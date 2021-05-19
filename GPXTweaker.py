@@ -759,7 +759,7 @@ class TilesCache():
 
   def Close(self):
     self.Closed = True
-    with self.Block:
+    with self.BLock:
       for infos, ptile in self.Buffer:
         try:
           ptile[0].set()
@@ -1673,9 +1673,9 @@ class WebMercatorMap(WGS84WebMercator):
     maxx = infos['topx'] + self.MapResolution * infos['width'] * (maxcol + 1)
     maxy = infos['topy'] - self.MapResolution * infos['height'] * minrow
     if not hasattr(self, 'WMS_BBOX'):
-      infos['bbox'] = '%s,%s,%s,%s' % (minx, miny, maxx, maxy)
+      self.MapInfos['bbox'] = '%s,%s,%s,%s' % (minx, miny, maxx, maxy)
     else:
-      infos['bbox'] = self.WMS_BBOX.format_map({'minx': minx, 'miny': miny, 'maxx': maxx, 'maxy': maxy})
+      self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minx, 'miny': miny, 'maxx': maxx, 'maxy': maxy})
     self.MapInfos['width'] = infos['width'] * (maxcol - mincol + 1)
     self.MapInfos['height'] = infos['height'] * (maxrow - minrow + 1)
     return True
@@ -1802,6 +1802,11 @@ class WGS84Elevation(WGS84Map):
           return None
       except:
         return None
+      finally:
+        try:
+          egen(close_connection=True)
+        except:
+          pass
 
   @classmethod
   def ASAlias(cls, name):
@@ -4251,8 +4256,7 @@ class GPXTweakerWebInterfaceServer():
       pass
     try:
       if self.Mode == "tiles":
-        self.Tiles.Close()
-        self.ElevationGenerator(close_connection=True)
+        self.Map.Tiles.Close()
     except:
       pass
 
