@@ -795,8 +795,13 @@ class WebMercatorMap(WGS84WebMercator):
   WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
   TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal'}
   TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
+  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE, 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'pattern': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
+  TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_TERRAIN = {'alias': 'GOOGLE_TERRAIN', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=p&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -2526,7 +2531,7 @@ class GPXTweakerWebInterfaceServer():
   '          tile.src = "/map/" + tile.id + text;\r\n' \
   '        } else {\r\n' \
   '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
-  '          tile.src = "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString();\r\n' \
+  '          tile.src = "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
@@ -2596,6 +2601,31 @@ class GPXTweakerWebInterfaceServer():
   '        hpy = Math.round(Math.min(Math.max(hpy, (vminy - htopy) * zoom / tscale + viewpane.offsetHeight), (vmaxy - htopy) * zoom / tscale));\r\n' \
   '        handle.style.left = hpx.toString() + "px";\r\n' \
   '        handle.style.top = hpy.toString() + "px";\r\n' \
+  '        k = Math.cosh((htopy + (hpy - viewpane.offsetHeight) * tscale / zoom) / 6378137);\r\n' \
+  '        sc = 150 * tscale / zoom / k;\r\n' \
+  '        let unit = "m";\r\n' \
+  '        let b = 1;\r\n' \
+  '        if (sc >= 1000) {\r\n' \
+  '          unit = "km";\r\n' \
+  '          b = 1000;\r\n' \
+  '        } else if (sc < 0.1) {\r\n' \
+  '          unit = "mm";\r\n' \
+  '          b = 1/1000;\r\n' \
+  '        } else if (sc < 1) {\r\n' \
+  '          unit = "cm";\r\n' \
+  '          b = 1/100;\r\n' \
+  '        }\r\n' \
+  '        sc_c = (sc / b).toFixed(0);\r\n' \
+  '        if (sc_c[0] == "1") {\r\n' \
+  '          sc_s = "1".padEnd(sc_c.length, "0");\r\n' \
+  '        } else if (sc_c[0] == "2" || sc_c[0] == "3" || sc_c[0] == "4") {\r\n' \
+  '          sc_s = "2".padEnd(sc_c.length, "0");\r\n' \
+  '        } else {\r\n' \
+  '          sc_s = "5".padEnd(sc_c.length, "0");\r\n' \
+  '        }\r\n' \
+  '        sc = parseFloat(sc_s) * b;\r\n' \
+  '        document.getElementById("scaleline").setAttribute("width", (sc / tscale * zoom * k).toFixed(0) + "px");\r\n' \
+  '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n' \
   '        update_tiles() \r\n' \
   '      }\r\n' \
   '      function prop_to_wmvalue(s) {\r\n' \
@@ -3595,6 +3625,14 @@ class GPXTweakerWebInterfaceServer():
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(95vh - 1.5em - 25px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS####DOTS##' \
+  '              </div>\r\n' \
+  '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);;padding-left:2px;padding-right: 2px;line-height:0.7em;"> \r\n' \
+  '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
+  '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
+  '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
+  '                  <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
+  '                </svg>\r\n' \
+  '                <span id="scalevalue" style="font-size:70%;color:black;">0 m</span>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
   '          </td>\r\n' \
