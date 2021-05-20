@@ -450,7 +450,6 @@ class HTTPMessage():
     return True
 
 def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=1073741824, pconnection=None):
-  print(url)
   if not method:
     method = 'GET' if not data else 'POST'
   redir = 0
