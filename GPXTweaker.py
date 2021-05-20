@@ -450,6 +450,7 @@ class HTTPMessage():
     return True
 
 def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=1073741824, pconnection=None):
+  print(url)
   if not method:
     method = 'GET' if not data else 'POST'
   redir = 0
@@ -4013,12 +4014,12 @@ class GPXTweakerWebInterfaceServer():
                 pass
           elif field in ('basescale', 'topx', 'topy'):
             try:
-              s[o][field] = float(field)
+              s[o][field] = float(value)
             except:
               pass
           elif field in ('width', 'height'):
             try:
-              s[o][field] = int(field)
+              s[o][field] = int(value)
             except:
               pass
           else:
