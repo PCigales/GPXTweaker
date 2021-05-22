@@ -1,6 +1,7 @@
 from functools import partial
 import urllib.parse
 import socket
+import selectors
 import ssl
 import http.client
 import math
@@ -2120,85 +2121,78 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
 class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
 
   def handle(self):
-    closed = False
-    while not closed:
-      req = HTTPMessage(self.request)
-      if req.header('Connection') == 'close':
-        closed = True
-      if not req.method:
-        closed = True
-      self.server.Interface.log(2, 'request', req.method, req.path)
-      if req.method == 'OPTIONS':
-        resp = 'HTTP/1.1 200 OK\r\n' \
-        'Content-Length: 0\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Allow: OPTIONS, HEAD, GET, POST\r\n' \
-        '\r\n'
-        try:
-          self.request.sendall(resp.encode('ISO-8859-1'))
-          self.server.Interface.log(2, 'response', req.method, req.path)
-        except:
-          self.server.Interface.log(2, 'rerror', req.method, req.path)
-      elif req.method in ('GET', 'HEAD'):
-        resp = 'HTTP/1.1 200 OK\r\n' \
-        'Content-Type: ##type##\r\n' \
-        'Content-Length: ##len##\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-        '\r\n'
-        resp_err = 'HTTP/1.1 404 File not found\r\n' \
-        'Content-Length: 0\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-        '\r\n'
-        resp_bad = 'HTTP/1.1 412 Precondition failed\r\n' \
-        'Content-Length: 0\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-        '\r\n'
-        resp_body = b''
-        if req.path.lower()[:13] == '/tiles/switch':
-          if req.header('If-Match') != self.server.Interface.SessionId:
-            try:
-              self.request.sendall(resp_bad.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'rbad', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
-            continue
-          q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
-          if 'set' in q:
-            try:
-              resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][3]}).encode('utf-8')
-              self.server.Interface.TilesSet = int(q['set'][0])
-            except:
+    with selectors.DefaultSelector() as selector:
+      selector.register(self.request, selectors.EVENT_READ)
+      closed = False
+      while not closed:
+        if self.server.__dict__['_BaseServer__shutdown_request'] or self.server.__dict__['_BaseServer__is_shut_down'].is_set():
+          break
+        ready = selector.select(0.5)
+        if self.server.__dict__['_BaseServer__shutdown_request'] or self.server.__dict__['_BaseServer__is_shut_down'].is_set():
+          break
+        if not ready:
+          continue
+        req = HTTPMessage(self.request)
+        if req.header('Connection') == 'close':
+          closed = True
+        if not req.method:
+          closed = True
+          continue
+        self.server.Interface.log(2, 'request', req.method, req.path)
+        if req.method == 'OPTIONS':
+          resp = 'HTTP/1.1 200 OK\r\n' \
+          'Content-Length: 0\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Allow: OPTIONS, HEAD, GET, POST\r\n' \
+          '\r\n'
+          try:
+            self.request.sendall(resp.encode('ISO-8859-1'))
+            self.server.Interface.log(2, 'response', req.method, req.path)
+          except:
+            self.server.Interface.log(2, 'rerror', req.method, req.path)
+        elif req.method in ('GET', 'HEAD'):
+          resp = 'HTTP/1.1 200 OK\r\n' \
+          'Content-Type: ##type##\r\n' \
+          'Content-Length: ##len##\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
+          resp_err = 'HTTP/1.1 404 File not found\r\n' \
+          'Content-Length: 0\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
+          resp_bad = 'HTTP/1.1 412 Precondition failed\r\n' \
+          'Content-Length: 0\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
+          resp_body = b''
+          if req.path.lower()[:13] == '/tiles/switch':
+            if req.header('If-Match') != self.server.Interface.SessionId:
               try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+                self.request.sendall(resp_bad.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rbad', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
               continue
-            try:
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
-          else:
-            if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
+            if 'set' in q:
               try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+                resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][3]}).encode('utf-8')
+                self.server.Interface.TilesSet = int(q['set'][0])
               except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-            else:
+                try:
+                  self.request.sendall(resp_err.encode('ISO-8859-1'))
+                  self.server.Interface.log(2, 'rnfound', req.method, req.path)
+                except:
+                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                continue
               try:
-                resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos['format'] == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos['format'] == 'image/png' else '.img'))}).encode('utf-8')
                 if req.method == 'GET':
                   self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                 else:
@@ -2206,126 +2200,149 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
-        elif req.path.lower()[:12] == '/tiles/tile-':
-          row, col = req.path.lower()[12:].split('.')[0].split('-')
-          resp_body = self.server.Interface.Map.Tiles[(int(row), int(col))](10)
-          if resp_body:
-            try:
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
-          else:
-            try:
-              self.request.sendall(resp_err.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'rnfound', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
-        elif req.path.lower()[:8] == '/map/map':
-          resp_body = self.server.Interface.Map.Map
-          if resp_body:
-            try:
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
-          else:
-            try:
-              self.request.sendall(resp_err.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'rnfound', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
-        elif req.path.lower() == '/GPXTweaker.html'.lower():
-          resp_body = self.server.Interface.HTML.encode('utf-8')
-          try:
-            if req.method == 'GET':
-              self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
             else:
-              self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-            self.server.Interface.log(2, 'response', req.method, req.path)
-          except:
-            self.server.Interface.log(2, 'rerror', req.method, req.path)
-        else:
-          try:
-            self.request.sendall(resp_err.encode('ISO-8859-1'))
-            self.server.Interface.log(2, 'rnfound', req.method, req.path)
-          except:
-            self.server.Interface.log(2, 'rerror', req.method, req.path)
-      elif req.method == 'POST':
-        resp_err = 'HTTP/1.1 422 Unprocessable Entity\r\n' \
-        'Content-Length: 0\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-        '\r\n'
-        resp_bad = 'HTTP/1.1 412 Precondition failed\r\n' \
-        'Content-Length: 0\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-        '\r\n'
-        if req.header('If-Match') != self.server.Interface.SessionId:
-          try:
-            self.request.sendall(resp_bad.encode('ISO-8859-1'))
-            self.server.Interface.log(2, 'rbad', req.method, req.path)
-          except:
-            self.server.Interface.log(2, 'rerror', req.method, req.path)
-          continue
-        if req.path.lower()[:4] == '/ele':
-          resp = 'HTTP/1.1 200 OK\r\n' \
-          'Content-Type: application/octet-stream\r\n' \
-          'Content-Length: ##len##\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
-          lpoints = req.body.splitlines()
-          resp_body = b''
-          points = []
-          ids = []
-          try:
-            for point in lpoints:
-              if point:
-                id, lat, lon = point.split(',')
-                points.append((float(lat), float(lon)))
-                ids.append(id)
-            lelevations = zip(ids, self.server.Interface.ElevationProvider(points))
-            for id_ele in lelevations:
+              if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
+                try:
+                  self.request.sendall(resp_err.encode('ISO-8859-1'))
+                  self.server.Interface.log(2, 'rnfound', req.method, req.path)
+                except:
+                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+              else:
+                try:
+                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos['format'] == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos['format'] == 'image/png' else '.img'))}).encode('utf-8')
+                  if req.method == 'GET':
+                    self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+                  else:
+                    self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+                  self.server.Interface.log(2, 'response', req.method, req.path)
+                except:
+                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:12] == '/tiles/tile-':
+            row, col = req.path.lower()[12:].split('.')[0].split('-')
+            resp_body = self.server.Interface.Map.Tiles[(int(row), int(col))](10)
+            if resp_body:
               try:
-                resp_body = resp_body + (id_ele[0] + ',' + ('%.1f' % id_ele[1]) + '\r\n').encode('utf-8')
+                if req.method == 'GET':
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+                else:
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'response', req.method, req.path)
               except:
-                resp_body = resp_body + (id_ele[0] + ', \r\n').encode('utf-8')
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+            else:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:8] == '/map/map':
+            resp_body = self.server.Interface.Map.Map
+            if resp_body:
+              try:
+                if req.method == 'GET':
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+                else:
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'response', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+            else:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower() == '/GPXTweaker.html'.lower():
+            resp_body = self.server.Interface.HTML.encode('utf-8')
             try:
-              self.request.sendall(resp.replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              if req.method == 'GET':
+                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              else:
+                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
-          except:
+          else:
             try:
               self.request.sendall(resp_err.encode('ISO-8859-1'))
               self.server.Interface.log(2, 'rnfound', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
-        elif req.path.lower()[:6] == '/track':
-          resp = 'HTTP/1.1 204 No content\r\n' \
+        elif req.method == 'POST':
+          resp_err = 'HTTP/1.1 422 Unprocessable Entity\r\n' \
           'Content-Length: 0\r\n' \
           'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
           'Server: GPXTweaker\r\n' \
           'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
           '\r\n'
-          if self.server.Interface.Track.UpdateGPX(req.body):
-            if self.server.Interface.Track.SaveGPX(self.server.Interface.Uri.rsplit('.', 1)[0] + ' - updated.gpx'):
+          resp_bad = 'HTTP/1.1 412 Precondition failed\r\n' \
+          'Content-Length: 0\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
+          if req.header('If-Match') != self.server.Interface.SessionId:
+            try:
+              self.request.sendall(resp_bad.encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'rbad', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            continue
+          if req.path.lower()[:4] == '/ele':
+            resp = 'HTTP/1.1 200 OK\r\n' \
+            'Content-Type: application/octet-stream\r\n' \
+            'Content-Length: ##len##\r\n' \
+            'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+            'Server: GPXTweaker\r\n' \
+            'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+            '\r\n'
+            lpoints = req.body.splitlines()
+            resp_body = b''
+            points = []
+            ids = []
+            try:
+              for point in lpoints:
+                if point:
+                  id, lat, lon = point.split(',')
+                  points.append((float(lat), float(lon)))
+                  ids.append(id)
+              lelevations = zip(ids, self.server.Interface.ElevationProvider(points))
+              for id_ele in lelevations:
+                try:
+                  resp_body = resp_body + (id_ele[0] + ',' + ('%.1f' % id_ele[1]) + '\r\n').encode('utf-8')
+                except:
+                  resp_body = resp_body + (id_ele[0] + ', \r\n').encode('utf-8')
               try:
-                self.request.sendall(resp.encode('ISO-8859-1'))
+                self.request.sendall(resp.replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:6] == '/track':
+            resp = 'HTTP/1.1 204 No content\r\n' \
+            'Content-Length: 0\r\n' \
+            'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+            'Server: GPXTweaker\r\n' \
+            'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+            '\r\n'
+            if self.server.Interface.Track.UpdateGPX(req.body):
+              if self.server.Interface.Track.SaveGPX(self.server.Interface.Uri.rsplit('.', 1)[0] + ' - updated.gpx'):
+                try:
+                  self.request.sendall(resp.encode('ISO-8859-1'))
+                  self.server.Interface.log(2, 'response', req.method, req.path)
+                except:
+                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+              else:
+                try:
+                  self.request.sendall(resp_err.encode('ISO-8859-1'))
+                  self.server.Interface.log(2, 'rfailed', req.method, req.path)
+                except:
+                  self.server.Interface.log(2, 'rerror', req.method, req.path)
             else:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -2335,27 +2352,21 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           else:
             try:
               self.request.sendall(resp_err.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'rfailed', req.method, req.path)
+              self.server.Interface.log(2, 'rnfound', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
-        else:
+        elif req.method:
+          resp_err = 'HTTP/1.1 501 Not Implemented\r\n' \
+          'Content-Length: 0\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
           try:
             self.request.sendall(resp_err.encode('ISO-8859-1'))
             self.server.Interface.log(2, 'rnfound', req.method, req.path)
           except:
             self.server.Interface.log(2, 'rerror', req.method, req.path)
-      elif req.method:
-        resp_err = 'HTTP/1.1 501 Not Implemented\r\n' \
-        'Content-Length: 0\r\n' \
-        'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-        'Server: GPXTweaker\r\n' \
-        'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-        '\r\n'
-        try:
-          self.request.sendall(resp_err.encode('ISO-8859-1'))
-          self.server.Interface.log(2, 'rnfound', req.method, req.path)
-        except:
-          self.server.Interface.log(2, 'rerror', req.method, req.path)
 
 
 class GPXTweakerWebInterfaceServer():
