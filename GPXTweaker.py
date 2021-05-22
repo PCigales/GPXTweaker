@@ -553,9 +553,10 @@ class WGS84WebMercator():
 
 class TilesCache():
 
-  def __init__(self, size, threads):
+  def __init__(self, size, threads, nbour=False):
     self.Size = size
     self.Threads = threads
+    self.Nbour = nbour
     self.InfosBuffer = []
     self.Buffer = []
     self.BLock = threading.RLock()
@@ -679,23 +680,23 @@ class TilesCache():
     except:
       return partial(self.WaitTile, None)
     self.log(2, 'get', row, col)
-    nbour = []
-    if row >= 1:
-      nbour.append((row - 1, col))
-      nbour.append((row - 1, col + 1))
+    if self.Nbour and self.Size >= 10:
+      nbour = []
+      if row >= 1:
+        nbour.append((row - 1, col))
+        nbour.append((row - 1, col + 1))
+        if col >= 1:
+          nbour.append((row - 1, col - 1))
       if col >= 1:
-        nbour.append((row - 1, col - 1))
-    if col >= 1:
-      nbour.append((row, col - 1))
-      nbour.append((row + 1, col - 1))
-    nbour.append((row, col + 1))
-    nbour.append((row + 1, col))
-    nbour.append((row + 1, col + 1))
-    def _get_nbour():
-      for npos in nbour:
-        if not self.Closed:
-          self.WaitTile(self._getitem(npos))
-    if self.Size >= 10:
+        nbour.append((row, col - 1))
+        nbour.append((row + 1, col - 1))
+      nbour.append((row, col + 1))
+      nbour.append((row + 1, col))
+      nbour.append((row + 1, col + 1))
+      def _get_nbour():
+        for npos in nbour:
+          if not self.Closed:
+            self.WaitTile(self._getitem(npos))
       t = threading.Timer(0.5, _get_nbour)
       t.daemon=True
       t.start()
@@ -708,10 +709,6 @@ class TilesCache():
       with self.BLock:
         self.Buffer.append((infos, pvalue))
         if len(self.Buffer) > self.Size:
-          try:
-            self.Buffer[0][1][0].set()
-          except:
-            pass
           del self.Buffer[0]
     except:
       return
@@ -2448,6 +2445,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        window.stop();\r\n' \
   '        msg = JSON.parse(t.response);\r\n' \
   '        if (nset == null) {\r\n' \
   '          tlevel = nlevel;\r\n' \
