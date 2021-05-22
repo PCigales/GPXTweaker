@@ -1107,7 +1107,6 @@ class WebMercatorMap(WGS84WebMercator):
     if referer:
       headers['Referer'] = referer
     try:
-      inf = {**infos}
       if 'pattern' in infos:
         if '{quadkey}' in infos['pattern']:
           quadkey = ''.join(map(lambda p: str(int(p[0]+p[1], 2)), zip(bin(int(infos['row']))[2:].rjust(int(infos['matrix']), '0'), bin(int(infos['col']))[2:].rjust(int(infos['matrix']), '0'))))
