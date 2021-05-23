@@ -554,10 +554,9 @@ class WGS84WebMercator():
 
 class TilesCache():
 
-  def __init__(self, size, threads, nbour=False):
+  def __init__(self, size, threads):
     self.Size = size
     self.Threads = threads
-    self.Nbour = nbour
     self.InfosBuffer = []
     self.Buffer = []
     self.BLock = threading.RLock()
@@ -681,25 +680,12 @@ class TilesCache():
     except:
       return partial(self.WaitTile, None)
     self.log(2, 'get', row, col)
-    if self.Nbour and self.Size >= 10:
-      nbour = []
-      if row >= 1:
-        nbour.append((row - 1, col))
-        nbour.append((row - 1, col + 1))
-        if col >= 1:
-          nbour.append((row - 1, col - 1))
-      if col >= 1:
-        nbour.append((row, col - 1))
-        nbour.append((row + 1, col - 1))
-      nbour.append((row, col + 1))
-      nbour.append((row + 1, col))
-      nbour.append((row + 1, col + 1))
-      def _get_nbour():
-        for npos in nbour:
-          if not self.Closed:
-            self.WaitTile(self._getitem(npos))
-      t = threading.Timer(0.5, _get_nbour)
-      t.daemon=True
+    def _get_diag():
+      if not self.Closed:
+        self.WaitTile(self._getitem((row + 1, col + 1)))
+    if self.Size >= 10:
+      t = threading.Timer(0.01, _get_diag)
+      t.daemon = True
       t.start()
     return partial(self.WaitTile, self._getitem(pos))
 
@@ -2547,7 +2533,8 @@ class GPXTweakerWebInterfaceServer():
   '          tile.src = "/map/" + tile.id + text;\r\n' \
   '        } else {\r\n' \
   '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
-  '          tile.src = "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
+  '          tile.src = "http://" + location.hostname + ":" + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
@@ -4008,6 +3995,8 @@ class GPXTweakerWebInterfaceServer():
   '</html>'
   HTML_TEMPLATE = HTML_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTML_DECLARATIONS_TEMPLATE = \
+  '      portmin = ##PORTMIN##;\r\n' \
+  '      portmax = ##PORTMAX##;\r\n' \
   '      sessionid = "##SESSIONID##";\r\n' \
   '      mode = "##MODE##";\r\n' \
   '      vminx = ##VMINX##;\r\n' \
@@ -4167,7 +4156,18 @@ class GPXTweakerWebInterfaceServer():
           if field == 'ip':
             self.Ip = value or self.Ip
           elif field == 'port':
-            self.Port = int(value or self.Port)
+            port = value or self.Ports
+            if '-' in port:
+              self.Ports = port.split('-', 1)
+            else:
+              self.Ports = (port, port)
+            if not self.Ports[0].isdecimal() or not self.Ports[1].isdecimal():
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+            self.Ports = (int(self.Ports[0]), int(self.Ports[1]))
+            if self.Ports[0] > self.Ports[1]:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -4304,7 +4304,7 @@ class GPXTweakerWebInterfaceServer():
     self.Uri = uri
     self.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, uri + str(time.time())))
     self.Ip = '127.0.0.1'
-    self.Port = '8000'
+    self.Ports = '8000'
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
     self.DMinLat = None
@@ -4328,6 +4328,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'conf')
     if not self._load_config(cfg):
       return
+    self.GPXTweakerInterfaceServerInstances = [None] * (self.Ports[1] - self.Ports[0] + 1)
     if not map:
       minlat = minlat if minlat != None else self.DMinLat
       maxlat = maxlat if maxlat != None else self.DMaxLat
@@ -4459,7 +4460,7 @@ class GPXTweakerWebInterfaceServer():
   def BuildHTML(self):
     if self.HTML == None:
       return False
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##SESSIONID##', self.SessionId).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos['format'] == 'image/jpeg' else ('.png' if self.Map.MapInfos['format'] == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##SESSIONID##', self.SessionId).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos['format'] == 'image/jpeg' else ('.png' if self.Map.MapInfos['format'] == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -4469,26 +4470,28 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots).replace('##TSETS##', tsets)
     return True
 
-  def _start_webserver(self):
-    with ThreadedDualStackServer((self.Ip, self.Port), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstance:
-      self.GPXTweakerInterfaceServerInstance.Interface = self
-      self.GPXTweakerInterfaceServerInstance.serve_forever()
+  def _start_webserver(self, ind):
+    with ThreadedDualStackServer((self.Ip, self.Ports[0] + ind), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
+      self.GPXTweakerInterfaceServerInstances[ind].Interface = self
+      self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
 
   def run(self):
     if self.BuildHTML():
       self.log(0, 'start')
-      webserver_thread = threading.Thread(target=self._start_webserver)
-      webserver_thread.start()
+      for ind in range(self.Ports[1] - self.Ports[0] + 1):
+        webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
+        webserver_thread.start()
       return True
     else:
       return False
 
   def shutdown(self):
     self.log(0, 'close')
-    try:
-      self.GPXTweakerInterfaceServerInstance.shutdown()
-    except:
-      pass
+    for ind in range(self.Ports[1] - self.Ports[0] + 1):
+      try:
+        self.GPXTweakerInterfaceServerInstances[ind].shutdown()
+      except:
+        pass
     try:
       if self.Mode == "tiles":
         self.Map.Tiles.Close()
@@ -4512,7 +4515,7 @@ if __name__ == '__main__':
   GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or None), maxwidth=(args.maxwidth or None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(__file__)) + '\GPXTweaker.cfg'))
   if not GPXTweakerInterface.run():
     exit()
-  webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Port))
+  webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0]))
   print(LSTRINGS['parser']['keyboard'])
   while True:
     k = msvcrt.getch()
