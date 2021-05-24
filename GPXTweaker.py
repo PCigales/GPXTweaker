@@ -104,6 +104,7 @@ FR_STRINGS = {
     'jsegmentabsorb': 'fusionner segments',
     'jelevationsadd': 'ajouter élévations',
     'jelevationsreplace': 'remplacer élévations',
+    'jaltitudesjoin': 'joindre altitudes',
     'jsave': 'sauvegarder',
     'jswitchpoints': 'afficher/cacher points',
     'jwaypoints': 'Points de cheminement',
@@ -205,6 +206,7 @@ EN_STRINGS = {
     'jsegmentabsorb': 'merge segments',
     'jelevationsadd': 'add elevations',
     'jelevationsreplace': 'replace elevations',
+    'jaltitudesjoin': 'join altitudes',
     'jsave': 'backup',
     'jswitchpoints': 'show/hide points',
     'jwaypoints': 'Waypoints',
@@ -2066,6 +2068,8 @@ name)
             self._XMLUpdateAttribute(np, 'lon', v[2])
             self._XMLUpdateNodeText(trk, np, 'ele', v[3])
             if v[4]:
+              if not r.hasAttribute('xmlns:mytrails'):
+                r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
               e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
               a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:ele_alt')
               t = self.Track.createTextNode(v[4])
@@ -2369,7 +2373,7 @@ class GPXTweakerWebInterfaceServer():
   '        --zoom:1;\r\n' \
   '      }\r\n' \
   '      input[id=name_track] {\r\n' \
-  '        width:50%;\r\n' \
+  '        width:calc(94vw - 48em);\r\n' \
   '        font-size:70%;\r\n' \
   '        background-color:inherit;\r\n' \
   '        color:inherit;\r\n' \
@@ -3554,6 +3558,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (seg != null) {segments_calc(seg);}\r\n' \
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
+  '        if (! ex_foc && focused) {element_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        if (seg != null) {whole_calc();}\r\n' \
   '      }\r\n' \
   '      function ele_adds(all=false) {\r\n' \
@@ -3588,6 +3593,53 @@ class GPXTweakerWebInterfaceServer():
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhre.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhre.send(b);\r\n' \
+  '      }\r\n' \
+  '      function ele_join() {\r\n' \
+  '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
+  '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '        if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
+  '        let spans = seg_foc.getElementsByTagName("span");\r\n' \
+  '        let stime = null;\r\n' \
+  '        let etime = null;\r\n' \
+  '        let ralt = null;\r\n' \
+  '        for (let p=0; p<spans.length; p++) {\r\n' \
+  '          if (document.getElementById(spans[p].id.slice(0, -5)).checked) {\r\n' \
+  '            etime = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '            ralt = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '            if (isNaN(etime) || isNaN(ralt)) {return;}\r\n' \
+  '            if (stime == null) {stime = etime;}\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        window.alert([stime, etime]);\r\n' \
+  '        if (stime >= etime) {return;}\r\n' \
+  '        let seg = seg_foc.nextElementSibling;\r\n' \
+  '        while (seg) {\r\n' \
+  '          if (seg.firstElementChild.checked) {break;}\r\n' \
+  '          seg = seg.nextElementSibling;\r\n' \
+  '        }\r\n' \
+  '        if (! seg) {return;}\r\n' \
+  '        let pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
+  '        while(pt) {\r\n' \
+  '          if (pt.firstElementChild.checked) {break;}\r\n' \
+  '          pt = pt.nextElementSibling;\r\n' \
+  '        }\r\n' \
+  '        if (! pt) {return;}\r\n' \
+  '        let talt = parseFloat(document.getElementById(pt.id.replace("cont", "alt")).value);\r\n' \
+  '        if (isNaN(talt)) {return;}\r\n' \
+  '        let cor = parseFloat((talt - ralt) / (etime - stime));\r\n' \
+  '        if (isNaN(cor)) {return;}\r\n' \
+  '        for (let p=0; p<spans.length; p++) {\r\n' \
+  '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error") {\r\n' \
+  '            let ptime = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '            let palt = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '            if (! isNaN(ptime) && ! isNaN(palt)) {\r\n' \
+  '              element_click(null, document.getElementById(spans[p].id.replace("focus", "desc")));\r\n' \
+  '              document.getElementById(spans[p].id.replace("focus", "alt")).value = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
+  '              point_edit(false, true, false);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")));\r\n' \
   '      }\r\n' \
   '      function switch_dots() {\r\n' \
   '        dots_visible = ! dots_visible;\r\n' \
@@ -3762,16 +3814,16 @@ class GPXTweakerWebInterfaceServer():
   '    </script>\r\n' \
   '  </head>\r\n' \
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);"> \r\n' \
-  '    <table style="width:95vw;">\r\n' \
+  '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
-  '        <col style="width:20%;">\r\n' \
-  '        <col style="width:80%;">\r\n' \
+  '        <col style="width:20em;">\r\n' \
+  '        <col style="width:calc(98vw - 20em);">\r\n' \
   '      </colgroup>\r\n' \
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;width:calc(45vw - 7px);overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span style="line-height:1em;">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" id="switch" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:44em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span style="line-height:1em;">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" id="switch" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
