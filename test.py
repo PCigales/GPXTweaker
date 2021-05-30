@@ -220,7 +220,7 @@ while threading.active_count() > 1:
 GPXTweakerInterface = GPXTweakerWebInterfaceServer(p + r"\t.gpx")
 #GPXTweakerInterface = GPXTweakerWebInterfaceServer(p + r"\t.gpx", 'IGN PLANV2', True, maxheight=3000, maxwidth=6000)
 GPXTweakerInterface.run()
-webbrowser.open('http://127.0.0.1:%s/GPXTweaker.html' % GPXTweakerInterface.Port)
+webbrowser.open('http://127.0.0.1:%s/GPXTweaker.html' % GPXTweakerInterface.Ports[0])
 while True:
   k = msvcrt.getch()
   if k == b'\xe0':
