@@ -4453,10 +4453,10 @@ class GPXTweakerWebInterfaceServer():
   '          <br><span>0</span><span id = "cursorv_rangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>360</span>\r\n' \
   '          <br><br>\r\n' \
   '          <p>{#jtexture#}</p>\r\n' \
-  '          <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)">{#jtextureyiso#}</input><br>\r\n' \
-  '          <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)">{#jtextureziso#}</input><br>\r\n' \
-  '          <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)">{#jtexturemap#}</input><br>\r\n' \
-  '          <input type="radio" id="radio_zmap" name="texture" disabled onclick="toggle_filling(3)">{#jtexturezmap#}</input>\r\n' \
+  '          <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)"><label for="radio_yiso">{#jtextureyiso#}</label><br>\r\n' \
+  '          <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)"><label for="radio_ziso">{#jtextureziso#}</label><br>\r\n' \
+  '          <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)"><label for="radio_map">{#jtexturemap#}</label><br>\r\n' \
+  '          <input type="radio" id="radio_zmap" name="texture" disabled onclick="toggle_filling(3)"><label for="radio_zmap">{#jtexturezmap#}</label>\r\n' \
   '          <br><br>\r\n' \
   '          <p>{#jzscale#}</p>\r\n' \
   '          <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" disabled oninput="set_zscale()">\r\n' \
