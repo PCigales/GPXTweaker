@@ -125,6 +125,7 @@ FR_STRINGS = {
     'jtextureyiso': 'Isoplèthes Y',
     'jtextureziso': 'Isoplèthes Z',
     'jtexturemap': 'Carte',
+    'jtexturezmap': 'Carte sombre Z',
     'jzscale': 'Échelle Z:',
     'jzscaleiso': 'iso',
     'jzscalemax': 'max',
@@ -234,9 +235,10 @@ EN_STRINGS = {
     'jtilt': 'Tilt:',
     'jrotation': 'Rotation:',
     'jtexture': 'Texture:',
-    'jtextureyiso': 'Y Isopleths',
-    'jtextureziso': 'Z Isopleths',
+    'jtextureyiso': 'Y isopleths',
+    'jtextureziso': 'Z isopleths',
     'jtexturemap': 'Map',
+    'jtexturezmap': 'Map Z dark',
     'jzscale': 'Z scale:',
     'jzscaleiso': 'iso',
     'jzscalemax': 'max',
@@ -4453,7 +4455,8 @@ class GPXTweakerWebInterfaceServer():
   '          <p>{#jtexture#}</p>\r\n' \
   '          <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)">{#jtextureyiso#}</input><br>\r\n' \
   '          <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)">{#jtextureziso#}</input><br>\r\n' \
-  '          <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)">{#jtexturemap#}</input>\r\n' \
+  '          <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)">{#jtexturemap#}</input><br>\r\n' \
+  '          <input type="radio" id="radio_zmap" name="texture" disabled onclick="toggle_filling(3)">{#jtexturezmap#}</input>\r\n' \
   '          <br><br>\r\n' \
   '          <p>{#jzscale#}</p>\r\n' \
   '          <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" disabled oninput="set_zscale()">\r\n' \
@@ -4465,12 +4468,17 @@ class GPXTweakerWebInterfaceServer():
   '      canvas = document.getElementById("canvas");\r\n' \
   '      gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '      gl_tcprogram = null;\r\n' \
+  '      tc_matrix_l = null;\r\n' \
+  '      v_tczfact_l = null;\r\n' \
+  '      f_tcziso_l = null;\r\n' \
   '      gl_ttprogram = null;\r\n' \
-  '      gl_tprogram = null;\r\n' \
+  '      tt_matrix_l = null;\r\n' \
+  '      v_ttzfact_l = null;\r\n' \
+  '      v_ttzdim_l = null;\r\n' \
   '      gl_lprogram = null;\r\n' \
+  '      tl_matrix_l = null;\r\n' \
   '      gl_tcvao = null;\r\n' \
   '      gl_ttvao = null;\r\n' \
-  '      gl_tvao = null;\r\n' \
   '      gl_lvao = null;\r\n' \
   '      tr_texture = null;\r\n' \
   '      map_texture = null;\r\n' \
@@ -4483,6 +4491,7 @@ class GPXTweakerWebInterfaceServer():
   '      r_yiso = document.getElementById("radio_yiso");\r\n' \
   '      r_ziso = document.getElementById("radio_ziso");\r\n' \
   '      r_map = document.getElementById("radio_map");\r\n' \
+  '      r_zmap = document.getElementById("radio_zmap");\r\n' \
   '      c_zfact = document.getElementById("cursor_zfact");\r\n' \
   '      fillmode = 0;\r\n' \
   '      tangle = 60 * Math.PI / 180;\r\n' \
@@ -4506,10 +4515,12 @@ class GPXTweakerWebInterfaceServer():
   '          uniform mat4 t_matrix;\r\n' \
   '          out vec2 f_tcoord;\r\n' \
   '          out float f_z;\r\n' \
+  '          out float f_dim;\r\n' \
   '          void main() {\r\n' \
   '            gl_Position = vec4((t_matrix * vec4(v_position.xy, v_zfact * (v_position.z + 1.0) - 1.0, v_position.w)).xyz, 1.733);\r\n' \
   '            f_tcoord = v_position.xy;\r\n' \
   '            f_z = v_zfactmax * (v_position.z + 1.0) - 1.0;\r\n' \
+  '            f_dim = pow(0.5 * (v_zfactmax * (v_position.z + 1.0) - 1.0) + 0.5, 0.7);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_ttshader_s = `#version 300 es\r\n' \
@@ -4517,12 +4528,13 @@ class GPXTweakerWebInterfaceServer():
   '          uniform float v_zfact;\r\n' \
   '          uniform float v_zfactmax;\r\n' \
   '          uniform mat4 t_matrix;\r\n' \
+  '          uniform bool v_zdim;\r\n' \
   '          out vec2 f_tcoord;\r\n' \
   '          out float f_dim;\r\n' \
   '          void main() {\r\n' \
   '            gl_Position = vec4((t_matrix * vec4(v_position.xy, v_zfact * (v_position.z + 1.0) - 1.0, v_position.w)).xyz, 1.733);\r\n' \
   '            f_tcoord = v_position.xy;\r\n' \
-  '            f_dim = pow(0.5 * (v_zfactmax * (v_position.z + 1.0) - 1.0) + 0.5, 0.6);\r\n' \
+  '            f_dim = v_zdim?pow(0.5 * (v_zfactmax * (v_position.z + 1.0) - 1.0) + 0.5, 0.6):1.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_lshader_s = `#version 300 es\r\n' \
@@ -4537,14 +4549,14 @@ class GPXTweakerWebInterfaceServer():
   '        let fragment_cshader_s = `#version 300 es\r\n' \
   '          precision highp float;\r\n' \
   '          in vec2 f_tcoord;\r\n' \
+  '          in float f_dim;\r\n' \
   '          in float f_z;\r\n' \
   '          uniform sampler2D f_trtex;\r\n' \
   '          uniform bool f_ziso;\r\n' \
   '          out vec4 p_color;\r\n' \
   '          void main() {\r\n' \
-  '            float color = f_ziso?((fract((1.0 + f_z) * 25.0) <= 0.15)?0.0:1.0):((fract((1.0 + f_tcoord.y) * 50.0) <= 0.17)?0.0:1.0);\r\n' \
-  '            float f_dim = 0.495 * f_z + 0.505;\r\n' \
-  '            p_color = gl_FrontFacing?(color * vec4(0.4 * f_dim, 0.5 * f_dim, 0.2 * f_dim, 1) + (1.0 - color) * vec4(0, 0.0, f_dim, 1)):((color * vec4(max(0.0, f_dim - 0.5), f_dim, 0.3 * f_dim, 1) + (1.0 - color) * vec4(0, 0.0, f_dim, 1)) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
+  '            float color = f_ziso?((fract((1.0 + f_z) * 25.0) <= 0.15)?0.0:1.0):((fract((1.0 + f_tcoord.y) * 50.0) <= 0.15)?0.0:1.0);\r\n' \
+  '            p_color = gl_FrontFacing?(color * vec4(0.47 * f_dim, 0.42 * f_dim, 0.35 * f_dim, 1) + (1.0 - color) * vec4(0, 0.0, f_dim, 1)):((color * vec4(0.82 * f_dim, f_dim, 0.74 * f_dim, 1) + (1.0 - color) * vec4(0, 0, f_dim, 1)) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let fragment_tshader_s = `#version 300 es\r\n' \
@@ -4556,7 +4568,7 @@ class GPXTweakerWebInterfaceServer():
   '          uniform vec4 f_pos;\r\n' \
   '          out vec4 p_color;\r\n' \
   '          void main() {\r\n' \
-  '            p_color = gl_FrontFacing?vec4(0.3 * f_dim, 0.5 * f_dim, 0.2 * f_dim, 1):(texture(f_tex, f_pos.st * f_tcoord + f_pos.pq) * vec4(vec3(f_dim), 1.0) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
+  '            p_color = gl_FrontFacing?vec4(0.47 * f_dim, 0.42 * f_dim, 0.35 * f_dim, 1):(texture(f_tex, f_pos.st * f_tcoord + f_pos.pq) * vec4(vec3(f_dim), 1.0) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let fragment_lshader_s = `#version 300 es\r\n' \
@@ -4612,6 +4624,8 @@ class GPXTweakerWebInterfaceServer():
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
   '            load_texture(gl.TEXTURE0, cnv2d);\r\n' \
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
+  '            r_map.disabled = false;\r\n' \
+  '            r_zmap.disabled = false;\r\n' \
   '          }\r\n' \
   '          function terr_cb() {\r\n' \
   '            ntiles--;\r\n' \
@@ -4715,12 +4729,17 @@ class GPXTweakerWebInterfaceServer():
   '          create_map();\r\n' \
   '        }\r\n' \
   '        gl_tcprogram = create_program(vertex_tcshader_s, fragment_cshader_s);\r\n' \
+  '        tc_matrix_l = gl.getUniformLocation(gl_tcprogram, "t_matrix");\r\n' \
+  '        v_tczfact_l = gl.getUniformLocation(gl_tcprogram, "v_zfact");\r\n' \
+  '        f_tcziso_l = gl.getUniformLocation(gl_tcprogram, "f_ziso");\r\n' \
   '        gl_ttprogram = create_program(vertex_ttshader_s, fragment_tshader_s);\r\n' \
-  '        gl_tprogram = gl_tcprogram;\r\n' \
+  '        tt_matrix_l = gl.getUniformLocation(gl_ttprogram, "t_matrix");\r\n' \
+  '        v_ttzfact_l = gl.getUniformLocation(gl_ttprogram, "v_zfact");\r\n' \
+  '        v_ttzdim_l = gl.getUniformLocation(gl_ttprogram, "v_zdim");\r\n' \
   '        gl_lprogram = create_program(vertex_lshader_s, fragment_lshader_s);\r\n' \
+  '        tl_matrix_l = gl.getUniformLocation(gl_lprogram, "t_matrix");\r\n' \
   '        gl_tcvao = gl.createVertexArray();\r\n' \
   '        gl_ttvao = gl.createVertexArray();\r\n' \
-  '        gl_tvao = gl_tcvao;\r\n' \
   '        gl_lvao = gl.createVertexArray();\r\n' \
   '        load_texture(gl.TEXTURE0, [0, 127, 0, 255]);\r\n' \
   '        load_texture(gl.TEXTURE1, [0, 0, 0, 255]);\r\n' \
@@ -4764,21 +4783,23 @@ class GPXTweakerWebInterfaceServer():
   '      function canvas_redraw() {\r\n' \
   '        gl.clearColor(0, 0, 0, 0);\r\n' \
   '        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
-  '        gl.useProgram(gl_tprogram);\r\n' \
-  '        gl.bindVertexArray(gl_tvao);\r\n' \
-  '        let v_zfact_l = gl.getUniformLocation(gl_tprogram, "v_zfact");\r\n' \
-  '        gl.uniform1f(v_zfact_l, zfact);\r\n' \
-  '        let t_matrix_l = gl.getUniformLocation(gl_tprogram, "t_matrix");\r\n' \
-  '        gl.uniformMatrix4fv(t_matrix_l, true, tmatrix);\r\n' \
-  '        if (fillmode != 2) {\r\n' \
-  '          let f_ziso_l = gl.getUniformLocation(gl_tprogram, "f_ziso");\r\n' \
-  '          gl.uniform1i(f_ziso_l, fillmode);\r\n' \
+  '        if (fillmode < 2) {\r\n' \
+  '          gl.useProgram(gl_tcprogram);\r\n' \
+  '          gl.bindVertexArray(gl_tcvao);\r\n' \
+  '          gl.uniformMatrix4fv(tc_matrix_l, true, tmatrix);\r\n' \
+  '          gl.uniform1f(v_tczfact_l, zfact);\r\n' \
+  '          gl.uniform1i(f_tcziso_l, fillmode);\r\n' \
+  '        } else {\r\n' \
+  '          gl.useProgram(gl_ttprogram);\r\n' \
+  '          gl.bindVertexArray(gl_ttvao);\r\n' \
+  '          gl.uniformMatrix4fv(tt_matrix_l, true, tmatrix);\r\n' \
+  '          gl.uniform1f(v_ttzfact_l, zfact);\r\n' \
+  '          gl.uniform1i(v_ttzdim_l, fillmode - 2);\r\n' \
   '        }\r\n' \
   '        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
   '        gl.useProgram(gl_lprogram);\r\n' \
   '        gl.bindVertexArray(gl_lvao);\r\n' \
-  '        t_matrix_l = gl.getUniformLocation(gl_lprogram, "t_matrix");\r\n' \
-  '        gl.uniformMatrix4fv(t_matrix_l, true, tmatrix);\r\n' \
+  '        gl.uniformMatrix4fv(tl_matrix_l, true, tmatrix);\r\n' \
   '        gl.drawArrays(gl.LINES, 0, 10);\r\n' \
   '      }\r\n' \
   '      function canvas_orient() {\r\n' \
@@ -4860,7 +4881,6 @@ class GPXTweakerWebInterfaceServer():
   '          c_tangle.disabled = false;\r\n' \
   '          r_yiso.disabled = false;\r\n' \
   '          r_ziso.disabled = false;\r\n' \
-  '          r_map.disabled = false;\r\n' \
   '          if (zfact_max > 1) {\r\n' \
   '            c_zfact.max = zfact_max.toString();\r\n' \
   '            c_zfact.disabled = false;\r\n' \
@@ -4892,8 +4912,6 @@ class GPXTweakerWebInterfaceServer():
   '      function toggle_filling(fmode) {\r\n' \
   '        if (fmode == fillmode) {return;};\r\n' \
   '        fillmode = fmode;\r\n' \
-  '        gl_tprogram = (fillmode != 2) ? gl_tcprogram : gl_ttprogram;\r\n' \
-  '        gl_tvao = (fillmode != 2) ? gl_tcvao : gl_ttvao;\r\n' \
   '        canvas_orient();\r\n' \
   '      }\r\n' \
   '      function set_zscale() {\r\n' \
