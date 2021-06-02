@@ -19,6 +19,8 @@ import base64
 import zlib
 import gzip
 import lzma
+import zipfile
+from io import BytesIO
 import ctypes, ctypes.wintypes
 import subprocess
 import struct
@@ -120,7 +122,9 @@ FR_STRINGS = {
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jtexture': 'Texture:',
-    'jtexturepatmap': 'Motif / Carte',
+    'jtextureyiso': 'Isoplèthes Y',
+    'jtextureziso': 'Isoplèthes Z',
+    'jtexturemap': 'Carte',
     'jzscale': 'Échelle Z:',
     'jzscaleiso': 'iso',
     'jzscalemax': 'max',
@@ -230,7 +234,9 @@ EN_STRINGS = {
     'jtilt': 'Tilt:',
     'jrotation': 'Rotation:',
     'jtexture': 'Texture:',
-    'jtexturepatmap': 'Pattern / Map',
+    'jtextureyiso': 'Y Isopleths',
+    'jtextureziso': 'Z Isopleths',
+    'jtexturemap': 'Map',
     'jzscale': 'Z scale:',
     'jzscaleiso': 'iso',
     'jzscalemax': 'max',
@@ -507,7 +513,6 @@ def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=
       try:
         msg = msg_pat % ('GET' if switch_get else method, url_[len(url_p.scheme) + 3 + len(url_p.netloc):].replace(' ', '%20'), url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
         pconnection[0].sendall(msg.encode('iso-8859-1') + ((data or b'') if not switch_get else b''))
-        retry = 0
       except:
         try:
           pconnection[0].close()
@@ -520,7 +525,16 @@ def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=
         continue
       resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length)
       if not resp.code:
-        raise
+        if retry:
+          raise
+        retry = 1
+        try:
+          pconnection[0].close()
+        except:
+          pass
+        pconnection[0] = None
+        continue
+      retry = 0
       code = resp.code
       if code[:2] == '30' and code[:2] != '304':
         try:
@@ -782,6 +796,7 @@ class WebMercatorMap(WGS84WebMercator):
   CRS = 'EPSG:3857'
   CRS_MPU = 1
   LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
+  LOCALSTORE_HGT_DEFAULT_PATTERN = '{alias|layer}\{hgt}.{ext}'
   WMS_PATTERN = {'GetCapabilities': '{source}?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '{source}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}'}
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
   WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
@@ -941,7 +956,7 @@ class WebMercatorMap(WGS84WebMercator):
             return False
         elif nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
           nmap = dmap
-          infos = json.loads(dec.unused_data)
+          infos = json.loads(imap)
         if infos['crs'] != self.CRS:
           return False
         if not hasattr(self, 'WMS_BBOX'):
@@ -984,11 +999,11 @@ class WebMercatorMap(WGS84WebMercator):
         comment = ('GPXTweaker: ' + json.dumps(self.MapInfos)).encode('ISO-8859-1')
         f.write(b'\xff\xfe' + (len(comment) + 2).to_bytes(2, 'big') + comment)
         f.write(self.Map[-2:])
-      elif self.MapInfos['format'] == 'image/x-bil;bits=32':
+      elif self.MapInfos['format'] == 'image/x-bil;bits=32' or self.MapInfos['format'] == 'image/hgt':
         if uri[-3:].lower() != '.xz':
           uri = uri + '.xz'
         f = open(uri, 'wb')
-        cmap = lzma.compress(self.Map, format=lzma.FORMAT_XZ, filters=({'id': lzma.FILTER_DELTA, 'dist': 4}, {'id': lzma.FILTER_LZMA2, 'preset': 4}))
+        cmap = lzma.compress(self.Map, format=lzma.FORMAT_XZ, filters=({'id': lzma.FILTER_DELTA, 'dist': (4 if self.MapInfos['format'] == 'image/x-bil;bits=32' else 2)}, {'id': lzma.FILTER_LZMA2, 'preset': 4}))
         f.write(cmap)
         f.write(json.dumps(self.MapInfos).encode('ISO-8859-1'))
       else:
@@ -1036,10 +1051,12 @@ class WebMercatorMap(WGS84WebMercator):
   def GetTileInfos(self, infos, matrix=None, lat=None, lon=None, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
     if matrix != None:
       infos['matrix'] = str(matrix)
+    if '{hgt}' in infos.get('pattern', ''):
+      infos['matrix'] = '0'
     if not 'matrix' in infos:
       return False
     if 'pattern' in infos:
-      infos['format'] = infos.get('format') or {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32'}.get(infos['pattern'].rsplit('.', 1)[-1], 'image')
+      infos['format'] = infos.get('format') or {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt'}.get(infos['pattern'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image')
       try:
         infos['scale'] = infos['basescale'] / (2 ** int(infos['matrix']))
         if lat != None and lon !=None :
@@ -1114,10 +1131,16 @@ class WebMercatorMap(WGS84WebMercator):
           quadkey = ''.join(map(lambda p: str(int(p[0]+p[1], 2)), zip(bin(int(infos['row']))[2:].rjust(int(infos['matrix']), '0'), bin(int(infos['col']))[2:].rjust(int(infos['matrix']), '0'))))
         else:
           quadkey = ''
-        if key:
-            uri = infos['pattern'].format_map({**infos, 'key': key, 'quadkey': quadkey})
+        if '{hgt}' in infos['pattern']:
+          lat = 89 - infos['row']
+          lon = infos['col'] - 180
+          hgt = ("N" if lat >= 0 else "S") + ('%02i' % abs(lat)) + ("E" if lon >= 0 else "O") + ('%03i' % abs(lon))
         else:
-            uri = infos['pattern'].format_map({**infos, 'quadkey': quadkey})
+          hgt = ''
+        if key:
+            uri = infos['pattern'].format_map({**infos, 'key': key, 'quadkey': quadkey, 'hgt': hgt})
+        else:
+            uri = infos['pattern'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt})
       else:
         uri = self.WMTS_PATTERN['GetTile'].format_map(infos)
         if key:
@@ -1131,7 +1154,15 @@ class WebMercatorMap(WGS84WebMercator):
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
       if rep.code != '200':
         return None
-      tile = rep.body
+      if 'zip' in rep.header('content-type', '').lower() or infos.get('pattern', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
+        try:
+          zf = zipfile.ZipFile(BytesIO(rep.body), 'r')
+          tile = zf.read(zf.namelist()[0])
+          zf.close()
+        except:
+          tile = rep.body
+      else:
+        tile = rep.body
     except:
       return None
     return tile
@@ -1147,9 +1178,9 @@ class WebMercatorMap(WGS84WebMercator):
 
   def _match_infos(self, pattern, infos, update_dict=False, update_json=False):
     if not '{' in pattern:
-      pattern = os.path.join(pattern, self.LOCALSTORE_DEFAULT_PATTERN)
+      pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN))
     infopattern = os.path.dirname(pattern)
-    while '{matrix}' in os.path.dirname(infopattern):
+    while '{matrix}' in os.path.dirname(infopattern) or '{hgt}' in infopattern:
       infopattern = os.path.dirname(infopattern)
     try:
       infopath = os.path.join(infopattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'infos.json')
@@ -1212,10 +1243,12 @@ class WebMercatorMap(WGS84WebMercator):
   def ReadTileInfos(self, pattern, infos, matrix, lat=None, lon=None):
     if matrix != None:
       infos['matrix'] = str(matrix)
+    if '{hgt}' in infos.get('pattern', ''):
+      infos['matrix'] = '0'
     if not 'matrix' in infos:
       return False
     if not '{' in pattern:
-      pattern = os.path.join(pattern, self.LOCALSTORE_DEFAULT_PATTERN)
+      pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN))
     if not self._match_infos(pattern, infos, update_dict=True):
       return False
     try:
@@ -1235,24 +1268,30 @@ class WebMercatorMap(WGS84WebMercator):
   def ReadKnownTile(self, pattern, infos, just_lookup=False):
     try:
       if not '{' in pattern:
-        pattern = os.path.join(pattern, self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale'])))))
+        pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
+      hgt = ''
       if infos['format'] == 'image/jpeg':
         ext = 'jpg'
       elif infos['format'] == 'image/png':
         ext = 'png'
       elif infos['format'] == 'image/x-bil;bits=32':
         ext = 'bil.xz'
+      elif infos['format'] == 'image/hgt':
+        ext = 'hgt.xz'
+        lat = 89 - infos['row']
+        lon = infos['col'] - 180
+        hgt = ("N" if lat >= 0 else "S") + ('%02i' % abs(lat)) + ("E" if lon >= 0 else "O") + ('%03i' % abs(lon))
       else:
         ext = 'img'
-      filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''), 'ext': ext}})
+      filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''), 'ext': ext, 'hgt': hgt}})
       if just_lookup:
         if os.path.exists(filepath):
           return os.path.getmtime(filepath)
-        elif ext == 'bil.xz':
+        elif (ext == 'bil.xz' or ext == 'hgt.xz') and os.path.exists(filepath[:-3]):
           return os.path.getmtime(filepath[:-3])
         else:
           return False
-      if ext == 'bil.xz':
+      if ext == 'bil.xz' or ext == 'hgt.xz':
         if os.path.exists(filepath):
           f = lzma.open(filepath, 'rb', format=lzma.FORMAT_XZ)
         else:
@@ -1280,27 +1319,34 @@ class WebMercatorMap(WGS84WebMercator):
 
   def SaveTile(self, pattern, infos, tile=None, match_json=True, just_refresh=False):
     if not '{' in pattern:
-      pattern = os.path.join(pattern, self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale'])))))
+      pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
     if infos['format'] == 'image/jpeg':
       ext = 'jpg'
     elif infos['format'] == 'image/png':
       ext = 'png'
     elif infos['format'] == 'image/x-bil;bits=32':
       ext = 'bil.xz'
+    elif infos['format'] == 'image/hgt':
+      ext = 'hgt.xz'
     else:
       ext = 'img'
     if match_json:
       if not self._match_infos(pattern, infos, update_json=True):
         return False
     if tile:
+      hgt = ''
+      if infos['format'] == 'image/hgt':
+        lat = 89 - infos['row']
+        lon = infos['col'] - 180
+        hgt = ("N" if lat >= 0 else "S") + ('%02i' % abs(lat)) + ("E" if lon >= 0 else "O") + ('%03i' % abs(lon))
       try:
-        filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''),'ext': ext}})
+        filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''),'ext': ext, 'hgt': hgt}})
         if just_refresh:
           os.utime(filepath, (time.time(),) * 2)
         else:
           Path(os.path.dirname(filepath)).mkdir(parents=True, exist_ok=True)
-          if ext == 'bil.xz':
-            f = lzma.open(filepath, 'wb', format=lzma.FORMAT_XZ, filters=({'id': lzma.FILTER_DELTA, 'dist': 4}, {'id': lzma.FILTER_LZMA2, 'preset': 4}))
+          if ext == 'bil.xz' or ext == 'hgt.xz':
+            f = lzma.open(filepath, 'wb', format=lzma.FORMAT_XZ, filters=({'id': lzma.FILTER_DELTA, 'dist': (4 if ext == 'bil.xz' else 2)}, {'id': lzma.FILTER_LZMA2, 'preset': 4}))
           else:
             f = open(filepath, 'wb')
           f.write(tile)
@@ -1541,7 +1587,10 @@ class WebMercatorMap(WGS84WebMercator):
       except:
         return None
     if only_local:
-      infos_completed['source'] = ''
+      if 'source' in infos_completed:
+        infos_completed['source'] = ''
+      if 'pattern' in infos_completed:
+        infos_completed['pattern'] = ''
     linfos = list({**infos_completed} for i in range(number))
     def retrieve_tiles(a=None, b=None, c=None, d=None, just_box=False, close_connection=False, ind=0):
       nonlocal pconnections
@@ -1569,7 +1618,7 @@ class WebMercatorMap(WGS84WebMercator):
           return None
       elif a == None and b == None:
         if just_box:
-            return ((c, d), (c, d))
+          return ((c, d), (c, d))
         linfos[ind]['row'] = c
         linfos[ind]['col'] = d
         try:
@@ -1624,7 +1673,7 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     if local_pattern:
       if not '{' in local_pattern:
-        local_pattern = os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale'])))))
+        local_pattern = os.path.join(local_pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
     if memory_store != None:
       for col in range(mincol, maxcol + 1):
         memory_store.append([None] * (maxrow + 1 - minrow))
@@ -1633,7 +1682,10 @@ class WebMercatorMap(WGS84WebMercator):
     progress = {'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow +1 - minrow), 'downloaded': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event':threading.Event(), 'process_event':threading.Event()}
     if only_local:
       infos = {**infos}
-      infos['source'] = ''
+      if 'source' in infos:
+        infos['source'] = ''
+      if 'pattern' in infos:
+        infos['pattern'] = ''
     def downloader():
       pconnection = [None]
       def update_progress(result):
@@ -1685,17 +1737,27 @@ class WebMercatorMap(WGS84WebMercator):
     self.Map = map
     self.MapResolution = infos['scale'] / self.CRS_MPU
     self.MapInfos = {(k + ('s' if k in ('layer', 'style') else '')): v for k, v in infos.items() if k in ('alias', 'source', 'layer', 'format', 'style', 'nodata')}
+    if 'pattern' in infos:
+      self.MapInfos['source'] = infos['pattern']
     self.MapInfos['crs'] = self.CRS
     minx = infos['topx'] + self.MapResolution * infos['width'] * mincol
     miny = infos['topy'] - self.MapResolution * infos['height'] * (maxrow + 1)
     maxx = infos['topx'] + self.MapResolution * infos['width'] * (maxcol + 1)
     maxy = infos['topy'] - self.MapResolution * infos['height'] * minrow
+    if '{hgt}' in infos.get('pattern', ''):
+      minx -= self.MapResolution / 2
+      maxx += self.MapResolution / 2
+      miny -= self.MapResolution / 2
+      maxy += self.MapResolution / 2
     if not hasattr(self, 'WMS_BBOX'):
       self.MapInfos['bbox'] = '%s,%s,%s,%s' % (minx, miny, maxx, maxy)
     else:
       self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minx, 'miny': miny, 'maxx': maxx, 'maxy': maxy})
     self.MapInfos['width'] = infos['width'] * (maxcol - mincol + 1)
     self.MapInfos['height'] = infos['height'] * (maxrow - minrow + 1)
+    if '{hgt}' in infos.get('pattern', ''):
+      self.MapInfos['width'] += 1
+      self.MapInfos['height'] += 1
     return True
 
   def CoordtoPixels(self, x, y):
@@ -1734,13 +1796,23 @@ class WGS84Map(WebMercatorMap):
 
 class WGS84Elevation(WGS84Map):
 
-  AS_IGN_ALTI = {'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': 'elevations', 'nodata': -99999, 'limit': 200}
+  AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': 'elevations', 'nodata': -99999, 'limit': 200}
+  TS_SRTM_SOURCE = 'http://step.esa.int/auxdata/dem'
+  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'pattern': TS_SRTM_SOURCE + '/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
 
-  def ElevationfromBil32Map(self, lat, lon):
+  def ElevationfromMap(self, lat, lon):
     if not self.MapInfos or not self.Map:
+      return None
+    if self.MapInfos['format'] != 'image/x-bil;bits=32' and self.MapInfos['format'] != 'image/hgt':
       return None
     try:
       miny, minx, maxy, maxx = list(map(float, self.MapInfos['bbox'].split(',')))
+      if self.MapInfos['format'] == 'image/x-bil;bits=32':
+        e_f = '<f'
+        e_s = 4
+      else:
+        e_f = '>h'
+        e_s = 2
       px = (lon - minx) * self.MapInfos['width'] / (maxx - minx)
       if px == self.MapInfos['width']:
         px -= 1
@@ -1749,8 +1821,8 @@ class WGS84Elevation(WGS84Map):
         py -= 1
       if px < 0 or px >= self.MapInfos['width'] or py < 0 or py >= self.MapInfos['height']:
         return None
-      pos = 4*(int(py) * self.MapInfos['width'] + int(px))
-      ele = struct.unpack('<f', self.Map[pos:pos+4])[0]
+      pos = e_s*(int(py) * self.MapInfos['width'] + int(px))
+      ele = struct.unpack(e_f, self.Map[pos:pos+e_s])[0]
       if 'nodata' in self.MapInfos:
         if ele == self.MapInfos['nodata']:
           return None
@@ -1759,21 +1831,30 @@ class WGS84Elevation(WGS84Map):
     return ele
 
   @classmethod
-  def ElevationfromBil32Tile(cls, infos, tile, lat, lon):
-    if infos['format'] != 'image/x-bil;bits=32':
-      return None
-    try:
-      px = (lon - infos['topx']) * cls.CRS_MPU / infos['scale'] - infos['col'] * infos['width']
-      py = (infos['topy'] - lat) * cls.CRS_MPU / infos['scale'] - infos['row'] * infos['height'] 
-      if px < 0 or px >= infos['width'] or py < 0 or py >= infos['height']:
-        return None
-      pos = 4*(int(py) * infos['width'] + int(px))
-      ele = struct.unpack('<f', tile[pos:pos+4])[0]
-      if 'nodata' in infos:
-        if ele == infos['nodata']:
+  def ElevationfromTile(cls, infos, tile, lat, lon):
+    px = (lon - infos['topx']) * cls.CRS_MPU / infos['scale'] - infos['col'] * infos['width']
+    py = (infos['topy'] - lat) * cls.CRS_MPU / infos['scale'] - infos['row'] * infos['height'] 
+    if infos['format'] == 'image/x-bil;bits=32':
+      try:
+        if px < 0 or px >= infos['width'] or py < 0 or py >= infos['height']:
           return None
-    except:
+        pos = 4 * (int(py) * infos['width'] + int(px))
+        ele = struct.unpack('<f', tile[pos:pos+4])[0]
+      except:
+        return None
+    elif infos['format'] == 'image/hgt':
+      try:
+        if px < 0 or round(px) > infos['width'] or py < 0 or round(py) > infos['height']:
+          return None
+        pos = 2 * (round(py) * (infos['width'] + 1) + round(px))
+        ele = struct.unpack('>h', tile[pos:pos+2])[0]
+      except:
+        return None
+    else:
       return None
+    if 'nodata' in infos:
+      if ele == infos['nodata']:
+        return None
     return ele
 
   def ElevationGenerator(self, infos_base=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
@@ -1791,11 +1872,11 @@ class WGS84Elevation(WGS84Map):
         row, col = tgen(lat, lon, just_box=True)[0]
         for infos, tile in buf_tiles:
           if infos['row'] == row and infos['col'] == col:
-            return self.ElevationfromBil32Tile(infos, tile, lat, lon)
+            return self.ElevationfromTile(infos, tile, lat, lon)
         infos, tile = tgen(None, None, row, col).values()
         if infos and tile:
           buf_tiles.append((infos, tile))
-          return self.ElevationfromBil32Tile(infos, tile, lat, lon)
+          return self.ElevationfromTile(infos, tile, lat, lon)
         else:
           return None
       except:
@@ -1808,7 +1889,7 @@ class WGS84Elevation(WGS84Map):
         return None
       else:
         try:
-          return list(self.ElevationfromBil32Map(lat, lon) for (lat, lon) in points)
+          return list(self.ElevationfromMap(lat, lon) for (lat, lon) in points)
         except:
           return None
     else:
@@ -1834,17 +1915,31 @@ class WGS84Elevation(WGS84Map):
       return None
 
   def MergeTiles(self, infos, tiles):
-    if infos['format'] != 'image/x-bil;bits=32':
+    if infos['format'] != 'image/x-bil;bits=32' and infos['format'] != 'image/hgt':
       return None
-    mh = infos['height'] * len(tiles[0])
-    mw = infos['width'] * len(tiles)
-    m = bytearray(mh * mw * 4)
-    for r in range(len(tiles[0])):
-      for c in range(len(tiles)):
-        if tiles[c][r]:
-          for l in range(infos['height']):
-            pos = (r * infos['height'] + l) * mw * 4 + c * infos['width'] * 4
-            m[pos: pos + infos['width'] * 4] = tiles[c][r][l * infos['width'] * 4: (l + 1) * infos['width'] * 4]
+    if infos['format'] == 'image/x-bil;bits=32':
+      mh = infos['height'] * len(tiles[0])
+      mw = infos['width'] * len(tiles)
+      m = bytearray(struct.pack('<f', infos.get('nodata', 0))) * (mh * mw)
+      for r in range(len(tiles[0])):
+        for c in range(len(tiles)):
+          if tiles[c][r]:
+            for l in range(infos['height']):
+              pos = (r * infos['height'] + l) * mw * 4 + c * infos['width'] * 4
+              m[pos: pos + infos['width'] * 4] = tiles[c][r][l * infos['width'] * 4: (l + 1) * infos['width'] * 4]
+    elif infos['format'] == 'image/hgt':
+      mh = infos['height'] * len(tiles[0]) + 1
+      mw = infos['width'] * len(tiles) + 1
+      m = bytearray(struct.pack('>h', infos.get('nodata', 0))) * (mh * mw)
+      for r in range(len(tiles[0])):
+        for c in range(len(tiles)):
+          if tiles[c][r]:
+            for l in range(infos['height'] if r < len(tiles[0]) - 1 else (infos['height'] + 1)):
+              pos = (r * infos['height'] + l) * mw * 2 + c * infos['width'] * 2
+              if c < len(tiles) - 1:
+                m[pos: pos + infos['width'] * 2] = tiles[c][r][l * (infos['width'] + 1) * 2: ((l + 1) * (infos['width'] + 1) - 1) * 2]
+              else:
+                m[pos: pos + (infos['width'] + 1) * 2] = tiles[c][r][l * (infos['width'] + 1) * 2: (l + 1) * (infos['width'] + 1) * 2]
     return m
 
   def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', threads=10):
@@ -1861,10 +1956,7 @@ class WGS84Elevation(WGS84Map):
     if not isinstance(points[0], (list, tuple)):
       is_list = False
       points = [points]
-    if 'limit' in infos:
-      limit = infos['limit']
-    else:
-      limit = len(points)
+    limit = infos.get('limit', len(points))
     ele = [None] * len(points)
     ilock = threading.Lock()
     finished = threading.Event()
@@ -1888,11 +1980,15 @@ class WGS84Elevation(WGS84Map):
             if not rep.body:
               rep = None
           if rep == None:
-            uri1 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:(ind1 + ind2) //2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:(ind1 + ind2) //2])})
-            uri2 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[(ind1 + ind2) //2:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[(ind1 + ind2) //2:ind2])})
+            uri1 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:(ind1+ind2)//2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:(ind1+ind2)//2])})
+            uri2 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[(ind1+ind2)//2:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[(ind1+ind2)//2:ind2])})
             rep1 = HTTPRequest(uri1, 'GET', headers, pconnection=pconnection)
             rep2 = HTTPRequest(uri2, 'GET', headers, pconnection=pconnection)
-            ele[ind1:ind2] = json.loads(rep1.body)[infos['key']] + json.loads(rep2.body)[infos['key']]
+            try:
+              ele[ind1:(ind1+ind2)//2] = json.loads(rep1.body)[infos['key']]
+            except:
+              pass
+            ele[(ind1+ind2)//2:ind2] = json.loads(rep2.body)[infos['key']]
           else:
             ele[ind1:ind2] = json.loads(rep.body)[infos['key']]
         except:
@@ -1917,7 +2013,7 @@ class WGS84Elevation(WGS84Map):
         return None
     return ele      
 
-  def GenerateMap(self, infos, minlat, maxlat, minlon, maxlon, nbpoints, key=None, referer=None, user_agent='GPXTweaker', threads=10):
+  def GenerateBil32Map(self, infos, minlat, maxlat, minlon, maxlon, nbpoints, key=None, referer=None, user_agent='GPXTweaker', threads=10):
     if nbpoints <= 1 or minlat >= maxlat or minlon >= maxlon:
       return False
     dlat = maxlat - minlat
@@ -1928,15 +2024,15 @@ class WGS84Elevation(WGS84Map):
     if maxlat - minlat >= maxlon - minlon:
       nrow = math.floor((maxlat - minlat) / res) + 1
       res = (maxlat - minlat) / (nrow - 1)
-      ncol = math.ceil(maxlon - minlon) / res + 1
-      minlon = moylon - res * (ncol - 1) / 2
-      maxlon = moylon + res * (ncol - 1) / 2
+      ncol = math.ceil((maxlon - minlon) / res) + 1
+      minlon = moylon - res * ncol / 2
+      maxlon = moylon + res * (ncol / 2 - 1)
     else:
       ncol = math.floor((maxlon - minlon) / res) + 1
       res = (maxlon - minlon) / (ncol - 1)
       nrow = math.ceil((maxlat - minlat) / res) + 1
-      minlat = moylat - res * (nrow - 1) / 2
-      maxlat = moylat + res * (nrow - 1) / 2
+      minlat = moylat - res * (nrow / 2 - 1)
+      maxlat = moylat + res * nrow / 2
     lats = list(maxlat - i * res for i in range(nrow))
     lons = list(minlon + i * res for i in range(ncol))
     points = list ((lat, lon) for lat in lats for lon in lons)
@@ -1946,10 +2042,12 @@ class WGS84Elevation(WGS84Map):
     self.Map = b''.join(struct.pack('<f', (ele if ele != None else infos.get('nodata', 0))) for ele in eles)
     self.MapResolution = res
     self.MapInfos = {'source': infos['source'], 'layers': '', 'styles': '', 'format': 'image/x-bil;bits=32'}
+    if 'alias' in infos:
+      self.MapInfos['alias'] = infos['alias']
     if 'nodata' in infos:
       self.MapInfos['nodata'] = infos['nodata']
     self.MapInfos['crs'] = self.CRS
-    self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minlon, 'miny': minlat, 'maxx': maxlon, 'maxy': maxlat})
+    self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minlon, 'miny': minlat - res, 'maxx': maxlon + res, 'maxy': maxlat})
     self.MapInfos['width'] = ncol
     self.MapInfos['height'] = nrow
     return True
@@ -4304,9 +4402,12 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      button {\r\n' \
   '        border:none;\r\n' \
-  '        background-color:darkgray;\r\n' \
+  '        background-color:transparent;\r\n' \
   '        padding-left:5px;\r\n' \
   '        padding-right:5px;\r\n' \
+  '        vertical-align:top;\r\n' \
+  '        color:inherit;\r\n' \
+  '        font-size:100%;\r\n' \
   '      }\r\n' \
   '      button:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
@@ -4315,6 +4416,13 @@ class GPXTweakerWebInterfaceServer():
   '        width:80px;\r\n' \
   '      }\r\n' \
   '      input[type=range]:enabled {\r\n' \
+  '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      input[type=radio] {\r\n' \
+  '        vertical-align:top;\r\n' \
+  '        margin-bottom:5px;\r\n' \
+  '      }\r\n' \
+  '      input[type=radio]:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
@@ -4339,11 +4447,13 @@ class GPXTweakerWebInterfaceServer():
   '          <br><span>0</span><span id = "cursorv_tangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>90</span>\r\n' \
   '          <br><br>\r\n' \
   '          <p>{#jrotation#}</p>\r\n' \
-  '          <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" disabled oninput="canvas_reorient()">&nbsp;&nbsp;<button style="font-size:100%;background-color:transparent;vertical-align:top;color:inherit;" onclick="toggle_rotation()">&#9199;</button>\r\n' \
+  '          <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" disabled oninput="canvas_reorient()">&nbsp;&nbsp;<button onclick="toggle_rotation()">&#9199;</button>\r\n' \
   '          <br><span>0</span><span id = "cursorv_rangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>360</span>\r\n' \
   '          <br><br>\r\n' \
   '          <p>{#jtexture#}</p>\r\n' \
-  '          <button id="button_texture" style="font-size:90%;" disabled onclick="toggle_filling()">{#jtexturepatmap#}</button>\r\n' \
+  '          <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)">{#jtextureyiso#}</input><br>\r\n' \
+  '          <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)">{#jtextureziso#}</input><br>\r\n' \
+  '          <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)">{#jtexturemap#}</input>\r\n' \
   '          <br><br>\r\n' \
   '          <p>{#jzscale#}</p>\r\n' \
   '          <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" disabled oninput="set_zscale()">\r\n' \
@@ -4370,7 +4480,9 @@ class GPXTweakerWebInterfaceServer():
   '      cv_rangle = document.getElementById("cursorv_rangle");\r\n' \
   '      c_tangle = document.getElementById("cursor_tangle");\r\n' \
   '      cv_tangle = document.getElementById("cursorv_tangle");\r\n' \
-  '      b_texture = document.getElementById("button_texture");\r\n' \
+  '      r_yiso = document.getElementById("radio_yiso");\r\n' \
+  '      r_ziso = document.getElementById("radio_ziso");\r\n' \
+  '      r_map = document.getElementById("radio_map");\r\n' \
   '      c_zfact = document.getElementById("cursor_zfact");\r\n' \
   '      fillmode = 0;\r\n' \
   '      tangle = 60 * Math.PI / 180;\r\n' \
@@ -4393,11 +4505,11 @@ class GPXTweakerWebInterfaceServer():
   '          uniform float v_zfactmax;\r\n' \
   '          uniform mat4 t_matrix;\r\n' \
   '          out vec2 f_tcoord;\r\n' \
-  '          out float f_dim;\r\n' \
+  '          out float f_z;\r\n' \
   '          void main() {\r\n' \
   '            gl_Position = vec4((t_matrix * vec4(v_position.xy, v_zfact * (v_position.z + 1.0) - 1.0, v_position.w)).xyz, 1.733);\r\n' \
   '            f_tcoord = v_position.xy;\r\n' \
-  '            f_dim = (0.495 * (v_zfactmax * (v_position.z + 1.0) - 1.0) + 0.505);\r\n' \
+  '            f_z = v_zfactmax * (v_position.z + 1.0) - 1.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_ttshader_s = `#version 300 es\r\n' \
@@ -4425,11 +4537,13 @@ class GPXTweakerWebInterfaceServer():
   '        let fragment_cshader_s = `#version 300 es\r\n' \
   '          precision highp float;\r\n' \
   '          in vec2 f_tcoord;\r\n' \
-  '          in float f_dim;\r\n' \
+  '          in float f_z;\r\n' \
   '          uniform sampler2D f_trtex;\r\n' \
+  '          uniform bool f_ziso;\r\n' \
   '          out vec4 p_color;\r\n' \
   '          void main() {\r\n' \
-  '            float color = min(1.0, mod(floor(((1.0 + f_tcoord.y) / 2.0) * 600.0), 6.0));\r\n' \
+  '            float color = f_ziso?((fract((1.0 + f_z) * 25.0) <= 0.15)?0.0:1.0):((fract((1.0 + f_tcoord.y) * 50.0) <= 0.17)?0.0:1.0);\r\n' \
+  '            float f_dim = 0.495 * f_z + 0.505;\r\n' \
   '            p_color = gl_FrontFacing?(color * vec4(0.4 * f_dim, 0.5 * f_dim, 0.2 * f_dim, 1) + (1.0 - color) * vec4(0, 0.0, f_dim, 1)):((color * vec4(max(0.0, f_dim - 0.5), f_dim, 0.3 * f_dim, 1) + (1.0 - color) * vec4(0, 0.0, f_dim, 1)) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -4442,7 +4556,7 @@ class GPXTweakerWebInterfaceServer():
   '          uniform vec4 f_pos;\r\n' \
   '          out vec4 p_color;\r\n' \
   '          void main() {\r\n' \
-  '            p_color = gl_FrontFacing?vec4(pow(0.6 * f_dim, 1.8), pow(0.7 * f_dim, 1.8), 0.2 * f_dim, 1):(texture(f_tex, f_pos.st * f_tcoord + f_pos.pq) * vec4(vec3(f_dim), 1.0) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
+  '            p_color = gl_FrontFacing?vec4(0.3 * f_dim, 0.5 * f_dim, 0.2 * f_dim, 1):(texture(f_tex, f_pos.st * f_tcoord + f_pos.pq) * vec4(vec3(f_dim), 1.0) * (1.0 - texture(f_trtex, (f_tcoord + 1.0) / 2.0).r) + texture(f_trtex, (f_tcoord + 1.0) / 2.0));\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let fragment_lshader_s = `#version 300 es\r\n' \
@@ -4656,6 +4770,10 @@ class GPXTweakerWebInterfaceServer():
   '        gl.uniform1f(v_zfact_l, zfact);\r\n' \
   '        let t_matrix_l = gl.getUniformLocation(gl_tprogram, "t_matrix");\r\n' \
   '        gl.uniformMatrix4fv(t_matrix_l, true, tmatrix);\r\n' \
+  '        if (fillmode != 2) {\r\n' \
+  '          let f_ziso_l = gl.getUniformLocation(gl_tprogram, "f_ziso");\r\n' \
+  '          gl.uniform1i(f_ziso_l, fillmode);\r\n' \
+  '        }\r\n' \
   '        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
   '        gl.useProgram(gl_lprogram);\r\n' \
   '        gl.bindVertexArray(gl_lvao);\r\n' \
@@ -4740,7 +4858,9 @@ class GPXTweakerWebInterfaceServer():
   '          canvas_resize();\r\n' \
   '          c_rangle.disabled = false;\r\n' \
   '          c_tangle.disabled = false;\r\n' \
-  '          b_texture.disabled = false;\r\n' \
+  '          r_yiso.disabled = false;\r\n' \
+  '          r_ziso.disabled = false;\r\n' \
+  '          r_map.disabled = false;\r\n' \
   '          if (zfact_max > 1) {\r\n' \
   '            c_zfact.max = zfact_max.toString();\r\n' \
   '            c_zfact.disabled = false;\r\n' \
@@ -4769,10 +4889,11 @@ class GPXTweakerWebInterfaceServer():
   '          rep_rot = window.setInterval(function() {canvas_rotate(number);}, 100);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function toggle_filling() {\r\n' \
-  '        fillmode = 1 - fillmode;\r\n' \
-  '        gl_tprogram = (fillmode == 0) ? gl_tcprogram : gl_ttprogram;\r\n' \
-  '        gl_tvao = (fillmode == 0) ? gl_tcvao : gl_ttvao;\r\n' \
+  '      function toggle_filling(fmode) {\r\n' \
+  '        if (fmode == fillmode) {return;};\r\n' \
+  '        fillmode = fmode;\r\n' \
+  '        gl_tprogram = (fillmode != 2) ? gl_tcprogram : gl_ttprogram;\r\n' \
+  '        gl_tvao = (fillmode != 2) ? gl_tcvao : gl_ttvao;\r\n' \
   '        canvas_orient();\r\n' \
   '      }\r\n' \
   '      function set_zscale() {\r\n' \
@@ -4959,7 +5080,11 @@ class GPXTweakerWebInterfaceServer():
           else:
             matrix = l
             zoom = '1'
-          matrix = int(matrix.strip())
+          try:
+            matrix = int(matrix.strip())
+          except:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
           zoom = zoom.strip()
           init = False
           if zoom[-1] == '*':
@@ -5231,38 +5356,45 @@ class GPXTweakerWebInterfaceServer():
         return False
     elif self.EMode == 'api':
       infos = {**self.ElevationAPI[0]}
-      if not self.Elevation.GenerateMap(infos, minlat, maxlat, minlon, maxlon, 65536, **self.ElevationAPI[1], threads=10):
+      if not self.Elevation.GenerateBil32Map(infos, minlat, maxlat, minlon, maxlon, 65536, **self.ElevationAPI[1], threads=(self.TilesBufferThreads or 10)):
         return False
     else:
+      return False
+    if self.Elevation.MapInfos['format'] != 'image/x-bil;bits=32' and self.Elevation.MapInfos['format'] != 'image/hgt':
       return False
     scale = self.Elevation.MapResolution
     width = self.Elevation.MapInfos['width']
     height = self.Elevation.MapInfos['height']
     tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
-    minpx = math.floor((minlon - tminlon) / scale)
+    minpx = max(0, math.floor((minlon - tminlon) / scale))
     minlon = tminlon + minpx * scale
-    maxpx = math.ceil((maxlon - tminlon) / scale)
-    maxlon = tminlon + maxpx * scale
-    minpy = math.floor((tmaxlat - maxlat) / scale)
+    maxpx = min(math.floor((maxlon - tminlon) / scale), width - 1)
+    maxlon = tminlon + (maxpx + 1) * scale
+    minpy = max(0, math.floor((tmaxlat - maxlat) / scale))
     maxlat = tmaxlat - minpy * scale
-    maxpy = math.ceil((tmaxlat - minlat) / scale)
-    minlat = tmaxlat - maxpy * scale
+    maxpy = min(math.floor((tmaxlat - minlat) / scale), height - 1)
+    minlat = tmaxlat - (maxpy + 1) * scale
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     if self.EMode == 'api':
       step = 1
     else:
-      step = max(1, round(math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 65536)))
-    lpx = list(range(minpx, maxpx + 1, step))
-    if (maxpx - minpx) % step != 0:
-      lpx.append(maxpx)
-    lpy = list(range(maxpy, minpy - 1, -step))
-    if (maxpy - minpy) % step != 0:
-      lpy.append(minpy)
+      step = math.ceil(math.sqrt((maxpx - minpx + 2) * (maxpy - minpy + 2) / 262144))
+    lpx = list(range(minpx, maxpx, step)) or [minpx]
+    lpx.append(maxpx + 1)
+    lpy = list(range(minpy, maxpy, step)) or [minpy]
+    lpy.append(maxpy + 1)
+    lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
     ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') else 0
-    eles = list(list(ef(struct.unpack('<f', self.Elevation.Map[4 * (py * width + px): 4 * (py * width + px) + 4])[0]) for px in lpx) for py in lpy)
+    if self.Elevation.MapInfos['format'] == 'image/x-bil;bits=32':
+      e_f = '<f'
+      e_s = 4
+    else:
+      e_f = '>h'
+      e_s = 2
+    eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
     minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
     maxele = max(eles[row][col] for row in range(nrow) for col in range(ncol))
     xy_den = max(maxx - minx, maxy - miny) / 2
