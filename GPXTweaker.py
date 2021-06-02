@@ -1815,10 +1815,10 @@ class WGS84Elevation(WGS84Map):
         e_s = 2
       px = (lon - minx) * self.MapInfos['width'] / (maxx - minx)
       if px == self.MapInfos['width']:
-        px -= 1
+        px = self.MapInfos['width'] - 1
       py = (maxy - lat) * self.MapInfos['height'] / (maxy - miny)
       if py == self.MapInfos['height']:
-        py -= 1
+        py = self.MapInfos['height'] - 1
       if px < 0 or px >= self.MapInfos['width'] or py < 0 or py >= self.MapInfos['height']:
         return None
       pos = e_s*(int(py) * self.MapInfos['width'] + int(px))
@@ -2022,19 +2022,19 @@ class WGS84Elevation(WGS84Map):
     moylat = (minlat + maxlat) / 2
     moylon = (minlon + maxlon) / 2
     if maxlat - minlat >= maxlon - minlon:
-      nrow = math.floor((maxlat - minlat) / res) + 1
-      res = (maxlat - minlat) / (nrow - 1)
-      ncol = math.ceil((maxlon - minlon) / res) + 1
+      nrow = math.floor((maxlat - minlat) / res)
+      res = (maxlat - minlat) / nrow
+      ncol = math.ceil((maxlon - minlon) / res)
       minlon = moylon - res * ncol / 2
-      maxlon = moylon + res * (ncol / 2 - 1)
+      maxlon = moylon + res * ncol / 2
     else:
-      ncol = math.floor((maxlon - minlon) / res) + 1
-      res = (maxlon - minlon) / (ncol - 1)
-      nrow = math.ceil((maxlat - minlat) / res) + 1
-      minlat = moylat - res * (nrow / 2 - 1)
+      ncol = math.floor((maxlon - minlon) / res)
+      res = (maxlon - minlon) / ncol
+      nrow = math.ceil((maxlat - minlat) / res)
+      minlat = moylat - res * nrow / 2
       maxlat = moylat + res * nrow / 2
-    lats = list(maxlat - i * res for i in range(nrow))
-    lons = list(minlon + i * res for i in range(ncol))
+    lats = list(maxlat - (i + 0.5) * res for i in range(nrow))
+    lons = list(minlon + (i + 0.5) * res for i in range(ncol))
     points = list ((lat, lon) for lat in lats for lon in lons)
     eles = self.RequestElevation(infos, points, key, referer, user_agent, threads)
     if not eles:
@@ -2047,7 +2047,7 @@ class WGS84Elevation(WGS84Map):
     if 'nodata' in infos:
       self.MapInfos['nodata'] = infos['nodata']
     self.MapInfos['crs'] = self.CRS
-    self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minlon, 'miny': minlat - res, 'maxx': maxlon + res, 'maxy': maxlat})
+    self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minlon, 'miny': minlat, 'maxx': maxlon, 'maxy': maxlat})
     self.MapInfos['width'] = ncol
     self.MapInfos['height'] = nrow
     return True
@@ -5367,33 +5367,35 @@ class GPXTweakerWebInterfaceServer():
     height = self.Elevation.MapInfos['height']
     tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
     minpx = max(0, math.floor((minlon - tminlon) / scale))
-    minlon = tminlon + minpx * scale
+    minlon = tminlon + (minpx + 0.5) * scale
     maxpx = min(math.floor((maxlon - tminlon) / scale), width - 1)
-    maxlon = tminlon + (maxpx + 1) * scale
+    maxlon = tminlon + (maxpx + 0.5) * scale
     minpy = max(0, math.floor((tmaxlat - maxlat) / scale))
-    maxlat = tmaxlat - minpy * scale
+    maxlat = tmaxlat - (minpy + 0.5) * scale
     maxpy = min(math.floor((tmaxlat - minlat) / scale), height - 1)
-    minlat = tmaxlat - (maxpy + 1) * scale
-    minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
-    maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
-    if self.EMode == 'api':
-      step = 1
-    else:
-      step = math.ceil(math.sqrt((maxpx - minpx + 2) * (maxpy - minpy + 2) / 262144))
-    lpx = list(range(minpx, maxpx, step)) or [minpx]
-    lpx.append(maxpx + 1)
-    lpy = list(range(minpy, maxpy, step)) or [minpy]
-    lpy.append(maxpy + 1)
-    lpy.reverse()
-    nrow = len(lpy)
-    ncol = len(lpx)
-    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') else 0
+    minlat = tmaxlat - (maxpy + 0.5) * scale
     if self.Elevation.MapInfos['format'] == 'image/x-bil;bits=32':
       e_f = '<f'
       e_s = 4
     else:
       e_f = '>h'
       e_s = 2
+    minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
+    maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
+    if self.EMode == 'api':
+      step = 1
+    elif self.Elevation.MapInfos['format'] == 'image/x-bil;bits=32':
+      step = math.ceil(math.sqrt((maxpx - minpx + 2) * (maxpy - minpy + 2) / 262144))
+    else:
+      step = math.ceil(math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 262144))
+    lpx = list(range(minpx, maxpx, step)) or [minpx]
+    lpx.append(maxpx)
+    lpy = list(range(minpy, maxpy, step)) or [minpy]
+    lpy.append(maxpy)
+    lpy.reverse()
+    nrow = len(lpy)
+    ncol = len(lpx)
+    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') else 0
     eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
     minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
     maxele = max(eles[row][col] for row in range(nrow) for col in range(ncol))
@@ -5407,7 +5409,7 @@ class GPXTweakerWebInterfaceServer():
       zfactor = 1
     moyx = (minx + maxx) / 2
     moyy = (miny + maxy) / 2
-    self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + px * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - py * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
+    self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
     if self.Mode == 'map':
       minrow, mincol = 1, 1
       maxrow, maxcol = 1, 1
