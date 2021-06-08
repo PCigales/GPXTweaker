@@ -4512,7 +4512,7 @@ class GPXTweakerWebInterfaceServer():
   '            <br><span>0</span><span id = "cursorv_tangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>90</span>\r\n' \
   '            <br><br>\r\n' \
   '            <p>{#jrotation#}</p>\r\n' \
-  '            <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" autocomplete="off" disabled oninput="set_param(\'r\')">&nbsp;&nbsp;<button id="button_rangle" disabledonclick="toggle_rotation()">&#9199;</button>\r\n' \
+  '            <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" autocomplete="off" disabled oninput="set_param(\'r\')">&nbsp;&nbsp;<button id="button_rangle" disabled onclick="toggle_rotation()">&#9199;</button>\r\n' \
   '            <br><span>0</span><span id = "cursorv_rangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>360</span>\r\n' \
   '            <br><br>\r\n' \
   '            <p>{#jzscale#}</p>\r\n' \
