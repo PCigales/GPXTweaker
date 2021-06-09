@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -4566,7 +4566,7 @@ class GPXTweakerWebInterfaceServer():
   '      cur_prog = null;\r\n' \
   '      gl_attributes = new Map([["tvposition", ["vec4", 3]], ["lvposition", ["vec4", 3]]]);\r\n' \
   '      gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["ftex", "sampler2D"], ["dtex", "sampler2D"]]);\r\n' \
-  '      gl_dynamic_uniforms = new Map([["zfact", "float"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"]]);\r\n' \
+  '      gl_dynamic_uniforms = new Map([["zfact", "float"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ylmag", "float"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"]]);\r\n' \
   '      vpositions = null;\r\n' \
   '      trpositions = null;\r\n' \
   '      tvposition = null;\r\n' \
@@ -4576,7 +4576,7 @@ class GPXTweakerWebInterfaceServer():
   '      ltype = null;\r\n' \
   '      const m_size = 2048;\r\n' \
   '      const tr_size = 2048;\r\n' \
-  '      const s_size = 8192;\r\n' \
+  '      const s_size = 2048;\r\n' \
   '      mtex = 0;\r\n' \
   '      trtex = 1;\r\n' \
   '      ftex = 2;\r\n' \
@@ -4636,6 +4636,7 @@ class GPXTweakerWebInterfaceServer():
   '      pmode = 0;\r\n' \
   '      dmode = 2;\r\n' \
   '      zfact = 1;\r\n' \
+  '      ylmag = 1;\r\n' \
   '      ctangle = null;\r\n' \
   '      stangle = null;\r\n' \
   '      set_param("t", 30);\r\n' \
@@ -4680,6 +4681,14 @@ class GPXTweakerWebInterfaceServer():
   '          0, 1, 0, 0,\r\n' \
   '          0, 0, 1, 0,\r\n' \
   '          0, 0, 0, w\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_yscale(ymag, ymax) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, ymag, 0, 1 - ymax * ymag / 1.733,\r\n' \
+  '          0, 0, 1, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
   '        ]);\r\n' \
   '      }\r\n' \
   '      function mat4_tilt(c, s) {\r\n' \
@@ -4865,6 +4874,7 @@ class GPXTweakerWebInterfaceServer():
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2D ftex;\r\n' \
   '          uniform sampler2D dtex;\r\n' \
+  '          uniform float ylmag;\r\n' \
   '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
@@ -4872,7 +4882,7 @@ class GPXTweakerWebInterfaceServer():
   '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
   '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
   '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
-  '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y))))) : 0.0;\r\n' \
+  '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag))))) : 0.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
   '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
@@ -4887,13 +4897,14 @@ class GPXTweakerWebInterfaceServer():
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2D ftex;\r\n' \
   '          uniform sampler2D dtex;\r\n' \
+  '          uniform float ylmag;\r\n' \
   '          uniform vec4 mpos;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
   '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
   '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
-  '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y))))) : 0.0;\r\n' \
+  '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag))))) : 0.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
   '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
@@ -5098,6 +5109,8 @@ class GPXTweakerWebInterfaceServer():
   '          mat4_mult(mat4_rotation(crangle, srangle), lmatrix);\r\n' \
   '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '          ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
+  '          mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
   '          gl.viewport(0, 0, s_size, s_size);\r\n' \
   '          gl.clearColor(0, 0, 0, 0);\r\n' \
