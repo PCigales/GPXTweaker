@@ -1,4 +1,4 @@
-﻿from functools import partial
+from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -106,8 +106,8 @@ FR_STRINGS = {
     'jredo': 'rétablir',
     'jinsertb': 'insérer avant',
     'jinserta': 'insérer après',
-    'jsegmentup': 'monter segment',
-    'jsegmentdown': 'descendre segment',
+    'jsegmentup': 'monter segment / segment courant',
+    'jsegmentdown': 'descendre segment / segment suivant',
     'jsegmentcut': 'couper segment',
     'jsegmentabsorb': 'fusionner segments',
     'jelevationsadd': 'ajouter élévations',
@@ -115,6 +115,7 @@ FR_STRINGS = {
     'jaltitudesjoin': 'joindre altitudes',
     'jsave': 'sauvegarder',
     'jswitchpoints': 'afficher/cacher points',
+    'jgraph': 'afficher/cacher graphique',
     'j3dviewer': 'visionneuse 3D',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -125,6 +126,12 @@ FR_STRINGS = {
     'jele': 'Elé',
     'jalt': 'Alt',
     'jsegment': 'Segment',
+    'jgraphdistance': 'distance',
+    'jgraphelevation': 'élévation',
+    'jgraphaltitude': 'altitude',
+    'jgraphelegain': 'déniv élé',
+    'jgraphaltgain': 'déniv alt',
+    'jgraphtime': 'durée',
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jzscale': 'Échelle Z:',
@@ -231,8 +238,8 @@ EN_STRINGS = {
     'jredo': 'redo',
     'jinsertb': 'insert before',
     'jinserta': 'insert after',
-    'jsegmentup': 'put segment up',
-    'jsegmentdown': 'put segment down',
+    'jsegmentup': 'put segment up / current segment',
+    'jsegmentdown': 'put segment down / next segment',
     'jsegmentcut': 'cut segment',
     'jsegmentabsorb': 'merge segments',
     'jelevationsadd': 'add elevations',
@@ -240,6 +247,7 @@ EN_STRINGS = {
     'jaltitudesjoin': 'join altitudes',
     'jsave': 'backup',
     'jswitchpoints': 'show/hide points',
+    'jgraph': 'show/hide graph',
     'j3dviewer': '3D viewer',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -250,6 +258,12 @@ EN_STRINGS = {
     'jele': 'Ele',
     'jalt': 'Alt',
     'jsegment': 'Segment',
+    'jgraphdistance': 'distance',
+    'jgraphelevation': 'elevation',
+    'jgraphaltitude': 'altitude',
+    'jgraphelegain': 'ele gain',
+    'jgraphaltgain': 'alt gain',
+    'jgraphtime': 'duration',
     'jtilt': 'Tilt:',
     'jrotation': 'Rotation:',
     'jzscale': 'Z scale:',
@@ -2727,6 +2741,9 @@ class GPXTweakerWebInterfaceServer():
   '      focused = "";\r\n' \
   '      hist = [[], []];\r\n' \
   '      foc_old = null;\r\n' \
+  '      stats = [];\r\n' \
+  '      graph_ip = null;\r\n' \
+  '      graph_px = null;\r\n' \
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
@@ -3065,6 +3082,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '            elt_foc.scrollIntoView();\r\n' \
   '          }\r\n' \
+  '          graph_point();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function WGS84toWebMercator(lat, lon) {\r\n' \
@@ -3520,6 +3538,7 @@ class GPXTweakerWebInterfaceServer():
   '        return d;\r\n' \
   '      }\r\n' \
   '      function segment_recalc(seg, whole=true) {\r\n' \
+  '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
   '        let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
   '        let pos_f = seg_desc.innerHTML.indexOf(")");\r\n' \
@@ -3527,78 +3546,76 @@ class GPXTweakerWebInterfaceServer():
   '          seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(0, pos_d) + seg_desc.innerHTML.substring(pos_f + 7) + "&mdash;&mdash;&mdash;&mdash;";\r\n' \
   '        }\r\n' \
   '        pos_d = seg_desc.innerHTML.lastIndexOf("&nbsp;") + 6;\r\n' \
+  '        while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
+  '        stats[seg_ind] = [];\r\n' \
   '        if (seg.firstElementChild.checked) {\r\n' \
   '          let spans = seg.getElementsByTagName("span");\r\n' \
-  '          let dur = "";\r\n' \
-  '          if (spans.length >= 2) {\r\n' \
-  '            let ind1 = 0;\r\n' \
-  '            while (ind1 <= spans.length - 2) {\r\n' \
-  '              if (spans[ind1].parentNode.firstElementChild.checked) {break;} else {ind1++;}\r\n' \
-  '            }\r\n' \
-  '            let ind2 = spans.length - 1;\r\n' \
-  '            if (ind1 <= spans.length - 2) {\r\n' \
-  '              while (ind2 >= 1) {\r\n' \
-  '                if (spans[ind2].parentNode.firstElementChild.checked) {break;} else {ind2--;}\r\n' \
-  '              }\r\n' \
+  '          let t_s = null;\r\n' \
+  '          let stat = Array(4);\r\n' \
+  '          let stat_p = Array(4);\r\n' \
+  '          let e_p = null;\r\n' \
+  '          let a_p = null;\r\n' \
+  '          let el = null;\r\n' \
+  '          let el_p = null;\r\n' \
+  '          let p_p = null;\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
+  '            let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '            let e = parseFloat(document.getElementById(spans[p].id.replace("focus", "ele")).value);\r\n' \
+  '            let a = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '            if (isNaN(t)) {\r\n' \
+  '              stat[0] = t_s==null?0:stat_p[0];\r\n' \
   '            } else {\r\n' \
-  '              ind2 = 0;\r\n' \
-  '            }\r\n' \
-  '            if (ind1 < ind2) {\r\n' \
-  '              let t1 = Date.parse(document.getElementById(spans[ind1].id.replace("focus", "time")).value);\r\n' \
-  '              let t2 = Date.parse(document.getElementById(spans[ind2].id.replace("focus", "time")).value);\r\n' \
-  '              if (! isNaN(t1) && ! isNaN(t2)) {\r\n' \
-  '                let dur = parseInt((t2 - t1) / 1000);\r\n' \
-  '                if (dur > 0) {\r\n' \
-  '                  let dur_s = dur % 60;\r\n' \
-  '                  let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '                  let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '                  let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
-  '                  let pos_c = seg_desc.innerHTML.indexOf("&nbsp;");\r\n' \
-  '                  seg_desc.innerHTML = "&mdash;&mdash;" + seg_desc.innerHTML.substring(pos_c, pos_d) + "(" + dur_c + ")&nbsp;&mdash;&mdash;";\r\n' \
-  '                }\r\n' \
+  '              if (t_s == null) {\r\n' \
+  '                t_s = t;\r\n' \
+  '                stat[0] = 0;\r\n' \
+  '              } else {\r\n' \
+  '                stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let ind = 0;\r\n' \
-  '            let ind_p = null;\r\n' \
-  '            let ele_p = null;\r\n' \
-  '            let ele = 0;\r\n' \
-  '            while (ind < spans.length) {\r\n' \
-  '              if (! spans[ind].parentNode.firstElementChild.checked) {ind++; continue;}\r\n' \
-  '              if (ind_p == null) {\r\n' \
-  '                ind_p = ind;\r\n' \
-  '                ind++;\r\n' \
-  '                if (document.getElementById(spans[ind_p].id.replace("focus", "alt")).value != "") {\r\n' \
-  '                  ele_p = parseFloat(document.getElementById(spans[ind_p].id.replace("focus", "alt")).value);\r\n' \
-  '                } else if (document.getElementById(spans[ind_p].id.replace("focus", "ele")).value != "") {\r\n' \
-  '                  ele_p = parseFloat(document.getElementById(spans[ind_p].id.replace("focus", "ele")).value);\r\n' \
-  '                }\r\n' \
-  '                continue;\r\n' \
-  '              }\r\n' \
-  '              let ele_i = ele_p;\r\n' \
-  '              if (document.getElementById(spans[ind].id.replace("focus", "alt")).value != "") {\r\n' \
-  '                  ele_i = parseFloat(document.getElementById(spans[ind].id.replace("focus", "alt")).value);\r\n' \
-  '                } else if (document.getElementById(spans[ind].id.replace("focus", "ele")).value != "") {\r\n' \
-  '                  ele_i = parseFloat(document.getElementById(spans[ind].id.replace("focus", "ele")).value);\r\n' \
-  '                }\r\n' \
-  '              dist = dist + distance(document.getElementById(spans[ind_p].id.replace("focus", "lat")).value, document.getElementById(spans[ind_p].id.replace("focus", "lon")).value, ele_p, document.getElementById(spans[ind].id.replace("focus", "lat")).value, document.getElementById(spans[ind].id.replace("focus", "lon")).value, ele_i);\r\n' \
-  '              if (ele_p != null) {ele = ele + Math.max(0, ele_i - ele_p);}\r\n' \
-  '              ind_p = ind;\r\n' \
-  '              ele_p = ele_i;\r\n' \
-  '              ind++;\r\n' \
+  '            if (! isNaN(a)) {\r\n' \
+  '              el = a;\r\n' \
+  '              if (el_p == null) {el_p = el;}\r\n' \
+  '            } else if (! isNaN(e)) {\r\n' \
+  '              el = e;\r\n' \
+  '              if (el_p == null) {el_p = el;}\r\n' \
+  '            } else {\r\n' \
+  '              el = el_p==null?0:el_p;\r\n' \
   '            }\r\n' \
-  '            if (dist != 0) {\r\n' \
-  '             let dist_c = (dist / 1000).toFixed(2) + "km";\r\n' \
-  '             if (ele != 0) {dist_c = dist_c + "|" + ele.toFixed(0) + "m";}\r\n' \
-  '             pos_d = seg_desc.innerHTML.indexOf(")");\r\n' \
-  '             let pos_c = seg_desc.innerHTML.indexOf("&nbsp;");\r\n' \
-  '             if (pos_d > 0) {\r\n' \
-  '               seg_desc.innerHTML = "&mdash;" + seg_desc.innerHTML.substring(pos_c, pos_d) + ", " + dist_c + ")&nbsp;&mdash;";\r\n' \
-  '             } else {\r\n' \
-  '               pos_d = seg_desc.innerHTML.lastIndexOf("&nbsp;") + 6;\r\n' \
-  '               seg_desc.innerHTML = "&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(pos_c, pos_d) + "(" + dist_c + ")&nbsp;&mdash;&mdash;&mdash;";\r\n' \
-  '             }\r\n' \
+  '            if (! isNaN(e) && e_p == null) {e_p = e;}\r\n' \
+  '            if (! isNaN(a) && a_p == null) {a_p = a;}\r\n' \
+  '            if (p_p == null) {\r\n' \
+  '              stat[1] = 0;\r\n' \
+  '              stat[2] = 0;\r\n' \
+  '              stat[3] = 0;\r\n' \
+  '            } else {\r\n' \
+  '              stat[1] = stat_p[1] + distance(document.getElementById(spans[p_p].id.replace("focus", "lat")).value, document.getElementById(spans[p_p].id.replace("focus", "lon")).value, el_p==null?0:el_p, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, el);\r\n' \
+  '              stat[2] = stat_p[2] + (e_p==null?0:Math.max(0,e-e_p));\r\n' \
+  '              stat[3] = stat_p[3] + (a_p==null?0:Math.max(0,a-a_p));\r\n' \
   '            }\r\n' \
+  '            stats[seg_ind].push([...stat]);\r\n' \
+  '            for (let i=0; i<4; i++) {stat_p[i] = stat[i];}\r\n' \
+  '            p_p = p;\r\n' \
+  '            if (el_p != null) {el_p = el;}\r\n' \
+  '            if (e_p != null) {e_p = e;}\r\n' \
+  '            if (a_p != null) {a_p = a;}\r\n' \
+  '          }\r\n' \
+  '          if (stat[0] != undefined) {\r\n' \
+  '            let dur_c = "--h--mn--s";\r\n' \
+  '            if (t_s != null) {\r\n' \
+  '              let dur_s = stat[0] % 60;\r\n' \
+  '              let dur_m = ((stat[0] - dur_s) / 60) % 60;\r\n' \
+  '              let dur_h = (stat[0] - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '            }\r\n' \
+  '            let dist_c = "-km";\r\n' \
+  '            dist_c = (stat[1] / 1000).toFixed(2) + "km";\r\n' \
+  '            let ele_c = "-m";\r\n' \
+  '            if (e_p != null) {ele_c = stat[2].toFixed(0) + "m";}\r\n' \
+  '            let alt_c = "-m";\r\n' \
+  '            if (a_p != null) {alt_c = stat[3].toFixed(0) + "m";}\r\n' \
+  '            let pos_c = seg_desc.innerHTML.indexOf("&nbsp;");\r\n' \
+  '            seg_desc.innerHTML = "&mdash;" + seg_desc.innerHTML.substring(pos_c, pos_d) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ")&nbsp;&mdash;";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (whole) {whole_calc();}\r\n' \
@@ -3608,61 +3625,33 @@ class GPXTweakerWebInterfaceServer():
   '        let pos_p =  points.data.indexOf("P");\r\n' \
   '        document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s");\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
-  '        let segs_dur = Array(0);\r\n' \
-  '        for (let i=0; i<segs.length; i++) {\r\n' \
-  '          if (! segs[i].firstElementChild.checked) {continue;}\r\n' \
-  '          let seg_desc = segs[i].firstElementChild.nextElementSibling;\r\n' \
-  '          if (seg_desc.innerHTML.indexOf("h") < 0) {continue;}\r\n' \
-  '          pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
-  '          pos_f = seg_desc.innerHTML.indexOf(",");\r\n' \
-  '          if (pos_f < 0) {pos_f = seg_desc.innerHTML.indexOf(")");}\r\n' \
-  '          let sdur_c = seg_desc.innerHTML.substring(pos_d + 1, pos_f);\r\n' \
-  '          segs_dur.push(parseInt(sdur_c.slice(-3,-1)) + parseInt(sdur_c.slice(-7,-5)) * 60 + parseInt(sdur_c.slice(0,-8)) * 3600);\r\n' \
+  '        let dur = null;\r\n' \
+  '        let dist = null;\r\n' \
+  '        let ele = null;\r\n' \
+  '        let alt = null;\r\n' \
+  '        for (let s=0; s<stats.length; s++) {\r\n' \
+  '          if (stats[s].length == 0) {continue;}\r\n' \
+  '          let stat = stats[s][stats[s].length - 1];\r\n' \
+  '          dur = dur==null?stat[0]:dur+stat[0];\r\n' \
+  '          dist = dist==null?stat[1]:dist+stat[1];\r\n' \
+  '          ele = ele==null?stat[2]:ele+stat[2];\r\n' \
+  '          alt = alt==null?stat[3]:alt+stat[3];\r\n' \
   '        }\r\n' \
-  '        let dur = 0;\r\n' \
-  '        for (let i=0; i<segs_dur.length; i++) {dur = dur + segs_dur[i];}\r\n' \
-  '        let dur_c = null;\r\n' \
-  '        if (dur != 0) {\r\n' \
+  '        let dur_c = "--h--mn--s";\r\n' \
+  '        if (dur != null) {\r\n' \
   '          let dur_s = dur % 60;\r\n' \
   '          let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '          let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
   '          dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
   '        }\r\n' \
-  '        let segs_dist = Array(0);\r\n' \
-  '        let segs_ele = Array(0);\r\n' \
-  '        for (let i=0; i<segs.length; i++) {\r\n' \
-  '          if (! segs[i].firstElementChild.checked) {continue;}\r\n' \
-  '          let seg_desc = segs[i].firstElementChild.nextElementSibling;\r\n' \
-  '          if (seg_desc.innerHTML.indexOf("km") < 0) {continue;}\r\n' \
-  '          pos_d = seg_desc.innerHTML.indexOf(",") + 1;\r\n' \
-  '          if (pos_d <= 0) {pos_d = seg_desc.innerHTML.indexOf("(");}\r\n' \
-  '          pos_f = seg_desc.innerHTML.indexOf("|");\r\n' \
-  '          if (pos_f > 0) {\r\n' \
-  '            pos_ff = seg_desc.innerHTML.indexOf(")");\r\n' \
-  '            let sele_c = seg_desc.innerHTML.substring(pos_f + 1, pos_ff);\r\n' \
-  '            segs_ele.push(parseInt(sele_c.slice(0,-1)));\r\n' \
-  '          } else {\r\n' \
-  '            pos_f = seg_desc.innerHTML.indexOf(")");\r\n' \
-  '          }\r\n' \
-  '          let sdist_c = seg_desc.innerHTML.substring(pos_d + 1, pos_f);\r\n' \
-  '          segs_dist.push(parseInt(sdist_c.slice(0,-2) * 1000));\r\n' \
-  '        }\r\n' \
-  '        let dist = 0;\r\n' \
-  '        for (let i=0; i<segs_dist.length; i++) {dist = dist + segs_dist[i];}\r\n' \
-  '        let ele = 0;\r\n' \
-  '        for (let i=0; i<segs_ele.length; i++) {ele = ele + segs_ele[i];}\r\n' \
-  '        let dist_c = null;\r\n' \
-  '        if (dist != 0) {\r\n' \
-  '          dist_c = (dist / 1000).toFixed(2) + "km";\r\n' \
-  '          if (ele != 0) {dist_c = dist_c + "|" + ele.toFixed(0) + "m";}\r\n' \
-  '        }\r\n' \
-  '        if (dur_c != null && dist_c != null) {\r\n' \
-  '          document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s (" + dur_c + ", " + dist_c + ")");\r\n' \
-  '        } else if (dur_c != null) {\r\n' \
-  '          document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s (" + dur_c + ")");\r\n' \
-  '        } else if (dist_c != null) {\r\n' \
-  '          document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s (" + dist_c + ")");\r\n' \
-  '        }\r\n' \
+  '        let dist_c = "-km";\r\n' \
+  '        if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
+  '        let ele_c = "-m";\r\n' \
+  '        if (ele != null) {ele_c = ele.toFixed(0) + "m";}\r\n' \
+  '        let alt_c = "-m";\r\n' \
+  '        if (alt != null) {alt_c = alt.toFixed(0) + "m";}\r\n' \
+  '        document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s (" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ")");\r\n' \
+  '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function segments_calc() {\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
@@ -3784,7 +3773,13 @@ class GPXTweakerWebInterfaceServer():
   '        segment_recalc(seg);\r\n' \
   '      }\r\n' \
   '      function segment_up() {\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
+  '        if (focused.substring(0, 3) != "seg") {\r\n' \
+  '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '          let seg = document.getElementById(focused + "cont").parentNode.firstElementChild.nextElementSibling;\r\n' \
+  '          element_click(null, seg);\r\n' \
+  '          seg.scrollIntoView({block:"start"});\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
   '        let seg = seg_foc.previousElementSibling;\r\n' \
   '        if (! seg) {return;}\r\n' \
@@ -3800,7 +3795,15 @@ class GPXTweakerWebInterfaceServer():
   '        segment_renum();\r\n' \
   '      }\r\n' \
   '      function segment_down() {\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
+  '        if (focused.substring(0, 3) != "seg") {\r\n' \
+  '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '          let seg = document.getElementById(focused + "cont").parentNode.nextElementSibling;\r\n' \
+  '          if (seg == null) {return;}\r\n' \
+  '          seg = seg.firstElementChild.nextElementSibling;\r\n' \
+  '          element_click(null, seg);\r\n' \
+  '          seg.scrollIntoView({block:"start"});\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
   '        let seg = seg_foc.nextElementSibling;\r\n' \
   '        if (! seg) {return;}\r\n' \
@@ -3968,6 +3971,267 @@ class GPXTweakerWebInterfaceServer():
   '        for (i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
   '        spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
   '        for (i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
+  '      }\r\n' \
+  '      function refresh_graph(sw=false) {\r\n' \
+  '        let graph = document.getElementById("graph");\r\n' \
+  '        let graphc = document.getElementById("graphc");\r\n' \
+  '        let gwidth = null;\r\n' \
+  '        let gheight = null;\r\n' \
+  '        let gctx = graphc.getContext("2d");\r\n' \
+  '        if (sw) {\r\n' \
+  '          if (graph.style.display == "none") {\r\n' \
+  '            document.getElementById("content").style.height = "calc(70vh - 1.5em - 25px)";\r\n' \
+  '            document.getElementById("view").style.height = "calc(70vh - 1.5em - 25px)";\r\n' \
+  '            graph.style.display = "block";\r\n' \
+  '            gctx.lineWidth = 1;\r\n' \
+  '            gctx.lineJoin = "round";\r\n' \
+  '            gctx.lineCap = "square";\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("content").style.height = "calc(95vh - 1.5em - 25px)";\r\n' \
+  '            document.getElementById("view").style.height = "calc(95vh - 1.5em - 25px)";\r\n' \
+  '            graph.style.display = "none";\r\n' \
+  '              document.getElementById("gbar").style.display = "none";\r\n' \
+  '            document.getElementById("gbarc").style.display = "none";\r\n' \
+  '            graph_ip = null;\r\n' \
+  '            graph_px = null;\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (graph.style.display == "none") {return;}\r\n' \
+  '        }\r\n' \
+  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '        gheight = graph.offsetHeight;\r\n' \
+  '        graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '        graphc.setAttribute("height", gheight.toString());\r\n' \
+  '        let gbar = document.getElementById("gbar");\r\n' \
+  '        gbar.style.top= "10px";\r\n' \
+  '        gbar.setAttribute("height", (gheight - 25).toString());\r\n' \
+  '        let gbarc = document.getElementById("gbarc");\r\n' \
+  '        gbarc.style.top= "10px";\r\n' \
+  '        gbarc.setAttribute("height", (gheight - 25).toString());\r\n' \
+  '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
+  '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
+  '        let xl = 40;\r\n' \
+  '        let xr = gwidth - 20;\r\n' \
+  '        let yt = 10;\r\n' \
+  '        let yb = gheight - 15;\r\n' \
+  '        let gx = [];\r\n' \
+  '        let sx = [];\r\n' \
+  '        let gy = [];\r\n' \
+  '        let dur = 0;\r\n' \
+  '        let dist = 0;\r\n' \
+  '        let ele = 0;\r\n' \
+  '        let alt = 0;\r\n' \
+  '        graph_ip = [];\r\n' \
+  '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
+  '        let segs = document.getElementById("pointsform").children;\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '          let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '          if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '          let stat = null;\r\n' \
+  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          let st = 0;\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
+  '            stat = stats[seg_ind][st];\r\n' \
+  '            let dr = true;\r\n' \
+  '            switch (document.getElementById("graphy").selectedIndex) {\r\n' \
+  '              case 0:\r\n' \
+  '                gy.push(dist + stat[1]);\r\n' \
+  '                break;\r\n' \
+  '              case 1:\r\n' \
+  '                e = parseFloat(document.getElementById(spans[p].id.replace("focus", "ele")).value);\r\n' \
+  '                if (isNaN(e)) {\r\n' \
+  '                  dr = false;\r\n' \
+  '                } else {\r\n' \
+  '                  gy.push(e);\r\n' \
+  '                }\r\n' \
+  '                break;\r\n' \
+  '              case 2:\r\n' \
+  '                a = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '                if (isNaN(a)) {\r\n' \
+  '                  dr = false;\r\n' \
+  '                } else {\r\n' \
+  '                  gy.push(a);\r\n' \
+  '                }\r\n' \
+  '                break;\r\n' \
+  '              case 3:\r\n' \
+  '                gy.push(ele + stat[2]);\r\n' \
+  '                break;\r\n' \
+  '              case 4:\r\n' \
+  '                gy.push(alt + stat[3]);\r\n' \
+  '                break;\r\n' \
+  '            }\r\n' \
+  '            if (dr) {\r\n' \
+  '              switch (document.getElementById("graphx").selectedIndex) {\r\n' \
+  '                case 0:\r\n' \
+  '                  gx.push(dur + stat[0]);\r\n' \
+  '                  break;\r\n' \
+  '                case 1:\r\n' \
+  '                  gx.push(dist + stat[1]);\r\n' \
+  '                  break;\r\n' \
+  '              }\r\n' \
+  '              sx.push([seg_ind, st]);\r\n' \
+  '              graph_ip.push(parseInt(spans[p].id.slice(5, -5)));\r\n' \
+  '            }\r\n' \
+  '            st++;\r\n' \
+  '          }\r\n' \
+  '          dur += stat[0];\r\n' \
+  '          dist += stat[1];\r\n' \
+  '          ele += stat[2];\r\n' \
+  '          alt += stat[3];\r\n' \
+  '        }\r\n' \
+  '        if (gx.length < 2) {\r\n' \
+  '          graph_point();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let minx = gx[0];\r\n' \
+  '        let maxx = gx[0];\r\n' \
+  '        let miny = gy[0];\r\n' \
+  '        let maxy = gy[0];\r\n' \
+  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '          if (minx > gx[i]) {minx = gx[i];}\r\n' \
+  '          if (maxx < gx[i]) {maxx = gx[i];}\r\n' \
+  '          if (miny > gy[i]) {miny = gy[i];}\r\n' \
+  '          if (maxy < gy[i]) {maxy = gy[i];}\r\n' \
+  '        }\r\n' \
+  '        if (maxx == minx) {maxx++;}\r\n' \
+  '        if (maxy == miny) {maxy++;}\r\n' \
+  '        cx = (xr - xl) / (maxx - minx);\r\n' \
+  '        cy = (yb - yt) / (maxy - miny);\r\n' \
+  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        gctx.moveTo(xl, yb);\r\n' \
+  '        gctx.lineTo(xl, yt);\r\n' \
+  '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '          yl = yb;\r\n' \
+  '        } else if (maxy < 0) {\r\n' \
+  '          yl = yt;\r\n' \
+  '        } else if (miny > 0) {\r\n' \
+  '          yl = yb;\r\n' \
+  '        } else {\r\n' \
+  '          yl = maxy * cy + yt;\r\n' \
+  '        }\r\n' \
+  '        gctx.moveTo(xl, yl);\r\n' \
+  '        gctx.lineTo(xr, yl);\r\n' \
+  '        gctx.lineTo(xr, yl - 1);\r\n' \
+  '        gctx.lineTo(xr, yl + 1);\r\n' \
+  '        x = xl;\r\n' \
+  '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
+  '        while (x <= xr) {\r\n' \
+  '          gctx.moveTo(x, yl - 1);\r\n' \
+  '          gctx.lineTo(x, yl + 1);\r\n' \
+  '          if (x == xr) {break;}\r\n' \
+  '          x += dx;\r\n' \
+  '          if (x > xr) {x = xr;}\r\n' \
+  '        }\r\n' \
+  '        let y = yb;\r\n' \
+  '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
+  '        while (y >= yt) {\r\n' \
+  '          gctx.moveTo(xl - 1, y);\r\n' \
+  '          gctx.lineTo(xl + 1, y);\r\n' \
+  '          if (y == yt) {break;}\r\n' \
+  '          y -= dy;\r\n' \
+  '          if (y < yt) {y = yt;}\r\n' \
+  '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        gctx.fillStyle = "rgb(225,225,255)";\r\n' \
+  '        gctx.textAlign = "center";\r\n' \
+  '        gctx.textBaseline = "top";\r\n' \
+  '        x = xl;\r\n' \
+  '        while (x <= xr) {\r\n' \
+  '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
+  '            let dur = Math.round(minx + (x - xl) / cx / 60) * 60;\r\n' \
+  '            let dur_m = (dur / 60) % 60;\r\n' \
+  '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
+  '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
+  '            gctx.fillText(dur_c, (dur - minx) * cx + xl, yl + 1);\r\n' \
+  '          } else {\r\n' \
+  '            gctx.fillText((minx + (x - xl) / cx / 1000).toFixed(1) + "km", x, yl + 1);\r\n' \
+  '          }\r\n' \
+  '          if (x == xr) {break;}\r\n' \
+  '          x += dx;\r\n' \
+  '          if (x > xr) {x = xr;}\r\n' \
+  '        }\r\n' \
+  '        gctx.textAlign = "right";\r\n' \
+  '        gctx.textBaseline = "middle";\r\n' \
+  '        gctx.fillText((maxy - (yl - yt) / cy).toFixed(0), xl - 2, yl);\r\n' \
+  '        y = yb;\r\n' \
+  '        while (y >= yt) {\r\n' \
+  '          if (Math.abs(y - yl) >= 5) {\r\n' \
+  '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1) + "km", xl - 2, y);\r\n' \
+  '            } else {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0) + "m", xl - 2, y);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (y == yt) {break;}\r\n' \
+  '          y -= dy;\r\n' \
+  '          if (y < yt) {y = yt;}\r\n' \
+  '        }\r\n' \
+  '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        graph_px[graph_ip[0]] = (gx[0] - minx) * cx + xl;\r\n' \
+  '        gctx.moveTo(graph_px[graph_ip[0]], (maxy - gy[0]) * cy + yt);\r\n' \
+  '        for (let i=1; i<gx.length; i++) {\r\n' \
+  '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
+  '          gctx.lineTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
+  '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        graph_point();\r\n' \
+  '      }\r\n' \
+  '      function graph_point(dx) {\r\n' \
+  '        let graph = document.getElementById("graph");\r\n' \
+  '        if (graph.style.display == "none") {return;}\r\n' \
+  '        let graphc = document.getElementById("graphc");\r\n' \
+  '        let xl = graphc.offsetLeft + 40;\r\n' \
+  '        let xr = graphc.offsetLeft + parseFloat(graphc.getAttribute("width")) - 20;\r\n' \
+  '        let gbar = document.getElementById("gbar");\r\n' \
+  '        gbar.style.display = "none";\r\n' \
+  '        let gbarc = document.getElementById("gbarc");\r\n' \
+  '        gbarc.style.display = "none";\r\n' \
+  '        if (graph_ip.length < 2) {return;}\r\n' \
+  '        if (focused == null) {return;}\r\n' \
+  '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '        if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
+  '        let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
+  '        if (! segf.firstElementChild.checked) {return;}\r\n' \
+  '        let segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
+  '        if (dx == null) {\r\n' \
+  '          let foc_ind = parseInt(focused.substring(5));\r\n' \
+  '          if (graph_px[foc_ind] != undefined) {\r\n' \
+  '            gbar.style.display = "";\r\n' \
+  '            gbarc.style.display = "";\r\n' \
+  '            gbar.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
+  '            if (gbarc.getAttribute("stroke") != "darkgray") {\r\n' \
+  '              gbarc.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          gbar.style.display = "";\r\n' \
+  '          gbarc.style.display = "";\r\n' \
+  '          let x = Math.max(Math.min(parseFloat(gbarc.style.left) + 1 + dx, xr), xl);\r\n' \
+  '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
+  '          let ind1 = 0;\r\n' \
+  '          let ind2 = graph_ip.length - 1;\r\n' \
+  '          x = x + 40 - xl;\r\n' \
+  '          while (ind1 < ind2) {\r\n' \
+  '            let inda = Math.floor((ind1 + ind2) / 2);\r\n' \
+  '            let indb = inda + 1;\r\n' \
+  '            while (graph_px[graph_ip[inda]] == graph_px[graph_ip[indb]] && indb < ind2) {indb++;}\r\n' \
+  '            let da = Math.abs(graph_px[graph_ip[inda]] - x);\r\n' \
+  '            let db = Math.abs(graph_px[graph_ip[indb]] - x);\r\n' \
+  '            if (da <= db) {ind2 = inda;} else {ind1 = indb;}\r\n' \
+  '          }\r\n' \
+  '          if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
+  '            let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
+  '            element_click(null, pt);\r\n' \
+  '            pt.scrollIntoView({block:"nearest"});\r\n' \
+  '            pt.nextElementSibling.nextElementSibling.scrollIntoView({block:"nearest"});\r\n' \
+  '              scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function open_3D() {\r\n' \
   '        track_save(true);\r\n' \
@@ -4150,14 +4414,14 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:45em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div style="height:calc(95vh - 1.5em - 25px);">\r\n' \
+  '            <div id="content" style="height:calc(95vh - 1.5em - 25px);">\r\n' \
   '              <div id="pattern_waypoint" style="display:none;">\r\n '\
   '                ##WAYPOINTTEMPLATE##\r\n' \
   '              </div>\r\n' \
@@ -4199,6 +4463,18 @@ class GPXTweakerWebInterfaceServer():
   '        </tr>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
+  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
+  '      <select id="graphy" name="graphy" autocomplete="off" style="width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" autocomplete="off" style="width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
+  '      </canvas>\r\n' \
+  '       <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '      </svg> \r\n' \
+  '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;" pointer-events="none">\r\n' \
+  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '      </svg>\r\n' \
+  '    </div>\r\n' \
   '    <script>\r\n' \
   '      mousex = null;\r\n' \
   '      mousey = null;\r\n' \
@@ -4224,9 +4500,14 @@ class GPXTweakerWebInterfaceServer():
   '            hand_m = false;\r\n' \
   '            let pt = document.getElementById(elt.id.replace("dot", "point") + "desc");\r\n' \
   '            if (pt.htmlFor != focused) {element_click(null, pt);}\r\n' \
+  '            pt.scrollIntoView({block:"nearest"});\r\n' \
   '            pt.nextElementSibling.nextElementSibling.scrollIntoView({block:"nearest"});\r\n' \
   '            viewpane.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
+  '          } else if (elt.id == "gbarc") {\r\n' \
+  '            hand = elt;\r\n' \
+  '            graph_point(0);\r\n' \
+  '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
@@ -4265,6 +4546,9 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
   '            }\r\n' \
+  '           } else if (hand.id == "gbarc") {\r\n' \
+  '            hand.setAttribute("stroke", "none");\r\n' \
+  '            graph_point();\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
   '          return;\r\n' \
@@ -4300,7 +4584,9 @@ class GPXTweakerWebInterfaceServer():
   '          mousex = e.pageX;\r\n' \
   '          mousey = e.pageY;\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
-  '          if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
+  '            if (hand.id == "gbarc") {\r\n' \
+  '            graph_point(dx);\r\n' \
+  '          } else if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
   '            if (hand.id == "view") {\r\n' \
   '              scroll_dview(dx, dy);\r\n' \
   '            } else if (hand.id.indexOf("dot") >= 0) {\r\n' \
@@ -4355,7 +4641,7 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")));\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      window.onresize = (e) => {rescale()};\r\n' \
+  '      window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
   '      if (mode == "map") {\r\n' \
   '        add_tile();\r\n' \
   '        rescale();\r\n' \
