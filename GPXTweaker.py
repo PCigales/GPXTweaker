@@ -2673,7 +2673,7 @@ class GPXTweakerWebInterfaceServer():
   '        --zoom:1;\r\n' \
   '      }\r\n' \
   '      input[id=name_track] {\r\n' \
-  '        width:calc(94vw - 49em);\r\n' \
+  '        width:calc(96vw - 53em);\r\n' \
   '        font-size:70%;\r\n' \
   '        background-color:inherit;\r\n' \
   '        color:inherit;\r\n' \
@@ -2744,6 +2744,7 @@ class GPXTweakerWebInterfaceServer():
   '      stats = [];\r\n' \
   '      graph_ip = null;\r\n' \
   '      graph_px = null;\r\n' \
+  '      graph_xv = null;\r\n' \
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
@@ -3082,8 +3083,8 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '            elt_foc.scrollIntoView();\r\n' \
   '          }\r\n' \
-  '          graph_point();\r\n' \
   '        }\r\n' \
+  '        graph_point();\r\n' \
   '      }\r\n' \
   '      function WGS84toWebMercator(lat, lon) {\r\n' \
   '        return [lon * Math.PI / 180 * 6378137, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137];\r\n' \
@@ -3590,15 +3591,15 @@ class GPXTweakerWebInterfaceServer():
   '              stat[3] = 0;\r\n' \
   '            } else {\r\n' \
   '              stat[1] = stat_p[1] + distance(document.getElementById(spans[p_p].id.replace("focus", "lat")).value, document.getElementById(spans[p_p].id.replace("focus", "lon")).value, el_p==null?0:el_p, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, el);\r\n' \
-  '              stat[2] = stat_p[2] + (e_p==null?0:Math.max(0,e-e_p));\r\n' \
-  '              stat[3] = stat_p[3] + (a_p==null?0:Math.max(0,a-a_p));\r\n' \
+  '              stat[2] = stat_p[2] + ((e_p==null||isNaN(e))?0:Math.max(0,e-e_p));\r\n' \
+  '              stat[3] = stat_p[3] + ((a_p==null||isNaN(a))?0:Math.max(0,a-a_p));\r\n' \
   '            }\r\n' \
   '            stats[seg_ind].push([...stat]);\r\n' \
   '            for (let i=0; i<4; i++) {stat_p[i] = stat[i];}\r\n' \
   '            p_p = p;\r\n' \
   '            if (el_p != null) {el_p = el;}\r\n' \
-  '            if (e_p != null) {e_p = e;}\r\n' \
-  '            if (a_p != null) {a_p = a;}\r\n' \
+  '            if (e_p != null && ! isNaN(e)) {e_p = e;}\r\n' \
+  '            if (a_p != null && ! isNaN(a)) {a_p = a;}\r\n' \
   '          }\r\n' \
   '          if (stat[0] != undefined) {\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
@@ -3606,7 +3607,7 @@ class GPXTweakerWebInterfaceServer():
   '              let dur_s = stat[0] % 60;\r\n' \
   '              let dur_m = ((stat[0] - dur_s) / 60) % 60;\r\n' \
   '              let dur_h = (stat[0] - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '              dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
   '            }\r\n' \
   '            let dist_c = "-km";\r\n' \
   '            dist_c = (stat[1] / 1000).toFixed(2) + "km";\r\n' \
@@ -3747,7 +3748,6 @@ class GPXTweakerWebInterfaceServer():
   '          pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
   '        }\r\n' \
   '        seg.firstElementChild.checked = false;\r\n' \
-  '        segment_checkbox(seg.firstElementChild);\r\n' \
   '        let track_foc = document.getElementById("track" + seg_foc.id.slice(7, -4));\r\n' \
   '        let path_foc = track_foc.firstElementChild;\r\n' \
   '        let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
@@ -3770,7 +3770,7 @@ class GPXTweakerWebInterfaceServer():
   '        path_foc.setAttribute("d", d_foc + d);\r\n' \
   '        path.setAttribute("d", "M0 0");\r\n' \
   '        segment_recalc(seg_foc, false);\r\n' \
-  '        segment_recalc(seg);\r\n' \
+  '        segment_checkbox(seg.firstElementChild);\r\n' \
   '      }\r\n' \
   '      function segment_up() {\r\n' \
   '        if (focused.substring(0, 3) != "seg") {\r\n' \
@@ -3986,14 +3986,18 @@ class GPXTweakerWebInterfaceServer():
   '            gctx.lineWidth = 1;\r\n' \
   '            gctx.lineJoin = "round";\r\n' \
   '            gctx.lineCap = "square";\r\n' \
+  '            rescale();\r\n' \
   '          } else {\r\n' \
   '            document.getElementById("content").style.height = "calc(95vh - 1.5em - 25px)";\r\n' \
   '            document.getElementById("view").style.height = "calc(95vh - 1.5em - 25px)";\r\n' \
   '            graph.style.display = "none";\r\n' \
-  '              document.getElementById("gbar").style.display = "none";\r\n' \
+  '            document.getElementById("gbar").style.display = "none";\r\n' \
   '            document.getElementById("gbarc").style.display = "none";\r\n' \
   '            graph_ip = null;\r\n' \
   '            graph_px = null;\r\n' \
+  '            graph_xv = null;\r\n' \
+  '            graph_coeff = null;\r\n' \
+  '            rescale();\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
@@ -4011,7 +4015,7 @@ class GPXTweakerWebInterfaceServer():
   '        gbarc.setAttribute("height", (gheight - 25).toString());\r\n' \
   '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
   '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
-  '        let xl = 40;\r\n' \
+  '        let xl = 45;\r\n' \
   '        let xr = gwidth - 20;\r\n' \
   '        let yt = 10;\r\n' \
   '        let yb = gheight - 15;\r\n' \
@@ -4100,10 +4104,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (maxy == miny) {maxy++;}\r\n' \
   '        cx = (xr - xl) / (maxx - minx);\r\n' \
   '        cy = (yb - yt) / (maxy - miny);\r\n' \
-  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
-  '        gctx.beginPath();\r\n' \
-  '        gctx.moveTo(xl, yb);\r\n' \
-  '        gctx.lineTo(xl, yt);\r\n' \
   '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
   '          yl = yb;\r\n' \
   '        } else if (maxy < 0) {\r\n' \
@@ -4113,15 +4113,13 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          yl = maxy * cy + yt;\r\n' \
   '        }\r\n' \
-  '        gctx.moveTo(xl, yl);\r\n' \
-  '        gctx.lineTo(xr, yl);\r\n' \
-  '        gctx.lineTo(xr, yl - 1);\r\n' \
-  '        gctx.lineTo(xr, yl + 1);\r\n' \
+  '        gctx.strokeStyle = "rgb(56,56,56)";\r\n' \
+  '        gctx.beginPath();\r\n' \
   '        x = xl;\r\n' \
   '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
   '        while (x <= xr) {\r\n' \
-  '          gctx.moveTo(x, yl - 1);\r\n' \
-  '          gctx.lineTo(x, yl + 1);\r\n' \
+  '          gctx.moveTo(x, yb + 1);\r\n' \
+  '          gctx.lineTo(x, yt);\r\n' \
   '          if (x == xr) {break;}\r\n' \
   '          x += dx;\r\n' \
   '          if (x > xr) {x = xr;}\r\n' \
@@ -4129,12 +4127,21 @@ class GPXTweakerWebInterfaceServer():
   '        let y = yb;\r\n' \
   '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
   '        while (y >= yt) {\r\n' \
-  '          gctx.moveTo(xl - 1, y);\r\n' \
-  '          gctx.lineTo(xl + 1, y);\r\n' \
+  '          gctx.moveTo(xl + 1, y);\r\n' \
+  '          gctx.lineTo(xr, y);\r\n' \
   '          if (y == yt) {break;}\r\n' \
   '          y -= dy;\r\n' \
   '          if (y < yt) {y = yt;}\r\n' \
   '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        gctx.moveTo(xl, yb);\r\n' \
+  '        gctx.lineTo(xl, yt);\r\n' \
+  '        gctx.moveTo(xl, yl);\r\n' \
+  '        gctx.lineTo(xr, yl);\r\n' \
+  '        gctx.lineTo(xr, yl - 1);\r\n' \
+  '        gctx.lineTo(xr, yl + 1);\r\n' \
   '        gctx.stroke();\r\n' \
   '        gctx.fillStyle = "rgb(225,225,255)";\r\n' \
   '        gctx.textAlign = "center";\r\n' \
@@ -4142,13 +4149,13 @@ class GPXTweakerWebInterfaceServer():
   '        x = xl;\r\n' \
   '        while (x <= xr) {\r\n' \
   '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
-  '            let dur = Math.round(minx + (x - xl) / cx / 60) * 60;\r\n' \
+  '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
   '            let dur_m = (dur / 60) % 60;\r\n' \
   '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
   '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
-  '            gctx.fillText(dur_c, (dur - minx) * cx + xl, yl + 1);\r\n' \
+  '            gctx.fillText(dur_c, x, yl + 3);\r\n' \
   '          } else {\r\n' \
-  '            gctx.fillText((minx + (x - xl) / cx / 1000).toFixed(1) + "km", x, yl + 1);\r\n' \
+  '            gctx.fillText(((minx + (x - xl) / cx) / 1000).toFixed(1) + "km", x, yl + 3);\r\n' \
   '          }\r\n' \
   '          if (x == xr) {break;}\r\n' \
   '          x += dx;\r\n' \
@@ -4159,7 +4166,7 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.fillText((maxy - (yl - yt) / cy).toFixed(0), xl - 2, yl);\r\n' \
   '        y = yb;\r\n' \
   '        while (y >= yt) {\r\n' \
-  '          if (Math.abs(y - yl) >= 5) {\r\n' \
+  '          if (y - yl >= 16 || yl - y >= 10) {\r\n' \
   '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
   '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1) + "km", xl - 2, y);\r\n' \
   '            } else {\r\n' \
@@ -4178,6 +4185,7 @@ class GPXTweakerWebInterfaceServer():
   '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
   '          gctx.lineTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
   '        }\r\n' \
+  '        graph_xv = [1 / cx, minx - xl / cx];\r\n' \
   '        gctx.stroke();\r\n' \
   '        graph_point();\r\n' \
   '      }\r\n' \
@@ -4185,12 +4193,15 @@ class GPXTweakerWebInterfaceServer():
   '        let graph = document.getElementById("graph");\r\n' \
   '        if (graph.style.display == "none") {return;}\r\n' \
   '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let xl = graphc.offsetLeft + 40;\r\n' \
+  '        let xl = graphc.offsetLeft + 45;\r\n' \
   '        let xr = graphc.offsetLeft + parseFloat(graphc.getAttribute("width")) - 20;\r\n' \
   '        let gbar = document.getElementById("gbar");\r\n' \
   '        gbar.style.display = "none";\r\n' \
   '        let gbarc = document.getElementById("gbarc");\r\n' \
   '        gbarc.style.display = "none";\r\n' \
+  '        let graphp = document.getElementById("graphp");\r\n' \
+  '        let gp = graphp.innerHTML;\r\n' \
+  '        graphp.innerHTML = "";\r\n' \
   '        if (graph_ip.length < 2) {return;}\r\n' \
   '        if (focused == null) {return;}\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
@@ -4207,6 +4218,37 @@ class GPXTweakerWebInterfaceServer():
   '            if (gbarc.getAttribute("stroke") != "darkgray") {\r\n' \
   '              gbarc.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
   '            }\r\n' \
+  '            let segs = document.getElementById("pointsform").children;\r\n' \
+  '            if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
+  '              let dur = Math.round(graph_xv[0] * graph_px[foc_ind] + graph_xv[1]);\r\n' \
+  '              let dur_s = dur % 60;\r\n' \
+  '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '             for (let s=0; s<segs.length; s++) {\r\n' \
+  '                 if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '                let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                if (seg_ind == segf_ind) {break;}\r\n' \
+  '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '                dur -= stats[seg_ind][stats[seg_ind].length - 1][0];\r\n' \
+  '              }\r\n' \
+  '              dur_s = dur % 60;\r\n' \
+  '              dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '              dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              let dur_s_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '              graphp.innerHTML = dur_c + "<br>" + dur_s_c;\r\n' \
+  '            } else {\r\n' \
+  '              let dist = graph_xv[0] * graph_px[foc_ind] + graph_xv[1];\r\n' \
+  '              let dist_s = dist;\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '                let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                if (seg_ind == segf_ind) {break;}\r\n' \
+  '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '                dist_s -= stats[seg_ind][stats[seg_ind].length - 1][1];\r\n' \
+  '              }\r\n' \
+  '              graphp.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          gbar.style.display = "";\r\n' \
@@ -4215,7 +4257,7 @@ class GPXTweakerWebInterfaceServer():
   '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
   '          let ind1 = 0;\r\n' \
   '          let ind2 = graph_ip.length - 1;\r\n' \
-  '          x = x + 40 - xl;\r\n' \
+  '          x = x + 45 - xl;\r\n' \
   '          while (ind1 < ind2) {\r\n' \
   '            let inda = Math.floor((ind1 + ind2) / 2);\r\n' \
   '            let indb = inda + 1;\r\n' \
@@ -4230,6 +4272,8 @@ class GPXTweakerWebInterfaceServer():
   '            pt.scrollIntoView({block:"nearest"});\r\n' \
   '            pt.nextElementSibling.nextElementSibling.scrollIntoView({block:"nearest"});\r\n' \
   '              scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()));\r\n' \
+  '          } else {\r\n' \
+  '            graphp.innerHTML = gp;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -4414,7 +4458,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:46em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -4466,6 +4510,7 @@ class GPXTweakerWebInterfaceServer():
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
   '      <select id="graphy" name="graphy" autocomplete="off" style="width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
   '      <select id="graphx" name="graphx" autocomplete="off" style="width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;bottom:2em;overflow:auto;text-align:right;">test<br>test2</div>\r\n' \
   '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
   '      </canvas>\r\n' \
   '       <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
