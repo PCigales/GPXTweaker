@@ -2692,8 +2692,11 @@ class GPXTweakerWebInterfaceServer():
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
   '        display:inline-block;\r\n' \
-  '        padding-top:2.9px;\r\n' \
-  '        padding-bottom:3.1px;\r\n' \
+  '        padding-bottom:3px;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        white-space:nowrap;\r\n' \
+  '        overflow-x:clip;\r\n' \
+  '        max-width:20em;\r\n' \
   '      }\r\n' \
   '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name]  {\r\n' \
   '        display:inline-block;\r\n' \
@@ -3081,7 +3084,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("points").style.maxHeight = "calc(100% - 10em)";\r\n' \
   '            document.getElementById("waypoints").style.maxHeight = "10em";\r\n' \
   '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '            elt_foc.scrollIntoView();\r\n' \
+  '            elt_foc.scrollIntoView({block:"nearest"});\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        graph_point();\r\n' \
@@ -3212,7 +3215,7 @@ class GPXTweakerWebInterfaceServer():
   '          let time = document.getElementById(focused + "time").value;\r\n' \
   '          if (focused.substring(0, 3) == "way") {\r\n' \
   '            let name = document.getElementById(focused + "name").value;\r\n' \
-  '            document.getElementById(focused + "desc").innerHTML = "(" + lat + ", " + lon + ") " + time + " " + name;\r\n' \
+  '            document.getElementById(focused + "desc").innerHTML = "(" + lat + ", " + lon + ") " + time + "<br>" + name;\r\n' \
   '          } else {\r\n' \
   '            let ele = "";\r\n' \
   '            if (document.getElementById(focused + "ele").value != "") {ele = parseFloat(document.getElementById(focused + "ele").value).toFixed(0);}\r\n' \
@@ -3496,9 +3499,9 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d); \r\n' \
+  '          segment_recalc(pt.parentNode.parentNode);\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, true);\r\n' \
-  '        segment_recalc(pt.parentNode.parentNode);\r\n' \
   '      }\r\n' \
   '      function point_undelete(pt) {\r\n' \
   '        if (document.getElementById(pt.id + "desc").style.textDecoration.indexOf("red") < 0) {\r\n' \
@@ -3522,12 +3525,12 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d); \r\n' \
+  '          segment_recalc(pt.parentNode.parentNode);\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, true);\r\n' \
   '        if (document.getElementById(pt.id + "cont").parentNode.firstElementChild.checked) {\r\n' \
   '          document.getElementById(pt.id.replace("point", "dot")).style.display = "";\r\n' \
   '        }\r\n' \
-  '        segment_recalc(pt.parentNode.parentNode);\r\n' \
   '      }\r\n' \
   '      function point_checkbox(pt) {\r\n' \
   '        if (pt.value == "error") {pt.checked = ! pt.checked;}\r\n' \
@@ -4589,7 +4592,9 @@ class GPXTweakerWebInterfaceServer():
   '              for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
   '                if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
   '              }\r\n' \
-  '              segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '              if (hand.id.indexOf("way") < 0) {\r\n' \
+  '                segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '           } else if (hand.id == "gbarc") {\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
@@ -4724,7 +4729,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_WAYPOINT_TEMPLATE = \
   '<div id=waypoint%scont>\r\n' \
   '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onchange="point_checkbox(this)">\r\n' \
-  '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">(%.4f, %.4f) %s %s</label><br>\r\n' \
+  '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">(%.4f, %.4f) %s<br>%s</label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
   '                      <input type="text" id="waypoint%slat" name="waypoint%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true)"><br>\r\n' \
