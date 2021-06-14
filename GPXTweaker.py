@@ -6157,7 +6157,7 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') else 0
+    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata')  else 0
     eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
     minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
     maxele = max(eles[row][col] for row in range(nrow) for col in range(ncol))
@@ -6174,7 +6174,7 @@ class GPXTweakerWebInterfaceServer():
     moyx = (minx + maxx) / 2
     moyy = (miny + maxy) / 2
     self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
-    self.log(2, '3dmodeled', ncol, nrow, ncol * nrow, self.Elevation.MapInfos.get('source', ''))
+    self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, self.Elevation.MapInfos.get('source', ''))
     if self.Mode == 'map':
       minrow, mincol = 1, 1
       maxrow, maxcol = 1, 1
