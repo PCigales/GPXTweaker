@@ -6157,7 +6157,7 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata')  else 0
+    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') and e > -100 else 0
     eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
     minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
     maxele = max(eles[row][col] for row in range(nrow) for col in range(ncol))
