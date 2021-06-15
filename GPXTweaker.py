@@ -3558,6 +3558,10 @@ class GPXTweakerWebInterfaceServer():
   '          let stat = Array(4);\r\n' \
   '          let stat_p = Array(4);\r\n' \
   '          let e_p = null;\r\n' \
+  '          let e_r = null;\r\n' \
+  '          let e_m = null;\r\n' \
+  '          let e_g = null;\r\n' \
+  '          let e_ic = null;\r\n' \
   '          let a_p = null;\r\n' \
   '          let el = null;\r\n' \
   '          let el_p = null;\r\n' \
@@ -3587,6 +3591,8 @@ class GPXTweakerWebInterfaceServer():
   '              el = el_p==null?0:el_p;\r\n' \
   '            }\r\n' \
   '            if (! isNaN(e) && e_p == null) {e_p = e;}\r\n' \
+  '            if (! isNaN(e) && e_r == null) {e_r = e;}\r\n' \
+  '            if (! isNaN(e) && e_m == null) {e_m = e;}\r\n' \
   '            if (! isNaN(a) && a_p == null) {a_p = a;}\r\n' \
   '            if (p_p == null) {\r\n' \
   '              stat[1] = 0;\r\n' \
@@ -3598,11 +3604,40 @@ class GPXTweakerWebInterfaceServer():
   '              stat[3] = stat_p[3] + ((a_p==null||isNaN(a))?0:Math.max(0,a-a_p));\r\n' \
   '            }\r\n' \
   '            stats[seg_ind].push([...stat]);\r\n' \
-  '            for (let i=0; i<4; i++) {stat_p[i] = stat[i];}\r\n' \
   '            p_p = p;\r\n' \
   '            if (el_p != null) {el_p = el;}\r\n' \
-  '            if (e_p != null && ! isNaN(e)) {e_p = e;}\r\n' \
-  '            if (a_p != null && ! isNaN(a)) {a_p = a;}\r\n' \
+  '            if (e_p != null && ! isNaN(e)) {\r\n' \
+  '              if (e > e_p) {\r\n' \
+  '                e_p=e;\r\n' \
+  '                if (e >= e_r + 3) {\r\n' \
+  '                  e_g = true;\r\n' \
+  '                  e_ic = null;\r\n' \
+  '                  e_m = e;\r\n' \
+  '                }\r\n' \
+  '                if (! e_g && e_ic == null) {\r\n' \
+  '                  e_ic = stats[seg_ind].length - 2;\r\n' \
+  '                }\r\n' \
+  '                e_m = Math.max(e_m, e);\r\n' \
+  '              }\r\n' \
+  '              if (e < e_p && e < e_m - 5) {\r\n' \
+  '                if (e_ic != null) {\r\n' \
+  '                  stat[2] = stats[seg_ind][e_ic][2];\r\n' \
+  '                  for (let i=e_ic+1; i<stats[seg_ind].length; i++) {stats[seg_ind][i][2] = stat[2];}\r\n' \
+  '                  e_ic = null;\r\n' \
+  '                }\r\n' \
+  '                if (e_g) {\r\n' \
+  '                  e_r=e;\r\n' \
+  '                } else {\r\n' \
+  '                  e_r=Math.min(e_r, e);\r\n' \
+  '                }\r\n' \
+  '                e_g = false;\r\n' \
+  '                e_p = e;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (a_p != null && ! isNaN(a)) {\r\n' \
+  '              if (a > a_p || a < a_p - 1) {a_p = a;}\r\n' \
+  '             }\r\n' \
+  '            for (let i=0; i<4; i++) {stat_p[i] = stat[i];}\r\n' \
   '          }\r\n' \
   '          if (stat[0] != undefined) {\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
@@ -4282,7 +4317,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_3D() {\r\n' \
   '        track_save(true);\r\n' \
-  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html");\r\n' \
   '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
   '        let view = document.getElementById("view");\r\n' \
@@ -4396,7 +4430,11 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '          document.getElementById("save").disabled = false;\r\n' \
   '        }\r\n' \
-  '        if (this.status != 204) {window.alert("{#jserror#}" + this.status + " " + this.statusText);}\r\n' \
+  '        if (this.status != 204) {\r\n' \
+  '          window.alert("{#jserror#}" + this.status + " " + this.statusText);\r\n' \
+  '        } else {\r\n' \
+  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html");\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function error_cb() {\r\n' \
   '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
@@ -4405,7 +4443,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        window.alert("{#jserror#}");\r\n' \
   '      }\r\n' \
-  '      function track_save(just_update=false) {\r\n' \
+  '      function track_save(o3d=false) {\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "10%";\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
   '        body = document.getElementById("name_track").value + "\\r\\n=\\r\\n";\r\n' \
@@ -4437,7 +4475,7 @@ class GPXTweakerWebInterfaceServer():
   '             }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (just_update) {xhr.open("POST", "/track?save=no");} else {xhr.open("POST", "/track");}\r\n' \
+  '        if (o3d) {xhr.open("POST", "/track?save=no");} else {xhr.open("POST", "/track");}\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr.send(body);\r\n' \
@@ -5219,7 +5257,7 @@ class GPXTweakerWebInterfaceServer():
   '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
   '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
   '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag))))) : 0.0;\r\n' \
-  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
+  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r || texture(ftex, pos).r < 0.5 ? 0.7 : 0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
   '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -5241,7 +5279,7 @@ class GPXTweakerWebInterfaceServer():
   '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
   '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
   '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag))))) : 0.0;\r\n' \
-  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
+  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r || texture(ftex, pos).r < 0.5 ? 0.7 : 0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
   '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -6084,6 +6122,8 @@ class GPXTweakerWebInterfaceServer():
   def Build3DHTML(self):
     self.HTML3D = None
     self.HTML3DData = None
+    if next((p for seg in self.Track.Pts for p in seg), None) == None:
+      return False
     self.log(1, '3dbuild')
     self.MinLat = min(p[1][0] for seg in self.Track.Pts for p in seg)
     self.MaxLat = max(p[1][0] for seg in self.Track.Pts for p in seg)
