@@ -5256,8 +5256,9 @@ class GPXTweakerWebInterfaceServer():
   '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
   '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
   '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
-  '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag))))) : 0.0;\r\n' \
-  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r || texture(ftex, pos).r < 0.5 ? 0.7 : 0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
+  '            vec3 norm = dmode >= 2 ? vec3((texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x), (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag), 1) : vec3(0);\r\n' \
+  '            float cinc = dmode >= 2 ? (dmode == 2 ? dot(vec3(0, 0.82 , 0.57), norm) : 1.0) / length(norm) : 0.0;\r\n' \
+  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
   '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -5278,8 +5279,9 @@ class GPXTweakerWebInterfaceServer():
   '          void main() {\r\n' \
   '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
   '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
-  '            float cinc = dmode >= 2 ? (1.0 / (length(vec2(1, (texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x))) * length(vec2(1, (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag))))) : 0.0;\r\n' \
-  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r || texture(ftex, pos).r < 0.5 ? 0.7 : 0.7 + 0.3 * clamp(5.0 * cinc - 1.86, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
+  '            vec3 norm = dmode >= 2 ? vec3((texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x), (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag), 1) : vec3(0);\r\n' \
+  '            float cinc = dmode >= 2 ? (dmode == 2 ? dot(vec3(0, 0.82 , 0.57), norm) : 1.0) / length(norm) : 0.0;\r\n' \
+  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
   '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -5482,9 +5484,13 @@ class GPXTweakerWebInterfaceServer():
   '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
   '          mat4_mult(mat4_rotation(crangle, srangle), lmatrix);\r\n' \
   '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
-  '          mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
-  '          ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
-  '          mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '          if (dmode == 2) {;\r\n' \
+  '            ylmag = 1;\r\n' \
+  '          } else {;\r\n' \
+  '            mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '            ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
+  '            mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '          }\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
   '          gl.viewport(0, 0, s_size, s_size);\r\n' \
   '          gl.clearColor(0, 0, 0, 0);\r\n' \
@@ -6224,10 +6230,10 @@ class GPXTweakerWebInterfaceServer():
     elif self.Mode == 'tiles':
       try:
         infos = {**self.Map.TilesInfos}
+        (minrow, mincol), (maxrow, maxcol) = WebMercatorMap.WGS84BoxtoTileBox(infos, minlat, maxlat, minlon, maxlon)
       except:
         self.log(0, '3derror2')
         return False
-      (minrow, mincol), (maxrow, maxcol) = WebMercatorMap.WGS84BoxtoTileBox(infos, minlat, maxlat, minlon, maxlon)
       scale = infos['scale'] / WebMercatorMap.CRS_MPU
       tminx = infos['topx'] + scale * infos['width'] * mincol
       tminy = infos['topy'] - scale * infos['height'] * (maxrow + 1)
