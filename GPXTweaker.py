@@ -3889,7 +3889,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (seg != null) {segment_recalc(seg);}\r\n' \
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        if (! ex_foc && focused) {element_click(null, document.getElementById(focused + "desc"));}\r\n' \
-  '        whole_calc();\r\n' \
+  '        if (seg != null) {whole_calc();}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '      }\r\n' \
   '      function ele_adds(all=false) {\r\n' \
