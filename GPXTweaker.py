@@ -3859,6 +3859,9 @@ class GPXTweakerWebInterfaceServer():
   '        let e = 0;\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        let seg = null;\r\n' \
+  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        while (p < pts.length) {\r\n' \
   '          while (e < ele.length) {\r\n' \
   '            r = ele[e].split(",");\r\n' \
@@ -3870,7 +3873,7 @@ class GPXTweakerWebInterfaceServer():
   '                  point_edit(false, true, false);\r\n' \
   '                  seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
   '                  if (seg != null && seg_p.id != seg.id) {\r\n' \
-  '                    segments_calc(seg);\r\n' \
+  '                    segment_recalc(seg);\r\n' \
   '                    seg = seg_p;\r\n' \
   '                  } else if (seg == null) {\r\n' \
   '                    seg = seg_p;\r\n' \
@@ -3883,10 +3886,11 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          p++;\r\n' \
   '        }\r\n' \
-  '        if (seg != null) {segments_calc(seg);}\r\n' \
+  '        if (seg != null) {segment_recalc(seg);}\r\n' \
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        if (! ex_foc && focused) {element_click(null, document.getElementById(focused + "desc"));}\r\n' \
-  '        if (seg != null) {whole_calc();}\r\n' \
+  '        whole_calc();\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
   '      }\r\n' \
   '      function ele_adds(all=false) {\r\n' \
   '        let pts = [];\r\n' \
