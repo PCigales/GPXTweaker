@@ -576,7 +576,7 @@ def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=
         continue
       retry = 0
       code = resp.code
-      if code[:2] == '30' and code[:2] != '304':
+      if code[:2] == '30' and code != '304':
         try:
           pconnection[0].close()
         except:
