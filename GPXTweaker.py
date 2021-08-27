@@ -1407,7 +1407,7 @@ class WebMercatorMap(WGS84WebMercator):
     PVOID = ctypes.c_void_p
     LPVOID = ctypes.wintypes.LPVOID
     LPCWSTR = ctypes.wintypes.LPCWSTR
-    path = os.path.dirname(__file__)
+    path = os.path.dirname(os.path.abspath(__file__))
     r = True
     w = True
     o = b''
@@ -5710,7 +5710,7 @@ class GPXTweakerWebInterfaceServer():
   '      tmaxrow = ##TMAXROW##;\r\n' \
   '      tmaxcol = ##TMAXCOL##;\r\n' \
 
-  def _load_config(self, uri=os.path.dirname(__file__) + '\GPXTweaker.cfg'):
+  def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     try:
       f = open(uri, "rt")
       cfg = f.read()
@@ -5946,7 +5946,7 @@ class GPXTweakerWebInterfaceServer():
     return True
 
 
-  def __init__(self, uri, map=None, emap=None, minlat=None, maxlat=None, minlon=None, maxlon=None, resolution=None, maxheight=2000, maxwidth=4000, dpi=None, cfg=os.path.dirname(__file__) + '\GPXTweaker.cfg'):
+  def __init__(self, uri, map=None, emap=None, minlat=None, maxlat=None, minlon=None, maxlon=None, resolution=None, maxheight=2000, maxwidth=4000, dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     self.Uri = uri
     self.SessionId = None
     self.Ip = '127.0.0.1'
@@ -6298,7 +6298,7 @@ if __name__ == '__main__':
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or None), maxwidth=(args.maxwidth or None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(__file__)) + '\GPXTweaker.cfg'))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or None), maxwidth=(args.maxwidth or None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   if not GPXTweakerInterface.run():
     exit()
   webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0]))
