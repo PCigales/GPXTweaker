@@ -6147,15 +6147,12 @@ class GPXTweakerWebInterfaceServer():
     maxlat = min(vmaxlat, self.MaxLat + 0.005)
     minlon = max(vminlon, self.MinLon - 0.006)
     maxlon = min(vmaxlon, self.MaxLon + 0.006)
+    print(self.EMode)
     if self.EMode == 'map':
       tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
       if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
-        if self.ElevationMap[0] == {}:
-          self.log(0, '3derror1')
-          return False
-        if not self.Elevation.FetchMap(self.ElevationMap[0], minlat, maxlat, minlon, maxlon, maxheight, maxwidth, dpi=dpi, **self.ElevationMap[1]):
-          self.log(0, '3derror1')
-          return False
+        self.log(0, '3derror1')
+        return False
     elif self.EMode == 'tiles':
       infos = {**self.ElevationTiles[0]}
       if not self.Elevation.AssembleMap(infos, self.ElevationTiles[0]['matrix'], minlat, maxlat, minlon, maxlon, **self.ElevationTiles[1]):
@@ -6300,7 +6297,7 @@ if __name__ == '__main__':
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or None), maxwidth=(args.maxwidth or None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or 2000), maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   if not GPXTweakerInterface.run():
     exit()
   webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0]))
