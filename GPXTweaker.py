@@ -6147,7 +6147,6 @@ class GPXTweakerWebInterfaceServer():
     maxlat = min(vmaxlat, self.MaxLat + 0.005)
     minlon = max(vminlon, self.MinLon - 0.006)
     maxlon = min(vmaxlon, self.MaxLon + 0.006)
-    print(self.EMode)
     if self.EMode == 'map':
       tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
       if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
