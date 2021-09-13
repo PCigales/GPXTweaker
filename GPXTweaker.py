@@ -2528,7 +2528,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower() == '/3D/viewer.html'.lower():
             if self.server.Interface.Build3DHTML():
-              resp_body = self.server.Interface.HTML3D.encode('utf-8')
+              resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               try:
                 if req.method == 'GET':
                   self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -5486,7 +5486,7 @@ class GPXTweakerWebInterfaceServer():
   '        mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '        if (dmode >= 2) {\r\n' \
   '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
-  '          mat4_mult(mat4_rotation(crangle, srangle), lmatrix);\r\n' \
+  '          if (dmode == 2) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
   '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
   '          if (dmode == 2) {;\r\n' \
   '            ylmag = 1;\r\n' \
@@ -5524,6 +5524,7 @@ class GPXTweakerWebInterfaceServer():
   '          vmatrix = mat4_zscale(1);\r\n' \
   '          mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(clt0angle, -slt0angle), vmatrix);\r\n' \
+  '          if (dmode == 3) {mat4_mult(mat4_rotation(crangle, srangle), vmatrix);}\r\n' \
   '          mat4_mult(mat4_rotation(clrangle, -slrangle), vmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '          program_uniforms();\r\n' \
@@ -5533,6 +5534,7 @@ class GPXTweakerWebInterfaceServer():
   '          vmatrix = mat4_zscale(1);\r\n' \
   '          mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(cltangle, -sltangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
   '          mat4_mult(mat4_rotation(clrangle, -slrangle), vmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '          program_uniforms();\r\n' \
