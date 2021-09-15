@@ -50,6 +50,18 @@ Exemples:
   GPXTweaker t.gpx -m m.png -v 1  
   GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -h 3000 -w 6000
 
+Dans l'interface:
+  - clic gauche sur la carte pour la faire glisser
+  - clic gauche sur un point pour le sélectionner ou le déplacer
+  - clic gauche sur un segment pour le sélectionner
+  - clic droit sur la carte pour insérer un point après le point sélectionné ou un point de cheminement sinon
+  - ctrl + clic droit sur la carte pour insérer un point après le point sélectionné en mode suivi de chemin
+  - clic droit sur un point ou un segment pour le masquer
+  - roulette souris pour faire glisser la carte verticalement
+  - shift + roulette souris pour faire glisser la carte horizontalement
+  - ctrl + roulette souris pour zoomer ou dézoomer
+  - alt + roulette souris pour passer au point suivant ou précédent
+
 
 ----------English----------
 
@@ -97,3 +109,15 @@ Examples:
   GPXTweaker t.gpx  
   GPXTweaker t.gpx -m m.png -v 1  
   GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -h 3000 -w 6000
+
+In the interface:
+  - left click on the map to scroll it
+  - left click on a dot to select or move it
+  - left click on a segment to select it
+  - right click on the map to insert a dot after the selected dot or a waypoint otherwise
+  - ctrl + right click on the map to insert a dot after the selected one in path following mode
+  - right click on a dot or a segment to hide it
+  - mouse wheel to scroll the map vertically
+  - shift + mouse wheel to scroll the map horizontally
+  - ctrl + mouse wheel to zoom in or out
+  - alt + mouse wheel to switch to the next or previous point
