@@ -20,6 +20,8 @@ Sont déjà paramétrées et utilisables au travers d'un alias les sources suiva
 
 Les données d'élévation contenues dans la trace peuvent être complétées ou remplacées par les informations obtenues par interrogation d'un serveur WMS ou WMTS ou l'API IGN (moyennant l'indication de la clé et d'informations complémentaires de connexion au serveur) renvoyant une réponse au format x-bil-32.
 
+Le tracé de point en point peut s'effectuer en ligne droite ou en suivant les chemins.
+
 Il est possible d'assembler une carte à partir de tuiles au format jpeg au moyen du programme jpegtran.
 
 Mode d'emploi:
@@ -66,6 +68,7 @@ Are already set and callable under an alias these sources: IGN (provided a key a
 Elevation datas included in the track can be completed or replaced by the informations obtained by interrogation or a WMS or WMTS server
  or the IGN API (provided a key and suitable connexion infos are given) sending back a response in x-bil-32 format.
 
+The drawing from point to point can be done in straight line or following pathes.
 
 It is possible to assemble a map from tiles in jpeg format thanks to the program jpegtran.
 
