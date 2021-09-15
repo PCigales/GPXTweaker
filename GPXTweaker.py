@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -86,6 +86,7 @@ FR_STRINGS = {
     'berror5': 'échec de la génération de la page d\'interface (paramètres de jeux ou de cache de tuiles)',
     'elevation': 'fournisseur d\'élévations configuré (%s)',
     'eerror': 'échec de la configuration du fournisseur d\'élévations (%s)',
+    'itinerary': 'fournisseur d\'itinéraires configuré (%s)',
     'built': 'page d\'interface générée', 
     'request': 'réception de la requête %s %s',
     'response': 'réponse à la requête %s %s envoyée',
@@ -106,6 +107,7 @@ FR_STRINGS = {
     'jredo': 'rétablir',
     'jinsertb': 'insérer avant',
     'jinserta': 'insérer après',
+    'jpath': 'tracer chemin vers',
     'jsegmentup': 'monter segment / segment courant',
     'jsegmentdown': 'descendre segment / segment suivant',
     'jsegmentcut': 'couper segment',
@@ -218,6 +220,7 @@ EN_STRINGS = {
     'berror5': 'failure of the generation of the interface page (settings of tiles sets or cache)',
     'elevation': 'elevations provider configured (%s)',
     'eerror': 'failure of the configuration of the elevations provider (%s)',
+    'itinerary': 'itineraries provider configured (%s)',
     'built': 'interface page generated',
     'request': 'receipt of the request %s %s',
     'response': 'response to the request %s %s sent',
@@ -238,6 +241,7 @@ EN_STRINGS = {
     'jredo': 'redo',
     'jinsertb': 'insert before',
     'jinserta': 'insert after',
+    'jpath': 'draw path to',
     'jsegmentup': 'put segment up / current segment',
     'jsegmentdown': 'put segment down / next segment',
     'jsegmentcut': 'cut segment',
@@ -2093,6 +2097,49 @@ class WGS84Elevation(WGS84Map):
     return True
 
 
+class WGS84Itinerary(WGS84Map):
+
+  AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://itineraire.ign.fr/simple/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
+  AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
+
+  @classmethod
+  def ASAlias(cls, name):
+    if hasattr(cls, 'AS_' + name):
+      return dict(getattr(cls, 'AS_' + name))
+    else:
+      return None
+
+  def RequestItinerary(self, infos, points, key=None, referer=None, user_agent='GPXTweaker'):
+    if not isinstance(points, (list, tuple)):
+      return None
+    if len(points) != 2:
+      return
+    if not isinstance(points[0], (list, tuple)) or not isinstance(points[1], (list, tuple)):
+      return
+    if len(points[0]) != 2 or len(points[1]) != 2:
+      return
+    headers = {}
+    if referer:
+      headers['Referer'] = referer
+    if user_agent:
+      headers['User-Agent'] = user_agent
+    if not infos.get('source'):
+      return None
+    uri = infos['source'].format_map({'key': key or '', 'lats': points[0][0], 'lons': points[0][1], 'late': points[1][0], 'lone': points[1][1]})
+    try:
+      rep = HTTPRequest(uri, 'GET', headers)
+      if rep == None:
+        return None
+      if not rep.body:
+        return None
+      iti = json.loads(rep.body)
+      for k in infos['key']:
+        iti = iti[k]
+    except:
+      return None
+    return list(map(lambda s:s[::-1], iti))
+
+
 class WGS84Track(WGS84WebMercator):
 
   def __init__(self):
@@ -2604,6 +2651,47 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:5] == '/path':
+            if req.header('If-Match') != self.server.Interface.SessionId:
+              try:
+                self.request.sendall(resp_bad.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rbad', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            resp = 'HTTP/1.1 200 OK\r\n' \
+            'Content-Type: text/csv; charset=utf-8\r\n' \
+            'Content-Length: ##len##\r\n' \
+            'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+            'Server: GPXTweaker\r\n' \
+            'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+            '\r\n'
+            lpoints = req.body.splitlines()
+            try:
+              if len(lpoints) != 2:
+                raise
+              points = [lpoints[0].split(','), lpoints[1].split(',')]
+              if len(points[0]) != 2 or len(points[1]) != 2:
+                raise
+              iti = self.server.Interface.ItineraryProvider(points)
+              if not iti:
+                raise
+              if math.dist(iti[0], map(float, points[0])) < 0.000001:
+                del iti[0]
+              if math.dist(iti[-1], map(float, points[1])) < 0.000001:
+                del iti[-1]
+              resp_body = ('\r\n'.join('%.6f,%.6f' % (*p,) for p in iti)).encode('utf-8')
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+            try:
+              self.request.sendall(resp.replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:6] == '/track':
             resp = 'HTTP/1.1 204 No content\r\n' \
             'Content-Length: 0\r\n' \
@@ -2673,7 +2761,7 @@ class GPXTweakerWebInterfaceServer():
   '        --zoom:1;\r\n' \
   '      }\r\n' \
   '      input[id=name_track] {\r\n' \
-  '        width:calc(96vw - 53em);\r\n' \
+  '        width:calc(97vw - 55em);\r\n' \
   '        font-size:70%;\r\n' \
   '        background-color:inherit;\r\n' \
   '        color:inherit;\r\n' \
@@ -4245,7 +4333,6 @@ class GPXTweakerWebInterfaceServer():
   '        let gp = graphp.innerHTML;\r\n' \
   '        graphp.innerHTML = "";\r\n' \
   '        if (graph_ip.length < 2) {return;}\r\n' \
-  '        if (focused == null) {return;}\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
   '        if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
   '        let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
@@ -4318,6 +4405,56 @@ class GPXTweakerWebInterfaceServer():
   '            graphp.innerHTML = gp;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function error_pcb() {\r\n' \
+  '      } \r\n' \
+  '      function load_pcb(t, foc) {\r\n' \
+  '        if (t.status != 200) {return;}\r\n' \
+  '        let path = t.response.split("\\r\\n");\r\n' \
+  '        if (path.length <= 0) {return;}\r\n' \
+  '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
+  '        for (let p=path.length - 1; p>=0; p--) {\r\n' \
+  '          [lat, lon] = path[p].split(",").map(Number);\r\n' \
+  '          point_insert("b", lat, lon);\r\n' \
+  '          document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
+  '          document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
+  '          document.getElementById(focused + "alt").value = "";\r\n' \
+  '          document.getElementById(focused + "ele").value = "";\r\n' \
+  '          point_edit(false, false, false);\r\n' \
+  '          save_old();\r\n' \
+  '        }\r\n' \
+  '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
+  '        document.getElementById(foc).scrollIntoView({block:"center"});\r\n' \
+  '        segment_recalc(document.getElementById(foc).parentNode.parentNode);\r\n' \
+  '      } \r\n' \
+  '      function build_path() {\r\n' \
+  '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
+  '        let lat_a = document.getElementById(focused + "lat").value;\r\n' \
+  '        let lon_a = document.getElementById(focused + "lon").value;\r\n' \
+  '        let lat_d = null;\r\n' \
+  '        let lon_d = null;\r\n' \
+  '        let pt = pt_foc;\r\n' \
+  '        while (pt != null) {\r\n' \
+  '          pt = pt.previousElementSibling;\r\n' \
+  '          if (pt.id.indexOf("point") < 0) {\r\n' \
+  '            pt = null;\r\n' \
+  '          } else {\r\n' \
+  '            pt_id = pt.id.slice(0, -4)\r\n' \
+  '            if (document.getElementById(pt_id).value != "error" && document.getElementById(pt_id).checked) {\r\n' \
+  '              lat_d = document.getElementById(pt_id + "lat").value;\r\n' \
+  '              lon_d = document.getElementById(pt_id + "lon").value;\r\n' \
+  '              break;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (lat_d == null || lon_d == null) {return;}\r\n' \
+  '        let b = lat_d + "," + lon_d + "\\r\\n" + lat_a + "," + lon_a;\r\n' \
+  '        xhrp.onload = (e) => {load_pcb(e.target, focused)};\r\n' \
+  '        xhrp.open("POST", "/path");\r\n' \
+  '        xhrp.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '        xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrp.send(b);\r\n' \
   '      }\r\n' \
   '      function open_3D() {\r\n' \
   '        track_save(true);\r\n' \
@@ -4491,6 +4628,8 @@ class GPXTweakerWebInterfaceServer():
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
   '      xhre = new XMLHttpRequest();\r\n' \
   '      xhre.addEventListener("error", error_ecb);\r\n' \
+  '      xhrp = new XMLHttpRequest();\r\n' \
+  '      xhrp.addEventListener("error", error_pcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);"> \r\n' \
@@ -4503,7 +4642,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:46em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:48em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -4609,6 +4748,8 @@ class GPXTweakerWebInterfaceServer():
   '            point_insert("a", lat, lon);\r\n' \
   '            document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
   '            document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
+  '            document.getElementById(focused + "alt").value = "";\r\n' \
+  '            document.getElementById(focused + "ele").value = "";\r\n' \
   '            point_edit(false, false, false);\r\n' \
   '            save_old();\r\n' \
   '            hand = document.getElementById(focused.replace("point", "dot"));\r\n' \
@@ -4634,9 +4775,10 @@ class GPXTweakerWebInterfaceServer():
   '              for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
   '                if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
   '              }\r\n' \
-  '              if (hand.id.indexOf("way") < 0) {\r\n' \
-  '                segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
-  '              }\r\n' \
+  '            }\r\n' \
+  '            if (hand.id.indexOf("way") < 0) {\r\n' \
+  '              segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '              if (e.ctrlKey) {build_path();}\r\n' \
   '            }\r\n' \
   '           } else if (hand.id == "gbarc") {\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
@@ -5751,7 +5893,7 @@ class GPXTweakerWebInterfaceServer():
           hcur = hcur.lower()
           s = self.ElevationMap
           o = 0
-        elif hcur.lower() in ('global', 'elevationapi'):
+        elif hcur.lower() in ('global', 'elevationapi', 'itineraryapi'):
           hcur = hcur.lower()
         else:
           self.log(0, 'cerror', hcur)
@@ -5767,7 +5909,7 @@ class GPXTweakerWebInterfaceServer():
           if not scur in ('infos', 'handling', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
-        elif hcur in ('elevationtiles', 'elevationapi', 'elevationmap'):
+        elif hcur in ('elevationtiles', 'elevationapi', 'elevationmap', 'itineraryapi'):
           if not scur in ('infos', 'handling'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
@@ -5941,6 +6083,24 @@ class GPXTweakerWebInterfaceServer():
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
+      elif hcur == 'itineraryapi':
+        if scur == 'infos':
+          if field == 'alias':
+            self.ItineraryAPI[0] = WGS84Itinerary.ASAlias(value)
+            if not self.ItineraryAPI[0]:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+          elif field in ('source', 'json_key'):
+            self.ItineraryAPI[0][field.replace('json_', '')] = value
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'handling':
+          if field in ('key', 'referer', 'user_agent'):
+            self.ItineraryAPI[1][field] = value
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
       else:
         self.log(0, 'cerror', hcur)
         return False
@@ -5966,6 +6126,7 @@ class GPXTweakerWebInterfaceServer():
     self.MapSets = []
     self.ElevationMap = [{}, {}]
     self.ElevationAPI = [{}, {}]
+    self.ItineraryAPI = [{}, {}]
     self.Track = WGS84Track()
     self.TilesSet = None
     self.MapSet = None
@@ -6090,6 +6251,12 @@ class GPXTweakerWebInterfaceServer():
       self.EMode = "api"
       self.ElevationProvider = partial(self.Elevation.RequestElevation, self.ElevationAPI[0], **self.ElevationAPI[1])
       self.log(1, 'elevation', self.ElevationAPI[0])
+    self.Itinerary = WGS84Itinerary()
+    if self.ItineraryAPI[0] != {}:
+      self.ItineraryProvider = partial(self.Itinerary.RequestItinerary, self.ItineraryAPI[0], **self.ItineraryAPI[1])
+      self.log(1, 'itinerary', self.ItineraryAPI[0])
+    else:
+      self.ItineraryProvider = None
     self.HTML = ''
 
   def _build_pathes(self):
