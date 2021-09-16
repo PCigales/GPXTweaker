@@ -115,6 +115,7 @@ FR_STRINGS = {
     'jelevationsadd': 'ajouter élévations',
     'jelevationsreplace': 'remplacer élévations',
     'jaltitudesjoin': 'joindre altitudes',
+    'jdatetime': 'compléter l\'horodatage par interpolation',
     'jsave': 'sauvegarder',
     'jswitchpoints': 'afficher/cacher points',
     'jgraph': 'afficher/cacher graphique',
@@ -249,6 +250,7 @@ EN_STRINGS = {
     'jelevationsadd': 'add elevations',
     'jelevationsreplace': 'replace elevations',
     'jaltitudesjoin': 'join altitudes',
+    'jdatetime': 'complete timestamps by interpolation',
     'jsave': 'backup',
     'jswitchpoints': 'show/hide points',
     'jgraph': 'show/hide graph',
@@ -2761,7 +2763,7 @@ class GPXTweakerWebInterfaceServer():
   '        --zoom:1;\r\n' \
   '      }\r\n' \
   '      input[id=name_track] {\r\n' \
-  '        width:calc(97vw - 55em);\r\n' \
+  '        width:calc(97vw - 57em);\r\n' \
   '        font-size:70%;\r\n' \
   '        background-color:inherit;\r\n' \
   '        color:inherit;\r\n' \
@@ -3976,7 +3978,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (seg != null) {segment_recalc(seg);}\r\n' \
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
-  '        if (! ex_foc && focused) {element_click(null, document.getElementById(focused + "desc"));}\r\n' \
+  '        if (! ex_foc && focused) {\r\n' \
+  '          ex_foc = focused;\r\n' \
+  '          element_click(null, document.getElementById(focused + "desc"));\r\n' \
+  '          dot_style(ex_foc, false);\r\n' \
+  '        }\r\n' \
   '        if (seg != null) {whole_calc();}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '      }\r\n' \
@@ -4093,6 +4099,97 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, document.getElementById(pt_foc.id.replace("cont", "desc")));\r\n' \
   '        } else {\r\n' \
   '          element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")));\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function datetime_interpolate() {\r\n' \
+  '        let segs = [];\r\n' \
+  '        let seg_foc = null;\r\n' \
+  '        let pt_foc = null;\r\n' \
+  '        if (focused == "") {\r\n' \
+  '          segms = document.getElementById("pointsform").children;\r\n' \
+  '          for (let s=0; s<segms.length; s++) {\r\n' \
+  '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
+  '          }\r\n' \
+  '          if (segs.length == 0) {return;}\r\n' \
+  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          segs = [seg_foc];\r\n' \
+  '        } else if (focused.substring(0, 5) == "point") {\r\n' \
+  '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
+  '          pt_foc = focused;\r\n' \
+  '          seg_foc = document.getElementById(pt_foc + "cont").parentNode;\r\n' \
+  '          segs = [seg_foc];\r\n' \
+  '        } else {\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        document.getElementById("graph").style.display = "none";\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          let lc = -1;\r\n' \
+  '          let pm = [];\r\n' \
+  '          let pt = "";\r\n' \
+  '          let stime = null;\r\n' \
+  '          let etime = null;\r\n' \
+  '          let dist = 0;\r\n' \
+  '          let pele = null;\r\n' \
+  '          let ele = null;\r\n' \
+  '          let pp = -1;\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            pt = spans[p].id.slice(0, -5);\r\n' \
+  '            if (! document.getElementById(pt).checked || document.getElementById(pt).value == "error") {continue;}\r\n' \
+  '            etime = Date.parse(document.getElementById(pt + "time").value.trim());\r\n' \
+  '            ele = parseFloat(document.getElementById(pt + "alt").value);\r\n' \
+  '            if (isNaN(ele)) {\r\n' \
+  '             ele = parseFloat(document.getElementById(pt + "ele").value);\r\n' \
+  '            }\r\n' \
+  '            if (isNaN(ele)) {ele = pele;}\r\n' \
+  '            if (isNaN(etime)) {\r\n' \
+  '              if (lc == -1) {\r\n' \
+  '                if (pt_foc == pt) {\r\n' \
+  '                  if (gr) {refresh_graph(true);}\r\n' \
+  '                  return;\r\n' \
+  '                }\r\n' \
+  '              } else {\r\n' \
+  '                dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '                if (pt_foc == null || pt_foc == pt) {\r\n' \
+  '                  pm.push([p, dist]);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              if (pm.length > 0) {\r\n' \
+  '                dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '                if (etime >= stime && dist > 0) {\r\n' \
+  '                  for (let i=0; i<pm.length; i++) {\r\n' \
+  '                    if (focused != spans[pm[i][0]].id.slice(0, -5)) {element_click(null, document.getElementById(spans[pm[i][0]].id.replace("focus", "desc")));}\r\n' \
+  '                    document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(stime + (etime - stime) * pm[i][1] / dist)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                    point_edit(false, true, false);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (pt_foc != null) {\r\n' \
+  '                  segment_recalc(segs[s]);\r\n' \
+  '                  if (gr) {refresh_graph(true);}\r\n' \
+  '                  return;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              lc = p;\r\n' \
+  '              pm = [];\r\n' \
+  '              stime = etime;\r\n' \
+  '              dist = 0;\r\n' \
+  '            }\r\n' \
+  '            pele = ele;\r\n' \
+  '            pp = p;\r\n' \
+  '          }\r\n' \
+  '          segment_recalc(segs[s], false);\r\n' \
+  '        }\r\n' \
+  '        whole_calc();\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")));}\r\n' \
+  '        if (pt_foc == null && seg_foc == null && focused != "") {\r\n' \
+  '          let ex_foc = focused;\r\n' \
+  '          element_click(null, document.getElementById(focused + "desc"));\r\n' \
+  '          dot_style(ex_foc, false);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function switch_dots() {\r\n' \
@@ -4413,6 +4510,9 @@ class GPXTweakerWebInterfaceServer():
   '        let path = t.response.split("\\r\\n");\r\n' \
   '        if (path.length <= 0) {return;}\r\n' \
   '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
+  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        for (let p=path.length - 1; p>=0; p--) {\r\n' \
   '          [lat, lon] = path[p].split(",").map(Number);\r\n' \
   '          point_insert("b", lat, lon);\r\n' \
@@ -4420,12 +4520,14 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
   '          document.getElementById(focused + "alt").value = "";\r\n' \
   '          document.getElementById(focused + "ele").value = "";\r\n' \
+  '          document.getElementById(focused + "time").value = "";\r\n' \
   '          point_edit(false, false, false);\r\n' \
   '          save_old();\r\n' \
   '        }\r\n' \
   '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
   '        document.getElementById(foc).scrollIntoView({block:"center"});\r\n' \
   '        segment_recalc(document.getElementById(foc).parentNode.parentNode);\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
   '      } \r\n' \
   '      function build_path() {\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
@@ -4573,7 +4675,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (this.status != 204) {\r\n' \
   '          window.alert("{#jserror#}" + this.status + " " + this.statusText);\r\n' \
-  '        } else {\r\n' \
+  '        } else if (this.responseURL.indexOf("?") > 0) {\r\n' \
   '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html");\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -4642,7 +4744,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:48em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:50em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;<button title="{#jdatetime#}" style="width:1.7em;" onclick="datetime_interpolate()">&#9201</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -4748,8 +4850,11 @@ class GPXTweakerWebInterfaceServer():
   '            point_insert("a", lat, lon);\r\n' \
   '            document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
   '            document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
-  '            document.getElementById(focused + "alt").value = "";\r\n' \
-  '            document.getElementById(focused + "ele").value = "";\r\n' \
+  '            if (focused.substring(0, 3) != "way") {\r\n' \
+  '              document.getElementById(focused + "alt").value = "";\r\n' \
+  '              document.getElementById(focused + "ele").value = "";\r\n' \
+  '              document.getElementById(focused + "time").value = "";\r\n' \
+  '            }\r\n' \
   '            point_edit(false, false, false);\r\n' \
   '            save_old();\r\n' \
   '            hand = document.getElementById(focused.replace("point", "dot"));\r\n' \
