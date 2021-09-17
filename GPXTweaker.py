@@ -2372,7 +2372,7 @@ name)
       return False
     flt = lambda s: float(s) if (s != None and s != '') else None
     waypts = self.Track.getElementsByTagNameNS('*', 'wpt')
-    self.Wpts = list(zip(range(len(self.Waypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.Waypts)))
+    self.Wpts = list(zip(range(len(waypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in waypts)))
     try:
       self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0])
     except:
@@ -2721,22 +2721,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   except:
                     self.server.Interface.log(2, 'rerror', req.method, req.path)
                   continue
-                try:
-                  if next((p for seg in self.server.Interface.Track.Pts for p in seg), None) != None:
-                    self.server.Interface.MinLat = min(p[1][0] for seg in self.server.Interface.Track.Pts for p in seg)
-                    self.server.Interface.MaxLat = max(p[1][0] for seg in self.server.Interface.Track.Pts for p in seg)
-                    self.server.Interface.MinLon = min(p[1][1] for seg in self.server.Interface.Track.Pts for p in seg)
-                    self.server.Interface.MaxLon = max(p[1][1] for seg in self.server.Interface.Track.Pts for p in seg)
-                    if self.server.Interface.Mode == "map":
-                      self.server.Interface.Minx, self.server.Interface.Miny = WGS84WebMercator.WGS84toWebMercator(self.server.Interface.MinLat, self.server.Interface.MinLon)
-                      self.server.Interface.Maxx, self.server.Interface.Maxy = WGS84WebMercator.WGS84toWebMercator(self.server.Interface.MaxLat, self.server.Interface.MaxLon)
-                    else:
-                      mlat = math.degrees(2 * math.atan(math.exp(math.pi) - math.pi / 2))
-                      self.server.Interface.Minx, self.server.Interface.Miny = map(max, zip((self.server.Interface.VMinx, self.server.Interface.VMiny), WGS84WebMercator.WGS84toWebMercator(max(-mlat, self.server.Interface.MinLat - 0.008), max(-180, self.server.Interface.MinLon - 0.011))))
-                      self.server.Interface.Maxx, self.server.Interface.Maxy = map(min, zip((self.server.Interface.VMaxx, self.server.Interface.VMaxy), WGS84WebMercator.WGS84toWebMercator(min(mlat, self.server.Interface.MaxLat + 0.008), min(180, self.server.Interface.MaxLon + 0.011))))
-                  self.server.Interface.BuildHTML();
-                except:
-                  pass
               try:
                 self.request.sendall(resp.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
