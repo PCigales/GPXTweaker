@@ -22,6 +22,8 @@ Les données d'élévation contenues dans la trace peuvent être complétées ou
 
 Le tracé de point en point peut s'effectuer en ligne droite ou en suivant les chemins.
 
+Les modifications et insertions de points peuvent être annulées/rétablies soit point par point (si un point est sélectionné), soit par segment et, s'il s'agit d'une opération portant sur plusieurs points (comme un suivi de chemin), par lot (si un segment est sélectionné), soit sur l'ensemble de la trace et par lot (si aucun élément n'est sélectionné).
+
 Il est possible d'assembler une carte à partir de tuiles au format jpeg au moyen du programme jpegtran.
 
 Mode d'emploi:
@@ -81,6 +83,8 @@ Elevation datas included in the track can be completed or replaced by the inform
  or the IGN API (provided a key and suitable connexion infos are given) sending back a response in x-bil-32 format.
 
 The drawing from point to point can be done in straight line or following pathes.
+
+Modifications and insertions of points can be undone/redone either point by point (if a point is selected), or by segment and, if an operation dealing with several points is concerned (such as path following), by batch (if a segment is selected), or on the whole track and by batch (if no element is selected).
 
 It is possible to assemble a map from tiles in jpeg format thanks to the program jpegtran.
 
