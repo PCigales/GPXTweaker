@@ -2111,7 +2111,7 @@ class WGS84Itinerary(WGS84Map):
     else:
       return None
 
-  def RequestItinerary(self, infos, points, key=None, referer=None, user_agent='GPXTweaker'):
+  def RequestItinerary(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
     if not isinstance(points, (list, tuple)):
       return None
     if len(points) != 2:
@@ -2129,7 +2129,7 @@ class WGS84Itinerary(WGS84Map):
       return None
     uri = infos['source'].format_map({'key': key or '', 'lats': points[0][0], 'lons': points[0][1], 'late': points[1][0], 'lone': points[1][1]})
     try:
-      rep = HTTPRequest(uri, 'GET', headers)
+      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
       if rep == None:
         return None
       if not rep.body:
@@ -3396,10 +3396,16 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (ind != null) {\r\n' \
   '          let inputs = document.getElementById(focused + "focus").getElementsByTagName("input");\r\n' \
-  '          let c = hist[s][ind][1].split("\\r\\n");\r\n' \
-  '          save_old();\r\n' \
-  '          hist[1-s].push([focused, foc_old]);\r\n' \
-  '          for (let i=0; i<inputs.length;i++) {inputs[i].value = c[i];}\r\n' \
+  '          if (hist[s][ind][1] != "") {\r\n' \
+  '            let c = hist[s][ind][1].split("\\r\\n");\r\n' \
+  '            save_old();\r\n' \
+  '            hist[1-s].push([focused, foc_old]);\r\n' \
+  '            for (let i=0; i<inputs.length;i++) {inputs[i].value = c[i];}\r\n' \
+  '          } else {\r\n' \
+  '            console.log(document.getElementById(focused).checked);\r\n' \
+  '            hist[1-s].push([focused, ""]);\r\n' \
+  '            document.getElementById(focused).checked = redo;\r\n' \
+  '          }\r\n' \
   '          hist[s].splice(ind, 1);\r\n' \
   '          save_old();\r\n' \
   '          point_edit(false, false, true);\r\n' \
@@ -3416,7 +3422,7 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_track(document.getElementById(ex_foc.replace("segment", "track")));\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function point_insert(pos, lat=null, lon=null) {\r\n' \
+  '      function point_insert(pos, lat=null, lon=null, batch=false) {\r\n' \
   '        let ex_foc = "";\r\n' \
   '        if (focused) {\r\n' \
   '          if (document.getElementById(focused).value == "error") {return;}\r\n' \
@@ -3566,8 +3572,10 @@ class GPXTweakerWebInterfaceServer():
   '          path.setAttribute("d", d); \r\n' \
   '        }\r\n' \
   '        element_click(null, el_label);\r\n' \
-  '        el_label.scrollIntoView({block:"center"});\r\n' \
-  '        if (seg) {segment_recalc(seg);}\r\n' \
+  '        if (! batch) {\r\n' \
+  '          el_label.scrollIntoView({block:"center"});\r\n' \
+  '          if (seg) {segment_recalc(seg);}\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function point_delete(pt) {\r\n' \
   '        if (document.getElementById(pt.id + "desc").style.textDecoration.indexOf("red") < 0) {\r\n' \
@@ -4515,7 +4523,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("graph").style.display = "none";\r\n' \
   '        for (let p=path.length - 1; p>=0; p--) {\r\n' \
   '          [lat, lon] = path[p].split(",").map(Number);\r\n' \
-  '          point_insert("b", lat, lon);\r\n' \
+  '          point_insert("b", lat, lon, true);\r\n' \
   '          document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
   '          document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
   '          document.getElementById(focused + "alt").value = "";\r\n' \
@@ -4854,6 +4862,8 @@ class GPXTweakerWebInterfaceServer():
   '              document.getElementById(focused + "alt").value = "";\r\n' \
   '              document.getElementById(focused + "ele").value = "";\r\n' \
   '              document.getElementById(focused + "time").value = "";\r\n' \
+  '            } else {\r\n' \
+  '              document.getElementById(focused + "name").value = "";\r\n' \
   '            }\r\n' \
   '            point_edit(false, false, false);\r\n' \
   '            save_old();\r\n' \
@@ -6358,7 +6368,8 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'elevation', self.ElevationAPI[0])
     self.Itinerary = WGS84Itinerary()
     if self.ItineraryAPI[0] != {}:
-      self.ItineraryProvider = partial(self.Itinerary.RequestItinerary, self.ItineraryAPI[0], **self.ItineraryAPI[1])
+      self.ItineraryProviderConnection = [None]
+      self.ItineraryProvider = partial(self.Itinerary.RequestItinerary, self.ItineraryAPI[0], **self.ItineraryAPI[1], pconnection=self.ItineraryProviderConnection)
       self.log(1, 'itinerary', self.ItineraryAPI[0])
     else:
       self.ItineraryProvider = None
