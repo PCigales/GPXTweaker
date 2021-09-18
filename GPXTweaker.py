@@ -99,6 +99,7 @@ FR_STRINGS = {
     '3derror2': 'échec de la génération de la page de visionnage 3D (récupération de la cartographie du terrain)',
     '3dmodeled': 'modélisation du terrain achevée (%s = %s x %s points, source: "%s")',
     '3dbuilt': 'page de visionnage 3D générée',
+    'jsession': 'Une session est déjà active !',
     'jserror': 'La sauvegarde a échoué: ',
     'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
     'jeconfirm': 'Remplacer toutes les données d\'élévation ?',
@@ -234,6 +235,7 @@ EN_STRINGS = {
     '3derror2': 'failure of the generation of the 3D viewer page (retrieval of the map of the ground)',
     '3dmodeled': 'modelization of the ground achieved (%s = %s x %s dots, source: "%s")',
     '3dbuilt': '3D viewer page generated',
+    'jsession': 'A session is already active !',
     'jserror': 'The backup has failed: ',
     'jesconfirm': 'Replace all elevation datas of the segment ?',
     'jeconfirm': 'Replace all elevation datas ?',
@@ -1620,6 +1622,10 @@ class WebMercatorMap(WGS84WebMercator):
         if local_pattern != None:
           if self.ReadTileInfos(local_pattern, infos_completed, matrix):
             infos_set = True
+          if 'source' in infos_completed and 'source' in infos_base:
+            infos_completed['source'] = infos_base['source']
+          if 'pattern' in infos_completed and 'pattern' in infos_base:
+            infos_completed['pattern'] = infos_base['pattern']
         if not infos_set:
           if only_local:
             return None
@@ -1697,8 +1703,14 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       infos_set = False
       if local_pattern != None:
+        inf_source = infos.get('source')
+        inf_pattern = infos.get('pattern')
         if self.ReadTileInfos(local_pattern, infos, matrix):
           infos_set = True
+        if 'source' in infos and inf_source:
+          infos['source'] = inf_source
+        if 'pattern' in infos and inf_pattern:
+          infos['pattern'] = inf_pattern
       if not infos_set:
         if only_local:
           return False
@@ -2150,6 +2162,8 @@ class WGS84Track(WGS84WebMercator):
     self.Name = None
     self.Waypts = None
     self.Trkpts = None
+    self.UWaypts = None
+    self.UTrkpts = None
     self.Wpts = None
     self.Pts = None
     self.WebMercatorWpts = None
@@ -2368,21 +2382,20 @@ name)
     except:
       self.Track.unlink()
       self.Track = self.OTrack
-      self.Track = None
       return False
     flt = lambda s: float(s) if (s != None and s != '') else None
-    waypts = self.Track.getElementsByTagNameNS('*', 'wpt')
-    self.Wpts = list(zip(range(len(waypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in waypts)))
+    self.UWaypts = self.Track.getElementsByTagNameNS('*', 'wpt')
+    self.Wpts = list(zip(range(len(self.UWaypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.UWaypts)))
     try:
       self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0])
     except:
       self.Name = ''
-    trkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
-    if trkpts == []:
-      trkpts = [[]]
+    self.UTrkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
+    if self.UTrkpts == []:
+      self.UTrkpts = [[]]
     self.Pts = []
     sn = 0
-    for seg in trkpts:
+    for seg in self.UTrkpts:
       self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele_alt')) or pt.getAttribute('ele_alt')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None) for pt in seg))))
       sn += len(seg)
     return True
@@ -2462,7 +2475,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           '\r\n'
           resp_body = b''
           if req.path.lower()[:13] == '/tiles/switch':
-            if req.header('If-Match') != self.server.Interface.SessionId:
+            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               try:
                 self.request.sendall(resp_bad.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'rbad', req.method, req.path)
@@ -2552,8 +2565,12 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower() == '/GPXTweaker.html'.lower():
-            self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
-            resp_body = self.server.Interface.HTML.replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            if self.server.Interface.SessionId == None:
+              self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
+              
+              resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            else:
+              resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             try:
               if req.method == 'GET':
                 self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -2615,7 +2632,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
           '\r\n'
           if req.path.lower()[:4] == '/ele':
-            if req.header('If-Match') != self.server.Interface.SessionId:
+            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               try:
                 self.request.sendall(resp_bad.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'rbad', req.method, req.path)
@@ -2657,7 +2674,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:5] == '/path':
-            if req.header('If-Match') != self.server.Interface.SessionId:
+            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               try:
                 self.request.sendall(resp_bad.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'rbad', req.method, req.path)
@@ -2707,10 +2724,22 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             nosave = False
             if '?' in req.path:
               nosave = req.path.split('?')[1].lower() == 'save=no'
+            if req.header('If-Match') == self.server.Interface.SessionId:
+              self.server.Interface.PSessionId = self.server.Interface.SessionId
+              if self.server.Interface.Track.UWaypts != None:
+                self.server.Interface.Track.Waypts = self.server.Interface.Track.UWaypts
+              if self.server.Interface.Track.UTrkpts != None:
+                self.server.Interface.Track.Trkpts = self.server.Interface.Track.UTrkpts
+              if self.server.Interface.Track.OTrack != self.server.Interface.Track.Track:
+                try:
+                  self.server.Interface.Track.OTrack.unlink()
+                except:
+                  pass
+                self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
             if self.server.Interface.Track.UpdateGPX(req.body):
               self.server.Interface.Track.BuildWebMercator()
               if not nosave:
-                if req.header('If-Match') == self.server.Interface.SessionId:
+                if req.header('If-Match') == self.server.Interface.PSessionId:
                   uri_suf = ' - updated.gpx'
                 else:
                   uri_suf = ' - updated_old_' + req.header('If-Match') + '.gpx'
@@ -2721,6 +2750,25 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   except:
                     self.server.Interface.log(2, 'rerror', req.method, req.path)
                   continue
+                try:
+                  if next((p for seg in self.server.Interface.Track.Pts for p in seg), None) != None:
+                    self.server.Interface.MinLat = min(p[1][0] for seg in self.server.Interface.Track.Pts for p in seg)
+                    self.server.Interface.MaxLat = max(p[1][0] for seg in self.server.Interface.Track.Pts for p in seg)
+                    self.server.Interface.MinLon = min(p[1][1] for seg in self.server.Interface.Track.Pts for p in seg)
+                    self.server.Interface.MaxLon = max(p[1][1] for seg in self.server.Interface.Track.Pts for p in seg)
+                  if self.server.Interface.Mode == "map":
+                    self.server.Interface.Minx, self.server.Interface.Miny = WGS84WebMercator.WGS84toWebMercator(self.server.Interface.MinLat, self.server.Interface.MinLon)
+                    self.server.Interface.Maxx, self.server.Interface.Maxy = WGS84WebMercator.WGS84toWebMercator(self.server.Interface.MaxLat, self.server.Interface.MaxLon)
+                  else:
+                    mlat = math.degrees(2 * math.atan(math.exp(math.pi) - math.pi / 2))
+                    self.server.Interface.Minx, self.server.Interface.Miny = map(max, zip((self.server.Interface.VMinx, self.server.Interface.VMiny), WGS84WebMercator.WGS84toWebMercator(max(-mlat, self.server.Interface.MinLat - 0.008), max(-180, self.server.Interface.MinLon - 0.011))))
+                    self.server.Interface.Maxx, self.server.Interface.Maxy = map(min, zip((self.server.Interface.VMaxx, self.server.Interface.VMaxy), WGS84WebMercator.WGS84toWebMercator(min(mlat, self.server.Interface.MaxLat + 0.008), min(180, self.server.Interface.MaxLon + 0.011))))
+                    if not self.server.Interface.BuildHTML():
+                      raise
+                except:
+                  pass
+                if self.server.Interface.SessionId == self.server.Interface.PSessionId:
+                  self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
               try:
                 self.request.sendall(resp.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
@@ -3340,7 +3388,7 @@ class GPXTweakerWebInterfaceServer():
   '              let d_right = d.slice(d_left[0].length);\r\n' \
   '              if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
   '              d = d_left[0].slice(0, -d_left[1].length) + d_left[1][0] + np + d_right;\r\n' \
-  '              path.setAttribute("d", d); \r\n' \
+  '              path.setAttribute("d", d);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
@@ -3608,7 +3656,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            d = d_left[0] + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
-  '          path.setAttribute("d", d); \r\n' \
+  '          path.setAttribute("d", d);\r\n' \
   '        }\r\n' \
   '        element_click(null, el_label);\r\n' \
   '        if (batch == 0) {\r\n' \
@@ -3638,7 +3686,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
-  '          path.setAttribute("d", d); \r\n' \
+  '          path.setAttribute("d", d);\r\n' \
   '          if (recalc) {segment_recalc(pt.parentNode.parentNode);}\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, true);\r\n' \
@@ -3664,7 +3712,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
-  '          path.setAttribute("d", d); \r\n' \
+  '          path.setAttribute("d", d);\r\n' \
   '          if (recalc) {segment_recalc(pt.parentNode.parentNode);}\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, true);\r\n' \
@@ -5060,6 +5108,13 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")));\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
+  '        window.alert("{#jsession#}");\r\n' \
+  '        document.body.innerHTML = "";\r\n' \
+  '        document.head.innerHTML = "";\r\n' \
+  '        window.close();\r\n' \
+  '        throw "{#jsession#}";\r\n' \
+  '      }\r\n' \
   '      window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
   '      if (mode == "map") {\r\n' \
   '        add_tile();\r\n' \
@@ -6295,7 +6350,9 @@ class GPXTweakerWebInterfaceServer():
 
   def __init__(self, uri, map=None, emap=None, minlat=None, maxlat=None, minlon=None, maxlon=None, resolution=None, maxheight=2000, maxwidth=4000, dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     self.Uri = uri
+    self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, self.Uri + str(time.time())))
     self.SessionId = None
+    self.PSessionId = None
     self.Ip = '127.0.0.1'
     self.Ports = '8000'
     self.TilesBufferSize = None
@@ -6481,7 +6538,7 @@ class GPXTweakerWebInterfaceServer():
     points = self._build_points()
     tsets = self._build_tsets()
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots).replace('##TSETS##', tsets)
-    self.log(0, 'built')
+    self.log(2, 'built')
     return True
 
   def Build3DHTML(self):
@@ -6490,16 +6547,12 @@ class GPXTweakerWebInterfaceServer():
     if next((p for seg in self.Track.Pts for p in seg), None) == None:
       return False
     self.log(1, '3dbuild')
-    self.MinLat = min(p[1][0] for seg in self.Track.Pts for p in seg)
-    self.MaxLat = max(p[1][0] for seg in self.Track.Pts for p in seg)
-    self.MinLon = min(p[1][1] for seg in self.Track.Pts for p in seg)
-    self.MaxLon = max(p[1][1] for seg in self.Track.Pts for p in seg)
     vminlat, vminlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
     vmaxlat, vmaxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
-    minlat = max(vminlat, self.MinLat - 0.005)
-    maxlat = min(vmaxlat, self.MaxLat + 0.005)
-    minlon = max(vminlon, self.MinLon - 0.006)
-    maxlon = min(vmaxlon, self.MaxLon + 0.006)
+    minlat = max(vminlat, min(p[1][0] for seg in self.Track.Pts for p in seg) - 0.005)
+    maxlat = min(vmaxlat, max(p[1][0] for seg in self.Track.Pts for p in seg) + 0.005)
+    minlon = max(vminlon, min(p[1][1] for seg in self.Track.Pts for p in seg) - 0.006)
+    maxlon = min(vmaxlon, max(p[1][1] for seg in self.Track.Pts for p in seg) + 0.006)
     if self.EMode == 'map':
       tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
       if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
@@ -6614,6 +6667,7 @@ class GPXTweakerWebInterfaceServer():
 
   def run(self):
     if self.BuildHTML():
+      self.log(1, 'built')
       self.log(0, 'start')
       for ind in range(self.Ports[1] - self.Ports[0] + 1):
         webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
