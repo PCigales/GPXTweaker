@@ -113,6 +113,7 @@ FR_STRINGS = {
     'jsegmentdown': 'descendre segment / segment suivant',
     'jsegmentcut': 'couper segment',
     'jsegmentabsorb': 'fusionner segments',
+    'jsegmentreverse': 'inverser segment',
     'jelevationsadd': 'ajouter élévations',
     'jelevationsreplace': 'remplacer élévations',
     'jaltitudesjoin': 'joindre altitudes',
@@ -249,6 +250,7 @@ EN_STRINGS = {
     'jsegmentdown': 'put segment down / next segment',
     'jsegmentcut': 'cut segment',
     'jsegmentabsorb': 'merge segments',
+    'jsegmentreverse': 'reverse segment',
     'jelevationsadd': 'add elevations',
     'jelevationsreplace': 'replace elevations',
     'jaltitudesjoin': 'join altitudes',
@@ -2184,6 +2186,30 @@ class WGS84Track(WGS84WebMercator):
           self._XMLClean(n)
         l -= 1
 
+  def _processGPX(self):
+    flt = lambda s: float(s) if (s != None and s != '') else None
+    self.UWaypts = self.Track.getElementsByTagNameNS('*', 'wpt')
+    self.Wpts = list(zip(range(len(self.UWaypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.UWaypts)))
+    try:
+      trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
+    except:
+      r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+      n = self.Track.createElementNS(r.namespaceURI, r.prefix + ':trk' if r.prefix else 'trk')
+      r.appendChild(n)
+      trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
+    try:
+      self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0])
+    except:
+      self.Name = ''
+    self.UTrkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
+    if self.UTrkpts == []:
+      self.UTrkpts = [[]]
+    self.Pts = []
+    sn = 0
+    for seg in self.UTrkpts:
+      self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele_alt')) or pt.getAttribute('ele_alt')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None) for pt in seg))))
+      sn += len(seg)
+
   def LoadGPX(self, uri):
     self.log(1, 'load', uri)
     try:
@@ -2208,29 +2234,10 @@ class WGS84Track(WGS84WebMercator):
       self.__init__()
       self.log(0, 'lerror', uri)
       return False
-    flt = lambda s: float(s) if (s != None and s != '') else None
     try:
-      self.Waypts = self.Track.getElementsByTagNameNS('*', 'wpt')
-      self.Wpts = list(zip(range(len(self.Waypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.Waypts)))
-      try:
-        trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
-      except:
-        r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
-        n = self.Track.createElementNS(r.namespaceURI, r.prefix + ':trk' if r.prefix else 'trk')
-        r.appendChild(n)
-        trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
-      try:
-        self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0])
-      except:
-        self.Name = ''
-      self.Trkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
-      if self.Trkpts == []:
-        self.Trkpts = [[]]
-      self.Pts = []
-      sn = 0
-      for seg in self.Trkpts:
-        self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele_alt')) or pt.getAttribute('ele_alt')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None) for pt in seg))))
-        sn += len(seg)
+      self._processGPX()
+      self.Waypts = self.UWaypts
+      self.Trkpts = self.UTrkpts
     except:
       try:
         self.Track.unlink()
@@ -2241,7 +2248,7 @@ class WGS84Track(WGS84WebMercator):
       return False
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
-    self.log(0, 'loaded', uri, self.Name, len(self.Wpts), len(self.Trkpts), sn)
+    self.log(0, 'loaded', uri, self.Name, len(self.Wpts), len(self.Trkpts), sum(len(seg) for seg in self.UTrkpts))
     return True
 
   def BuildWebMercator(self):
@@ -2379,25 +2386,11 @@ name)
         self._XMLUpdateChildNodes(ns, 'trkpt', pn)
         sn.append(ns)
       self._XMLUpdateChildNodes(trk, 'trkseg', sn)
+      self._processGPX()
     except:
       self.Track.unlink()
       self.Track = self.OTrack
       return False
-    flt = lambda s: float(s) if (s != None and s != '') else None
-    self.UWaypts = self.Track.getElementsByTagNameNS('*', 'wpt')
-    self.Wpts = list(zip(range(len(self.UWaypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.UWaypts)))
-    try:
-      self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0])
-    except:
-      self.Name = ''
-    self.UTrkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
-    if self.UTrkpts == []:
-      self.UTrkpts = [[]]
-    self.Pts = []
-    sn = 0
-    for seg in self.UTrkpts:
-      self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele_alt')) or pt.getAttribute('ele_alt')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None) for pt in seg))))
-      sn += len(seg)
     return True
 
 
@@ -2725,10 +2718,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               nosave = req.path.split('?')[1].lower() == 'save=no'
             if req.header('If-Match') == self.server.Interface.SessionId:
               self.server.Interface.PSessionId = self.server.Interface.SessionId
-              if self.server.Interface.Track.UWaypts != None:
-                self.server.Interface.Track.Waypts = self.server.Interface.Track.UWaypts
-              if self.server.Interface.Track.UTrkpts != None:
-                self.server.Interface.Track.Trkpts = self.server.Interface.Track.UTrkpts
+              self.server.Interface.Track.Waypts = self.server.Interface.Track.UWaypts
+              self.server.Interface.Track.Trkpts = self.server.Interface.Track.UTrkpts
               if self.server.Interface.Track.OTrack != self.server.Interface.Track.Track:
                 try:
                   self.server.Interface.Track.OTrack.unlink()
@@ -4008,16 +3999,26 @@ class GPXTweakerWebInterfaceServer():
   '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
   '        let seg = seg_foc.previousElementSibling;\r\n' \
   '        if (! seg) {return;}\r\n' \
+  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        document.getElementById("pointsform").insertBefore(seg_foc, seg);\r\n' \
   '        seg_foc.scrollIntoView({block:"start"});\r\n' \
-  '        let pt_ref = seg.FirstElementChild;\r\n' \
+  '        let pt_ref = seg.firstElementChild;\r\n' \
+  '        while (pt_ref.id.indexOf("point") < 0) {\r\n' \
+  '          pt_ref = pt_ref.nextElementSibling;\r\n' \
+  '          if (! pt_ref) {break;}\r\n' \
+  '        }\r\n' \
   '        if (pt_ref) {\r\n' \
-  '          for (i=0; i<len(seg_foc.children); i++) {\r\n' \
-  '            document.getElementById("handle").insertBefore(document.getElementById(seg_foc.children[i].id.replace("point", "dot")), document.getElementById(pt_ref.id.replace("point", "dot")));\r\n' \
+  '          for (i=0; i<seg_foc.children.length; i++) {\r\n' \
+  '            if (seg_foc.children[i].id.indexOf("point") < 0) {continue;}\r\n' \
+  '            document.getElementById("handle").insertBefore(document.getElementById(seg_foc.children[i].id.slice(0, -4).replace("point", "dot")), document.getElementById(pt_ref.id.slice(0, -4).replace("point", "dot")));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("handle").insertBefore(document.getElementById("track" + seg_foc.id.slice(7, -4)), document.getElementById("track" + seg.id.slice(7, -4)));\r\n' \
   '        segment_renum();\r\n' \
+  '        segments_calc();\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
   '      }\r\n' \
   '      function segment_down() {\r\n' \
   '        if (focused.substring(0, 3) != "seg") {\r\n' \
@@ -4036,6 +4037,62 @@ class GPXTweakerWebInterfaceServer():
   '        segment_up();\r\n' \
   '        focused = seg_foc.id.slice(0, -4);\r\n' \
   '        seg_foc.scrollIntoView({block:"start"});\r\n' \
+  '      }\r\n' \
+  '      function segment_reverse() {\r\n' \
+  '        if (focused.substring(0, 3) != "seg") {return}\r\n' \
+  '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        document.getElementById("graph").style.display = "none";\r\n' \
+  '        seg_foc.scrollIntoView({block:"start"});\r\n' \
+  '        let pt_f = seg_foc.firstElementChild;\r\n' \
+  '        while (pt_f.id.indexOf("point") < 0) {\r\n' \
+  '          pt_f = pt_f.nextElementSibling;\r\n' \
+  '          if (! pt_f) {break;}\r\n' \
+  '        }\r\n' \
+  '        if (pt_f) {\r\n' \
+  '          let pt = pt_f;\r\n' \
+  '          let pt_r = pt;\r\n' \
+  '          let handle = document.getElementById("handle");\r\n' \
+  '          let mintime = null;\r\n' \
+  '          let maxtime = null;\r\n' \
+  '          while (pt) {\r\n' \
+  '            let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
+  '            if (! isNaN(t)) {\r\n' \
+  '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
+  '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '            }\r\n' \
+  '            pt = pt.nextElementSibling;\r\n' \
+  '          }\r\n' \
+  '          pt = pt_f;\r\n' \
+  '          while (pt) {\r\n' \
+  '            if (mintime != null && maxtime != null) {\r\n' \
+  '              let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
+  '              if (! isNaN(t)) {\r\n' \
+  '                element_click(null, document.getElementById(pt.id.replace("cont", "desc")));\r\n' \
+  '                document.getElementById(pt.id.replace("cont", "time")).value = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                point_edit(false, false, false);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            pt = pt_f.nextElementSibling;\r\n' \
+  '            if (pt) {\r\n' \
+  '              seg_foc.insertBefore(pt, pt_r);\r\n' \
+  '              handle.insertBefore(document.getElementById(pt.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt_r.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '              pt_r = pt;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (focused.substring(0, 3) != "seg") {element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")));}\r\n' \
+  '          let path = document.getElementById("path" + seg_foc.id.slice(7, -4));\r\n' \
+  '          let d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
+  '          let d_r = "M0 0";\r\n' \
+  '          let points = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '          points.reverse();\r\n' \
+  '          for (point of points) {d_r = d_r + " " + point};\r\n' \
+  '          d_r = d_r.replace("L", "M");\r\n' \
+  '          path.setAttribute("d", d_r);\r\n' \
+  '          segments_calc();\r\n' \
+  '        }\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
   '      } \r\n' \
@@ -4869,7 +4926,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:50em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;<button title="{#jdatetime#}" style="width:1.7em;" onclick="datetime_interpolate()">&#9201</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:50em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;<button title="{#jsegmentreverse#}" style="width:1.7em;"onclick="segment_reverse()">&ratail;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;<button title="{#jdatetime#}" style="width:1.7em;" onclick="datetime_interpolate()">&#9201</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
