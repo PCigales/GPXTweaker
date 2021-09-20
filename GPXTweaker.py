@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -103,15 +103,16 @@ FR_STRINGS = {
     'jserror': 'La sauvegarde a échoué: ',
     'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
     'jeconfirm': 'Remplacer toutes les données d\'élévation ?',
+    'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler',
     'jredo': 'rétablir',
     'jinsertb': 'insérer avant',
     'jinserta': 'insérer après',
     'jpath': 'tracer chemin vers',
-    'jsegmentup': 'monter segment / segment courant',
-    'jsegmentdown': 'descendre segment / segment suivant',
-    'jsegmentcut': 'couper segment',
+    'jelementup': 'monter segment ou point de cheminement / segment courant',
+    'jelementdown': 'descendre segment ou point de cheminement / segment suivant',
+    'jsegmentcut': 'couper / dupliquer segment',
     'jsegmentabsorb': 'fusionner segments',
     'jsegmentreverse': 'inverser segment',
     'jelevationsadd': 'ajouter élévations',
@@ -240,15 +241,16 @@ EN_STRINGS = {
     'jserror': 'The backup has failed: ',
     'jesconfirm': 'Replace all elevation datas of the segment ?',
     'jeconfirm': 'Replace all elevation datas ?',
+    'jrconfirm': 'Reverse the whole track ?',
     'junload': 'Warning, the datas will be lost !',
     'jundo': 'undo',
     'jredo': 'redo',
     'jinsertb': 'insert before',
     'jinserta': 'insert after',
     'jpath': 'draw path to',
-    'jsegmentup': 'put segment up / current segment',
-    'jsegmentdown': 'put segment down / next segment',
-    'jsegmentcut': 'cut segment',
+    'jelementup': 'put segment or waypoint up / current segment',
+    'jelementdown': 'put segment or waypoint down / next segment',
+    'jsegmentcut': 'cut / duplicate segment',
     'jsegmentabsorb': 'merge segments',
     'jsegmentreverse': 'reverse segment',
     'jelevationsadd': 'add elevations',
@@ -2346,9 +2348,12 @@ name)
       self._XMLUpdateNodeText(trk, trk, 'name', (nmsg or [''])[0], def_first=True, cdata=True)
       wpn = []
       for wp in wpmsg:
-        nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
         if '&' in wp:
           v = wp.split('&')
+          if int(v[0]) < len(self.Waypts):
+            nwp = self.Waypts[int(v[0])].cloneNode(True)
+          else:
+            nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
           self._XMLUpdateAttribute(nwp, 'lat', v[1])
           self._XMLUpdateAttribute(nwp, 'lon', v[2])
           self._XMLUpdateNodeText(trk, nwp, 'time', urllib.parse.unquote(v[3]))
@@ -2364,21 +2369,32 @@ name)
         pn = []
         pmsg = s.splitlines()
         for p in pmsg:
-          np = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkpt' if trk.prefix else 'trkpt')
           if '&' in p:
             v = p.split('&')
+            if int(v[0]) < len(opts):
+              np = opts[int(v[0])].cloneNode(True)
+            else:
+              np = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkpt' if trk.prefix else 'trkpt')
             self._XMLUpdateAttribute(np, 'lat', v[1])
             self._XMLUpdateAttribute(np, 'lon', v[2])
             self._XMLUpdateNodeText(trk, np, 'ele', v[3])
             if v[4]:
               if not r.hasAttribute('xmlns:mytrails'):
                 r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
-              e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
+              ext = np.getElementsByTagNameNS('*', 'extensions')
+              if len(ext) == 0:
+                e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
+                np.appendChild(e)
+              else:
+                e = ext[0]
+                for ex in ext:
+                  if ex.getElementsByTagNameNS('*', 'ele_alt'):
+                    e = ex
+                    break
               a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:ele_alt')
               t = self.Track.createTextNode(v[4])
               a.appendChild(t)
-              e.appendChild(a)
-              np.appendChild(e)
+              self._XMLUpdateChildNodes(e, 'ele_alt', [a])
             self._XMLUpdateNodeText(trk, np, 'time', urllib.parse.unquote(v[5]))
           else:
             np = opts[int(p)].cloneNode(True)
@@ -3164,7 +3180,6 @@ class GPXTweakerWebInterfaceServer():
   '      function save_old() {\r\n' \
   '        if (! focused) {return;}\r\n' \
   '        if (focused.indexOf("point") < 0) {return;}\r\n' \
-  '        if (document.getElementById(focused).value == "error") {return;}\r\n' \
   '        elt_foc = document.getElementById(focused + "focus");\r\n' \
   '        let c = "";\r\n' \
   '        let inputs = elt_foc.getElementsByTagName("input");\r\n' \
@@ -3900,19 +3915,102 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function segment_cut() {\r\n' \
-  '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
-  '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
-  '        let pt = pt_foc.previousElementSibling;\r\n' \
-  '        if (pt.id.indexOf("point") < 0) {return;}\r\n' \
-  '        let seg_foc = pt_foc.parentNode;\r\n' \
+  '        let seg_foc = null;\r\n' \
+  '        let pt_foc = null;\r\n' \
+  '        if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
+  '        } else if (focused.substring(0, 5) == "point") {\r\n' \
+  '          pt_foc = document.getElementById(focused + "cont");\r\n' \
+  '          seg_foc = pt_foc.parentNode;\r\n' \
+  '        } else {return;}\r\n' \
   '        let seg = seg_foc.cloneNode(true);\r\n' \
   '        let pref = "segment" + document.getElementById("pointsform").children.length.toString();\r\n' \
+  '        let track_foc = document.getElementById("track" + seg_foc.id.slice(7, -4));\r\n' \
+  '        let path_foc = track_foc.firstElementChild;\r\n' \
+  '        let track = track_foc.cloneNode(true);\r\n' \
+  '        let path = track.firstElementChild;\r\n' \
+  '        if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          seg.id = pref + "cont";\r\n' \
+  '          seg.children[0].id = pref;\r\n' \
+  '          seg.children[0].name = pref;\r\n' \
+  '          seg.children[1].htmlFor = pref;\r\n' \
+  '          seg.children[1].id = pref + "desc";\r\n' \
+  '          track.id = "track" + pref.substring(7);\r\n' \
+  '          path.id = "path" + pref.substring(7);\r\n' \
+  '          path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
+  '          let spans = seg.getElementsByTagName("span");\r\n' \
+  '          let pref_num = document.getElementById("points").getElementsByTagName("span").length;\r\n' \
+  '          let handle = document.getElementById("handle");\r\n' \
+  '          let dot_ref = document.getElementById(spans[spans.length - 1].id.slice(0, -5).replace("point", "dot")).nextElementSibling;\r\n' \
+  '          let mintime = null;\r\n' \
+  '          let maxtime = null;\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
+  '            let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '            if (! isNaN(t)) {\r\n' \
+  '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
+  '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          for (p=0; p<spans.length; p++) {\r\n' \
+  '            let dot = document.getElementById(spans[p].id.slice(0, -5).replace("point", "dot")).cloneNode(true);\r\n' \
+  '            let pref = "point" + pref_num.toString();\r\n' \
+  '            let el_cont = spans[p].parentNode;\r\n' \
+  '            el_cont.id = pref + "cont";\r\n' \
+  '            let el_input = el_cont.firstElementChild;\r\n' \
+  '            el_input.id = pref;\r\n' \
+  '            el_input.name = pref;\r\n' \
+  '            if (el_input.value != "error") {el_input.value = "edited";}\r\n' \
+  '            let el_label = el_input.nextElementSibling;\r\n' \
+  '            el_label.htmlFor = pref;\r\n' \
+  '            el_label.id = pref + "desc";\r\n' \
+  '            let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
+  '            el_span.id = pref + "focus";\r\n' \
+  '            el_span_children = el_span.children;\r\n' \
+  '            el_span_children[0].htmlFor = pref + "lat";\r\n' \
+  '            el_span_children[1].id = pref + "lat";\r\n' \
+  '            el_span_children[1].name = pref + "lat";\r\n' \
+  '            el_span_children[3].htmlFor = pref + "lon";\r\n' \
+  '            el_span_children[4].id = pref + "lon";\r\n' \
+  '            el_span_children[4].name = pref + "lon";\r\n' \
+  '            el_span_children[6].htmlFor = pref + "ele";\r\n' \
+  '            el_span_children[7].id = pref + "ele";\r\n' \
+  '            el_span_children[7].name = pref + "ele";\r\n' \
+  '            el_span_children[9].htmlFor = pref + "alt";\r\n' \
+  '            el_span_children[10].id = pref + "alt";\r\n' \
+  '            el_span_children[10].name = pref + "alt";\r\n' \
+  '            el_span_children[12].htmlFor = pref + "time";\r\n' \
+  '            el_span_children[13].id = pref + "time";\r\n' \
+  '            el_span_children[13].name = pref + "time";\r\n' \
+  '            if (mintime != null && maxtime != null) {\r\n' \
+  '              let t = Date.parse(el_span_children[13].value);\r\n' \
+  '              if (! isNaN(t)) {\r\n' \
+  '                let ex_time = el_span_children[13].value;\r\n' \
+  '                el_span_children[13].value = (new Date(maxtime + t - mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                el_label.innerHTML = el_label.innerHTML.replace(ex_time, el_span_children[13].value);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            dot.id = pref.replace("point", "dot");\r\n' \
+  '            handle.insertBefore(dot, dot_ref);\r\n' \
+  '            pref_num++;\r\n' \
+  '          }\r\n' \
+  '          document.getElementById("pointsform").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
+  '          segment_renum();\r\n' \
+  '          document.getElementById("handle").insertBefore(track, track_foc.nextElementSibling);\r\n' \
+  '          segment_recalc(seg);\r\n' \
+  '          element_click(null, document.getElementById(seg.id.replace("cont", "desc")));\r\n' \
+  '          seg.scrollIntoView({block:"start"});\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let pt = pt_foc.previousElementSibling;\r\n' \
+  '        if (pt.id.indexOf("point") < 0) {return;}\r\n' \
   '        seg_foc.id = pref + "cont";\r\n' \
   '        seg_foc.children[0].id = pref;\r\n' \
   '        seg_foc.children[0].name = pref;\r\n' \
   '        seg_foc.children[1].htmlFor = pref;\r\n' \
   '        seg_foc.children[1].id = pref + "desc";\r\n' \
-  '        while (pt.id.indexOf("point") >= 0)   {\r\n' \
+  '        while (pt.id.indexOf("point") >= 0) {\r\n' \
   '          pt_p = pt.previousElementSibling;\r\n' \
   '          seg_foc.removeChild(pt);\r\n' \
   '          pt = pt_p;\r\n' \
@@ -3925,10 +4023,6 @@ class GPXTweakerWebInterfaceServer():
   '        seg.removeChild(seg.lastElementChild);\r\n' \
   '        document.getElementById("pointsform").insertBefore(seg, seg_foc);\r\n' \
   '        segment_renum();\r\n' \
-  '        let track_foc = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
-  '        let path_foc = track_foc.firstElementChild;\r\n' \
-  '        let track = track_foc.cloneNode(true);\r\n' \
-  '        let path = track.firstElementChild;\r\n' \
   '        track_foc.id = "track" + pref.substring(7);\r\n' \
   '        path_foc.id = "path" + pref.substring(7);\r\n' \
   '        path_foc.nextElementSibling.firstElementChild.setAttribute("href", "#" + path_foc.id);\r\n' \
@@ -3988,21 +4082,73 @@ class GPXTweakerWebInterfaceServer():
   '        segment_recalc(seg_foc, false);\r\n' \
   '        segment_checkbox(seg.firstElementChild);\r\n' \
   '      }\r\n' \
-  '      function segment_up() {\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {\r\n' \
-  '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '      function element_up() {\r\n' \
+  '        if (focused.substring(0, 5) == "point") {\r\n' \
   '          let seg = document.getElementById(focused + "cont").parentNode.firstElementChild.nextElementSibling;\r\n' \
   '          element_click(null, seg);\r\n' \
   '          seg.scrollIntoView({block:"start"});\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        if (focused.substring(0, 3) == "way") {\r\n' \
+  '          let pt_foc = document.getElementById(focused + "cont");\r\n' \
+  '          let pt = pt_foc.previousElementSibling;\r\n' \
+  '          if (! pt) {return;}\r\n' \
+  '          document.getElementById("waypointsform").insertBefore(pt_foc, pt);\r\n' \
+  '          pt_foc.scrollIntoView({block:"start"});\r\n' \
+  '          document.getElementById("handle").insertBefore(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
   '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
   '        let seg = seg_foc.previousElementSibling;\r\n' \
   '        if (! seg) {return;}\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
+  '        let mintime_foc = null;\r\n' \
+  '        let maxtime_foc = null;\r\n' \
+  '        let mintime = null;\r\n' \
+  '        let maxtime = null;\r\n' \
+  '        let spans_foc = seg_foc.getElementsByTagName("span");\r\n' \
+  '        let spans = seg.getElementsByTagName("span");\r\n' \
+  '        for (let p=0; p<spans_foc.length; p++) {\r\n' \
+  '          if (! spans_foc[p].parentNode.firstElementChild.checked || spans_foc[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
+  '          let t = Date.parse(document.getElementById(spans_foc[p].id.replace("focus", "time")).value);\r\n' \
+  '          if (! isNaN(t)) {\r\n' \
+  '            if (mintime_foc == null) {mintime_foc = t;} else {mintime_foc = Math.min(mintime_foc, t);}\r\n' \
+  '            if (maxtime_foc == null) {maxtime_foc = t;} else {maxtime_foc = Math.max(maxtime_foc, t);}\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        for (let p=0; p<spans.length; p++) {\r\n' \
+  '          if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
+  '          let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '          if (! isNaN(t)) {\r\n' \
+  '            if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
+  '            if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        document.getElementById("pointsform").insertBefore(seg_foc, seg);\r\n' \
+  '        if (mintime_foc != null && maxtime_foc != null && mintime != null && maxtime != null) {\r\n' \
+  '          let batch = ++hist_b;\r\n' \
+  '          let offset =  mintime - mintime_foc;\r\n' \
+  '          for (sp of [spans_foc, spans]) {\r\n' \
+  '            for (let p=0; p<sp.length; p++) {\r\n' \
+  '              let t = Date.parse(document.getElementById(sp[p].id.replace("focus", "time")).value);\r\n' \
+  '              if (! isNaN(t)) {\r\n' \
+  '                let ex_time = document.getElementById(sp[p].id.replace("focus", "time")).value;\r\n' \
+  '                let new_time = (new Date(t + offset)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                let c = "";\r\n' \
+  '                let inputs = sp[p].getElementsByTagName("input");\r\n' \
+  '                for (let i=0; i<inputs.length;i++) {c = c + inputs[i].value + "\\r\\n";}\r\n' \
+  '                hist[0].push([sp[p].id.slice(0, -5), c, batch]);\r\n' \
+  '                for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
+  '                 if (hist[1][i][0] == sp[p].id.slice(0, -5)) {hist[1].splice(i, 1);}\r\n' \
+  '                }\r\n' \
+  '                if (sp[p].parentNode.firstElementChild.value != "error") {sp[p].parentNode.firstElementChild.value = "edited";}\r\n' \
+  '                document.getElementById(sp[p].id.replace("focus", "time")).value = new_time;\r\n' \
+  '                document.getElementById(sp[p].id.replace("focus", "desc")).innerHTML = document.getElementById(sp[p].id.replace("focus", "desc")).innerHTML.replace(ex_time, new_time);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            offset = maxtime_foc - maxtime;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        seg_foc.scrollIntoView({block:"start"});\r\n' \
   '        let pt_ref = seg.firstElementChild;\r\n' \
   '        while (pt_ref.id.indexOf("point") < 0) {\r\n' \
@@ -4017,12 +4163,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("handle").insertBefore(document.getElementById("track" + seg_foc.id.slice(7, -4)), document.getElementById("track" + seg.id.slice(7, -4)));\r\n' \
   '        segment_renum();\r\n' \
-  '        segments_calc();\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        segment_recalc(seg, false);\r\n' \
+  '        segment_recalc(seg_foc);\r\n' \
   '      }\r\n' \
-  '      function segment_down() {\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {\r\n' \
-  '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '      function element_down() {\r\n' \
+  '        if (focused.substring(0, 5) == "point") {\r\n' \
   '          let seg = document.getElementById(focused + "cont").parentNode.nextElementSibling;\r\n' \
   '          if (seg == null) {return;}\r\n' \
   '          seg = seg.firstElementChild.nextElementSibling;\r\n' \
@@ -4030,59 +4175,73 @@ class GPXTweakerWebInterfaceServer():
   '          seg.scrollIntoView({block:"start"});\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '        let seg = seg_foc.nextElementSibling;\r\n' \
-  '        if (! seg) {return;}\r\n' \
-  '        focused = seg.id.slice(0, -4);\r\n' \
-  '        segment_up();\r\n' \
-  '        focused = seg_foc.id.slice(0, -4);\r\n' \
-  '        seg_foc.scrollIntoView({block:"start"});\r\n' \
+  '        if (focused.substring(0, 3) != "seg" && focused.substring(0, 3) != "way") {return;}\r\n' \
+  '        let elt_foc = document.getElementById(focused + "cont");\r\n' \
+  '        let elt = elt_foc.nextElementSibling;\r\n' \
+  '        if (! elt) {return;}\r\n' \
+  '        focused = elt.id.slice(0, -4);\r\n' \
+  '        element_up();\r\n' \
+  '        focused = elt_foc.id.slice(0, -4);\r\n' \
+  '        elt_foc.scrollIntoView({block:"start"});\r\n' \
   '      }\r\n' \
   '      function segment_reverse() {\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {return}\r\n' \
-  '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        seg_foc.scrollIntoView({block:"start"});\r\n' \
-  '        let pt_f = seg_foc.firstElementChild;\r\n' \
-  '        while (pt_f.id.indexOf("point") < 0) {\r\n' \
-  '          pt_f = pt_f.nextElementSibling;\r\n' \
-  '          if (! pt_f) {break;}\r\n' \
-  '        }\r\n' \
-  '        if (pt_f) {\r\n' \
-  '          let pt = pt_f;\r\n' \
-  '          let pt_r = pt;\r\n' \
-  '          let handle = document.getElementById("handle");\r\n' \
-  '          let mintime = null;\r\n' \
-  '          let maxtime = null;\r\n' \
-  '          while (pt) {\r\n' \
-  '            let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
+  '        let whole = false;\r\n' \
+  '        let handle = document.getElementById("handle");\r\n' \
+  '        let segs = null;\r\n' \
+  '        let pts = document.getElementById("pointsform");\r\n' \
+  '        let wpts = document.getElementById("waypointsform");\r\n' \
+  '        if (focused == "") {\r\n' \
+  '          if (! window.confirm("{#jrconfirm#}")) {return;}\r\n' \
+  '          whole = true;\r\n' \
+  '          segs = pts.children;\r\n' \
+  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          let seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          seg_foc.scrollIntoView({block:"start"});\r\n' \
+  '          segs = [seg_foc];\r\n' \
+  '        } else {return;}\r\n' \
+  '        let mintime = null;\r\n' \
+  '        let maxtime = null;\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
+  '            let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
   '            if (! isNaN(t)) {\r\n' \
   '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
   '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
   '            }\r\n' \
-  '            pt = pt.nextElementSibling;\r\n' \
   '          }\r\n' \
-  '          pt = pt_f;\r\n' \
+  '        }\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          let pt_f = segs[s].firstElementChild;\r\n' \
+  '          while (pt_f.id.indexOf("point") < 0) {\r\n' \
+  '            pt_f = pt_f.nextElementSibling;\r\n' \
+  '            if (! pt_f) {break;}\r\n' \
+  '          }\r\n' \
+  '          if (! pt_f) {continue;}\r\n' \
+  '          let pt = pt_f;\r\n' \
+  '          let pt_r = pt;\r\n' \
   '          while (pt) {\r\n' \
   '            if (mintime != null && maxtime != null) {\r\n' \
   '              let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
   '              if (! isNaN(t)) {\r\n' \
-  '                element_click(null, document.getElementById(pt.id.replace("cont", "desc")));\r\n' \
-  '                document.getElementById(pt.id.replace("cont", "time")).value = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                point_edit(false, false, false);\r\n' \
+  '                let ex_time = document.getElementById(pt.id.replace("cont", "time")).value;\r\n' \
+  '                let new_time = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                if (pt.firstElementChild.value != "error") {pt.firstElementChild.value = "edited";}\r\n' \
+  '                document.getElementById(pt.id.replace("cont", "time")).value = new_time;\r\n' \
+  '                document.getElementById(pt.id.replace("cont", "desc")).innerHTML = document.getElementById(pt.id.replace("cont", "desc")).innerHTML.replace(ex_time, new_time);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            pt = pt_f.nextElementSibling;\r\n' \
   '            if (pt) {\r\n' \
-  '              seg_foc.insertBefore(pt, pt_r);\r\n' \
-  '              handle.insertBefore(document.getElementById(pt.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt_r.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '              segs[s].insertBefore(pt, pt_r);\r\n' \
+  '              if (! whole) {\r\n' \
+  '                handle.insertBefore(document.getElementById(pt.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt_r.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '              }\r\n' \
   '              pt_r = pt;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (focused.substring(0, 3) != "seg") {element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")));}\r\n' \
-  '          let path = document.getElementById("path" + seg_foc.id.slice(7, -4));\r\n' \
+  '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
   '          let d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
   '          let d_r = "M0 0";\r\n' \
   '          let points = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
@@ -4090,9 +4249,79 @@ class GPXTweakerWebInterfaceServer():
   '          for (point of points) {d_r = d_r + " " + point};\r\n' \
   '          d_r = d_r.replace("L", "M");\r\n' \
   '          path.setAttribute("d", d_r);\r\n' \
-  '          segments_calc();\r\n' \
+  '          segment_recalc(segs[s], false);\r\n' \
   '        }\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        if (! whole) {\r\n' \
+  '          whole_calc();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let seg_f = segs[0];\r\n' \
+  '        let seg_r = seg_f;\r\n' \
+  '        let seg = seg_f;\r\n' \
+  '        while (seg) {\r\n' \
+  '          seg = seg_f.nextElementSibling;\r\n' \
+  '          if (seg) {\r\n' \
+  '            pts.insertBefore(seg, seg_r);\r\n' \
+  '            handle.insertBefore(document.getElementById("track" + seg.id.slice(7, -4)), document.getElementById("track" + seg_r.id.slice(7, -4)));\r\n' \
+  '            seg_r = seg;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        let wpt_f = wpts.firstElementChild;\r\n' \
+  '        let wpt_r = wpt_f;\r\n' \
+  '        let wpt = wpt_f;\r\n' \
+  '        while (wpt) {\r\n' \
+  '          if (mintime != null && maxtime != null) {\r\n' \
+  '            let t = Date.parse(document.getElementById(wpt.id.replace("cont", "time")).value);\r\n' \
+  '            if (! isNaN(t)) {\r\n' \
+  '              let ex_time = document.getElementById(wpt.id.replace("cont", "time")).value;\r\n' \
+  '              let new_time = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '              if (wpt.firstElementChild.value != "error") {wpt.firstElementChild.value = "edited";}\r\n' \
+  '              document.getElementById(wpt.id.replace("cont", "time")).value = new_time;\r\n' \
+  '              document.getElementById(wpt.id.replace("cont", "desc")).innerHTML = document.getElementById(wpt.id.replace("cont", "desc")).innerHTML.replace(ex_time, new_time);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          wpt = wpt_f.nextElementSibling;\r\n' \
+  '          if (wpt) {\r\n' \
+  '            wpts.insertBefore(wpt, wpt_r);\r\n' \
+  '            wpt_r = wpt;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        let wdot_f = document.getElementById("track" + seg_f.id.slice(7, -4)).nextElementSibling;\r\n' \
+  '        let wdot_r = wdot_f;\r\n' \
+  '        let wdot = wdot_f;\r\n' \
+  '        if (wdot_f) {\r\n' \
+  '          if (wdot_f.id.substring(0, 3) != "way") {wdot = null;}\r\n' \
+  '        }\r\n' \
+  '        while (wdot) {\r\n' \
+  '          wdot = wdot_f.nextElementSibling;\r\n' \
+  '          if (wdot) {\r\n' \
+  '            if (wdot.id.substring(0, 3) != "way") {wdot = null;}\r\n' \
+  '          }\r\n' \
+  '          if (wdot) {\r\n' \
+  '            handle.insertBefore(wdot, wdot_r);\r\n' \
+  '            wdot_r = wdot;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (wdot_f) {\r\n' \
+  '          if (wdot_f.id.substring(0, 3) == "way") {dot_f = wdot_f.nextElementSibling;} else {dot_f = wdot_f;}\r\n' \
+  '        } else {dot_f = null;}\r\n' \
+  '        let dot_r = dot_f;\r\n' \
+  '        let dot = dot_f;\r\n' \
+  '        if (dot_f) {\r\n' \
+  '          if (dot_f.id.substring(0, 3) != "dot") {dot = null;}\r\n' \
+  '        }\r\n' \
+  '        while (dot) {\r\n' \
+  '          dot = dot_f.nextElementSibling;\r\n' \
+  '          if (dot) {\r\n' \
+  '            if (dot.id.substring(0, 3) != "dot") {dot = null;}\r\n' \
+  '          }\r\n' \
+  '          if (dot) {\r\n' \
+  '            handle.insertBefore(dot, dot_r);\r\n' \
+  '            dot_r = dot;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        segment_renum();\r\n' \
+  '        whole_calc();\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
   '      } \r\n' \
@@ -4106,7 +4335,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        batch = ++hist_b;\r\n' \
+  '        let batch = ++hist_b;\r\n' \
   '        while (p < pts.length) {\r\n' \
   '          while (e < ele.length) {\r\n' \
   '            r = ele[e].split(",");\r\n' \
@@ -4238,7 +4467,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        batch = ++hist_b;\r\n' \
+  '        let batch = ++hist_b;\r\n' \
   '        for (let p=sp; p<spans.length; p++) {\r\n' \
   '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error") {\r\n' \
   '            let palt = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
@@ -4300,7 +4529,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        batch = ++hist_b;\r\n' \
+  '        let batch = ++hist_b;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = segs[s].getElementsByTagName("span");\r\n' \
   '          let lc = -1;\r\n' \
@@ -4694,7 +4923,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        batch = ++hist_b;\r\n' \
+  '        let batch = ++hist_b;\r\n' \
   '        for (let p=path.length - 1; p>=0; p--) {\r\n' \
   '          [lat, lon] = path[p].split(",").map(Number);\r\n' \
   '          point_insert("b", lat, lon, batch);\r\n' \
@@ -4926,7 +5155,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:50em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jsegmentup#}" style="width:1.7em;" onclick="segment_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jsegmentdown#}" style="width:1.7em;" onclick="segment_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;<button title="{#jsegmentreverse#}" style="width:1.7em;"onclick="segment_reverse()">&rlarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;<button title="{#jdatetime#}" style="width:1.7em;" onclick="datetime_interpolate()">&#9201</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:50em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jelementup#}" style="width:1.7em;" onclick="element_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jelementdown#}" style="width:1.7em;" onclick="element_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;<button title="{#jsegmentreverse#}" style="width:1.7em;"onclick="segment_reverse()">&rlarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;<button title="{#jdatetime#}" style="width:1.7em;" onclick="datetime_interpolate()">&#9201</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
