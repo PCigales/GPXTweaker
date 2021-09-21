@@ -64,7 +64,7 @@ Dans l'interface:
   - roulette souris pour faire glisser la carte verticalement
   - shift + roulette souris pour faire glisser la carte horizontalement
   - ctrl + roulette souris pour zoomer ou dézoomer
-  - alt + roulette souris pour passer au point suivant ou précédent
+  - alt + roulette souris pour passer au point ou segment suivant ou précédent
 
 
 ----------English----------
@@ -128,4 +128,4 @@ In the interface:
   - mouse wheel to scroll the map vertically
   - shift + mouse wheel to scroll the map horizontally
   - ctrl + mouse wheel to zoom in or out
-  - alt + mouse wheel to switch to the next or previous point
+  - alt + mouse wheel to switch to the next or previous point or segment
