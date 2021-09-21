@@ -3324,6 +3324,9 @@ class GPXTweakerWebInterfaceServer():
   '        rebase_track(x, y, track);\r\n' \
   '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1)\r\n' \
   '      }\r\n' \
+  '      function escape(s) {\r\n' \
+  '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
+  '      }\r\n' \
   '      function point_edit(scroll=true, cancel=true, recalc=true) {\r\n' \
   '        let pt = document.getElementById(focused + "desc");\r\n' \
   '        let pt_cb = document.getElementById(focused);\r\n' \
@@ -3359,13 +3362,13 @@ class GPXTweakerWebInterfaceServer():
   '          let time = document.getElementById(focused + "time").value;\r\n' \
   '          if (focused.substring(0, 3) == "way") {\r\n' \
   '            let name = document.getElementById(focused + "name").value;\r\n' \
-  '            document.getElementById(focused + "desc").innerHTML = "(" + lat + ", " + lon + ") " + time + "<br>" + name;\r\n' \
+  '            document.getElementById(focused + "desc").innerHTML = escape("(" + lat + ", " + lon + ") " + time) + "<br>" + escape(name);\r\n' \
   '          } else {\r\n' \
   '            let ele = "";\r\n' \
   '            if (document.getElementById(focused + "ele").value != "") {ele = parseFloat(document.getElementById(focused + "ele").value).toFixed(0);}\r\n' \
   '            let alt = "";\r\n' \
   '            if (document.getElementById(focused + "alt").value != "") {alt = parseFloat(document.getElementById(focused + "alt").value).toFixed(0);}\r\n' \
-  '          document.getElementById(focused + "desc").innerHTML = "(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time;\r\n' \
+  '          document.getElementById(focused + "desc").innerHTML = escape("(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time);\r\n' \
   '          }\r\n' \
   '          let dot = document.getElementById(focused.replace("point", "dot"))\r\n' \
   '          dot.style.left = pos[0];\r\n' \
@@ -3876,7 +3879,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (ele != null) {ele_c = ele.toFixed(0) + "m";}\r\n' \
   '        let alt_c = "-m";\r\n' \
   '        if (alt != null) {alt_c = alt.toFixed(0) + "m";}\r\n' \
-  '        document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s (" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ")");\r\n' \
+  '        document.getElementById("points").firstChild.replaceData(pos_p + 5, points.length - pos_p - 5, "s (" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") ");\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function segments_calc() {\r\n' \
