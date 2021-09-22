@@ -3110,40 +3110,74 @@ class GPXTweakerWebInterfaceServer():
   '      function scroll_to_dot(dot) {\r\n' \
   '        scroll_view(htopx + prop_to_wmvalue(dot.style.left), htopy - prop_to_wmvalue(dot.style.top));\r\n' \
   '      }\r\n' \
-  '      function scroll_to_track(track) {\r\n' \
-  '        let p_box = track.firstElementChild.getBBox();\r\n' \
-  '        let d = track.firstElementChild.getAttribute("d").substring(1);\r\n' \
-  '        if (d.indexOf("M") < 0) {return;}\r\n' \
-  '        if (d.indexOf("L") < 0) {\r\n' \
-  '          let [x, y] = d.match(/M *\d+([.]\d*)? +\d+([.]\d*)?/)[0].substring(1).replace(/ +/g, " ").split(" ").map(Number);\r\n' \
-  '          scroll_view(htopx + x, htopy - y);\r\n' \
+  '      function track_center(track=null) {\r\n' \
+  '        let tracks = [];\r\n' \
+  '        if (track != null) {\r\n' \
+  '          tracks.push(track);\r\n' \
   '        } else {\r\n' \
-  '          scroll_view(htopx + prop_to_wmvalue(track.style.left) + p_box.x + p_box.width / 2, htopy - prop_to_wmvalue(track.style.top) - p_box.y - p_box.height / 2);\r\n' \
+  '          let segs = document.getElementById("pointsform").children;\r\n' \
+  '          for (let s=0; s<segs.length; s++) {\r\n' \
+  '            if (segs[s].firstElementChild.checked) {\r\n' \
+  '              tracks.push(document.getElementById("track" + segs[s].id.slice(7, -4)));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        let gminx = null;\r\n' \
+  '        let gminy = null;\r\n' \
+  '        let gmaxx = null;\r\n' \
+  '        let gmaxy = null;\r\n' \
+  '        for (let t=0; t<tracks.length; t++) {\r\n' \
+  '          let d = tracks[t].firstElementChild.getAttribute("d").match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g);\r\n' \
+  '          let minx = null;\r\n' \
+  '          let miny = null;\r\n' \
+  '          let maxx = null;\r\n' \
+  '          let maxy = null;\r\n' \
+  '          for (let p=1; p<d.length; p++) {\r\n' \
+  '            if (d[p][0] != "m") {\r\n' \
+  '              let pt = d[p].substring(1).replace(/ +/g, " ").split(" ").map(Number);\r\n' \
+  '              if (minx == null) {\r\n' \
+  '                [minx, miny] = pt;\r\n' \
+  '                [maxx, maxy] = pt;\r\n' \
+  '              } else {\r\n' \
+  '                minx = Math.min(minx, pt[0]);\r\n' \
+  '                miny = Math.min(miny, pt[1]);\r\n' \
+  '                maxx = Math.max(maxx, pt[0]);\r\n' \
+  '                maxy = Math.max(maxy, pt[1]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (minx != null) {\r\n' \
+  '            if (gminx == null) {\r\n' \
+  '              gminx = prop_to_wmvalue(tracks[t].style.left) + minx;\r\n' \
+  '              gminy = prop_to_wmvalue(tracks[t].style.top) + miny;\r\n' \
+  '              gmaxx = prop_to_wmvalue(tracks[t].style.left) + maxx;\r\n' \
+  '              gmaxy = prop_to_wmvalue(tracks[t].style.top) + maxy;\r\n' \
+  '            } else {\r\n' \
+  '              gminx = Math.min(gminx, prop_to_wmvalue(tracks[t].style.left) + minx);\r\n' \
+  '              gminy = Math.min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
+  '              gmaxx = Math.max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
+  '              gmaxy = Math.max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (gminx == null) {\r\n' \
+  '          return null;\r\n' \
+  '        } else {\r\n' \
+  '          return [(gminx + gmaxx) / 2, (gminy + gmaxy) / 2];\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function scroll_to_track(track) {\r\n' \
+  '        let c = track_center(track);\r\n' \
+  '        if (c == null) {return;}\r\n' \
+  '        scroll_view(htopx + c[0], htopy - c[1]);\r\n' \
+  '      }\r\n' \
   '      function scroll_to_all() {\r\n' \
-  '        let minx = vmaxx;\r\n' \
-  '        let maxx = vminx;\r\n' \
-  '        let miny = vmaxy;\r\n' \
-  '        let maxy = vminy;\r\n' \
-  '        let segs = document.getElementById("pointsform").children;\r\n' \
-  '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '          let track = document.getElementById("track" + segs[s].id.slice(7, -4));\r\n' \
-  '          let p_box = track.firstElementChild.getBBox();\r\n' \
-  '          if (track.firstElementChild.getAttribute("d").substring(1).indexOf("M") < 0) {continue;}\r\n' \
-  '          minx = Math.min(minx, htopx + prop_to_wmvalue(track.style.left) + p_box.x);\r\n' \
-  '          maxy = Math.max(maxy, htopy - prop_to_wmvalue(track.style.top) - p_box.y);\r\n' \
-  '          maxx = Math.max(maxx, htopx + prop_to_wmvalue(track.style.left) + p_box.x + p_box.width);\r\n' \
-  '          miny = Math.min(miny, htopy - prop_to_wmvalue(track.style.top) - p_box.y - p_box.height);\r\n' \
+  '        let c = track_center();\r\n' \
+  '        if (c == null) {\r\n' \
+  '          scroll_view((vminx + vmaxx) / 2, (vminy + vmaxy) / 2);\r\n' \
+  '        } else {\r\n' \
+  '          scroll_view(htopx + c[0], htopy - c[1]); \r\n' \
   '        }\r\n' \
-  '        if (segs.length == 0) {\r\n' \
-  '          minx = vminx;\r\n' \
-  '          maxx = vmaxx;\r\n' \
-  '          miny = vminy;\r\n' \
-  '          maxy = vmaxy;\r\n' \
-  '        }\r\n' \
-  '        scroll_view((minx + maxx) / 2, (miny + maxy) / 2);\r\n' \
   '      }\r\n' \
   '      function dot_style(pt, over) {\r\n' \
   '        if (pt.indexOf("point") < 0) {return;}\r\n' \
@@ -3312,7 +3346,7 @@ class GPXTweakerWebInterfaceServer():
   '          let points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '          if (points != null) {\r\n' \
   '            for (let point of points) {\r\n' \
-  '              [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '              let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
   '              d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -4030,6 +4064,7 @@ class GPXTweakerWebInterfaceServer():
   '        path_foc.setAttribute("d", "M0 0 " + d_right);\r\n' \
   '        path.setAttribute("d", d_left[0]);\r\n' \
   '        handle.insertBefore(track, track_foc);\r\n' \
+  '        scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")));\r\n' \
   '        segment_recalc(seg_foc, false);\r\n' \
   '        segment_recalc(seg);\r\n' \
   '      }\r\n' \
@@ -4075,6 +4110,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (d_foc.substring(1).indexOf("M") >= 0) {d = d.replace("M", "L");}\r\n' \
   '        path_foc.setAttribute("d", d_foc + d);\r\n' \
   '        path.setAttribute("d", "M0 0");\r\n' \
+  '        scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
   '        segment_recalc(seg_foc, false);\r\n' \
   '        segment_checkbox(seg.firstElementChild);\r\n' \
   '      }\r\n' \
@@ -4188,11 +4224,13 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused == "") {\r\n' \
   '          if (! window.confirm("{#jrconfirm#}")) {return;}\r\n' \
   '          whole = true;\r\n' \
+  '          scroll_to_all();\r\n' \
   '          segs = pts.children;\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          let seg_foc = document.getElementById(focused + "cont");\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
+  '          scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
   '        } else {return;}\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
@@ -4512,14 +4550,19 @@ class GPXTweakerWebInterfaceServer():
   '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
   '          }\r\n' \
   '          if (segs.length == 0) {return;}\r\n' \
+  '          scroll_to_all();\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
+  '          scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
   '        } else if (focused.substring(0, 5) == "point") {\r\n' \
   '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
   '          pt_foc = focused;\r\n' \
+  '          document.getElementById(pt_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
   '          seg_foc = document.getElementById(pt_foc + "cont").parentNode;\r\n' \
   '          segs = [seg_foc];\r\n' \
+  '          scroll_to_dot(document.getElementById(pt_foc.replace("point", "dot")));\r\n' \
   '        } else {\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
@@ -4914,6 +4957,7 @@ class GPXTweakerWebInterfaceServer():
   '      } \r\n' \
   '      function load_pcb(t, foc) {\r\n' \
   '        if (t.status != 200) {return;}\r\n' \
+  '        let ex_foc = focused;\r\n' \
   '        let path = t.response.split("\\r\\n");\r\n' \
   '        if (path.length <= 0) {return;}\r\n' \
   '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
@@ -4932,12 +4976,13 @@ class GPXTweakerWebInterfaceServer():
   '          point_edit(false, false, false);\r\n' \
   '          save_old();\r\n' \
   '        }\r\n' \
-  '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
+  '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        document.getElementById(foc).scrollIntoView({block:"center"});\r\n' \
   '        segment_recalc(document.getElementById(foc).parentNode.parentNode);\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '      } \r\n' \
   '      function build_path() {\r\n' \
+  '        let foc = focused;\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
   '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
   '        let lat_a = document.getElementById(focused + "lat").value;\r\n' \
@@ -4960,7 +5005,9 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (lat_d == null || lon_d == null) {return;}\r\n' \
   '        let b = lat_d + "," + lon_d + "\\r\\n" + lat_a + "," + lon_a;\r\n' \
-  '        xhrp.onload = (e) => {load_pcb(e.target, focused)};\r\n' \
+  '        let xhrp = new XMLHttpRequest();\r\n' \
+  '        xhrp.addEventListener("error", error_pcb);\r\n' \
+  '        xhrp.onload = (e) => {load_pcb(e.target, foc)};\r\n' \
   '        xhrp.open("POST", "/path");\r\n' \
   '        xhrp.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -6775,8 +6822,17 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'elevation', self.ElevationAPI[0])
     self.Itinerary = WGS84Itinerary()
     if self.ItineraryAPI[0] != {}:
-      self.ItineraryProviderConnection = [None]
-      self.ItineraryProvider = partial(self.Itinerary.RequestItinerary, self.ItineraryAPI[0], **self.ItineraryAPI[1], pconnection=self.ItineraryProviderConnection)
+      self.ItineraryProviderConnection = [[None]]
+      def ItineraryProvider(self, points):
+        try:
+          pcon = self.ItineraryProviderConnection.pop()
+        except:
+          pcon = None
+        iti = self.Itinerary.RequestItinerary(self.ItineraryAPI[0], points, **self.ItineraryAPI[1], pconnection=pcon)
+        if pcon:
+          self.ItineraryProviderConnection.append(pcon)
+        return iti
+      self.ItineraryProvider = partial(ItineraryProvider, self)
       self.log(1, 'itinerary', self.ItineraryAPI[0])
     else:
       self.ItineraryProvider = None
