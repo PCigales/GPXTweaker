@@ -138,6 +138,36 @@ FR_STRINGS = {
     'jgraphelegain': 'déniv élé',
     'jgraphaltgain': 'déniv alt',
     'jgraphtime': 'durée',
+    'jmundo': 'Action annulée',
+    'jmredo': 'Action rétablie',
+    'jminsert1': 'Point de cheminement inséré',
+    'jminsert2': 'Point inséré',
+    'jmpath1': 'Récupération de l\'itinéraire en cours...',
+    'jmpath2': 'Itinéraire inséré',
+    'jmpath3': 'Échec de la récupération de l\'itinéraire',
+    'jmelementup1': 'Point de cheminement déplacé',
+    'jmelementup2': 'Segment déplacé',
+    'jmsegmentcut1': 'Segment dupliqué',
+    'jmsegmentcut2': 'Segment divisé',
+    'jmsegmentabsorb': 'Segments fusionnés',
+    'jmsegmentreverse1': 'Segment inversé',
+    'jmsegmentreverse2': 'Trace inversée',
+    'jmelevations1': 'Récupération des élévations en cours...',
+    'jmelevations2': 'Élévation du point mise à jour',
+    'jmelevations3': 'Élévations du segment mises à jour',
+    'jmelevations4': 'Élévations de la trace mises à jour',
+    'jmelevations5': 'Échec de la récupération des élévations',
+    'jmaltitudesjoin1': 'Altitudes égalisées par décalage uniforme',
+    'jmaltitudesjoin2': 'Altitudes égalisées par décalage progressif',
+    'jmdatetime1': 'Horodatage du point mis à jour',
+    'jmdatetime2': 'Horodatages du segment mis à jour',
+    'jmdatetime3': 'Horodatages de la trace mis à jour',
+    'jmsave1': 'Sauvegarde en cours...',
+    'jmsave2': 'Sauvegarde effectuée',
+    'jmsave3': 'Échec de la sauvegarde',
+    'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
+    'jm3dviewer2': 'Visionneuse 3D démarrée',
+    'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jzscale': 'Échelle Z:',
@@ -276,6 +306,36 @@ EN_STRINGS = {
     'jgraphelegain': 'ele gain',
     'jgraphaltgain': 'alt gain',
     'jgraphtime': 'duration',
+    'jmundo': 'Action canceled',
+    'jmredo': 'Action restored',
+    'jminsert1': 'Waypoint inserted',
+    'jminsert2': 'Point inserted',
+    'jmpath1': 'Retrieval of the itinerary in progress...',
+    'jmpath2': 'Itinerary inserted',
+    'jmpath3': 'Failure of the retrieval of the itinerary',
+    'jmelementup1': 'Waypoint moved',
+    'jmelementup2': 'Segment moved',
+    'jmsegmentcut1': 'Segment duplicated',
+    'jmsegmentcut2': 'Segment split',
+    'jmsegmentabsorb': 'Segments merged',
+    'jmsegmentreverse1': 'Segment reversed',
+    'jmsegmentreverse2': 'Track reversed',
+    'jmelevations1': 'Retrieval of elevations in progress...',
+    'jmelevations2': 'Elevation of the point updated',
+    'jmelevations3': 'Elevations of the segment updated',
+    'jmelevations4': 'Elevations of the track updated',
+    'jmelevations5': 'Failure of the retrieval of elevations',
+    'jmaltitudesjoin1': 'Altitudes equalized by uniform offset',
+    'jmaltitudesjoin2': 'Altitudes equalized by progressive offset',
+    'jmdatetime1': 'Timestamp of the point updated',
+    'jmdatetime2': 'Timestamps of the segment updated',
+    'jmdatetime3': 'Timestamps of the track updated',
+    'jmsave1': 'Backup in progress...',
+    'jmsave2': 'Backup completed',
+    'jmsave3': 'Failure of the backup',
+    'jm3dviewer1': 'Loading of the 3D viewer in progress...',
+    'jm3dviewer2': '3D viewer started',
+    'jm3dviewer3': 'Failure of the loading of the 3D viewer',
     'jtilt': 'Tilt:',
     'jrotation': 'Rotation:',
     'jzscale': 'Z scale:',
@@ -2856,7 +2916,7 @@ class GPXTweakerWebInterfaceServer():
   '      br+span {\r\n' \
   '        display:none;\r\n' \
   '      }\r\n' \
-   '      path, svg[id*=dot] {\r\n' \
+  '      path, svg[id*=dot] {\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
   '      button {\r\n' \
@@ -2864,6 +2924,11 @@ class GPXTweakerWebInterfaceServer():
   '        padding-left:0;\r\n' \
   '        padding-right:0;\r\n' \
   '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      span+span[id^=message] {\r\n' \
+  '        margin-left: 0.4em;\r\n' \
+  '        padding-left: 0.4em;\r\n' \
+  '        border-left:1px rgb(225,225,225) solid;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' \
@@ -2896,6 +2961,21 @@ class GPXTweakerWebInterfaceServer():
   '      var graph_ip = null;\r\n' \
   '      var graph_px = null;\r\n' \
   '      var graph_xv = null;\r\n' \
+  '      var msg_n = 0;\r\n' \
+  '      function show_msg(msg, dur, msgn=null) {\r\n' \
+  '        let m = null;\r\n' \
+  '        if (msgn == null) {\r\n' \
+  '          msgn = ++msg_n;\r\n' \
+  '          m = document.createElement("span");\r\n' \
+  '          m.id = "message" + msgn.toString();\r\n' \
+  '        } else {\r\n' \
+  '          m = document.getElementById("message" + msgn.toString());\r\n' \
+  '        }\r\n' \
+  '        m.innerHTML = msg;\r\n' \
+  '        document.getElementById("message").insertBefore(m, document.getElementById("message").firstElementChild);\r\n' \
+  '        if (dur) {setTimeout(function() {document.getElementById("message").removeChild(m);}, dur * 1000);}\r\n' \
+  '        return msgn;\r\n' \
+  '      }\r\n' \
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
@@ -3544,6 +3624,7 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_dot(document.getElementById(ex_foc_.replace("point", "dot")));\r\n' \
   '          document.getElementById(ex_foc_ + "cont").scrollIntoView({block:"center"});\r\n' \
   '        }\r\n' \
+  '        show_msg((redo?"{#jmredo#}":"{#jmundo#}"), 2);\r\n' \
   '      }\r\n' \
   '      function point_insert(pos, lat=null, lon=null, batch=0) {\r\n' \
   '        let ex_foc = "";\r\n' \
@@ -3699,6 +3780,7 @@ class GPXTweakerWebInterfaceServer():
   '          hist[0].push([focused, ""]);\r\n' \
   '          el_label.scrollIntoView({block:"center"});\r\n' \
   '          if (seg) {segment_recalc(seg);}\r\n' \
+  '          show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
   '        } else {\r\n' \
   '          hist[0].push([focused, "", batch]);\r\n' \
   '        }\r\n' \
@@ -4031,6 +4113,7 @@ class GPXTweakerWebInterfaceServer():
   '          segment_recalc(seg);\r\n' \
   '          element_click(null, document.getElementById(seg.id.replace("cont", "desc")));\r\n' \
   '          seg.scrollIntoView({block:"start"});\r\n' \
+  '          show_msg("{#jmsegmentcut1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let pt = pt_foc.previousElementSibling;\r\n' \
@@ -4067,6 +4150,7 @@ class GPXTweakerWebInterfaceServer():
   '        scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")));\r\n' \
   '        segment_recalc(seg_foc, false);\r\n' \
   '        segment_recalc(seg);\r\n' \
+  '        show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '      }\r\n' \
   '      function segment_absorb() {\r\n' \
   '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
@@ -4113,6 +4197,7 @@ class GPXTweakerWebInterfaceServer():
   '        scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
   '        segment_recalc(seg_foc, false);\r\n' \
   '        segment_checkbox(seg.firstElementChild);\r\n' \
+  '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_up() {\r\n' \
   '        if (focused.substring(0, 5) == "point") {\r\n' \
@@ -4128,6 +4213,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("waypointsform").insertBefore(pt_foc, pt);\r\n' \
   '          pt_foc.scrollIntoView({block:"start"});\r\n' \
   '          handle.insertBefore(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '          show_msg("{#jmelementup1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
@@ -4197,6 +4283,7 @@ class GPXTweakerWebInterfaceServer():
   '        segment_renum();\r\n' \
   '        segment_recalc(seg, false);\r\n' \
   '        segment_recalc(seg_foc);\r\n' \
+  '        show_msg("{#jmelementup2#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_down() {\r\n' \
   '        if (focused.substring(0, 5) == "point") {\r\n' \
@@ -4286,6 +4373,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (! whole) {\r\n' \
   '          whole_calc();\r\n' \
+  '          show_msg("{#jmsegmentreverse1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let seg_f = segs[0];\r\n' \
@@ -4356,11 +4444,13 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        segment_renum();\r\n' \
   '        whole_calc();\r\n' \
+  '          show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
   '      } \r\n' \
   '      function load_ecb(t, pts) {\r\n' \
-  '        if (t.status != 200) {return;}\r\n' \
+  '        if (t.status != 200) {return false;}\r\n' \
+  '        if (t.response == "") {return false;}\r\n' \
   '        let ele = t.response.split("\\r\\n");\r\n' \
   '        let p = 0;\r\n' \
   '        let e = 0;\r\n' \
@@ -4395,7 +4485,7 @@ class GPXTweakerWebInterfaceServer():
   '                e++;\r\n' \
   '              }\r\n' \
   '              break;\r\n' \
-  '            }\r\n' \
+  '            } else {e++;}\r\n' \
   '          }\r\n' \
   '          p++;\r\n' \
   '        }\r\n' \
@@ -4407,11 +4497,13 @@ class GPXTweakerWebInterfaceServer():
   '          dot_style(ex_foc, false);\r\n' \
   '        }\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
+  '        return true;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false) {\r\n' \
   '        let pts = [];\r\n' \
   '        let b = "";\r\n' \
   '        let spans = null;\r\n' \
+  '        let msg = "";\r\n' \
   '        if (focused) {\r\n' \
   '          if (focused.substring(0, 3) == "way") {return;}\r\n' \
   '          if (focused.substring(0, 3) == "seg") {\r\n' \
@@ -4419,14 +4511,17 @@ class GPXTweakerWebInterfaceServer():
   '              if (! window.confirm("{#jesconfirm#}")) {return;}\r\n' \
   '            }\r\n' \
   '            spans = document.getElementById(focused + "cont").getElementsByTagName("span");\r\n' \
+  '            msg = "{#jmelevations3#}";\r\n' \
   '          } else {\r\n' \
   '            spans = [document.getElementById(focused + "focus")];\r\n' \
+  '            msg = "{#jmelevations2#}";\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          if (all) {\r\n' \
   '            if (! window.confirm("{#jeconfirm#}")) {return;}\r\n' \
   '          }\r\n' \
   '          spans = document.getElementById("points").getElementsByTagName("span");\r\n' \
+  '          msg = "{#jmelevations4#}";\r\n' \
   '        } \r\n' \
   '        for (let p=0; p<spans.length; p++) {\r\n' \
   '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error" && (all || document.getElementById(spans[p].id.slice(0, -5) + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
@@ -4435,7 +4530,10 @@ class GPXTweakerWebInterfaceServer():
   '          } \r\n' \
   '        }\r\n' \
   '        if (b.length == 0) {return;}\r\n' \
-  '        xhre.onload = (e) => {load_ecb(e.target, pts)};\r\n' \
+  '        let msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
+  '        let xhre = new XMLHttpRequest();\r\n' \
+  '        xhre.onload = (e) => {load_ecb(e.target, pts)?show_msg(msg, 2, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
+  '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhre.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -4539,6 +4637,7 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")));\r\n' \
   '        }\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
+  '        show_msg(((pt_foc==null)?"{#jmaltitudesjoin1#}":"{#jmaltitudesjoin2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function datetime_interpolate() {\r\n' \
   '        let segs = [];\r\n' \
@@ -4620,6 +4719,7 @@ class GPXTweakerWebInterfaceServer():
   '                if (pt_foc != null) {\r\n' \
   '                  segment_recalc(segs[s]);\r\n' \
   '                  if (gr) {refresh_graph(true);}\r\n' \
+  '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -4631,6 +4731,7 @@ class GPXTweakerWebInterfaceServer():
   '            pele = ele;\r\n' \
   '            pp = p;\r\n' \
   '          }\r\n' \
+  '          if (pt_foc != null) {return;}\r\n' \
   '          segment_recalc(segs[s], false);\r\n' \
   '        }\r\n' \
   '        whole_calc();\r\n' \
@@ -4641,6 +4742,7 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, document.getElementById(focused + "desc"));\r\n' \
   '          dot_style(ex_foc, false);\r\n' \
   '        }\r\n' \
+  '        show_msg(((seg_foc!=null)?"{#jmdatetime2#}":"{#jmdatetime3#}"), 2);\r\n' \
   '      }\r\n' \
   '      function switch_dots() {\r\n' \
   '        dots_visible = ! dots_visible;\r\n' \
@@ -4657,16 +4759,16 @@ class GPXTweakerWebInterfaceServer():
   '        let gctx = graphc.getContext("2d");\r\n' \
   '        if (sw) {\r\n' \
   '          if (graph.style.display == "none") {\r\n' \
-  '            document.getElementById("content").style.height = "calc(70vh - 1.5em - 25px)";\r\n' \
-  '            viewpane.style.height = "calc(70vh - 1.5em - 25px)";\r\n' \
+  '            document.getElementById("content").style.height = "calc(74vh - 1.8em - 25px)";\r\n' \
+  '            viewpane.style.height = "calc(74vh - 1.8em - 25px)";\r\n' \
   '            graph.style.display = "block";\r\n' \
   '            gctx.lineWidth = 1;\r\n' \
   '            gctx.lineJoin = "round";\r\n' \
   '            gctx.lineCap = "square";\r\n' \
   '            rescale();\r\n' \
   '          } else {\r\n' \
-  '            document.getElementById("content").style.height = "calc(95vh - 1.5em - 25px)";\r\n' \
-  '            viewpane.style.height = "calc(95vh - 1.5em - 25px)";\r\n' \
+  '            document.getElementById("content").style.height = "calc(99vh - 1.8em - 25px)";\r\n' \
+  '            viewpane.style.height = "calc(99vh - 1.8em - 25px)";\r\n' \
   '            graph.style.display = "none";\r\n' \
   '            document.getElementById("gbar").style.display = "none";\r\n' \
   '            document.getElementById("gbarc").style.display = "none";\r\n' \
@@ -4956,14 +5058,14 @@ class GPXTweakerWebInterfaceServer():
   '      function error_pcb() {\r\n' \
   '      } \r\n' \
   '      function load_pcb(t, foc) {\r\n' \
-  '        if (t.status != 200) {return;}\r\n' \
+  '        if (t.status != 200) {return false;}\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        let path = t.response.split("\\r\\n");\r\n' \
-  '        if (path.length <= 0) {return;}\r\n' \
-  '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
+  '        if (path.length <= 0) {return false;}\r\n' \
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
+  '        if (focused != foc) {element_click(null, document.getElementById(foc + "desc"));}\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        for (let p=path.length - 1; p>=0; p--) {\r\n' \
   '          let [lat, lon] = path[p].split(",").map(Number);\r\n' \
@@ -4977,9 +5079,10 @@ class GPXTweakerWebInterfaceServer():
   '          save_old();\r\n' \
   '        }\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
-  '        document.getElementById(foc).scrollIntoView({block:"center"});\r\n' \
+  '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        segment_recalc(document.getElementById(foc).parentNode.parentNode);\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
+  '        return true;\r\n'\
   '      } \r\n' \
   '      function build_path() {\r\n' \
   '        let foc = focused;\r\n' \
@@ -5006,8 +5109,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (lat_d == null || lon_d == null) {return;}\r\n' \
   '        let b = lat_d + "," + lon_d + "\\r\\n" + lat_a + "," + lon_a;\r\n' \
   '        let xhrp = new XMLHttpRequest();\r\n' \
-  '        xhrp.addEventListener("error", error_pcb);\r\n' \
-  '        xhrp.onload = (e) => {load_pcb(e.target, foc)};\r\n' \
+  '        let msgn = show_msg("{#jmpath1#}", 0);\r\n' \
+  '        xhrp.onload = (e) => {load_pcb(e.target, foc)?show_msg("{#jmpath2#}", 2, msgn):show_msg("{#jmpath3#}", 10, msgn);};\r\n' \
+  '        xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmpath3#}", 10, msgn);};\r\n' \
   '        xhrp.open("POST", "/path");\r\n' \
   '        xhrp.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -5120,23 +5224,25 @@ class GPXTweakerWebInterfaceServer():
   '      function zoom_inc() {\r\n' \
   '        zoom_change(1);\r\n' \
   '      }\r\n' \
-  '      function load_cb() {\r\n' \
+  '      function load_cb(t) {\r\n' \
   '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
   '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '          document.getElementById("save").disabled = false;\r\n' \
   '        }\r\n' \
-  '        if (this.status != 204) {\r\n' \
-  '          window.alert("{#jserror#}" + this.status + " " + this.statusText);\r\n' \
-  '        } else if (this.responseURL.indexOf("?") > 0) {\r\n' \
+  '        if (t.status != 204) {\r\n' \
+  '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
+  '          return false;\r\n'\
+  '        } else if (t.responseURL.indexOf("?") > 0) {\r\n' \
   '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html");\r\n' \
   '        }\r\n' \
+  '        return true;\r\n'\
   '      }\r\n' \
-  '      function error_cb() {\r\n' \
+  '      function error_cb(t) {\r\n' \
   '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
   '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '          document.getElementById("save").disabled = false;\r\n' \
   '        }\r\n' \
-  '        window.alert("{#jserror#}");\r\n' \
+  '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
   '      }\r\n' \
   '      function track_save(o3d=false) {\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "10%";\r\n' \
@@ -5170,23 +5276,27 @@ class GPXTweakerWebInterfaceServer():
   '             }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (o3d) {xhr.open("POST", "/track?save=no");} else {xhr.open("POST", "/track");}\r\n' \
+  '        if (o3d) {\r\n' \
+  '          let msgn = show_msg("{#jm3dviewer1#}", 0);\r\n' \
+  '           xhr.onload = (e) => {load_cb(e.target)?show_msg("{#jm3dviewer2#}", 2, msgn):show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
+  '           xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
+  '           xhr.open("POST", "/track?save=no");\r\n' \
+  '        } else {\r\n' \
+  '          let msgn = show_msg("{#jmsave1#}", 0);\r\n' \
+  '          xhr.onload = (e) => {load_cb(e.target)?show_msg("{#jmsave2#}", 5, msgn):show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '          xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '          xhr.open("POST", "/track");\r\n' \
+  '        }\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
-  '      xhr.addEventListener("error", error_cb);\r\n' \
-  '      xhr.addEventListener("load", load_cb);\r\n' \
   '      var xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
-  '      var xhre = new XMLHttpRequest();\r\n' \
-  '      xhre.addEventListener("error", error_ecb);\r\n' \
-  '      var xhrp = new XMLHttpRequest();\r\n' \
-  '      xhrp.addEventListener("error", error_pcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);"> \r\n' \
+  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
   '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:20em;">\r\n' \
@@ -5203,7 +5313,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div id="content" style="height:calc(95vh - 1.5em - 25px);">\r\n' \
+  '            <div id="content" style="height:calc(99vh - 1.8em - 25px);">\r\n' \
   '              <div id="pattern_waypoint" style="display:none;">\r\n '\
   '                ##WAYPOINTTEMPLATE##\r\n' \
   '              </div>\r\n' \
@@ -5229,7 +5339,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(95vh - 1.5em - 25px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 1.8em - 25px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS####DOTS##' \
   '              </div>\r\n' \
   '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);;padding-left:2px;padding-right: 2px;line-height:0.7em;"> \r\n' \
@@ -5244,6 +5354,13 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '        </tr>\r\n' \
   '      </tbody>\r\n' \
+  '      <tfoot>\r\n' \
+  '        <tr>\r\n' \
+  '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
+  '            <div id="message" style="overflow-x:hidden;width:98vw;"></div>\r\n' \
+  '          </th>\r\n' \
+  '        </tr>\r\n' \
+  '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
   '      <select id="graphy" name="graphy" autocomplete="off" style="width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
