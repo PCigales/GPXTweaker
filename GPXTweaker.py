@@ -3987,7 +3987,7 @@ class GPXTweakerWebInterfaceServer():
   '          waypoints.replaceData(pos_p, waypoints.data.length - pos_p, "(" + nbpt.toString() + ") ");\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function whole_calc(only_wpt=false) {\r\n' \
+  '      function whole_calc() {\r\n' \
   '        let points = document.getElementById("points").firstChild;\r\n' \
   '        let pos_p =  points.data.indexOf("(");\r\n' \
   '        if (pos_p >= 0) {points.deleteData(pos_p, points.length - pos_p);}\r\n' \
