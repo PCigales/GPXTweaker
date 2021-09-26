@@ -123,6 +123,8 @@ FR_STRINGS = {
     'jswitchpoints': 'afficher/cacher points',
     'jgraph': 'afficher/cacher graphique',
     'j3dviewer': 'visionneuse 3D',
+    'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
+    'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -194,7 +196,9 @@ FR_STRINGS = {
     'emap': 'chemin d\'accès à la carte d\'altitudes ou vide (ou ".") pour utiliser le fournisseur de carte d\'altitudes configuré ou pas mentionné pour utiliser le fournisseur de tuiles d\'altitudes configuré (par défaut)',
     'maxheight': 'hauteur maximale de la carte à retourner (requis pour l\'utilisation d\'un fournisseur de carte)',
     'maxwidth': 'largeur maximale de la carte à retourner (requis pour l\'utilisation d\'un fournisseur de carte)',
+    'noopen': 'par d\'ouverture automatique dans le navigateur par défaut',
     'verbosity': 'niveau de verbosité de 0 à 2 (0 par défaut)',
+    'open': 'Ouvrir l\'url %s',
     'keyboard': 'Presser "S" pour quitter',
    }
 }
@@ -291,6 +295,8 @@ EN_STRINGS = {
     'jswitchpoints': 'show/hide points',
     'jgraph': 'show/hide graph',
     'j3dviewer': '3D viewer',
+    'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
+    'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -362,7 +368,9 @@ EN_STRINGS = {
     'emap': 'path to the elevations map or blank (or ".") to use the configured elevations map provider or not mentioned to use the configured elevations tiles provider (by default)',
     'maxheight': 'max height of the map to be retrieved (required for the use of a map provider)',
     'maxwidth': 'max width of the map to be retrieved (required for the use of a map provider)',
+    'noopen': 'no automatic opening in the default browser',
     'verbosity': 'verbosity level from 0 to 2 (0 by default)',
+    'open': 'Open the url %s',
     'keyboard': 'Press "S" to exit',
    }
 }
@@ -2875,9 +2883,10 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker</title>\r\n' \
   '    <style type="text/css">\r\n' \
-  '      :root{\r\n' \
+  '      :root {\r\n' \
   '        --scale:1;\r\n' \
   '        --zoom:1;\r\n' \
+  '        --filter:none;\r\n' \
   '      }\r\n' \
   '      input[id=name_track] {\r\n' \
   '        width:calc(98vw - 60em);\r\n' \
@@ -2923,12 +2932,19 @@ class GPXTweakerWebInterfaceServer():
   '        border:none;\r\n' \
   '        padding-left:0;\r\n' \
   '        padding-right:0;\r\n' \
+  '        width:1.4em;\r\n' \
+  '        height:1.4em;\r\n' \
+  '        line-height:1.2em;\r\n' \
+  '        font-size:100%;\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
   '      span+span[id^=message] {\r\n' \
   '        margin-left: 0.4em;\r\n' \
   '        padding-left: 0.4em;\r\n' \
   '        border-left:1px rgb(225,225,225) solid;\r\n' \
+  '      }\r\n' \
+  '      img {\r\n' \
+  '        filter: var(--filter);\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' \
@@ -3627,7 +3643,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById(focused).checked = redo;\r\n' \
   '            focused = "";\r\n' \
   '            point_checkbox(document.getElementById(hist[s][ind][0]), histb != 0);\r\n' \
-  '            if (histb ==0) {dot_style(hist[s][ind][0], false)};\r\n' \
+  '            if (histb == 0) {dot_style(hist[s][ind][0], false)};\r\n' \
   '            focused = hist[s][ind][0];\r\n' \
   '          }\r\n' \
   '          hist[s].splice(ind, 1);\r\n' \
@@ -4682,7 +4698,7 @@ class GPXTweakerWebInterfaceServer():
   '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '                focused = spans[p].id.slice(0, -5);\r\n' \
+  '              focused = spans[p].id.slice(0, -5);\r\n' \
   '              save_old();\r\n' \
   '              document.getElementById(spans[p].id.replace("focus", "alt")).value = (palt + cor).toFixed(1);\r\n' \
   '              hist[0].push([focused, foc_old, batch]);\r\n' \
@@ -5343,6 +5359,27 @@ class GPXTweakerWebInterfaceServer():
   '      function zoom_inc() {\r\n' \
   '        zoom_change(1);\r\n' \
   '      }\r\n' \
+  '      function opacity_dec() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        let opacity = 1;\r\n' \
+  '        if (filter && filter != "none") {\r\n' \
+  '          opacity = parseFloat(filter.match(/slope=\"(0\.[0-9])\"/)[1]);\r\n' \
+  '        }\r\n' \
+  '        if (opacity > 0.19) {\r\n' \
+  '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function opacity_inc() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (filter && filter != "none") {\r\n' \
+  '          let opacity = parseFloat(filter.match(/slope=\"(0\.[0-9])\"/)[1]);\r\n' \
+  '          if (opacity < 0.81) {\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
+  '          } else {filter = "none";}\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function load_cb(t) {\r\n' \
   '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
   '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
@@ -5425,7 +5462,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" style="width:1.7em;" onclick="undo()">&cularr;</button>&nbsp;<button title="{#jredo#}" style="width:1.7em;" onclick="undo(true)">&curarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jinsertb#}" style="width:1.7em;" onclick="point_insert(\'b\')">&boxdR;</button>&nbsp;<button title="{#jinserta#}" style="width:1.7em;" onclick="point_insert(\'a\')">&boxuR;</button>&nbsp;<button title="{#jpath#}" style="width:1.7em;" onclick="build_path()">&rarrc;</button>&nbsp;&nbsp;&nbsp<button title="{#jelementup#}" style="width:1.7em;" onclick="element_up()">&UpTeeArrow;</button>&nbsp;<button title="{#jelementdown#}" style="width:1.7em;" onclick="element_down()">&DownTeeArrow;</button>&nbsp;<button title="{#jsegmentcut#}" style="width:1.7em;" onclick="segment_cut()">&latail;</button>&nbsp;<button title="{#jsegmentabsorb#}" style="width:1.7em;"onclick="segment_absorb()">&ratail;</button>&nbsp;<button title="{#jsegmentreverse#}" style="width:1.7em;"onclick="segment_reverse()">&rlarr;</button>&nbsp;&nbsp;&nbsp;<button title="{#jelevationsadd#}" style="width:1.7em;" onclick="ele_adds()">&plusacir;</button>&nbsp;<button title="{#jelevationsreplace#}" style="width:1.7em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button>&nbsp;<button title="{#jaltitudesjoin#}" style="width:1.7em;" onclick="ele_join()">&apacir;</button>&nbsp;<button title="{#jdatetime#}" style="width:1.7em;" onclick="datetime_interpolate()">&#9201</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jsave#}" id="save" style="width:1.7em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button title="{#jswitchpoints#}" style="width:1.7em;" onclick="switch_dots()">&EmptySmallSquare;</button>&nbsp;<button title="{#jgraph#}" style="width:1.7em;" onclick="refresh_graph(true)">&angrt;</button>&nbsp;&nbsp;&nbsp;<button title="{#j3dviewer#}" style="width:1.7em;" onclick="open_3D()">3D</button>&nbsp;&nbsp;&nbsp;<select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select>&nbsp;<button style="width:1.7em;" onclick="zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button style="width:1.7em;" onclick="zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo()">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -7271,13 +7308,17 @@ if __name__ == '__main__':
   parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const='.', default='')
   parser.add_argument('--maxheight', '-mh', metavar='MAX_HEIGHT', help=LSTRINGS['parser']['maxheight'], type=int, default=0)
   parser.add_argument('--maxwidth', '-mw', metavar='MAX_WIDTH', help=LSTRINGS['parser']['maxwidth'], type=int, default=0)
+  parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   VERBOSITY = args.verbosity
   GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or 2000), maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   if not GPXTweakerInterface.run():
     exit()
-  webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0]))
+  if args.noopen:
+    print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0])))
+  else:
+    webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0]))
   print(LSTRINGS['parser']['keyboard'])
   while True:
     k = msvcrt.getch()
