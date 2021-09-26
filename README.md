@@ -38,7 +38,7 @@ Le module fournit diverses classes destinées à la manipulation directe de cont
 
 Syntaxe:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--maxheight|-mh MAX_HEIGHT] [--maxwidth|-mw MAX_WIDTH] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--maxheight|-mh MAX_HEIGHT] [--maxwidth|-mw MAX_WIDTH] [--noopen|-n] [--v|-v VERBOSITY]  
 où:  
   -h: afficher l'aide  
   URI: le chemin d'accès à la trace (en local ou, en lecture seule, sur un serveur)  
@@ -46,6 +46,7 @@ où:
   MAP: le chemin d'accès à la carte (en local ou sur un serveur) ou le nom d'un fournisseur de carte paramétré dans le fichier de configuration, ou non mentionné pour utiliser les fournisseurs de tuiles définis dans ce même fichier  
   EMAP: le chemin d'accès à la carte d'altitudes ou vide (ou '.') pour utiliser le fournisseur de cartes d'altitudes paramétré dans le fichier de configuration, ou non mentionné pour utiliser le fournisseur de tuiles ou données d'altitudes définis dans ce même fichier  
   MAX_HEIGHT et MAX_WIDTH: si le nom d'un fournisseur de carte est mentionné, la hauteur et la largeur maximales de la carte à retourner doit être indiquée au moyen de ces deux paramètres  
+  -noopen: pour que le script n'ouvre pas la page d'interface dans le navigateur par défaut (et ainsi pouvoir utiliser un autre navigateur)  
   VERBOSITY: niveau de verbosité de 0 à 2 (0 par défaut)
 
 Exemples:  
@@ -65,6 +66,7 @@ Dans l'interface:
   - shift + roulette souris pour faire glisser la carte horizontalement
   - ctrl + roulette souris pour zoomer ou dézoomer
   - alt + roulette souris pour passer au point ou segment suivant ou précédent
+  - ctrl + clic sur les boutons de zoom pour modifier l'opacité de la carte
 
 
 ----------English----------
@@ -110,6 +112,7 @@ where:
   MAP: the path to the map (on local or on a server) or the name of a map provider set in the configuration file, or not mentioned in order to use the tiles providers defined in this file  
   EMAP: the path to the elevations map or blank (or '.') to use the elevations map provider setin the configuration file, or not mentioned in order to use the elevations tiles or data defined in this file  
   MAX_HEIGHT and MAX_WIDTH: if the name of a map provider is mentioned, the max height and width of the map to be retrieved has to be indicated with these two arguments  
+  -noopen: so that the script does not open the interface page in the default browser (and so, be able to use another browser)  
   VERBOSITY: verbosity level from 0 to 2 (0 by default)
 
 Examples:  
@@ -129,3 +132,4 @@ In the interface:
   - shift + mouse wheel to scroll the map horizontally
   - ctrl + mouse wheel to zoom in or out
   - alt + mouse wheel to switch to the next or previous point or segment
+  - ctrl + click on the zoom buttons to change the opacity of the map
