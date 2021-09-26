@@ -104,7 +104,7 @@ The module provides different classes designed for direct handling of cartograph
 
 Syntax:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--maxheight|-mh MAX_HEIGHT] [--maxwidth|-mw MAX_WIDTH] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--maxheight|-mh MAX_HEIGHT] [--maxwidth|-mw MAX_WIDTH] [--noopen|-n] [--v|-v VERBOSITY]  
 where:  
   -h: shows the help  
   URI: the path to the track (on local or, in read only mode, on a server)  
