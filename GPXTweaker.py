@@ -123,6 +123,9 @@ FR_STRINGS = {
     'jswitchpoints': 'afficher/cacher points',
     'jgraph': 'afficher/cacher graphique',
     'j3dviewer': 'visionneuse 3D',
+    'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
+    'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
+    'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+shift: +alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
     'jwaypoints': 'Points de cheminement',
@@ -295,6 +298,9 @@ EN_STRINGS = {
     'jswitchpoints': 'show/hide points',
     'jgraph': 'show/hide graph',
     'j3dviewer': '3D viewer',
+    'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
+    'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
+    'jiset': 'select the itineraries provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
     'jwaypoints': 'Waypoints',
@@ -594,7 +600,7 @@ class HTTPMessage():
         buff = buff + bloc
     return True
 
-def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=1073741824, pconnection=None):
+def HTTPRequest(url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, pconnection=None):
   if not method:
     method = 'GET' if not data else 'POST'
   redir = 0
@@ -603,6 +609,8 @@ def HTTPRequest(url, method=None, headers={}, data=None, timeout=30, max_length=
   code = '0'
   url_ = url
   close = False
+  if headers == None:
+    headers = {}
   for k in list(k for k in headers):
     if not headers[k]:
       del headers[k]
@@ -1680,12 +1688,14 @@ class WebMercatorMap(WGS84WebMercator):
       self.log(2, 'tileretrieved', infos)
     return tile
 
-  def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False, number=1, infos_completed={}, pconnections=None):
+  def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False, number=1, infos_completed=None, pconnections=None):
     if isinstance(pconnections, list):
       if len(pconnections) < number:
         pconnections.extend(list([None] for i in range(number - len(pconnections))))
     else:
       pconnections = list([None] for i in range(number))
+    if infos_completed == None:
+      infos_completed = {}
     if False in (k in infos_completed for k in ('layer',  'format', 'matrix', 'scale', 'topx', 'topy', 'width', 'height')) or (False in (k in infos_completed for k in ('source', 'matrixset', 'style')) and False in (k in infos_completed for k in ('pattern', 'basescale'))):
       infos_set = False
       for k in infos_base:
@@ -2538,6 +2548,12 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
           'Access-Control-Allow-Origin: %s\r\n' \
           '\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+          resp_204 = 'HTTP/1.1 204 No content\r\n' \
+          'Content-Length: 0\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
           resp_err = 'HTTP/1.1 404 File not found\r\n' \
           'Content-Length: 0\r\n' \
           'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
@@ -2652,6 +2668,61 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
               else:
                 self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:27] == '/elevationsproviders/switch' :
+            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+              try:
+                self.request.sendall(resp_bad.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rbad', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
+            try:
+              if 'layer' in self.server.Interface.ElevationsProviders[int(q['eset'][0])][1]:
+                self.server.Interface.EMode = "tiles"
+                self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], matrix=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1].get('matrix'), **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
+                self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
+              else:
+                self.server.Interface.EMode = "api"
+                self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
+                self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            try:
+              self.request.sendall(resp_204.encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:28] == '/itinerariesproviders/switch' :
+            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+              try:
+                self.request.sendall(resp_bad.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rbad', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
+            try:
+              self.server.Interface.ItineraryProviderConnection = [[None]]
+              self.server.Interface.ItineraryProviderSel = int(q['iset'][0])
+              self.server.Interface.log(1, 'itinerary', self.server.Interface.ItinerariesProviders[int(q['iset'][0])][0])
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            try:
+              self.request.sendall(resp_204.encode('ISO-8859-1'))
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
@@ -2968,6 +3039,8 @@ class GPXTweakerWebInterfaceServer():
   '        var tlock = false;\r\n' \
   '        var zoom_s = "1";\r\n' \
   '      }\r\n' \
+  '      var eset = 0;\r\n' \
+  '      var iset = 0;\r\n' \
   '      var dots_visible = false;\r\n' \
   '      var focused = "";\r\n' \
   '      var hist = [[], []];\r\n' \
@@ -5134,6 +5207,7 @@ class GPXTweakerWebInterfaceServer():
   '      function load_pcb(t, foc) {\r\n' \
   '        if (t.status != 200) {return false;}\r\n' \
   '        let ex_foc = focused;\r\n' \
+  '        if (! t.response) {return false;}\r\n' \
   '        let iti = t.response.split("\\r\\n");\r\n' \
   '        if (iti.length <= 0) {return false;}\r\n' \
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
@@ -5308,6 +5382,32 @@ class GPXTweakerWebInterfaceServer():
   '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
   '        rescale();\r\n' \
   '      }\r\n' \
+  '      function switch_sel(e, s) {\r\n' \
+  '        if (e.altKey) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (s.id != "tset") {\r\n' \
+  '            s.style.display = "none";\r\n' \
+  '            document.getElementById("tset").style.display = "inline-block";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (e.shiftKey) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (s.id != "eset" && document.getElementById("eset").options.length > 0) {\r\n' \
+  '            s.style.display = "none";\r\n' \
+  '            document.getElementById("eset").style.display = "inline-block";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (e.ctrlKey) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (s.id != "iset" && document.getElementById("iset").options.length > 0) {\r\n' \
+  '            s.style.display = "none";\r\n' \
+  '            document.getElementById("iset").style.display = "inline-block";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function zoom_change(o) {\r\n' \
   '        let zoom_s_ex = zoom_s;\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -5363,7 +5463,7 @@ class GPXTweakerWebInterfaceServer():
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        let opacity = 1;\r\n' \
   '        if (filter && filter != "none") {\r\n' \
-  '          opacity = parseFloat(filter.match(/slope=\"(0\.[0-9])\"/)[1]);\r\n' \
+  '          opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
   '        }\r\n' \
   '        if (opacity > 0.19) {\r\n' \
   '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
@@ -5373,12 +5473,46 @@ class GPXTweakerWebInterfaceServer():
   '      function opacity_inc() {\r\n' \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (filter && filter != "none") {\r\n' \
-  '          let opacity = parseFloat(filter.match(/slope=\"(0\.[0-9])\"/)[1]);\r\n' \
+  '          let opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
   '          if (opacity < 0.81) {\r\n' \
   '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
   '          } else {filter = "none";}\r\n' \
   '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function load_epcb(t) {\r\n' \
+  '        if (t.status != 204) {\r\n' \
+  '          document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        eset = document.getElementById("eset").selectedIndex;\r\n' \
+  '      } \r\n' \
+  '      function error_epcb() {\r\n' \
+  '        document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '      } \r\n' \
+  '      function switch_elevations(eset) {\r\n' \
+  '        let q = "eset=" + encodeURIComponent(eset);\r\n' \
+  '        xhrep.onload = (e) => {load_epcb(e.target)};\r\n' \
+  '        xhrep.open("GET", "/elevationsproviders/switch?" + q);\r\n' \
+  '        xhrep.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrep.send();\r\n' \
+  '      }\r\n' \
+  '      function load_ipcb(t) {\r\n' \
+  '        if (t.status != 204) {\r\n' \
+  '          document.getElementById("iset").selectedIndex = iset;\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        iset = document.getElementById("iset").selectedIndex;\r\n' \
+  '      } \r\n' \
+  '      function error_ipcb() {\r\n' \
+  '        document.getElementById("iset").selectedIndex = iset;\r\n' \
+  '      } \r\n' \
+  '      function switch_itineraries(iset) {\r\n' \
+  '        let q = "iset=" + encodeURIComponent(iset);\r\n' \
+  '        xhrip.onload = (e) => {load_ipcb(e.target)};\r\n' \
+  '        xhrip.open("GET", "/itinerariesproviders/switch?" + q);\r\n' \
+  '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrip.send();\r\n' \
   '      }\r\n' \
   '      function load_cb(t) {\r\n' \
   '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
@@ -5450,6 +5584,10 @@ class GPXTweakerWebInterfaceServer():
   '      var xhr = new XMLHttpRequest();\r\n' \
   '      var xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
+  '      var xhrep = new XMLHttpRequest();\r\n' \
+  '      xhrep.addEventListener("error", error_epcb);\r\n' \
+  '      var xhrip = new XMLHttpRequest();\r\n' \
+  '      xhrip.addEventListener("error", error_ipcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
@@ -5462,7 +5600,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo()">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo()">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -5513,7 +5651,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tfoot>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div id="message" style="overflow-x:hidden;width:98vw;height:1.2em"></div>\r\n' \
+  '            <div id="message" style="overflow-y:auto;width:98vw;height:1.2em"></div>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </tfoot>\r\n' \
@@ -5719,7 +5857,6 @@ class GPXTweakerWebInterfaceServer():
   '        rescale();\r\n' \
   '      } else {\r\n' \
   '        switch_tiles(0, 0);\r\n' \
-  '        document.getElementById("tset").style.display = "inline-block";\r\n' \
   '        document.getElementById("matrix").style.display = "inline-block";\r\n' \
   '        document.getElementById("tlock").style.display = "inline-block";\r\n' \
   '      }\r\n' \
@@ -6714,11 +6851,7 @@ class GPXTweakerWebInterfaceServer():
         continue
       if l[:2] == '[[' and l[-2:] == ']]':
         hcur = l[2:-2]
-        if hcur.lower() == 'elevationtiles':
-          hcur = hcur.lower()
-          s = self.ElevationTiles
-          o = 0
-        elif hcur[:9].lower() == 'maptiles ':
+        if hcur[:9].lower() == 'maptiles ':
           hcur = hcur[:9].lower() + hcur[9:]
           self.TilesSets.append([hcur[9:], {}, {}, [1, ]])
           s = self.TilesSets[-1]
@@ -6728,11 +6861,26 @@ class GPXTweakerWebInterfaceServer():
           self.MapSets.append([hcur[4:], {}, {}])
           s = self.MapSets[-1]
           o = 1
+        elif hcur[:15].lower() == 'elevationtiles ':
+          hcur = hcur[:15].lower() + hcur[15:]
+          self.ElevationsProviders.append([hcur[15:], {}, {}])
+          s = self.ElevationsProviders[-1]
+          o = 1
         elif hcur.lower() == 'elevationmap':
           hcur = hcur.lower()
           s = self.ElevationMap
           o = 0
-        elif hcur.lower() in ('global', 'elevationapi', 'itineraryapi'):
+        elif hcur[:13].lower() in 'elevationapi ':
+          hcur = hcur[:13].lower() + hcur[13:]
+          self.ElevationsProviders.append([hcur[13:], {}, {}])
+          s = self.ElevationsProviders[-1]
+          o = 1
+        elif hcur[:13].lower() == 'itineraryapi ':
+          hcur = hcur[:13].lower() + hcur[13:]
+          self.ItinerariesProviders.append([hcur[13:], {}, {}])
+          s = self.ItinerariesProviders[-1]
+          o = 1
+        elif hcur.lower() == 'global':
           hcur = hcur.lower()
         else:
           self.log(0, 'cerror', hcur)
@@ -6748,11 +6896,7 @@ class GPXTweakerWebInterfaceServer():
           if not scur in ('infos', 'handling', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
-        elif hcur in ('elevationtiles', 'elevationapi', 'elevationmap', 'itineraryapi'):
-          if not scur in ('infos', 'handling'):
-            self.log(0, 'cerror', hcur + ' - ' + scur)
-            return False
-        elif hcur[:4] == 'map ':
+        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationapi ', 'itineraryapi ') or hcur == 'elevationmap':
           if not scur in ('infos', 'handling'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
@@ -6819,14 +6963,14 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
-      elif hcur[:9] == 'maptiles ' or hcur == 'elevationtiles':
+      elif hcur[:9] == 'maptiles ' or hcur[:15] == 'elevationtiles ':
         if scur == 'infos':
           if field == 'alias':
             s[o] = WebMercatorMap.TSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.TSAlias(value)
             if not s[o]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'pattern', 'layer', 'matrixset', 'style', 'format') or (hcur == 'elevationtiles' and field in ('matrix', 'nodata')):
+          elif field in ('source', 'pattern', 'layer', 'matrixset', 'style', 'format') or (hcur[:15] == 'elevationtiles ' and field in ('matrix', 'nodata')):
             s[o][field] = value
             if field == 'nodata':
               try:
@@ -6899,18 +7043,18 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
-      elif hcur == 'elevationapi':
+      elif hcur[:13] in ('elevationapi ', 'itineraryapi '):
         if scur == 'infos':
           if field == 'alias':
-            self.ElevationAPI[0] = WGS84Elevation.ASAlias(value)
-            if not self.ElevationAPI[0]:
+            s[o] = WGS84Elevation.ASAlias(value) if hcur[:13] == 'elevationapi ' else WGS84Itinerary.ASAlias(value)
+            if not s[o]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'separator', 'json_key', 'nodata'):
-            self.ElevationAPI[0][field.replace('json_', '')] = value
+          elif field in ('source', 'json_key') + (('separator', 'nodata') if hcur[:13] == 'elevationapi ' else ()):
+            s[o][field.replace('json_', '')] = value
             if field == 'nodata':
               try:
-                self.ElevationAPI[0][field] = float(value)
+                s[o][field] = float(value)
               except:
                 pass
           else:
@@ -6918,25 +7062,7 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent'):
-            self.ElevationAPI[1][field] = value
-          else:
-            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-            return False
-      elif hcur == 'itineraryapi':
-        if scur == 'infos':
-          if field == 'alias':
-            self.ItineraryAPI[0] = WGS84Itinerary.ASAlias(value)
-            if not self.ItineraryAPI[0]:
-              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-              return False
-          elif field in ('source', 'json_key'):
-            self.ItineraryAPI[0][field.replace('json_', '')] = value
-          else:
-            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-            return False
-        elif scur == 'handling':
-          if field in ('key', 'referer', 'user_agent'):
-            self.ItineraryAPI[1][field] = value
+            s[o + 1][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -6963,14 +7089,14 @@ class GPXTweakerWebInterfaceServer():
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
-    self.ElevationTiles = [{}, {}]
     self.MapSets = []
+    self.ElevationsProviders = []
     self.ElevationMap = [{}, {}]
-    self.ElevationAPI = [{}, {}]
-    self.ItineraryAPI = [{}, {}]
+    self.ItinerariesProviders = []
     self.Track = WGS84Track()
     self.TilesSet = None
     self.MapSet = None
+    self.ItineraryProviderSel = None
     self.HTML = None
     self.HTML3D = None
     self.HTML3DData = None
@@ -7021,6 +7147,7 @@ class GPXTweakerWebInterfaceServer():
       self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = None, None, None, None
     if map:
       self.Mode = "map"
+      self.TilesSets = [["Map"]]
       self.Map = WebMercatorMap()
       if '://' in map or ':\\' in map:
         if not self.Map.LoadMap(map, minx=self.VMinx, miny=self.VMiny, maxx=self.VMaxx, maxy=self.VMaxy, resolution=resolution):
@@ -7062,6 +7189,7 @@ class GPXTweakerWebInterfaceServer():
         return
     self.Elevation = WGS84Elevation()
     if emap:
+      self.ElevationsProviders = []
       if emap != True:
         if self.Elevation.LoadMap(emap):
           self.EMode = "map"
@@ -7081,31 +7209,33 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.ElevationProvider = None
         self.log(0, 'eerror', '-')
-    elif self.ElevationTiles[0] != {}:
-      self.EMode = "tiles"
-      self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationTiles[0], matrix=self.ElevationTiles[0]['matrix'], **self.ElevationTiles[1])
-      self.log(1, 'elevation', self.ElevationTiles[0])
+    elif len(self.ElevationsProviders) > 0:
+      if 'layer' in self.ElevationsProviders[0][1]:
+        self.EMode = "tiles"
+        self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
+        self.log(1, 'elevation', self.ElevationsProviders[0][0])
+      else:
+        self.EMode = "api"
+        self.ElevationProvider = partial(self.Elevation.RequestElevation, self.ElevationsProviders[0][1], **self.ElevationsProviders[0][2])
+        self.log(1, 'elevation', self.ElevationsProviders[0][0])
     else:
       self.log(0, 'eerror', '-')
       self.ElevationProvider = None
-    if not self.ElevationProvider and self.ElevationAPI[0] != {}:
-      self.EMode = "api"
-      self.ElevationProvider = partial(self.Elevation.RequestElevation, self.ElevationAPI[0], **self.ElevationAPI[1])
-      self.log(1, 'elevation', self.ElevationAPI[0])
     self.Itinerary = WGS84Itinerary()
-    if self.ItineraryAPI[0] != {}:
+    if len(self.ItinerariesProviders) > 0:
+      self.ItineraryProviderSel = 0
       self.ItineraryProviderConnection = [[None]]
       def ItineraryProvider(points):
         try:
           pcon = self.ItineraryProviderConnection.pop()
         except:
           pcon = None
-        iti = self.Itinerary.RequestItinerary(self.ItineraryAPI[0], points, **self.ItineraryAPI[1], pconnection=pcon)
+        iti = self.Itinerary.RequestItinerary(self.ItinerariesProviders[self.ItineraryProviderSel][1], points, **self.ItinerariesProviders[self.ItineraryProviderSel][2], pconnection=pcon)
         if pcon:
           self.ItineraryProviderConnection.append(pcon)
         return iti
       self.ItineraryProvider = ItineraryProvider
-      self.log(1, 'itinerary', self.ItineraryAPI[0])
+      self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
     else:
       self.ItineraryProvider = None
     self.HTML = ''
@@ -7135,6 +7265,12 @@ class GPXTweakerWebInterfaceServer():
   def _build_tsets(self):
     return ''.join('<option value="%s">%s</option>' % (*([html.escape(tset[0])] * 2),) for tset in self.TilesSets)
 
+  def _build_esets(self):
+    return ''.join('<option value="%s">%s</option>' % (*([html.escape(epro[0])] * 2),) for epro in self.ElevationsProviders)
+
+  def _build_isets(self):
+    return ''.join('<option value="%s">%s</option>' % (*([html.escape(ipro[0])] * 2),) for ipro in self.ItinerariesProviders)
+
   def BuildHTML(self):
     if self.HTML == None:
       return False
@@ -7145,7 +7281,9 @@ class GPXTweakerWebInterfaceServer():
     waypoints = self._build_waypoints()
     points = self._build_points()
     tsets = self._build_tsets()
-    self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots).replace('##TSETS##', tsets)
+    esets = self._build_esets()
+    isets = self._build_isets()
+    self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets)
     self.log(2, 'built')
     return True
 
