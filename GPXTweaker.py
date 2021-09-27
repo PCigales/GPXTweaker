@@ -105,29 +105,30 @@ FR_STRINGS = {
     'jeconfirm': 'Remplacer toutes les données d\'élévation ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
-    'jundo': 'annuler',
-    'jredo': 'rétablir',
-    'jinsertb': 'insérer avant',
-    'jinserta': 'insérer après',
-    'jpath': 'tracer chemin vers',
-    'jelementup': 'monter segment ou point de cheminement / segment courant',
-    'jelementdown': 'descendre segment ou point de cheminement / segment suivant',
-    'jsegmentcut': 'couper / dupliquer segment',
-    'jsegmentabsorb': 'fusionner segments',
-    'jsegmentreverse': 'inverser segment',
-    'jelevationsadd': 'ajouter élévations',
-    'jelevationsreplace': 'remplacer élévations',
-    'jaltitudesjoin': 'joindre altitudes',
-    'jdatetime': 'compléter l\'horodatage par interpolation',
-    'jsave': 'sauvegarder',
-    'jswitchpoints': 'afficher/cacher points',
-    'jgraph': 'afficher/cacher graphique',
-    'j3dviewer': 'visionneuse 3D',
+    'jundo': 'annuler la dernière action&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
+    'jredo': 'rétablir la dernière action&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
+    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessus&#13;&#10pas de focus: insérer un point de cheminement au début',
+    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessous&#13;&#10pas de focus: insérer un point de cheminement à la fin',
+    'jpath': 'tracer un chemin vers le point qui a le focus depuis le point précédent',
+    'jelementup': 'focus sur segment: monter l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment courant&#13;&#10;focus sur point de cheminement: monter l\'élément',
+    'jelementdown': 'focus sur segment: descendre l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment suivant&#13;&#10;focus sur point de cheminement: descendre l\'élément',
+    'jsegmentcut': 'focus sur segment: dupliquer le segment&#13;&#10;focus sur point: diviser le segment au-dessus',
+    'jsegmentabsorb': 'fusionner le segment qui a le focus avec le segment suivant',
+    'jsegmentreverse': 'focus sur segment / pas de focus: inverser le segment / la trace',
+    'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace',
+    'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace',
+    'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
+    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par interpolation l\'horodatage de l\'élément / la trace',
+    'jsave': 'sauvegarder la trace',
+    'jswitchpoints': 'afficher / cacher les points et points de cheminement',
+    'jgraph': 'afficher / cacher le graphique',
+    'j3dviewer': 'ouvrir la visionneuse 3D',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
-    'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+shift: +alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
+    'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
+    'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -280,29 +281,30 @@ EN_STRINGS = {
     'jeconfirm': 'Replace all elevation datas ?',
     'jrconfirm': 'Reverse the whole track ?',
     'junload': 'Warning, the datas will be lost !',
-    'jundo': 'undo',
-    'jredo': 'redo',
-    'jinsertb': 'insert before',
-    'jinserta': 'insert after',
-    'jpath': 'draw path to',
-    'jelementup': 'put segment or waypoint up / current segment',
-    'jelementdown': 'put segment or waypoint down / next segment',
-    'jsegmentcut': 'cut / duplicate segment',
-    'jsegmentabsorb': 'merge segments',
-    'jsegmentreverse': 'reverse segment',
-    'jelevationsadd': 'add elevations',
-    'jelevationsreplace': 'replace elevations',
-    'jaltitudesjoin': 'join altitudes',
-    'jdatetime': 'complete timestamps by interpolation',
-    'jsave': 'backup',
-    'jswitchpoints': 'show/hide points',
-    'jgraph': 'show/hide graph',
-    'j3dviewer': '3D viewer',
+    'jundo': 'undo the action&#13;&#10;+alt: only for the focused element',
+    'jredo': 'redo the action&#13;&#10;+alt: only for the focused element',
+    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint above&#13;&#10no focus: insert a waypoint at the start',
+    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint below&#13;&#10no focus: insert a waypoint at the end',
+    'jpath': 'draw a path towards the focused point from the previous point',
+    'jelementup': 'focus on segment: move the element up (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the current segment&#13;&#10;focus on waypoint: move the element up',
+    'jelementdown': 'focus on segment: move the element down (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the next segment&#13;&#10;focus on waypoint: move the element down',
+    'jsegmentcut': 'focus on segment: duplicate the segment&#13;&#10;focus on point: split the segment above',
+    'jsegmentabsorb': 'merge the focused segment with the next segment',
+    'jsegmentreverse': 'focus on segment / no focus: reverse the segment / the track',
+    'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track',
+    'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track',
+    'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
+    'jdatetime': 'focus on segment or point / no focus: complete by interpolation the timestamps of the element / the track',
+    'jsave': 'backup the track',
+    'jswitchpoints': 'show / hide the points and waypoints',
+    'jgraph': 'show / hide the graph',
+    'j3dviewer': 'open the 3D viewer',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
     'jiset': 'select the itineraries provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
+    'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag on the plot of a point / waypoint to select it / move it&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -2681,6 +2683,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
             try:
+              self.server.Interface.ElevationProviderSel = int(q['eset'][0])
               if 'layer' in self.server.Interface.ElevationsProviders[int(q['eset'][0])][1]:
                 self.server.Interface.EMode = "tiles"
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], matrix=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1].get('matrix'), **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
@@ -3464,7 +3467,7 @@ class GPXTweakerWebInterfaceServer():
   '        [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
   '        document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
   '        document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
-  '        point_edit(false, false, false);\r\n' \
+  '        point_edit(false, false, false, true);\r\n' \
   '      }\r\n' \
   '      function rebase_track(x, y, track, exact=false) {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
@@ -3627,10 +3630,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt.id.indexOf("desc") < 0) {foc = pt.id;} else {foc = pt.htmlFor;}\r\n' \
   '        dot_style(foc, false);\r\n' \
   '      }\r\n' \
-  '      function undo(redo=false) {\r\n' \
+  '      function undo(redo, whole) {\r\n' \
   '        let s = redo?1:0;\r\n' \
   '        if (hist[s].length == 0) {return;}\r\n' \
   '        let ex_foc = focused;\r\n' \
+  '        if (whole && focused) {element_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        let ind = null;\r\n' \
   '        let histb = 0;\r\n' \
   '        let inds=[];\r\n' \
@@ -3662,6 +3666,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (ind == null) {return;}\r\n' \
+  '          histb = ++hist_b;\r\n' \
   '        } else {\r\n' \
   '          for (let i=hist[s].length-1; i>=0; i--) {\r\n' \
   '            if (hist[s][i][0] == focused) {\r\n' \
@@ -3753,7 +3758,7 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_dot(document.getElementById(ex_foc_.replace("point", "dot")));\r\n' \
   '          document.getElementById(ex_foc_ + "cont").scrollIntoView({block:"center"});\r\n' \
   '        } else {\r\n' \
-  '          document.getElementById(ex_foc_ + "cont").scrollIntoView({block:"nearest"});\r\n' \
+  '          document.getElementById(ex_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        show_msg((redo?"{#jmredo#}":"{#jmundo#}"), 2);\r\n' \
@@ -4451,7 +4456,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (! elt) {return;}\r\n' \
   '        focused = elt.id.slice(0, -4);\r\n' \
   '        element_up();\r\n' \
-  '        focused = elt_foc.id.slice(0, -4);\r\n' \
+  '        if (focused != elt_foc.id.slice(0, -4)) {element_click(null, elt_foc.firstElementChild.nextElementSibling);};\r\n' \
   '        elt_foc.scrollIntoView({block:"start"});\r\n' \
   '      }\r\n' \
   '      function segment_reverse() {\r\n' \
@@ -5600,7 +5605,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo()">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -5651,7 +5656,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tfoot>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div id="message" style="overflow-y:auto;width:98vw;height:1.2em"></div>\r\n' \
+  '            <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </tfoot>\r\n' \
@@ -5719,7 +5724,7 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              document.getElementById(focused + "name").value = "";\r\n' \
   '            }\r\n' \
-  '            point_edit(false, false, false);\r\n' \
+  '            point_edit(false, false, false, true);\r\n' \
   '            save_old();\r\n' \
   '            hand = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            hand_m = false;\r\n' \
@@ -5892,13 +5897,13 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">(%.4f, %.4f) %s<br>%s</label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit(false, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit(false, true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit(false, true, false, false)"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_WAYPOINT_TEMPLATE = HTML_WAYPOINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -5908,15 +5913,15 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="point%s" id="point%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)">(%.4f, %.4f) %s %s %s</label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slat" name="point%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slon" name="point%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="point%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="point%salt">{jalt}</label>\r\n' \
-  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit(false, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -7096,6 +7101,7 @@ class GPXTweakerWebInterfaceServer():
     self.Track = WGS84Track()
     self.TilesSet = None
     self.MapSet = None
+    self.ElevationProviderSel = None
     self.ItineraryProviderSel = None
     self.HTML = None
     self.HTML3D = None
@@ -7210,6 +7216,7 @@ class GPXTweakerWebInterfaceServer():
         self.ElevationProvider = None
         self.log(0, 'eerror', '-')
     elif len(self.ElevationsProviders) > 0:
+      self.ElevationProviderSel = 0
       if 'layer' in self.ElevationsProviders[0][1]:
         self.EMode = "tiles"
         self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
@@ -7299,22 +7306,26 @@ class GPXTweakerWebInterfaceServer():
     maxlat = min(vmaxlat, max(p[1][0] for seg in self.Track.Pts for p in seg) + 0.005)
     minlon = max(vminlon, min(p[1][1] for seg in self.Track.Pts for p in seg) - 0.006)
     maxlon = min(vmaxlon, max(p[1][1] for seg in self.Track.Pts for p in seg) + 0.006)
-    if self.EMode == 'map':
-      tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
-      if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
+    try:
+      if self.EMode == 'map':
+        tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
+        if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
+          self.log(0, '3derror1')
+          return False
+      elif self.EMode == 'tiles':
+        infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
+        if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2]):
+          self.log(0, '3derror1')
+          return False
+      elif self.EMode == 'api':
+        infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
+        if not self.Elevation.GenerateBil32Map(infos, minlat, maxlat, minlon, maxlon, 65536, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10)):
+          self.log(0, '3derror1')
+          return False
+      else:
         self.log(0, '3derror1')
         return False
-    elif self.EMode == 'tiles':
-      infos = {**self.ElevationTiles[0]}
-      if not self.Elevation.AssembleMap(infos, self.ElevationTiles[0]['matrix'], minlat, maxlat, minlon, maxlon, **self.ElevationTiles[1]):
-        self.log(0, '3derror1')
-        return False
-    elif self.EMode == 'api':
-      infos = {**self.ElevationAPI[0]}
-      if not self.Elevation.GenerateBil32Map(infos, minlat, maxlat, minlon, maxlon, 65536, **self.ElevationAPI[1], threads=(self.TilesBufferThreads or 10)):
-        self.log(0, '3derror1')
-        return False
-    else:
+    except:
       self.log(0, '3derror1')
       return False
     if self.Elevation.MapInfos['format'] != 'image/x-bil;bits=32' and self.Elevation.MapInfos['format'] != 'image/hgt':
