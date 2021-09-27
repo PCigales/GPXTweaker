@@ -107,8 +107,8 @@ FR_STRINGS = {
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
-    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessus&#13;&#10pas de focus: insérer un point de cheminement au début',
-    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessous&#13;&#10pas de focus: insérer un point de cheminement à la fin',
+    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début',
+    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessous&#13;&#10;pas de focus: insérer un point de cheminement à la fin',
     'jpath': 'tracer un chemin vers le point qui a le focus depuis le point précédent',
     'jelementup': 'focus sur segment: monter l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment courant&#13;&#10;focus sur point de cheminement: monter l\'élément',
     'jelementdown': 'focus sur segment: descendre l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment suivant&#13;&#10;focus sur point de cheminement: descendre l\'élément',
@@ -283,8 +283,8 @@ EN_STRINGS = {
     'junload': 'Warning, the datas will be lost !',
     'jundo': 'undo the action&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the action&#13;&#10;+alt: only for the focused element',
-    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint above&#13;&#10no focus: insert a waypoint at the start',
-    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint below&#13;&#10no focus: insert a waypoint at the end',
+    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint above&#13;&#10;no focus: insert a waypoint at the start',
+    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint below&#13;&#10;no focus: insert a waypoint at the end',
     'jpath': 'draw a path towards the focused point from the previous point',
     'jelementup': 'focus on segment: move the element up (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the current segment&#13;&#10;focus on waypoint: move the element up',
     'jelementdown': 'focus on segment: move the element down (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the next segment&#13;&#10;focus on waypoint: move the element down',
@@ -2985,7 +2985,7 @@ class GPXTweakerWebInterfaceServer():
   '        padding-bottom:3px;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '        overflow-x:clip;\r\n' \
+  '        overflow-x:hidden;\r\n' \
   '        max-width:20em;\r\n' \
   '      }\r\n' \
   '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name]  {\r\n' \
@@ -5612,7 +5612,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div id="content" style="height:calc(99vh - 1.8em - 25px);">\r\n' \
+  '            <div id="content" style="height:calc(99vh - 1.8em - 25px);width: calc(20em - 2px);">\r\n' \
   '              <div id="pattern_waypoint" style="display:none;">\r\n '\
   '                ##WAYPOINTTEMPLATE##\r\n' \
   '              </div>\r\n' \
@@ -5625,12 +5625,12 @@ class GPXTweakerWebInterfaceServer():
   '              <div id="pattern_dot" style="display:none;">\r\n '\
   '                ##DOTTEMPLATE##\r\n' \
   '              </div>\r\n' \
-  '              <div id="waypoints" style="overflow-y:auto;max-height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
+  '              <div id="waypoints" style="overflow-y:auto;overflow-x:hidden;max-height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
   '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
   '                <form id="waypointsform" autocomplete="off">\r\n                  ##WAYPOINTS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
-  '              <div id="points" style="overflow-y:auto;max-height:88%;font-size:80%">\r\n' \
+  '              <div id="points" style="overflow-y:auto;overflow-x:hidden;max-height:88%;font-size:80%">\r\n' \
   '                {#jpoints#}&nbsp;<svg id="dot%s" width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
   '                <form id="pointsform" autocomplete="off">\r\n                  ##POINTS##\r\n' \
   '                </form>\r\n' \
