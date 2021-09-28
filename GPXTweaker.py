@@ -105,8 +105,8 @@ FR_STRINGS = {
     'jeconfirm': 'Remplacer toutes les données d\'élévation ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
-    'jundo': 'annuler la dernière action&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
-    'jredo': 'rétablir la dernière action&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
+    'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
+    'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début',
     'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessous&#13;&#10;pas de focus: insérer un point de cheminement à la fin',
     'jpath': 'tracer un chemin vers le point qui a le focus depuis le point précédent',
@@ -127,6 +127,7 @@ FR_STRINGS = {
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
+    'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
@@ -144,8 +145,10 @@ FR_STRINGS = {
     'jgraphelegain': 'déniv élé',
     'jgraphaltgain': 'déniv alt',
     'jgraphtime': 'durée',
-    'jmundo': 'Action annulée',
-    'jmredo': 'Action rétablie',
+    'jmundo1': 'Insertion de %s point(s) annulée',
+    'jmundo2': 'Modification de %s point(s) annulée',
+    'jmredo1': 'Insertion de %s point(s) rétablie',
+    'jmredo2': 'Modification de %s point(s) rétablie',
     'jminsert1': 'Point de cheminement inséré',
     'jminsert2': 'Point inséré',
     'jmpath1': 'Récupération de l\'itinéraire en cours...',
@@ -281,8 +284,8 @@ EN_STRINGS = {
     'jeconfirm': 'Replace all elevation datas ?',
     'jrconfirm': 'Reverse the whole track ?',
     'junload': 'Warning, the datas will be lost !',
-    'jundo': 'undo the action&#13;&#10;+alt: only for the focused element',
-    'jredo': 'redo the action&#13;&#10;+alt: only for the focused element',
+    'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
+    'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
     'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint above&#13;&#10;no focus: insert a waypoint at the start',
     'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint below&#13;&#10;no focus: insert a waypoint at the end',
     'jpath': 'draw a path towards the focused point from the previous point',
@@ -303,6 +306,7 @@ EN_STRINGS = {
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
     'jiset': 'select the itineraries provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
+    'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag on the plot of a point / waypoint to select it / move it&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
@@ -320,8 +324,10 @@ EN_STRINGS = {
     'jgraphelegain': 'ele gain',
     'jgraphaltgain': 'alt gain',
     'jgraphtime': 'duration',
-    'jmundo': 'Action canceled',
-    'jmredo': 'Action restored',
+    'jmundo1': 'Insertion of %s point(s) cancelled',
+    'jmundo2': 'Modification of %s point(s) cancelled',
+    'jmredo1': 'Insertion of %s point(s) restores',
+    'jmredo2': 'Modification of %s point(s) restored',
     'jminsert1': 'Waypoint inserted',
     'jminsert2': 'Point inserted',
     'jmpath1': 'Retrieval of the itinerary in progress...',
@@ -2974,7 +2980,13 @@ class GPXTweakerWebInterfaceServer():
   '        color:revert;\r\n' \
   '      }\r\n' \
   '      input[type=checkbox] {\r\n' \
-  '        vertical-align:-20%;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        margin-left:3px;\r\n' \
+  '        width:1.25em;\r\n' \
+  '        height:1.25em;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox][id^=segment] {\r\n' \
+  '        margin-left: 1px;\r\n' \
   '      }\r\n' \
   '      input+label:hover,input:hover+label {\r\n' \
   '        background-color:green;\r\n' \
@@ -2982,11 +2994,11 @@ class GPXTweakerWebInterfaceServer():
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
   '        display:inline-block;\r\n' \
-  '        padding-bottom:3px;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
   '        overflow-x:hidden;\r\n' \
-  '        max-width:20em;\r\n' \
+  '        max-width:calc(24em - 22px);\r\n' \
+  '        min-height:1.35em;\r\n' \
   '      }\r\n' \
   '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name]  {\r\n' \
   '        display:inline-block;\r\n' \
@@ -3049,6 +3061,8 @@ class GPXTweakerWebInterfaceServer():
   '      var hist = [[], []];\r\n' \
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
+  '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
+  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
   '      var stats = [];\r\n' \
   '      var graph_ip = null;\r\n' \
   '      var graph_px = null;\r\n' \
@@ -3536,6 +3550,33 @@ class GPXTweakerWebInterfaceServer():
   '      function escape(s) {\r\n' \
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
   '      }\r\n' \
+  '      function point_desc(ptspan = null) {\r\n' \
+  '        if (! ptspan) {\r\n' \
+  '          let points = document.getElementById("content").getElementsByTagName("span");\r\n' \
+  '          for (p=0; p<points.length; p++) {\r\n' \
+  '            points[p].parentNode.firstElementChild.nextElementSibling.innerHTML = point_desc(points[p]);\r\n' \
+  '          }\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let chld = ptspan.children;\r\n' \
+  '        let lat = parseFloat(chld[1].value).toFixed(4);\r\n' \
+  '        let lon = parseFloat(chld[4].value).toFixed(4);\r\n' \
+  '        let time_ = Date.parse(chld[(ptspan.id.substring(0, 3) == "way")?7:13].value);\r\n' \
+  '        let time = "";\r\n' \
+  '        if (! isNaN(time_)) {\r\n' \
+  '          time = time_conv.format(time_)  + "˙" + date_conv.format(time_);\r\n' \
+  '        }\r\n' \
+  '        if (ptspan.id.substring(0, 3) == "way") {\r\n' \
+  '          let name = chld[10].value;\r\n' \
+  '          return escape("(" + lat + ", " + lon + ") " + time) + "<br>" + escape(name);\r\n' \
+  '          } else {\r\n' \
+  '            let ele = "";\r\n' \
+  '            if (chld[7].value != "") {ele = parseFloat(chld[7].value).toFixed(0);}\r\n' \
+  '            let alt = "";\r\n' \
+  '            if (chld[10].value != "") {alt = parseFloat(chld[10].value).toFixed(0);}\r\n' \
+  '          return escape("(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time);\r\n' \
+  '          }\r\n' \
+  '      }\r\n' \
   '      function point_edit(scroll=true, cancel=true, recalc=true, coord=true) {\r\n' \
   '        let pt = document.getElementById(focused + "desc");\r\n' \
   '        let pt_cb = document.getElementById(focused);\r\n' \
@@ -3552,12 +3593,8 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "alt").checkValidity() && document.getElementById(focused + "time").checkValidity();\r\n' \
   '        } \r\n' \
-  '        let lat = null;\r\n' \
-  '        let lon = null;\r\n' \
   '        let wm = null;\r\n' \
   '        if (valid) {\r\n' \
-  '          lat = parseFloat(document.getElementById(focused + "lat").value).toFixed(4);\r\n' \
-  '          lon = parseFloat(document.getElementById(focused + "lon").value).toFixed(4);\r\n' \
   '          wm = WGS84toWebMercator(parseFloat(document.getElementById(focused + "lat").value), parseFloat(document.getElementById(focused + "lon").value));\r\n' \
   '          valid = wm[0] > vminx && wm[0] < vmaxx && wm[1] > vminy && wm[1] < vmaxy;\r\n' \
   '        }\r\n' \
@@ -3567,17 +3604,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            pt.style.textDecoration = "line-through";\r\n' \
   '          }\r\n' \
-  '          let time = document.getElementById(focused + "time").value;\r\n' \
-  '          if (focused.substring(0, 3) == "way") {\r\n' \
-  '            let name = document.getElementById(focused + "name").value;\r\n' \
-  '            document.getElementById(focused + "desc").innerHTML = escape("(" + lat + ", " + lon + ") " + time) + "<br>" + escape(name);\r\n' \
-  '          } else {\r\n' \
-  '            let ele = "";\r\n' \
-  '            if (document.getElementById(focused + "ele").value != "") {ele = parseFloat(document.getElementById(focused + "ele").value).toFixed(0);}\r\n' \
-  '            let alt = "";\r\n' \
-  '            if (document.getElementById(focused + "alt").value != "") {alt = parseFloat(document.getElementById(focused + "alt").value).toFixed(0);}\r\n' \
-  '          document.getElementById(focused + "desc").innerHTML = escape("(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time);\r\n' \
-  '          }\r\n' \
+  '          document.getElementById(focused + "desc").innerHTML = point_desc(document.getElementById(focused + "focus"));\r\n' \
   '          if (coord || pt_cb.value == "error") {\r\n' \
   '            let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            [dot.style.left, dot.style.top] = point_to_position(pt);\r\n' \
@@ -3761,7 +3788,11 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById(ex_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
-  '        show_msg((redo?"{#jmredo#}":"{#jmundo#}"), 2);\r\n' \
+  '        if (hist[1-s][hist[1-s].length-1][1] == "") {\r\n' \
+  '          show_msg((redo?"{#jmredo1#}":"{#jmundo1#}").replace("%s", inds.length), 2);\r\n' \
+  '        } else {\r\n' \
+  '          show_msg((redo?"{#jmredo2#}":"{#jmundo2#}").replace("%s", inds.length), 2);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function point_insert(pos, lat=null, lon=null) {\r\n' \
   '        let ex_foc = "";\r\n' \
@@ -3994,11 +4025,9 @@ class GPXTweakerWebInterfaceServer():
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
   '        let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
-  '        let pos_f = seg_desc.innerHTML.indexOf(")");\r\n' \
   '        if (pos_d > 0) {\r\n' \
-  '          seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(0, pos_d) + seg_desc.innerHTML.substring(pos_f + 7) + "&mdash;&mdash;&mdash;&mdash;";\r\n' \
+  '          seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(1, pos_d) + "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;";\r\n' \
   '        }\r\n' \
-  '        pos_d = seg_desc.innerHTML.lastIndexOf("&nbsp;") + 6;\r\n' \
   '        while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
   '        stats[seg_ind] = [];\r\n' \
   '        if (seg.firstElementChild.checked) {\r\n' \
@@ -4102,8 +4131,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (e_p != null) {ele_c = stat[2].toFixed(0) + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
   '            if (a_p != null) {alt_c = stat[3].toFixed(0) + "m";}\r\n' \
-  '            let pos_c = seg_desc.innerHTML.indexOf("&nbsp;");\r\n' \
-  '            seg_desc.innerHTML = "&mdash;" + seg_desc.innerHTML.substring(pos_c, pos_d) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ")&nbsp;&mdash;";\r\n' \
+  '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (whole) {whole_calc();}\r\n' \
@@ -4180,10 +4208,7 @@ class GPXTweakerWebInterfaceServer():
   '        let segs = document.getElementById("pointsform").children;\r\n' \
   '        for (let i=0; i<segs.length; i++) {\r\n' \
   '          let seg_desc = segs[i].firstElementChild.nextElementSibling;\r\n' \
-  '          let pos_d = seg_desc.innerHTML.indexOf("Segment ") + 8;\r\n' \
-  '          let pos_f = seg_desc.innerHTML.indexOf("(") - 6;\r\n' \
-  '          if (pos_f < 0) {pos_f = seg_desc.innerHTML.lastIndexOf("&nbsp;");}\r\n' \
-  '          seg_desc.innerHTML = seg_desc.innerHTML.substring(0, pos_d) + (i + 1).toString() + seg_desc.innerHTML.substring(pos_f);\r\n' \
+  '          seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+/, (i + 1).toString());\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function segment_cut() {\r\n' \
@@ -4257,9 +4282,8 @@ class GPXTweakerWebInterfaceServer():
   '            if (mintime != null && maxtime != null) {\r\n' \
   '              let t = Date.parse(el_span_children[13].value);\r\n' \
   '              if (! isNaN(t)) {\r\n' \
-  '                let ex_time = el_span_children[13].value;\r\n' \
   '                el_span_children[13].value = (new Date(maxtime + t - mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                el_label.innerHTML = el_label.innerHTML.replace(ex_time, el_span_children[13].value);\r\n' \
+  '                el_label.innerHTML = point_desc(el_span);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            dot.id = pref.replace("point", "dot");\r\n' \
@@ -4507,11 +4531,10 @@ class GPXTweakerWebInterfaceServer():
   '              if (mintime != null && maxtime != null) {\r\n' \
   '                let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
   '                if (! isNaN(t)) {\r\n' \
-  '                  let ex_time = document.getElementById(pt.id.replace("cont", "time")).value;\r\n' \
   '                  let new_time = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                  if (pt.firstElementChild.value != "error") {pt.firstElementChild.value = "edited";}\r\n' \
   '                  document.getElementById(pt.id.replace("cont", "time")).value = new_time;\r\n' \
-  '                  document.getElementById(pt.id.replace("cont", "desc")).innerHTML = document.getElementById(pt.id.replace("cont", "desc")).innerHTML.replace(ex_time, new_time);\r\n' \
+  '                  document.getElementById(pt.id.replace("cont", "desc")).innerHTML = point_desc(document.getElementById(pt.id.replace("cont", "focus")));\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              seg.insertBefore(pt, null);\r\n' \
@@ -4553,11 +4576,10 @@ class GPXTweakerWebInterfaceServer():
   '          if (mintime != null && maxtime != null) {\r\n' \
   '            let t = Date.parse(document.getElementById(wpt.id.replace("cont", "time")).value);\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              let ex_time = document.getElementById(wpt.id.replace("cont", "time")).value;\r\n' \
   '              let new_time = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '              if (wpt.firstElementChild.value != "error") {wpt.firstElementChild.value = "edited";}\r\n' \
   '              document.getElementById(wpt.id.replace("cont", "time")).value = new_time;\r\n' \
-  '              document.getElementById(wpt.id.replace("cont", "desc")).innerHTML = document.getElementById(wpt.id.replace("cont", "desc")).innerHTML.replace(ex_time, new_time);\r\n' \
+  '              document.getElementById(wpt.id.replace("cont", "desc")).innerHTML = point_desc(document.getElementById(wpt.id.replace("cont", "focus")));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          wpt = wpt_f.nextElementSibling;\r\n' \
@@ -4889,7 +4911,10 @@ class GPXTweakerWebInterfaceServer():
   '            pele = ele;\r\n' \
   '            pp = p;\r\n' \
   '          }\r\n' \
-  '          if (pt_foc != null) {return;}\r\n' \
+  '          if (pt_foc != null) {\r\n' \
+  '            if (gr) {refresh_graph(true);}\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          segment_recalc(segs[s], false);\r\n' \
   '        }\r\n' \
   '        whole_calc();\r\n' \
@@ -5598,21 +5623,21 @@ class GPXTweakerWebInterfaceServer():
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
   '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
-  '        <col style="width:20em;">\r\n' \
-  '        <col style="width:calc(98vw - 20em);">\r\n' \
+  '        <col style="width:21em;">\r\n' \
+  '        <col style="width:calc(98vw - 21em);">\r\n' \
   '      </colgroup>\r\n' \
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div id="content" style="height:calc(99vh - 1.8em - 25px);width: calc(20em - 2px);">\r\n' \
+  '            <div id="content" style="height:calc(99vh - 1.8em - 25px);width: calc(21em - 2px);">\r\n' \
   '              <div id="pattern_waypoint" style="display:none;">\r\n '\
   '                ##WAYPOINTTEMPLATE##\r\n' \
   '              </div>\r\n' \
@@ -5866,6 +5891,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tlock").style.display = "inline-block";\r\n' \
   '      }\r\n' \
   '      scroll_to_all();\r\n' \
+  '      point_desc();\r\n' \
   '      document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '      segments_calc();\r\n' \
   '      wpt_calc();\r\n' \
@@ -5894,7 +5920,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_WAYPOINT_TEMPLATE = \
   '<div id=waypoint%scont>\r\n' \
   '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onchange="point_checkbox(this)">\r\n' \
-  '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">(%.4f, %.4f) %s<br>%s</label><br>\r\n' \
+  '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
   '                      <input type="text" id="waypoint%slat" name="waypoint%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
@@ -5910,7 +5936,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_POINT_TEMPLATE = \
   '<div id=point%scont style="text-decoration:inherit;">\r\n' \
   '                    <input type="checkbox" id="point%s" checked name="point%s" value="initial" onchange="point_checkbox(this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
-  '                    <label for="point%s" id="point%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)">(%.4f, %.4f) %s %s %s</label><br>\r\n' \
+  '                    <label for="point%s" id="point%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
   '                      <input type="text" id="point%slat" name="point%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
@@ -5928,7 +5954,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_SEGMENT_TEMPLATE = \
   '<div id=segment%scont>\r\n' \
   '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment" onchange="segment_checkbox(this)">\r\n' \
-  '                    <label for="segment%s" id="segment%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
+  '                    <label for="segment%s" id="segment%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
   '                    <br>'
   HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_PATH_TEMPLATE = \
@@ -7256,12 +7282,11 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_waypoints(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 5), *map(f , pt[1]), pt[0], *(a for b in zip(*([[pt[0]] * 4] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 5), pt[0], *(a for b in zip(*([[pt[0]] * 4] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
 
   def _build_points(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    g = lambda e: '' if e == None else round(e) if isinstance(e, (float, int)) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([str(pt[0])] * 5), pt[1][0], pt[1][1], g(pt[1][2]), g(pt[1][3]), f(pt[1][4]), str(pt[0]), *(a for b in zip(*([[str(pt[0])] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) +   '</div>' for s in range(len(self.Track.Pts)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([str(pt[0])] * 5), str(pt[0]), *(a for b in zip(*([[str(pt[0])] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) +   '</div>' for s in range(len(self.Track.Pts)))
 
   def _build_waydots(self):
     return ''.join(GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for pt in self.Track.WebMercatorWpts)
