@@ -326,7 +326,7 @@ EN_STRINGS = {
     'jgraphtime': 'duration',
     'jmundo1': 'Insertion of %s point(s) cancelled',
     'jmundo2': 'Modification of %s point(s) cancelled',
-    'jmredo1': 'Insertion of %s point(s) restores',
+    'jmredo1': 'Insertion of %s point(s) restored',
     'jmredo2': 'Modification of %s point(s) restored',
     'jminsert1': 'Waypoint inserted',
     'jminsert2': 'Point inserted',
