@@ -162,10 +162,10 @@ FR_STRINGS = {
     'jmsegmentreverse1': 'Segment inversé',
     'jmsegmentreverse2': 'Trace inversée',
     'jmelevations1': 'Récupération des élévations en cours...',
-    'jmelevations2': 'Élévation du point mise à jour',
+    'jmelevations2': 'Élévation du point / point de cheminement mise à jour',
     'jmelevations3': 'Élévations du segment mises à jour',
     'jmelevations4': 'Élévations de la trace mises à jour',
-    'jmelevations5': 'Échec de la récupération des élévations',
+    'jmelevations5': 'Échec total ou partiel de la récupération des élévations',
     'jmaltitudesjoin1': 'Altitudes égalisées par décalage uniforme',
     'jmaltitudesjoin2': 'Altitudes égalisées par décalage progressif',
     'jmdatetime1': 'Horodatage du point mis à jour',
@@ -201,8 +201,8 @@ FR_STRINGS = {
     'conf': 'chemin d\'accès au fichier de configuration (même répertoire que le script par défaut)',
     'map': 'chemin d\'accès à la carte ou nom du fournisseur de carte configuré ou pas mentionné pour utiliser les fournisseurs de tuiles configurés (par défaut)',
     'emap': 'chemin d\'accès à la carte d\'altitudes ou vide (ou ".") pour utiliser le fournisseur de carte d\'altitudes configuré ou pas mentionné pour utiliser le fournisseur de tuiles d\'altitudes configuré (par défaut)',
-    'maxheight': 'hauteur maximale de la carte à retourner (requis pour l\'utilisation d\'un fournisseur de carte)',
-    'maxwidth': 'largeur maximale de la carte à retourner (requis pour l\'utilisation d\'un fournisseur de carte)',
+    'maxheight': 'hauteur maximale de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
+    'maxwidth': 'largeur maximale de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
     'noopen': 'par d\'ouverture automatique dans le navigateur par défaut',
     'verbosity': 'niveau de verbosité de 0 à 2 (0 par défaut)',
     'open': 'Ouvrir l\'url %s',
@@ -326,7 +326,7 @@ EN_STRINGS = {
     'jgraphtime': 'duration',
     'jmundo1': 'Insertion of %s point(s) cancelled',
     'jmundo2': 'Modification of %s point(s) cancelled',
-    'jmredo1': 'Insertion of %s point(s) restored',
+    'jmredo1': 'Insertion of %s point(s) restores',
     'jmredo2': 'Modification of %s point(s) restored',
     'jminsert1': 'Waypoint inserted',
     'jminsert2': 'Point inserted',
@@ -341,10 +341,10 @@ EN_STRINGS = {
     'jmsegmentreverse1': 'Segment reversed',
     'jmsegmentreverse2': 'Track reversed',
     'jmelevations1': 'Retrieval of elevations in progress...',
-    'jmelevations2': 'Elevation of the point updated',
+    'jmelevations2': 'Elevation of the point / waypoint updated',
     'jmelevations3': 'Elevations of the segment updated',
     'jmelevations4': 'Elevations of the track updated',
-    'jmelevations5': 'Failure of the retrieval of elevations',
+    'jmelevations5': 'Total or partial failure of the retrieval of elevations',
     'jmaltitudesjoin1': 'Altitudes equalized by uniform offset',
     'jmaltitudesjoin2': 'Altitudes equalized by progressive offset',
     'jmdatetime1': 'Timestamp of the point updated',
@@ -380,8 +380,8 @@ EN_STRINGS = {
     'conf': 'path to the configuration file (same folder as the script by default)',
     'map': 'path to the map or name of the configured map provider or not mentioned to use the configured tiles providers (by default)',
     'emap': 'path to the elevations map or blank (or ".") to use the configured elevations map provider or not mentioned to use the configured elevations tiles provider (by default)',
-    'maxheight': 'max height of the map to be retrieved (required for the use of a map provider)',
-    'maxwidth': 'max width of the map to be retrieved (required for the use of a map provider)',
+    'maxheight': 'max height of the map to be retrieved (for the use of a map provider)',
+    'maxwidth': 'max width of the map to be retrieved (for the use of a map provider)',
     'noopen': 'no automatic opening in the default browser',
     'verbosity': 'verbosity level from 0 to 2 (0 by default)',
     'open': 'Open the url %s',
@@ -2277,7 +2277,7 @@ class WGS84Track(WGS84WebMercator):
   def _processGPX(self):
     flt = lambda s: float(s) if (s != None and s != '') else None
     self.UWaypts = self.Track.getElementsByTagNameNS('*', 'wpt')
-    self.Wpts = list(zip(range(len(self.UWaypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.UWaypts)))
+    self.Wpts = list(zip(range(len(self.UWaypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.UWaypts)))
     try:
       trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
     except:
@@ -2442,8 +2442,9 @@ name)
             nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
           self._XMLUpdateAttribute(nwp, 'lat', v[1])
           self._XMLUpdateAttribute(nwp, 'lon', v[2])
-          self._XMLUpdateNodeText(trk, nwp, 'time', urllib.parse.unquote(v[3]))
-          self._XMLUpdateNodeText(trk, nwp, 'name', urllib.parse.unquote(v[4]), cdata=True)
+          self._XMLUpdateNodeText(trk, nwp, 'ele', v[3])
+          self._XMLUpdateNodeText(trk, nwp, 'time', urllib.parse.unquote(v[4]))
+          self._XMLUpdateNodeText(trk, nwp, 'name', urllib.parse.unquote(v[5]), cdata=True)
         else:
           nwp = self.Waypts[int(wp)].cloneNode(True)
         wpn.append(nwp)
@@ -2905,18 +2906,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                     self.server.Interface.log(2, 'rerror', req.method, req.path)
                   continue
                 try:
-                  if next((p for seg in self.server.Interface.Track.Pts for p in seg), None) != None:
-                    self.server.Interface.MinLat = min(p[1][0] for seg in self.server.Interface.Track.Pts for p in seg)
-                    self.server.Interface.MaxLat = max(p[1][0] for seg in self.server.Interface.Track.Pts for p in seg)
-                    self.server.Interface.MinLon = min(p[1][1] for seg in self.server.Interface.Track.Pts for p in seg)
-                    self.server.Interface.MaxLon = max(p[1][1] for seg in self.server.Interface.Track.Pts for p in seg)
-                  if self.server.Interface.Mode == "map":
-                    self.server.Interface.Minx, self.server.Interface.Miny = WGS84WebMercator.WGS84toWebMercator(self.server.Interface.MinLat, self.server.Interface.MinLon)
-                    self.server.Interface.Maxx, self.server.Interface.Maxy = WGS84WebMercator.WGS84toWebMercator(self.server.Interface.MaxLat, self.server.Interface.MaxLon)
-                  else:
-                    mlat = math.degrees(2 * math.atan(math.exp(math.pi) - math.pi / 2))
-                    self.server.Interface.Minx, self.server.Interface.Miny = map(max, zip((self.server.Interface.VMinx, self.server.Interface.VMiny), WGS84WebMercator.WGS84toWebMercator(max(-mlat, self.server.Interface.MinLat - 0.008), max(-180, self.server.Interface.MinLon - 0.011))))
-                    self.server.Interface.Maxx, self.server.Interface.Maxy = map(min, zip((self.server.Interface.VMaxx, self.server.Interface.VMaxy), WGS84WebMercator.WGS84toWebMercator(min(mlat, self.server.Interface.MaxLat + 0.008), min(180, self.server.Interface.MaxLon + 0.011))))
+                  if next((p for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg), None) != None:
+                    minlat = min(p[1][0] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
+                    maxlat = max(p[1][0] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
+                    minlon = min(p[1][1] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
+                    maxlon = max(p[1][1] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
+                  if self.server.Interface.Mode != "map":
+                    self.server.Interface.Minx, self.server.Interface.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.server.Interface.VMinLat, minlat - 0.008), max(self.server.Interface.VMinLon, minlon - 0.011))
+                    self.server.Interface.Maxx, self.server.Interface.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.server.Interface.VMaxLat, maxlat + 0.008), min(self.server.Interface.VMaxLon, maxlon + 0.011))
                     if not self.server.Interface.BuildHTML():
                       raise
                 except:
@@ -3360,7 +3357,7 @@ class GPXTweakerWebInterfaceServer():
   '      function scroll_to_all() {\r\n' \
   '        let c = track_center();\r\n' \
   '        if (c == null) {\r\n' \
-  '          scroll_view((vminx + vmaxx) / 2, (vminy + vmaxy) / 2);\r\n' \
+  '          scroll_view(defx, defy);\r\n' \
   '        } else {\r\n' \
   '          scroll_view(htopx + c[0], htopy - c[1]); \r\n' \
   '        }\r\n' \
@@ -3553,7 +3550,7 @@ class GPXTweakerWebInterfaceServer():
   '      function point_desc(ptspan = null) {\r\n' \
   '        if (! ptspan) {\r\n' \
   '          let points = document.getElementById("content").getElementsByTagName("span");\r\n' \
-  '          for (p=0; p<points.length; p++) {\r\n' \
+  '          for (p=2; p<points.length; p++) {\r\n' \
   '            points[p].parentNode.firstElementChild.nextElementSibling.innerHTML = point_desc(points[p]);\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
@@ -3561,21 +3558,21 @@ class GPXTweakerWebInterfaceServer():
   '        let chld = ptspan.children;\r\n' \
   '        let lat = parseFloat(chld[1].value).toFixed(4);\r\n' \
   '        let lon = parseFloat(chld[4].value).toFixed(4);\r\n' \
-  '        let time_ = Date.parse(chld[(ptspan.id.substring(0, 3) == "way")?7:13].value);\r\n' \
+  '        let ele = "";\r\n' \
+  '        if (chld[7].value != "") {ele = parseFloat(chld[7].value).toFixed(0);}\r\n' \
+  '        let time_ = Date.parse(chld[(ptspan.id.substring(0, 3) == "way")?10:13].value);\r\n' \
   '        let time = "";\r\n' \
   '        if (! isNaN(time_)) {\r\n' \
   '          time = time_conv.format(time_)  + "˙" + date_conv.format(time_);\r\n' \
   '        }\r\n' \
   '        if (ptspan.id.substring(0, 3) == "way") {\r\n' \
-  '          let name = chld[10].value;\r\n' \
-  '          return escape("(" + lat + ", " + lon + ") " + time) + "<br>" + escape(name);\r\n' \
-  '          } else {\r\n' \
-  '            let ele = "";\r\n' \
-  '            if (chld[7].value != "") {ele = parseFloat(chld[7].value).toFixed(0);}\r\n' \
-  '            let alt = "";\r\n' \
-  '            if (chld[10].value != "") {alt = parseFloat(chld[10].value).toFixed(0);}\r\n' \
+  '          let name = chld[13].value;\r\n' \
+  '          return escape("(" + lat + ", " + lon + ") " + ele + " " + time) + "<br>" + escape(name);\r\n' \
+  '        } else {\r\n' \
+  '          let alt = "";\r\n' \
+  '          if (chld[10].value != "") {alt = parseFloat(chld[10].value).toFixed(0);}\r\n' \
   '          return escape("(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time);\r\n' \
-  '          }\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function point_edit(scroll=true, cancel=true, recalc=true, coord=true) {\r\n' \
   '        let pt = document.getElementById(focused + "desc");\r\n' \
@@ -3589,7 +3586,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (focused.substring(0, 3) == "way") {\r\n' \
-  '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "time").checkValidity() && document.getElementById(focused + "name").checkValidity();\r\n' \
+  '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "time").checkValidity() && document.getElementById(focused + "name").checkValidity();\r\n' \
   '        } else {\r\n' \
   '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "alt").checkValidity() && document.getElementById(focused + "time").checkValidity();\r\n' \
   '        } \r\n' \
@@ -3605,6 +3602,7 @@ class GPXTweakerWebInterfaceServer():
   '            pt.style.textDecoration = "line-through";\r\n' \
   '          }\r\n' \
   '          document.getElementById(focused + "desc").innerHTML = point_desc(document.getElementById(focused + "focus"));\r\n' \
+  '          if (pt_cb.value != "error") {pt_cb.value = "edited";}\r\n' \
   '          if (coord || pt_cb.value == "error") {\r\n' \
   '            let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            [dot.style.left, dot.style.top] = point_to_position(pt);\r\n' \
@@ -3613,7 +3611,6 @@ class GPXTweakerWebInterfaceServer():
   '              pt_cb.value = "edited";\r\n' \
   '              if (pt_cb.checked) {point_undelete(pt_cb);} else {dot_style(focused, true);}\r\n' \
   '            } else {\r\n' \
-  '              pt_cb.value = "edited";\r\n' \
   '              if (scroll) {scroll_to_dot(dot);}\r\n' \
   '              if (focused.substring(0, 3) != "way" && pt_cb.checked) {\r\n' \
   '                let seg = pt.parentNode.parentNode;\r\n' \
@@ -3869,17 +3866,17 @@ class GPXTweakerWebInterfaceServer():
   '        el_span_children[3].htmlFor = pref + "lon";\r\n' \
   '        el_span_children[4].id = pref + "lon";\r\n' \
   '        el_span_children[4].name = pref + "lon";\r\n' \
+  '        el_span_children[6].htmlFor = pref + "ele";\r\n' \
+  '        el_span_children[7].id = pref + "ele";\r\n' \
+  '        el_span_children[7].name = pref + "ele";\r\n' \
   '        if (ex_foc.substring(0, 3) == "way" || ! ex_foc) {\r\n' \
-  '          el_span_children[6].htmlFor = pref + "time";\r\n' \
-  '          el_span_children[7].id = pref + "time";\r\n' \
-  '          el_span_children[7].name = pref + "time";\r\n' \
-  '          el_span_children[9].htmlFor = pref + "name";\r\n' \
-  '          el_span_children[10].id = pref + "name";\r\n' \
-  '          el_span_children[10].name = pref + "name";\r\n' \
+  '          el_span_children[9].htmlFor = pref + "time";\r\n' \
+  '          el_span_children[10].id = pref + "time";\r\n' \
+  '          el_span_children[10].name = pref + "time";\r\n' \
+  '          el_span_children[12].htmlFor = pref + "name";\r\n' \
+  '          el_span_children[13].id = pref + "name";\r\n' \
+  '          el_span_children[13].name = pref + "name";\r\n' \
   '        } else {\r\n' \
-  '          el_span_children[6].htmlFor = pref + "ele";\r\n' \
-  '          el_span_children[7].id = pref + "ele";\r\n' \
-  '          el_span_children[7].name = pref + "ele";\r\n' \
   '          el_span_children[9].htmlFor = pref + "alt";\r\n' \
   '          el_span_children[10].id = pref + "alt";\r\n' \
   '          el_span_children[10].name = pref + "alt";\r\n' \
@@ -3890,7 +3887,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (el_dot) {\r\n' \
   '          let scr = false;\r\n' \
   '          if (lat == null || lon == null) {\r\n' \
-  '            [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '            [lat, lon] = WebMercatortoWGS84(Math.max(vminx, Math.min(vmaxx, htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom)), Math.max(vminy, Math.min(vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom)));\r\n' \
   '            scr = true;\r\n' \
   '          }\r\n' \
   '          el_span_children[1].value = lat.toFixed(6);\r\n' \
@@ -4641,6 +4638,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let batch = ++hist_b;\r\n' \
+  '        let err = false;\r\n' \
   '        while (p < pts.length) {\r\n' \
   '          while (e < ele.length) {\r\n' \
   '            let r = ele[e].split(",");\r\n' \
@@ -4656,18 +4654,24 @@ class GPXTweakerWebInterfaceServer():
   '                    if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
   '                  }\r\n' \
   '                  point_edit(false, false, false, false);\r\n' \
-  '                  let seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
-  '                  if (seg != null && seg_p.id != seg.id) {\r\n' \
+  '                  let seg_p = null;\r\n' \
+  '                  if (pts[p].slice(0,3) != "way") {\r\n' \
+  '                    let seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
+  '                  } \r\n' \
+  '                  if (seg == null) {\r\n' \
+  '                    seg = seg_p;\r\n' \
+  '                  } else if (seg_p.id != seg.id) {\r\n' \
   '                    segment_recalc(seg, false);\r\n' \
   '                    seg = seg_p;\r\n' \
-  '                  } else if (seg == null) {\r\n' \
-  '                    seg = seg_p;\r\n' \
   '                  }\r\n' \
-  '                }\r\n' \
+  '                } else {err = true;}\r\n' \
   '                e++;\r\n' \
-  '              }\r\n' \
+  '              } else {err = true;}\r\n' \
   '              break;\r\n' \
-  '            } else {e++;}\r\n' \
+  '            } else {\r\n' \
+  '              err = true;\r\n' \
+  '              e++;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          p++;\r\n' \
   '        }\r\n' \
@@ -4675,7 +4679,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        if (! ex_foc && focused) {focused = "";}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
-  '        return true;\r\n'\
+  '        return ! err;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false) {\r\n' \
   '        let pts = [];\r\n' \
@@ -4683,7 +4687,6 @@ class GPXTweakerWebInterfaceServer():
   '        let spans = null;\r\n' \
   '        let msg = "";\r\n' \
   '        if (focused) {\r\n' \
-  '          if (focused.substring(0, 3) == "way") {return;}\r\n' \
   '          if (focused.substring(0, 3) == "seg") {\r\n' \
   '            if (all) {\r\n' \
   '              if (! window.confirm("{#jesconfirm#}")) {return;}\r\n' \
@@ -4698,10 +4701,10 @@ class GPXTweakerWebInterfaceServer():
   '          if (all) {\r\n' \
   '            if (! window.confirm("{#jeconfirm#}")) {return;}\r\n' \
   '          }\r\n' \
-  '          spans = document.getElementById("points").getElementsByTagName("span");\r\n' \
+  '          spans = document.getElementById("content").getElementsByTagName("span");\r\n' \
   '          msg = "{#jmelevations4#}";\r\n' \
   '        } \r\n' \
-  '        for (let p=0; p<spans.length; p++) {\r\n' \
+  '        for (let p=(focused?0:2); p<spans.length; p++) {\r\n' \
   '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error" && (all || document.getElementById(spans[p].id.slice(0, -5) + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
   '           pts.push(spans[p].id.slice(0, -5));\r\n' \
   '           b = b + spans[p].id.slice(0, -5) + "," + document.getElementById(spans[p].id.slice(0, -5) + "lat").value + "," + document.getElementById(spans[p].id.slice(0, -5) + "lon").value + "\\r\\n";\r\n' \
@@ -5299,17 +5302,26 @@ class GPXTweakerWebInterfaceServer():
   '          el_span_children[7].value = "";\r\n' \
   '          el_span_children[10].value = "";\r\n' \
   '          el_span_children[13].value = "";\r\n' \
+  '          let wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {\r\n' \
+  '            el_input.disabled = true;\r\n' \
+  '            el_input.value = "error";\r\n' \
+  '            el_label.style.textDecoration = "line-through red";\r\n' \
+  '          }\r\n' \
   '          frag.insertBefore(el_cont, frag.firstElementChild);\r\n' \
   '          let el_dot = dot.cloneNode(true);\r\n' \
   '          el_dot.id = pref.replace("point", "dot");\r\n' \
   '          el_dot.setAttribute("stroke", "gray");\r\n' \
   '          el_dot.style.display = dots_visible?"":"none";\r\n' \
-  '          let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '          el_dot.style.left = wmvalue_to_prop(wm[0] - htopx, 3.5);\r\n' \
-  '          el_dot.style.top = wmvalue_to_prop(htopy - wm[1], 3.5);\r\n' \
+  '          el_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
+  '          el_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, wm[1])), 3.5);\r\n' \
   '          frag_dot.insertBefore(el_dot, frag_dot.firstElementChild);\r\n' \
-  '          let np = WGS84_to_viewbox(parseFloat(el_span_children[1].value), parseFloat(el_span_children[4].value), track);\r\n' \
-  '          d_right = " L" + np + d_right;\r\n' \
+  '          if (el_input.disabled) {\r\n' \
+  '            d_right = " m0 0" + d_right;\r\n' \
+  '          } else {\r\n' \
+  '            let np = WGS84_to_viewbox(parseFloat(el_span_children[1].value), parseFloat(el_span_children[4].value), track);\r\n' \
+  '            d_right = " L" + np + d_right;\r\n' \
+  '          }\r\n' \
   '          hist[0].push([pref, "", batch]);\r\n' \
   '        }\r\n' \
   '        seg.insertBefore(frag, pt);\r\n' \
@@ -5327,6 +5339,7 @@ class GPXTweakerWebInterfaceServer():
   '        let foc = focused;\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
   '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
+  '        if (pt_foc.firstElementChild.value == "error") {return;}\r\n' \
   '        let lat_a = document.getElementById(focused + "lat").value;\r\n' \
   '        let lon_a = document.getElementById(focused + "lon").value;\r\n' \
   '        let lat_d = null;\r\n' \
@@ -5574,7 +5587,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (document.getElementById(pt).checked && document.getElementById(pt).value != "error") {\r\n' \
   '            body = body + pt.substring(8);\r\n' \
   '            if (document.getElementById(pt).value == "edited") {\r\n' \
-  '              body = body + "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value) + "&" + encodeURIComponent(document.getElementById(pt + "name").value);\r\n' \
+  '              body = body + "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value) + "&" + encodeURIComponent(document.getElementById(pt + "name").value);\r\n' \
   '            }\r\n' \
   '            body = body + "\\r\\n";\r\n' \
   '           }\r\n' \
@@ -5738,14 +5751,15 @@ class GPXTweakerWebInterfaceServer():
   '            let x = e.pageX - p.offsetLeft;\r\n' \
   '            let y = e.pageY - p.offsetTop;\r\n' \
   '            let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
+  '            if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '            let [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
   '            point_insert("a", lat, lon);\r\n' \
   '            document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
   '            document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
+  '            document.getElementById(focused + "ele").value = "";\r\n' \
+  '            document.getElementById(focused + "time").value = "";\r\n' \
   '            if (focused.substring(0, 3) != "way") {\r\n' \
   '              document.getElementById(focused + "alt").value = "";\r\n' \
-  '              document.getElementById(focused + "ele").value = "";\r\n' \
-  '              document.getElementById(focused + "time").value = "";\r\n' \
   '            } else {\r\n' \
   '              document.getElementById(focused + "name").value = "";\r\n' \
   '            }\r\n' \
@@ -5909,6 +5923,8 @@ class GPXTweakerWebInterfaceServer():
   '      var vminy = ##VMINY##;\r\n' \
   '      var vmaxx = ##VMAXX##;\r\n' \
   '      var vmaxy = ##VMAXY##;\r\n' \
+  '      var defx = ##DEFX##;\r\n' \
+  '      var defy = ##DEFY##;\r\n' \
   '      var ttopx = ##TTOPX##;\r\n' \
   '      var ttopy = ##TTOPY##;\r\n' \
   '      var twidth = ##TWIDTH##;\r\n' \
@@ -5926,6 +5942,8 @@ class GPXTweakerWebInterfaceServer():
   '                      <input type="text" id="waypoint%slat" name="waypoint%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
   '                      <input type="text" id="waypoint%slon" name="waypoint%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <label for="waypoint%sele">{jele}</label>\r\n' \
+  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
   '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
@@ -6886,31 +6904,26 @@ class GPXTweakerWebInterfaceServer():
           hcur = hcur[:9].lower() + hcur[9:]
           self.TilesSets.append([hcur[9:], {}, {}, [1, ]])
           s = self.TilesSets[-1]
-          o = 1
         elif hcur[:4].lower() == 'map ':
           hcur = hcur[:4].lower() + hcur[4:]
           self.MapSets.append([hcur[4:], {}, {}])
           s = self.MapSets[-1]
-          o = 1
         elif hcur[:15].lower() == 'elevationtiles ':
           hcur = hcur[:15].lower() + hcur[15:]
           self.ElevationsProviders.append([hcur[15:], {}, {}])
           s = self.ElevationsProviders[-1]
-          o = 1
-        elif hcur.lower() == 'elevationmap':
-          hcur = hcur.lower()
-          s = self.ElevationMap
-          o = 0
-        elif hcur[:13].lower() in 'elevationapi ':
+        elif hcur[:13].lower() == 'elevationmap ':
+          hcur = hcur[:13].lower() + hcur[13:]
+          self.ElevationMapSets.append([hcur[13:], {}, {}])
+          s = self.ElevationMapSets[-1]
+        elif hcur[:13].lower() == 'elevationapi ':
           hcur = hcur[:13].lower() + hcur[13:]
           self.ElevationsProviders.append([hcur[13:], {}, {}])
           s = self.ElevationsProviders[-1]
-          o = 1
         elif hcur[:13].lower() == 'itineraryapi ':
           hcur = hcur[:13].lower() + hcur[13:]
           self.ItinerariesProviders.append([hcur[13:], {}, {}])
           s = self.ItinerariesProviders[-1]
-          o = 1
         elif hcur.lower() == 'global':
           hcur = hcur.lower()
         else:
@@ -6927,7 +6940,7 @@ class GPXTweakerWebInterfaceServer():
           if not scur in ('infos', 'handling', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
-        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationapi ', 'itineraryapi ') or hcur == 'elevationmap':
+        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi '):
           if not scur in ('infos', 'handling'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
@@ -6980,42 +6993,94 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'boundaries':
-          if field == 'default_minlat':
-            self.DMinLat = None if value == None else float(value)
-          elif field == 'default_maxlat':
-            self.DMaxLat = None if value == None else float(value)
-          elif field == 'default_minlon':
-            self.DMinLon = None if value == None else float(value)
-          elif field == 'default_maxlon':
-            self.DMaxLon = None if value == None else float(value)
+          if field == 'min_lat':
+            if value == None:
+              self.VMinLat = None
+            else:
+              self.VMinLat = float(value)
+              if self.VMinLat < -math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2):
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              if self.VMaxLat != None:
+                if self.VMinLat >= self.VMaxLat:
+                  self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                  return False
+          elif field == 'max_lat':
+            if value == None:
+              self.VMaxLat = None
+            else:
+              self.VMaxLat = float(value)
+              if self.VMaxLat > math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2):
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              if self.VMinLat != None:
+                if self.VMinLat >= self.VMaxLat:
+                  self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                  return False
+          elif field == 'min_lon':
+            if value == None:
+              self.VMinLon = None
+            else:
+              self.VMinLon = float(value)
+              if self.VMinLon < -180:
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              if self.VMaxLon != None:
+                if self.VMinLon >= self.VMaxLon:
+                  self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                  return False
+          elif field == 'max_lon':
+            if value == None:
+              self.VMaxLon = None
+            else:
+              self.VMaxLon = float(value)
+              if self.VMaxLon > 180:
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              if self.VMinLon != None:
+                if self.VMinLon >= self.VMaxLon:
+                  self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                  return False
+          elif field == 'def_lat':
+            self.DefLat = None if value == None else float(value)
+          elif field == 'def_lon':
+            self.DefLon = None if value == None else float(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
+          if not None in (self.VMinLat, self.VMaxLat, self.DefLat):
+            if self.DefLat <= self.VMinLat or self.DefLat >= self.VMaxLat:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+          if not None in (self.VMinLon, self.VMaxLon, self.DefLon):
+            if self.DefLon <= self.VMinLon or self.DefLon >= self.VMaxLon:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
       elif hcur[:9] == 'maptiles ' or hcur[:15] == 'elevationtiles ':
         if scur == 'infos':
           if field == 'alias':
-            s[o] = WebMercatorMap.TSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.TSAlias(value)
-            if not s[o]:
+            s[1] = WebMercatorMap.TSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.TSAlias(value)
+            if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
           elif field in ('source', 'pattern', 'layer', 'matrixset', 'style', 'format') or (hcur[:15] == 'elevationtiles ' and field in ('matrix', 'nodata')):
-            s[o][field] = value
+            s[1][field] = value
             if field == 'nodata':
               try:
-                s[o][field] = float(value)
+                s[1][field] = float(value)
               except:
                 pass
           elif field in ('basescale', 'topx', 'topy'):
             try:
-              s[o][field] = float(value)
+              s[1][field] = float(value)
             except:
               pass
           elif field in ('width', 'height'):
             try:
-              s[o][field] = int(value)
+              s[1][field] = int(value)
             except:
               pass
           else:
@@ -7023,7 +7088,7 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent', 'local_pattern', 'local_store', 'local_expiration', 'only_local'):
-            s[o + 1][field] = value
+            s[2][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -7042,24 +7107,22 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
           zoom = zoom.strip()
-          init = False
           if zoom[-1] == '*':
-            init = True
             zoom = zoom[:-1].strip()
-            s[o + 2][0] = len(s[o + 2])
-          s[o + 2].append([matrix, zoom])
-      elif hcur[:4] == 'map ' or hcur == 'elevationmap':
+            s[3][0] = len(s[3])
+          s[3].append([matrix, zoom])
+      elif hcur[:4] == 'map ' or hcur[:13] == 'elevationmap ':
         if scur == 'infos':
           if field == 'alias':
-            s[o] = WebMercatorMap.MSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.MSAlias(value)
-            if not s[o]:
+            s[1] = WebMercatorMap.MSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.MSAlias(value)
+            if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'layers', 'styles', 'format') or (hcur == 'elevationmap' and field == 'nodata'):
-            s[o][field] = value
+          elif field in ('source', 'layers', 'styles', 'format') or (hcur[:13] == 'elevationmap ' and field == 'nodata'):
+            s[1][field] = value
             if field == 'nodata':
               try:
-                s[o][field] = float(value)
+                s[1][field] = float(value)
               except:
                 pass
           else:
@@ -7067,7 +7130,7 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent'):
-            s[o + 1][field] = value
+            s[2][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -7077,15 +7140,15 @@ class GPXTweakerWebInterfaceServer():
       elif hcur[:13] in ('elevationapi ', 'itineraryapi '):
         if scur == 'infos':
           if field == 'alias':
-            s[o] = WGS84Elevation.ASAlias(value) if hcur[:13] == 'elevationapi ' else WGS84Itinerary.ASAlias(value)
-            if not s[o]:
+            s[1] = WGS84Elevation.ASAlias(value) if hcur[:13] == 'elevationapi ' else WGS84Itinerary.ASAlias(value)
+            if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
           elif field in ('source', 'json_key') + (('separator', 'nodata') if hcur[:13] == 'elevationapi ' else ()):
-            s[o][field.replace('json_', '')] = value
+            s[1][field.replace('json_', '')] = value
             if field == 'nodata':
               try:
-                s[o][field] = float(value)
+                s[1][field] = float(value)
               except:
                 pass
           else:
@@ -7093,7 +7156,7 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent'):
-            s[o + 1][field] = value
+            s[2][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -7103,8 +7166,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-
-  def __init__(self, uri, map=None, emap=None, minlat=None, maxlat=None, minlon=None, maxlon=None, resolution=None, maxheight=2000, maxwidth=4000, dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
+  def __init__(self, uri, map=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     self.Uri = uri
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, self.Uri + str(time.time())))
     self.SessionId = None
@@ -7113,87 +7175,91 @@ class GPXTweakerWebInterfaceServer():
     self.Ports = '8000'
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
-    self.DMinLat = None
-    self.DMaxLat = None
-    self.DMinLon = None
-    self.DMaxLon = None
+    self.VMinLat = - math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2)
+    self.VMaxLat = - self.VMinLat
+    self.VMinLon = -180
+    self.VMaxLon = 180
+    self.DefLat = None
+    self.DefLon = None
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
     self.MapSets = []
     self.ElevationsProviders = []
-    self.ElevationMap = [{}, {}]
+    self.ElevationMapSets = []
     self.ItinerariesProviders = []
     self.Track = WGS84Track()
     self.TilesSet = None
     self.MapSet = None
+    self.ElevationMapSet = None
     self.ElevationProviderSel = None
     self.ItineraryProviderSel = None
     self.HTML = None
     self.HTML3D = None
     self.HTML3DData = None
-    self.MinLat = None
-    self.MaxLat = None
-    self.MinLon = None
-    self.MaxLon = None
+    self.Minx = None
+    self.Maxx = None
+    self.Miny = None
+    self.Maxy = None
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
     if not self._load_config(cfg):
       return
     self.GPXTweakerInterfaceServerInstances = [None] * (self.Ports[1] - self.Ports[0] + 1)
-    if not map:
-      minlat = minlat if minlat != None else self.DMinLat
-      maxlat = maxlat if maxlat != None else self.DMaxLat
-      minlon = minlon if minlon != None else self.DMinLon
-      maxlon = maxlon if maxlon != None else self.DMaxLon
+    err = False
+    if map_minlat != None:
+      if map_minlat < self.VMinLat:
+        err = True
+    if map_maxlat != None:
+      if map_maxlat > self.VMaxLat:
+        err = True
+    if map_minlon != None:
+      if map_minlon < self.VMinLon:
+        err = True
+    if map_maxlat != None:
+      if map_maxlat > self.VMaxLat:
+        err = True
+    if err:
+      self.log(0, 'berror4')
+      return
+    self.DefLat = self.DefLat if self.DefLat != None else (self.VMinLat + self.VMaxLat) / 2
+    self.DefLon = self.DefLon if self.DefLon != None else (self.VMinLon + self.VMaxLon) / 2
     if not self.Track.LoadGPX(uri):
       return
     self.log(1, 'build')
     if not self.Track.BuildWebMercator():
       self.log(0, 'berror1')
       return
-    if list(p[1][0] for seg in self.Track.Pts for p in seg) == []:
-      if minlat == None or maxlat == None or minlon == None or maxlon == None:
-        self.log(0, 'berror2')
+    if next((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), None) == None:
+      minlat = self.DefLat if (not map or map_minlat == None) else map_minlat
+      maxlat = self.DefLat if (not map or map_maxlat == None) else map_maxlat
+      minlon = self.DefLon if (not map or map_minlon == None) else map_minlon
+      maxlon = self.DefLon if (not map or map_maxlon == None) else map_maxlon
+    else:
+      minlat = min(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_minlat == None) else map_minlat
+      maxlat = max(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_maxlat == None) else map_maxlat
+      minlon = min(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_minlon == None) else map_minlon
+      maxlon = max(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_maxlon == None) else map_maxlon
+      if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlat > self.VMaxLat:
+        self.log(0, 'berror4')
         return
-      self.MinLat, self.MaxLat = minlat + 0.008, maxlat - 0.008
-      self.MinLon, self.MaxLon = minlon + 0.011, maxlon - 0.011
-    else:
-      self.MinLat = min(p[1][0] for seg in self.Track.Pts for p in seg)
-      self.MaxLat = max(p[1][0] for seg in self.Track.Pts for p in seg)
-      self.MinLon = min(p[1][1] for seg in self.Track.Pts for p in seg)
-      self.MaxLon = max(p[1][1] for seg in self.Track.Pts for p in seg)
-    mlat = math.degrees(2 * math.atan(math.exp(math.pi) - math.pi / 2))
-    if minlat != None and maxlat != None and minlon != None and maxlon != None:
-      self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
-      self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
-    elif not map:
-      minlat = max(-mlat, self.MinLat - 0.041)
-      maxlat = min(mlat, self.MaxLat + 0.041)
-      minlon = max(-180, self.MinLon - 0.056)
-      maxlon = min(180, self.MaxLon + 0.056)
-      self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
-      self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
-    else:
-      minlat, maxlat, minlon, maxlon = max(-mlat, self.MinLat - 0.014), min(mlat, self.MaxLat + 0.014), max(-180, self.MinLon - 0.019), min(180, self.MaxLon + 0.019)
-      self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = None, None, None, None
     if map:
       self.Mode = "map"
       self.TilesSets = [["Map"]]
       self.Map = WebMercatorMap()
       if '://' in map or ':\\' in map:
-        if not self.Map.LoadMap(map, minx=self.VMinx, miny=self.VMiny, maxx=self.VMaxx, maxy=self.VMaxy, resolution=resolution):
+        if not self.Map.LoadMap(map, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
           self.log(0, 'berror')
           return
       else:
         for i in range(len(self.MapSets)):
-          if self.MapSets[i][0] == map:
+          if self.MapSets[i][0].lower() == map.lower():
             self.MapSet = i
             break
         if self.MapSet == None:
           self.log(0, 'berror3', map)
           return
-        if not self.Map.FetchMap(self.MapSets[self.MapSet][1], minlat, maxlat, minlon, maxlon, maxheight, maxwidth, dpi=dpi, **self.MapSets[self.MapSet][2]):
+        if not self.Map.FetchMap(self.MapSets[self.MapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
           self.log(0, 'berror')
           return
       if not hasattr(self.Map, 'WMS_BBOX'):
@@ -7201,11 +7267,12 @@ class GPXTweakerWebInterfaceServer():
       else:
         bbox = dict(zip(self.Map.WMS_BBOX.split(','), self.Map.MapInfos['bbox'].split(',')))
       self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = list(float(bbox[k]) for k in ('{minx}', '{miny}', '{maxx}', '{maxy}'))
-      self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(self.MinLat, self.MinLon)
-      self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(self.MaxLat, self.MaxLon)
-      if self.Minx < self.VMinx or self.Maxx > self.VMaxx or self.Miny < self.VMiny or self.Maxy > self.VMaxy:
-        self.log(0, 'berror4')
-        return
+      if next((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), None) != None:
+        self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
+        self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
+        if self.Minx < self.VMinx or self.Maxx > self.VMaxx or self.Miny < self.VMiny or self.Maxy > self.VMaxy:
+          self.log(0, 'berror4')
+          return
       self.Minx, self.Miny, self.Maxx, self.Maxy = self.VMinx, self.VMiny, self.VMaxx, self.VMaxy
     else:
       if len(self.TilesSets) == 0 or not self.TilesBufferSize or not self.TilesBufferThreads:
@@ -7214,15 +7281,14 @@ class GPXTweakerWebInterfaceServer():
       self.Mode = "tiles"
       self.Map = WebMercatorMap(self.TilesBufferSize, self.TilesBufferThreads)
       self.TilesSet = 0
-      self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(max(-mlat, self.MinLat - 0.008), max(-180, self.MinLon - 0.011))
-      self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(min(mlat, self.MaxLat + 0.008), min(180, self.MaxLon + 0.011))
-      if self.Minx < self.VMinx or self.Maxx > self.VMaxx or self.Miny < self.VMiny or self.Maxy > self.VMaxy:
-        self.log(0, 'berror4')
-        return
+      self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
+      self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
+      self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011))
+      self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))
     self.Elevation = WGS84Elevation()
     if emap:
       self.ElevationsProviders = []
-      if emap != True:
+      if '://' in emap or ':\\' in emap:
         if self.Elevation.LoadMap(emap):
           self.EMode = "map"
           self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
@@ -7230,17 +7296,21 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.ElevationProvider = None
           self.log(0, 'eerror', emap)
-      elif self.ElevationMap[0] != {}:
-        if self.Elevation.FetchMap(self.ElevationMap[0], minlat, maxlat, minlon, maxlon, maxheight, maxwidth, dpi=dpi, **self.ElevationMap[1]):
-          self.EMode = "map"
-          self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
-          self.log(1, 'elevation', self.ElevationMap[0])
-        else:
-          self.ElevationProvider = None
-          self.log(0, 'eerror', self.ElevationMap[0])
       else:
-        self.ElevationProvider = None
-        self.log(0, 'eerror', '-')
+        for i in range(len(self.ElevationMapSets)):
+          if self.ElevationMapSets[i][0].lower() == emap.lower():
+            self.ElevationMapSet = i
+            break
+        if self.ElevationMapSet == None:
+          self.log(0, 'eerror', emap)
+        else:
+          if self.Elevation.FetchMap(self.ElevationMapSets[self.ElevationMapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.ElevationMapSets[self.ElevationMapSet][2]):
+            self.EMode = "map"
+            self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
+            self.log(1, 'elevation', self.ElevationMapSets[self.ElevationMapSet][0])
+          else:
+            self.ElevationProvider = None
+            self.log(0, 'eerror', self.ElevationMap[0])
     elif len(self.ElevationsProviders) > 0:
       self.ElevationProviderSel = 0
       if 'layer' in self.ElevationsProviders[0][1]:
@@ -7282,7 +7352,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_waypoints(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 5), pt[0], *(a for b in zip(*([[pt[0]] * 4] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 5), pt[0], *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
 
   def _build_points(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
@@ -7306,7 +7376,8 @@ class GPXTweakerWebInterfaceServer():
   def BuildHTML(self):
     if self.HTML == None:
       return False
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos['format'] == 'image/jpeg' else ('.png' if self.Map.MapInfos['format'] == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos['format'] == 'image/jpeg' else ('.png' if self.Map.MapInfos['format'] == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -7486,7 +7557,7 @@ if __name__ == '__main__':
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(True if args.emap == '.' else (args.emap or None)), maxheight=(args.maxheight or 2000), maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_maxheight=(args.maxheight or 2000), map_maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
