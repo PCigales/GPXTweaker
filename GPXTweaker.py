@@ -201,6 +201,7 @@ FR_STRINGS = {
     'conf': 'chemin d\'accès au fichier de configuration (même répertoire que le script par défaut)',
     'map': 'chemin d\'accès à la carte ou nom du fournisseur de carte configuré ou pas mentionné pour utiliser les fournisseurs de tuiles configurés (par défaut)',
     'emap': 'chemin d\'accès à la carte d\'altitudes ou vide (ou ".") pour utiliser le fournisseur de carte d\'altitudes configuré ou pas mentionné pour utiliser le fournisseur de tuiles d\'altitudes configuré (par défaut)',
+    'box': '"minlat, maxlat, minlon, maxlon" de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
     'maxheight': 'hauteur maximale de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
     'maxwidth': 'largeur maximale de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
     'noopen': 'par d\'ouverture automatique dans le navigateur par défaut',
@@ -326,7 +327,7 @@ EN_STRINGS = {
     'jgraphtime': 'duration',
     'jmundo1': 'Insertion of %s point(s) cancelled',
     'jmundo2': 'Modification of %s point(s) cancelled',
-    'jmredo1': 'Insertion of %s point(s) restores',
+    'jmredo1': 'Insertion of %s point(s) restored',
     'jmredo2': 'Modification of %s point(s) restored',
     'jminsert1': 'Waypoint inserted',
     'jminsert2': 'Point inserted',
@@ -380,6 +381,7 @@ EN_STRINGS = {
     'conf': 'path to the configuration file (same folder as the script by default)',
     'map': 'path to the map or name of the configured map provider or not mentioned to use the configured tiles providers (by default)',
     'emap': 'path to the elevations map or blank (or ".") to use the configured elevations map provider or not mentioned to use the configured elevations tiles provider (by default)',
+    'box': '"minlat, maxlat, minlon, maxlon" of the map to be retrieved (for the use of a map provider)',
     'maxheight': 'max height of the map to be retrieved (for the use of a map provider)',
     'maxwidth': 'max width of the map to be retrieved (for the use of a map provider)',
     'noopen': 'no automatic opening in the default browser',
@@ -2914,8 +2916,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   if self.server.Interface.Mode != "map":
                     self.server.Interface.Minx, self.server.Interface.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.server.Interface.VMinLat, minlat - 0.008), max(self.server.Interface.VMinLon, minlon - 0.011))
                     self.server.Interface.Maxx, self.server.Interface.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.server.Interface.VMaxLat, maxlat + 0.008), min(self.server.Interface.VMaxLon, maxlon + 0.011))
-                    if not self.server.Interface.BuildHTML():
-                      raise
+                  if not self.server.Interface.BuildHTML():
+                    raise
                 except:
                   pass
                 if self.server.Interface.SessionId == self.server.Interface.PSessionId:
@@ -3480,7 +3482,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
   '        point_edit(false, false, false, true);\r\n' \
   '      }\r\n' \
-  '      function rebase_track(x, y, track, exact=false) {\r\n' \
+  '      function rebase_track(x, y, track, exact=false, batch=false) {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
   '        let path = track.firstElementChild;\r\n' \
   '        let minx = wmb;\r\n' \
@@ -3526,17 +3528,25 @@ class GPXTweakerWebInterfaceServer():
   '          vb = true;\r\n' \
   '        }\r\n' \
   '        if (vb) {track.setAttribute("viewBox", viewbox.join(" "));}\r\n' \
-  '        if (minx_ex != minx || maxy_ex != maxy) {\r\n' \
-  '          let d_ex = path.getAttribute("d").substring(4);\r\n' \
-  '          let d = "M0 0";\r\n' \
-  '          let points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
-  '          if (points != null) {\r\n' \
-  '            for (let point of points) {\r\n' \
-  '              let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '              d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '        if (! batch) {\r\n' \
+  '          if (minx_ex != minx || maxy_ex != maxy) {\r\n' \
+  '            let d_ex = path.getAttribute("d").substring(4);\r\n' \
+  '            let d = "M0 0";\r\n' \
+  '            let points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '            if (points != null) {\r\n' \
+  '              for (let point of points) {\r\n' \
+  '                let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
+  '            path.setAttribute("d", d);\r\n' \
   '          }\r\n' \
-  '          path.setAttribute("d", d);\r\n' \
+  '        } else {\r\n' \
+  '          if (minx_ex != minx || maxy_ex != maxy) {\r\n' \
+  '            return [minx_ex - minx, maxy - maxy_ex];\r\n' \
+  '          } else {\r\n' \
+  '            return null;\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function WGS84_to_viewbox(lat, lon, track) {\r\n' \
@@ -5260,8 +5270,8 @@ class GPXTweakerWebInterfaceServer():
   '        while (spans[ind].id != foc + "focus") {ind++;}\r\n' \
   '        ind++;\r\n' \
   '        let d = path.getAttribute("d");\r\n' \
-  '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + ind.toString() + "}");\r\n' \
-  '        let d_right = " " + d.slice(d_left[0].length).replace("M", "L");\r\n' \
+  '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + ind.toString() + "}")[0];\r\n' \
+  '        let d_right = " " + d.slice(d_left.length).replace("M", "L");\r\n' \
   '        let l = document.getElementById("points").getElementsByTagName("span").length;\r\n' \
   '        for (let p=iti.length - 1; p>=0; p--) {\r\n' \
   '          let [lat, lon] = iti[p].split(",").map(Number);\r\n' \
@@ -5319,15 +5329,31 @@ class GPXTweakerWebInterfaceServer():
   '          if (el_input.disabled) {\r\n' \
   '            d_right = " m0 0" + d_right;\r\n' \
   '          } else {\r\n' \
-  '            let np = WGS84_to_viewbox(parseFloat(el_span_children[1].value), parseFloat(el_span_children[4].value), track);\r\n' \
+  '            let [x, y] = WGS84toWebMercator(parseFloat(el_span_children[1].value), parseFloat(el_span_children[4].value));\r\n' \
+  '            let c = rebase_track(x, y, track, false, true);\r\n' \
+  '            let np = (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
+  '            if (c != null) {\r\n' \
+  '              for (let i=0; i<2; i++) {\r\n' \
+  '                let d_ = i==0?d_left.substring(4):d_right;\r\n' \
+  '                let points = d_.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '                d_ = "";\r\n' \
+  '                if (points != null) {\r\n' \
+  '                  for (let point of points) {\r\n' \
+  '                    let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                    d_ = d_ + " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (i == 0) {d_left = "M0 0" + d_;} else {d_right = d_;}\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            d_right = " L" + np + d_right;\r\n' \
   '          }\r\n' \
   '          hist[0].push([pref, "", batch]);\r\n' \
   '        }\r\n' \
   '        seg.insertBefore(frag, pt);\r\n' \
   '        handle.insertBefore(frag_dot, dot);\r\n' \
-  '        if (d_left[0].indexOf("M", 1) < 0) {d_right =  d_right.replace("L", "M");}\r\n' \
-  '        d = d_left[0].trimEnd() + d_right;\r\n' \
+  '        if (d_left.indexOf("M", 1) < 0) {d_right =  d_right.replace("L", "M");}\r\n' \
+  '        d = d_left.trimEnd() + d_right;\r\n' \
   '        path.setAttribute("d", d);\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
@@ -7210,15 +7236,23 @@ class GPXTweakerWebInterfaceServer():
     if map_minlat != None:
       if map_minlat < self.VMinLat:
         err = True
+      if map:
+        self.VMinLat = map_minlat
     if map_maxlat != None:
       if map_maxlat > self.VMaxLat:
         err = True
+      if map:
+        self.VMaxLat = map_maxlat
     if map_minlon != None:
       if map_minlon < self.VMinLon:
         err = True
+      if map:
+        self.VMinLon = map_minlon
     if map_maxlat != None:
       if map_maxlat > self.VMaxLat:
         err = True
+      if map:
+        self.VMaxLon = map_maxlon
     if err:
       self.log(0, 'berror4')
       return
@@ -7236,13 +7270,17 @@ class GPXTweakerWebInterfaceServer():
       minlon = self.DefLon if (not map or map_minlon == None) else map_minlon
       maxlon = self.DefLon if (not map or map_maxlon == None) else map_maxlon
     else:
-      minlat = min(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_minlat == None) else map_minlat
-      maxlat = max(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_maxlat == None) else map_maxlat
-      minlon = min(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_minlon == None) else map_minlon
-      maxlon = max(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg) if (not map or map_maxlon == None) else map_maxlon
-      if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlat > self.VMaxLat:
+      minlat = min(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
+      maxlat = max(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
+      minlon = min(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
+      maxlon = max(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
+      if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
         self.log(0, 'berror4')
         return
+      minlat = minlat if (not map or map_minlat == None) else map_minlat
+      maxlat = maxlat if (not map or map_maxlat == None) else map_maxlat
+      minlon = minlon if (not map or map_minlon == None) else map_minlon
+      maxlon = maxlon if (not map or map_maxlon == None) else map_maxlon
     if map:
       self.Mode = "map"
       self.TilesSets = [["Map"]]
@@ -7551,13 +7589,14 @@ if __name__ == '__main__':
   parser.add_argument('--conf', '-c', metavar='CONF', help=LSTRINGS['parser']['conf'], default='')
   parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], default='')
   parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const='.', default='')
+  parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: (list((p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 4), default='')
   parser.add_argument('--maxheight', '-mh', metavar='MAX_HEIGHT', help=LSTRINGS['parser']['maxheight'], type=int, default=0)
   parser.add_argument('--maxwidth', '-mw', metavar='MAX_WIDTH', help=LSTRINGS['parser']['maxwidth'], type=int, default=0)
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_maxheight=(args.maxheight or 2000), map_maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat = args.box[0], map_maxlat = args.box[1], map_minlon = args.box[2], map_maxlon = args.box[3], map_maxheight=(args.maxheight or 2000), map_maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
