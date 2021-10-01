@@ -1,4 +1,4 @@
-# GPXTweaker
+# GPXTweaker (éditeur GPX / GPX editor)
 A script in Python 3 to visualize, in 2D and 3D, and edit GPX tracks
 
 Description in english in the second part of this document.
@@ -13,16 +13,16 @@ La sauvegarde de la trace mise à jour s'effectue dans un fichier distinct (par 
 L'utilitaire est en phase de développement et de test, et comporte probablement encore de multiples erreurs de programmation. Il convient de ce fait de faire preuve de prudence lors de son utilisation en conditions réelles en s'assurant de l'absence de perte ou de corruption de données au niveau de la trace modifiée telle qu'enregistrée par rapport à la version d'origine avant de supprimer le fichier initial.
 De nouvelles fonctionnalités seront, en outre, progressivement incorporées.  L'outil est, à ce stade, compatible avec MyTrails, quant à la prise en compte des données d'altitude issues du capteur de pression barométrique.
 Seule la première trace préseente dans le fichier dont le chemin est fourni en paramètre est chargée.
-Si le fichier indiqué n'existe pas, une nouvelle trace sera créée à partir de zéro, à condition que les variables de la section "boundaries" soient définies dans le fichier de configuration.
+Si le fichier indiqué n'existe pas, une nouvelle trace sera créée à partir de zéro.
 
 Le fond sur lequel est affichée la trace peut être formé d'une carte générée par interrogation d'un serveur WMS ou enregistrée en local ou sur un serveur, ou bien être construit à partir de tuiles récupérées sur un serveur WMTS ou Web ou sauvegardées localement.
-Sont déjà paramétrées et utilisables au travers d'un alias les sources suivantes: IGN (moyennant l'indication de la clé et d'informations complémentaires de connexion au serveur), OSM.
+Sont déjà paramétrées et utilisables au travers d'un alias les sources suivantes: IGN (moyennant l'indication de la clé et d'informations complémentaires de connexion au serveur), OSM, Google, Bing.
 
-Les données d'élévation contenues dans la trace peuvent être complétées ou remplacées par les informations obtenues par interrogation d'un serveur WMS ou WMTS ou l'API IGN (moyennant l'indication de la clé et d'informations complémentaires de connexion au serveur) renvoyant une réponse au format x-bil-32.
+Les données d'élévation contenues dans la trace peuvent être complétées ou remplacées par les informations obtenues par interrogation d'un serveur WMS ou WMTS ou l'API IGN (moyennant l'indication de la clé et d'informations complémentaires de connexion au serveur) renvoyant une réponse au format x-bil-32 ou hgt.
 
-Le tracé de point en point peut s'effectuer en ligne droite ou en suivant les chemins.
+Le tracé de point en point peut s'effectuer en ligne droite ou en suivant les chemins, grâce à un service de calcul d'itinéraires (IGN et OSRM sont déjà configurés).
 
-Les modifications et insertions de points peuvent être annulées/rétablies soit point par point (si un point est sélectionné), soit par segment et, s'il s'agit d'une opération portant sur plusieurs points (comme un suivi de chemin), par lot (si un segment est sélectionné), soit sur l'ensemble de la trace et par lot (si aucun élément n'est sélectionné).
+Les modifications et insertions de points peuvent être annulées/rétablies soit point par point, soit par segment et, s'il s'agit d'une opération portant sur plusieurs points (comme un suivi de chemin), par lot, sur un segment ou sur l'ensemble de la trace.
 
 La trace peut, irréversiblement, être purgée des éléments décochés en la sauvant puis en actualisant la page d'interface.
 
@@ -38,23 +38,23 @@ Le module fournit diverses classes destinées à la manipulation directe de cont
 
 Syntaxe:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--maxheight|-mh MAX_HEIGHT] [--maxwidth|-mw MAX_WIDTH] [--noopen|-n] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--noopen|-n] [--v|-v VERBOSITY]  
 où:  
   -h: afficher l'aide  
   URI: le chemin d'accès à la trace (en local ou, en lecture seule, sur un serveur)  
   CONF: le chemin d'accès au fichier de configuration (même répertoire que le script par défaut)  
-  MAP: le chemin d'accès à la carte (en local ou sur un serveur) ou le nom d'un fournisseur de carte paramétré dans le fichier de configuration, ou non mentionné pour utiliser les fournisseurs de tuiles définis dans ce même fichier  
-  EMAP: le chemin d'accès à la carte d'altitudes ou le nom d'un fournisseur de cartes d'altitudes paramétré dans le fichier de configuration, ou non mentionné pour utiliser les fournisseurs de tuiles et données d'altitudes définis dans ce même fichier  
-  BOX: si le nom d'un fournisseur de carte est mentionné, la boîte au format "minlat, maxlat, minlon, maxlon" (avec les "") de la carte à retourner peut être indiquée au moyen de ce paramètre  
-  MAX_HEIGHT et MAX_WIDTH: si le nom d'un fournisseur de carte est mentionné, la hauteur et la largeur maximales de la carte à retourner peuvent être indiquées au moyen de ces deux paramètres  
+  MAP: le chemin d'accès complet à la carte (en local ou sur un serveur) ou le nom d'un fournisseur de carte paramétré dans le fichier de configuration ou vide pour utiliser le premier founisseur de carte configuré, ou non mentionné pour utiliser les fournisseurs de tuiles définis dans ce même fichier  
+  EMAP: le chemin d'accès complet à la carte d'altitudes ou le nom d'un fournisseur de cartes d'altitudes paramétré dans le fichier de configuration ou vide pour utiliser le premier fournisseur de carte d'altitudes configuré, ou non mentionné pour utiliser les fournisseurs de tuiles et données d'altitudes définis dans ce même fichier  
+  BOX: si le chemin d'une carte ou le nom d'un fournisseur de carte est mentionné ou laissé vide, la boîte au format "minlat, maxlat, minlon, maxlon" (avec les "") de la carte à retourner peut être indiquée au moyen de ce paramètre  
+  SIZE: si le chemin d'une carte ou le nom d'un fournisseur de carte est mentionné ou laissé vide, les dimensions au format "hauteur, largeur" (avec les "") de la carte à retourner peuvent être indiquées au moyen de ce paramètre  
   -noopen: pour que le script n'ouvre pas la page d'interface dans le navigateur par défaut (et ainsi pouvoir utiliser un autre navigateur)  
   VERBOSITY: niveau de verbosité de 0 à 2 (0 par défaut)
 
 Exemples:  
 
   GPXTweaker t.gpx  
-  GPXTweaker t.gpx -m m.png -v 1  
-  GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -h 3000 -w 6000
+  GPXTweaker t.gpx -m "d:\maps\m.png" -v 1  
+  GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -s "3000, 6000"
 
 Dans l'interface:
   - clic gauche sur la carte pour la faire glisser
@@ -72,24 +72,24 @@ Dans l'interface:
 
 ----------English----------
 
-GPXTwekaer is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, of GPX tracks on a cartographic background. No dependency is required.
+GPXTweaker is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, GPX tracks on a cartographic background. No dependency is required.
 
-The backup of the updated track is done in a distinct file (by addition of the suffix " - updated"), in the same folder. Unchanged datas are, as much as possible, kept as they are, without alteraton, in order to ensure the conservation of fields constituting extensions relatively to standards.
+The backup of the updated track is done in a distinct file (by addition of the suffix " - updated"), in the same folder. Unchanged datas are, as much as possible, kept as they are, without alteration, in order to ensure the conservation of fields constituting extensions relatively to standards.
 
 The utility is in development and test phase, and probably still includes many bugs. It is therefore necessary to be careful when using it in real conditions by making sure that no data loss or corruption occurred in the modified track as saved compared to the original version before deleting the initial file.
 New features will, besides, preogressively be inplemented. The tool is, currently, compatible with MyTrails in taking into account altitude datas coming from the barometric pressure sensor.
 Only the first track present in the file whose path is provided as argument is loaded.
-If the indicated file does not exist, a new track will be created from scratch, provided that the variables in the section "boundaries" are defined in the configuration file.
+If the indicated file does not exist, a new track will be created from scratch.
 
 The background on which the track is displayed can be made of a map generated by interrogation of a WMS server or saved locally or on a server, or also be built from tiles retrieved from a WMTS or Web server or stored locally.
-Are already set and callable under an alias these sources: IGN (provided a key and suitable connexion infos are given), OSM.
+Are already set and callable under an alias these sources: IGN (provided a key and suitable connexion infos are given), OSM, Google, Bing.
 
 Elevation datas included in the track can be completed or replaced by the informations obtained by interrogation or a WMS or WMTS server
- or the IGN API (provided a key and suitable connexion infos are given) sending back a response in x-bil-32 format.
+ or the IGN API (provided a key and suitable connexion infos are given) sending back a response in x-bil-32 or hgt format.
 
-The drawing from point to point can be done in straight line or following pathes.
+The drawing from point to point can be done in straight line or following pathes, thanks to a service of itineraries calculation (IGN ans OSRM are already configured).
 
-Modifications and insertions of points can be undone/redone either point by point (if a point is selected), or by segment and, if an operation dealing with several points is concerned (such as path following), by batch (if a segment is selected), or on the whole track and by batch (if no element is selected).
+Modifications and insertions of points can be undone/redone either point by point, or by segment and, if an operation dealing with several points is concerned (such as path following), by batch, on a segment or on the whole track.
 
 The track can, irreversibly, be purged of unchecked elements by saving it then reloading the interface page.
 
@@ -105,23 +105,23 @@ The module provides different classes designed for direct handling of cartograph
 
 Syntax:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--maxheight|-mh MAX_HEIGHT] [--maxwidth|-mw MAX_WIDTH] [--noopen|-n] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--noopen|-n] [--v|-v VERBOSITY]  
 where:  
   -h: shows the help  
   URI: the path to the track (on local or, in read only mode, on a server)  
   CONF: the path to the configuration file (same folder as the script by default)  
-  MAP: the path to the map (on local or on a server) or the name of a map provider set in the configuration file, or not mentioned in order to use the tiles providers defined in this file  
-  EMAP: the path to the elevations map or the name of a map provider set in the configuration file, or not mentioned in order to use the elevations tiles or data providers defined in this file  
-  BOX: if the name of a map provider is mentioned, the box in format "minlat, maxlat, minlon, maxlon" (with the "") of the map to be retrieved can be indicated with this argument  
-  MAX_HEIGHT and MAX_WIDTH: if the name of a map provider is mentioned, the max height and width of the map to be retrieved can be indicated with these two arguments  
+  MAP: the full path to the map (on local or on a server) or the name of a map provider set in the configuration file or blank to use the first map provider configured, or not mentioned in order to use the tiles providers defined in this file  
+  EMAP: the full path to the elevations map or the name of an elevations map provider set in the configuration file or blank to use the first elevations map provider configured, or not mentioned in order to use the elevations tiles or data providers defined in this file  
+  BOX: if the path to a map or the name of a map provider is mentioned or kept blank, the box in format "minlat, maxlat, minlon, maxlon" (with the "") of the map to be retrieved can be indicated with this argument  
+  SIZE: if the path to a map or the name of a map provider is mentioned or kept blank, the dimensions in format "height, width" (with the "") of the map to be retrieved can be indicated with this argument  
   -noopen: so that the script does not open the interface page in the default browser (and so, be able to use another browser)  
   VERBOSITY: verbosity level from 0 to 2 (0 by default)
 
 Examples:  
 
   GPXTweaker t.gpx  
-  GPXTweaker t.gpx -m m.png -v 1  
-  GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -h 3000 -w 6000
+  GPXTweaker t.gpx -m "d:\maps\m.png" -v 1  
+  GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -s "3000, 6000"
 
 In the interface:
   - left click on the map to scroll it
