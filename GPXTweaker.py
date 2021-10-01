@@ -1076,6 +1076,7 @@ class WebMercatorMap(WGS84WebMercator):
       if nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
         nmap = dmap
       infos['crs'] = self.CRS
+      infos['format'] = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt'}.get(uri.replace('.xz', '').rsplit('.', 1)[-1][0:3], 'image')
     else:
       try:
         if nmap[:4] == b'\x89PNG':
@@ -2654,9 +2655,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             if resp_body:
               try:
                 if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', '*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                 else:
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', '*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
@@ -7421,7 +7422,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTML == None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos['format'] == 'image/jpeg' else ('.png' if self.Map.MapInfos['format'] == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -7605,6 +7606,7 @@ if __name__ == '__main__':
     GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   except:
     log('interface', 0, 'berror')
+    exit()
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
