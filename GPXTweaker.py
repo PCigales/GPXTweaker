@@ -2614,7 +2614,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   self.server.Interface.log(2, 'rerror', req.method, req.path)
               else:
                 try:
-                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos['format'] == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos['format'] == 'image/png' else '.img'))}).encode('utf-8')
+                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img'))}).encode('utf-8')
                   if req.method == 'GET':
                     self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                   else:
@@ -2638,9 +2638,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             if resp_body:
               try:
                 if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos.get('format')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                 else:
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos['format']).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos.get('format')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
@@ -2655,9 +2655,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             if resp_body:
               try:
                 if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', '*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', 'image/*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                 else:
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', '*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', 'image/*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
@@ -7469,7 +7469,7 @@ class GPXTweakerWebInterfaceServer():
     except:
       self.log(0, '3derror1')
       return False
-    if self.Elevation.MapInfos['format'] != 'image/x-bil;bits=32' and self.Elevation.MapInfos['format'] != 'image/hgt':
+    if self.Elevation.MapInfos.get('format') != 'image/x-bil;bits=32' and self.Elevation.MapInfos.get('format') != 'image/hgt':
       self.log(0, '3derror1')
       return False
     scale = self.Elevation.MapResolution
