@@ -163,9 +163,9 @@ FR_STRINGS = {
     'jmsegmentreverse2': 'Trace inversée',
     'jmelevations1': 'Récupération des élévations en cours...',
     'jmelevations2': 'Élévation du point / point de cheminement mise à jour',
-    'jmelevations3': 'Élévations du segment mises à jour',
-    'jmelevations4': 'Élévations de la trace mises à jour',
-    'jmelevations5': 'Échec total ou partiel de la récupération des élévations',
+    'jmelevations3': 'Élévations du segment mises à jour (%s point(s) sur %s)',
+    'jmelevations4': 'Élévations de la trace mises à jour (%s point(s) et point(s) de cheminement sur %s)',
+    'jmelevations5': 'Échec de la récupération des élévations',
     'jmaltitudesjoin1': 'Altitudes égalisées par décalage uniforme',
     'jmaltitudesjoin2': 'Altitudes égalisées par décalage progressif',
     'jmdatetime1': 'Horodatage du point mis à jour',
@@ -198,14 +198,13 @@ FR_STRINGS = {
   },
   'parser': {
     'uri': 'chemin d\'accès à la trace',
-    'conf': 'chemin d\'accès au fichier de configuration (même répertoire que le script par défaut)',
-    'map': 'chemin d\'accès à la carte ou nom du fournisseur de carte configuré ou pas mentionné pour utiliser les fournisseurs de tuiles configurés (par défaut)',
-    'emap': 'chemin d\'accès à la carte d\'altitudes ou vide (ou ".") pour utiliser le fournisseur de carte d\'altitudes configuré ou pas mentionné pour utiliser le fournisseur de tuiles d\'altitudes configuré (par défaut)',
-    'box': '"minlat, maxlat, minlon, maxlon" de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
-    'maxheight': 'hauteur maximale de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
-    'maxwidth': 'largeur maximale de la carte à retourner (pour l\'utilisation d\'un fournisseur de carte)',
-    'noopen': 'par d\'ouverture automatique dans le navigateur par défaut',
-    'verbosity': 'niveau de verbosité de 0 à 2 (0 par défaut)',
+    'conf': 'chemin d\'accès au fichier de configuration [même répertoire que le script par défaut]',
+    'map': 'chemin d\'accès à la carte ou nom du fournisseur de carte ou vide pour utiliser le premier founisseur de carte configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles configurés [par défaut]',
+    'emap': 'chemin d\'accès à la carte d\'altitudes ou nom du fournisseur de carte d\'altitudes ou vide pour utiliser le premier fournisseur de carte d\'altitudes configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles et données d\'altitudes configurés [par défaut]',
+    'box': '"minlat, maxlat, minlon, maxlon" (latitudes minimale et maximale, longitudes minimale et maximale, avec les "" ) de la carte à charger / à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / déterminé à partir de la trace par défaut]',
+    'size': '"height, width" (hauteur et largeur, avec les "") de la carte à charger / "maxheight, maxwidth" (hauteur et largeur maximales, avec les "") de la carte à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / "2000, 4000" par défaut]',
+    'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
+    'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
     'open': 'Ouvrir l\'url %s',
     'keyboard': 'Presser "S" pour quitter',
    }
@@ -343,9 +342,9 @@ EN_STRINGS = {
     'jmsegmentreverse2': 'Track reversed',
     'jmelevations1': 'Retrieval of elevations in progress...',
     'jmelevations2': 'Elevation of the point / waypoint updated',
-    'jmelevations3': 'Elevations of the segment updated',
-    'jmelevations4': 'Elevations of the track updated',
-    'jmelevations5': 'Total or partial failure of the retrieval of elevations',
+    'jmelevations3': 'Elevations of the segment updated (%s point(s) out of %s)',
+    'jmelevations4': 'Elevations of the track updated (%s point(s) and waypoint(s) out of %s)',
+    'jmelevations5': 'Failure of the retrieval of elevations',
     'jmaltitudesjoin1': 'Altitudes equalized by uniform offset',
     'jmaltitudesjoin2': 'Altitudes equalized by progressive offset',
     'jmdatetime1': 'Timestamp of the point updated',
@@ -378,14 +377,13 @@ EN_STRINGS = {
   },
   'parser': {
     'uri': 'path to the track',
-    'conf': 'path to the configuration file (same folder as the script by default)',
-    'map': 'path to the map or name of the configured map provider or not mentioned to use the configured tiles providers (by default)',
-    'emap': 'path to the elevations map or blank (or ".") to use the configured elevations map provider or not mentioned to use the configured elevations tiles provider (by default)',
-    'box': '"minlat, maxlat, minlon, maxlon" of the map to be retrieved (for the use of a map provider)',
-    'maxheight': 'max height of the map to be retrieved (for the use of a map provider)',
-    'maxwidth': 'max width of the map to be retrieved (for the use of a map provider)',
+    'conf': 'path to the configuration file [same folder as the script by default]',
+    'map': 'path to the map or name of the map provider or blank to use the first map provider configured, or option not mentioned to use the tiles providers configured [by default]',
+    'emap': 'path to the elevations map or name of the elevations map provider or blank to use the first elevations map configured, or option not mentioned to use the elevations tiles and data providers configured [by default]',
+    'box': '"minlat, maxlat, minlon, maxlon" (minimum and maximum latitudes, minimum and maximum longitudes, with the "") of the map to be loaded / retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / determined from the track by default]',
+    'size': '"height, width" (height and width, with the "") of the map to be loaded / "maxheight, maxwidth" (maximum height and width, with the "") of the map to be retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / "2000, 4000" by default]',
     'noopen': 'no automatic opening in the default browser',
-    'verbosity': 'verbosity level from 0 to 2 (0 by default)',
+    'verbosity': 'verbosity level from 0 to 2 [0 by default]',
     'open': 'Open the url %s',
     'keyboard': 'Press "S" to exit',
    }
@@ -3796,9 +3794,9 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        if (hist[1-s][hist[1-s].length-1][1] == "") {\r\n' \
-  '          show_msg((redo?"{#jmredo1#}":"{#jmundo1#}").replace("%s", inds.length), 2);\r\n' \
+  '          show_msg((redo?"{#jmredo1#}":"{#jmundo1#}").replace("%s", inds.length), 3);\r\n' \
   '        } else {\r\n' \
-  '          show_msg((redo?"{#jmredo2#}":"{#jmundo2#}").replace("%s", inds.length), 2);\r\n' \
+  '          show_msg((redo?"{#jmredo2#}":"{#jmundo2#}").replace("%s", inds.length), 3);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function point_insert(pos, lat=null, lon=null) {\r\n' \
@@ -4637,8 +4635,8 @@ class GPXTweakerWebInterfaceServer():
   '      function error_ecb() {\r\n' \
   '      } \r\n' \
   '      function load_ecb(t, pts) {\r\n' \
-  '        if (t.status != 200) {return false;}\r\n' \
-  '        if (t.response == "") {return false;}\r\n' \
+  '        if (t.status != 200) {return 0;}\r\n' \
+  '        if (t.response == "") {return 0;}\r\n' \
   '        let ele = t.response.split("\\r\\n");\r\n' \
   '        let p = 0;\r\n' \
   '        let e = 0;\r\n' \
@@ -4648,7 +4646,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let batch = ++hist_b;\r\n' \
-  '        let err = false;\r\n' \
+  '        let np = 0;\r\n' \
   '        while (p < pts.length) {\r\n' \
   '          while (e < ele.length) {\r\n' \
   '            let r = ele[e].split(",");\r\n' \
@@ -4664,6 +4662,7 @@ class GPXTweakerWebInterfaceServer():
   '                    if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
   '                  }\r\n' \
   '                  point_edit(false, false, false, false);\r\n' \
+  '                  np++;\r\n' \
   '                  let seg_p = null;\r\n' \
   '                  if (pts[p].slice(0,3) != "way") {\r\n' \
   '                    let seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
@@ -4674,14 +4673,11 @@ class GPXTweakerWebInterfaceServer():
   '                    segment_recalc(seg, false);\r\n' \
   '                    seg = seg_p;\r\n' \
   '                  }\r\n' \
-  '                } else {err = true;}\r\n' \
+  '                }\r\n' \
   '                e++;\r\n' \
-  '              } else {err = true;}\r\n' \
+  '              }\r\n' \
   '              break;\r\n' \
-  '            } else {\r\n' \
-  '              err = true;\r\n' \
-  '              e++;\r\n' \
-  '            }\r\n' \
+  '            } else {e++;}\r\n' \
   '          }\r\n' \
   '          p++;\r\n' \
   '        }\r\n' \
@@ -4689,7 +4685,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        if (! ex_foc && focused) {focused = "";}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
-  '        return ! err;\r\n'\
+  '        return np;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false) {\r\n' \
   '        let pts = [];\r\n' \
@@ -4723,7 +4719,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (b.length == 0) {return;}\r\n' \
   '        let msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
   '        let xhre = new XMLHttpRequest();\r\n' \
-  '        xhre.onload = (e) => {load_ecb(e.target, pts)?show_msg(msg, 2, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
+  '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length), 4, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
   '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -6928,27 +6924,27 @@ class GPXTweakerWebInterfaceServer():
         hcur = l[2:-2]
         if hcur[:9].lower() == 'maptiles ':
           hcur = hcur[:9].lower() + hcur[9:]
-          self.TilesSets.append([hcur[9:], {}, {}, [1, ]])
+          self.TilesSets.append([hcur[9:].strip(), {}, {}, [1, ]])
           s = self.TilesSets[-1]
         elif hcur[:4].lower() == 'map ':
           hcur = hcur[:4].lower() + hcur[4:]
-          self.MapSets.append([hcur[4:], {}, {}])
+          self.MapSets.append([hcur[4:].strip(), {}, {}])
           s = self.MapSets[-1]
         elif hcur[:15].lower() == 'elevationtiles ':
           hcur = hcur[:15].lower() + hcur[15:]
-          self.ElevationsProviders.append([hcur[15:], {}, {}])
+          self.ElevationsProviders.append([hcur[15:].strip(), {}, {}])
           s = self.ElevationsProviders[-1]
         elif hcur[:13].lower() == 'elevationmap ':
           hcur = hcur[:13].lower() + hcur[13:]
-          self.ElevationMapSets.append([hcur[13:], {}, {}])
+          self.ElevationMapSets.append([hcur[13:].strip(), {}, {}])
           s = self.ElevationMapSets[-1]
         elif hcur[:13].lower() == 'elevationapi ':
           hcur = hcur[:13].lower() + hcur[13:]
-          self.ElevationsProviders.append([hcur[13:], {}, {}])
+          self.ElevationsProviders.append([hcur[13:].strip(), {}, {}])
           s = self.ElevationsProviders[-1]
         elif hcur[:13].lower() == 'itineraryapi ':
           hcur = hcur[:13].lower() + hcur[13:]
-          self.ItinerariesProviders.append([hcur[13:], {}, {}])
+          self.ItinerariesProviders.append([hcur[13:].strip(), {}, {}])
           s = self.ItinerariesProviders[-1]
         elif hcur.lower() == 'global':
           hcur = hcur.lower()
@@ -7277,10 +7273,6 @@ class GPXTweakerWebInterfaceServer():
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
         self.log(0, 'berror4')
         return
-      minlat = minlat if (not map or map_minlat == None) else map_minlat
-      maxlat = maxlat if (not map or map_maxlat == None) else map_maxlat
-      minlon = minlon if (not map or map_minlon == None) else map_minlon
-      maxlon = maxlon if (not map or map_maxlon == None) else map_maxlon
     if map:
       self.Mode = "map"
       self.TilesSets = [["Map"]]
@@ -7291,12 +7283,16 @@ class GPXTweakerWebInterfaceServer():
           return
       else:
         for i in range(len(self.MapSets)):
-          if self.MapSets[i][0].lower() == map.lower():
+          if self.MapSets[i][0].lower() == map.lower() or map == " ":
             self.MapSet = i
             break
         if self.MapSet == None:
           self.log(0, 'berror3', map)
           return
+        minlat = minlat if map_minlat == None else map_minlat
+        maxlat = maxlat if map_maxlat == None else map_maxlat
+        minlon = minlon if map_minlon == None else map_minlon
+        maxlon = maxlon if map_maxlon == None else map_maxlon
         if not self.Map.FetchMap(self.MapSets[self.MapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
           self.log(0, 'berror')
           return
@@ -7336,12 +7332,16 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'eerror', emap)
       else:
         for i in range(len(self.ElevationMapSets)):
-          if self.ElevationMapSets[i][0].lower() == emap.lower():
+          if self.ElevationMapSets[i][0].lower() == emap.lower() or emap == " ":
             self.ElevationMapSet = i
             break
         if self.ElevationMapSet == None:
           self.log(0, 'eerror', emap)
         else:
+          minlat = minlat if map_minlat == None else map_minlat
+          maxlat = maxlat if map_maxlat == None else map_maxlat
+          minlon = minlon if map_minlon == None else map_minlon
+          maxlon = maxlon if map_maxlon == None else map_maxlon
           if self.Elevation.FetchMap(self.ElevationMapSets[self.ElevationMapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.ElevationMapSets[self.ElevationMapSet][2]):
             self.EMode = "map"
             self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
@@ -7587,16 +7587,18 @@ if __name__ == '__main__':
   parser = CustomArgumentParser()
   parser.add_argument('uri', metavar='URI', help=LSTRINGS['parser']['uri'])
   parser.add_argument('--conf', '-c', metavar='CONF', help=LSTRINGS['parser']['conf'], default='')
-  parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], default='')
-  parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const='.', default='')
+  parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs ='?', const=' ', default='')
+  parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const=' ', default='')
   parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: (list((p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 4), default='')
-  parser.add_argument('--maxheight', '-mh', metavar='MAX_HEIGHT', help=LSTRINGS['parser']['maxheight'], type=int, default=0)
-  parser.add_argument('--maxwidth', '-mw', metavar='MAX_WIDTH', help=LSTRINGS['parser']['maxwidth'], type=int, default=0)
+  parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda b: (list((p,q) for [p,q] in (map(int, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 2), default='')
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat = args.box[0], map_maxlat = args.box[1], map_minlon = args.box[2], map_maxlon = args.box[3], map_maxheight=(args.maxheight or 2000), map_maxwidth=(args.maxwidth or 4000), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+  try:
+    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+  except:
+    exit()
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
