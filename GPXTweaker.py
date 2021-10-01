@@ -199,8 +199,8 @@ FR_STRINGS = {
   'parser': {
     'uri': 'chemin d\'accès à la trace',
     'conf': 'chemin d\'accès au fichier de configuration [même répertoire que le script par défaut]',
-    'map': 'chemin d\'accès à la carte ou nom du fournisseur de carte ou vide pour utiliser le premier founisseur de carte configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles configurés [par défaut]',
-    'emap': 'chemin d\'accès à la carte d\'altitudes ou nom du fournisseur de carte d\'altitudes ou vide pour utiliser le premier fournisseur de carte d\'altitudes configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles et données d\'altitudes configurés [par défaut]',
+    'map': 'chemin d\'accès complet à la carte ou nom du fournisseur de carte ou vide pour utiliser le premier founisseur de carte configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles configurés [par défaut]',
+    'emap': 'chemin d\'accès complet à la carte d\'altitudes ou nom du fournisseur de carte d\'altitudes ou vide pour utiliser le premier fournisseur de carte d\'altitudes configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles et données d\'altitudes configurés [par défaut]',
     'box': '"minlat, maxlat, minlon, maxlon" (latitudes minimale et maximale, longitudes minimale et maximale, avec les "" ) de la carte à charger / à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / déterminé à partir de la trace par défaut]',
     'size': '"height, width" (hauteur et largeur, avec les "") de la carte à charger / "maxheight, maxwidth" (hauteur et largeur maximales, avec les "") de la carte à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / "2000, 4000" par défaut]',
     'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
@@ -377,8 +377,8 @@ EN_STRINGS = {
   },
   'parser': {
     'uri': 'path to the track',
-    'conf': 'path to the configuration file [same folder as the script by default]',
-    'map': 'path to the map or name of the map provider or blank to use the first map provider configured, or option not mentioned to use the tiles providers configured [by default]',
+    'conf': 'full path to the configuration file [same folder as the script by default]',
+    'map': 'full path to the map or name of the map provider or blank to use the first map provider configured, or option not mentioned to use the tiles providers configured [by default]',
     'emap': 'path to the elevations map or name of the elevations map provider or blank to use the first elevations map configured, or option not mentioned to use the elevations tiles and data providers configured [by default]',
     'box': '"minlat, maxlat, minlon, maxlon" (minimum and maximum latitudes, minimum and maximum longitudes, with the "") of the map to be loaded / retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / determined from the track by default]',
     'size': '"height, width" (height and width, with the "") of the map to be loaded / "maxheight, maxwidth" (maximum height and width, with the "") of the map to be retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / "2000, 4000" by default]',
@@ -1083,18 +1083,18 @@ class WebMercatorMap(WGS84WebMercator):
           if cpos >= 0:
             infos = json.loads(nmap[cpos+24:cpos+4+int.from_bytes(nmap[cpos-4:cpos], 'big')])
           else:
-            return False
+            raise
         elif nmap[:2] == b'\xff\xd8':
           cpos = nmap.rfind(b'GPXTweaker: ')
           if cpos >= 0:
             infos = json.loads(nmap[cpos+12:cpos-2+int.from_bytes(nmap[cpos-2:cpos], 'big')])
           else:
-            return False
+            raise
         elif nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
           nmap = dmap
           infos = json.loads(imap)
         if infos['crs'] != self.CRS:
-          return False
+          raise
         if not hasattr(self, 'WMS_BBOX'):
           bbox = dict(zip(('{minx}', '{miny}', '{maxx}', '{maxy}'), infos['bbox'].split(',')))
         else:
@@ -4719,7 +4719,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (b.length == 0) {return;}\r\n' \
   '        let msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
   '        let xhre = new XMLHttpRequest();\r\n' \
-  '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length), 4, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
+  '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
   '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -7301,6 +7301,12 @@ class GPXTweakerWebInterfaceServer():
       else:
         bbox = dict(zip(self.Map.WMS_BBOX.split(','), self.Map.MapInfos['bbox'].split(',')))
       self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = list(float(bbox[k]) for k in ('{minx}', '{miny}', '{maxx}', '{maxy}'))
+      minlat, minlon = WGS84WebMercator.WebMercatortoWGS84(float(bbox['{minx}']), float(bbox['{miny}']))
+      maxlat, maxlon = WGS84WebMercator.WebMercatortoWGS84(float(bbox['{maxx}']), float(bbox['{maxy}']))
+      minlat += 0.014
+      maxlat -= 0.014
+      minlon += 0.019
+      maxlon -= 0.019
       if next((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), None) != None:
         self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
         self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
@@ -7598,7 +7604,7 @@ if __name__ == '__main__':
   try:
     GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   except:
-    exit()
+    log('interface', 0, 'berror')
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
