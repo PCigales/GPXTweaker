@@ -3153,7 +3153,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (! tlock && ! zf) {switch_tlock(false);}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (nlevel != null) {switch_tiles(null, nlevel, true)};\r\n' \
+  '          switch_tiles(null, nlevel, true);\r\n' \
   '        }\r\n' \
   '      } \r\n' \
   '      function error_tcb() {\r\n' \
