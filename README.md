@@ -69,6 +69,10 @@ Dans l'interface:
   - alt + roulette souris pour passer au point ou segment suivant ou précédent
   - ctrl + clic sur les boutons de zoom pour modifier l'opacité de la carte
 
+Pour associer les fichers dont l'extension est ".gpx" avec GPXTweaker:
+  - créer dans le même répertoire un fichier GPXTweaker.bat contenant la ligne, en remplaçant [path] par le chemin d'accès au script: @"[path]\GPXTweaker.py" %1
+  - dans l'explorateur de fichiers, double-cliquer sur un fichier ".gpx", cliquer sur "plus d'applications" puis sur "rechercher une autre application", et naviguer jusque puis choisir "GPXTweaker.bat"
+
 
 ----------English----------
 
@@ -135,3 +139,7 @@ In the interface:
   - ctrl + mouse wheel to zoom in or out
   - alt + mouse wheel to switch to the next or previous point or segment
   - ctrl + click on the zoom buttons to change the opacity of the map
+
+In order to associate the files whose extension is ".gpx" with GPXTweaker:
+  - create in the same folder a file GPXTweaker.bat containing the line, replacing [path] by the path to the script: @"[path]\GPXTweaker.py" %1
+  - in the files explorer, double-click on a ".gpx" file, click on "more applications" then on "look for another application", and navigate towards then choose "GPXTweaker.bat"
