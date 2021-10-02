@@ -3103,10 +3103,12 @@ class GPXTweakerWebInterfaceServer():
   '          tset = document.getElementById("tset").selectedIndex;\r\n' \
   '          let matrix = null;\r\n' \
   '          let lf = false;\r\n' \
-  '          if (nlevel == 0) {\r\n' \
+  '          if (nlevel >= 0) {\r\n' \
   '            tlevels = msg.tlevels;\r\n' \
-  '            nlevel = tlevels[0];\r\n' \
-  '            zoom_s = tlevels[nlevel][1];\r\n' \
+  '            if (nlevel == 0) {\r\n' \
+  '              nlevel = tlevels[0];\r\n' \
+  '              zoom_s = tlevels[nlevel][1];\r\n' \
+  '            }\r\n' \
   '          } else {\r\n' \
   '            nlevel = tlevels[0];\r\n' \
   '            matrix = tlevels[tlevel][0];\r\n' \
@@ -3151,7 +3153,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (! tlock && ! zf) {switch_tlock(false);}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          switch_tiles(null, nlevel, true);\r\n' \
+  '          if (nlevel != null) {switch_tiles(null, nlevel, true)};\r\n' \
   '        }\r\n' \
   '      } \r\n' \
   '      function error_tcb() {\r\n' \
@@ -3960,7 +3962,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        element_click(null, el_label, false);\r\n' \
   '        hist[0].push([focused, ""]);\r\n' \
-  '        el_label.scrollIntoView({block:"center"});\r\n' \
+  '        el_span.scrollIntoView({block:"center"});\r\n' \
   '        if (seg) {segment_recalc(seg);} else {wpt_calc();}\r\n' \
   '        show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
@@ -4119,7 +4121,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            if (a_p != null && ! isNaN(a)) {\r\n' \
-  '              if (a > a_p || a < a_p - 1) {a_p = a;}\r\n' \
+  '              if (a > a_p || a < a_p - 2) {a_p = a;}\r\n' \
   '             }\r\n' \
   '            for (let i=0; i<4; i++) {stat_p[i] = stat[i];}\r\n' \
   '          }\r\n' \
@@ -5666,7 +5668,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, tlevel)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -5911,6 +5913,44 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")));\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function page_unload() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (! filter) {filter = "none";}\r\n' \
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString());\r\n' \
+  '        return "{#junload#}";\r\n' \
+  '      }\r\n' \
+  '      function page_load() {\r\n' \
+  '        prev_state = sessionStorage.getItem("state");\r\n' \
+  '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
+  '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          add_tile();\r\n' \
+  '          rescale();\r\n' \
+  '        } else {\r\n' \
+  '          if (prev_state == null) {\r\n' \
+  '            switch_tiles(0, 0);\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
+  '            switch_tiles(parseInt(prev_state[0]), parseInt(prev_state[1]));\r\n' \
+  '            if (prev_state[2] == "true") {switch_tlock(false);}\r\n' \
+  '          }\r\n' \
+  '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
+  '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
+  '        }\r\n' \
+  '        scroll_to_all();\r\n' \
+  '        if (prev_state != null) {\r\n' \
+  '          if (prev_state[4] == "true") {switch_dots();}\r\n' \
+  '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
+  '          if (prev_state[6] != "0") {\r\n' \
+  '            eset = parseInt(prev_state[6]);\r\n' \
+  '            document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '          }\r\n' \
+  '          if (prev_state[7] != "0") {\r\n' \
+  '            iset = parseInt(prev_state[7]);\r\n' \
+  '            document.getElementById("iset").selectedIndex = iset;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
   '        window.alert("{#jsession#}");\r\n' \
   '        document.body.innerHTML = "";\r\n' \
@@ -5919,20 +5959,12 @@ class GPXTweakerWebInterfaceServer():
   '        throw "{#jsession#}";\r\n' \
   '      }\r\n' \
   '      window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
-  '      if (mode == "map") {\r\n' \
-  '        add_tile();\r\n' \
-  '        rescale();\r\n' \
-  '      } else {\r\n' \
-  '        switch_tiles(0, 0);\r\n' \
-  '        document.getElementById("matrix").style.display = "inline-block";\r\n' \
-  '        document.getElementById("tlock").style.display = "inline-block";\r\n' \
-  '      }\r\n' \
-  '      scroll_to_all();\r\n' \
+  '      page_load();\r\n' \
   '      point_desc();\r\n' \
   '      document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '      segments_calc();\r\n' \
   '      wpt_calc();\r\n' \
-  '      window.onbeforeunload = function() {return "{#junload#}";};\r\n' \
+  '      window.onbeforeunload = page_unload;\r\n' \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
