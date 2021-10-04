@@ -107,8 +107,8 @@ FR_STRINGS = {
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
-    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début',
-    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: insérer un point / point de cheminement au-dessous&#13;&#10;pas de focus: insérer un point de cheminement à la fin',
+    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début',
+    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessous&#13;&#10;pas de focus: insérer un point de cheminement à la fin',
     'jpath': 'tracer un chemin vers le point qui a le focus depuis le point précédent',
     'jelementup': 'focus sur segment: monter l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment courant&#13;&#10;focus sur point de cheminement: monter l\'élément',
     'jelementdown': 'focus sur segment: descendre l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment suivant&#13;&#10;focus sur point de cheminement: descendre l\'élément',
@@ -118,7 +118,7 @@ FR_STRINGS = {
     'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace',
     'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace',
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
-    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par interpolation l\'horodatage de l\'élément / la trace',
+    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace',
     'jswitchpoints': 'afficher / cacher les points et points de cheminement',
     'jgraph': 'afficher / cacher le graphique',
@@ -129,7 +129,7 @@ FR_STRINGS = {
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
-    'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -286,8 +286,8 @@ EN_STRINGS = {
     'junload': 'Warning, the datas will be lost !',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
-    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint above&#13;&#10;no focus: insert a waypoint at the start',
-    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: insert a point / waypoint below&#13;&#10;no focus: insert a waypoint at the end',
+    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint above&#13;&#10;no focus: insert a waypoint at the start',
+    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint below&#13;&#10;no focus: insert a waypoint at the end',
     'jpath': 'draw a path towards the focused point from the previous point',
     'jelementup': 'focus on segment: move the element up (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the current segment&#13;&#10;focus on waypoint: move the element up',
     'jelementdown': 'focus on segment: move the element down (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the next segment&#13;&#10;focus on waypoint: move the element down',
@@ -297,7 +297,7 @@ EN_STRINGS = {
     'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track',
     'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track',
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
-    'jdatetime': 'focus on segment or point / no focus: complete by interpolation the timestamps of the element / the track',
+    'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track',
     'jswitchpoints': 'show / hide the points and waypoints',
     'jgraph': 'show / hide the graph',
@@ -308,7 +308,7 @@ EN_STRINGS = {
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
-    'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag on the plot of a point / waypoint to select it / move it&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
+    'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -3371,6 +3371,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (document.getElementById(pt).value == "error") {\r\n' \
   '          dot.setAttribute("stroke", "gray");\r\n' \
   '          dot.style.display = "none";\r\n' \
+  '          dot.style.zIndex = "";\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let segcb = true;\r\n' \
@@ -3379,18 +3380,23 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt == focused) {\r\n' \
   '          dot.setAttribute("stroke", "blue");\r\n' \
   '          dot.style.display = "";\r\n' \
+  '          dot.style.zIndex = "1";\r\n' \
   '        } else if (!cb || !segcb) {\r\n' \
-  '         dot.setAttribute("stroke", "gray");\r\n' \
-  '         dot.style.display = "none";\r\n' \
+  '          dot.setAttribute("stroke", "gray");\r\n' \
+  '          dot.style.display = "none";\r\n' \
+  '          dot.style.zIndex = "";\r\n' \
   '        } else if (over) {\r\n' \
-  '         dot.setAttribute("stroke", "green");\r\n' \
-  '         dot.style.display = "";\r\n' \
+  '          dot.setAttribute("stroke", "green");\r\n' \
+  '          dot.style.display = "";\r\n' \
+  '          dot.style.zIndex = "2";\r\n' \
   '        } else if (dots_visible) {\r\n' \
-  '           dot.setAttribute("stroke", "gray");\r\n' \
-  '           dot.style.display = "";\r\n' \
+  '          dot.setAttribute("stroke", "gray");\r\n' \
+  '          dot.style.display = "";\r\n' \
+  '          dot.style.zIndex = "";\r\n' \
   '        } else {\r\n' \
   '          dot.setAttribute("stroke", "gray");\r\n' \
   '          dot.style.display = "none";\r\n' \
+  '          dot.style.zIndex = "";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function save_old() {\r\n' \
@@ -3418,13 +3424,15 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '          }\r\n' \
   '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
-  '            document.getElementById(ex_foc.replace("segment", "track")).setAttribute("stroke", "red");\r\n' \
-  '            document.getElementById(ex_foc.replace("segment", "track")).setAttribute("fill", "red");\r\n' \
-  '             if (document.getElementById(ex_foc).checked) {\r\n' \
-  '              document.getElementById(ex_foc.replace("segment", "track")).style.display = "";\r\n' \
-  '             } else {\r\n' \
-  '              document.getElementById(ex_foc.replace("segment", "track")).style.display = "none";\r\n' \
-  '             }\r\n' \
+  '            let track = document.getElementById(ex_foc.replace("segment", "track"));\r\n' \
+  '            track.setAttribute("stroke", "red");\r\n' \
+  '            track.setAttribute("fill", "red");\r\n' \
+  '            if (document.getElementById(ex_foc).checked) {\r\n' \
+  '              track.style.display = "";\r\n' \
+  '            } else {\r\n' \
+  '              track.style.display = "none";\r\n' \
+  '            }\r\n' \
+  '            track.style.zIndex = "";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (focused) {\r\n' \
@@ -3446,6 +3454,7 @@ class GPXTweakerWebInterfaceServer():
   '            track.setAttribute("stroke", "blue");\r\n' \
   '            track.setAttribute("fill", "blue");\r\n' \
   '            track.style.display = "";\r\n' \
+  '            track.style.zIndex = "1";\r\n' \
   '            if (scroll) {elt.scrollIntoView({block:"start"});}\r\n' \
   '            scroll_to_track(track);\r\n' \
   '          } else if (scroll) {\r\n' \
@@ -4043,20 +4052,19 @@ class GPXTweakerWebInterfaceServer():
   '          let t_s = null;\r\n' \
   '          let stat = Array(4);\r\n' \
   '          let stat_p = Array(4);\r\n' \
-  '          let e_p = null;\r\n' \
-  '          let e_r = null;\r\n' \
-  '          let e_m = null;\r\n' \
-  '          let e_g = null;\r\n' \
-  '          let e_ic = null;\r\n' \
-  '          let a_p = null;\r\n' \
+  '          let ea_p = [null, null];\r\n' \
+  '          let ea_l = [null, null];\r\n' \
+  '          let ea_h = [null, null];\r\n' \
+  '          let ea_g = [null, null];\r\n' \
+  '          let ea_ic = [null, null];\r\n' \
+  '          const ea_f = [4, 3]\r\n' \
   '          let el = null;\r\n' \
   '          let el_p = null;\r\n' \
   '          let p_p = null;\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
   '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
   '            let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
-  '            let e = parseFloat(document.getElementById(spans[p].id.replace("focus", "ele")).value);\r\n' \
-  '            let a = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '            let ea = [parseFloat(document.getElementById(spans[p].id.replace("focus", "ele")).value), parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value)];\r\n' \
   '            if (isNaN(t)) {\r\n' \
   '              stat[0] = t_s==null?0:stat_p[0];\r\n' \
   '            } else {\r\n' \
@@ -4067,62 +4075,61 @@ class GPXTweakerWebInterfaceServer():
   '                stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            if (! isNaN(a)) {\r\n' \
-  '              el = a;\r\n' \
+  '            if (! isNaN(ea[1])) {\r\n' \
+  '              el = ea[1];\r\n' \
   '              if (el_p == null) {el_p = el;}\r\n' \
-  '            } else if (! isNaN(e)) {\r\n' \
-  '              el = e;\r\n' \
+  '            } else if (! isNaN(ea[0])) {\r\n' \
+  '              el = ea[0];\r\n' \
   '              if (el_p == null) {el_p = el;}\r\n' \
   '            } else {\r\n' \
   '              el = el_p==null?0:el_p;\r\n' \
   '            }\r\n' \
-  '            if (! isNaN(e) && e_p == null) {e_p = e;}\r\n' \
-  '            if (! isNaN(e) && e_r == null) {e_r = e;}\r\n' \
-  '            if (! isNaN(e) && e_m == null) {e_m = e;}\r\n' \
-  '            if (! isNaN(a) && a_p == null) {a_p = a;}\r\n' \
+  '            for (let v=0; v<2; v++) {\r\n' \
+  '              if (! isNaN(ea[v]) && ea_p[v] == null) {ea_p[v] = ea[v];}\r\n' \
+  '              if (! isNaN(ea[v]) && ea_l[v] == null) {ea_l[v] = ea[v];}\r\n' \
+  '              if (! isNaN(ea[v]) && ea_h[v] == null) {ea_h[v] = ea[v];}\r\n' \
+  '            }\r\n' \
   '            if (p_p == null) {\r\n' \
   '              stat[1] = 0;\r\n' \
   '              stat[2] = 0;\r\n' \
   '              stat[3] = 0;\r\n' \
   '            } else {\r\n' \
   '              stat[1] = stat_p[1] + distance(document.getElementById(spans[p_p].id.replace("focus", "lat")).value, document.getElementById(spans[p_p].id.replace("focus", "lon")).value, el_p==null?0:el_p, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, el);\r\n' \
-  '              stat[2] = stat_p[2] + ((e_p==null||isNaN(e))?0:Math.max(0,e-e_p));\r\n' \
-  '              stat[3] = stat_p[3] + ((a_p==null||isNaN(a))?0:Math.max(0,a-a_p));\r\n' \
+  '              stat[2] = stat_p[2] + ((ea_p[0]==null||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
+  '              stat[3] = stat_p[3] + ((ea_p[1]==null||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
   '            }\r\n' \
   '            stats[seg_ind].push([...stat]);\r\n' \
   '            p_p = p;\r\n' \
   '            if (el_p != null) {el_p = el;}\r\n' \
-  '            if (e_p != null && ! isNaN(e)) {\r\n' \
-  '              if (e > e_p) {\r\n' \
-  '                e_p=e;\r\n' \
-  '                if (e >= e_r + 3) {\r\n' \
-  '                  e_g = true;\r\n' \
-  '                  e_ic = null;\r\n' \
-  '                  e_m = e;\r\n' \
+  '            for (let v=0; v<2; v++) {\r\n' \
+  '              if (ea_p[v] != null && ! isNaN(ea[v])) {\r\n' \
+  '                if (ea[v] > ea_p[v]) {\r\n' \
+  '                  ea_p[v] = ea[v];\r\n' \
+  '                  if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
+  '                    ea_g[v] = "+";\r\n' \
+  '                    ea_ic[v] = null;\r\n' \
+  '                    ea_h[v] = ea[v];\r\n' \
+  '                  }\r\n' \
+  '                  if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
+  '                    ea_ic[v] = stats[seg_ind].length - 2;\r\n' \
+  '                  }\r\n' \
   '                }\r\n' \
-  '                if (! e_g && e_ic == null) {\r\n' \
-  '                  e_ic = stats[seg_ind].length - 2;\r\n' \
+  '                if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
+  '                  if (ea_ic[v] != null) {\r\n' \
+  '                    stat[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
+  '                    for (let i=ea_ic[v]+1; i<stats[seg_ind].length; i++) {stats[seg_ind][i][v + 2] = stat[v + 2];}\r\n' \
+  '                    ea_ic[v] = null;\r\n' \
+  '                  }\r\n' \
+  '                  if (ea_g[v] == "+") {\r\n' \
+  '                    ea_l[v] = ea[v];\r\n' \
+  '                  } else {\r\n' \
+  '                    ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
+  '                  }\r\n' \
+  '                  ea_g[v] = "-";\r\n' \
+  '                  ea_p[v] = ea[v];\r\n' \
   '                }\r\n' \
-  '                e_m = Math.max(e_m, e);\r\n' \
-  '              }\r\n' \
-  '              if (e < e_p && e < e_m - 5) {\r\n' \
-  '                if (e_ic != null) {\r\n' \
-  '                  stat[2] = stats[seg_ind][e_ic][2];\r\n' \
-  '                  for (let i=e_ic+1; i<stats[seg_ind].length; i++) {stats[seg_ind][i][2] = stat[2];}\r\n' \
-  '                  e_ic = null;\r\n' \
-  '                }\r\n' \
-  '                if (e_g) {\r\n' \
-  '                  e_r=e;\r\n' \
-  '                } else {\r\n' \
-  '                  e_r=Math.min(e_r, e);\r\n' \
-  '                }\r\n' \
-  '                e_g = false;\r\n' \
-  '                e_p = e;\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            if (a_p != null && ! isNaN(a)) {\r\n' \
-  '              if (a > a_p || a < a_p - 2) {a_p = a;}\r\n' \
-  '             }\r\n' \
   '            for (let i=0; i<4; i++) {stat_p[i] = stat[i];}\r\n' \
   '          }\r\n' \
   '          if (stat[0] != undefined) {\r\n' \
@@ -4136,9 +4143,9 @@ class GPXTweakerWebInterfaceServer():
   '            let dist_c = "-km";\r\n' \
   '            dist_c = (stat[1] / 1000).toFixed(2) + "km";\r\n' \
   '            let ele_c = "-m";\r\n' \
-  '            if (e_p != null) {ele_c = stat[2].toFixed(0) + "m";}\r\n' \
+  '            if (ea_p[0] != null) {ele_c = stat[2].toFixed(0) + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
-  '            if (a_p != null) {alt_c = stat[3].toFixed(0) + "m";}\r\n' \
+  '            if (ea_p[1] != null) {alt_c = stat[3].toFixed(0) + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -4290,7 +4297,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (mintime != null && maxtime != null) {\r\n' \
   '              let t = Date.parse(el_span_children[13].value);\r\n' \
   '              if (! isNaN(t)) {\r\n' \
-  '                el_span_children[13].value = (new Date(maxtime + t - mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                el_span_children[13].value = (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                el_label.innerHTML = point_desc(el_span);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -4442,7 +4449,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (! isNaN(t)) {\r\n' \
   '                focused = sp[p].id.slice(0, -5);\r\n' \
   '                let ex_time = document.getElementById(sp[p].id.replace("focus", "time")).value;\r\n' \
-  '                let new_time = (new Date(t + offset)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                let new_time = (new Date(Math.round((t + offset) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                save_old();\r\n' \
   '                hist[0].push([focused, foc_old, batch]);\r\n' \
   '                document.getElementById(sp[p].id.replace("focus", "time")).value = new_time;\r\n' \
@@ -4539,7 +4546,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (mintime != null && maxtime != null) {\r\n' \
   '                let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
   '                if (! isNaN(t)) {\r\n' \
-  '                  let new_time = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                  let new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                  if (pt.firstElementChild.value != "error") {pt.firstElementChild.value = "edited";}\r\n' \
   '                  document.getElementById(pt.id.replace("cont", "time")).value = new_time;\r\n' \
   '                  document.getElementById(pt.id.replace("cont", "desc")).innerHTML = point_desc(document.getElementById(pt.id.replace("cont", "focus")));\r\n' \
@@ -4584,7 +4591,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (mintime != null && maxtime != null) {\r\n' \
   '            let t = Date.parse(document.getElementById(wpt.id.replace("cont", "time")).value);\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              let new_time = (new Date(maxtime - t + mintime)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '              let new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '              if (wpt.firstElementChild.value != "error") {wpt.firstElementChild.value = "edited";}\r\n' \
   '              document.getElementById(wpt.id.replace("cont", "time")).value = new_time;\r\n' \
   '              document.getElementById(wpt.id.replace("cont", "desc")).innerHTML = point_desc(document.getElementById(wpt.id.replace("cont", "focus")));\r\n' \
@@ -4864,13 +4871,17 @@ class GPXTweakerWebInterfaceServer():
   '          let spans = segs[s].getElementsByTagName("span");\r\n' \
   '          let lc = -1;\r\n' \
   '          let pm = [];\r\n' \
+  '          let pm_b = [];\r\n' \
   '          let pt = "";\r\n' \
   '          let stime = null;\r\n' \
   '          let etime = null;\r\n' \
+  '          let btime = null;\r\n' \
   '          let dist = 0;\r\n' \
+  '          let dist_b = 0;\r\n' \
   '          let pele = null;\r\n' \
   '          let ele = null;\r\n' \
-  '          let pp = -1;\r\n' \
+  '          let inv_vit = 0;\r\n' \
+  '          let pp = 0;\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
   '            pt = spans[p].id.slice(0, -5);\r\n' \
   '            if (! document.getElementById(pt).checked || document.getElementById(pt).value == "error") {continue;}\r\n' \
@@ -4880,32 +4891,72 @@ class GPXTweakerWebInterfaceServer():
   '             ele = parseFloat(document.getElementById(pt + "ele").value);\r\n' \
   '            }\r\n' \
   '            if (isNaN(ele)) {ele = pele;}\r\n' \
-  '            if (isNaN(etime)) {\r\n' \
-  '              if (lc == -1) {\r\n' \
-  '                if (pt_foc == pt) {\r\n' \
-  '                  if (gr) {refresh_graph(true);}\r\n' \
-  '                  return;\r\n' \
-  '                }\r\n' \
-  '              } else {\r\n' \
-  '                dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '            let valid = ! isNaN(etime);\r\n' \
+  '            if (valid && stime != null) {valid = etime >= stime;}\r\n' \
+  '            if (! valid) {\r\n' \
+  '              if (pm_b != null && lc == -1) {\r\n' \
+  '                dist_b += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
   '                if (pt_foc == null || pt_foc == pt) {\r\n' \
-  '                  pm.push([p, dist]);\r\n' \
+  '                  pm_b.push([p, dist_b]);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (lc != -1) {\r\n' \
+  '                dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '              }\r\n' \
+  '              if (pt_foc == null || pt_foc == pt) {\r\n' \
+  '                pm.push([p, dist]);\r\n' \
+  '              }\r\n' \
+  '              if (p == spans.length - 1 && inv_vit > 0) {\r\n' \
+  '                for (let i=0; i<pm.length; i++) {\r\n' \
+  '                  focused = spans[pm[i][0]].id.slice(0, -5);\r\n' \
+  '                  save_old();\r\n' \
+  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((stime + inv_vit * pm[i][1]) / 1000) * 1000)).toISOString().replace(/\.[0-9]*/,"");\r\n' \
+  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
+  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
+  '                  }\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              if (pm.length > 0) {\r\n' \
-  '                dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
-  '                if (etime >= stime && dist > 0) {\r\n' \
-  '                  for (let i=0; i<pm.length; i++) {\r\n' \
-  '                    focused = spans[pm[i][0]].id.slice(0, -5);\r\n' \
+  '              dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '              if (dist > 0 && lc != -1 && etime > stime	) {inv_vit = (etime - stime) / dist;}\r\n' \
+  '              if (pm_b != null) {\r\n' \
+  '                if (lc == -1) {\r\n' \
+  '                  dist_b += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '                  btime = etime;\r\n' \
+  '                }\r\n' \
+  '                if (dist_b == 0 || inv_vit > 0) {\r\n' \
+  '                  for (let i=0; i<pm_b.length; i++) {\r\n' \
+  '                    focused = spans[pm_b[i][0]].id.slice(0, -5);\r\n' \
   '                    save_old();\r\n' \
   '                    hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                    document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(stime + (etime - stime) * pm[i][1] / dist)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                    document.getElementById(spans[pm_b[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((dist_b==0?btime:(btime + inv_vit * (pm_b[i][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\.[0-9]*/,"");\r\n' \
   '                    for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
   '                      if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
   '                    }\r\n' \
   '                    point_edit(false, false, false, false);\r\n' \
   '                  }\r\n' \
+  '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
+  '                    save_old();\r\n' \
+  '                    segment_recalc(segs[s]);\r\n' \
+  '                    if (gr) {refresh_graph(true);}\r\n' \
+  '                    show_msg("Horodatage du point mis à jour", 2);\r\n' \
+  '                    return;\r\n' \
+  '                  }\r\n' \
+  '                  pm_b = null;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (pm.length > 0 && lc != -1) {\r\n' \
+  '                for (let i=0; i<pm.length; i++) {\r\n' \
+  '                  focused = spans[pm[i][0]].id.slice(0, -5);\r\n' \
+  '                  save_old();\r\n' \
+  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((stime + (etime - stime) * pm[i][1] / (dist>0?dist:1)) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
+  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
+  '                  }\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
   '                  save_old();\r\n' \
@@ -4950,16 +5001,18 @@ class GPXTweakerWebInterfaceServer():
   '        let gctx = graphc.getContext("2d");\r\n' \
   '        if (sw) {\r\n' \
   '          if (graph.style.display == "none") {\r\n' \
-  '            document.getElementById("content").style.height = "calc(74vh - 1.8em - 25px)";\r\n' \
-  '            viewpane.style.height = "calc(74vh - 1.8em - 25px)";\r\n' \
+  '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '            graph.style.display = "block";\r\n' \
   '            gctx.lineWidth = 1;\r\n' \
   '            gctx.lineJoin = "round";\r\n' \
   '            gctx.lineCap = "square";\r\n' \
   '            rescale();\r\n' \
   '          } else {\r\n' \
-  '            document.getElementById("content").style.height = "calc(99vh - 1.8em - 25px)";\r\n' \
-  '            viewpane.style.height = "calc(99vh - 1.8em - 25px)";\r\n' \
+  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '            graph.style.display = "none";\r\n' \
   '            document.getElementById("gbar").style.display = "none";\r\n' \
   '            document.getElementById("gbarc").style.display = "none";\r\n' \
@@ -5322,6 +5375,7 @@ class GPXTweakerWebInterfaceServer():
   '          el_dot.id = pref.replace("point", "dot");\r\n' \
   '          el_dot.setAttribute("stroke", "gray");\r\n' \
   '          el_dot.style.display = dots_visible?"":"none";\r\n' \
+  '          el_dot.style.zIndex = "";\r\n' \
   '          el_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
   '          el_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, wm[1])), 3.5);\r\n' \
   '          frag_dot.insertBefore(el_dot, frag_dot.firstElementChild);\r\n' \
@@ -5675,7 +5729,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div id="content" style="height:calc(99vh - 1.8em - 25px);width: calc(21em - 2px);">\r\n' \
+  '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
   '              <div id="pattern_waypoint" style="display:none;">\r\n '\
   '                ##WAYPOINTTEMPLATE##\r\n' \
   '              </div>\r\n' \
@@ -5701,7 +5755,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 1.8em - 25px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS####DOTS##' \
   '              </div>\r\n' \
   '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);;padding-left:2px;padding-right: 2px;line-height:0.7em;"> \r\n' \
@@ -5719,14 +5773,16 @@ class GPXTweakerWebInterfaceServer():
   '      <tfoot>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
+  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
+  '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
+  '            </div>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
-  '      <select id="graphy" name="graphy" autocomplete="off" style="width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" autocomplete="off" style="width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;bottom:2em;overflow:auto;text-align:right;">test<br>test2</div>\r\n' \
   '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
   '      </canvas>\r\n' \
@@ -5808,11 +5864,19 @@ class GPXTweakerWebInterfaceServer():
   '        if (hand) {\r\n' \
   '          if (hand.id.indexOf("dot") >= 0) {\r\n' \
   '            hand.style.cursor = "";\r\n' \
-  '            if (hand_m) {\r\n' \
+  '            let d = 0;\r\n' \
+  '            if (hand_m || (e.shiftKey && ! e.altKey)) {\r\n' \
   '              hist[0].push([focused, foc_old]);\r\n' \
+  '              let c = foc_old.split("\\r\\n");\r\n' \
+  '              let d = distance(parseFloat(c[0]), parseFloat(c[1]), 0, parseFloat(document.getElementById(focused + "lat").value), parseFloat(document.getElementById(focused + "lon").value), 0);\r\n' \
   '              save_old();\r\n' \
   '              for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
   '                if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
+  '              }\r\n' \
+  '              if ((e.shiftKey || d > 25) && ! e.altKey) {\r\n' \
+  '                document.getElementById(focused + "ele").value = "";\r\n' \
+  '                if (focused.indexOf("way") < 0) {document.getElementById(focused + "alt").value = "";}\r\n' \
+  '                save_old();\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            if (hand.id.indexOf("way") < 0) {\r\n' \
@@ -5958,7 +6022,7 @@ class GPXTweakerWebInterfaceServer():
   '        window.close();\r\n' \
   '        throw "{#jsession#}";\r\n' \
   '      }\r\n' \
-  '      window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
+  '      window.onresize = (e) => {document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";rescale();refresh_graph()};\r\n' \
   '      page_load();\r\n' \
   '      point_desc();\r\n' \
   '      document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
