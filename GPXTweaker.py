@@ -120,8 +120,8 @@ FR_STRINGS = {
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace',
-    'jswitchpoints': 'afficher / cacher les points et points de cheminement',
-    'jgraph': 'afficher / cacher le graphique',
+    'jswitchpoints': 'afficher / masquer les points et points de cheminement',
+    'jgraph': 'afficher / masquer le graphique&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de dénivelé',
     'j3dviewer': 'ouvrir la visionneuse 3D',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
@@ -129,6 +129,7 @@ FR_STRINGS = {
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
+    'jfilterpanel': 'Seuils calcul dénivelé',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -300,7 +301,7 @@ EN_STRINGS = {
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track',
     'jswitchpoints': 'show / hide the points and waypoints',
-    'jgraph': 'show / hide the graph',
+    'jgraph': 'show / hide the graph&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of elevation gain',
     'j3dviewer': 'open the 3D viewer',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
@@ -308,6 +309,7 @@ EN_STRINGS = {
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
+    'jfilterpanel': 'Threshold gain calcul',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -2966,28 +2968,42 @@ class GPXTweakerWebInterfaceServer():
   '        --zoom:1;\r\n' \
   '        --filter:none;\r\n' \
   '      }\r\n' \
+  '      input {\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
+  '      }\r\n' \
+  '      input[type="text"] {\r\n' \
+  '        border-width:0.5px;\r\n' \
+  '      }\r\n' \
+  '      input[type="text"]:focus {\r\n' \
+  '        color:rgb(200,250,240);\r\n' \
+  '      }\r\n' \
   '      input[id=name_track] {\r\n' \
   '        width:calc(98vw - 60em);\r\n' \
   '        font-size:70%;\r\n' \
-  '        background-color:inherit;\r\n' \
-  '        color:inherit;\r\n' \
-  '        border-width:0.5px;\r\n' \
-  '      }\r\n' \
-  '      input[id=name_track]:focus {\r\n' \
-  '        background-color:revert;\r\n' \
-  '        color:revert;\r\n' \
   '      }\r\n' \
   '      input[type=checkbox] {\r\n' \
+  '        appearance:none;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        margin-left:3px;\r\n' \
   '        width:1.25em;\r\n' \
   '        height:1.25em;\r\n' \
   '      }\r\n' \
+  '      input[type=checkbox]:checked::before {\r\n' \
+  '        content:"\\2714";\r\n' \
+  '        display:inline-block;\r\n' \
+  '        text-align:center;\r\n' \
+  '        width:100%;\r\n' \
+  '        font-weight:bold;\r\n' \
+  '      }\r\n' \
   '      input[type=checkbox][id^=segment] {\r\n' \
-  '        margin-left: 1px;\r\n' \
+  '        margin-left:1px;\r\n' \
   '      }\r\n' \
   '      input+label:hover,input:hover+label {\r\n' \
   '        background-color:green;\r\n' \
+  '      }\r\n' \
+  '      label[id^=segment], label[id^=point], div[id^=point][id$=cont] {\r\n' \
+  '        text-decoration:inherit;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
@@ -2998,13 +3014,15 @@ class GPXTweakerWebInterfaceServer():
   '        max-width:calc(24em - 22px);\r\n' \
   '        min-height:1.35em;\r\n' \
   '      }\r\n' \
-  '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name]  {\r\n' \
+  '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name] {\r\n' \
   '        display:inline-block;\r\n' \
   '        width:2em;\r\n' \
   '        padding-left:1em;\r\n' \
   '      }\r\n' \
   '      input[id$=lat], input[id$=lon], input[id$=ele], input[id$=alt], input[id$=time], input[id$=name] {\r\n' \
+  '        height:1.35em;\r\n' \
   '        width:70%;\r\n' \
+  '        font-size:100%;\r\n' \
   '      }\r\n' \
   '      br+span {\r\n' \
   '        display:none;\r\n' \
@@ -3012,23 +3030,75 @@ class GPXTweakerWebInterfaceServer():
   '      path, svg[id*=dot] {\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
+  '      svg[id^=track], svg[id*=dot] {\r\n' \
+  '        position:absolute;\r\n' \
+  '      }\r\n' \
   '      button {\r\n' \
   '        border:none;\r\n' \
   '        padding-left:0;\r\n' \
   '        padding-right:0;\r\n' \
   '        width:1.4em;\r\n' \
   '        height:1.4em;\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
   '        line-height:1.2em;\r\n' \
   '        font-size:100%;\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
+  '      select {\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
+  '        border-width:0.5px;\r\n' \
+  '        }\r\n' \
+  '        select:focus {\r\n' \
+  '          color:rgb(200,250,240);\r\n' \
+  '        }\r\n' \
+  '      @-moz-document url-prefix() {\r\n' \
+  '        select {\r\n' \
+  '          appearance:none;\r\n' \
+	'          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
+	'          background-repeat:no-repeat;\r\n' \
+	'          background-position-x:right;\r\n' \
+	'          background-position-y:bottom;\r\n' \
+	'          background-size:2em 1em;\r\n' \
+  '        }\r\n' \
+  '        select:focus {\r\n' \
+  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(200,250,240)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      select option {\r\n' \
+  '        color:rgb(225,225,225);\r\n' \
+  '      }\r\n' \
+  '      label[for$=filter] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:1.5em;\r\n' \
+  '        text-align:center;\r\n' \
+  '        font-weight:normal;\r\n' \
+  '        font-size:90%;\r\n' \
+  '      }\r\n' \
+  '      span[id$=stren] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:2.8em;\r\n' \
+  '        width:2em;\r\n' \
+  '        font-size:90%;\r\n' \
+  '      }\r\n' \
+  '      input[type=range] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:3em;\r\n' \
+  '        max-width:40vh;\r\n' \
+  '        width:9em;\r\n' \
+  '        margin-right:0;\r\n' \
+  '        transform:rotate(-90deg);\r\n' \
+  '        transform-origin:right center;\r\n' \
+  '        font-size:100%;\r\n' \
+  '      }\r\n' \
   '      span+span[id^=message] {\r\n' \
-  '        margin-left: 0.4em;\r\n' \
-  '        padding-left: 0.4em;\r\n' \
+  '        margin-left:0.4em;\r\n' \
+  '        padding-left:0.4em;\r\n' \
   '        border-left:1px rgb(225,225,225) solid;\r\n' \
   '      }\r\n' \
   '      img {\r\n' \
-  '        filter: var(--filter);\r\n' \
+  '        filter:var(--filter);\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' \
@@ -4057,7 +4127,7 @@ class GPXTweakerWebInterfaceServer():
   '          let ea_h = [null, null];\r\n' \
   '          let ea_g = [null, null];\r\n' \
   '          let ea_ic = [null, null];\r\n' \
-  '          const ea_f = [4, 3]\r\n' \
+  '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
   '          let el = null;\r\n' \
   '          let el_p = null;\r\n' \
   '          let p_p = null;\r\n' \
@@ -5656,6 +5726,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
   '      }\r\n' \
+  '      function switch_fpanel() {\r\n' \
+  '        let fp = document.getElementById("filterpanel");\r\n' \
+  '        if (fp.style.display == "none") {fp.style.display="";} else {fp.style.display = "none";}\r\n' \
+  '      }\r\n' \
   '      function track_save(o3d=false) {\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "10%";\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
@@ -5722,7 +5796,18 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_fpanel():refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '            <div id="filterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel#}</span>\r\n' \
+  '              <form id="filterform" autocomplete="off" onchange="segments_calc()">\r\n' \
+  '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
+  '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
+  '                <span id="egstren" style="left:0.7em;">4</span>\r\n' \
+  '                <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="4" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="agstren" style="right:0.7em;">3</span>\r\n' \
+  '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="3" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -5748,7 +5833,7 @@ class GPXTweakerWebInterfaceServer():
   '                </form>\r\n' \
   '              </div>\r\n' \
   '              <div id="points" style="overflow-y:auto;overflow-x:hidden;max-height:88%;font-size:80%">\r\n' \
-  '                {#jpoints#}&nbsp;<svg id="dot%s" width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
+  '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
   '                <form id="pointsform" autocomplete="off">\r\n                  ##POINTS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
@@ -5781,8 +5866,8 @@ class GPXTweakerWebInterfaceServer():
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;bottom:2em;overflow:auto;text-align:right;">test<br>test2</div>\r\n' \
   '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
   '      </canvas>\r\n' \
@@ -5980,11 +6065,11 @@ class GPXTweakerWebInterfaceServer():
   '      function page_unload() {\r\n' \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString());\r\n' \
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML);\r\n' \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
   '      function page_load() {\r\n' \
-  '        prev_state = sessionStorage.getItem("state");\r\n' \
+  '        let prev_state = sessionStorage.getItem("state");\r\n' \
   '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
   '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -6013,6 +6098,14 @@ class GPXTweakerWebInterfaceServer():
   '            iset = parseInt(prev_state[7]);\r\n' \
   '            document.getElementById("iset").selectedIndex = iset;\r\n' \
   '          }\r\n' \
+  '          document.getElementById("egstren").innerHTML = prev_state[8];\r\n' \
+  '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
+  '          document.getElementById("agstren").innerHTML = prev_state[9];\r\n' \
+  '          document.getElementById("agfilter").value = parseFloat(prev_state[9]);\r\n' \
+  '        }\r\n' \
+  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
+  '          document.getElementById("tset").focus();\r\n' \
+  '          document.getElementById("tset").blur();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
@@ -6026,6 +6119,7 @@ class GPXTweakerWebInterfaceServer():
   '      page_load();\r\n' \
   '      point_desc();\r\n' \
   '      document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
+  '      document.getElementById("filterpanel").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '      segments_calc();\r\n' \
   '      wpt_calc();\r\n' \
   '      window.onbeforeunload = page_unload;\r\n' \
@@ -6071,9 +6165,9 @@ class GPXTweakerWebInterfaceServer():
   '                  </div>'
   HTML_WAYPOINT_TEMPLATE = HTML_WAYPOINT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_POINT_TEMPLATE = \
-  '<div id=point%scont style="text-decoration:inherit;">\r\n' \
+  '<div id="point%scont">\r\n' \
   '                    <input type="checkbox" id="point%s" checked name="point%s" value="initial" onchange="point_checkbox(this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
-  '                    <label for="point%s" id="point%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
+  '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
   '                      <input type="text" id="point%slat" name="point%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
@@ -6103,11 +6197,11 @@ class GPXTweakerWebInterfaceServer():
   '                </text>\r\n' \
   '              </svg>'
   HTML_WAYDOT_TEMPLATE = \
-  '              <svg id="waydot%s" width="8" height="8" stroke="gray" stroke-width="1.5" fill="none" style="position:absolute;left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '              <svg id="waydot%s" width="8" height="8" stroke="gray" stroke-width="1.5" fill="none" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '                <circle cx="4" cy="4" r="3"/>\r\n' \
   '              </svg>\r\n'
   HTML_DOT_TEMPLATE = \
-  '              <svg id="dot%s" width="7" height="7" stroke="gray" stroke-width="1.5" fill="none" style="position:absolute;left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '              <svg id="dot%s" width="7" height="7" stroke="gray" stroke-width="1.5" fill="none" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '                <rect x="1" y="1" width="5" height="5"/>\r\n' \
   '              </svg>\r\n'
   HTML_3D_TEMPLATE = \
