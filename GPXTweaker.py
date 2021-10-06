@@ -4243,7 +4243,6 @@ class GPXTweakerWebInterfaceServer():
   '                ps = p;\r\n' \
   '                for (ps=p-1;ps>=0;ps--) {\r\n' \
   '                  if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
-  '                  if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
   '                  stats[seg_ind][p][4] = stats[seg_ind][p][4] + stats[seg_ind][ps][4];\r\n' \
   '                }\r\n' \
   '                stats[seg_ind][p][4] /= p - ps;\r\n' \
