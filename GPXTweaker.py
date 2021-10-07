@@ -4235,17 +4235,21 @@ class GPXTweakerWebInterfaceServer():
   '                if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
   '                stats[seg_ind][p][4] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
   '              }\r\n' \
-  '              if (stats[seg_ind][ps - 1][0] - stats[seg_ind][p][0] != 0) {stats[seg_ind][p][4] /= (stats[seg_ind][ps - 1][0] - stats[seg_ind][p][0]);}\r\n' \
+  '              if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {stats[seg_ind][p][4] = (stats[seg_ind][p][4] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;}\r\n' \
   '              stats[seg_ind][p][4] = Math.min(stats[seg_ind][p][4], vmax);\r\n' \
   '            }\r\n' \
-  '            for (let p=stats[seg_ind].length - 2;p>0;p--) {\r\n' \
+  '            for (let p=stats[seg_ind].length-2;p>0;p--) {\r\n' \
   '              if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
   '                ps = p;\r\n' \
+  '                let v = 0;\r\n' \
+  '                let s = 0;\r\n' \
   '                for (ps=p-1;ps>=0;ps--) {\r\n' \
   '                  if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
-  '                  stats[seg_ind][p][4] = stats[seg_ind][p][4] + stats[seg_ind][ps][4];\r\n' \
+  '                  let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
+  '                  v += stats[seg_ind][ps][4] * c;\r\n' \
+  '                  s += c;\r\n' \
   '                }\r\n' \
-  '                stats[seg_ind][p][4] /= p - ps;\r\n' \
+  '                if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {stats[seg_ind][p][4] = Math.min(vmax, (stats[seg_ind][p][4] + v/2 ) / (1 + s/2));}\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -6120,7 +6124,7 @@ class GPXTweakerWebInterfaceServer():
   '      function page_unload() {\r\n' \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML);\r\n' \
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
   '      function page_load() {\r\n' \
@@ -6162,6 +6166,8 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("stfilter").value = parseFloat(prev_state[10]);\r\n' \
   '          document.getElementById("spmax").innerHTML = prev_state[11];\r\n' \
   '          document.getElementById("smfilter").value = parseFloat(prev_state[11]);\r\n' \
+  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[12]);\r\n' \
+  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[13]);\r\n' \
   '        }\r\n' \
   '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
   '          document.getElementById("tset").focus();\r\n' \
