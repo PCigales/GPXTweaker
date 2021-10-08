@@ -102,7 +102,9 @@ FR_STRINGS = {
     'jsession': 'Une session est déjà active !',
     'jserror': 'La sauvegarde a échoué: ',
     'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
-    'jeconfirm': 'Remplacer toutes les données d\'élévation ?',
+    'jeconfirm': 'Remplacer toutes les données d\'élévation de la trace ?',
+    'jeasconfirm': 'Intervertir les données d\'élévation et d\'altitude du segment ?',
+    'jeaconfirm': 'Intervertir les données d\'élévation et d\'altitude de la trace ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
@@ -115,13 +117,13 @@ FR_STRINGS = {
     'jsegmentcut': 'focus sur segment: dupliquer le segment&#13;&#10;focus sur point: diviser le segment au-dessus',
     'jsegmentabsorb': 'fusionner le segment qui a le focus avec le segment suivant',
     'jsegmentreverse': 'focus sur segment / pas de focus: inverser le segment / la trace',
-    'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace',
-    'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace',
+    'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude',
+    'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude&#13;&#10;+shift: intervertir avec les données d\'altitude',
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
     'jswitchpoints': 'afficher / masquer les points et points de cheminement',
-    'jgraph': 'afficher / masquer le graphique&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
+    'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
@@ -130,9 +132,10 @@ FR_STRINGS = {
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
     'jfilterpanel1': 'Seuils calcul dénivelé',
-    'jfilterpanel2': 'Plages calcul vitesse',
+    'jfilterpanel2': 'Plages calcul pente',
+    'jfilterpanel3': 'Plages calcul vitesse',
     'jspduration': '&nbsp;durée',
-    'jspmax': 'max&nbsp;&nbsp;&nbsp;',
+    'jsmax': 'max&nbsp;&nbsp;&nbsp;',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -148,6 +151,8 @@ FR_STRINGS = {
     'jgraphaltitude': 'altitude',
     'jgraphelegain': 'déniv élé',
     'jgraphaltgain': 'déniv alt',
+    'jgrapheleslope': 'pente élé',
+    'jgraphaltslope': 'pente alt',
     'jgraphspeed': 'vitesse',
     'jgraphtime': 'durée',
     'jmundo1': 'Insertion de %s point(s) annulée',
@@ -171,6 +176,9 @@ FR_STRINGS = {
     'jmelevations3': 'Élévations du segment mises à jour (%s point(s) sur %s)',
     'jmelevations4': 'Élévations de la trace mises à jour (%s point(s) et point(s) de cheminement sur %s)',
     'jmelevations5': 'Échec de la récupération des élévations',
+    'jmelealt1': 'Élévation et altitude du point interverties',
+    'jmelealt2': 'Élévations et altitudes du segment interverties',
+    'jmelealt3': 'Élévations et altitudes de la trace interverties',
     'jmaltitudesjoin1': 'Altitudes égalisées par décalage uniforme',
     'jmaltitudesjoin2': 'Altitudes égalisées par décalage progressif',
     'jmdatetime1': 'Horodatage du point mis à jour',
@@ -285,10 +293,12 @@ EN_STRINGS = {
     '3dbuilt': '3D viewer page generated',
     'jsession': 'A session is already active !',
     'jserror': 'The backup has failed: ',
-    'jesconfirm': 'Replace all elevation datas of the segment ?',
-    'jeconfirm': 'Replace all elevation datas ?',
+    'jesconfirm': 'Replace all elevation data of the segment ?',
+    'jeconfirm': 'Replace all elevation data of the track ?',
+    'jeasconfirm': 'Switch the elevation and altitude data of the segment ?',
+    'jeaconfirm': 'Switch the elevation and altitude data of the track ?',
     'jrconfirm': 'Reverse the whole track ?',
-    'junload': 'Warning, the datas will be lost !',
+    'junload': 'Warning, the data will be lost !',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
     'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint above&#13;&#10;no focus: insert a waypoint at the start',
@@ -299,13 +309,13 @@ EN_STRINGS = {
     'jsegmentcut': 'focus on segment: duplicate the segment&#13;&#10;focus on point: split the segment above',
     'jsegmentabsorb': 'merge the focused segment with the next segment',
     'jsegmentreverse': 'focus on segment / no focus: reverse the segment / the track',
-    'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track',
-    'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track',
+    'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track&#13;&#10;+alt: from the altitude data',
+    'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track#13;&#10;+alt: from the altitude data&#13;&#10;+shift: switch with the altitude data',
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
     'jswitchpoints': 'show / hide the points and waypoints',
-    'jgraph': 'show / hide the graph&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of elevation gain',
+    'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
@@ -314,9 +324,10 @@ EN_STRINGS = {
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
     'jfilterpanel1': 'Thresholds gain calcul',
-    'jfilterpanel2': 'Ranges speed calcul',
+    'jfilterpanel2': 'Ranges slope calcul',
+    'jfilterpanel3': 'Ranges speed calcul',
     'jspduration': 'duration',
-    'jspmax': 'max&nbsp;&nbsp;&nbsp;',
+    'jsmax': 'max&nbsp;&nbsp;&nbsp;',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -332,6 +343,8 @@ EN_STRINGS = {
     'jgraphaltitude': 'altitude',
     'jgraphelegain': 'ele gain',
     'jgraphaltgain': 'alt gain',
+    'jgrapheleslope': 'ele slope',
+    'jgraphaltslope': 'alt slope',
     'jgraphspeed': 'speed',
     'jgraphtime': 'duration',
     'jmundo1': 'Insertion of %s point(s) cancelled',
@@ -355,6 +368,9 @@ EN_STRINGS = {
     'jmelevations3': 'Elevations of the segment updated (%s point(s) out of %s)',
     'jmelevations4': 'Elevations of the track updated (%s point(s) and waypoint(s) out of %s)',
     'jmelevations5': 'Failure of the retrieval of elevations',
+    'jmelealt1': 'Elevation and altitude of the point switched',
+    'jmelealt2': 'Elevations and altitudes of the segment switched',
+    'jmelealt3': 'Elevations and altitudes of the track switched',
     'jmaltitudesjoin1': 'Altitudes equalized by uniform offset',
     'jmaltitudesjoin2': 'Altitudes equalized by progressive offset',
     'jmdatetime1': 'Timestamp of the point updated',
@@ -3058,10 +3074,10 @@ class GPXTweakerWebInterfaceServer():
   '        background-color:rgb(30,30,35);\r\n' \
   '        color:inherit;\r\n' \
   '        border-width:0.5px;\r\n' \
-  '        }\r\n' \
-  '        select:focus {\r\n' \
+  '      }\r\n' \
+  '      select:focus {\r\n' \
   '          color:rgb(200,250,240);\r\n' \
-  '        }\r\n' \
+  '      }\r\n' \
   '      @-moz-document url-prefix() {\r\n' \
   '        select {\r\n' \
   '          appearance:none;\r\n' \
@@ -3085,7 +3101,7 @@ class GPXTweakerWebInterfaceServer():
   '        font-weight:normal;\r\n' \
   '        font-size:90%;\r\n' \
   '      }\r\n' \
-  '      span[id$=stren], span[id^=sp] {\r\n' \
+  '      span[id$=stren], span[id^=sl] ,span[id^=sp] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
   '        width:2em;\r\n' \
@@ -4116,6 +4132,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (ele1 != null && ele2 != null) {d = Math.sqrt(d ** 2 + (ele2 - ele1) ** 2);}\r\n' \
   '        return d;\r\n' \
   '      }\r\n' \
+  '      function slope(dist, heig) {\r\n' \
+  '        return dist>heig?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
+  '      }\r\n' \
   '      function segment_recalc(seg, whole=true) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
@@ -4176,7 +4195,7 @@ class GPXTweakerWebInterfaceServer():
   '              stat[2] = stat_p[2] + ((ea_p[0]==null||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
   '              stat[3] = stat_p[3] + ((ea_p[1]==null||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
   '            }\r\n' \
-  '            stats[seg_ind].push([...stat]);\r\n' \
+  '            stats[seg_ind].push([...stat, isNaN(ea[0])?(ea_p[0]==null?0:ea_p[0]):ea[0], isNaN(ea[1])?(ea_p[1]==null?0:ea_p[1]):ea[1]]);\r\n' \
   '            p_p = p;\r\n' \
   '            if (el_p != null) {el_p = el;}\r\n' \
   '            for (let v=0; v<2; v++) {\r\n' \
@@ -4225,6 +4244,45 @@ class GPXTweakerWebInterfaceServer():
   '            let alt_c = "-m";\r\n' \
   '            if (ea_p[1] != null) {alt_c = stat[3].toFixed(0) + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
+  '            let srange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
+  '            let smax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
+  '            for (let p=0;p<stats[seg_ind].length;p++) {\r\n' \
+  '              let ea = stats[seg_ind][p].slice(4,6);\r\n' \
+  '              stats[seg_ind][p][4]=0;\r\n' \
+  '              stats[seg_ind][p][5]=0;\r\n' \
+  '              let ps = p;\r\n' \
+  '              for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
+  '                if (stats[seg_ind][ps][1] > stats[seg_ind][p][1] + srange) {break;}\r\n' \
+  '                if (stats[seg_ind][ps][1] - stats[seg_ind][p][1] == 0) {continue;}\r\n' \
+  '                stats[seg_ind][p][4] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][4] - ea[0]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
+  '                stats[seg_ind][p][5] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][5] - ea[1]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
+  '              }\r\n' \
+  '              if (stats[seg_ind][ps - 1][1] - stats[seg_ind][p][1] != 0) {\r\n' \
+  '                let c = (srange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1]) / (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]);\r\n' \
+  '                stats[seg_ind][p][4] = (stats[seg_ind][p][4] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][4] - ea[0]) * (srange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / srange;\r\n' \
+  '                stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][5] - ea[1]) * (srange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / srange;\r\n' \
+  '              }\r\n' \
+  '              stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], smax), -smax);\r\n' \
+  '              stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], smax), -smax);\r\n' \
+  '            }\r\n' \
+  '            for (let p=stats[seg_ind].length-2;p>0;p--) {\r\n' \
+  '              if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= srange) {\r\n' \
+  '                ps = p;\r\n' \
+  '                let s = [0, 0];\r\n' \
+  '                let su = 0;\r\n' \
+  '                for (ps=p-1;ps>=0;ps--) {\r\n' \
+  '                  if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - srange) {break;}\r\n' \
+  '                  let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
+  '                  s[0] += stats[seg_ind][ps][4] * c;\r\n' \
+  '                  s[1] += stats[seg_ind][ps][5] * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                }\r\n' \
+  '                if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
+  '                  stats[seg_ind][p][4] = Math.max(-smax, Math.min(smax, (stats[seg_ind][p][4] + s[0]/2 ) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][5] = Math.max(-smax, Math.min(smax, (stats[seg_ind][p][5] + s[1]/2 ) / (1 + su/2)));\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '            let vmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '            for (let p=0;p<stats[seg_ind].length;p++) {\r\n' \
@@ -4233,23 +4291,27 @@ class GPXTweakerWebInterfaceServer():
   '              for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
   '                if (stats[seg_ind][ps][0] > stats[seg_ind][p][0] + trange) {break;}\r\n' \
   '                if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
-  '                stats[seg_ind][p][4] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
+  '                stats[seg_ind][p][6] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
   '              }\r\n' \
-  '              if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {stats[seg_ind][p][4] = (stats[seg_ind][p][4] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;}\r\n' \
-  '              stats[seg_ind][p][4] = Math.min(stats[seg_ind][p][4], vmax);\r\n' \
+  '              if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
+  '                stats[seg_ind][p][6] = (stats[seg_ind][p][6] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
+  '              }\r\n' \
+  '              stats[seg_ind][p][6] = Math.min(stats[seg_ind][p][6], vmax);\r\n' \
   '            }\r\n' \
   '            for (let p=stats[seg_ind].length-2;p>0;p--) {\r\n' \
   '              if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
   '                ps = p;\r\n' \
   '                let v = 0;\r\n' \
-  '                let s = 0;\r\n' \
+  '                let su = 0;\r\n' \
   '                for (ps=p-1;ps>=0;ps--) {\r\n' \
   '                  if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
   '                  let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
-  '                  v += stats[seg_ind][ps][4] * c;\r\n' \
-  '                  s += c;\r\n' \
+  '                  v += stats[seg_ind][ps][6] * c;\r\n' \
+  '                  su += c;\r\n' \
   '                }\r\n' \
-  '                if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {stats[seg_ind][p][4] = Math.min(vmax, (stats[seg_ind][p][4] + v/2 ) / (1 + s/2));}\r\n' \
+  '                if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
+  '                  stats[seg_ind][p][6] = Math.min(vmax, (stats[seg_ind][p][6] + v/2 ) / (1 + su/2));\r\n' \
+  '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -4802,7 +4864,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        return np;\r\n'\
   '      }\r\n' \
-  '      function ele_adds(all=false) {\r\n' \
+  '      function ele_adds(all=false, fromalt=false) {\r\n' \
   '        let pts = [];\r\n' \
   '        let b = "";\r\n' \
   '        let spans = null;\r\n' \
@@ -4824,7 +4886,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          spans = document.getElementById("content").getElementsByTagName("span");\r\n' \
   '          msg = "{#jmelevations4#}";\r\n' \
-  '        } \r\n' \
+  '        }\r\n' \
   '        for (let p=(focused?0:2); p<spans.length; p++) {\r\n' \
   '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error" && (all || document.getElementById(spans[p].id.slice(0, -5) + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
   '           pts.push(spans[p].id.slice(0, -5));\r\n' \
@@ -4833,6 +4895,21 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (b.length == 0) {return;}\r\n' \
   '        let msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
+  '        if (fromalt) {\r\n' \
+  '          let t = new Object;\r\n' \
+  '          t.status = 200;\r\n' \
+  '          t.response = "";\r\n' \
+  '          for (let p of pts) {\r\n' \
+  '            t.response = t.response + p + "," + document.getElementById(p + "alt").value + "\\r\\n";\r\n' \
+  '          }\r\n' \
+  '          let np = load_ecb(t, pts);\r\n' \
+  '          if (np) {\r\n' \
+  '            show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn);\r\n' \
+  '          } else {\r\n' \
+  '            show_msg("Échec de la récupération des élévations", 10, msgn);\r\n' \
+  '          }\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        let xhre = new XMLHttpRequest();\r\n' \
   '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
   '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
@@ -4841,7 +4918,53 @@ class GPXTweakerWebInterfaceServer():
   '        xhre.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhre.send(b);\r\n' \
   '      }\r\n' \
-  '      function ele_join() {\r\n' \
+  '      function ele_alt_switch() {\r\n' \
+  '        let spans = null;\r\n' \
+  '        let msg = "";\r\n' \
+  '        let ex_foc = focused;\r\n' \
+  '        let seg = null;\r\n' \
+  '        if (ex_foc) {\r\n' \
+  '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
+  '            if (! window.confirm("{#jeasconfirm#}")) {return;}\r\n' \
+  '            spans = document.getElementById(ex_foc + "cont").getElementsByTagName("span");\r\n' \
+  '            msg = "{#jmelealt2#}";\r\n' \
+  '            seg = document.getElementById(ex_foc + "cont");\r\n' \
+  '          } else if (ex_foc.substring(0, 3) =="way") {\r\n' \
+  '            return;\r\n' \
+  '          } else {\r\n' \
+  '            spans = [document.getElementById(ex_foc + "focus")];\r\n' \
+  '            msg = "{#jmelealt1#}";\r\n' \
+  '            seg = document.getElementById(ex_foc + "cont").parentNode;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (! window.confirm("{#jeaconfirm#}")) {return;}\r\n' \
+  '          spans = document.getElementById("points").getElementsByTagName("span");\r\n' \
+  '          msg = "{#jmelealt3#}";\r\n' \
+  '        }\r\n' \
+  '        if (spans.length == 0) {return;}\r\n' \
+  '        let batch = ++hist_b;\r\n' \
+  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        for (let p=0; p<spans.length; p++) {\r\n' \
+  '          focused = spans[p].id.slice(0, -5);\r\n' \
+  '          save_old();\r\n' \
+  '          let g = document.getElementById(focused + "ele").value;\r\n' \
+  '          document.getElementById(focused + "ele").value = document.getElementById(focused + "alt").value;\r\n' \
+  '          document.getElementById(focused + "alt").value = g;\r\n' \
+  '          hist[0].push([focused, foc_old, batch]);\r\n' \
+  '          save_old();\r\n' \
+  '          for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
+  '            if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
+  '          }\r\n' \
+  '          point_edit(false, false, false, false);\r\n' \
+  '        }\r\n' \
+  '        if (seg != null) {segment_recalc(seg);} else {segments_calc();}\r\n' \
+  '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
+  '        if (! ex_foc && focused) {focused = "";}\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        show_msg(msg, 2);\r\n' \
+  '      }\r\n' \
+  '      function alt_join() {\r\n' \
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
   '        if (focused.substring(0, 3) == "seg") {\r\n' \
@@ -5194,7 +5317,13 @@ class GPXTweakerWebInterfaceServer():
   '                gy.push(alt + stat[3]);\r\n' \
   '                break;\r\n' \
   '              case 5:\r\n' \
-  '                gy.push(stat[4] * 3.6);\r\n' \
+  '                gy.push(stat[4] * 100);\r\n' \
+  '                break;\r\n' \
+  '              case 6:\r\n' \
+  '                gy.push(stat[5] * 100);\r\n' \
+  '                break;\r\n' \
+  '              case 7:\r\n' \
+  '                gy.push(stat[6] * 3.6);\r\n' \
   '                break;\r\n' \
   '            }\r\n' \
   '            if (dr) {\r\n' \
@@ -5294,19 +5423,26 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        gctx.textAlign = "right";\r\n' \
   '        gctx.textBaseline = "middle";\r\n' \
-  '        gctx.fillText((maxy - (yl - yt) / cy).toFixed(0), xl - 2, yl);\r\n' \
   '        y = yb;\r\n' \
-  '        while (y >= yt) {\r\n' \
-  '          if (y - yl >= 16 || yl - y >= 10) {\r\n' \
+  '        let fin = false;\r\n' \
+  '        while (true) {\r\n' \
+  '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
   '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
-  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1) + "km", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 5) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1) + "km/h", xl - 2, y);\r\n' \
+  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
+  '            } else if (document.getElementById("graphy").selectedIndex == 5 || document.getElementById("graphy").selectedIndex == 6) {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
+  '            } else if (document.getElementById("graphy").selectedIndex == 7) {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
   '            } else {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0) + "m", xl - 2, y);\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
   '            }\r\n' \
+  '            if (fin) {break;}\r\n' \
   '          }\r\n' \
-  '          if (y == yt) {break;}\r\n' \
+  '          if (y == yt) {\r\n' \
+  '            y = yl;\r\n' \
+  '            fin = true;\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
   '          y -= dy;\r\n' \
   '          if (y < yt) {y = yt;}\r\n' \
   '        }\r\n' \
@@ -5767,15 +5903,14 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
   '      }\r\n' \
-  '      function switch_fpanel(p) {\r\n' \
-  '        let fp1 = document.getElementById("filterpanel1");\r\n' \
-  '        let fp2 = document.getElementById("filterpanel2");\r\n' \
-  '        if (p == 1) {\r\n' \
-  '          fp2.style.display = "none";\r\n' \
-  '          if (fp1.style.display == "none") {fp1.style.display="";} else {fp1.style.display = "none";}\r\n' \
-  '        } else if (p == 2) {\r\n' \
-  '          fp1.style.display = "none";\r\n' \
-  '          if (fp2.style.display == "none") {fp2.style.display="";} else {fp2.style.display = "none";}\r\n' \
+  '      function switch_fpanel(pa) {\r\n' \
+  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
+  '        for (let p=1; p<=3; p++) {\r\n' \
+  '          if (p == pa) {\r\n' \
+  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
+  '          } else {\r\n' \
+  '            fp[p].style.display = "none";\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function track_save(o3d=false) {\r\n' \
@@ -5844,7 +5979,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds()">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="ele_adds(true)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="ele_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.ctrlKey||event.altKey)?switch_fpanel(event.ctrlKey?1:2):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_fpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
   '              <form id="filterform1" autocomplete="off" onchange="segments_calc()">\r\n' \
@@ -5859,12 +5994,23 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
   '              <form id="filterform2" autocomplete="off" onchange="segments_calc()">\r\n' \
-  '                <label for="stfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
-  '                <label for="smfilter" style="right:2px;">{#jspmax#}</label>\r\n' \
+  '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
+  '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
+  '                <span id="sldist" style="left:0.7em;">100</span>\r\n' \
+  '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="100" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="slmax" style="right:0.7em;">50</span>\r\n' \
+  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="50" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel3#}</span>\r\n' \
+  '              <form id="filterform3" autocomplete="off" onchange="segments_calc()">\r\n' \
+  '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
+  '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sptime" style="left:0.7em;">60</span>\r\n' \
-  '                <input type="range" id="stfilter" name="stfilter" min="0" max="300" step="2" value="60" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="60" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '                <span id="spmax" style="right:0.7em;">8</span>\r\n' \
-  '                <input type="range" id="smfilter" name="smfilter" min="0" max="90" step="1" value="8" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="8" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
   '          </th>\r\n' \
@@ -5925,7 +6071,7 @@ class GPXTweakerWebInterfaceServer():
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
   '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;bottom:2em;overflow:auto;text-align:right;">test<br>test2</div>\r\n' \
   '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
@@ -6124,7 +6270,7 @@ class GPXTweakerWebInterfaceServer():
   '      function page_unload() {\r\n' \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
   '      function page_load() {\r\n' \
@@ -6162,12 +6308,16 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
   '          document.getElementById("agstren").innerHTML = prev_state[9];\r\n' \
   '          document.getElementById("agfilter").value = parseFloat(prev_state[9]);\r\n' \
-  '          document.getElementById("sptime").innerHTML = prev_state[10];\r\n' \
-  '          document.getElementById("stfilter").value = parseFloat(prev_state[10]);\r\n' \
-  '          document.getElementById("spmax").innerHTML = prev_state[11];\r\n' \
-  '          document.getElementById("smfilter").value = parseFloat(prev_state[11]);\r\n' \
-  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[12]);\r\n' \
-  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[13]);\r\n' \
+  '          document.getElementById("sldist").innerHTML = prev_state[10];\r\n' \
+  '          document.getElementById("sldfilter").value = parseFloat(prev_state[10]);\r\n' \
+  '          document.getElementById("slmax").innerHTML = prev_state[11];\r\n' \
+  '          document.getElementById("slmfilter").value = parseFloat(prev_state[11]);\r\n' \
+  '          document.getElementById("sptime").innerHTML = prev_state[12];\r\n' \
+  '          document.getElementById("sptfilter").value = parseFloat(prev_state[12]);\r\n' \
+  '          document.getElementById("spmax").innerHTML = prev_state[13];\r\n' \
+  '          document.getElementById("spmfilter").value = parseFloat(prev_state[13]);\r\n' \
+  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
+  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
   '        }\r\n' \
   '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
   '          document.getElementById("tset").focus();\r\n' \
@@ -6187,6 +6337,7 @@ class GPXTweakerWebInterfaceServer():
   '      document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '      document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '      document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '      document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '      segments_calc();\r\n' \
   '      wpt_calc();\r\n' \
   '      window.onbeforeunload = page_unload;\r\n' \
