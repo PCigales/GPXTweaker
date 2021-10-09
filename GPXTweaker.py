@@ -5472,20 +5472,20 @@ class GPXTweakerWebInterfaceServer():
   '        let gp = graphp.innerHTML;\r\n' \
   '        graphp.innerHTML = "";\r\n' \
   '        if (graph_ip.length < 2) {return;}\r\n' \
-  '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
-  '        if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
-  '        let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
-  '        if (! segf.firstElementChild.checked) {return;}\r\n' \
-  '        let segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
   '        if (dx == null) {\r\n' \
+  '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
+  '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
+  '          let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
+  '          if (! segf.firstElementChild.checked) {return;}\r\n' \
+  '          let segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
   '          let foc_ind = parseInt(focused.substring(5));\r\n' \
   '          if (graph_px[foc_ind] != undefined) {\r\n' \
-  '            gbar.style.display = "";\r\n' \
-  '            gbarc.style.display = "";\r\n' \
   '            gbar.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
   '            if (gbarc.getAttribute("stroke") != "darkgray") {\r\n' \
   '              gbarc.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
   '            }\r\n' \
+  '            gbar.style.display = "";\r\n' \
+  '            gbarc.style.display = "";\r\n' \
   '            let segs = document.getElementById("pointsform").children;\r\n' \
   '            if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
   '              let dur = Math.round(graph_xv[0] * graph_px[foc_ind] + graph_xv[1]);\r\n' \
@@ -5493,8 +5493,8 @@ class GPXTweakerWebInterfaceServer():
   '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
   '              let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
-  '             for (let s=0; s<segs.length; s++) {\r\n' \
-  '                 if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
   '                let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
   '                if (seg_ind == segf_ind) {break;}\r\n' \
   '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
@@ -5519,10 +5519,9 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          gbar.style.display = "";\r\n' \
-  '          gbarc.style.display = "";\r\n' \
   '          let x = Math.max(Math.min(parseFloat(gbarc.style.left) + 1 + dx, xr), xl);\r\n' \
   '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
+  '          gbarc.style.display = "";\r\n' \
   '          let ind1 = 0;\r\n' \
   '          let ind2 = graph_ip.length - 1;\r\n' \
   '          x = x + 45 - xl;\r\n' \
@@ -5539,6 +5538,7 @@ class GPXTweakerWebInterfaceServer():
   '            element_click(null, pt);\r\n' \
   '            scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()));\r\n' \
   '          } else {\r\n' \
+  '            gbar.style.display = "";\r\n' \
   '            graphp.innerHTML = gp;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -6074,7 +6074,7 @@ class GPXTweakerWebInterfaceServer():
   '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
   '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;bottom:2em;overflow:auto;text-align:right;">test<br>test2</div>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event, this)">\r\n' \
   '      </canvas>\r\n' \
   '       <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
@@ -6115,6 +6115,10 @@ class GPXTweakerWebInterfaceServer():
   '            hand = elt;\r\n' \
   '            graph_point(0);\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
+  '          } else if (elt.id == "graphc") {\r\n' \
+  '            hand = document.getElementById("gbarc");\r\n' \
+  '            hand.setAttribute("stroke", "darkgray");\r\n' \
+  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX - parseFloat(hand.style.left));\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
@@ -6173,7 +6177,7 @@ class GPXTweakerWebInterfaceServer():
   '              segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
   '              if (e.ctrlKey) {build_path();}\r\n' \
   '            }\r\n' \
-  '           } else if (hand.id == "gbarc") {\r\n' \
+  '          } else if (hand.id == "gbarc") {\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
   '            graph_point();\r\n' \
   '          }\r\n' \
@@ -6202,7 +6206,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (elt) {\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
   '            let seg = document.getElementById(elt.id.replace("path", "segment") + "desc");\r\n' \
-  '            element_click(null, seg);}\r\n' \
+  '            element_click(null, seg);\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
@@ -6212,7 +6217,7 @@ class GPXTweakerWebInterfaceServer():
   '          mousex = e.pageX;\r\n' \
   '          mousey = e.pageY;\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
-  '            if (hand.id == "gbarc") {\r\n' \
+  '          if (hand.id == "gbarc") {\r\n' \
   '            graph_point(dx);\r\n' \
   '          } else if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
   '            if (hand.id == "view") {\r\n' \
