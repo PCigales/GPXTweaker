@@ -2266,7 +2266,8 @@ class WGS84Itinerary(WGS84Map):
       iti = json.loads(rep.body)
       for k in infos['key']:
         iti = iti[k]
-      if sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[0][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))) > sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[0][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[1]))))):
+      if sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[0][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))) > sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[-1][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))):
+        print("r")
         iti.reverse()
       return list(map(lambda s:s[::-1], iti))
     except:
