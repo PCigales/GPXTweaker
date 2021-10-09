@@ -4529,9 +4529,10 @@ class GPXTweakerWebInterfaceServer():
   '        let pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
   '        if (! pt) {return;}\r\n' \
   '        let ref_dot = document.getElementById(seg_foc.lastElementChild.id.slice(0, -4).replace("point", "dot")).nextElementSibling;\r\n' \
+  '        if (ref_dot == document.getElementById(pt.id.slice(0, -4).replace("point", "dot"))) {ref_dot = null;}\r\n' \
   '        while (pt) {\r\n' \
   '          seg_foc.appendChild(pt);\r\n' \
-  '          if (seg != seg_foc.nextElementSibling) {\r\n' \
+  '          if (ref_dot) {\r\n' \
   '            handle.insertBefore(document.getElementById(pt.id.slice(0, -4).replace("point", "dot")), ref_dot);\r\n' \
   '          }\r\n' \
   '          pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
