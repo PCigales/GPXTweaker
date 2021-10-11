@@ -4135,7 +4135,7 @@ class GPXTweakerWebInterfaceServer():
   '        return d;\r\n' \
   '      }\r\n' \
   '      function slope(dist, heig) {\r\n' \
-  '        return dist>heig?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
+  '        return dist>Math.abs(heig)?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
   '      }\r\n' \
   '      function segment_recalc(seg, whole=true) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
