@@ -3666,7 +3666,7 @@ class GPXTweakerWebInterfaceServer():
   '      function point_desc(ptspan = null) {\r\n' \
   '        if (! ptspan) {\r\n' \
   '          let points = document.getElementById("content").getElementsByTagName("span");\r\n' \
-  '          for (p=2; p<points.length; p++) {\r\n' \
+  '          for (let p=2; p<points.length; p++) {\r\n' \
   '            points[p].parentNode.firstElementChild.nextElementSibling.innerHTML = point_desc(points[p]);\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
@@ -3753,7 +3753,7 @@ class GPXTweakerWebInterfaceServer():
   '            pt.style.textDecoration = "line-through red";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (recalc && focused.substring(0, 3) != "way") {segment_recalc(pt.parentNode.parentNode);}\r\n' \
+  '        if (recalc && focused.substring(0, 3) != "way") {segments_calc(pt.parentNode.parentNode);}\r\n' \
   '      }\r\n' \
   '      function point_over(pt) {\r\n' \
   '        let foc = null;\r\n' \
@@ -4068,7 +4068,7 @@ class GPXTweakerWebInterfaceServer():
   '        element_click(null, el_label, false);\r\n' \
   '        hist[0].push([focused, ""]);\r\n' \
   '        el_span.scrollIntoView({block:"center"});\r\n' \
-  '        if (seg) {segment_recalc(seg);} else {wpt_calc();}\r\n' \
+  '        if (seg) {segments_calc(seg);} else {wpt_calc();}\r\n' \
   '        show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function point_delete(pt, batch=false) {\r\n' \
@@ -4093,7 +4093,7 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
-  '          segment_recalc(pt.parentNode.parentNode);\r\n' \
+  '          segments_calc(pt.parentNode.parentNode);\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
@@ -4121,7 +4121,7 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
-  '          segment_recalc(pt.parentNode.parentNode);\r\n' \
+  '          segments_calc(pt.parentNode.parentNode);\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
@@ -4137,7 +4137,7 @@ class GPXTweakerWebInterfaceServer():
   '      function slope(dist, heig) {\r\n' \
   '        return dist>Math.abs(heig)?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
   '      }\r\n' \
-  '      function segment_recalc(seg, whole=true) {\r\n' \
+  '      function segment_calc(seg) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
   '        let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
@@ -4151,6 +4151,7 @@ class GPXTweakerWebInterfaceServer():
   '          let t_s = null;\r\n' \
   '          let stat = Array(4);\r\n' \
   '          let stat_p = Array(4);\r\n' \
+  '          let ea_s = [0, 0];\r\n' \
   '          let ea_p = [null, null];\r\n' \
   '          let ea_l = [null, null];\r\n' \
   '          let ea_h = [null, null];\r\n' \
@@ -4184,7 +4185,10 @@ class GPXTweakerWebInterfaceServer():
   '              el = el_p==null?0:el_p;\r\n' \
   '            }\r\n' \
   '            for (let v=0; v<2; v++) {\r\n' \
-  '              if (! isNaN(ea[v]) && ea_p[v] == null) {ea_p[v] = ea[v];}\r\n' \
+  '              if (! isNaN(ea[v]) && ea_p[v] == null) {\r\n' \
+  '                ea_p[v] = ea[v];\r\n' \
+  '                ea_s[v] = ea_p[v];\r\n' \
+  '              }\r\n' \
   '              if (! isNaN(ea[v]) && ea_l[v] == null) {ea_l[v] = ea[v];}\r\n' \
   '              if (! isNaN(ea[v]) && ea_h[v] == null) {ea_h[v] = ea[v];}\r\n' \
   '            }\r\n' \
@@ -4197,7 +4201,7 @@ class GPXTweakerWebInterfaceServer():
   '              stat[2] = stat_p[2] + ((ea_p[0]==null||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
   '              stat[3] = stat_p[3] + ((ea_p[1]==null||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
   '            }\r\n' \
-  '            stats[seg_ind].push([...stat, isNaN(ea[0])?(ea_p[0]==null?0:ea_p[0]):ea[0], isNaN(ea[1])?(ea_p[1]==null?0:ea_p[1]):ea[1]]);\r\n' \
+  '            stats[seg_ind].push([...stat, isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1], 0]);\r\n' \
   '            p_p = p;\r\n' \
   '            if (el_p != null) {el_p = el;}\r\n' \
   '            for (let v=0; v<2; v++) {\r\n' \
@@ -4246,14 +4250,22 @@ class GPXTweakerWebInterfaceServer():
   '            let alt_c = "-m";\r\n' \
   '            if (ea_p[1] != null) {alt_c = stat[3].toFixed(0) + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
+  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '            if (stats[seg_ind][p][4] == null) {\r\n' \
+  '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
+  '                if (stats[seg_ind][p][5] == null) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
+  '              } else if (stats[seg_ind][p][5] == null) {\r\n' \
+  '                stats[seg_ind][p][5] = ea_s[1];\r\n' \
+  '              } else {break;}\r\n' \
+  '            }\r\n' \
   '            let srange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
   '            let smax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '            for (let p=0;p<stats[seg_ind].length;p++) {\r\n' \
+  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '              let ea = stats[seg_ind][p].slice(4,6);\r\n' \
   '              stats[seg_ind][p][4]=0;\r\n' \
   '              stats[seg_ind][p][5]=0;\r\n' \
   '              let ps = p;\r\n' \
-  '              for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
+  '              for (ps=p+1; ps<stats[seg_ind].length; ps++) {\r\n' \
   '                if (stats[seg_ind][ps][1] > stats[seg_ind][p][1] + srange) {break;}\r\n' \
   '                if (stats[seg_ind][ps][1] - stats[seg_ind][p][1] == 0) {continue;}\r\n' \
   '                stats[seg_ind][p][4] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][4] - ea[0]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
@@ -4267,12 +4279,12 @@ class GPXTweakerWebInterfaceServer():
   '              stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], smax), -smax);\r\n' \
   '              stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], smax), -smax);\r\n' \
   '            }\r\n' \
-  '            for (let p=stats[seg_ind].length-2;p>0;p--) {\r\n' \
+  '            for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
   '              if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= srange) {\r\n' \
-  '                ps = p;\r\n' \
+  '                let ps = p;\r\n' \
   '                let s = [0, 0];\r\n' \
   '                let su = 0;\r\n' \
-  '                for (ps=p-1;ps>=0;ps--) {\r\n' \
+  '                for (ps=p-1; ps>=0 ;ps--) {\r\n' \
   '                  if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - srange) {break;}\r\n' \
   '                  let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
   '                  s[0] += stats[seg_ind][ps][4] * c;\r\n' \
@@ -4287,10 +4299,9 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '            let vmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '            for (let p=0;p<stats[seg_ind].length;p++) {\r\n' \
-  '              stats[seg_ind][p].push(0);\r\n' \
+  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '              let ps = p;\r\n' \
-  '              for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
+  '              for (ps=p+1; ps<stats[seg_ind].length; ps++) {\r\n' \
   '                if (stats[seg_ind][ps][0] > stats[seg_ind][p][0] + trange) {break;}\r\n' \
   '                if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
   '                stats[seg_ind][p][6] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
@@ -4300,12 +4311,12 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              stats[seg_ind][p][6] = Math.min(stats[seg_ind][p][6], vmax);\r\n' \
   '            }\r\n' \
-  '            for (let p=stats[seg_ind].length-2;p>0;p--) {\r\n' \
+  '            for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
   '              if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
-  '                ps = p;\r\n' \
+  '                let ps = p;\r\n' \
   '                let v = 0;\r\n' \
   '                let su = 0;\r\n' \
-  '                for (ps=p-1;ps>=0;ps--) {\r\n' \
+  '                for (ps=p-1; ps>=0; ps--) {\r\n' \
   '                  if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
   '                  let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
   '                  v += stats[seg_ind][ps][6] * c;\r\n' \
@@ -4318,7 +4329,6 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (whole) {whole_calc();}\r\n' \
   '      }\r\n' \
   '      function wpt_calc() {\r\n' \
   '        let nbpt = 0;\r\n' \
@@ -4369,9 +4379,9 @@ class GPXTweakerWebInterfaceServer():
   '        points.appendData("(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + "|" + nbpt.toString() + ") ");\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
-  '      function segments_calc() {\r\n' \
-  '        let segs = document.getElementById("pointsform").children;\r\n' \
-  '        for (let i=0; i<segs.length; i++) {segment_recalc(segs[i], false);}\r\n' \
+  '      function segments_calc(...segs) {\r\n' \
+  '        if (segs.length == 0) {segs = document.getElementById("pointsform").children;}\r\n' \
+  '        for (let s=0; s<segs.length; s++) {segment_calc(segs[s]);}\r\n' \
   '        whole_calc();\r\n' \
   '      }\r\n' \
   '      function segment_checkbox(seg) {\r\n' \
@@ -4386,7 +4396,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let spans = seg.parentNode.getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length;i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
-  '        segment_recalc(seg.parentNode);\r\n' \
+  '        segments_calc(seg.parentNode);\r\n' \
   '      }\r\n' \
   '      function segment_renum() {\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
@@ -4477,7 +4487,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("pointsform").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          segment_renum();\r\n' \
   '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
-  '          segment_recalc(seg);\r\n' \
+  '          segments_calc(seg);\r\n' \
   '          element_click(null, document.getElementById(seg.id.replace("cont", "desc")));\r\n' \
   '          show_msg("{#jmsegmentcut1#}", 2);\r\n' \
   '          return;\r\n' \
@@ -4514,8 +4524,7 @@ class GPXTweakerWebInterfaceServer():
   '        path.setAttribute("d", d_left[0]);\r\n' \
   '        handle.insertBefore(track, track_foc);\r\n' \
   '        scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")));\r\n' \
-  '        segment_recalc(seg_foc, false);\r\n' \
-  '        segment_recalc(seg);\r\n' \
+  '        segments_calc(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '      }\r\n' \
   '      function segment_absorb() {\r\n' \
@@ -4563,8 +4572,9 @@ class GPXTweakerWebInterfaceServer():
   '        path.setAttribute("d", "M0 0");\r\n' \
   '        scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
   '        seg_foc.firstElementChild.scrollIntoView({block:"start"});\r\n' \
-  '        segment_recalc(seg_foc, false);\r\n' \
-  '        segment_checkbox(seg.firstElementChild);\r\n' \
+  '        document.getElementById("track" + seg.id.slice(7, -4)).style.display = "none";\r\n' \
+  '        seg.style.textDecoration="line-through";\r\n' \
+  '        segments_calc(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_up() {\r\n' \
@@ -4647,8 +4657,7 @@ class GPXTweakerWebInterfaceServer():
   '        handle.insertBefore(document.getElementById("track" + seg_foc.id.slice(7, -4)), document.getElementById("track" + seg.id.slice(7, -4)));\r\n' \
   '        if (focused != seg_foc.id.slice(0, -4)) {element_click(null, seg_foc.firstElementChild.nextElementSibling);}\r\n' \
   '        segment_renum();\r\n' \
-  '        segment_recalc(seg, false);\r\n' \
-  '        segment_recalc(seg_foc);\r\n' \
+  '        segments_calc(seg, seg_foc);\r\n' \
   '        show_msg("{#jmelementup2#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_down() {\r\n' \
@@ -4736,7 +4745,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            pts.replaceChild(seg, segs[0]);\r\n' \
   '          }\r\n' \
-  '          segs[0] = seg;\r\n' \
+  '          if (Array.isArray(segs)) {segs[0] = seg;}\r\n' \
   '          if (pt_f) {\r\n' \
   '            let path = document.getElementById("path" + segs[0].id.slice(7, -4));\r\n' \
   '            let d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
@@ -4747,10 +4756,9 @@ class GPXTweakerWebInterfaceServer():
   '            d_r = d_r.replace("L", "M");\r\n' \
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
-  '          segment_recalc(segs[0], false);\r\n' \
   '        }\r\n' \
   '        if (! whole) {\r\n' \
-  '          whole_calc();\r\n' \
+  '          segments_calc(segs[0]);\r\n' \
   '          show_msg("{#jmsegmentreverse1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
@@ -4808,8 +4816,8 @@ class GPXTweakerWebInterfaceServer():
   '            dot_r = dot;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        segments_calc();\r\n' \
   '        segment_renum();\r\n' \
-  '        whole_calc();\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
@@ -4821,7 +4829,7 @@ class GPXTweakerWebInterfaceServer():
   '        let p = 0;\r\n' \
   '        let e = 0;\r\n' \
   '        let ex_foc = focused;\r\n' \
-  '        let seg = null;\r\n' \
+  '        let segs = [];\r\n' \
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
@@ -4845,13 +4853,12 @@ class GPXTweakerWebInterfaceServer():
   '                  np++;\r\n' \
   '                  let seg_p = null;\r\n' \
   '                  if (pts[p].slice(0,3) != "way") {\r\n' \
-  '                    let seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
-  '                  } \r\n' \
-  '                  if (seg == null) {\r\n' \
-  '                    seg = seg_p;\r\n' \
-  '                  } else if (seg_p.id != seg.id) {\r\n' \
-  '                    segment_recalc(seg, false);\r\n' \
-  '                    seg = seg_p;\r\n' \
+  '                    seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
+  '                    if (segs.length == 0) {\r\n' \
+  '                      segs = [seg_p];\r\n' \
+  '                    } else if (seg_p.id != segs[segs.length - 1].id) {\r\n' \
+  '                      segs.push(seg_p);\r\n' \
+  '                    } \r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '                e++;\r\n' \
@@ -4861,7 +4868,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          p++;\r\n' \
   '        }\r\n' \
-  '        if (seg != null) {segment_recalc(seg);}\r\n' \
+  '        if (segs.length > 0) {segments_calc(...segs);}\r\n' \
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        if (! ex_foc && focused) {focused = "";}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
@@ -4961,7 +4968,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          point_edit(false, false, false, false);\r\n' \
   '        }\r\n' \
-  '        if (seg != null) {segment_recalc(seg);} else {segments_calc();}\r\n' \
+  '        if (seg != null) {segments_calc(seg);} else {segments_calc();}\r\n' \
   '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
   '        if (! ex_foc && focused) {focused = "";}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
@@ -5060,7 +5067,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        segment_recalc(seg_foc);\r\n' \
+  '        segments_calc(seg_foc);\r\n' \
   '        if (pt_foc && pt_foc != focused) {\r\n' \
   '          element_click(null, document.getElementById(pt_foc.id.replace("cont", "desc")), false);\r\n' \
   '        }\r\n' \
@@ -5170,7 +5177,7 @@ class GPXTweakerWebInterfaceServer():
   '                  }\r\n' \
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
-  '                    segment_recalc(segs[s]);\r\n' \
+  '                    segments_calc(segs[s]);\r\n' \
   '                    if (gr) {refresh_graph(true);}\r\n' \
   '                    show_msg("Horodatage du point mis à jour", 2);\r\n' \
   '                    return;\r\n' \
@@ -5191,7 +5198,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
   '                  save_old();\r\n' \
-  '                  segment_recalc(segs[s]);\r\n' \
+  '                  segments_calc(segs[s]);\r\n' \
   '                  if (gr) {refresh_graph(true);}\r\n' \
   '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                  return;\r\n' \
@@ -5206,12 +5213,12 @@ class GPXTweakerWebInterfaceServer():
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          if (pt_foc != null) {\r\n' \
+  '            segments_calc(segs[s]);\r\n' \
   '            if (gr) {refresh_graph(true);}\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
-  '          segment_recalc(segs[s], false);\r\n' \
   '        }\r\n' \
-  '        whole_calc();\r\n' \
+  '        segments_calc(...segs);\r\n' \
   '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")), false);}\r\n' \
   '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
@@ -5659,7 +5666,7 @@ class GPXTweakerWebInterfaceServer():
   '        path.setAttribute("d", d);\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
-  '        segment_recalc(document.getElementById(foc).parentNode.parentNode);\r\n' \
+  '        segments_calc(document.getElementById(foc).parentNode.parentNode);\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        return true;\r\n'\
   '      } \r\n' \
@@ -6177,7 +6184,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            if (hand.id.indexOf("way") < 0) {\r\n' \
-  '              segment_recalc(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '              segments_calc(document.getElementById(focused).parentNode.parentNode);\r\n' \
   '              if (e.ctrlKey) {build_path();}\r\n' \
   '            }\r\n' \
   '          } else if (hand.id == "gbarc") {\r\n' \
@@ -6724,12 +6731,10 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function program_use(name) {\r\n' \
   '        cur_prog = name;\r\n' \
-  '        let prog = gl_programs.get(name).get("program");\r\n' \
-  '        gl.useProgram(prog);\r\n' \
+  '        gl.useProgram(gl_programs.get(name).get("program"));\r\n' \
   '        gl.bindVertexArray(gl_programs.get(name).get("vao"));\r\n' \
   '      }\r\n' \
   '      function program_attributes() {\r\n' \
-  '        let prog = gl_programs.get(cur_prog).get("program");\r\n' \
   '        for (let [n, ts] of gl_attributes) {\r\n' \
   '          if (gl_programs.get(cur_prog).has(n)) {\r\n' \
   '            gl.enableVertexAttribArray(gl_programs.get(cur_prog).get(n));\r\n' \
@@ -6739,7 +6744,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function program_uniforms(type="dynamic") {\r\n' \
-  '        let prog = gl_programs.get(cur_prog).get("program");\r\n' \
   '        for (let [n, t] of type=="static"?gl_static_uniforms:gl_dynamic_uniforms) {\r\n' \
   '          if (gl_programs.get(cur_prog).has(n)) {\r\n' \
   '            switch (t) {\r\n' \
