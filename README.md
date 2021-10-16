@@ -26,6 +26,8 @@ Les modifications et insertions de points peuvent être annulées/rétablies soi
 
 La trace peut, irréversiblement, être purgée des éléments décochés en la sauvant puis en actualisant la page d'interface.
 
+Le calcul des statistiques de la trace peut être partiellement (option Gpu_comp sur 1) ou totalement (option Gpu_comp sur 2) déchargé vers le processeur graphique.
+
 Il est possible d'assembler une carte à partir de tuiles au format jpeg au moyen du programme jpegtran.
 
 Mode d'emploi:
@@ -96,6 +98,8 @@ The drawing from point to point can be done in straight line or following pathes
 Modifications and insertions of points can be undone/redone either point by point, or by segment and, if an operation dealing with several points is concerned (such as path following), by batch, on a segment or on the whole track.
 
 The track can, irreversibly, be purged of unchecked elements by saving it then reloading the interface page.
+
+The computation of the statistics of the track can be partially (option Gpu_comp on 1) ou totally (option Gpu_comp on 2) onto the graphics processor unit.
 
 It is possible to assemble a map from tiles in jpeg format thanks to the program jpegtran.
 
