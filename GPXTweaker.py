@@ -2346,7 +2346,6 @@ class WGS84Track(WGS84WebMercator):
           self.log(0, 'new', uri)
       self.Track = minidom.parseString(track)
       self._XMLClean()
-      t = time.time()
       self.OTrack = self.Track
     except:
       self.__init__()
@@ -2367,7 +2366,6 @@ class WGS84Track(WGS84WebMercator):
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     self.log(0, 'loaded', uri, self.Name, len(self.Wpts), len(self.Trkpts), sum(len(seg) for seg in self.UTrkpts))
-    print(time.time() - t)
     return True
 
   def BuildWebMercator(self):
@@ -6038,7 +6036,7 @@ class GPXTweakerWebInterfaceServer():
   '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
   '              let dur_s_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
-  '             for (let s=0; s<segs.length; s++) {\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
   '                if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
   '                let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
   '                if (seg_ind == segf_ind) {break;}\r\n' \
@@ -8466,7 +8464,6 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     isets = self._build_isets()
-
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots)
     self.log(2, 'built')
     return True
