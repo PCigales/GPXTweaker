@@ -175,7 +175,8 @@ FR_STRINGS = {
     'jmelevations2': 'Élévation du point / point de cheminement mise à jour',
     'jmelevations3': 'Élévations du segment mises à jour (%s point(s) sur %s)',
     'jmelevations4': 'Élévations de la trace mises à jour (%s point(s) et point(s) de cheminement sur %s)',
-    'jmelevations5': 'Échec de la récupération des élévations',
+    'jmelevations5': 'Élévations de la trace mises à jour (%s point(s) sur %s)',
+    'jmelevations6': 'Échec de la récupération des élévations',
     'jmelealt1': 'Élévation et altitude du point interverties',
     'jmelealt2': 'Élévations et altitudes du segment interverties',
     'jmelealt3': 'Élévations et altitudes de la trace interverties',
@@ -367,7 +368,8 @@ EN_STRINGS = {
     'jmelevations2': 'Elevation of the point / waypoint updated',
     'jmelevations3': 'Elevations of the segment updated (%s point(s) out of %s)',
     'jmelevations4': 'Elevations of the track updated (%s point(s) and waypoint(s) out of %s)',
-    'jmelevations5': 'Failure of the retrieval of elevations',
+    'jmelevations5': 'Elevations of the track updated (%s point(s) out of %s)',
+    'jmelevations6': 'Failure of the retrieval of elevations',
     'jmelealt1': 'Elevation and altitude of the point switched',
     'jmelealt2': 'Elevations and altitudes of the segment switched',
     'jmelealt3': 'Elevations and altitudes of the track switched',
@@ -4032,19 +4034,15 @@ class GPXTweakerWebInterfaceServer():
   '        let chld = ptspan.children;\r\n' \
   '        let lat = parseFloat(chld[1].value).toFixed(4);\r\n' \
   '        let lon = parseFloat(chld[4].value).toFixed(4);\r\n' \
-  '        let ele = "";\r\n' \
-  '        if (chld[7].value != "") {ele = parseFloat(chld[7].value).toFixed(0);}\r\n' \
   '        let time_ = Date.parse(chld[(ptspan.id.substring(0, 3) == "way")?10:13].value);\r\n' \
-  '        let time = "";\r\n' \
-  '        if (! isNaN(time_)) {\r\n' \
-  '          time = time_conv.format(time_)  + "˙" + date_conv.format(time_);\r\n' \
-  '        }\r\n' \
+  '        let time = isNaN(time_)?"":time_conv.format(time_)  + "˙" + date_conv.format(time_);\r\n' \
   '        if (ptspan.id.substring(0, 3) == "way") {\r\n' \
+  '          let ele = chld[7].value==""?"":parseFloat(chld[7].value).toFixed(0);\r\n' \
   '          let name = chld[13].value;\r\n' \
   '          return escape("(" + lat + ", " + lon + ") " + ele + " " + time) + "<br>" + escape(name);\r\n' \
   '        } else {\r\n' \
-  '          let alt = "";\r\n' \
-  '          if (chld[10].value != "") {alt = parseFloat(chld[10].value).toFixed(0);}\r\n' \
+  '          let ele = chld[7].value==""?"...":parseFloat(chld[7].value).toFixed(0);\r\n' \
+  '          let alt = chld[10].value==""?"":parseFloat(chld[10].value).toFixed(0);\r\n' \
   '          return escape("(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -4252,13 +4250,13 @@ class GPXTweakerWebInterfaceServer():
   '        let ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
   '        if (ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
+  '        if (gr) {refresh_graph(true);}\r\n' \
   '        if (ex_foc.indexOf("point") < 0) {\r\n' \
   '          scroll_to_dot(document.getElementById(ex_foc_.replace("point", "dot")));\r\n' \
   '          document.getElementById(ex_foc_ + "cont").scrollIntoView({block:"center"});\r\n' \
   '        } else {\r\n' \
   '          document.getElementById(ex_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
   '        if (hist[1-s][hist[1-s].length-1][1] == "") {\r\n' \
   '          show_msg((redo?"{#jmredo1#}":"{#jmundo1#}").replace("%s", inds.length), 3);\r\n' \
   '        } else {\r\n' \
@@ -4521,7 +4519,7 @@ class GPXTweakerWebInterfaceServer():
   '          let lat = null;\r\n' \
   '          let lon = null;\r\n' \
   '          let ea_s = [0, 0];\r\n' \
-  '          let ea_p = [null, null];\r\n' \
+  '          let ea_p = [NaN, NaN];\r\n' \
   '          let ea_l = [null, null];\r\n' \
   '          let ea_h = [null, null];\r\n' \
   '          let ea_g = [null, null];\r\n' \
@@ -4529,14 +4527,14 @@ class GPXTweakerWebInterfaceServer():
   '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
   '          let el_s = 0;\r\n' \
   '          let el = null;\r\n' \
-  '          let el_p = null;\r\n' \
+  '          let el_p = NaN;\r\n' \
   '          let p_p = null;\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
   '            if (point_stat[parseInt(spans[p].id.slice(5, -5))] == null) {continue;}\r\n' \
   '            let p_c = spans[p].children;\r\n' \
   '            let ea = [parseFloat(p_c[7].value), parseFloat(p_c[10].value)];\r\n' \
   '            for (let v=0; v<2; v++) {\r\n' \
-  '              if (! isNaN(ea[v]) && ea_p[v] == null) {\r\n' \
+  '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
   '                ea_s[v] = ea_p[v];\r\n' \
   '              }\r\n' \
@@ -4558,18 +4556,18 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              if (! isNaN(ea[1])) {\r\n' \
   '                el = ea[1];\r\n' \
-  '                if (el_p == null) {\r\n' \
+  '                if (isNaN(el_p)) {\r\n' \
   '                  el_p = el;\r\n' \
   '                  el_s = el_p;\r\n' \
   '                }\r\n' \
   '              } else if (! isNaN(ea[0])) {\r\n' \
   '                el = ea[0];\r\n' \
-  '                if (el_p == null) {\r\n' \
+  '                if (isNaN(el_p)) {\r\n' \
   '                  el_p = el;\r\n' \
   '                  el_s = el_p;\r\n' \
   '                }\r\n' \
   '              } else {\r\n' \
-  '                el = el_p==null?0:el_p;\r\n' \
+  '                el = isNaN(el_p)?0:el_p;\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            if (p_p == null) {\r\n' \
@@ -4583,17 +4581,17 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            } else {\r\n' \
   '              if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '                stat[2] = stat_p[2] + ((ea_p[0]==null||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
-  '                stat[3] = stat_p[3] + ((ea_p[1]==null||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
+  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
+  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
   '              }\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0) {\r\n' \
-  '                  stat[1] = stat_p[1] + distance(lat_p, lon_p, el_p==null?0:el_p, lat, lon, el);\r\n' \
+  '                  stat[1] = stat_p[1] + distance(lat_p, lon_p, isNaN(el_p)?0:el_p, lat, lon, el);\r\n' \
   '                }\r\n' \
   '                stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
   '                stat[5] = isNaN(ea[1])?ea_p[1]:ea[1];\r\n' \
   '              } else if (fpan != 1) {\r\n' \
-  '                mmlhs.set([lat - lat_p,  lon - lon_p , lat, el_p==null?null:el], 4 * ind);\r\n' \
+  '                mmlhs.set([lat - lat_p,  lon - lon_p , lat, isNaN(el_p)?el_p:el], 4 * ind);\r\n' \
   '                teas.set([stat[0], isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1]], 3 * ind);\r\n' \
   '                ind++;\r\n' \
   '              }\r\n' \
@@ -4603,7 +4601,7 @@ class GPXTweakerWebInterfaceServer():
   '            stat_p = stat.slice();\r\n' \
   '            if (fpan == 0) {\r\n' \
   '              stats[seg_ind].push(stat_p);\r\n' \
-  '              if (el_p != null) {el_p = el;}\r\n' \
+  '              if (! isNaN(el_p)) {el_p = el;}\r\n' \
   '            } else if (fpan == 1) {\r\n' \
   '              stats[seg_ind][stat_i][2] = stat_p[2];\r\n' \
   '              stats[seg_ind][stat_i][3] = stat_p[3];\r\n' \
@@ -4615,7 +4613,7 @@ class GPXTweakerWebInterfaceServer():
   '            p_p = p;\r\n' \
   '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
   '              for (let v=0; v<2; v++) {\r\n' \
-  '                if (ea_p[v] != null && ! isNaN(ea[v])) {\r\n' \
+  '                if (! isNaN(ea[v])) {\r\n' \
   '                  if (ea[v] > ea_p[v]) {\r\n' \
   '                    ea_p[v] = ea[v];\r\n' \
   '                    if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
@@ -4639,31 +4637,32 @@ class GPXTweakerWebInterfaceServer():
   '                      ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
   '                    }\r\n' \
   '                    ea_g[v] = "-";\r\n' \
-  '                    ea_p[v] = ea[v];\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
+  '            if (! isNaN(ea[0])) {ea_p[0] = ea[0];}\r\n' \
+  '            if (! isNaN(ea[1])) {ea_p[1] = ea[1];}\r\n' \
   '          }\r\n' \
   '          if (! stat_p) {return;}\r\n' \
   '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
   '            for (let p=0; p<stat_i; p++) {\r\n' \
-  '              if (stats[seg_ind][p][4] == null) {\r\n' \
+  '              if (isNaN(stats[seg_ind][p][4])) {\r\n' \
   '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
-  '                if (stats[seg_ind][p][5] == null) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
-  '              } else if (stats[seg_ind][p][5] == null) {\r\n' \
+  '                if (isNaN(stats[seg_ind][p][5])) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
+  '              } else if (isNaN(stats[seg_ind][p][5])) {\r\n' \
   '                stats[seg_ind][p][5] = ea_s[1];\r\n' \
   '              } else {break;}\r\n' \
   '            }\r\n' \
   '          } else if (gpucomp != 0 && (fpan == 0 || gpu_part) && fpan != 1) {\r\n' \
   '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
-  '              if (mmlhs[4 * i + 3] == null) {mmlhs[4 * i + 3] = el_s;} else {break;}\r\n' \
+  '              if (isNaN(mmlhs[4 * i + 3])) {mmlhs[4 * i + 3] = el_s;} else {break;}\r\n' \
   '            }\r\n' \
   '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
-  '              if (teas[3 * i + 1] == null) {teas[3 * i + 1] = ea_s[0];} else {break;}\r\n' \
+  '              if (isNaN(teas[3 * i + 1])) {teas[3 * i + 1] = ea_s[0];} else {break;}\r\n' \
   '            }\r\n' \
   '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
-  '              if (teas[3 * i + 2] == null) {teas[3 * i + 2] = ea_s[1];} else {break;}\r\n' \
+  '              if (isNaN(teas[3 * i + 2])) {teas[3 * i + 2] = ea_s[1];} else {break;}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (fpan == 0) {\r\n' \
@@ -4677,9 +4676,9 @@ class GPXTweakerWebInterfaceServer():
   '            let dist_c = "-km";\r\n' \
   '            if (gpucomp == 0) {dist_c = (stat_p[1] / 1000).toFixed(2) + "km";}\r\n' \
   '            let ele_c = "-m";\r\n' \
-  '            if (ea_p[0] != null) {ele_c = (gpucomp<=1?stat_p[2].toFixed(0):"[eg]") + "m";}\r\n' \
+  '            if (! isNaN(ea_p[0])) {ele_c = (gpucomp<=1?stat_p[2].toFixed(0):"[eg]") + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
-  '            if (ea_p[1] != null) {alt_c = (gpucomp<=1?stat_p[3].toFixed(0):"[ag]") + "m";}\r\n' \
+  '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?stat_p[3].toFixed(0):"[ag]") + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
   '          } else if (fpan == 1) {\r\n' \
   '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\d+m\|/, stat_p[2].toFixed(0) + "m|").replace(/\d+m\)/, stat_p[3].toFixed(0) + "m)");\r\n' \
@@ -5361,9 +5360,6 @@ class GPXTweakerWebInterfaceServer():
   '        let e = 0;\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        let segs = [];\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        let np = 0;\r\n' \
   '        while (p < pts.length) {\r\n' \
@@ -5398,10 +5394,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          p++;\r\n' \
   '        }\r\n' \
+  '        focused = ex_foc;\r\n' \
   '        if (segs.length > 0) {segments_calc(...segs);}\r\n' \
-  '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
-  '        if (! ex_foc && focused) {focused = "";}\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
   '        return np;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
@@ -5424,8 +5418,13 @@ class GPXTweakerWebInterfaceServer():
   '          if (all) {\r\n' \
   '            if (! window.confirm("{#jeconfirm#}")) {return;}\r\n' \
   '          }\r\n' \
-  '          spans = document.getElementById("content").getElementsByTagName("span");\r\n' \
-  '          msg = "{#jmelevations4#}";\r\n' \
+  '          if (fromalt) {\r\n' \
+  '            spans = document.getElementById("pointsform").getElementsByTagName("span");\r\n' \
+  '            msg = "{#jmelevations5#}";\r\n' \
+  '          } else {\r\n' \
+  '            spans = document.getElementById("content").getElementsByTagName("span");\r\n' \
+  '            msg = "{#jmelevations4#}";\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        for (let p=(focused?0:2); p<spans.length; p++) {\r\n' \
   '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error" && (all || document.getElementById(spans[p].id.slice(0, -5) + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
@@ -5451,8 +5450,8 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        let xhre = new XMLHttpRequest();\r\n' \
-  '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn):show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
-  '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations5#}", 10, msgn);};\r\n' \
+  '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn):show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
+  '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhre.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -5469,7 +5468,7 @@ class GPXTweakerWebInterfaceServer():
   '            spans = document.getElementById(ex_foc + "cont").getElementsByTagName("span");\r\n' \
   '            msg = "{#jmelealt2#}";\r\n' \
   '            seg = document.getElementById(ex_foc + "cont");\r\n' \
-  '          } else if (ex_foc.substring(0, 3) =="way") {\r\n' \
+  '          } else if (ex_foc.substring(0, 3) == "way") {\r\n' \
   '            return;\r\n' \
   '          } else {\r\n' \
   '            spans = [document.getElementById(ex_foc + "focus")];\r\n' \
@@ -5483,8 +5482,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (spans.length == 0) {return;}\r\n' \
   '        let batch = ++hist_b;\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
   '        for (let p=0; p<spans.length; p++) {\r\n' \
   '          focused = spans[p].id.slice(0, -5);\r\n' \
   '          save_old();\r\n' \
@@ -5498,10 +5495,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          point_edit(false, false, false, false);\r\n' \
   '        }\r\n' \
+  '        focused = ex_foc;\r\n' \
   '        if (seg != null) {segments_calc(seg);} else {segments_calc();}\r\n' \
-  '        if (ex_foc && ex_foc != focused) {element_click(null, document.getElementById(ex_foc + "desc"));}\r\n' \
-  '        if (! ex_foc && focused) {focused = "";}\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
   '        show_msg(msg, 2);\r\n' \
   '      }\r\n' \
   '      function alt_join() {\r\n' \
@@ -5564,9 +5559,6 @@ class GPXTweakerWebInterfaceServer():
   '          cor = parseFloat(talt - ralt);\r\n' \
   '        }\r\n' \
   '        if (isNaN(cor)) {return;}\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        for (let p=sp; p<spans.length; p++) {\r\n' \
   '          let palt = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
@@ -5597,12 +5589,9 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        segments_calc(seg_foc);\r\n' \
-  '        if (pt_foc && pt_foc != focused) {\r\n' \
-  '          element_click(null, document.getElementById(pt_foc.id.replace("cont", "desc")), false);\r\n' \
-  '        }\r\n' \
+  '        if (pt_foc) {focused = pt_foc.id.slice(0, -4);}\r\n' \
   '        if (! pt_foc) {focused = seg_foc.id.slice(0, -4);}\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        segments_calc(seg_foc);\r\n' \
   '        show_msg(((pt_foc==null)?"{#jmaltitudesjoin1#}":"{#jmaltitudesjoin2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function datetime_interpolate() {\r\n' \
@@ -5631,9 +5620,6 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = segs[s].getElementsByTagName("span");\r\n' \
@@ -5708,7 +5694,6 @@ class GPXTweakerWebInterfaceServer():
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
   '                    segments_calc(segs[s]);\r\n' \
-  '                    if (gr) {refresh_graph(true);}\r\n' \
   '                    show_msg("Horodatage du point mis à jour", 2);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
@@ -5729,7 +5714,6 @@ class GPXTweakerWebInterfaceServer():
   '                if (pt_foc != null) {\r\n' \
   '                  save_old();\r\n' \
   '                  segments_calc(segs[s]);\r\n' \
-  '                  if (gr) {refresh_graph(true);}\r\n' \
   '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
@@ -5744,15 +5728,14 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (pt_foc != null) {\r\n' \
   '            segments_calc(segs[s]);\r\n' \
-  '            if (gr) {refresh_graph(true);}\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        segments_calc(...segs);\r\n' \
-  '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {element_click(null, document.getElementById(seg_foc.id.replace("cont", "desc")), false);}\r\n' \
+  '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"Horodatages du segment mis à jour":"Horodatages de la trace mis à jour");\r\n' \
+  '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        show_msg(((seg_foc!=null)?"{#jmdatetime2#}":"{#jmdatetime3#}"), 2);\r\n' \
+  '        segments_calc(...segs);\r\n' \
+  '        if (msg) {show_msg(msg, 2);}\r\n' \
   '      }\r\n' \
   '      function switch_dots() {\r\n' \
   '        dots_visible = ! dots_visible;\r\n' \
@@ -6243,9 +6226,9 @@ class GPXTweakerWebInterfaceServer():
   '        d = d_left.trimEnd() + d_right;\r\n' \
   '        path.setAttribute("d", d);\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
-  '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        segments_calc(document.getElementById(foc).parentNode.parentNode);\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
+  '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        return true;\r\n'\
   '      } \r\n' \
   '      function build_path() {\r\n' \
@@ -6761,6 +6744,7 @@ class GPXTweakerWebInterfaceServer():
   '              if ((e.shiftKey || d > 25) && ! e.altKey) {\r\n' \
   '                document.getElementById(focused + "ele").value = "";\r\n' \
   '                if (focused.indexOf("way") < 0) {document.getElementById(focused + "alt").value = "";}\r\n' \
+  '                point_edit(false, false, false, false);\r\n' \
   '                save_old();\r\n' \
   '              }\r\n' \
   '            }\r\n' \
