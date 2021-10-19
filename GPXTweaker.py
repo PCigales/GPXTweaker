@@ -3039,7 +3039,6 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '        overflow-x:hidden;\r\n' \
   '        max-width:calc(24em - 22px);\r\n' \
   '        min-height:1.35em;\r\n' \
   '      }\r\n' \
@@ -3179,14 +3178,14 @@ class GPXTweakerWebInterfaceServer():
   '          this._starts = null;\r\n' \
   '          this.tlength = null;\r\n' \
   '          this._mmlhs = null;\r\n' \
-  '          this._tdeas = null;\r\n' \
+  '          this._teas = null;\r\n' \
   '          this.vstart = null;\r\n' \
   '          this.mmlhtex = 0;\r\n' \
   '          this.teatex = 1;\r\n' \
   '          this.dtex = 2;\r\n' \
   '          this.ssstex = 3;\r\n' \
   '          this.mmlh_texture = null;\r\n' \
-  '          this.tdea_texture = null;\r\n' \
+  '          this.tea_texture = null;\r\n' \
   '          this.d_texture = null;\r\n' \
   '          this.sss_texture = null;\r\n' \
   '          this.vlength = 0;\r\n' \
@@ -3397,7 +3396,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        program_feedbacks(offset=0) {\r\n' \
+  '        program_feedbacks(offset, size) {\r\n' \
   '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
   '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
   '              let s = 0;\r\n' \
@@ -3411,7 +3410,7 @@ class GPXTweakerWebInterfaceServer():
   '                default:\r\n' \
   '                  s = 4;\r\n' \
   '              }\r\n' \
-  '              this.gl.bindBufferRange(this.gl.TRANSFORM_FEEDBACK_BUFFER, this.gl_programs.get(this.cur_prog).get(n), this[n], offset * s, 4);\r\n' \
+  '              this.gl.bindBufferRange(this.gl.TRANSFORM_FEEDBACK_BUFFER, this.gl_programs.get(this.cur_prog).get(n), this[n], offset * s, size * s);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -3468,7 +3467,7 @@ class GPXTweakerWebInterfaceServer():
   '            this.vlength = this._starts[s + 1] - this._starts[s];\r\n' \
   '            if (this.vlength == 0) {continue;}\r\n' \
   '            this.program_uniforms();\r\n' \
-  '            this.program_feedbacks(this._starts[s]);\r\n' \
+  '            this.program_feedbacks(this._starts[s], this.vlength);\r\n' \
   '            this.gl.beginTransformFeedback(this.gl.POINTS);\r\n' \
   '            this.gl.drawArraysInstanced(this.gl.POINTS, s, 1, this.vlength - (this.cur_prog=="s2program"?1:0));\r\n' \
   '            this.gl.endTransformFeedback();\r\n' \
@@ -4263,7 +4262,7 @@ class GPXTweakerWebInterfaceServer():
   '          show_msg((redo?"{#jmredo2#}":"{#jmundo2#}").replace("%s", inds.length), 3);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function point_insert(pos, recalc=true) {\r\n' \
+  '      function point_insert(pos, coord=null) {\r\n' \
   '        let ex_foc = "";\r\n' \
   '        if (focused) {\r\n' \
   '          if (document.getElementById(focused).value == "error") {return;}\r\n' \
@@ -4356,16 +4355,25 @@ class GPXTweakerWebInterfaceServer():
   '          el_span_children[13].id = pref + "time";\r\n' \
   '          el_span_children[13].name = pref + "time";\r\n' \
   '        }\r\n' \
-  '        if (el_dot) {\r\n' \
-  '          let [lat, lon] = WebMercatortoWGS84(Math.max(vminx, Math.min(vmaxx, htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom)), Math.max(vminy, Math.min(vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom)));\r\n' \
+  '        if (el_dot || coord) {\r\n' \
+  '          let lat = null;\r\n' \
+  '          let lon = null;\r\n' \
+  '          if (coord) {\r\n' \
+  '            [lat, lon] = coord;\r\n' \
+  '          } else {\r\n' \
+  '            [lat, lon] = WebMercatortoWGS84(Math.max(vminx, Math.min(vmaxx, htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom)), Math.max(vminy, Math.min(vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom)));\r\n' \
+  '          }\r\n' \
+  '          if (! el_dot) {\r\n' \
+  '            el_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);\r\n' \
+  '          }\r\n' \
   '          el_span_children[1].value = lat.toFixed(6);\r\n' \
   '          el_span_children[4].value = lon.toFixed(6);\r\n' \
-  '          el_label.innerHTML = "(" + lat.toFixed(4) + ", " + lon.toFixed(4) + ")   ";\r\n' \
   '          el_span_children[7].value = "";\r\n' \
   '          el_span_children[10].value = "";\r\n' \
+  '          el_span_children[13].value = "";\r\n' \
+  '          el_label.innerHTML = point_desc(el_span);\r\n' \
   '          let wm = WGS84toWebMercator(lat, lon);\r\n' \
   '          if (ex_foc) {\r\n' \
-  '            el_span_children[13].value = "";\r\n' \
   '            el_dot.style.left = wmvalue_to_prop(wm[0] - htopx, 3.5);\r\n' \
   '            el_dot.style.top = wmvalue_to_prop(htopy - wm[1], 3.5);\r\n' \
   '          } else {\r\n' \
@@ -4419,15 +4427,15 @@ class GPXTweakerWebInterfaceServer():
   '        element_click(null, el_label, false);\r\n' \
   '        hist[0].push([focused, ""]);\r\n' \
   '        el_span.scrollIntoView({block:"center"});\r\n' \
-  '        if (seg) {\r\n' \
-  '          if (recalc) {\r\n' \
+  '        if (! coord) {\r\n' \
+  '          if (seg) {\r\n' \
   '            scroll_to_dot(el_dot);\r\n' \
   '            segments_calc(seg);\r\n' \
+  '          } else {\r\n' \
+  '            scroll_to_dot(el_dot);\r\n' \
+  '            wpt_calc();\r\n' \
   '          }\r\n' \
-  '        } else {\r\n' \
-  '          scroll_to_dot(el_dot);\r\n' \
-  '          wpt_calc();\r\n' \
-  '        }}\r\n' \
+  '        }\r\n' \
   '        show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function point_delete(pt, batch=false) {\r\n' \
@@ -5427,9 +5435,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        for (let p=(focused?0:2); p<spans.length; p++) {\r\n' \
-  '          if (document.getElementById(spans[p].id.slice(0, -5)).value != "error" && (all || document.getElementById(spans[p].id.slice(0, -5) + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
-  '           pts.push(spans[p].id.slice(0, -5));\r\n' \
-  '           b = b + spans[p].id.slice(0, -5) + "," + document.getElementById(spans[p].id.slice(0, -5) + "lat").value + "," + document.getElementById(spans[p].id.slice(0, -5) + "lon").value + "\\r\\n";\r\n' \
+  '          pid = spans[p].id.slice(0, -5);\r\n' \
+  '          if (document.getElementById(pid).value != "error" && (all || document.getElementById(pid + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
+  '           pts.push(pid);\r\n' \
+  '           b = b + pid + "," + document.getElementById(pid + "lat").value + "," + document.getElementById(pid + "lon").value + "\\r\\n";\r\n' \
   '          } \r\n' \
   '        }\r\n' \
   '        if (b.length == 0) {return;}\r\n' \
@@ -5518,12 +5527,13 @@ class GPXTweakerWebInterfaceServer():
   '        let ralt = null;\r\n' \
   '        let sp = 0;\r\n' \
   '        for (let p=0; p<spans.length; p++) {\r\n' \
-  '          if (pt_foc != null && pt_foc.id.slice(0, -4) != spans[p].id.slice(0, -5) && stime == null) {continue;}\r\n' \
-  '          if (document.getElementById(spans[p].id.slice(0, -5)).checked && document.getElementById(focused).value != "error") {\r\n' \
-  '            ralt = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '          let pid = spans[p].id.slice(0, -5);\r\n' \
+  '          if (pt_foc != null && pt_foc.id.slice(0, -4) != pid && stime == null) {continue;}\r\n' \
+  '          if (document.getElementById(pid).checked && document.getElementById(pid).value != "error") {\r\n' \
+  '            ralt = parseFloat(document.getElementById(pid + "alt").value);\r\n' \
   '            if (isNaN(ralt)) {continue;}\r\n' \
   '            if (pt_foc != null) {\r\n' \
-  '              let tim = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '              let tim = Date.parse(document.getElementById(pid + "time").value);\r\n' \
   '              if (stime == null) {\r\n' \
   '                if (isNaN(tim)) {return;}\r\n' \
   '                sp = p;\r\n' \
@@ -5554,21 +5564,21 @@ class GPXTweakerWebInterfaceServer():
   '        if (isNaN(talt)) {return;}\r\n' \
   '        let cor = null;\r\n' \
   '        if (pt_foc != null) {\r\n' \
-  '          cor = parseFloat((talt - ralt) / (etime - stime));\r\n' \
+  '          cor = (talt - ralt) / (etime - stime);\r\n' \
   '        } else {\r\n' \
-  '          cor = parseFloat(talt - ralt);\r\n' \
+  '          cor = talt - ralt;\r\n' \
   '        }\r\n' \
-  '        if (isNaN(cor)) {return;}\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        for (let p=sp; p<spans.length; p++) {\r\n' \
-  '          let palt = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
+  '          let pid = spans[p].id.slice(0, -5);\r\n' \
+  '          let palt = parseFloat(document.getElementById(pid + "alt").value);\r\n' \
   '          if (! isNaN(palt)) {\r\n' \
   '            if (pt_foc != null) {\r\n' \
-  '              let ptime = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '              let ptime = Date.parse(document.getElementById(pid + "time").value);\r\n' \
   '              if (! isNaN(ptime)) {\r\n' \
-  '                focused = spans[p].id.slice(0, -5);\r\n' \
+  '                focused = pid;\r\n' \
   '                save_old();\r\n' \
-  '                document.getElementById(spans[p].id.replace("focus", "alt")).value = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
+  '                document.getElementById(pid + "alt").value = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
   '                hist[0].push([focused, foc_old, batch]);\r\n' \
   '                save_old();\r\n' \
   '                for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
@@ -5577,9 +5587,9 @@ class GPXTweakerWebInterfaceServer():
   '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              focused = spans[p].id.slice(0, -5);\r\n' \
+  '              focused = pid;\r\n' \
   '              save_old();\r\n' \
-  '              document.getElementById(spans[p].id.replace("focus", "alt")).value = (palt + cor).toFixed(1);\r\n' \
+  '              document.getElementById(pid + "alt").value = (palt + cor).toFixed(1);\r\n' \
   '              hist[0].push([focused, foc_old, batch]);\r\n' \
   '              save_old();\r\n' \
   '              for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
@@ -6003,6 +6013,7 @@ class GPXTweakerWebInterfaceServer():
   '          let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
   '          if (! segf.firstElementChild.checked) {return;}\r\n' \
   '          let foc_ind = parseInt(focused.substring(5));\r\n' \
+  '          if (foc_ind >= point_stat.length) {return;}\r\n' \
   '          if (point_stat[foc_ind] == null) {return;}\r\n' \
   '          let segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
   '          if (graph_px[foc_ind] != undefined) {\r\n' \
@@ -6122,9 +6133,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (! t.response) {return false;}\r\n' \
   '        let iti = t.response.split("\\r\\n");\r\n' \
   '        if (iti.length <= 0) {return false;}\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        if (focused == foc) {element_click(null, document.getElementById(foc + "desc"), false);}\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        let frag = document.createDocumentFragment();\r\n' \
@@ -6177,10 +6185,10 @@ class GPXTweakerWebInterfaceServer():
   '          el_span_children[13].name = pref + "time";\r\n' \
   '          el_span_children[1].value = lat.toFixed(6);\r\n' \
   '          el_span_children[4].value = lon.toFixed(6);\r\n' \
-  '          el_label.innerHTML = "(" + lat.toFixed(4) + ", " + lon.toFixed(4) + ")   ";\r\n' \
   '          el_span_children[7].value = "";\r\n' \
   '          el_span_children[10].value = "";\r\n' \
   '          el_span_children[13].value = "";\r\n' \
+  '          el_label.innerHTML = point_desc(el_span);\r\n' \
   '          let wm = WGS84toWebMercator(lat, lon);\r\n' \
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {\r\n' \
   '            el_input.disabled = true;\r\n' \
@@ -6191,7 +6199,7 @@ class GPXTweakerWebInterfaceServer():
   '          let el_dot = dot.cloneNode(true);\r\n' \
   '          el_dot.id = pref.replace("point", "dot");\r\n' \
   '          el_dot.setAttribute("stroke", "gray");\r\n' \
-  '          el_dot.style.display = dots_visible?"":"none";\r\n' \
+  '          el_dot.style.display = (dots_visible && ! el_input.disabled)?"":"none";\r\n' \
   '          el_dot.style.zIndex = "";\r\n' \
   '          el_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
   '          el_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, wm[1])), 3.5);\r\n' \
@@ -6225,9 +6233,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (d_left.indexOf("M", 1) < 0) {d_right =  d_right.replace("L", "M");}\r\n' \
   '        d = d_left.trimEnd() + d_right;\r\n' \
   '        path.setAttribute("d", d);\r\n' \
-  '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        segments_calc(document.getElementById(foc).parentNode.parentNode);\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        return true;\r\n'\
   '      } \r\n' \
@@ -6235,7 +6242,7 @@ class GPXTweakerWebInterfaceServer():
   '        let foc = focused;\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
   '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
-  '        if (pt_foc.firstElementChild.value == "error") {return;}\r\n' \
+  '        if (pt_foc.firstElementChild.value == "error" || ! pt_foc.firstElementChild.checked) {return;}\r\n' \
   '        let lat_a = document.getElementById(focused + "lat").value;\r\n' \
   '        let lon_a = document.getElementById(focused + "lon").value;\r\n' \
   '        let lat_d = null;\r\n' \
@@ -6603,12 +6610,12 @@ class GPXTweakerWebInterfaceServer():
   '              <div id="pattern_dot" style="display:none;">\r\n '\
   '                ##DOTTEMPLATE##\r\n' \
   '              </div>\r\n' \
-  '              <div id="waypoints" style="overflow-y:auto;overflow-x:hidden;max-height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
+  '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;max-height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
   '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
   '                <form id="waypointsform" autocomplete="off">\r\n                  ##WAYPOINTS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
-  '              <div id="points" style="overflow-y:auto;overflow-x:hidden;max-height:88%;font-size:80%">\r\n' \
+  '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;max-height:88%;font-size:80%">\r\n' \
   '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
   '                <form id="pointsform" autocomplete="off">\r\n                  ##POINTS##\r\n' \
   '                </form>\r\n' \
@@ -6701,18 +6708,9 @@ class GPXTweakerWebInterfaceServer():
   '            let y = e.pageY - p.offsetTop;\r\n' \
   '            let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
   '            if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
-  '            let [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
-  '            point_insert("a", false);\r\n' \
-  '            document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
-  '            document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
-  '            document.getElementById(focused + "ele").value = "";\r\n' \
-  '            document.getElementById(focused + "time").value = "";\r\n' \
-  '            if (focused.substring(0, 3) != "way") {\r\n' \
-  '              document.getElementById(focused + "alt").value = "";\r\n' \
-  '            } else {\r\n' \
-  '              document.getElementById(focused + "name").value = "";\r\n' \
-  '            }\r\n' \
-  '            point_edit(false, false, false, true);\r\n' \
+  '            let coord = WebMercatortoWGS84(...wm);\r\n' \
+  '            point_insert("a", coord);\r\n' \
+  '            point_edit(false, false, false, false);\r\n' \
   '            save_old();\r\n' \
   '            hand = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            hand_m = false;\r\n' \
@@ -6751,6 +6749,8 @@ class GPXTweakerWebInterfaceServer():
   '            if (hand.id.indexOf("way") < 0) {\r\n' \
   '              segments_calc(document.getElementById(focused).parentNode.parentNode);\r\n' \
   '              if (e.ctrlKey) {build_path();}\r\n' \
+  '            } else {\r\n' \
+  '              wpt_calc();\r\n' \
   '            }\r\n' \
   '          } else if (hand.id == "gbarc") {\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
