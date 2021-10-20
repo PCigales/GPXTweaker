@@ -136,7 +136,7 @@ FR_STRINGS = {
     'jfilterpanel3': 'Plages calcul vitesse',
     'jspduration': '&nbsp;durée',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
-    'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le ' + 'déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -329,7 +329,7 @@ EN_STRINGS = {
     'jfilterpanel3': 'Ranges speed calcul',
     'jspduration': 'duration',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
-    'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
+    'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -3900,7 +3900,6 @@ class GPXTweakerWebInterfaceServer():
   '            dot_style(focused, elt.htmlFor == ex_foc);\r\n' \
   '          }\r\n' \
   '          if (focused.substring(0, 3) == "way") {\r\n' \
-  '            document.getElementById("waypoints").style.overflowY = "scroll";\r\n' \
   '            document.getElementById("points").style.height = "calc(100% - 10em)";\r\n' \
   '            document.getElementById("waypoints").style.maxHeight = "10em";\r\n' \
   '            document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
@@ -4308,6 +4307,10 @@ class GPXTweakerWebInterfaceServer():
   '        let pref = "";\r\n' \
   '        if (ex_foc.substring(0, 3) == "way" || ! ex_foc) {\r\n' \
   '          pref = document.getElementById("waypoints").getElementsByTagName("span").length.toString();\r\n' \
+  '          if (pref == "0") {\r\n' \
+  '            document.getElementById("waypoints").style.borderRight = "";\r\n' \
+  '            document.getElementById("waypoints").style.overflowY = "scroll";\r\n' \
+  '          }\r\n' \
   '          pref = "waypoint" + pref;\r\n' \
   '        } else {\r\n' \
   '          pref = document.getElementById("points").getElementsByTagName("span").length.toString();\r\n' \
@@ -6826,7 +6829,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (! dt) {return;}\r\n' \
   '            if (focused.indexOf("way") != dt.id.indexOf("way")) {return;}\r\n' \
   '            pt = document.getElementById(dt.id.replace("dot", "point"));\r\n' \
-  '          } while (pt.value == "error" || ! pt.checked || ! pt.parentNode.parentNode.firstElementChild.checked)\r\n' \
+  '          } while (pt.value == "error" || ! pt.checked || (focused.indexOf("way")>=0?false:!pt.parentNode.parentNode.firstElementChild.checked))\r\n' \
   '          pt = document.getElementById(dt.id.replace("dot", "point") + "desc");\r\n' \
   '          element_click(null, pt);\r\n' \
   '          scroll_to_dot(dt);\r\n' \
@@ -6907,7 +6910,10 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
-  '          if (! document.getElementById("waypoint0cont")) {document.getElementById("waypoints").style.overflowY = "auto";}\r\n' \
+  '          if (! document.getElementById("waypoint0cont")) {\r\n' \
+  '            document.getElementById("waypoints").style.overflowY = "auto";\r\n' \
+  '            document.getElementById("waypoints").style.borderRight = "solid rgb(34,37,42) 17px";\r\n' \
+  '          }\r\n' \
   '          document.getElementById("tset").focus();\r\n' \
   '          document.getElementById("tset").blur();\r\n' \
   '        }\r\n' \
