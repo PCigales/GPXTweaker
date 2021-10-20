@@ -3874,9 +3874,9 @@ class GPXTweakerWebInterfaceServer():
   '            dot_style(ex_foc, elt.htmlFor == ex_foc);\r\n' \
   '          }\r\n' \
   '          if (ex_foc.substring(0, 3) == "way") {\r\n' \
-  '            document.getElementById("points").style.maxHeight = "88%";\r\n' \
+  '            document.getElementById("points").style.height = "88%";\r\n' \
   '            document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
-  '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
+  '            document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '          }\r\n' \
   '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
   '            let track = document.getElementById(ex_foc.replace("segment", "track"));\r\n' \
@@ -3900,9 +3900,10 @@ class GPXTweakerWebInterfaceServer():
   '            dot_style(focused, elt.htmlFor == ex_foc);\r\n' \
   '          }\r\n' \
   '          if (focused.substring(0, 3) == "way") {\r\n' \
-  '            document.getElementById("points").style.maxHeight = "calc(100% - 10em)";\r\n' \
+  '            document.getElementById("waypoints").style.overflowY = "scroll";\r\n' \
+  '            document.getElementById("points").style.height = "calc(100% - 10em)";\r\n' \
   '            document.getElementById("waypoints").style.maxHeight = "10em";\r\n' \
-  '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
+  '            document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '          }\r\n' \
   '          if (focused.substring(0, 3) == "seg") {\r\n' \
   '            let track = document.getElementById(focused.replace("segment", "track"));\r\n' \
@@ -5764,7 +5765,6 @@ class GPXTweakerWebInterfaceServer():
   '          if (graph.style.display == "none") {\r\n' \
   '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '            graph.style.display = "block";\r\n' \
   '            gctx.lineWidth = 1;\r\n' \
   '            gctx.lineJoin = "round";\r\n' \
@@ -5773,7 +5773,6 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '            graph.style.display = "none";\r\n' \
   '            document.getElementById("gbar").style.display = "none";\r\n' \
   '            document.getElementById("gbarc").style.display = "none";\r\n' \
@@ -6610,12 +6609,12 @@ class GPXTweakerWebInterfaceServer():
   '              <div id="pattern_dot" style="display:none;">\r\n '\
   '                ##DOTTEMPLATE##\r\n' \
   '              </div>\r\n' \
-  '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;max-height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
+  '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
   '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
   '                <form id="waypointsform" autocomplete="off">\r\n                  ##WAYPOINTS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
-  '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;max-height:88%;font-size:80%">\r\n' \
+  '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;height:88%;font-size:80%">\r\n' \
   '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
   '                <form id="pointsform" autocomplete="off">\r\n                  ##POINTS##\r\n' \
   '                </form>\r\n' \
@@ -6899,10 +6898,22 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
   '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
   '        }\r\n' \
+  '        point_desc();\r\n' \
+  '        window.onresize = (e) => {document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";rescale();refresh_graph()};\r\n' \
+  '        document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
+  '        document.getElementById("waypoints").style.height = "";\r\n' \
+  '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
+  '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
+  '          if (! document.getElementById("waypoint0cont")) {document.getElementById("waypoints").style.overflowY = "auto";}\r\n' \
   '          document.getElementById("tset").focus();\r\n' \
   '          document.getElementById("tset").blur();\r\n' \
   '        }\r\n' \
+  '        segments_calc();\r\n' \
+  '        wpt_calc();\r\n' \
+  '        window.onbeforeunload = page_unload;\r\n' \
   '      }\r\n' \
   '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
   '        window.alert("{#jsession#}");\r\n' \
@@ -6911,16 +6922,7 @@ class GPXTweakerWebInterfaceServer():
   '        window.close();\r\n' \
   '        throw "{#jsession#}";\r\n' \
   '      }\r\n' \
-  '      window.onresize = (e) => {document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";rescale();refresh_graph()};\r\n' \
   '      page_load();\r\n' \
-  '      point_desc();\r\n' \
-  '      document.getElementById("points").style.maxHeight = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '      document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '      document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '      document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '      segments_calc();\r\n' \
-  '      wpt_calc();\r\n' \
-  '      window.onbeforeunload = page_unload;\r\n' \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
