@@ -778,7 +778,7 @@ class TilesCache():
       nonlocal ptile
       nonlocal e
       with self.GCondition:
-        if infos != {**self.Infos, 'row': row, 'col': col}:
+        if infos != {**(self.Infos or {}), 'row': row, 'col': col}:
           ptile[0] = None
           e.set()
           self.log(2, 'cancel', row, col)
@@ -796,12 +796,12 @@ class TilesCache():
               break
           if not tgen:
             self.GCondition.wait()
-        if infos == {**self.Infos, 'row': row, 'col': col}:
+        if infos == {**(self.Infos or {}), 'row': row, 'col': col}:
           tgen[0] = False
-      if infos == {**self.Infos, 'row': row, 'col': col} and not tgen[0]:
+      if infos == {**(self.Infos or {}), 'row': row, 'col': col} and not tgen[0]:
         try:
           inf, tile = tgen[1](None, None, row, col).values()
-          if inf != {**self.Infos, 'row': row, 'col': col}:
+          if inf != {**(self.Infos or {}), 'row': row, 'col': col}:
             tgen[1](close_connection=True)
             tile = None
             self.log(2, 'cancel', row, col)
@@ -2642,6 +2642,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   self.server.Interface.log(2, 'rnfound', req.method, req.path)
                 except:
                   self.server.Interface.log(2, 'rerror', req.method, req.path)
+                try:
+                  self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, self.server.Interface.Map.TilesInfos['matrix']), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], self.server.Interface.Map.TilesInfos['matrix'], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2])
+                except:
+                  pass
               else:
                 try:
                   resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img'))}).encode('utf-8')
