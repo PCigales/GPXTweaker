@@ -8,7 +8,7 @@ Description in english in the second part of this document.
 
 GPXTweaker est une application, écrite en Python (≥ 3.8) et en Javascript, de visualisation, en 2D et en 3D, et d'édition, au travers d'une interface web, de trace GPX sur fond cartographique. Aucune dépendance n'est requise.
 
-La sauvegarde de la trace mise à jour s'effectue dans un fichier distinct (par ajout du suffixe " - updated"), dans le même répertoire. Les données inchangées sont, autant que faire se peut, conservées en l'état, sans altération, pour assurer la préservation des champs constituant des extensions par rapport aux standards.
+Lors de la sauvegarde de la trace mise à jour, le fichier inital est renommé, par ajout du suffixe " - original" ou, les fois suivantes, " - backup", dans le même répertoire. Les données inchangées sont, autant que faire se peut, conservées en l'état, sans altération, pour assurer la préservation des champs constituant des extensions par rapport aux standards.
 
 L'utilitaire est en phase de développement et de test, et comporte probablement encore de multiples erreurs de programmation. Il convient de ce fait de faire preuve de prudence lors de son utilisation en conditions réelles en s'assurant de l'absence de perte ou de corruption de données au niveau de la trace modifiée telle qu'enregistrée par rapport à la version d'origine avant de supprimer le fichier initial.
 De nouvelles fonctionnalités seront, en outre, progressivement incorporées.  L'outil est, à ce stade, compatible avec MyTrails, quant à la prise en compte des données d'altitude issues du capteur de pression barométrique.
@@ -80,7 +80,7 @@ Pour associer les fichers dont l'extension est ".gpx" avec GPXTweaker:
 
 GPXTweaker is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, GPX tracks on a cartographic background. No dependency is required.
 
-The backup of the updated track is done in a distinct file (by addition of the suffix " - updated"), in the same folder. Unchanged datas are, as much as possible, kept as they are, without alteration, in order to ensure the conservation of fields constituting extensions relatively to standards.
+When saving the updated track, the inital file is renamed, by adding the suffix "- original" or, the following times, "- backup", in the same folder. Unchanged datas are, as much as possible, kept as they are, without alteration, in order to ensure the conservation of fields constituting extensions relatively to standards.
 
 The utility is in development and test phase, and probably still includes many bugs. It is therefore necessary to be careful when using it in real conditions by making sure that no data loss or corruption occurred in the modified track as saved compared to the original version before deleting the initial file.
 New features will, besides, preogressively be inplemented. The tool is, currently, compatible with MyTrails in taking into account altitude datas coming from the barometric pressure sensor.
