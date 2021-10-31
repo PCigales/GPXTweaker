@@ -12,7 +12,7 @@ import socketserver
 import email.utils
 import time
 import threading
-import os.path
+import os, os.path
 from pathlib import Path
 import json
 import base64 
@@ -219,6 +219,7 @@ FR_STRINGS = {
     'size': '"height, width" (hauteur et largeur, avec les "") de la carte à charger / "maxheight, maxwidth" (hauteur et largeur maximales, avec les "") de la carte à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / "2000, 4000" par défaut]',
     'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
     'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
+    'gpx': 'seuls les fichiers .gpx sont pris en charge',
     'open': 'Ouvrir l\'url %s',
     'keyboard': 'Presser "S" pour quitter',
    }
@@ -412,6 +413,7 @@ EN_STRINGS = {
     'size': '"height, width" (height and width, with the "") of the map to be loaded / "maxheight, maxwidth" (maximum height and width, with the "") of the map to be retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / "2000, 4000" by default]',
     'noopen': 'no automatic opening in the default browser',
     'verbosity': 'verbosity level from 0 to 2 [0 by default]',
+    'gpx': 'only .gpx files are supported',
     'open': 'Open the url %s',
     'keyboard': 'Press "S" to exit',
    }
@@ -2926,10 +2928,25 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.Track.BuildWebMercator()
               if not nosave:
                 if req.header('If-Match') == self.server.Interface.PSessionId:
-                  uri_suf = ' - updated.gpx'
+                  uri_suf = '.gpx'
                 else:
-                  uri_suf = ' - updated_old_' + req.header('If-Match') + '.gpx'
-                if not self.server.Interface.Track.SaveGPX(self.server.Interface.Uri.rsplit('.', 1)[0] + uri_suf):
+                  uri_suf = ' - ' + req.header('If-Match') + '.gpx'
+                uri_pre = self.server.Interface.Uri.rsplit('.', 1)[0]
+                try:
+                  if not os.path.exists (uri_pre + ' - original.gpx'):
+                    os.rename(self.server.Interface.Uri, uri_pre + ' - original.gpx')
+                  else:
+                    if os.path.exists (uri_pre + ' - backup.gpx'):
+                      os.remove(uri_pre + ' - backup.gpx')
+                    os.rename(self.server.Interface.Uri, uri_pre + ' - backup.gpx')
+                except:
+                  try:
+                    self.request.sendall(resp_err.encode('ISO-8859-1'))
+                    self.server.Interface.log(2, 'rfailed', req.method, req.path)
+                  except:
+                    self.server.Interface.log(2, 'rerror', req.method, req.path)
+                  continue
+                if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf):
                   try:
                     self.request.sendall(resp_err.encode('ISO-8859-1'))
                     self.server.Interface.log(2, 'rfailed', req.method, req.path)
@@ -8633,6 +8650,8 @@ if __name__ == '__main__':
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
+  if args.uri.rpartition('.')[2] != 'gpx':
+    parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
   try:
     GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
