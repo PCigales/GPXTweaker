@@ -2642,10 +2642,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   self.server.Interface.log(2, 'rnfound', req.method, req.path)
                 except:
                   self.server.Interface.log(2, 'rerror', req.method, req.path)
-                try:
-                  self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, self.server.Interface.Map.TilesInfos['matrix']), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], self.server.Interface.Map.TilesInfos['matrix'], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2])
-                except:
-                  pass
               else:
                 try:
                   resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img'))}).encode('utf-8')
@@ -3542,6 +3538,13 @@ class GPXTweakerWebInterfaceServer():
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
+  '          if (nset == null) {\r\n' \
+  '            window.stop();\r\n' \
+  '            tlevel = nlevel;\r\n' \
+  '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
+  '            cleft = null;\r\n' \
+  '            rescale();\r\n' \
+  '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        window.stop();\r\n' \
