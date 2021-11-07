@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -78,16 +78,19 @@ FR_STRINGS = {
     'cerror': 'échec du chargement de la configuration (%s)',
     'cloaded': 'configuration chargée',
     'build': 'génération de la page d\'interface',
+    'buildexp': 'génération de la page d\'interface de l\'explorateur',
     'berror': 'échec de la génération de la page d\'interface',
     'berror1': 'échec de la génération de la page d\'interface (conversion en WebMercator)',
     'berror2': 'échec de la génération de la page d\'interface (trace vide sans délimitation du cadre)',
     'berror3': 'échec de la génération de la page d\'interface (carte "%s" pas définie)',
     'berror4': 'échec de la génération de la page d\'interface (trace débordant de la vue)',
     'berror5': 'échec de la génération de la page d\'interface (paramètres de jeux ou de cache de tuiles)',
+    'berror6': 'trace sautée car débordant de la vue',
     'elevation': 'fournisseur d\'élévations configuré (%s)',
     'eerror': 'échec de la configuration du fournisseur d\'élévations (%s)',
     'itinerary': 'fournisseur d\'itinéraires configuré (%s)',
-    'built': 'page d\'interface générée', 
+    'built': 'page d\'interface générée',
+    'builtexp': 'page d\'interface de l\'explorateur générée',
     'request': 'réception de la requête %s %s',
     'response': 'réponse à la requête %s %s envoyée',
     'rerror': 'échec de la réponse à la requête %s %s',
@@ -125,9 +128,14 @@ FR_STRINGS = {
     'jswitchpoints': 'afficher / masquer les points et points de cheminement',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D',
+    'jedit': 'éditer la trace',
+    'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
+    'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
+    'jzoomall': 'recadrer sur toutes les traces',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
+    'jtsetonly': 'sélectionner le jeu de tuiles',
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
@@ -137,6 +145,7 @@ FR_STRINGS = {
     'jspduration': '&nbsp;durée',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -146,6 +155,12 @@ FR_STRINGS = {
     'jele': 'Elé',
     'jalt': 'Alt',
     'jsegment': 'Segment',
+    'jtracks': 'Traces',
+    'jfile': 'Fich',
+    'jfolder': 'Répe',
+    'jperiod': 'Péri',
+    'jcontent': 'Cont',
+    'jtrackcontent': '%s seg(s) | %s pt(s) | %s pt(s) de chem',
     'jgraphdistance': 'distance',
     'jgraphelevation': 'élévation',
     'jgraphaltitude': 'altitude',
@@ -272,16 +287,19 @@ EN_STRINGS = {
     'cerror': 'failure of loading of configuration (%s)',
     'cloaded': 'configuration loaded',
     'build': 'generation of the interface page',
+    'buildexp': 'generation of the interface page of the explorer',
     'berror': 'failure of the generation of the interface page',
     'berror1': 'failure of the generation of the interface page (conversion into WebMercator)',
     'berror2': 'failure of the generation of the interface page (empty track without frame boundaries)',
     'berror3': 'failure of the generation of the interface page (map "%s" not defined)',
-    'berror4': 'failure of the generation of the interface page (track outside view)',
+    'berror4': 'failure of the generation of the interface page (track overflowing with the view)',
     'berror5': 'failure of the generation of the interface page (settings of tiles sets or cache)',
+    'berror6': 'track skipped because overflowing with the view',
     'elevation': 'elevations provider configured (%s)',
     'eerror': 'failure of the configuration of the elevations provider (%s)',
     'itinerary': 'itineraries provider configured (%s)',
     'built': 'interface page generated',
+    'builtexp': 'interface page of the explorer generated',
     'request': 'receipt of the request %s %s',
     'response': 'response to the request %s %s sent',
     'rerror': 'failure of the response to the request %s %s',
@@ -319,9 +337,14 @@ EN_STRINGS = {
     'jswitchpoints': 'show / hide the points and waypoints',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer',
+    'jedit': 'edit the track',
+    'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
+    'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
+    'jzoomall': 'reframe on all tracks',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
     'jiset': 'select the itineraries provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
+    'jtsetonly': 'select the set of tiles',
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
@@ -331,6 +354,7 @@ EN_STRINGS = {
     'jspduration': 'duration',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
+    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -340,6 +364,12 @@ EN_STRINGS = {
     'jele': 'Ele',
     'jalt': 'Alt',
     'jsegment': 'Segment',
+    'jtracks': 'Tracks',
+    'jfile': 'File',
+    'jfolder': 'Fold',
+    'jperiod': 'Peri',
+    'jcontent': 'Cont',
+    'jtrackcontent': '%s seg(s) | %s pt(s) | %s waypt(s)',
     'jgraphdistance': 'distance',
     'jgraphelevation': 'elevation',
     'jgraphaltitude': 'altitude',
@@ -2283,6 +2313,7 @@ class WGS84Track(WGS84WebMercator):
     self.OTrack = None
     self.Track = None
     self.Name = None
+    self.Color = None
     self.Waypts = None
     self.Trkpts = None
     self.UWaypts = None
@@ -2319,9 +2350,22 @@ class WGS84Track(WGS84WebMercator):
       r.appendChild(n)
       trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
     try:
-      self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0])
+      self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0]).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
     except:
       self.Name = ''
+    self.Color = ''
+    try:
+      c = trk.getElementsByTagName('mytrails:color')
+      if c:
+        self.Color = '#' + hex(int(_XMLGetNodeText(c[0])) % (1 << 24))[2:][-6:].rjust(6, "0").upper()
+      else:
+        c = trk.getElementsByTagNameNS('*', 'line')
+        if c:
+          c = c[0].getElementsByTagNameNS('*', 'color')
+          if c:
+            self.Color = '#' + hex(int(_XMLGetNodeText(c[0]), 16))[2:][-6:].rjust(6, "0").upper()
+    except:
+      pass
     self.UTrkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
     if self.UTrkpts == []:
       self.UTrkpts = [[]]
@@ -2413,7 +2457,7 @@ class WGS84Track(WGS84WebMercator):
       node.removeAttribute(name)
     nl = node.getElementsByTagNameNS('*', name)
     no = None
-    if len(nl) > 0:
+    if nl:
       no = nl[0]
     for n in nl[1:] :
       node.removeChild(n)
@@ -2457,6 +2501,51 @@ name)
 
   def UpdateGPX(self, msg):
     self.Track = self.OTrack.cloneNode(True)
+    if not '\r\n=\r\n' in msg:
+      try:
+        msgp = msg.split('=', 1)
+        r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+        trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
+        if msgp[0][-5:] == 'color':
+          if not r.hasAttribute('xmlns:mytrails'):
+            r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
+          ext = trk.getElementsByTagNameNS('*', 'extensions')
+          if not ext:
+            e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
+            e_ = None
+            trk.appendChild(e)
+          else:
+            e = ext[0]
+            e_ = None
+            for ex in ext:
+              if ex.getElementsByTagName('mytrails:color'):
+                e = ex
+                break
+            for ex in ext:
+              if ex.getElementsByTagNameNS('*', 'line'):
+                if ex.getElementsByTagNameNS('*', 'line')[0].getElementsByTagNameNS('*', 'color'):
+                  e_ = ex
+                  break
+          a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:color')
+          t = self.Track.createTextNode(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
+          a.appendChild(t)
+          self._XMLUpdateChildNodes(e, 'color', [a])
+          if e_:
+            self._XMLUpdateNodeText(*([e_.getElementsByTagNameNS('*', 'line')[0]] * 2), 'color', msgp[1].lstrip('#'))
+        elif msgp[0][-4:] == 'name':
+          self._XMLUpdateNodeText(trk, trk, 'name', msgp[1], def_first=True, cdata=True)
+        else:
+          raise
+        try:
+          self.OTrack.unlink()
+        except:
+          pass
+        self.OTrack = self.Track
+      except:
+        self.Track.unlink()
+        self.Track = self.OTrack
+        return False
+      return True
     try:
       msgp = msg.split('=\r\n')
       nmsg = msgp[0].splitlines()
@@ -2502,7 +2591,7 @@ name)
               if not r.hasAttribute('xmlns:mytrails'):
                 r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
               ext = np.getElementsByTagNameNS('*', 'extensions')
-              if len(ext) == 0:
+              if not ext:
                 e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
                 np.appendChild(e)
               else:
@@ -2596,6 +2685,13 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           'Server: GPXTweaker\r\n' \
           'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
           '\r\n'
+          resp_307 = 'HTTP/1.1 307 Temporary Redirect\r\n' \
+          'Content-Length: 0\r\n' \
+          'Location: GPXTweaker.html\r\n' \
+          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
+          'Server: GPXTweaker\r\n' \
+          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+          '\r\n'
           resp_err = 'HTTP/1.1 404 File not found\r\n' \
           'Content-Length: 0\r\n' \
           'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
@@ -2609,7 +2705,60 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
           '\r\n'
           resp_body = b''
-          if req.path.lower()[:13] == '/tiles/switch':
+          if req.path.lower() == '/GPXTweaker.html'.lower():
+            if not self.server.Interface.HTML:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            if self.server.Interface.SessionId == None:
+              self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
+              resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            else:
+              resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            try:
+              if req.method == 'GET':
+                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              else:
+                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower() == '/GPXExplorer.html'.lower():
+            if self.server.Interface.HTMLExp == None:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            if self.server.Interface.HTMLExp == '':
+              self.server.Interface.ExploreMode()
+            self.server.Interface.HTML = None
+            if not self.server.Interface.HTMLExp:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            self.server.Interface.PSessionId = None
+            if self.server.Interface.SessionId == None:
+              self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
+              resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            else:
+              resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            try:
+              if req.method == 'GET':
+                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              else:
+                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:13] == '/tiles/switch':
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               try:
                 self.request.sendall(resp_bad.encode('ISO-8859-1'))
@@ -2638,6 +2787,41 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
             else:
+              l1 = 0
+              if 'auto' in q:
+                tl = self.server.Interface.TilesSets[self.server.Interface.TilesSet][3]
+                l1 = tl[0]
+                q['matrix'] = [str(tl[l1][0])]
+                tw = self.server.Interface.Maxx - self.server.Interface.Minx
+                th = self.server.Interface.Maxy - self.server.Interface.Miny
+                try:
+                  vw, vh = map(float, q['auto'][0].split('|'))
+                  l1 = 1
+                  l2 = 1
+                  l3 = len(tl)
+                  m = None
+                  while True:
+                    if tl[l2][0] != m:
+                      if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
+                        l2 += 1
+                        if l2 >= l3:
+                          l3 = (l1 + l3) // 2
+                          l2 = l3 - 1
+                          if l2 <= l1:
+                            break
+                        continue
+                      m = tl[l2][0]
+                    s = self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    if tw < vw * s and th < vh * s:
+                      l1 = l2
+                    else:
+                      l3 = l2
+                    l2 = (l1 + l3) // 2
+                    if l2 == l1:
+                      break
+                  q['matrix'] = [str(tl[l1][0])]
+                except:
+                  pass
               if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
                 try:
                   self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -2646,7 +2830,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   self.server.Interface.log(2, 'rerror', req.method, req.path)
               else:
                 try:
-                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img'))}).encode('utf-8')
+                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img')), 'level': l1}).encode('utf-8')
                   if req.method == 'GET':
                     self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
                   else:
@@ -2699,20 +2883,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
-          elif req.path.lower() == '/GPXTweaker.html'.lower():
-            if self.server.Interface.SessionId == None:
-              self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
-              resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
-            else:
-              resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
-            try:
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               try:
@@ -2725,7 +2895,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             try:
               self.server.Interface.ElevationProviderSel = int(q['eset'][0])
               if 'layer' in self.server.Interface.ElevationsProviders[int(q['eset'][0])][1]:
-                self.server.Interface.EMode = "tiles"
+                self.server.Interface.EMode = 'tiles'
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], matrix=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1].get('matrix'), **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
               else:
@@ -2769,23 +2939,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
-          elif req.path.lower() == '/3D/data'.lower():
-            if self.server.Interface.HTML3D:
-              try:
-                if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(self.server.Interface.HTML3DData))).encode('ISO-8859-1') + self.server.Interface.HTML3DData)
-                else:
-                  self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(self.server.Interface.HTML3DData))).encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-            else:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-          elif req.path.lower() == '/3D/viewer.html'.lower():
+          elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
+            if not self.server.Interface.HTML:
+              self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
+              self.server.Interface.Track.BuildWebMercator()
             if self.server.Interface.Build3DHTML():
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               try:
@@ -2802,6 +2959,61 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+            self.server.Interface.Uri, self.server.Interface.Track = None, None
+          elif req.path.lower() == '/3D/data'.lower():
+            if self.server.Interface.HTML3D:
+              try:
+                if req.method == 'GET':
+                  self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(self.server.Interface.HTML3DData))).encode('ISO-8859-1') + self.server.Interface.HTML3DData)
+                else:
+                  self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(self.server.Interface.HTML3DData))).encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'response', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+            else:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:5] == '/edit':
+            try:
+              self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
+              self.server.Interface.HTML = ''
+              self.server.Interface.EditMode()
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            self.server.Interface.HTMLExp = ''
+            self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
+            try:
+              self.request.sendall(resp_307.encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower() == '/GPXExplorer/data'.lower():
+            if not self.server.Interface.HTMLExp:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            try:
+              resp_body = b''
+              f = lambda e: '' if e == None else urllib.parse.quote(str(e))
+              resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('&'.join(map(f, p[1])) for p in seg) for seg in track.Pts) for track in map(lambda t: t[1], self.server.Interface.Tracks)).encode('utf-8')
+              if req.method == 'GET':
+                self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              else:
+                self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
           else:
             try:
               self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -2911,10 +3123,34 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             'Server: GPXTweaker\r\n' \
             'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
             '\r\n'
+            if not self.server.Interface.HTML and req.body.split('=')[0][-4:] == 'file':
+              try:
+                tr_ind = int(req.body.split('=')[0][5:-4].rstrip('c'))
+                track = self.server.Interface.Tracks[tr_ind]
+                nuri = os.path.join(track[0].rsplit('\\', 1)[0] + '\\', req.body.split('=', 1)[1])
+                if os.path.exists (nuri):
+                  raise
+                os.rename(track[0], nuri)
+                track[0] = nuri
+                pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sfile"' % str(tr_ind))
+                self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+              except:
+                try:
+                  self.request.sendall(resp_err.encode('ISO-8859-1'))
+                  self.server.Interface.log(2, 'rfailed', req.method, req.path)
+                except:
+                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                continue
+              try:
+                self.request.sendall(resp.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'response', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
             nosave = False
-            if '?' in req.path:
+            if self.server.Interface.HTML and '?' in req.path:
               nosave = req.path.split('?')[1].lower() == 'save=no'
-            if req.header('If-Match') == self.server.Interface.SessionId:
+            if self.server.Interface.HTML and req.header('If-Match') == self.server.Interface.SessionId:
               self.server.Interface.PSessionId = self.server.Interface.SessionId
               self.server.Interface.Track.Waypts = self.server.Interface.Track.UWaypts
               self.server.Interface.Track.Trkpts = self.server.Interface.Track.UTrkpts
@@ -2924,61 +3160,64 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 except:
                   pass
                 self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
-            if self.server.Interface.Track.UpdateGPX(req.body):
-              self.server.Interface.Track.BuildWebMercator()
-              if not nosave:
-                if req.header('If-Match') == self.server.Interface.PSessionId:
-                  uri_suf = '.gpx'
+            try:
+              if not self.server.Interface.HTML:
+                self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.body.split('=')[0][5:-4].rstrip('c'))]
+              if self.server.Interface.Track.UpdateGPX(req.body):
+                if nosave:
+                  self.server.Interface.Track.BuildWebMercator()
                 else:
-                  uri_suf = ' - ' + req.header('If-Match') + '.gpx'
-                uri_pre = self.server.Interface.Uri.rsplit('.', 1)[0]
-                try:
-                  if not os.path.exists (uri_pre + ' - original.gpx'):
+                  if req.header('If-Match') in (self.server.Interface.PSessionId, self.server.Interface.SessionId):
+                    uri_suf = '.gpx'
+                  else:
+                    uri_suf = ' - ' + req.header('If-Match') + '.gpx'
+                  uri_pre = self.server.Interface.Uri.rsplit('.', 1)[0]
+                  if not os.path.exists(uri_pre + ' - original.gpx'):
                     os.rename(self.server.Interface.Uri, uri_pre + ' - original.gpx')
                   else:
-                    if os.path.exists (uri_pre + ' - backup.gpx'):
+                    if os.path.exists(uri_pre + ' - backup.gpx'):
                       os.remove(uri_pre + ' - backup.gpx')
                     os.rename(self.server.Interface.Uri, uri_pre + ' - backup.gpx')
-                except:
-                  try:
-                    self.request.sendall(resp_err.encode('ISO-8859-1'))
-                    self.server.Interface.log(2, 'rfailed', req.method, req.path)
-                  except:
-                    self.server.Interface.log(2, 'rerror', req.method, req.path)
-                  continue
-                if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf):
-                  try:
-                    self.request.sendall(resp_err.encode('ISO-8859-1'))
-                    self.server.Interface.log(2, 'rfailed', req.method, req.path)
-                  except:
-                    self.server.Interface.log(2, 'rerror', req.method, req.path)
-                  continue
-                try:
-                  if next((p for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg), None) != None:
-                    minlat = min(p[1][0] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
-                    maxlat = max(p[1][0] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
-                    minlon = min(p[1][1] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
-                    maxlon = max(p[1][1] for seg in (*self.server.Interface.Track.Pts, self.server.Interface.Track.Wpts) for p in seg)
-                  if self.server.Interface.Mode != "map":
-                    self.server.Interface.Minx, self.server.Interface.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.server.Interface.VMinLat, minlat - 0.008), max(self.server.Interface.VMinLon, minlon - 0.011))
-                    self.server.Interface.Maxx, self.server.Interface.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.server.Interface.VMaxLat, maxlat + 0.008), min(self.server.Interface.VMaxLon, maxlon + 0.011))
-                  if not self.server.Interface.BuildHTML():
+                  if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf):
                     raise
-                except:
-                  pass
-                if self.server.Interface.SessionId == self.server.Interface.PSessionId:
-                  self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
-              try:
-                self.request.sendall(resp.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-            else:
+                  if self.server.Interface.HTML:
+                    try:
+                      self.server.Interface.EditMode()
+                    except:
+                      pass
+                    if self.server.Interface.SessionId == self.server.Interface.PSessionId:
+                      self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
+                if not self.server.Interface.HTML:
+                  tr_ind = int(req.body.split('=')[0][5:-4].rstrip('c'))
+                  if req.body.split('=')[0][-4:] == 'name':
+                    pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sname"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    pos = self.server.Interface.HTMLExp.find('<label for="track%svisible"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('>', pos) + 1] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('<', pos + 1):]
+                  elif req.body.split('=')[0][-5:] == 'color':
+                    pos = self.server.Interface.HTMLExp.find('<input type="color" id="track%scolor"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    pos = self.server.Interface.HTMLExp.find('<svg id="track%s"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" stroke-width', pos + 1):self.server.Interface.HTMLExp.find('fill="', pos) + 6] + html.escape(req.body.split('=', 1)[1]) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" stroke-linecap', pos + 1):]
+                    pos = self.server.Interface.HTMLExp.find('<svg id="waydots%s"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" stroke-width', pos + 1):self.server.Interface.HTMLExp.find('fill="', pos) + 6] + html.escape(req.body.split('=', 1)[1]) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos + 1):]
+              else:
+                raise
+            except:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'rfailed', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            finally:
+              if not self.server.Interface.HTML:
+                self.server.Interface.Uri, self.server.Interface.Track = None, None
+            try:
+              self.request.sendall(resp.encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
           else:
             try:
               self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -3018,15 +3257,19 @@ class GPXTweakerWebInterfaceServer():
   '        background-color:rgb(30,30,35);\r\n' \
   '        color:inherit;\r\n' \
   '      }\r\n' \
-  '      input[type="text"] {\r\n' \
+  '      input[type=text] {\r\n' \
   '        border-width:0.5px;\r\n' \
   '      }\r\n' \
-  '      input[type="text"]:focus {\r\n' \
+  '      input[type=text]:focus {\r\n' \
   '        color:rgb(200,250,240);\r\n' \
   '      }\r\n' \
   '      input[id=name_track] {\r\n' \
   '        width:calc(98vw - 60em);\r\n' \
   '        font-size:70%;\r\n' \
+  '      }\r\n' \
+  '      form[id*=point] {\r\n' \
+  '        overflow-x:hidden;\r\n' \
+  '        margin-right: 4px;\r\n' \
   '      }\r\n' \
   '      input[type=checkbox] {\r\n' \
   '        appearance:none;\r\n' \
@@ -3066,17 +3309,39 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      input[id$=lat], input[id$=lon], input[id$=ele], input[id$=alt], input[id$=time], input[id$=name] {\r\n' \
   '        height:1.35em;\r\n' \
-  '        width:70%;\r\n' \
+  '        width:75%;\r\n' \
   '        font-size:100%;\r\n' \
   '      }\r\n' \
   '      br+span {\r\n' \
   '        display:none;\r\n' \
   '      }\r\n' \
-  '      path, svg[id*=dot] {\r\n' \
-  '        cursor:pointer;\r\n' \
-  '      }\r\n' \
-  '      svg[id^=track], svg[id*=dot] {\r\n' \
+  '      svg[id*=dot] {\r\n' \
   '        position:absolute;\r\n' \
+  '        cursor:pointer;\r\n' \
+  '        stroke-width:1.5;\r\n' \
+  '        stroke:gray;\r\n' \
+  '        fill:none;\r\n' \
+  '      }\r\n' \
+  '      path {\r\n' \
+  '        pointer-events:stroke;\r\n' \
+  '        cursor:pointer;\r\n' \
+  '        fill:none;\r\n' \
+  '        vector-effect:non-scaling-stroke;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=track] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        pointer-events:none;\r\n' \
+  '        stroke-width:1.5;\r\n' \
+  '        stroke-linecap:round;\r\n' \
+  '        stroke-linejoin:round;\r\n' \
+  '        stroke:red;\r\n' \
+  '        fill:red;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=track] text {\r\n' \
+  '        pointer-events:none;\r\n' \
+  '        font-size:calc(24px * var(--scale));\r\n' \
+  '        word-spacing:var(--wsp);\r\n' \
+  '        stroke:none;\r\n' \
   '      }\r\n' \
   '      button {\r\n' \
   '        border:none;\r\n' \
@@ -3939,6 +4204,11 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (scroll) {\r\n' \
   '            elt.scrollIntoView({block:"nearest"});\r\n' \
   '            elt_foc.scrollIntoView({block:"nearest"});\r\n' \
+  '            let par_c = true;\r\n' \
+  '            if (focused.substring(0, 3) != "way") {par_c = elt.parentNode.parentNode.firstElementChild.checked;}\r\n' \
+  '            if (((! document.getElementById(focused).checked || ! par_c)) && document.getElementById(focused).value != "error") {\r\n' \
+  '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        graph_point();\r\n' \
@@ -4579,8 +4849,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            if (fpan == 0 || (gpucomp >= 1 && fpan != 1)) {\r\n' \
   '              let t = Date.parse(p_c[13].value);\r\n' \
-  '              lat = p_c[1].value;\r\n' \
-  '              lon = p_c[4].value;\r\n' \
+  '              lat = parseFloat(p_c[1].value);\r\n' \
+  '              lon = parseFloat(p_c[4].value);\r\n' \
   '              if (isNaN(t)) {\r\n' \
   '                stat[0] = t_s==null?0:stat_p[0];\r\n' \
   '              } else {\r\n' \
@@ -4830,6 +5100,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let dur_c = "--h--mn--s";\r\n' \
   '        if (dur != null) {\r\n' \
+  '          dur = Math.round(dur);\r\n' \
   '          let dur_s = dur % 60;\r\n' \
   '          let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '          let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
@@ -6051,7 +6322,7 @@ class GPXTweakerWebInterfaceServer():
   '            gbarc.style.display = "";\r\n' \
   '            let segs = document.getElementById("pointsform").children;\r\n' \
   '            if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
-  '              let dur = stats[segf_ind][point_stat[foc_ind]][0];\r\n' \
+  '              let dur = Math.round(stats[segf_ind][point_stat[foc_ind]][0]);\r\n' \
   '              let dur_s = dur % 60;\r\n' \
   '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
@@ -6487,6 +6758,16 @@ class GPXTweakerWebInterfaceServer():
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrip.send();\r\n' \
   '      }\r\n' \
+  '      function switch_fpanel(pa) {\r\n' \
+  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
+  '        for (let p=1; p<=3; p++) {\r\n' \
+  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
+  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
+  '          } else {\r\n' \
+  '            fp[p].style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function load_cb(t) {\r\n' \
   '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
   '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
@@ -6506,16 +6787,6 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("save").disabled = false;\r\n' \
   '        }\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
-  '      }\r\n' \
-  '      function switch_fpanel(pa) {\r\n' \
-  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
-  '        for (let p=1; p<=3; p++) {\r\n' \
-  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
-  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
-  '          } else {\r\n' \
-  '            fp[p].style.display = "none";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
   '      }\r\n' \
   '      function track_save(o3d=false) {\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "10%";\r\n' \
@@ -6683,7 +6954,7 @@ class GPXTweakerWebInterfaceServer():
   '      </div>\r\n' \
   '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event, this)">\r\n' \
   '      </canvas>\r\n' \
-  '       <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '      </svg> \r\n' \
   '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;" pointer-events="none">\r\n' \
@@ -6880,6 +7151,14 @@ class GPXTweakerWebInterfaceServer():
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
   '      function page_load() {\r\n' \
+  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
+  '          if (! document.getElementById("waypoint0cont")) {\r\n' \
+  '            document.getElementById("waypoints").style.overflowY = "auto";\r\n' \
+  '            document.getElementById("waypoints").style.borderRight = "solid rgb(34,37,42) 17px";\r\n' \
+  '          }\r\n' \
+  '          document.getElementById("tset").focus();\r\n' \
+  '          document.getElementById("tset").blur();\r\n' \
+  '        }\r\n' \
   '        let prev_state = sessionStorage.getItem("state");\r\n' \
   '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
   '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
@@ -6904,11 +7183,9 @@ class GPXTweakerWebInterfaceServer():
   '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
   '          if (prev_state[6] != "0") {\r\n' \
   '            eset = parseInt(prev_state[6]);\r\n' \
-  '            document.getElementById("eset").selectedIndex = eset;\r\n' \
   '          }\r\n' \
   '          if (prev_state[7] != "0") {\r\n' \
   '            iset = parseInt(prev_state[7]);\r\n' \
-  '            document.getElementById("iset").selectedIndex = iset;\r\n' \
   '          }\r\n' \
   '          document.getElementById("egstren").innerHTML = prev_state[8];\r\n' \
   '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
@@ -6933,14 +7210,6 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
-  '          if (! document.getElementById("waypoint0cont")) {\r\n' \
-  '            document.getElementById("waypoints").style.overflowY = "auto";\r\n' \
-  '            document.getElementById("waypoints").style.borderRight = "solid rgb(34,37,42) 17px";\r\n' \
-  '          }\r\n' \
-  '          document.getElementById("tset").focus();\r\n' \
-  '          document.getElementById("tset").blur();\r\n' \
-  '        }\r\n' \
   '        segments_calc();\r\n' \
   '        wpt_calc();\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
@@ -6978,7 +7247,7 @@ class GPXTweakerWebInterfaceServer():
   '      var htopx = ##HTOPX##;\r\n' \
   '      var htopy = ##HTOPY##;'
   HTML_WAYPOINT_TEMPLATE = \
-  '<div id=waypoint%scont>\r\n' \
+  '<div id="waypoint%scont">\r\n' \
   '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onchange="point_checkbox(this)">\r\n' \
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
@@ -7014,25 +7283,25 @@ class GPXTweakerWebInterfaceServer():
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_SEGMENT_TEMPLATE = \
-  '<div id=segment%scont>\r\n' \
+  '<div id="segment%scont">\r\n' \
   '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment" onchange="segment_checkbox(this)">\r\n' \
   '                    <label for="segment%s" id="segment%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
   '                    <br>'
   HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_PATH_TEMPLATE = \
   '\r\n' \
-  '              <svg id="track%s" pointer-events="none" viewbox="##VIEWBOX##" stroke="red" stroke-width="1.5" fill="red" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '                <path id="path%s" fill="none" pointer-events="stroke" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" vector-effect="non-scaling-stroke" d="%s"/>\r\n' \
-  '                <text dy="0.25em" stroke="none" pointer-events="none" style="font-size:calc(24px * var(--scale));word-spacing:var(--wsp);">\r\n' \
+  '              <svg id="track%s" viewbox="##VIEWBOX##" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
+  '                <path id="path%s" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" d="%s"/>\r\n' \
+  '                <text dy="0.25em">\r\n' \
   '                  <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
   '                </text>\r\n' \
   '              </svg>'
   HTML_WAYDOT_TEMPLATE = \
-  '              <svg id="waydot%s" width="8" height="8" stroke="gray" stroke-width="1.5" fill="none" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '              <svg id="waydot%s" width="8" height="8" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '                <circle cx="4" cy="4" r="3"/>\r\n' \
   '              </svg>\r\n'
   HTML_DOT_TEMPLATE = \
-  '              <svg id="dot%s" width="7" height="7" stroke="gray" stroke-width="1.5" fill="none" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '              <svg id="dot%s" width="7" height="7" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '                <rect x="1" y="1" width="5" height="5"/>\r\n' \
   '              </svg>\r\n'
   HTML_3D_TEMPLATE = \
@@ -7918,7 +8187,2108 @@ class GPXTweakerWebInterfaceServer():
   '      var tminrow = ##TMINROW##;\r\n' \
   '      var tmincol = ##TMINCOL##;\r\n' \
   '      var tmaxrow = ##TMAXROW##;\r\n' \
-  '      var tmaxcol = ##TMAXCOL##;\r\n' \
+  '      var tmaxcol = ##TMAXCOL##;\r\n'
+  HTMLExp_TEMPLATE = \
+  '<!DOCTYPE html>\r\n' \
+  '<html lang="fr-FR">\r\n' \
+  '  <head>\r\n' \
+  '    <meta charset="utf-8">\r\n' \
+  '    <title>GPXExplorer</title>\r\n' \
+  '    <style type="text/css">\r\n' \
+  '      :root {\r\n' \
+  '        --scale:1;\r\n' \
+  '        --zoom:1;\r\n' \
+  '        --wsp:6em;\r\n' \
+  '        --filter:none;\r\n' \
+  '      }\r\n' \
+  '      div[id$=cont] {\r\n' \
+  '        position:relative;\r\n' \
+  '      }\r\n' \
+  '      input {\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
+  '      }\r\n' \
+  '      input[type=text] {\r\n' \
+  '        border-width:0.5px;\r\n' \
+  '      }\r\n' \
+  '      input[type=text]:focus {\r\n' \
+  '        color:rgb(200,250,240);\r\n' \
+  '      }\r\n' \
+  '      input[id=filter_track] {\r\n' \
+  '        width:calc(98vw - 60em);\r\n' \
+  '        font-size:70%;\r\n' \
+  '      }\r\n' \
+  '      form[id^=track] {\r\n' \
+  '        overflow-x:hidden;\r\n' \
+  '        margin-right: 4px;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox] {\r\n' \
+  '        appearance:none;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        margin-left:1px;\r\n' \
+  '        width:1.25em;\r\n' \
+  '        height:1.25em;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox]:checked::before {\r\n' \
+  '        content:"\\2714";\r\n' \
+  '        display:inline-block;\r\n' \
+  '        text-align:center;\r\n' \
+  '        width:100%;\r\n' \
+  '        font-weight:bold;\r\n' \
+  '      }\r\n' \
+  '      input+label:hover,input:hover+label {\r\n' \
+  '        background-color:green;\r\n' \
+  '      }\r\n' \
+  '      label[id$=desc] {\r\n' \
+  '        cursor:cell;\r\n' \
+  '        display:inline-block;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        white-space:nowrap;\r\n' \
+  '        width:calc(24em - 22px);\r\n' \
+  '        min-height:1.35em;\r\n' \
+  '      }\r\n' \
+  '      input[type=color] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        right:0.3em;\r\n' \
+  '        top:calc(1em + 3px);\r\n' \
+  '        width:1em;\r\n' \
+  '        height:1em;\r\n' \
+  '        border:none;\r\n' \
+  '        padding:0;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-webkit-color-swatch-wrapper{\r\n' \
+  '        padding:0;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-webkit-color-swatch {\r\n' \
+  '        border:none;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-moz-color-swatch {\r\n' \
+  '        border:none;\r\n' \
+  '      }\r\n' \
+  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content] {\r\n' \
+  '        display:inline-block;\r\n' \
+  '        width:2em;\r\n' \
+  '        padding-left:0.8em;\r\n' \
+  '      }\r\n' \
+  '      input[id$=name], input[id$=file], input[id$=folder], input[id$=period], input[id$=content] {\r\n' \
+  '        height:1.35em;\r\n' \
+  '        width:80%;\r\n' \
+  '        font-size:100%;\r\n' \
+  '      }\r\n' \
+  '      label+br {\r\n' \
+  '        margin-bottom: 1em;\r\n' \
+  '      }\r\n' \
+  '      span[id$=focus] {\r\n' \
+  '        display:none;\r\n' \
+  '      }\r\n' \
+  '      svg[id*=dot] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        cursor:pointer;\r\n' \
+  '        stroke-width:1.5;\r\n' \
+  '      }\r\n' \
+  '      path {\r\n' \
+  '        pointer-events:stroke;\r\n' \
+  '        cursor:pointer;\r\n' \
+  '        fill:none;\r\n' \
+  '        vector-effect:non-scaling-stroke;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=track] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        pointer-events:none;\r\n' \
+  '        stroke-width:1.5;\r\n' \
+  '        stroke-linecap:round;\r\n' \
+  '        stroke-linejoin:round;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=track] text {\r\n' \
+  '        pointer-events:none;\r\n' \
+  '        font-size:calc(24px * var(--scale));\r\n' \
+  '        word-spacing:var(--wsp);\r\n' \
+  '        stroke:none;\r\n' \
+  '        display:none;\r\n' \
+  '      }\r\n' \
+  '      button {\r\n' \
+  '        border:none;\r\n' \
+  '        padding-left:0;\r\n' \
+  '        padding-right:0;\r\n' \
+  '        width:1.4em;\r\n' \
+  '        height:1.4em;\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
+  '        line-height:1.2em;\r\n' \
+  '        font-size:100%;\r\n' \
+  '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      select {\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
+  '        border-width:0.5px;\r\n' \
+  '      }\r\n' \
+  '      select:focus {\r\n' \
+  '          color:rgb(200,250,240);\r\n' \
+  '      }\r\n' \
+  '      @-moz-document url-prefix() {\r\n' \
+  '        select {\r\n' \
+  '          appearance:none;\r\n' \
+	'          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
+	'          background-repeat:no-repeat;\r\n' \
+	'          background-position-x:right;\r\n' \
+	'          background-position-y:bottom;\r\n' \
+	'          background-size:2em 1em;\r\n' \
+  '        }\r\n' \
+  '        select:focus {\r\n' \
+  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(200,250,240)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      select option {\r\n' \
+  '        color:rgb(225,225,225);\r\n' \
+  '      }\r\n' \
+  '      label[for$=filter] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:1.5em;\r\n' \
+  '        text-align:center;\r\n' \
+  '        font-weight:normal;\r\n' \
+  '        font-size:90%;\r\n' \
+  '      }\r\n' \
+  '      span[id$=stren], span[id^=sl] ,span[id^=sp] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:2.8em;\r\n' \
+  '        width:2em;\r\n' \
+  '        font-size:90%;\r\n' \
+  '      }\r\n' \
+  '      input[type=range] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:3em;\r\n' \
+  '        max-width:40vh;\r\n' \
+  '        width:9em;\r\n' \
+  '        margin-right:0;\r\n' \
+  '        transform:rotate(-90deg);\r\n' \
+  '        transform-origin:right center;\r\n' \
+  '        font-size:100%;\r\n' \
+  '      }\r\n' \
+  '      span+span[id^=message] {\r\n' \
+  '        margin-left:0.4em;\r\n' \
+  '        padding-left:0.4em;\r\n' \
+  '        border-left:1px rgb(225,225,225) solid;\r\n' \
+  '      }\r\n' \
+  '      img {\r\n' \
+  '        filter:var(--filter);\r\n' \
+  '      }\r\n' \
+  '      svg circle {\r\n' \
+  '        r:calc(3px * var(--scale));\r\n' \
+  '        pointer-events:all;\r\n' \
+  '      }\r\n' \
+  '    </style>\r\n' \
+  '    <script>\r\n' \
+  '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
+  '      var cleft = null;\r\n' \
+  '      var cright = null;\r\n' \
+  '      var ctop = null;\r\n' \
+  '      var cbottom = null;\r\n' \
+  '      var hpx = 0;\r\n' \
+  '      var hpy = 0;\r\n' \
+  '      var zoom = 1;\r\n' \
+  '      if (mode == "map") {\r\n' \
+  '        var zooms = ["1", "1.5", "2", "3", "4", "6", "10", "15", "25"];\r\n' \
+  '        var zoom_s = "1";\r\n' \
+  '      } else {\r\n' \
+  '        var tset = 0;\r\n' \
+  '        var tlevels = [];\r\n' \
+  '        var tlevel = 0;\r\n' \
+  '        var zooms = ["1/8", "1/4", "1/2", "3/4", "1", "1.5", "2", "3", "4", "6", "8"];\r\n' \
+  '        var tlock = false;\r\n' \
+  '        var zoom_s = "1";\r\n' \
+  '      }\r\n' \
+  '      var eset = 0;\r\n' \
+  '      var iset = 0;\r\n' \
+  '      var dots_visible = false;\r\n' \
+  '      var focused = "";\r\n' \
+  '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
+  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+  '      var tracks_pts = [];\r\n' \
+  '      var tracks_stats = [];\r\n' \
+  '      var msg_n = 0;\r\n' \
+  '      class GPUStats {\r\n' \
+  '        static get tw() {return 1024;}\r\n' \
+  '        constructor () {\r\n' \
+  '          this.canvas = document.createElement("canvas");\r\n' \
+  '          this.gl = this.canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
+  '          this.gl_programs = new Map();\r\n' \
+  '          this.cur_prog = null;\r\n' \
+  '          this.gl_attributes = new Map([["vstart", ["int", 1]]]);\r\n' \
+  '          this.gl_static_uniforms = new Map([["llhtex", "sampler2D"], ["teatex", "sampler2D"], ["dtex", "sampler2D"], ["ssstex", "sampler2D"], ["trange", "float"], ["spmax", "float"], ["drange", "float"], ["slmax", "float"]]);\r\n' \
+  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"], ["vlength", "int"]]);\r\n' \
+  '          this.gl_feedbacks = new Map([["vxy", "vec2"], ["vd", "float"], ["vsss", "vec3"]]);\r\n' \
+  '          this._starts = null;\r\n' \
+  '          this.tlength = null;\r\n' \
+  '          this._rlats = null;\r\n' \
+  '          this._llhs = null;\r\n' \
+  '          this._teas = null;\r\n' \
+  '          this.vstart = null;\r\n' \
+  '          this.llhtex = 0;\r\n' \
+  '          this.teatex = 1;\r\n' \
+  '          this.dtex = 2;\r\n' \
+  '          this.ssstex = 3;\r\n' \
+  '          this.llh_texture = null;\r\n' \
+  '          this.tea_texture = null;\r\n' \
+  '          this.d_texture = null;\r\n' \
+  '          this.sss_texture = null;\r\n' \
+  '          this.trlat = null;\r\n' \
+  '          this.rlat = null;\r\n' \
+  '          this.vlength = 0;\r\n' \
+  '          this.trange = 300 / 2;\r\n' \
+  '          this.spmax = 8 / 3.6;\r\n' \
+  '          this.drange = 500 / 2;\r\n' \
+  '          this.slmax = 50 / 100;\r\n' \
+  '          this.vxy = null;\r\n' \
+  '          this.vd = null;\r\n' \
+  '          this.vsss = null;\r\n' \
+  '          this._xys = null;\r\n' \
+  '          this._ds = null;\r\n' \
+  '          this._ssss = null;\r\n' \
+  '          this.gl.enable(this.gl.RASTERIZER_DISCARD);\r\n' \
+  '          let vertex_pshader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform float trlat;\r\n' \
+  '            uniform sampler2D llhtex;\r\n' \
+  '            out vec2 vxy;\r\n' \
+  '            void main() {\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec2 ll = texelFetch(llhtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626);\r\n' \
+  '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
+  '              vxy = vec2(ll.t * 12756274.0, log((1.0 + t * trlat) / (1.0 - t / trlat)) * 6378137.0);\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let vertex_dshader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform float rlat;\r\n' \
+  '            uniform sampler2D llhtex;\r\n' \
+  '            out float vd;\r\n' \
+  '            void main() {\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec3 llhe = texelFetch(llhtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 1.0);\r\n' \
+  '              vec3 llhs = gl_InstanceID > 0 ? texelFetch(llhtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 1.0) : llhe.stp;\r\n' \
+  '              vec3 dll = llhe - llhs;\r\n' \
+  '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - llhs.s * 2.0) * cos(rlat - llhe.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
+  '              vd = sqrt(pow(12756274.0 * (a + pow(a, 3.0) / 6.0), 2.0) + pow(llhe.p - llhs.p, 2.0));\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let vertex_s1shader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform sampler2D teatex;\r\n' \
+  '            uniform sampler2D dtex;\r\n' \
+  '            uniform int vlength;\r\n' \
+  '            uniform float trange;\r\n' \
+  '            uniform float spmax;\r\n' \
+  '            uniform float drange;\r\n' \
+  '            uniform float slmax;\r\n' \
+  '            out vec3 vsss;\r\n' \
+  '            vec2 slope(float d, vec2 h) {\r\n' \
+  '              return mix(slmax * sign(h), h / sqrt(d * d - h * h), lessThan(abs(h), vec2(d)));\r\n' \
+  '            }\r\n' \
+  '            void main() {\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec4 tdeas;\r\n' \
+  '              tdeas.spq = texelFetch(teatex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp;\r\n' \
+  '              tdeas.t = texelFetch(dtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s;\r\n' \
+  '              vec2 tde = tdeas.st;\r\n' \
+  '              vec2 tdp = tde;\r\n' \
+  '              vsss = vec3(0.0);\r\n' \
+  '              for (int p = pc + 1; p < vstart + vlength; p++) {\r\n' \
+  '                tde = vec2(texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(dtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + tde.t);\r\n' \
+  '                if (tde.s > tdeas.s + trange) {break;}\r\n' \
+  '                if (tde.s == tdeas.s) {continue;}\r\n' \
+  '                vsss.s += (tde.t - tdeas.t) / (tde.s - tdeas.s) * (tde.s - tdp.s);\r\n' \
+  '                tdp = tde;\r\n' \
+  '              }\r\n' \
+  '              if (tdp.s != tdeas.s) {\r\n' \
+  '                vsss.s = (vsss.s + (tdp.t - tdeas.t) / (tdp.s - tdeas.s) * (trange + tdeas.s - tdp.s)) / trange;\r\n' \
+  '              }\r\n' \
+  '              vsss.s = min(vsss.s, spmax);\r\n' \
+  '              vec3 deae = tdeas.tpq;\r\n' \
+  '              vec3 deap = deae;\r\n' \
+  '              for (int p = pc + 1; p < vstart + vlength; p++) {\r\n' \
+  '                deae = vec3(texelFetch(dtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + deae.s, texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tp);\r\n' \
+  '                if (deae.s > tdeas.t + drange) {break;}\r\n' \
+  '                if (deae.s == tdeas.t) {continue;}\r\n' \
+  '                vsss.tp += slope(deae.s - tdeas.t, deae.tp - tdeas.pq) * (deae.s - deap.s);\r\n' \
+  '                deap = deae;\r\n' \
+  '              }\r\n' \
+  '              if (deap.s != tdeas.t) {\r\n' \
+  '                vsss.tp = (vsss.tp + slope(deap.s - tdeas.t, deap.tp - tdeas.pq) * (drange + tdeas.t - deap.s)) / drange;\r\n' \
+  '              }\r\n' \
+  '              vsss.tp = clamp(vsss.tp, vec2(-slmax), vec2(slmax));\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let vertex_s2shader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform sampler2D teatex;\r\n' \
+  '            uniform sampler2D dtex;\r\n' \
+  '            uniform sampler2D ssstex;\r\n' \
+  '            uniform int vlength;\r\n' \
+  '            uniform float trange;\r\n' \
+  '            uniform float spmax;\r\n' \
+  '            uniform float drange;\r\n' \
+  '            uniform float slmax;\r\n' \
+  '            out vec3 vsss;\r\n' \
+  '            void main() {\r\n' \
+  '              vsss = vec3(0.0);\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec2 tsc = vec2(texelFetch(teatex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s);\r\n' \
+  '              vec2 tsf = tsc;\r\n' \
+  '              vec2 tsn = tsc;\r\n' \
+  '              vsss.s = tsc.t;\r\n' \
+  '              float c;\r\n' \
+  '              float su = 0.0;\r\n' \
+  '              float s = 0.0;\r\n' \
+  '              if (texelFetch(teatex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
+  '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
+  '                  tsf = vec2(texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s);\r\n' \
+  '                  if (tsf.s < tsc.s - trange) {break;}\r\n' \
+  '                  c = (tsn.s - tsf.s) / (tsc.s - tsf.s + 1.0);\r\n' \
+  '                  s += tsf.t * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  tsn = tsf;\r\n' \
+  '                }\r\n' \
+  '                if (tsc.s != tsn.s) {\r\n' \
+  '                  vsss.s = min((vsss.s + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              vec3 dssc = vec3(texelFetch(dtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).tp);\r\n' \
+  '              vec3 dssf = dssc;\r\n' \
+  '              vec3 dssn = dssc;\r\n' \
+  '              vsss.tp = dssc.tp;\r\n' \
+  '              su = 0.0;\r\n' \
+  '              vec2 ss = vec2(0.0);\r\n' \
+  '              if (texelFetch(dtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s <= drange) {\r\n' \
+  '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
+  '                  dssf = vec3(dssf.s - texelFetch(dtex, ivec2((p + 1) % ${GPUStats.tw}, (p + 1) / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tp);\r\n' \
+  '                  if (dssf.s < dssc.s - drange) {break;}\r\n' \
+  '                  c = (dssn.s - dssf.s) / (dssc.s - dssf.s + 1.0);\r\n' \
+  '                  ss += dssf.tp * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  dssn = dssf;\r\n' \
+  '                }\r\n' \
+  '                if (dssc.s != dssn.s) {\r\n' \
+  '                  vsss.tp = clamp((vsss.tp + ss / 2.0) / (1.0 + su / 2.0), vec2(-slmax), vec2(slmax));\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let fragment_shader_s = `#version 300 es\r\n' \
+  '            precision highp float;\r\n' \
+  '            void main() {\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          this.program_create("pprogram", vertex_pshader_s, fragment_shader_s);\r\n' \
+  '          this.program_create("dprogram", vertex_dshader_s, fragment_shader_s);\r\n' \
+  '          this.program_create("s1program", vertex_s1shader_s, fragment_shader_s);\r\n' \
+  '          this.program_create("s2program", vertex_s2shader_s, fragment_shader_s);\r\n' \
+  '        }\r\n' \
+  '        program_create(name, vshader_s, fshader_s) {\r\n' \
+  '          let vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER);\r\n' \
+  '          this.gl.shaderSource(vertex_shader, vshader_s);\r\n' \
+  '          this.gl.compileShader(vertex_shader);\r\n' \
+  '          let fragment_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER);\r\n' \
+  '          this.gl.shaderSource(fragment_shader, fshader_s);\r\n' \
+  '          this.gl.compileShader(fragment_shader);\r\n' \
+  '          let prog = this.gl.createProgram();\r\n' \
+  '          this.gl.attachShader(prog, vertex_shader);\r\n' \
+  '          this.gl.attachShader(prog, fragment_shader);\r\n' \
+  '          this.gl_programs.set(name, new Map());\r\n' \
+  '          this.gl_programs.get(name).set("program", prog);\r\n' \
+  '          let f = [];\r\n' \
+  '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
+  '            if (vshader_s.indexOf("out " + t + " " + n) >= 0) {\r\n' \
+  '              this.gl_programs.get(name).set(n, f.length);\r\n' \
+  '              f.push(n);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (f.length > 0) {\r\n' \
+  '            this.gl.transformFeedbackVaryings(prog, f, this.gl.SEPARATE_ATTRIBS);\r\n' \
+  '          }\r\n' \
+  '          this.gl.linkProgram(prog);\r\n' \
+  '          this.gl_programs.get(name).set("vao", this.gl.createVertexArray());\r\n' \
+  '          if (f.length > 0) {\r\n' \
+  '            this.gl_programs.get(name).set("tf", this.gl.createTransformFeedback());\r\n' \
+  '          }\r\n' \
+  '          for (let [n, ts] of this.gl_attributes) {\r\n' \
+  '            if (vshader_s.indexOf("in " + ts[0] + " " + n) >= 0) {\r\n' \
+  '              this.gl_programs.get(name).set(n, this.gl.getAttribLocation(prog, n));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          for (let [n, t] of [...this.gl_static_uniforms.entries(), ...this.gl_dynamic_uniforms.entries()]) {\r\n' \
+  '            if (vshader_s.indexOf("uniform " + t + " " + n) >= 0 || fshader_s.indexOf("uniform " + t + " " + n) >= 0) {\r\n' \
+  '              this.gl_programs.get(name).set(n, this.gl.getUniformLocation(prog, n));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        program_use(name) {\r\n' \
+  '          this.cur_prog = name;\r\n' \
+  '          this.gl.useProgram(this.gl_programs.get(name).get("program"));\r\n' \
+  '          this.gl.bindVertexArray(this.gl_programs.get(name).get("vao"));\r\n' \
+  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, this.gl_programs.get(name).get("tf"));\r\n' \
+  '        }\r\n' \
+  '        program_attributes() {\r\n' \
+  '          for (let [n, ts] of this.gl_attributes) {\r\n' \
+  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
+  '              this.gl.enableVertexAttribArray(this.gl_programs.get(this.cur_prog).get(n));\r\n' \
+  '              this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this[n]);\r\n' \
+  '              if (ts[0] == "int") {\r\n' \
+  '                this.gl.vertexAttribIPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.INT, false, 0, 0);\r\n' \
+  '              } else {\r\n' \
+  '                this.gl.vertexAttribPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.FLOAT, false, 0, 0);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
+  '        }\r\n' \
+  '        program_uniforms(type="dynamic") {\r\n' \
+  '          for (let [n, t] of type=="static"?this.gl_static_uniforms:this.gl_dynamic_uniforms) {\r\n' \
+  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
+  '              switch (t) {\r\n' \
+  '                case "float":\r\n' \
+  '                  this.gl.uniform1f(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
+  '                  break;\r\n' \
+  '                case "sampler2D":\r\n' \
+  '                case "int":\r\n' \
+  '                  this.gl.uniform1i(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
+  '                  break;\r\n' \
+  '                default:\r\n' \
+  '                  this.gl.uniform1f(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        program_feedbacks(offset, size) {\r\n' \
+  '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
+  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
+  '              let s = 0;\r\n' \
+  '              switch (t) {\r\n' \
+  '                case "float":\r\n' \
+  '                  s = 4;\r\n' \
+  '                  break;\r\n' \
+  '                case "vec2":\r\n' \
+  '                  s = 8;\r\n' \
+  '                  break;\r\n' \
+  '                case "vec3":\r\n' \
+  '                  s = 12;\r\n' \
+  '                  break;\r\n' \
+  '                default:\r\n' \
+  '                  s = 4;\r\n' \
+  '              }\r\n' \
+  '              this.gl.bindBufferRange(this.gl.TRANSFORM_FEEDBACK_BUFFER, this.gl_programs.get(this.cur_prog).get(n), this[n], offset * s, size * s);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        static pad(s) {\r\n' \
+  '          return (Math.floor((s - 1) / GPUStats.tw) + 1) * GPUStats.tw;\r\n' \
+  '        }\r\n' \
+  '        texture_load(unit, ncomp, src, tex=null) {\r\n' \
+  '          let gl_texture = tex;\r\n' \
+  '          if (tex == null) {gl_texture = this.gl.createTexture();}\r\n' \
+  '          this.gl.activeTexture(unit);\r\n' \
+  '          this.gl.bindTexture(this.gl.TEXTURE_2D, gl_texture);\r\n' \
+  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);\r\n' \
+  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);\r\n' \
+  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);\r\n' \
+  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);\r\n' \
+  '          if (Array.isArray(src)) {\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, new Float32Array(src));\r\n' \
+  '          } else if (src instanceof Float32Array) {\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, src);\r\n' \
+  '          } else if (src instanceof WebGLBuffer) {\r\n' \
+  '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, src);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, this.gl.getBufferParameter(this.gl.PIXEL_UNPACK_BUFFER, this.gl.BUFFER_SIZE) / ncomp / 4 / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
+  '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, null);\r\n' \
+  '          } else {\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
+  '          }\r\n' \
+  '          return gl_texture;\r\n' \
+  '        }\r\n' \
+  '        buffer_load(src, use, buf=null) {\r\n' \
+  '          let gl_buffer = buf;\r\n' \
+  '          if (buf == null) {gl_buffer = this.gl.createBuffer();}\r\n' \
+  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, gl_buffer);\r\n' \
+  '          this.gl.bufferData(this.gl.ARRAY_BUFFER, src, use);\r\n' \
+  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
+  '          return gl_buffer;\r\n' \
+  '        }\r\n' \
+  '        set starts(a) {\r\n' \
+  '          this._starts = a;\r\n' \
+  '          this.tlength = this._starts[this._starts.length - 1];\r\n' \
+  '          this.vstart = this.buffer_load(new Int32Array(this._starts), this.gl.STATIC_DRAW, this.vstart);\r\n' \
+  '        }\r\n' \
+  '        set rlats(a) {\r\n' \
+  '          this._rlats = a.map(function (tl) {return tl[0] * Math.PI / 180});\r\n' \
+  '        }\r\n' \
+  '        set llhs(a) {\r\n' \
+  '          this._llhs = a;\r\n' \
+  '          this.llh_texture = this.texture_load(this.gl.TEXTURE0 + this.llhtex, 3, this._llhs, this.llh_texture);\r\n' \
+  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vxy);\r\n' \
+  '          this.vd = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vd);\r\n' \
+  '         }\r\n' \
+  '        set teas(a) {\r\n' \
+  '          this._teas = a;\r\n' \
+  '          this.tea_texture = this.texture_load(this.gl.TEXTURE0 + this.teatex, 3, this._teas, this.tea_texture);\r\n' \
+  '          this.vsss = this.buffer_load(3 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vsss);\r\n' \
+  '        }\r\n' \
+  '        _calc() {\r\n' \
+  '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
+  '            this.vlength = this._starts[s + 1] - this._starts[s];\r\n' \
+  '            if (this.vlength == 0) {continue;}\r\n' \
+  '            if (this.cur_prog == "pprogram")  {this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);}\r\n' \
+  '            if (this.cur_prog == "dprogram") {this.rlat = this._rlats[s];}\r\n' \
+  '            this.program_uniforms();\r\n' \
+  '            this.program_feedbacks(this._starts[s], this.vlength);\r\n' \
+  '            this.gl.beginTransformFeedback(this.gl.POINTS);\r\n' \
+  '            this.gl.drawArraysInstanced(this.gl.POINTS, s, 1, this.vlength - (this.cur_prog=="s2program"?1:0));\r\n' \
+  '            this.gl.endTransformFeedback();\r\n' \
+  '            this.gl.finish();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        calc(pos=true) {\r\n' \
+  '          for (let n of this.gl_programs.keys()) {\r\n' \
+  '            this.program_use(n);\r\n' \
+  '            this.program_attributes();\r\n' \
+  '            this.program_uniforms("static");\r\n' \
+  '          }\r\n' \
+  '          if (pos) {\r\n' \
+  '            this.program_use("pprogram");\r\n' \
+  '            this._calc();\r\n' \
+  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '            this.feedbacks();\r\n' \
+  '          }\r\n' \
+  '          this.program_use("dprogram");\r\n' \
+  '          this._calc();\r\n' \
+  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '          this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
+  '          this.feedbacks();\r\n' \
+  '          this.program_use("s1program");\r\n' \
+  '          this._calc();\r\n' \
+  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '          this.sss_texture = this.texture_load(this.gl.TEXTURE0 + this.ssstex, 3, this.vsss, this.sss_texture);\r\n' \
+  '          this.program_use("s2program");\r\n' \
+  '          this._calc();\r\n' \
+  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '          this.feedbacks();\r\n' \
+  '        }\r\n' \
+  '        feedbacks() {\r\n' \
+  '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
+  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
+  '              switch (t) {\r\n' \
+  '                case "float":\r\n' \
+  '                  this[n.replace("v", "_") + "s"] = new Float32Array(this.tlength);\r\n' \
+  '                  break;\r\n' \
+'                case "vec2":\r\n' \
+  '                  this[n.replace("v", "_") + "s"] = new Float32Array(2 * this.tlength);\r\n' \
+  '                  break;\r\n' \
+  '                case "vec3":\r\n' \
+  '                  this[n.replace("v", "_") + "s"] = new Float32Array(3 * this.tlength);\r\n' \
+  '                  break;\r\n' \
+  '                default:\r\n' \
+  '                  this[n.replace("v", "_") + "s"] = new Float32Array(this.tlength);\r\n' \
+  '              }\r\n' \
+  '              this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this[n]) ;\r\n' \
+  '              this.gl.getBufferSubData(this.gl.ARRAY_BUFFER, 0, this[n.replace("v", "_") + "s"], 0, this[n.replace("v", "_") + "s"].length);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null) ;\r\n' \
+  '        }\r\n' \
+  '        get xys() {\r\n' \
+  '          return this._xys;\r\n' \
+  '        }\r\n' \
+  '        get ds() {\r\n' \
+  '          return this._ds;\r\n' \
+  '        }\r\n' \
+  '        get ssss() {\r\n' \
+  '          return this._ssss;\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      if (gpucomp > 0) {var gpustats = new GPUStats();}\r\n' \
+  '      function show_msg(msg, dur, msgn=null) {\r\n' \
+  '        let m = null;\r\n' \
+  '        if (msgn == null) {\r\n' \
+  '          msgn = ++msg_n;\r\n' \
+  '          m = document.createElement("span");\r\n' \
+  '          m.id = "message" + msgn.toString();\r\n' \
+  '        } else {\r\n' \
+  '          m = document.getElementById("message" + msgn.toString());\r\n' \
+  '        }\r\n' \
+  '        m.innerHTML = msg;\r\n' \
+  '        document.getElementById("message").insertBefore(m, document.getElementById("message").firstElementChild);\r\n' \
+  '        if (dur) {setTimeout(function() {document.getElementById("message").removeChild(m);}, dur * 1000);}\r\n' \
+  '        return msgn;\r\n' \
+  '      }\r\n' \
+  '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
+  '        if (t.status != 200) {\r\n' \
+  '          document.getElementById("tset").selectedIndex = tset;\r\n' \
+  '          if (nset == null) {\r\n' \
+  '            window.stop();\r\n' \
+  '            tlevel = nlevel;\r\n' \
+  '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
+  '            cleft = null;\r\n' \
+  '            rescale();\r\n' \
+  '          }\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        window.stop();\r\n' \
+  '        let msg = JSON.parse(t.response);\r\n' \
+  '        if (nset == null) {\r\n' \
+  '          if (nlevel == null) {\r\n' \
+  '            if (tlock) {switch_tlock(false);}\r\n' \
+  '            tlevel = msg.level;\r\n' \
+  '          } else {\r\n' \
+  '            tlevel = nlevel;\r\n' \
+  '          }\r\n' \
+  '          if (! kzoom || nlevel == null) {zoom_s = tlevels[tlevel][1];}\r\n' \
+  '          ttopx = msg.topx;\r\n' \
+  '          ttopy = msg.topy;\r\n' \
+  '          twidth = msg.width;\r\n' \
+  '          theight = msg.height\r\n' \
+  '          text = msg.ext;\r\n' \
+  '          let tscale_ex = tscale;\r\n' \
+  '          tscale = msg.scale;\r\n' \
+  '          cleft = null;\r\n' \
+  '          rescale(tscale_ex);\r\n' \
+  '        } else {\r\n' \
+  '          tset = document.getElementById("tset").selectedIndex;\r\n' \
+  '          let matrix = null;\r\n' \
+  '          let lf = false;\r\n' \
+  '          if (nlevel >= 0) {\r\n' \
+  '            tlevels = msg.tlevels;\r\n' \
+  '            if (nlevel == 0) {\r\n' \
+  '              nlevel = tlevels[0];\r\n' \
+  '              zoom_s = tlevels[nlevel][1];\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            nlevel = tlevels[0];\r\n' \
+  '            matrix = tlevels[tlevel][0];\r\n' \
+  '            tlevels = msg.tlevels;\r\n' \
+  '            for (let i=1; i<tlevels.length; i++) {\r\n' \
+  '              if (tlevels[i][0] <= matrix) {nlevel = i;}\r\n' \
+  '              if (tlevels[i][0] == matrix) {\r\n' \
+  '                lf = true;\r\n' \
+  '                break;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (! lf) {\r\n' \
+  '              let zoom_t = Math.pow(2, matrix - tlevels[nlevel][0]) * zoom;\r\n' \
+  '              zoom_s = zooms[0];\r\n' \
+  '              let i = 0;\r\n' \
+  '              while (i < zooms.length) {\r\n' \
+  '                if (eval(zooms[i]) <= zoom_t) {zoom_s = zooms[i]}\r\n' \
+  '                if (eval(zooms[i]) >= zoom_t) {break;}\r\n' \
+  '                i ++;\r\n' \
+  '              }\r\n' \
+  '              matrix = tlevels[nlevel][0];\r\n' \
+  '              for (let i=1; i<tlevels.length; i++) {\r\n' \
+  '                if (tlevels[i][0] == matrix) {\r\n' \
+  '                  nlevel = i;\r\n' \
+  '                  break;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              for (let i=nlevel; i<tlevels.length; i++) {\r\n' \
+  '                if (tlevels[i][0] != matrix) {break;}\r\n' \
+  '                if (eval(tlevels[i][1]) <= zoom_t) {nlevel = i;}\r\n' \
+  '              }\r\n' \
+  '              if (! tlock) {switch_tlock(false);}\r\n' \
+  '            } else  {\r\n' \
+  '              let zf = false;\r\n' \
+  '              for (let i=1; i<tlevels.length; i++) {\r\n' \
+  '                if (tlevels[i][0] == matrix && eval(tlevels[i][1]) <= eval(zoom_s)) {nlevel = i;}\r\n' \
+  '                if (tlevels[i][0] == matrix && tlevels[i][1] == zoom_s) {\r\n' \
+  '                  zf = true;\r\n' \
+  '                  break;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (! tlock && ! zf) {switch_tlock(false);}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          switch_tiles(null, nlevel, true);\r\n' \
+  '        }\r\n' \
+  '      } \r\n' \
+  '      function error_tcb() {\r\n' \
+  '        document.getElementById("tset").selectedIndex = tset;\r\n' \
+  '      } \r\n' \
+  '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
+  '        let q = "";\r\n' \
+  '        if (nset != null) {\r\n' \
+  '          q = "set=" + encodeURIComponent(nset);\r\n' \
+  '        } else if (nlevel != null) {\r\n' \
+  '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
+  '        } else {\r\n' \
+  '          q = "auto=" + encodeURIComponent(viewpane.offsetWidth.toString() + "|" + viewpane.offsetHeight.toString());\r\n' \
+  '        }\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom)};\r\n' \
+  '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
+  '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrt.send();\r\n' \
+  '      }\r\n' \
+  '      function add_tile(row=0, col=0) {\r\n' \
+  '        let tile = document.createElement("img");\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          tile.id = "map";\r\n' \
+  '          tile.src = "/map/" + tile.id + text;\r\n' \
+  '        } else {\r\n' \
+  '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
+  '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
+  '          tile.src = "http://" + location.hostname + ":" + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '        }\r\n' \
+  '        tile.alt = "";\r\n' \
+  '        tile.style.position = "absolute";\r\n' \
+  '        tile.style.width = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
+  '        tile.style.height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
+  '        tile.style.left = "calc(var(--zoom) * " + ((ttopx - htopx) / tscale + col * twidth).toString() + "px)";\r\n' \
+  '        tile.style.top = "calc(var(--zoom) * " + ((htopy - ttopy) / tscale + row * theight).toString() + "px";\r\n' \
+  '        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '      }\r\n' \
+  '      function update_tiles() {\r\n' \
+  '        if (mode == "map") {return;}\r\n' \
+  '        let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
+  '        let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
+  '        let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
+  '        let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
+  '        let tiles = handle.getElementsByTagName("img");\r\n' \
+  '        let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
+  '        let rright = parseInt(vright / twidth + 1.5);\r\n' \
+  '        let rtop = parseInt(vtop / theight - 1.5);\r\n' \
+  '        let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
+  '        if (cleft == null) {\r\n' \
+  '          let i = tiles.length - 1;\r\n' \
+  '            while (i >= 0) {\r\n' \
+  '              handle.removeChild(tiles[i]);\r\n' \
+  '              i--;\r\n' \
+  '            } \r\n' \
+  '          cleft = rleft - 1;\r\n' \
+  '          cright = rleft - 1;\r\n' \
+  '          ctop = rtop - 1;\r\n' \
+  '          cbottom = rtop - 1;\r\n' \
+  '        }\r\n' \
+  '        let i = tiles.length - 1;\r\n' \
+  '        if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
+  '          while (i >= 0) {\r\n' \
+  '            let [r, c] = tiles[i].id.split("-").slice(1, 3);\r\n' \
+  '            let row = parseInt(r);\r\n' \
+  '            let col = parseInt(c);\r\n' \
+  '            if (row < rtop || row > rbottom || col < rleft || col > rright) {\r\n' \
+  '              handle.removeChild(tiles[i]);\r\n' \
+  '            }\r\n' \
+  '            i--;\r\n' \
+  '          } \r\n' \
+  '          for (let col=rleft; col<cleft; col++) {\r\n' \
+  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
+  '          }\r\n' \
+  '          for (let col=cright+1; col<=rright; col++) {\r\n' \
+  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
+  '          }\r\n' \
+  '          cleft = rleft;\r\n' \
+  '          cright = rright;\r\n' \
+  '          for (let row=rtop; row<ctop; row++) {\r\n' \
+  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
+  '          }\r\n' \
+  '          for (let row=cbottom + 1; row<=rbottom; row++) {\r\n' \
+  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
+  '          }\r\n' \
+  '          ctop = rtop;\r\n' \
+  '          cbottom = rbottom;\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function reframe() {\r\n' \
+  '        hpx = Math.round(Math.min(Math.max(hpx, (htopx - vmaxx) * zoom / tscale + viewpane.offsetWidth), (htopx - vminx) * zoom / tscale));\r\n' \
+  '        hpy = Math.round(Math.min(Math.max(hpy, (vminy - htopy) * zoom / tscale + viewpane.offsetHeight), (vmaxy - htopy) * zoom / tscale));\r\n' \
+  '        handle.style.left = hpx.toString() + "px";\r\n' \
+  '        handle.style.top = hpy.toString() + "px";\r\n' \
+  '        let k = Math.cosh((htopy + (hpy - viewpane.offsetHeight) * tscale / zoom) / 6378137);\r\n' \
+  '        let sc = 150 * tscale / zoom / k;\r\n' \
+  '        let unit = "m";\r\n' \
+  '        let b = 1;\r\n' \
+  '        if (sc >= 1000) {\r\n' \
+  '          unit = "km";\r\n' \
+  '          b = 1000;\r\n' \
+  '        } else if (sc < 0.1) {\r\n' \
+  '          unit = "mm";\r\n' \
+  '          b = 1/1000;\r\n' \
+  '        } else if (sc < 1) {\r\n' \
+  '          unit = "cm";\r\n' \
+  '          b = 1/100;\r\n' \
+  '        }\r\n' \
+  '        let sc_c = (sc / b).toFixed(0);\r\n' \
+  '        let sc_s = "";\r\n' \
+  '        if (sc_c[0] == "1") {\r\n' \
+  '          sc_s = "1".padEnd(sc_c.length, "0");\r\n' \
+  '        } else if (sc_c[0] == "2" || sc_c[0] == "3" || sc_c[0] == "4") {\r\n' \
+  '          sc_s = "2".padEnd(sc_c.length, "0");\r\n' \
+  '        } else {\r\n' \
+  '          sc_s = "5".padEnd(sc_c.length, "0");\r\n' \
+  '        }\r\n' \
+  '        sc = parseFloat(sc_s) * b;\r\n' \
+  '        document.getElementById("scaleline").setAttribute("width", (sc / tscale * zoom * k).toFixed(0) + "px");\r\n' \
+  '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n' \
+  '        update_tiles() \r\n' \
+  '      }\r\n' \
+  '      function prop_to_wmvalue(s) {\r\n' \
+  '        return parseFloat(s.match(/-?\\d+[.]?\\d*/)[0]);\r\n' \
+  '      }\r\n' \
+  '      function scroll_view(x, y) {\r\n' \
+  '        hpx = viewpane.offsetWidth / 2 + (htopx - x) * zoom / tscale;\r\n' \
+  '        hpy = viewpane.offsetHeight / 2 + (y - htopy) * zoom / tscale;\r\n' \
+  '        reframe();\r\n' \
+  '      }\r\n' \
+  '      function scroll_dview(dx, dy) {\r\n' \
+  '        hpx += dx;\r\n' \
+  '        hpy += dy;\r\n' \
+  '        reframe();\r\n' \
+  '      }\r\n' \
+  '      function track_center(track=null) {\r\n' \
+  '        let tracks = [];\r\n' \
+  '        if (track != null) {\r\n' \
+  '          tracks.push(track);\r\n' \
+  '        } else {\r\n' \
+  '          let trks = document.getElementById("tracksform").children;\r\n' \
+  '          for (let t=0; t<trks.length; t++) {\r\n' \
+  '            tracks.push(document.getElementById(trks[t].id.slice(0, -4)));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        let gminx = null;\r\n' \
+  '        let gminy = null;\r\n' \
+  '        let gmaxx = null;\r\n' \
+  '        let gmaxy = null;\r\n' \
+  '        for (let t=0; t<tracks.length; t++) {\r\n' \
+  '          let minx = prop_to_wmvalue(tracks[t].style.left);\r\n' \
+  '          let maxy = - prop_to_wmvalue(tracks[t].style.top);\r\n' \
+  '          let maxx = minx + prop_to_wmvalue(tracks[t].style.width);\r\n' \
+  '          let miny = maxy - prop_to_wmvalue(tracks[t].style.height);\r\n' \
+  '          if (gminx == null) {\r\n' \
+  '            gminx = minx;\r\n' \
+  '            gminy = miny;\r\n' \
+  '            gmaxx = maxx;\r\n' \
+  '            gmaxy = maxy;\r\n' \
+  '          } else {\r\n' \
+  '            gminx = Math.min(gminx, minx);\r\n' \
+  '            gminy = Math.min(gminy, miny);\r\n' \
+  '            gmaxx = Math.max(gmaxx, maxx);\r\n' \
+  '            gmaxy = Math.max(gmaxy, maxy);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (gminx == null) {\r\n' \
+  '          return null;\r\n' \
+  '        } else {\r\n' \
+  '          return [htopx + (gminx + gmaxx) / 2, htopy + (gminy + gmaxy) / 2];\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function scroll_to_track(track) {\r\n' \
+  '        let c = track_center(track);\r\n' \
+  '        if (c == null) {return;}\r\n' \
+  '        scroll_view(c[0], c[1]);\r\n' \
+  '      }\r\n' \
+  '      function scroll_to_all() {\r\n' \
+  '        let c = track_center();\r\n' \
+  '        if (c == null) {\r\n' \
+  '          scroll_view(defx, defy);\r\n' \
+  '        } else {\r\n' \
+  '          scroll_view(c[0], c[1]); \r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function track_click(e, trk, scroll=true) {\r\n' \
+  '        if (e != null) {e.preventDefault();}\r\n' \
+  '        let ex_foc = focused;\r\n' \
+  '        if (trk.htmlFor == ex_foc + "visible") {focused = "";} else {focused = trk.htmlFor.slice(0, -7);}\r\n' \
+  '        if (ex_foc != "") {\r\n' \
+  '          document.getElementById(ex_foc + "desc").style.color = "";\r\n' \
+  '          document.getElementById(ex_foc + "focus").style.display = "";\r\n' \
+  '          if (! document.getElementById(ex_foc + "visible").checked) {\r\n' \
+  '            document.getElementById(ex_foc.replace("track", "waydots")).style.display = "none";\r\n' \
+  '            document.getElementById(ex_foc).style.display = "none";\r\n' \
+  '          }\r\n' \
+  '          if (focused || e == null) {\r\n' \
+  '            document.getElementById(ex_foc.replace("track", "waydots")).style.zIndex = "";\r\n' \
+  '            document.getElementById(ex_foc).style.zIndex = "";\r\n' \
+  '            document.getElementById(ex_foc.replace("track", "patharrows")).style.display = "";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (focused) {\r\n' \
+  '          trk.style.color = "dodgerblue";\r\n' \
+  '          document.getElementById(focused + "focus").style.display = "inline";\r\n' \
+  '          document.getElementById(focused.replace("track", "waydots")).style.display = "";\r\n' \
+  '          document.getElementById(focused).style.display = "";\r\n' \
+  '          document.getElementById(focused.replace("track", "waydots")).style.zIndex = "1";\r\n' \
+  '          document.getElementById(focused).style.zIndex = "1";\r\n' \
+  '          document.getElementById(focused.replace("track", "patharrows")).style.display = "inline";\r\n' \
+  '          if (scroll) {\r\n' \
+  '            trk.scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
+  '            scroll_to_track(document.getElementById(focused));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        refresh_graph();\r\n' \
+  '      }\r\n' \
+  '      function WGS84toWebMercator(lat, lon) {\r\n' \
+  '        return [lon * Math.PI / 180 * 6378137, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137];\r\n' \
+  '      }\r\n' \
+  '      function WebMercatortoWGS84(x, y) {\r\n' \
+  '        return [(2 * Math.atan(Math.exp(y / 6378137)) - Math.PI / 2) * 180 / Math.PI, x * 180 / Math.PI / 6378137];\r\n' \
+  '      }\r\n' \
+  '      function track_over(trk) {\r\n' \
+  '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
+  '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
+  '        document.getElementById(foc).style.zIndex = "2";\r\n' \
+  '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
+  '        if (document.getElementById(foc + "visible").checked || foc == focused) {\r\n' \
+  '          scroll_to_track(document.getElementById(foc));\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function track_outside(trk) {\r\n' \
+  '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
+  '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = foc==focused?"1":"";\r\n' \
+  '        document.getElementById(foc).style.zIndex = foc==focused?"1":"";\r\n' \
+  '        document.getElementById(foc.replace("track", "patharrows")).style.display = foc==focused?"inline":"";\r\n' \
+  '      }\r\n' \
+  '      function distance(lat1, lon1, ele1, lat2, lon2, ele2) {\r\n' \
+  '        let d = 2 * 6378137 * Math.asin(Math.sqrt((Math.sin((lat2 - lat1) * Math.PI / 360)) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos (lat2 * Math.PI / 180) * (Math.sin((lon2 - lon1) * Math.PI / 360)) ** 2));\r\n' \
+  '        if (ele1 != null && ele2 != null) {d = Math.sqrt(d ** 2 + (ele2 - ele1) ** 2);}\r\n' \
+  '        return d;\r\n' \
+  '      }\r\n' \
+  '      function slope(dist, heig) {\r\n' \
+  '        return dist>Math.abs(heig)?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
+  '      }\r\n' \
+  '      function segment_calc(seg, seg_ind, stats, fpan=0, ind=null, tl=null, llhs=null, teas=null) {\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
+  '          stats[seg_ind] = [];\r\n' \
+  '        }\r\n' \
+  '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0)) {\r\n' \
+  '          let stat = Array(7).fill(0);\r\n' \
+  '          let stat_p = null;\r\n' \
+  '          let t_s = null;\r\n' \
+  '          let lat_p = null;\r\n' \
+  '          let lon_p = null;\r\n' \
+  '          let lat = null;\r\n' \
+  '          let lon = null;\r\n' \
+  '          let ea_s = [0, 0];\r\n' \
+  '          let ea_p = [NaN, NaN];\r\n' \
+  '          let ea_l = [null, null];\r\n' \
+  '          let ea_h = [null, null];\r\n' \
+  '          let ea_g = [null, null];\r\n' \
+  '          let ea_ic = [null, null];\r\n' \
+  '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
+  '          let el_s = 0;\r\n' \
+  '          let el = null;\r\n' \
+  '          let el_p = NaN;\r\n' \
+  '          let p_p = null;\r\n' \
+  '          for (let p=0; p<seg.length; p++) {\r\n' \
+  '            let pt = seg[p];\r\n' \
+  '            let ea = [parseFloat(pt[2]), parseFloat(pt[3])];\r\n' \
+  '            for (let v=0; v<2; v++) {\r\n' \
+  '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
+  '                ea_p[v] = ea[v];\r\n' \
+  '                ea_s[v] = ea_p[v];\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(ea[v]) && ea_l[v] == null) {ea_l[v] = ea[v];}\r\n' \
+  '              if (! isNaN(ea[v]) && ea_h[v] == null) {ea_h[v] = ea[v];}\r\n' \
+  '            }\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              let t = Date.parse(pt[4]);\r\n' \
+  '              lat = parseFloat(pt[0]);\r\n' \
+  '              lon = parseFloat(pt[1]);\r\n' \
+  '              if (isNaN(t)) {\r\n' \
+  '                stat[0] = t_s==null?0:stat_p[0];\r\n' \
+  '              } else {\r\n' \
+  '                if (t_s == null) {\r\n' \
+  '                  t_s = t;\r\n' \
+  '                } else {\r\n' \
+  '                  stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(ea[1])) {\r\n' \
+  '                el = ea[1];\r\n' \
+  '                if (isNaN(el_p)) {\r\n' \
+  '                  el_p = el;\r\n' \
+  '                  el_s = el_p;\r\n' \
+  '                }\r\n' \
+  '              } else if (! isNaN(ea[0])) {\r\n' \
+  '                el = ea[0];\r\n' \
+  '                if (isNaN(el_p)) {\r\n' \
+  '                  el_p = el;\r\n' \
+  '                  el_s = el_p;\r\n' \
+  '                }\r\n' \
+  '              } else {\r\n' \
+  '                el = isNaN(el_p)?0:el_p;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (p_p == null) {\r\n' \
+  '              if (gpucomp == 0) {\r\n' \
+  '                stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
+  '                stat[5] = isNaN(ea[1])?ea_p[1]:ea[1];\r\n' \
+  '              } else if (fpan == 0) {\r\n' \
+  '                llhs.set([tl[0] - lat, lon - tl[1], el_p], 3 * ind);\r\n' \
+  '                teas.set([stat[0], isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1]], 3 * ind);\r\n' \
+  '                ind++;\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              if (gpucomp <= 1 && fpan <= 1) {\r\n' \
+  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
+  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
+  '              }\r\n' \
+  '              if (gpucomp == 0) {\r\n' \
+  '                if (fpan == 0) {\r\n' \
+  '                  stat[1] = stat_p[1] + distance(lat_p, lon_p, isNaN(el_p)?0:el_p, lat, lon, el);\r\n' \
+  '                }\r\n' \
+  '                stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
+  '                stat[5] = isNaN(ea[1])?ea_p[1]:ea[1];\r\n' \
+  '              } else if (fpan == 0) {\r\n' \
+  '                llhs.set([tl[0] - lat, lon - tl[1], isNaN(el_p)?el_p:el], 3 * ind);\r\n' \
+  '                teas.set([stat[0], isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1]], 3 * ind);\r\n' \
+  '                ind++;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            lat_p = lat;\r\n' \
+  '            lon_p = lon;\r\n' \
+  '            stat_p = stat.slice();\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              stats[seg_ind].push(stat_p);\r\n' \
+  '              if (! isNaN(el_p)) {el_p = el;}\r\n' \
+  '            } else if (fpan == 1) {\r\n' \
+  '              stats[seg_ind][p][2] = stat_p[2];\r\n' \
+  '              stats[seg_ind][p][3] = stat_p[3];\r\n' \
+  '            } else if (fpan == 2 && gpucomp == 0) {\r\n' \
+  '              stats[seg_ind][p][4] = stat_p[4];\r\n' \
+  '              stats[seg_ind][p][5] = stat_p[5];\r\n' \
+  '            }\r\n' \
+  '            p_p = p;\r\n' \
+  '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
+  '              for (let v=0; v<2; v++) {\r\n' \
+  '                if (! isNaN(ea[v])) {\r\n' \
+  '                  if (ea[v] > ea_p[v]) {\r\n' \
+  '                    ea_p[v] = ea[v];\r\n' \
+  '                    if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
+  '                      ea_g[v] = "+";\r\n' \
+  '                      ea_ic[v] = null;\r\n' \
+  '                      ea_h[v] = ea[v];\r\n' \
+  '                    }\r\n' \
+  '                    if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
+  '                      ea_ic[v] = p - 1;\r\n' \
+  '                    }\r\n' \
+  '                  }\r\n' \
+  '                  if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
+  '                    if (ea_ic[v] != null) {\r\n' \
+  '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
+  '                      for (let i=ea_ic[v]+1; i<=p; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
+  '                      ea_ic[v] = null;\r\n' \
+  '                    }\r\n' \
+  '                    if (ea_g[v] == "+") {\r\n' \
+  '                      ea_l[v] = ea[v];\r\n' \
+  '                    } else {\r\n' \
+  '                      ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
+  '                    }\r\n' \
+  '                    ea_g[v] = "-";\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (! isNaN(ea[0])) {ea_p[0] = ea[0];}\r\n' \
+  '            if (! isNaN(ea[1])) {ea_p[1] = ea[1];}\r\n' \
+  '          }\r\n' \
+  '          if (! stat_p) {return;}\r\n' \
+  '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
+  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '              if (isNaN(stats[seg_ind][p][4])) {\r\n' \
+  '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
+  '                if (isNaN(stats[seg_ind][p][5])) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
+  '              } else if (isNaN(stats[seg_ind][p][5])) {\r\n' \
+  '                stats[seg_ind][p][5] = ea_s[1];\r\n' \
+  '              } else {break;}\r\n' \
+  '            }\r\n' \
+  '          } else if (gpucomp != 0 && fpan == 0) {\r\n' \
+  '            for (let i=ind-stats[seg_ind].length; i<ind; i++) {\r\n' \
+  '              if (isNaN(llhs[3 * i + 2])) {llhs[3 * i + 2] = el_s;} else {break;}\r\n' \
+  '            }\r\n' \
+  '            for (let i=ind-stats[seg_ind].length; i<ind; i++) {\r\n' \
+  '              if (isNaN(teas[3 * i + 1])) {teas[3 * i + 1] = ea_s[0];} else {break;}\r\n' \
+  '            }\r\n' \
+  '            for (let i=ind-stats[seg_ind].length; i<ind; i++) {\r\n' \
+  '              if (isNaN(teas[3 * i + 2])) {teas[3 * i + 2] = ea_s[1];} else {break;}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
+  '          let drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
+  '          let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
+  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '            let ea = stats[seg_ind][p].slice(4,6);\r\n' \
+  '            stats[seg_ind][p][4]=0;\r\n' \
+  '            stats[seg_ind][p][5]=0;\r\n' \
+  '            let ps = p;\r\n' \
+  '            for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
+  '              if (stats[seg_ind][ps][1] > stats[seg_ind][p][1] + drange) {break;}\r\n' \
+  '              if (stats[seg_ind][ps][1] - stats[seg_ind][p][1] == 0) {continue;}\r\n' \
+  '              stats[seg_ind][p][4] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][4] - ea[0]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
+  '              stats[seg_ind][p][5] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][5] - ea[1]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
+  '            }\r\n' \
+  '            if (stats[seg_ind][ps - 1][1] - stats[seg_ind][p][1] != 0) {\r\n' \
+  '              let c = (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1]) / (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]);\r\n' \
+  '              stats[seg_ind][p][4] = (stats[seg_ind][p][4] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][4] - ea[0]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
+  '              stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][5] - ea[1]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
+  '            }\r\n' \
+  '            stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
+  '            stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
+  '          }\r\n' \
+  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
+  '            if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
+  '              let ps = p;\r\n' \
+  '              let s = [0, 0];\r\n' \
+  '              let su = 0;\r\n' \
+  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
+  '                if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - drange) {break;}\r\n' \
+  '                let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
+  '                s[0] += stats[seg_ind][ps][4] * c;\r\n' \
+  '                s[1] += stats[seg_ind][ps][5] * c;\r\n' \
+  '                su += c;\r\n' \
+  '              }\r\n' \
+  '              if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
+  '                stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2 ) / (1 + su/2)));\r\n' \
+  '                stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2 ) / (1 + su/2)));\r\n' \
+  '            }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (gpucomp == 0 && (fpan == 0 || fpan == 3)) {\r\n' \
+  '          let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
+  '          let spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
+  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '            stats[seg_ind][p][6] = 0;\r\n' \
+  '            let ps = p;\r\n' \
+  '            for (ps=p+1; ps<stats[seg_ind].length; ps++) {\r\n' \
+  '              if (stats[seg_ind][ps][0] > stats[seg_ind][p][0] + trange) {break;}\r\n' \
+  '              if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
+  '              stats[seg_ind][p][6] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
+  '            }\r\n' \
+  '            if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
+  '              stats[seg_ind][p][6] = (stats[seg_ind][p][6] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
+  '            }\r\n' \
+  '            stats[seg_ind][p][6] = Math.min(stats[seg_ind][p][6], spmax);\r\n' \
+  '          }\r\n' \
+  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
+  '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
+  '              let ps = p;\r\n' \
+  '              let s = 0;\r\n' \
+  '              let su = 0;\r\n' \
+  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
+  '                if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
+  '                let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
+  '                s += stats[seg_ind][ps][6] * c;\r\n' \
+  '                su += c;\r\n' \
+  '              }\r\n' \
+  '              if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
+  '                stats[seg_ind][p][6] = Math.min(spmax, (stats[seg_ind][p][6] + s/2 ) / (1 + su/2));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function tracks_calc(fpan=0) {\r\n' \
+  '        let starts = null;\r\n' \
+  '        let tls = null;\r\n' \
+  '        let llhs = null;\r\n' \
+  '        let teas = null;\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          starts = [0];\r\n' \
+  '          tls = [];\r\n' \
+  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            tracks_stats.push([]);\r\n' \
+  '            let tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top));\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              let nbp = segs[s].length;\r\n' \
+  '              if (nbp != 0) {\r\n' \
+  '                starts.push(starts[starts.length - 1] + nbp);\r\n' \
+  '                tls.push(tl);\r\n' \
+  '               }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (starts[starts.length - 1] == 0) {\r\n' \
+  '            refresh_graph();\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '          if (gpucomp >= 1) {\r\n' \
+  '            llhs = new Float32Array(GPUStats.pad(starts[starts.length - 1]) * 3);\r\n' \
+  '            teas = new Float32Array(GPUStats.pad(starts[starts.length - 1]) * 3);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan <= 1 || gpucomp == 0) {\r\n' \
+  '          let ind = 0;\r\n' \
+  '          let i = 0;\r\n' \
+  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              segment_calc(segs[s], s, tracks_stats[t], fpan, ind, tls==null?null:tls[i], llhs, teas);\r\n' \
+  '              let nbp = segs[s].length;\r\n' \
+  '              ind += nbp;\r\n' \
+  '              if (nbp != 0) {i++;}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan == 0 && gpucomp >= 1) {\r\n' \
+  '          gpustats.starts = starts;\r\n' \
+  '          gpustats.rlats = tls;\r\n' \
+  '          gpustats.llhs = llhs;\r\n' \
+  '          gpustats.teas = teas;\r\n' \
+  '        }\r\n' \
+  '        if (gpucomp == 0 && fpan == 0) {\r\n' \
+  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let topx = htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left);\r\n' \
+  '            let topy = htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top);\r\n' \
+  '            let d = "M0 0";\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              for (let p=0; p<segs[s].length; p++) {\r\n' \
+  '                let [x, y] = WGS84toWebMercator(segs[s][p][0], segs[s][p][1]);\r\n' \
+  '                d = d + (p==0?" M":" L") + (x - topx).toFixed(1) + " " + (topy - y).toFixed(1);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (gpucomp >= 1 && fpan != 1) {\r\n' \
+  '          gpustats.trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
+  '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
+  '          gpustats.drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
+  '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
+  '          gpustats.calc(fpan==0);\r\n' \
+  '          let ds = gpustats.ds;\r\n' \
+  '          let ssss = gpustats.ssss;\r\n' \
+  '          let xys = gpustats.xys;\r\n' \
+  '          let i = 0;\r\n' \
+  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let stats = tracks_stats[t];\r\n' \
+  '            let d = "M0 0";\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              for (let p=0; p<segs[s].length; p++) {\r\n' \
+  '                if (fpan == 0) {\r\n' \
+  '                  stats[s][p][1] = stats[s][p>0?p-1:0][1] + ds[i];\r\n' \
+  '                  d = d + (p==0?" M":" L") + xys[2 * i].toFixed(1) + " " + xys[2 * i + 1].toFixed(1);\r\n' \
+  '                }\r\n' \
+  '                stats[s][p][6] = ssss[3 * i];\r\n' \
+  '                stats[s][p][4] = ssss[3 * i + 1];\r\n' \
+  '                stats[s][p][5] = ssss[3 * i + 2];\r\n' \
+  '                if (gpucomp == 2 && fpan != 3) {\r\n' \
+  '                  if (p == 0) {\r\n' \
+  '                    stats[s][p][2] = 0;\r\n' \
+  '                    stats[s][p][3] = 0;\r\n' \
+  '                  } else {\r\n' \
+  '                    stats[s][p][2] = stats[s][p - 1][2] + Math.max(0, ssss[3 * i - 2]) * ds[i];\r\n' \
+  '                    stats[s][p][3] = stats[s][p - 1][3] + Math.max(0, ssss[3 * i - 1]) * ds[i];\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                i++;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let ts = null;\r\n' \
+  '            let te = null;\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              for (let p=0; p<segs[s].length; p++) {\r\n' \
+  '                let t = Date.parse(segs[s][p][4]);\r\n' \
+  '                if (! isNaN(t)) {\r\n' \
+  '                  ts = Math.min(t, ts==null?t:ts);\r\n' \
+  '                  te = Math.max(t, te==null?t:te);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (ts != null) {\r\n' \
+  '              document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan <= 1 || (fpan == 2 && gpucomp == 2)) {\r\n' \
+  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '            let dur = null;\r\n' \
+  '            let dist = null;\r\n' \
+  '            let ele = null;\r\n' \
+  '            let alt = null;\r\n' \
+  '            let stats = tracks_stats[t];\r\n' \
+  '            for (let s=0; s<stats.length; s++) {\r\n' \
+  '              if (stats[s].length == 0) {continue;}\r\n' \
+  '              let stat = stats[s][stats[s].length - 1];\r\n' \
+  '              dur = dur==null?stat[0]:dur+stat[0];\r\n' \
+  '              dist = dist==null?stat[1]:dist+stat[1];\r\n' \
+  '              ele = ele==null?stat[2]:ele+stat[2];\r\n' \
+  '              alt = alt==null?stat[3]:alt+stat[3];\r\n' \
+  '            }\r\n' \
+  '            let dur_c = "--h--mn--s";\r\n' \
+  '            if (dur != null) {\r\n' \
+  '              dur = Math.round(dur);\r\n' \
+  '              let dur_s = dur % 60;\r\n' \
+  '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '            }\r\n' \
+  '            let dist_c = "-km";\r\n' \
+  '            if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
+  '            let ele_c = "-m";\r\n' \
+  '            if (ele != null) {ele_c = ele.toFixed(0) + "m";}\r\n' \
+  '            let alt_c = "-m";\r\n' \
+  '            if (alt != null) {alt_c = alt.toFixed(0) + "m";}\r\n' \
+  '            document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        refresh_graph();\r\n' \
+  '      }\r\n' \
+  '      function track_checkbox(trk) {\r\n' \
+  '        if (trk.checked) {\r\n' \
+  '          document.getElementById(trk.id.slice(0, -7)).style.display = "";\r\n' \
+  '          document.getElementById("waydots" + trk.id.slice(5, -7)).style.display = "";\r\n' \
+  '        } else {\r\n' \
+  '          if (trk.id.slice(0, -7) != focused) {\r\n' \
+  '            document.getElementById(trk.id.slice(0, -7)).style.display = "none";\r\n' \
+  '            document.getElementById("waydots" + trk.id.slice(5, -7)).style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function show_hide_tracks(show, others) {\r\n' \
+  '        let trks = document.getElementById("tracksform").children;\r\n' \
+  '        for (let t=0; t<trks.length; t++) {\r\n' \
+  '          if (trks[t].style.display != (others?"none":"")) {continue;}\r\n' \
+  '          let cb = trks[t].firstElementChild;\r\n' \
+  '          if (cb.checked != show) {\r\n' \
+  '            cb.checked = show;\r\n' \
+  '            track_checkbox(cb);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function track_color(trk) {\r\n' \
+  '        let foc = trk.id.slice(0, -5);\r\n' \
+  '        let col = trk.value.toUpperCase();\r\n' \
+  '        if (document.getElementById(foc).getAttribute("stroke").toUpperCase() == col) {return;}\r\n' \
+  '        document.getElementById(foc).setAttribute("stroke", col);\r\n' \
+  '        document.getElementById(foc).setAttribute("fill", col);\r\n' \
+  '        document.getElementById(foc.replace("track", "waydots")).setAttribute("stroke", col);\r\n' \
+  '        document.getElementById(foc.replace("track", "waydots")).setAttribute("fill", col);\r\n' \
+  '        track_save(trk);\r\n' \
+  '      }\r\n' \
+  '      function refresh_graph(sw=false) {\r\n' \
+  '        let graph = document.getElementById("graph");\r\n' \
+  '        let graphc = document.getElementById("graphc");\r\n' \
+  '        let gwidth = null;\r\n' \
+  '        let gheight = null;\r\n' \
+  '        let gctx = graphc.getContext("2d");\r\n' \
+  '        if (sw) {\r\n' \
+  '          if (graph.style.display == "none") {\r\n' \
+  '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '            graph.style.display = "block";\r\n' \
+  '            gctx.lineWidth = 1;\r\n' \
+  '            gctx.lineJoin = "round";\r\n' \
+  '            gctx.lineCap = "square";\r\n' \
+  '            rescale();\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            graph.style.display = "none";\r\n' \
+  '            rescale();\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (graph.style.display == "none") {return;}\r\n' \
+  '        }\r\n' \
+  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '        gheight = graph.offsetHeight;\r\n' \
+  '        graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '        graphc.setAttribute("height", gheight.toString());\r\n' \
+  '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
+  '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
+  '        if (focused == "") {return;}\r\n' \
+  '        let xl = 45;\r\n' \
+  '        let xr = gwidth - 20;\r\n' \
+  '        let yt = 10;\r\n' \
+  '        let yb = gheight - 15;\r\n' \
+  '        let gx = [];\r\n' \
+  '        let gy = [];\r\n' \
+  '        let gc = [];\r\n' \
+  '        let dur = 0;\r\n' \
+  '        let dist = 0;\r\n' \
+  '        let ele = 0;\r\n' \
+  '        let alt = 0;\r\n' \
+  '        let stats = tracks_stats[parseInt(focused.substring(5))];\r\n' \
+  '        for (let s=0; s<stats.length; s++) {\r\n' \
+  '          if (stats[s].length == 0) {continue;}\r\n' \
+  '          let stat = null;\r\n' \
+  '          gc.push(gx.length);\r\n' \
+  '          for (let p=0; p<stats[s].length; p++) {\r\n' \
+  '            stat = stats[s][p];\r\n' \
+  '            let pt = tracks_pts[parseInt(focused.substring(5))][s][p];\r\n' \
+  '            let dr = true;\r\n' \
+  '            switch (document.getElementById("graphy").selectedIndex) {\r\n' \
+  '              case 0:\r\n' \
+  '                gy.push(dist + stat[1]);\r\n' \
+  '                break;\r\n' \
+  '              case 1:\r\n' \
+  '                let e = parseFloat(pt[2]);\r\n' \
+  '                if (isNaN(e)) {\r\n' \
+  '                  dr = false;\r\n' \
+  '                } else {\r\n' \
+  '                  gy.push(e);\r\n' \
+  '                }\r\n' \
+  '                break;\r\n' \
+  '              case 2:\r\n' \
+  '                let a = parseFloat(pt[3]);\r\n' \
+  '                if (isNaN(a)) {\r\n' \
+  '                  dr = false;\r\n' \
+  '                } else {\r\n' \
+  '                  gy.push(a);\r\n' \
+  '                }\r\n' \
+  '                break;\r\n' \
+  '              case 3:\r\n' \
+  '                gy.push(ele + stat[2]);\r\n' \
+  '                break;\r\n' \
+  '              case 4:\r\n' \
+  '                gy.push(alt + stat[3]);\r\n' \
+  '                break;\r\n' \
+  '              case 5:\r\n' \
+  '                gy.push(stat[4] * 100);\r\n' \
+  '                break;\r\n' \
+  '              case 6:\r\n' \
+  '                gy.push(stat[5] * 100);\r\n' \
+  '                break;\r\n' \
+  '              case 7:\r\n' \
+  '                gy.push(stat[6] * 3.6);\r\n' \
+  '                break;\r\n' \
+  '            }\r\n' \
+  '            if (dr) {\r\n' \
+  '              switch (document.getElementById("graphx").selectedIndex) {\r\n' \
+  '                case 0:\r\n' \
+  '                  gx.push(dur + stat[0]);\r\n' \
+  '                  break;\r\n' \
+  '                case 1:\r\n' \
+  '                  gx.push(dist + stat[1]);\r\n' \
+  '                  break;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          dur += stat[0];\r\n' \
+  '          dist += stat[1];\r\n' \
+  '          ele += stat[2];\r\n' \
+  '          alt += stat[3];\r\n' \
+  '        }\r\n' \
+  '        if (gx.length < 2) {return;}\r\n' \
+  '        let minx = gx[0];\r\n' \
+  '        let maxx = gx[0];\r\n' \
+  '        let miny = gy[0];\r\n' \
+  '        let maxy = gy[0];\r\n' \
+  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '          if (minx > gx[i]) {minx = gx[i];}\r\n' \
+  '          if (maxx < gx[i]) {maxx = gx[i];}\r\n' \
+  '          if (miny > gy[i]) {miny = gy[i];}\r\n' \
+  '          if (maxy < gy[i]) {maxy = gy[i];}\r\n' \
+  '        }\r\n' \
+  '        if (maxx == minx) {maxx++;}\r\n' \
+  '        if (maxy == miny) {maxy++;}\r\n' \
+  '        let cx = (xr - xl) / (maxx - minx);\r\n' \
+  '        let cy = (yb - yt) / (maxy - miny);\r\n' \
+  '        let yl = 0;\r\n' \
+  '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '          yl = yb;\r\n' \
+  '        } else if (maxy < 0) {\r\n' \
+  '          yl = yt;\r\n' \
+  '        } else if (miny > 0) {\r\n' \
+  '          yl = yb;\r\n' \
+  '        } else {\r\n' \
+  '          yl = maxy * cy + yt;\r\n' \
+  '        }\r\n' \
+  '        gctx.strokeStyle = "rgb(56,56,56)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        let x = xl;\r\n' \
+  '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
+  '        while (x <= xr) {\r\n' \
+  '          gctx.moveTo(x, yb + 1);\r\n' \
+  '          gctx.lineTo(x, yt);\r\n' \
+  '          if (x == xr) {break;}\r\n' \
+  '          x += dx;\r\n' \
+  '          if (x > xr) {x = xr;}\r\n' \
+  '        }\r\n' \
+  '        let y = yb;\r\n' \
+  '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
+  '        while (y >= yt) {\r\n' \
+  '          gctx.moveTo(xl + 1, y);\r\n' \
+  '          gctx.lineTo(xr, y);\r\n' \
+  '          if (y == yt) {break;}\r\n' \
+  '          y -= dy;\r\n' \
+  '          if (y < yt) {y = yt;}\r\n' \
+  '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        gctx.moveTo(xl, yb);\r\n' \
+  '        gctx.lineTo(xl, yt);\r\n' \
+  '        gctx.moveTo(xl, yl);\r\n' \
+  '        gctx.lineTo(xr, yl);\r\n' \
+  '        gctx.lineTo(xr, yl - 1);\r\n' \
+  '        gctx.lineTo(xr, yl + 1);\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        gctx.fillStyle = "rgb(225,225,255)";\r\n' \
+  '        gctx.textAlign = "center";\r\n' \
+  '        gctx.textBaseline = "top";\r\n' \
+  '        x = xl;\r\n' \
+  '        while (x <= xr) {\r\n' \
+  '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
+  '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
+  '            let dur_m = (dur / 60) % 60;\r\n' \
+  '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
+  '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
+  '            gctx.fillText(dur_c, x, yl + 3);\r\n' \
+  '          } else {\r\n' \
+  '            gctx.fillText(((minx + (x - xl) / cx) / 1000).toFixed(1) + "km", x, yl + 3);\r\n' \
+  '          }\r\n' \
+  '          if (x == xr) {break;}\r\n' \
+  '          x += dx;\r\n' \
+  '          if (x > xr) {x = xr;}\r\n' \
+  '        }\r\n' \
+  '        gctx.textAlign = "right";\r\n' \
+  '        gctx.textBaseline = "middle";\r\n' \
+  '        y = yb;\r\n' \
+  '        let fin = false;\r\n' \
+  '        while (true) {\r\n' \
+  '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
+  '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
+  '            } else if (document.getElementById("graphy").selectedIndex == 5 || document.getElementById("graphy").selectedIndex == 6) {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
+  '            } else if (document.getElementById("graphy").selectedIndex == 7) {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
+  '            } else {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
+  '            }\r\n' \
+  '            if (fin) {break;}\r\n' \
+  '          }\r\n' \
+  '          if (y == yt) {\r\n' \
+  '            y = yl;\r\n' \
+  '            fin = true;\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          y -= dy;\r\n' \
+  '          if (y < yt) {y = yt;}\r\n' \
+  '        }\r\n' \
+  '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '          if (i == gc[0]) {\r\n' \
+  '            gctx.moveTo((gx[i] - minx) * cx + xl, (maxy - gy[i]) * cy + yt);\r\n' \
+  '            gc.shift();\r\n' \
+  '          } else {\r\n' \
+  '            gctx.lineTo((gx[i] - minx) * cx + xl, (maxy - gy[i]) * cy + yt);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '      }\r\n' \
+  '      function open_3D() {\r\n' \
+  '        if (focused == "") {return;}\r\n' \
+  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?" + focused.substring(5));\r\n' \
+  '      }\r\n' \
+  '      function rescale(tscale_ex=tscale) {\r\n' \
+  '        let zoom_ex = zoom;\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
+  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
+  '        } else {\r\n' \
+  '          zoom = eval(zoom_s);\r\n' \
+  '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
+  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
+  '        }\r\n' \
+  '        document.documentElement.style.setProperty("--scale", tscale / zoom);\r\n' \
+  '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
+  '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
+  '        if (focused) {\r\n' \
+  '          scroll_to_track(document.getElementById(focused));\r\n' \
+  '        } else {\r\n' \
+  '          let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
+  '        }\r\n' \
+  '        reframe();\r\n' \
+  '      }\r\n' \
+  '      function switch_tlock(resc=true) {\r\n' \
+  '        if (mode == "map") {return;}\r\n' \
+  '        let zoom_s_ex = zoom_s;\r\n' \
+  '        if (tlock) {\r\n' \
+  '          if (tlevel == 0) {return;}\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128275";\r\n' \
+  '          let nlevel = tlevel;\r\n' \
+  '          if (eval(zoom_s) < eval(tlevels[tlevel][1])) {\r\n' \
+  '            while (nlevel > 1) {\r\n' \
+  '              if (tlevels[nlevel - 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
+  '              if (eval(zoom_s) <= eval(tlevels[nlevel - 1][1])) {nlevel--;} else {break;}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (eval(zoom_s) > eval(tlevels[tlevel][1])) {\r\n' \
+  '            while (nlevel < tlevels.length - 1) {\r\n' \
+  '              if (tlevels[nlevel + 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
+  '              if (eval(zoom_s) >= eval(tlevels[nlevel + 1][1])) {nlevel++;} else {break;}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          tlevel = nlevel;\r\n' \
+  '          zoom_s = tlevels[nlevel][1];\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128274";\r\n' \
+  '        }\r\n' \
+  '        tlock = ! tlock;\r\n' \
+  '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
+  '        rescale();\r\n' \
+  '      }\r\n' \
+  '      function zoom_change(o) {\r\n' \
+  '        let zoom_s_ex = zoom_s;\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          if (o < 0) {\r\n' \
+  '            zoom_s = ([zooms[0]].concat(zooms))[zooms.indexOf(zoom_s)];\r\n' \
+  '          } else {\r\n' \
+  '            zoom_s = (zooms.concat(zooms[zooms.length - 1]))[zooms.indexOf(zoom_s) + 1];\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (tlock) {\r\n' \
+  '            if (o < 0) {\r\n' \
+  '              let ind = zooms.length;\r\n' \
+  '              while (ind >= 0) {\r\n' \
+  '                if (eval(zooms[ind]) < zoom) {break;}\r\n' \
+  '                ind --;\r\n' \
+  '              }\r\n' \
+  '              if (ind >=0) {zoom_s = zooms[ind]} else {return;}\r\n' \
+  '            } else {\r\n' \
+  '              let ind = 0;\r\n' \
+  '              while (ind < zooms.length) {\r\n' \
+  '                if (eval(zooms[ind]) > zoom) {break;}\r\n' \
+  '                ind ++;\r\n' \
+  '              }\r\n' \
+  '              if (ind < zooms.length) {zoom_s = zooms[ind]} else {return;}\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            let ntlevel = tlevel;\r\n' \
+  '            if (o < 0) {\r\n' \
+  '              if (tlevel <= 1) {return;}\r\n' \
+  '              ntlevel = tlevel - 1;\r\n' \
+  '            } else {\r\n' \
+  '              if (tlevel >= tlevels.length - 1) {return;}\r\n' \
+  '              ntlevel = tlevel + 1;\r\n' \
+  '            }\r\n' \
+  '            if (tlevels[ntlevel][0] != tlevels[tlevel][0]) {\r\n' \
+  '              switch_tiles(null, ntlevel);\r\n' \
+  '              return;\r\n' \
+  '            }\r\n' \
+  '            tlevel = ntlevel;\r\n' \
+  '            zoom_s = tlevels[tlevel][1];\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (zoom_s == zoom_s_ex) {return;}\r\n' \
+  '        rescale();\r\n' \
+  '      }\r\n' \
+  '      function zoom_dec() {\r\n' \
+  '        zoom_change(-1);\r\n' \
+  '      }\r\n' \
+  '      function zoom_inc() {\r\n' \
+  '        zoom_change(1);\r\n' \
+  '      }\r\n' \
+  '      function opacity_dec() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        let opacity = 1;\r\n' \
+  '        if (filter && filter != "none") {\r\n' \
+  '          opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
+  '        }\r\n' \
+  '        if (opacity > 0.19) {\r\n' \
+  '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function opacity_inc() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (filter && filter != "none") {\r\n' \
+  '          let opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
+  '          if (opacity < 0.81) {\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
+  '          } else {filter = "none";}\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function switch_fpanel(pa) {\r\n' \
+  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
+  '        for (let p=1; p<=3; p++) {\r\n' \
+  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
+  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
+  '          } else {\r\n' \
+  '            fp[p].style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function track_edit() {\r\n' \
+  '        if (focused == "") {return;}\r\n' \
+  '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5)));\r\n' \
+  '      }\r\n' \
+  '      function escape(s) {\r\n' \
+  '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
+  '      }\r\n' \
+  '      function load_cb(t) {\r\n' \
+  '        if (t.status != 204) {\r\n' \
+  '          window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);\r\n' \
+  '          return false;\r\n'\
+  '        }\r\n' \
+  '        return true;\r\n'\
+  '      }\r\n' \
+  '      function error_cb(t) {\r\n' \
+  '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
+  '      }\r\n' \
+  '      function track_save(prop) {\r\n' \
+  '        if (prop.id.slice(-4) == "file") {\r\n' \
+  '          if (prop.value.slice(-4) != ".gpx") {\r\n' \
+  '            if (prop.value.slice(-4).toLowerCase() != ".gpx") {\r\n' \
+  '              prop.value = prop.value + ".gpx";\r\n' \
+  '            } else {\r\n' \
+  '              prop.value = prop.value.slice(0, -4) + ".gpx";\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (prop.id.slice(-4) == "name"){\r\n' \
+  '          document.getElementById(prop.id.replace("name", "desc")).innerHTML = document.getElementById(prop.id.replace("name", "desc")).innerHTML.replace(/.*(<br>.*)/, escape(prop.value) + "$1");\r\n' \
+  '        }\r\n' \
+  '        let body = prop.id + "=" + (prop.id.slice(-5)=="color"?prop.value.toUpperCase():prop.value);\r\n' \
+  '        let msgn = show_msg("{#jmsave1#}", 0);\r\n' \
+  '        xhr.onload = (e) => {load_cb(e.target)?show_msg("{#jmsave2#}", 5, msgn):show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '        xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '        xhr.open("POST", "/track");\r\n' \
+  '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr.send(body);\r\n' \
+  '      }\r\n' \
+  '      var xhr = new XMLHttpRequest();\r\n' \
+  '      var xhrt = new XMLHttpRequest();\r\n' \
+  '      xhrt.addEventListener("error", error_tcb);\r\n' \
+  '    </script>\r\n' \
+  '  </head>\r\n' \
+  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
+  '    <table style="width:98vw;">\r\n' \
+  '      <colgroup>\r\n' \
+  '        <col style="width:21em;">\r\n' \
+  '        <col style="width:calc(98vw - 21em);">\r\n' \
+  '      </colgroup>\r\n' \
+  '      <thead>\r\n' \
+  '        <tr>\r\n' \
+  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
+  '           <input type="text" id="filter_track" name="filter_track" value="" disabled style="opacity:0;">\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jhidetracks#}" style="margin-left:1.25em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jedit#}" style="margin-left:1.25em;" onclick="track_edit()">&#9998</button><button title="{#jzoomall#}" style="margin-left:1.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_fpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel1#}</span>\r\n' \
+  '              <form id="filterform1" autocomplete="off" onchange="tracks_calc(1)">\r\n' \
+  '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
+  '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
+  '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
+  '                <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="##EGTHRESHOLD##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="agstren" style="right:0.7em;">##AGTHRESHOLD##</span>\r\n' \
+  '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel2#}</span>\r\n' \
+  '              <form id="filterform2" autocomplete="off" onchange="tracks_calc(2)">\r\n' \
+  '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
+  '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
+  '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
+  '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
+  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel3#}</span>\r\n' \
+  '              <form id="filterform3" autocomplete="off" onchange="tracks_calc(3)">\r\n' \
+  '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
+  '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
+  '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
+  '                <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="##SPRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="spmax" style="right:0.7em;">##SPMAX##</span>\r\n' \
+  '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '          </th>\r\n' \
+  '        </tr>\r\n' \
+  '      </thead>\r\n' \
+  '      <tbody>\r\n' \
+  '        <tr style="display:table-row;">\r\n' \
+  '          <td style="display:table-cell;vertical-align:top;">\r\n' \
+  '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
+  '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%">\r\n' \
+  '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
+  '                <form id="tracksform" autocomplete="off">\r\n                  ##TRACKS##\r\n' \
+  '                </form>\r\n' \
+  '              </div>\r\n' \
+  '            </div>\r\n' \
+  '          </td>\r\n' \
+  '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS##' \
+  '              </div>\r\n' \
+  '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
+  '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
+  '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
+  '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
+  '                  <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
+  '                </svg>\r\n' \
+  '                <span id="scalevalue" style="font-size:70%;color:black;">0 m</span>\r\n' \
+  '              </div>\r\n' \
+  '            </div>\r\n' \
+  '          </td>\r\n' \
+  '        </tr>\r\n' \
+  '      </tbody>\r\n' \
+  '      <tfoot>\r\n' \
+  '        <tr>\r\n' \
+  '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
+  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
+  '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jexphelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
+  '            </div>\r\n' \
+  '          </th>\r\n' \
+  '        </tr>\r\n' \
+  '      </tfoot>\r\n' \
+  '    </table>\r\n' \
+  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
+  '      </canvas>\r\n' \
+  '    </div>\r\n' \
+  '    <script>\r\n' \
+  '      var mousex = null;\r\n' \
+  '      var mousey = null;\r\n' \
+  '      var viewpane = document.getElementById("view");\r\n' \
+  '      var handle = document.getElementById("handle");\r\n' \
+  '      var hand = null;\r\n' \
+  '      function mouse_down(e, elt) {\r\n' \
+  '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
+  '        mousex = e.pageX;\r\n' \
+  '        mousey = e.pageY;\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        document.onmousemove = mouse_move;\r\n' \
+  '        document.onmouseup = mouse_up;\r\n' \
+  '        document.onclick = mouse_click;\r\n' \
+  '        document.oncontextmenu = mouse_click;\r\n' \
+  '        if (e.button == 0) {\r\n' \
+  '          if (elt.id == "view") {\r\n' \
+  '            hand = elt;\r\n' \
+  '            viewpane.style.cursor = "all-scroll";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mouse_up(e, elt) {\r\n' \
+  '        mousex = null;\r\n' \
+  '        mousey = null;\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        document.onmousemove = null;\r\n' \
+  '        document.onmouseup = null;\r\n' \
+  '        viewpane.style.cursor = "";\r\n' \
+  '        if (hand) {\r\n' \
+  '          hand = null;\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (elt && e.button == 2) {\r\n' \
+  '          if (elt.id.substring(0, 4) == "path") {\r\n' \
+  '            let cb = document.getElementById(elt.id.replace("path", "track") + "visible");\r\n' \
+  '            cb.checked = ! cb.checked;\r\n' \
+  '            track_checkbox(cb);\r\n' \
+  '            cb.scrollIntoView({block:"nearest"});\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mouse_click(e, elt) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        document.onclick = null;\r\n' \
+  '        document.oncontextmenu = null;\r\n' \
+  '        if (elt) {\r\n' \
+  '          if (elt.id.substring(0, 4) == "path") {\r\n' \
+  '            let trk = document.getElementById(elt.id.replace("path", "track") + "desc");\r\n' \
+  '            track_click(null, trk);\r\n' \
+  '          } else if (elt.id.substring(0, 7) == "waydots") {\r\n' \
+  '            let trk = document.getElementById(elt.id.replace("waydots", "track") + "desc");\r\n' \
+  '            track_click(null, trk);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mouse_move(e) {\r\n' \
+  '        if (mousex != null && mousey != null && hand != null) {\r\n' \
+  '          let dx = e.pageX - mousex;\r\n' \
+  '          let dy = e.pageY - mousey;\r\n' \
+  '          mousex = e.pageX;\r\n' \
+  '          mousey = e.pageY;\r\n' \
+  '          let p = viewpane.parentNode;\r\n' \
+  '          if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
+  '            if (hand.id == "view") {\r\n' \
+  '              scroll_dview(dx, dy);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mouse_wheel(e) {\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        if (e.ctrlKey) {\r\n' \
+  '          if (e.deltaY < 0) {zoom_inc();} else {zoom_dec();}\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (! e.altKey) {\r\n' \
+  '          if (e.shiftKey) {scroll_dview(-e.deltaY, 0);} else {scroll_dview(0, -e.deltaY);}\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (! focused) {return;}\r\n' \
+  '        tr = document.getElementById(focused + "cont");\r\n' \
+  '        do {\r\n' \
+  '          if (e.deltaY > 0) {\r\n' \
+  '            tr = tr.nextElementSibling;\r\n' \
+  '          } else {\r\n' \
+  '            tr = tr.previousElementSibling;\r\n' \
+  '          }\r\n' \
+  '          if (! tr) {return;}\r\n' \
+  '        } while (! tr.firstElementChild.checked || tr.style.display == "none")\r\n' \
+  '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
+  '      }\r\n' \
+  '      function page_unload() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (! filter) {filter = "none";}\r\n' \
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
+  '      }\r\n' \
+  '      function error_dcb() {\r\n' \
+  '      } \r\n' \
+  '      function load_dcb(t) {\r\n' \
+  '        if (t.status != 200) {return;}\r\n' \
+  '        if (t.response == "") {return;}\r\n' \
+  '        let tracks = t.response.split("==\\r\\n");\r\n' \
+  '        for (let t=0; t<tracks.length; t++) {\r\n' \
+  '          tracks_pts.push([]);\r\n' \
+  '          if (tracks[t] == "") {continue;}\r\n' \
+  '          let segs = tracks[t].split("=\\r\\n");\r\n' \
+  '          for (let s=0; s<segs.length; s++) {\r\n' \
+  '            let s_p = [];\r\n' \
+  '            if (segs[s] != "") {\r\n' \
+  '              let pts = segs[s].split("\\r\\n");\r\n' \
+  '              for (let p=0; p<pts.length; p++) {\r\n' \
+  '                s_p.push(pts[p].split("&").map(decodeURIComponent));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            tracks_pts[t].push(s_p);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        page_load(true);\r\n' \
+  '      }\r\n' \
+  '      function page_load(fol=false) {\r\n' \
+  '        if (! fol) {\r\n' \
+  '          let xhrd = new XMLHttpRequest();\r\n' \
+  '          xhrd.onerror = (e) => error_dcb(e.target);\r\n' \
+  '          xhrd.onload = (e) => load_dcb(e.target);\r\n' \
+  '          xhrd.open("GET", "/GPXExplorer/data");\r\n' \
+  '          xhrd.send();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
+  '          document.getElementById("tset").focus();\r\n' \
+  '          document.getElementById("tset").blur();\r\n' \
+  '        }\r\n' \
+  '        let prev_state = sessionStorage.getItem("state");\r\n' \
+  '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
+  '        if (prev_state != null) {zoom_s = prev_state[3]}\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          add_tile();\r\n' \
+  '          rescale();\r\n' \
+  '        } else {\r\n' \
+  '          if (prev_state == null) {\r\n' \
+  '            switch_tiles(0, null);\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
+  '            switch_tiles(parseInt(prev_state[0]), parseInt(prev_state[1]));\r\n' \
+  '            if (prev_state[2] == "true") {switch_tlock(false);}\r\n' \
+  '          }\r\n' \
+  '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
+  '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
+  '          if (tlevel == 0) {rescale();}\r\n' \
+  '        }\r\n' \
+  '        scroll_to_all();\r\n' \
+  '        if (prev_state != null) {\r\n' \
+  '          dots_visible = prev_state[4] == "true";\r\n' \
+  '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
+  '          eset = parseInt(prev_state[6]);\r\n' \
+  '          iset = parseInt(prev_state[7]);\r\n' \
+  '          document.getElementById("egstren").innerHTML = prev_state[8];\r\n' \
+  '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
+  '          document.getElementById("agstren").innerHTML = prev_state[9];\r\n' \
+  '          document.getElementById("agfilter").value = parseFloat(prev_state[9]);\r\n' \
+  '          document.getElementById("sldist").innerHTML = prev_state[10];\r\n' \
+  '          document.getElementById("sldfilter").value = parseFloat(prev_state[10]);\r\n' \
+  '          document.getElementById("slmax").innerHTML = prev_state[11];\r\n' \
+  '          document.getElementById("slmfilter").value = parseFloat(prev_state[11]);\r\n' \
+  '          document.getElementById("sptime").innerHTML = prev_state[12];\r\n' \
+  '          document.getElementById("sptfilter").value = parseFloat(prev_state[12]);\r\n' \
+  '          document.getElementById("spmax").innerHTML = prev_state[13];\r\n' \
+  '          document.getElementById("spmfilter").value = parseFloat(prev_state[13]);\r\n' \
+  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
+  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
+  '        }\r\n' \
+  '        tracks_calc();\r\n' \
+  '        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
+  '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        window.onbeforeunload = page_unload;\r\n' \
+  '        if (focused != "") {\r\n' \
+  '          foc = focused;\r\n' \
+  '          focused = "";\r\n' \
+  '          track_click(null, document.getElementById(foc + "desc"));\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
+  '        window.alert("{#jsession#}");\r\n' \
+  '        document.body.innerHTML = "";\r\n' \
+  '        document.head.innerHTML = "";\r\n' \
+  '        window.close();\r\n' \
+  '        throw "{#jsession#}";\r\n' \
+  '      }\r\n' \
+  '      page_load();\r\n' \
+  '    </script>\r\n' \
+  '  </body>\r\n' \
+  '</html>'
+  HTMLExp_TEMPLATE = HTMLExp_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
+  HTMLExp_TRACK_TEMPLATE = \
+  '<div id="track%scont">\r\n' \
+  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="track" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
+  '                    <label for="track%svisible" id="track%sdesc" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br></label><br>\r\n' \
+  '                    <input type="color" id="track%scolor" value="%s" onchange="track_color(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
+  '                    <span id="track%sfocus">\r\n' \
+  '                      <label for="track%sname">{jname}</label>\r\n' \
+  '                      <input type="text" id="track%sname" name="track%sname" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <label for="track%sfile">{jfile}</label>\r\n' \
+  '                      <input type="text" id="track%sfile" name="track%sfile" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
+  '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" disabled><br>\r\n' \
+  '                      <label for="track%speriod">{jperiod}</label>\r\n' \
+  '                      <input type="text" id="track%speriod" name="track%speriod" value="%s" disabled><br>\r\n' \
+  '                      <label for="track%scontent">{jcontent}</label>\r\n' \
+  '                      <input type="text" id="track%scontent" name="track%scontent" value="%s" disabled><br>\r\n' \
+  '                    </span>\r\n' \
+  '                  </div>'
+  HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
+  HTMLExp_PATH_TEMPLATE = \
+  '\r\n' \
+  '              <svg id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
+  '                <path id="path%s" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" d="M0 0">\r\n' \
+  '                  <title>%s</title>;\r\n' \
+  '                </path>\r\n' \
+  '                <text id="patharrows%s" dy="0.25em">\r\n' \
+  '                  <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
+  '                </text>\r\n' \
+  '              </svg>'
+  HTMLExp_WAYDOT_TEMPLATE = \
+  '                <circle onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this.parentNode)" cx="%s" cy="%s"><title>%s</title></circle>\r\n'
+  HTMLExp_WAYDOTS_TEMPLATE = \
+  '              <svg id="waydots%s" pointer-events="none" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
+  '              </svg>\r\n'
 
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     try:
@@ -7974,7 +10344,7 @@ class GPXTweakerWebInterfaceServer():
       if l[0] == '[' and l[-1] == ']':
         scur = l[1:-1].lower()
         if hcur == 'global':
-          if not scur in ('interfaceserver', 'tilesbuffer', 'boundaries', 'statistics'):
+          if not scur in ('interfaceserver', 'tilesbuffer', 'boundaries', 'folders', 'statistics'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:9] == 'maptiles ':
@@ -7989,7 +10359,7 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
         continue
-      if not (hcur[:9] == 'maptiles ' and scur == 'display'):
+      if not (hcur[:9] == 'maptiles ' and scur == 'display') and not (hcur == 'global' and scur == 'folders'):
         if ':' in l:
           field, value = l.split(':', 1)
           field = field.lower().strip()
@@ -8095,6 +10465,17 @@ class GPXTweakerWebInterfaceServer():
               return False
           if not None in (self.VMinLon, self.VMaxLon, self.DefLon):
             if self.DefLon <= self.VMinLon or self.DefLon >= self.VMaxLon:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+        elif scur == 'folders':
+          if l.rstrip().endswith('*'):
+            self.Folders.insert(0, os.path.abspath(os.path.expandvars(l.lstrip().rstrip(' *'))))
+            if not os.path.isdir(self.Folders[0]):
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+          else:
+            self.Folders.append(os.path.abspath(os.path.expandvars(l.lstrip().rstrip())))
+            if not os.path.isdir(self.Folders[-1]):
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
         elif scur == 'statistics':
@@ -8231,9 +10612,9 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __init__(self, uri, map=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
-    self.Uri = uri
-    self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, self.Uri + str(time.time())))
+  def __init__(self, uri=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
+    self.Uri = None
+    self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
     self.PSessionId = None
     self.Ip = '127.0.0.1'
@@ -8246,6 +10627,7 @@ class GPXTweakerWebInterfaceServer():
     self.VMaxLon = 180
     self.DefLat = None
     self.DefLon = None
+    self.Folders = []
     self.GpuComp = 0;
     self.EleGainThreshold = 4;
     self.AltGainThreshold = 3;
@@ -8260,7 +10642,8 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationsProviders = []
     self.ElevationMapSets = []
     self.ItinerariesProviders = []
-    self.Track = WGS84Track()
+    self.Tracks = []
+    self.Track = None
     self.TilesSet = None
     self.MapSet = None
     self.ElevationMapSet = None
@@ -8269,6 +10652,8 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = None
     self.HTML3D = None
     self.HTML3DData = None
+    self.HTMLExp = None
+    self.TracksBoundaries = []
     self.Minx = None
     self.Maxx = None
     self.Miny = None
@@ -8282,62 +10667,80 @@ class GPXTweakerWebInterfaceServer():
     if map_minlat != None:
       if map_minlat < self.VMinLat:
         err = True
-      if map:
+      if bmap:
         self.VMinLat = map_minlat
     if map_maxlat != None:
       if map_maxlat > self.VMaxLat:
         err = True
-      if map:
+      if bmap:
         self.VMaxLat = map_maxlat
     if map_minlon != None:
       if map_minlon < self.VMinLon:
         err = True
-      if map:
+      if bmap:
         self.VMinLon = map_minlon
     if map_maxlat != None:
       if map_maxlat > self.VMaxLat:
         err = True
-      if map:
+      if bmap:
         self.VMaxLon = map_maxlon
     if err:
       self.log(0, 'berror4')
       return
     self.DefLat = self.DefLat if self.DefLat != None else (self.VMinLat + self.VMaxLat) / 2
     self.DefLon = self.DefLon if self.DefLon != None else (self.VMinLon + self.VMaxLon) / 2
-    if not self.Track.LoadGPX(uri):
-      return
-    self.log(1, 'build')
-    if not self.Track.BuildWebMercator():
-      self.log(0, 'berror1')
-      return
-    if next((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), None) == None:
-      minlat = self.DefLat if (not map or map_minlat == None) else map_minlat
-      maxlat = self.DefLat if (not map or map_maxlat == None) else map_maxlat
-      minlon = self.DefLon if (not map or map_minlon == None) else map_minlon
-      maxlon = self.DefLon if (not map or map_maxlon == None) else map_maxlon
+    if len(self.Folders) == 0:
+      self.Folders.append(os.path.abspath(''))
+    if uri != None:
+      uris = [os.path.abspath(uri)]
     else:
-      minlat = min(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
-      maxlat = max(p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
-      minlon = min(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
-      maxlon = max(p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg)
+      k = lambda f: f[2].lower() == 'gpx' and not f[0].lower().endswith(' - original') and not f[0].lower().endswith(' - backup')
+      uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if k(f.rpartition('.')))
+    for u in uris:
+      track = WGS84Track()
+      if not track.LoadGPX(u):
+        if uri == None:
+          continue
+        else:
+          return
+      minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat == None) else map_minlat))
+      maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat == None) else map_maxlat))
+      minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_minlon == None) else map_minlon))
+      maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon == None) else map_maxlon))
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
-        self.log(0, 'berror4')
-        return
-    if map:
-      self.Mode = "map"
-      self.TilesSets = [["Map"]]
+        if uri == None:
+          self.log(0, 'berror6')
+          continue
+        else:
+          self.log(0, 'berror4')
+          return
+      track.Ind = len(self.Tracks)
+      self.Tracks.append([u, track])
+      self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
+    if uri != None:
+      self.Uri, self.Track = self.Tracks[0]
+    minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat == None) else map_minlat))
+    maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat == None) else map_maxlat))
+    minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon == None) else map_minlon))
+    maxlon = max((b[3] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_maxlon == None) else map_maxlon))
+    if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
+      self.log(0, 'berror4')
+      return
+    if bmap:
+      self.Mode = 'map'
+      self.TilesSets = [['Map']]
       self.Map = WebMercatorMap()
-      if '://' in map or ':\\' in map:
-        if not self.Map.LoadMap(map, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
+      if '://' in bmap or ':\\' in bmap:
+        if not self.Map.LoadMap(bmap, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
           self.log(0, 'berror')
           return
       else:
         for i in range(len(self.MapSets)):
-          if self.MapSets[i][0].lower() == map.lower() or map == " ":
+          if self.MapSets[i][0].lower() == bmap.lower() or bmap == " ":
             self.MapSet = i
             break
         if self.MapSet == None:
-          self.log(0, 'berror3', map)
+          self.log(0, 'berror3', bmap)
           return
         minlat = minlat if map_minlat == None else map_minlat
         maxlat = maxlat if map_maxlat == None else map_maxlat
@@ -8364,23 +10767,27 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'berror4')
           return
       self.Minx, self.Miny, self.Maxx, self.Maxy = self.VMinx, self.VMiny, self.VMaxx, self.VMaxy
+      for t in range(len(self.TracksBoundaries)):
+        self.TracksBoundaries[t] = (self.Minx, self.Maxx, self.Miny, self.Maxy)
     else:
       if len(self.TilesSets) == 0 or not self.TilesBufferSize or not self.TilesBufferThreads:
         self.log(0, 'berror5')
         return
-      self.Mode = "tiles"
+      self.Mode = 'tiles'
       self.Map = WebMercatorMap(self.TilesBufferSize, self.TilesBufferThreads)
       self.TilesSet = 0
       self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
       self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
       self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011))
       self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))
+      for t in range(len(self.TracksBoundaries)):
+        self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, self.TracksBoundaries[t][0] - 0.008), max(self.VMinLon, self.TracksBoundaries[t][2] - 0.011)), WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, self.TracksBoundaries[t][1] + 0.008), min(self.VMaxLon, self.TracksBoundaries[t][3] + 0.011))))
     self.Elevation = WGS84Elevation()
     if emap:
       self.ElevationsProviders = []
       if '://' in emap or ':\\' in emap:
         if self.Elevation.LoadMap(emap):
-          self.EMode = "map"
+          self.EMode = 'map'
           self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
           self.log(1, 'elevation', emap)
         else:
@@ -8399,7 +10806,7 @@ class GPXTweakerWebInterfaceServer():
           minlon = minlon if map_minlon == None else map_minlon
           maxlon = maxlon if map_maxlon == None else map_maxlon
           if self.Elevation.FetchMap(self.ElevationMapSets[self.ElevationMapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.ElevationMapSets[self.ElevationMapSet][2]):
-            self.EMode = "map"
+            self.EMode = 'map'
             self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
             self.log(1, 'elevation', self.ElevationMapSets[self.ElevationMapSet][0])
           else:
@@ -8408,7 +10815,7 @@ class GPXTweakerWebInterfaceServer():
     elif len(self.ElevationsProviders) > 0:
       self.ElevationProviderSel = 0
       if 'layer' in self.ElevationsProviders[0][1]:
-        self.EMode = "tiles"
+        self.EMode = 'tiles'
         self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
         self.log(1, 'elevation', self.ElevationsProviders[0][0])
       else:
@@ -8435,7 +10842,10 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
     else:
       self.ItineraryProvider = None
-    self.HTML = ''
+    if uri != None:
+      self.HTML = ''
+    else:
+      self.HTMLExp = ''
 
   def _build_pathes(self):
     def _coord_to_vb(x, y):
@@ -8446,11 +10856,11 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_waypoints(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 5), pt[0], *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
 
   def _build_points(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([str(pt[0])] * 5), str(pt[0]), *(a for b in zip(*([[str(pt[0])] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) +   '</div>' for s in range(len(self.Track.Pts)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[str(pt[0])] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) +   '</div>' for s in range(len(self.Track.Pts)))
 
   def _build_waydots(self):
     return ''.join(GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for pt in self.Track.WebMercatorWpts)
@@ -8607,21 +11017,107 @@ class GPXTweakerWebInterfaceServer():
     self.log(0, '3dbuilt')
     return True
 
+  def _build_pathes_exp(self):
+    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
+    def _coord_to_vb(x, y):
+      return '%.1f %.1f' % (x - self.Minx, self.Maxy - y)
+    pathes = ''
+    pathes = ''.join(GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', "&rsaquo; " * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, f(self.Tracks[t][1].Name), t, t) for t in range(len(self.Tracks)))
+    return pathes
+
+  def _build_tracks_exp(self):
+    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 5), f(self.Tracks[t][1].Name), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(f, (self.Tracks[t][1].Name, *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (str(len(self.Tracks[t][1].Pts)) , str(sum(len(s) for s in self.Tracks[t][1].Pts)), str(len(self.Tracks[t][1].Wpts)))))) for a in b)) for t in range(len(self.Tracks)))
+
+  def _build_waydots_exp(self):
+    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
+    def _coord_to_vb(x, y, t):
+      return '%.1f' % (x - self.TracksBoundaries[t][0]), '%.1f' % (self.TracksBoundaries[t][3] - y)
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (*_coord_to_vb(*WGS84Track.WGS84toWebMercator(*pt[1][0:2]), t), f(pt[1][4])) for pt in self.Tracks[t][1].Wpts)) for t in range(len(self.Tracks)))
+
+  def BuildHTMLExp(self):
+    if self.HTMLExp == None:
+      return False
+    defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    pathes = self._build_pathes_exp()
+    waydots = self._build_waydots_exp()
+    tracks = self._build_tracks_exp()
+    tsets = self._build_tsets()
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
+    self.log(2, 'builtexp')
+    return True
+
+  def EditMode(self):
+    if self.HTML == None:
+      return False
+    if self.Mode == 'tiles':
+      if self.HTML != '':
+        minlat = min((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLat)
+        maxlat = max((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLat)
+        minlon = min((p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLon)
+        maxlon = max((p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLon)
+        self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011))
+        self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))
+      else:
+        self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.Track.Ind]
+    self.HTML = ''
+    self.log(1, 'build')
+    if not self.Track.BuildWebMercator():
+      self.log(0, 'berror1')
+      return False
+    if self.BuildHTML():
+      self.log(1, 'built')
+      return True
+    else:
+      return False
+
+  def ExploreMode(self):
+    if self.HTMLExp == None:
+      return False
+    self.HTML = None
+    self.HTMLExp = ''
+    if self.Track != None:
+      self.Track.Waypts = self.Track.UWaypts
+      self.Track.Trkpts = self.Track.UTrkpts
+      if self.Track.OTrack != self.Track.Track:
+        try:
+          self.Track.OTrack.unlink()
+        except:
+          pass
+        self.Track.OTrack = self.Track.Track
+      if self.Mode == 'tiles':
+        self.TracksBoundaries[self.Track.Ind] = (self.Minx, self.Maxx, self.Miny, self.Maxy)
+        self.Minx = min((b[0] for b in self.TracksBoundaries), default=self.Minx)
+        self.Maxx = max((b[1] for b in self.TracksBoundaries), default=self.Maxx)
+        self.Miny = min((b[2] for b in self.TracksBoundaries), default=self.Miny)
+        self.Maxy = max((b[3] for b in self.TracksBoundaries), default=self.Maxy)
+    self.log(1, 'buildexp')
+    if self.BuildHTMLExp():
+      if self.Track != None:
+        self.HTMLExp = self.HTMLExp.replace('var focused = ""', 'var focused = "track' + str(self.Track.Ind) + '"')
+        self.Track = None
+      self.log(1, 'builtexp')
+      return True
+    else:
+      return False    
+
   def _start_webserver(self, ind):
     with ThreadedDualStackServer((self.Ip, self.Ports[0] + ind), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
       self.GPXTweakerInterfaceServerInstances[ind].Interface = self
       self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
 
   def run(self):
-    if self.BuildHTML():
-      self.log(1, 'built')
-      self.log(0, 'start')
-      for ind in range(self.Ports[1] - self.Ports[0] + 1):
-        webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
-        webserver_thread.start()
-      return True
-    else:
+    try:
+      if not (self.EditMode() if self.Uri != None else self.ExploreMode()):
+        return False
+    except:
       return False
+    self.log(0, 'start')
+    for ind in range(self.Ports[1] - self.Ports[0] + 1):
+      webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
+      webserver_thread.start()
+    return True
 
   def shutdown(self):
     self.log(0, 'close')
@@ -8631,7 +11127,7 @@ class GPXTweakerWebInterfaceServer():
       except:
         pass
     try:
-      if self.Mode == "tiles":
+      if self.Mode == 'tiles':
         self.Map.Tiles.Close()
     except:
       pass
@@ -8641,7 +11137,7 @@ if __name__ == '__main__':
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
   CustomArgumentParser = partial(argparse.ArgumentParser, formatter_class=formatter)
   parser = CustomArgumentParser()
-  parser.add_argument('uri', metavar='URI', help=LSTRINGS['parser']['uri'])
+  parser.add_argument('uri', metavar='URI', help=LSTRINGS['parser']['uri'], nargs='?', default=None)
   parser.add_argument('--conf', '-c', metavar='CONF', help=LSTRINGS['parser']['conf'], default='')
   parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs ='?', const=' ', default='')
   parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const=' ', default='')
@@ -8650,20 +11146,21 @@ if __name__ == '__main__':
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
-  if args.uri.rpartition('.')[2] != 'gpx':
-    parser.error(LSTRINGS['parser']['gpx'])
+  if args.uri != None:
+    if args.uri.rpartition('.')[2] != 'gpx':
+      parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
   try:
-    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, map=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   except:
     log('interface', 0, 'berror')
     exit()
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
-    print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0])))
+    print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri != None else 'Explorer'))))
   else:
-    webbrowser.open('http://%s:%s/GPXTweaker.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0]))
+    webbrowser.open('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri != None else 'Explorer')))
   print(LSTRINGS['parser']['keyboard'])
   while True:
     k = msvcrt.getch()
