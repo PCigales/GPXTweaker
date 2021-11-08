@@ -129,9 +129,10 @@ FR_STRINGS = {
     'jswitchpoints': 'afficher / masquer les points et points de cheminement',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D',
-    'jedit': 'éditer la trace',
+    'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
+    'jedit': 'éditer la trace',
     'jzoomall': 'recadrer sur toutes les traces',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
@@ -227,8 +228,9 @@ FR_STRINGS = {
     'close': 'fermeture',
   },
   'parser': {
-    'uri': 'chemin d\'accès à la trace',
+    'uri': 'chemin d\'accès à la trace ou argument pas mentionné pour démarrer avec l\'explorateur de traces',
     'conf': 'chemin d\'accès au fichier de configuration [même répertoire que le script par défaut]',
+    'trk': 'indice de la trace (commençant à 0) [0 par défaut]',
     'map': 'chemin d\'accès complet à la carte ou nom du fournisseur de carte ou vide pour utiliser le premier founisseur de carte configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles configurés [par défaut]',
     'emap': 'chemin d\'accès complet à la carte d\'altitudes ou nom du fournisseur de carte d\'altitudes ou vide pour utiliser le premier fournisseur de carte d\'altitudes configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles et données d\'altitudes configurés [par défaut]',
     'box': '"minlat, maxlat, minlon, maxlon" (latitudes minimale et maximale, longitudes minimale et maximale, avec les "" ) de la carte à charger / à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / déterminé à partir de la trace par défaut]',
@@ -339,9 +341,10 @@ EN_STRINGS = {
     'jswitchpoints': 'show / hide the points and waypoints',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer',
-    'jedit': 'edit the track',
+    'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
+    'jedit': 'edit the track',
     'jzoomall': 'reframe on all tracks',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
@@ -437,8 +440,9 @@ EN_STRINGS = {
     'close': 'shutdown',
   },
   'parser': {
-    'uri': 'path to the track',
+    'uri': 'path to the track or argument not mentioned to start with the explorer of tracks',
     'conf': 'full path to the configuration file [same folder as the script by default]',
+    'trk': 'index of the track (starting at 0) [0 by default]',
     'map': 'full path to the map or name of the map provider or blank to use the first map provider configured, or option not mentioned to use the tiles providers configured [by default]',
     'emap': 'path to the elevations map or name of the elevations map provider or blank to use the first elevations map configured, or option not mentioned to use the elevations tiles and data providers configured [by default]',
     'box': '"minlat, maxlat, minlon, maxlon" (minimum and maximum latitudes, minimum and maximum longitudes, with the "") of the map to be loaded / retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / determined from the track by default]',
@@ -2313,13 +2317,11 @@ class WGS84Track(WGS84WebMercator):
 
   def __init__(self):
     self.OTrack = None
+    self.STrack = None
     self.Track = None
+    self.TrkId = None
     self.Name = None
     self.Color = None
-    self.Waypts = None
-    self.Trkpts = None
-    self.UWaypts = None
-    self.UTrkpts = None
     self.Wpts = None
     self.Pts = None
     self.WebMercatorWpts = None
@@ -2340,45 +2342,55 @@ class WGS84Track(WGS84WebMercator):
           self._XMLClean(n)
         l -= 1
 
-  def _processGPX(self):
+  def ProcessGPX(self, mode='a'):
     flt = lambda s: float(s) if (s != None and s != '') else None
-    self.UWaypts = self.Track.getElementsByTagNameNS('*', 'wpt')
-    self.Wpts = list(zip(range(len(self.UWaypts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in self.UWaypts)))
+    if mode == 'a' or mode == 'w':
+      wpts = self.Track.getElementsByTagNameNS('*', 'wpt')
+      try:
+        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None, _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'name')) or pt.getAttribute('name') or None) for pt in wpts)))
+      except:
+        return False
     try:
-      trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
+      trk = self.Track.getElementsByTagNameNS('*', 'trk')[self.TrkId]
     except:
+      if mode != 'a' or self.TrkId > 0:
+        return False
       r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
       n = self.Track.createElementNS(r.namespaceURI, r.prefix + ':trk' if r.prefix else 'trk')
       r.appendChild(n)
-      trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
-    try:
-      self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0]).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
-    except:
-      self.Name = ''
-    self.Color = ''
-    try:
-      c = trk.getElementsByTagName('mytrails:color')
-      if c:
-        self.Color = '#' + hex(int(_XMLGetNodeText(c[0])) % (1 << 24))[2:][-6:].rjust(6, "0").upper()
-      else:
-        c = trk.getElementsByTagNameNS('*', 'line')
+      trk = self.Track.getElementsByTagNameNS('*', 'trk')[self.TrkId]
+    if mode == 'a' or mode == 'e':
+      try:
+        self.Name = _XMLGetNodeText(trk.getElementsByTagNameNS('*', 'name')[0]).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+      except:
+        self.Name = ''
+      self.Color = ''
+      try:
+        c = trk.getElementsByTagName('mytrails:color')
         if c:
-          c = c[0].getElementsByTagNameNS('*', 'color')
+          self.Color = '#' + hex(int(_XMLGetNodeText(c[0])) % (1 << 24))[2:][-6:].rjust(6, "0").upper()
+        else:
+          c = trk.getElementsByTagNameNS('*', 'line')
           if c:
-            self.Color = '#' + hex(int(_XMLGetNodeText(c[0]), 16))[2:][-6:].rjust(6, "0").upper()
-    except:
-      pass
-    self.UTrkpts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg'))
-    if self.UTrkpts == []:
-      self.UTrkpts = [[]]
-    self.Pts = []
-    sn = 0
-    for seg in self.UTrkpts:
-      self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele_alt')) or pt.getAttribute('ele_alt')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None) for pt in seg))))
-      sn += len(seg)
+            c = c[0].getElementsByTagNameNS('*', 'color')
+            if c:
+              self.Color = '#' + hex(int(_XMLGetNodeText(c[0]), 16))[2:][-6:].rjust(6, "0").upper()
+      except:
+        pass
+    if mode == 'a':
+      pts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg')) or [[]]
+      self.Pts = []
+      sn = 0
+      try:
+        for seg in pts:
+          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lat'))), float(pt.getAttribute('lon') or _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'lon'))), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele')) or pt.getAttribute('ele')), flt(_XMLGetNodeText(pt.getElementsByTagNameNS('*', 'ele_alt')) or pt.getAttribute('ele_alt')), _XMLGetNodeText(pt.getElementsByTagNameNS('*', 'time')) or pt.getAttribute('time') or None) for pt in seg))))
+          sn += len(seg)
+      except:
+        return False
+    return True
 
-  def LoadGPX(self, uri):
-    self.log(1, 'load', uri)
+  def LoadGPX(self, uri, trkid=None):
+    self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
     try:
       if '://' in uri:
         rep = HTTPRequest(uri, 'GET', headers)
@@ -2391,31 +2403,33 @@ class WGS84Track(WGS84WebMercator):
           try:
             f.close()
           except:
-            pass
+            if trkid:
+              raise
           track = b'<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="GPXTweaker" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mytrails="http://www.frogsparks.com/mytrails" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"></gpx>'
           self.log(0, 'new', uri)
       self.Track = minidom.parseString(track)
       self._XMLClean()
       self.OTrack = self.Track
+      self.STrack = self.Track
     except:
       self.__init__()
-      self.log(0, 'lerror', uri)
+      self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
       return False
+    self.TrkId = trkid or 0
     try:
-      self._processGPX()
-      self.Waypts = self.UWaypts
-      self.Trkpts = self.UTrkpts
+      if not self.ProcessGPX('a'):
+        raise
     except:
       try:
         self.Track.unlink()
       except:
         pass
       self.__init__()
-      self.log(0, 'lerror', uri)
+      self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
       return False
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
-    self.log(0, 'loaded', uri, self.Name, len(self.Wpts), len(self.Trkpts), sum(len(seg) for seg in self.UTrkpts))
+    self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid != None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
     return True
 
   def BuildWebMercator(self):
@@ -2446,6 +2460,12 @@ class WGS84Track(WGS84WebMercator):
     else:
       self.log(0, 'serror', uri)
       return False
+    if self.STrack != self.OTrack and self.STrack != self.Track:
+      try:
+        self.STrack.unlink()
+      except:
+        pass
+    self.STrack = self.Track
     self.log(0, 'saved', uri)
     return True
 
@@ -2502,12 +2522,17 @@ name)
         node.appendChild(n)
 
   def UpdateGPX(self, msg):
-    self.Track = self.OTrack.cloneNode(True)
-    if not '\r\n=\r\n' in msg:
+    if self.Track != self.OTrack and self.Track != self.STrack:
       try:
+        self.Track.unlink()
+      except:
+        pass
+    self.Track = self.OTrack.cloneNode(True)
+    r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+    trk = self.Track.getElementsByTagNameNS('*', 'trk')[self.TrkId]
+    try:
+      if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
-        r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
-        trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
         if msgp[0][-5:] == 'color':
           if not r.hasAttribute('xmlns:mytrails'):
             r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
@@ -2538,85 +2563,81 @@ name)
           self._XMLUpdateNodeText(trk, trk, 'name', msgp[1], def_first=True, cdata=True)
         else:
           raise
-        try:
-          self.OTrack.unlink()
-        except:
-          pass
-        self.OTrack = self.Track
-      except:
-        self.Track.unlink()
-        self.Track = self.OTrack
-        return False
-      return True
-    try:
-      msgp = msg.split('=\r\n')
-      nmsg = msgp[0].splitlines()
-      wpmsg = msgp[1].splitlines()
-      smsg = msgp[2].split('-\r\n')[1:]
-      r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
-      trk = self.Track.getElementsByTagNameNS('*', 'trk')[0]
-      self._XMLUpdateNodeText(trk, trk, 'name', (nmsg or [''])[0], def_first=True, cdata=True)
-      wpn = []
-      for wp in wpmsg:
-        if '&' in wp:
-          v = wp.split('&')
-          if int(v[0]) < len(self.Waypts):
-            nwp = self.Waypts[int(v[0])].cloneNode(True)
-          else:
-            nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
-          self._XMLUpdateAttribute(nwp, 'lat', v[1])
-          self._XMLUpdateAttribute(nwp, 'lon', v[2])
-          self._XMLUpdateNodeText(trk, nwp, 'ele', v[3])
-          self._XMLUpdateNodeText(trk, nwp, 'time', urllib.parse.unquote(v[4]))
-          self._XMLUpdateNodeText(trk, nwp, 'name', urllib.parse.unquote(v[5]), cdata=True)
-        else:
-          nwp = self.Waypts[int(wp)].cloneNode(True)
-        wpn.append(nwp)
-      self._XMLUpdateChildNodes(r, 'wpt', wpn, def_first=True)
-      sn = []
-      opts = list(pt for seg in self.Trkpts for pt in seg)
-      for s in smsg:
-        ns = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkseg' if trk.prefix else 'trkseg')
-        pn = []
-        pmsg = s.splitlines()
-        for p in pmsg:
-          if '&' in p:
-            v = p.split('&')
-            if int(v[0]) < len(opts):
-              np = opts[int(v[0])].cloneNode(True)
+        if not self.ProcessGPX('e'):
+          raise
+      else:
+        msgp = msg.split('=\r\n')
+        nmsg = msgp[0].splitlines()
+        wpmsg = msgp[1].splitlines()
+        smsg = msgp[2].split('-\r\n')[1:]
+        wpts = self.Track.getElementsByTagNameNS('*', 'wpt')
+        pts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg')) or [[]]
+        self._XMLUpdateNodeText(trk, trk, 'name', (nmsg or [''])[0], def_first=True, cdata=True)
+        wpn = []
+        for wp in wpmsg:
+          if '&' in wp:
+            v = wp.split('&')
+            if int(v[0]) < len(wpts):
+              nwp = wpts[int(v[0])].cloneNode(True)
             else:
-              np = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkpt' if trk.prefix else 'trkpt')
-            self._XMLUpdateAttribute(np, 'lat', v[1])
-            self._XMLUpdateAttribute(np, 'lon', v[2])
-            self._XMLUpdateNodeText(trk, np, 'ele', v[3])
-            if v[4]:
-              if not r.hasAttribute('xmlns:mytrails'):
-                r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
-              ext = np.getElementsByTagNameNS('*', 'extensions')
-              if not ext:
-                e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
-                np.appendChild(e)
-              else:
-                e = ext[0]
-                for ex in ext:
-                  if ex.getElementsByTagNameNS('*', 'ele_alt'):
-                    e = ex
-                    break
-              a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:ele_alt')
-              t = self.Track.createTextNode(v[4])
-              a.appendChild(t)
-              self._XMLUpdateChildNodes(e, 'ele_alt', [a])
-            self._XMLUpdateNodeText(trk, np, 'time', urllib.parse.unquote(v[5]))
+              nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
+            self._XMLUpdateAttribute(nwp, 'lat', v[1])
+            self._XMLUpdateAttribute(nwp, 'lon', v[2])
+            self._XMLUpdateNodeText(trk, nwp, 'ele', v[3])
+            self._XMLUpdateNodeText(trk, nwp, 'time', urllib.parse.unquote(v[4]))
+            self._XMLUpdateNodeText(trk, nwp, 'name', urllib.parse.unquote(v[5]), cdata=True)
           else:
-            np = opts[int(p)].cloneNode(True)
-          pn.append(np)
-        self._XMLUpdateChildNodes(ns, 'trkpt', pn)
-        sn.append(ns)
-      self._XMLUpdateChildNodes(trk, 'trkseg', sn)
-      self._processGPX()
+            nwp = wpts[int(wp)].cloneNode(True)
+          wpn.append(nwp)
+        self._XMLUpdateChildNodes(r, 'wpt', wpn, def_first=True)
+        sn = []
+        opts = list(pt for seg in pts for pt in seg)
+        for s in smsg:
+          ns = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkseg' if trk.prefix else 'trkseg')
+          pn = []
+          pmsg = s.splitlines()
+          for p in pmsg:
+            if '&' in p:
+              v = p.split('&')
+              if int(v[0]) < len(opts):
+                np = opts[int(v[0])].cloneNode(True)
+              else:
+                np = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkpt' if trk.prefix else 'trkpt')
+              self._XMLUpdateAttribute(np, 'lat', v[1])
+              self._XMLUpdateAttribute(np, 'lon', v[2])
+              self._XMLUpdateNodeText(trk, np, 'ele', v[3])
+              if v[4]:
+                if not r.hasAttribute('xmlns:mytrails'):
+                  r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
+                ext = np.getElementsByTagNameNS('*', 'extensions')
+                if not ext:
+                  e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
+                  np.appendChild(e)
+                else:
+                  e = ext[0]
+                  for ex in ext:
+                    if ex.getElementsByTagNameNS('*', 'ele_alt'):
+                      e = ex
+                      break
+                a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:ele_alt')
+                t = self.Track.createTextNode(v[4])
+                a.appendChild(t)
+                self._XMLUpdateChildNodes(e, 'ele_alt', [a])
+              self._XMLUpdateNodeText(trk, np, 'time', urllib.parse.unquote(v[5]))
+            else:
+              np = opts[int(p)].cloneNode(True)
+            pn.append(np)
+          self._XMLUpdateChildNodes(ns, 'trkpt', pn)
+          sn.append(ns)
+        self._XMLUpdateChildNodes(trk, 'trkseg', sn)
+        if not self.ProcessGPX('a'):
+          raise
+        self.WebMercatorWpts = None
+        self.WebMercatorPts = None
     except:
       self.Track.unlink()
       self.Track = self.OTrack
+      self.ProcessGPX('a' if '\r\n=\r\n' in msg else 'e')
       return False
     return True
 
@@ -2942,7 +2963,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
             if not self.server.Interface.HTML:
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
-              self.server.Interface.Track.BuildWebMercator()
+              if self.WebMercatorPts == None:
+                self.server.Interface.Track.BuildWebMercator()
             if self.server.Interface.Build3DHTML():
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               try:
@@ -2959,7 +2981,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
-            self.server.Interface.Uri, self.server.Interface.Track = None, None
+            if not self.server.Interface.HTML:
+              self.server.Interface.Uri, self.server.Interface.Track = None, None
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
               try:
@@ -3125,15 +3148,17 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             '\r\n'
             if not self.server.Interface.HTML and req.body.split('=')[0][-4:] == 'file':
               try:
-                tr_ind = int(req.body.split('=')[0][5:-4].rstrip('c'))
-                track = self.server.Interface.Tracks[tr_ind]
-                nuri = os.path.join(track[0].rsplit('\\', 1)[0] + '\\', req.body.split('=', 1)[1])
+                ouri = self.server.Interface.Tracks[int(req.body.split('=')[0][5:-4].rstrip('c'))][0]
+                nuri = os.path.join(ouri.rsplit('\\', 1)[0] + '\\', req.body.split('=', 1)[1])
                 if os.path.exists (nuri):
                   raise
-                os.rename(track[0], nuri)
-                track[0] = nuri
-                pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sfile"' % str(tr_ind))
-                self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                os.rename(ouri, nuri)
+                for tr_ind in range(len(self.server.Interface.Tracks)):
+                  tr = self.server.Interface.Tracks[tr_ind]
+                  if tr[0] == ouri:
+                    tr[0] = nuri
+                    pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sfile"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
               except:
                 try:
                   self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -3152,9 +3177,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               nosave = req.path.split('?')[1].lower() == 'save=no'
             if self.server.Interface.HTML and req.header('If-Match') == self.server.Interface.SessionId:
               self.server.Interface.PSessionId = self.server.Interface.SessionId
-              self.server.Interface.Track.Waypts = self.server.Interface.Track.UWaypts
-              self.server.Interface.Track.Trkpts = self.server.Interface.Track.UTrkpts
-              if self.server.Interface.Track.OTrack != self.server.Interface.Track.Track:
+              if self.server.Interface.Track.OTrack != self.server.Interface.Track.Track and self.server.Interface.Track.OTrack != self.server.Interface.Track.STrack:
                 try:
                   self.server.Interface.Track.OTrack.unlink()
                 except:
@@ -3180,6 +3203,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                         os.remove(uri_pre + ' - backup.gpx')
                       os.rename(self.server.Interface.Uri, uri_pre + ' - backup.gpx')
                   if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf):
+                    if not self.server.Interface.HTML:
+                      try:
+                        if self.server.Interface.Track != self.server.Interface.OTrack:
+                          self.server.Interface.Track.unlink()
+                      except:
+                        pass
+                      self.server.Interface.Track = self.server.Interface.OTrack
+                      self.server.Interface.Track.ProcessGPX('e')
                     raise
                   if self.server.Interface.HTML:
                     try:
@@ -3189,19 +3220,36 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                     if self.server.Interface.SessionId == self.server.Interface.PSessionId:
                       self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
                 if not self.server.Interface.HTML:
+                  try:
+                    if self.server.Interface.OTrack != self.server.Interface.STrack:
+                      self.server.Interface.OTrack.unlink()
+                  except:
+                    pass
+                  self.server.Interface.OTrack = self.server.Interface.Track
+                  for tr in self.server.Interface.Tracks:
+                    if tr[1] != self.server.Interface.Track and tr[0] == self.server.Interface.Uri:
+                      try:
+                        tr[1].Track.unlink()
+                      except:
+                        pass
+                      tr[1].Track = self.server.Interface.Track.Track.cloneNode(True)
+                      tr[1].ProcessGPX('e')
+                      tr[1].OTrack = tr[1].Track
+                      tr[1].STrack = tr[1].Track
                   tr_ind = int(req.body.split('=')[0][5:-4].rstrip('c'))
+                  nval = req.body.split('=', 1)[1]
                   if req.body.split('=')[0][-4:] == 'name':
                     pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sname"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
                     pos = self.server.Interface.HTMLExp.find('<label for="track%svisible"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('>', pos) + 1] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('<', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('>', pos) + 1] + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('<', pos + 1):]
                   elif req.body.split('=')[0][-5:] == 'color':
                     pos = self.server.Interface.HTMLExp.find('<input type="color" id="track%scolor"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
                     pos = self.server.Interface.HTMLExp.find('<svg id="track%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" stroke-width', pos + 1):self.server.Interface.HTMLExp.find('fill="', pos) + 6] + html.escape(req.body.split('=', 1)[1]) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" stroke-linecap', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(nval) + '" fill="' + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
                     pos = self.server.Interface.HTMLExp.find('<svg id="waydots%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" stroke-width', pos + 1):self.server.Interface.HTMLExp.find('fill="', pos) + 6] + html.escape(req.body.split('=', 1)[1]) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(nval) + '" fill="' + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
               else:
                 raise
             except:
@@ -3367,11 +3415,11 @@ class GPXTweakerWebInterfaceServer():
   '      @-moz-document url-prefix() {\r\n' \
   '        select {\r\n' \
   '          appearance:none;\r\n' \
-	'          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
-	'          background-repeat:no-repeat;\r\n' \
-	'          background-position-x:right;\r\n' \
-	'          background-position-y:bottom;\r\n' \
-	'          background-size:2em 1em;\r\n' \
+  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
+  '          background-repeat:no-repeat;\r\n' \
+  '          background-position-x:right;\r\n' \
+  '          background-position-y:bottom;\r\n' \
+  '          background-size:2em 1em;\r\n' \
   '        }\r\n' \
   '        select:focus {\r\n' \
   '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(200,250,240)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
@@ -4116,7 +4164,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt.indexOf("point") < 0) {return;}\r\n' \
   '        let dot = document.getElementById(pt.replace("point", "dot"))\r\n' \
   '        if (document.getElementById(pt).value == "error") {\r\n' \
-  '          dot.setAttribute("stroke", "gray");\r\n' \
+  '          dot.style.stroke = "";\r\n' \
   '          dot.style.display = "none";\r\n' \
   '          dot.style.zIndex = "";\r\n' \
   '          return;\r\n' \
@@ -4125,23 +4173,23 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt.substring(0, 3) != "way") {segcb = document.getElementById(pt).parentNode.parentNode.firstElementChild.checked;}\r\n' \
   '        let cb = document.getElementById(pt).checked;\r\n' \
   '        if (pt == focused) {\r\n' \
-  '          dot.setAttribute("stroke", "blue");\r\n' \
+  '          dot.style.stroke = "blue";\r\n' \
   '          dot.style.display = "";\r\n' \
   '          dot.style.zIndex = "1";\r\n' \
   '        } else if (!cb || !segcb) {\r\n' \
-  '          dot.setAttribute("stroke", "gray");\r\n' \
+  '          dot.style.stroke = "";\r\n' \
   '          dot.style.display = "none";\r\n' \
   '          dot.style.zIndex = "";\r\n' \
   '        } else if (over) {\r\n' \
-  '          dot.setAttribute("stroke", "green");\r\n' \
+  '          dot.style.stroke = "green";\r\n' \
   '          dot.style.display = "";\r\n' \
   '          dot.style.zIndex = "2";\r\n' \
   '        } else if (dots_visible) {\r\n' \
-  '          dot.setAttribute("stroke", "gray");\r\n' \
+  '          dot.style.stroke = "";\r\n' \
   '          dot.style.display = "";\r\n' \
   '          dot.style.zIndex = "";\r\n' \
   '        } else {\r\n' \
-  '          dot.setAttribute("stroke", "gray");\r\n' \
+  '          dot.style.stroke = "";\r\n' \
   '          dot.style.display = "none";\r\n' \
   '          dot.style.zIndex = "";\r\n' \
   '        }\r\n' \
@@ -4172,8 +4220,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
   '            let track = document.getElementById(ex_foc.replace("segment", "track"));\r\n' \
-  '            track.setAttribute("stroke", "red");\r\n' \
-  '            track.setAttribute("fill", "red");\r\n' \
+  '            track.style.stroke = "";\r\n' \
+  '            track.style.fill = "";\r\n' \
   '            if (document.getElementById(ex_foc).checked) {\r\n' \
   '              track.style.display = "";\r\n' \
   '            } else {\r\n' \
@@ -4198,8 +4246,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (focused.substring(0, 3) == "seg") {\r\n' \
   '            let track = document.getElementById(focused.replace("segment", "track"));\r\n' \
-  '            track.setAttribute("stroke", "blue");\r\n' \
-  '            track.setAttribute("fill", "blue");\r\n' \
+  '            track.style.stroke = "blue";\r\n' \
+  '            track.style.fill = "blue";\r\n' \
   '            track.style.display = "";\r\n' \
   '            track.style.zIndex = "1";\r\n' \
   '            if (scroll) {elt.scrollIntoView({block:"start"});}\r\n' \
@@ -5986,7 +6034,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            } else {\r\n' \
   '              dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
-  '              if (dist > 0 && lc != -1 && etime > stime	) {inv_vit = (etime - stime) / dist;}\r\n' \
+  '              if (dist > 0 && lc != -1 && etime > stime) {inv_vit = (etime - stime) / dist;}\r\n' \
   '              if (pm_b != null) {\r\n' \
   '                if (lc == -1) {\r\n' \
   '                  dist_b += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
@@ -6498,7 +6546,7 @@ class GPXTweakerWebInterfaceServer():
   '          frag.insertBefore(el_cont, frag.firstElementChild);\r\n' \
   '          let el_dot = dot.cloneNode(true);\r\n' \
   '          el_dot.id = pref.replace("point", "dot");\r\n' \
-  '          el_dot.setAttribute("stroke", "gray");\r\n' \
+  '          el_dot.style.stroke = "gray";\r\n' \
   '          el_dot.style.display = (dots_visible && ! el_input.disabled)?"":"none";\r\n' \
   '          el_dot.style.zIndex = "";\r\n' \
   '          el_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
@@ -6606,7 +6654,7 @@ class GPXTweakerWebInterfaceServer():
   '        let zoom_s_ex = zoom_s;\r\n' \
   '        if (tlock) {\r\n' \
   '          if (tlevel == 0) {return;}\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128275";\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128275;";\r\n' \
   '          let nlevel = tlevel;\r\n' \
   '          if (eval(zoom_s) < eval(tlevels[tlevel][1])) {\r\n' \
   '            while (nlevel > 1) {\r\n' \
@@ -6623,7 +6671,7 @@ class GPXTweakerWebInterfaceServer():
   '          tlevel = nlevel;\r\n' \
   '          zoom_s = tlevels[nlevel][1];\r\n' \
   '        } else {\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128274";\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128274;";\r\n' \
   '        }\r\n' \
   '        tlock = ! tlock;\r\n' \
   '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
@@ -6761,7 +6809,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrip.send();\r\n' \
   '      }\r\n' \
-  '      function switch_fpanel(pa) {\r\n' \
+  '      function switch_filterpanel(pa) {\r\n' \
   '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
   '        for (let p=1; p<=3; p++) {\r\n' \
   '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
@@ -6772,10 +6820,8 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function load_cb(t) {\r\n' \
-  '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
-  '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
-  '          document.getElementById("save").disabled = false;\r\n' \
-  '        }\r\n' \
+  '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
+  '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
@@ -6785,14 +6831,12 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n'\
   '      }\r\n' \
   '      function error_cb(t) {\r\n' \
-  '        if (document.getElementById("save_icon").style.fontSize == "10%") {\r\n' \
-  '          document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
-  '          document.getElementById("save").disabled = false;\r\n' \
-  '        }\r\n' \
+  '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
+  '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
   '      }\r\n' \
   '      function track_save(o3d=false) {\r\n' \
-  '        document.getElementById("save_icon").style.fontSize = "10%";\r\n' \
+  '        if (! o3d) {document.getElementById("save_icon").style.fontSize = "10%";}\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
   '        let body = document.getElementById("name_track").value + "\\r\\n=\\r\\n";\r\n' \
   '        let spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
@@ -6857,8 +6901,8 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_fpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
-  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
   '              <form id="filterform1" autocomplete="off" onchange="segments_calc(1)">\r\n' \
   '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
@@ -6869,7 +6913,7 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
   '              <form id="filterform2" autocomplete="off" onchange="segments_calc(2)">\r\n' \
   '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
@@ -6880,7 +6924,7 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
   '              <span>{#jfilterpanel3#}</span>\r\n' \
   '              <form id="filterform3" autocomplete="off" onchange="segments_calc(3)">\r\n' \
   '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
@@ -8239,7 +8283,7 @@ class GPXTweakerWebInterfaceServer():
   '        width:100%;\r\n' \
   '        font-weight:bold;\r\n' \
   '      }\r\n' \
-  '      input+label:hover,input:hover+label {\r\n' \
+  '      input+label[id$=desc]:hover,input:hover+label[id$=desc] {\r\n' \
   '        background-color:green;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
@@ -8278,7 +8322,7 @@ class GPXTweakerWebInterfaceServer():
   '        width:80%;\r\n' \
   '        font-size:100%;\r\n' \
   '      }\r\n' \
-  '      label+br {\r\n' \
+  '      label[id$=desc]+br {\r\n' \
   '        margin-bottom: 1em;\r\n' \
   '      }\r\n' \
   '      span[id$=focus] {\r\n' \
@@ -8332,11 +8376,11 @@ class GPXTweakerWebInterfaceServer():
   '      @-moz-document url-prefix() {\r\n' \
   '        select {\r\n' \
   '          appearance:none;\r\n' \
-	'          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
-	'          background-repeat:no-repeat;\r\n' \
-	'          background-position-x:right;\r\n' \
-	'          background-position-y:bottom;\r\n' \
-	'          background-size:2em 1em;\r\n' \
+  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
+  '          background-repeat:no-repeat;\r\n' \
+  '          background-position-x:right;\r\n' \
+  '          background-position-y:bottom;\r\n' \
+  '          background-size:2em 1em;\r\n' \
   '        }\r\n' \
   '        select:focus {\r\n' \
   '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(200,250,240)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
@@ -8344,6 +8388,11 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      select option {\r\n' \
   '        color:rgb(225,225,225);\r\n' \
+  '      }\r\n' \
+  '      label[for^=folder] {\r\n' \
+  '        display:inline-block;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        white-space:nowrap;\r\n' \
   '      }\r\n' \
   '      label[for$=filter] {\r\n' \
   '        position:absolute;\r\n' \
@@ -9850,7 +9899,7 @@ class GPXTweakerWebInterfaceServer():
   '        let zoom_s_ex = zoom_s;\r\n' \
   '        if (tlock) {\r\n' \
   '          if (tlevel == 0) {return;}\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128275";\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128275;";\r\n' \
   '          let nlevel = tlevel;\r\n' \
   '          if (eval(zoom_s) < eval(tlevels[tlevel][1])) {\r\n' \
   '            while (nlevel > 1) {\r\n' \
@@ -9867,7 +9916,7 @@ class GPXTweakerWebInterfaceServer():
   '          tlevel = nlevel;\r\n' \
   '          zoom_s = tlevels[nlevel][1];\r\n' \
   '        } else {\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128274";\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128274;";\r\n' \
   '        }\r\n' \
   '        tlock = ! tlock;\r\n' \
   '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
@@ -9945,7 +9994,25 @@ class GPXTweakerWebInterfaceServer():
   '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function switch_fpanel(pa) {\r\n' \
+  '      function switch_folderspanel() {\r\n' \
+  '        let fp = document.getElementById("folderspanel");\r\n' \
+  '        if (fp.style.display == "none") {fp.style.display="";} else {fp.style.display = "none";}\r\n' \
+  '      }\r\n' \
+  '      function select_folders() {\r\n' \
+  '        let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
+  '        let t = 0;\r\n' \
+  '        for (let f=0; f<folders.length; f++) {\r\n' \
+  '          while (t < tracks_pts.length) {\r\n' \
+  '            if (document.getElementById("track" + t.toString() + "folder" ).value.toLowerCase().indexOf(folders[f].value.toLowerCase()) >= 0) {\r\n' \
+  '              document.getElementById("track" + t.toString() + "cont").style.display = folders[f].checked?"":"none";\r\n' \
+  '              t++;\r\n' \
+  '            } else {\r\n' \
+  '              break;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function switch_filterpanel(pa) {\r\n' \
   '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
   '        for (let p=1; p<=3; p++) {\r\n' \
   '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
@@ -9981,6 +10048,12 @@ class GPXTweakerWebInterfaceServer():
   '              prop.value = prop.value.slice(0, -4) + ".gpx";\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '          let trks = document.getElementById("tracksform").children;\r\n' \
+  '          for (let t=0; t<trks.length; t++) {\r\n' \
+  '            if (trks[t].id.slice(0, -4) != prop.id.slice(0, -4) && trks[t].firstElementChild.value == document.getElementById(prop.id.replace("file", "visible")).value) {\r\n' \
+  '              document.getElementById(trks[t].id.replace("cont", "file")).value = prop.value;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
   '        } else if (prop.id.slice(-4) == "name"){\r\n' \
   '          document.getElementById(prop.id.replace("name", "desc")).innerHTML = document.getElementById(prop.id.replace("name", "desc")).innerHTML.replace(/.*(<br>.*)/, escape(prop.value) + "$1");\r\n' \
   '        }\r\n' \
@@ -10008,7 +10081,12 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="filter_track" name="filter_track" value="" disabled style="opacity:0;">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jhidetracks#}" style="margin-left:1.25em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jedit#}" style="margin-left:1.25em;" onclick="track_edit()">&#9998</button><button title="{#jzoomall#}" style="margin-left:1.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_fpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jedit#}" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
+  '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
+  '              <form id="foldersform" autocomplete="off" onchange="select_folders()">\r\n' \
+  '##FOLDERS##' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
   '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
   '              <form id="filterform1" autocomplete="off" onchange="tracks_calc(1)">\r\n' \
@@ -10292,9 +10370,12 @@ class GPXTweakerWebInterfaceServer():
   '  </body>\r\n' \
   '</html>'
   HTMLExp_TEMPLATE = HTMLExp_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
+  HTMLExp_FOLDER_TEMPLATE = \
+  '                <input id="folder%s" type="checkbox" checked="" name="folder%s" value="%s">\r\n' \
+  '                <label for="folder%s">%s</label><br>\r\n'
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
-  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="track" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
+  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '                    <label for="track%svisible" id="track%sdesc" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label><br>\r\n' \
   '                    <input type="color" id="track%scolor" value="%s" onchange="track_color(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '                    <span id="track%sfocus">\r\n' \
@@ -10329,7 +10410,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     try:
-      f = open(uri, "rt")
+      f = open(uri, "rt", encoding='utf-8')
       cfg = f.read()
     except:
       self.log(0, 'cerror', uri)
@@ -10649,7 +10730,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __init__(self, uri=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
+  def __init__(self, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     self.Uri = None
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
@@ -10729,14 +10810,18 @@ class GPXTweakerWebInterfaceServer():
     if len(self.Folders) == 0:
       self.Folders.append(os.path.abspath(''))
     if uri != None:
-      uris = [os.path.abspath(uri)]
+      u = os.path.abspath(uri)
     else:
       k = lambda f: f[2].lower() == 'gpx' and not f[0].lower().endswith(' - original') and not f[0].lower().endswith(' - backup')
       uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if k(f.rpartition('.')))
-    for u in uris:
+      trk = 0
+      nbtrk = None
+      u = next(uris, None)
+    while u != None:
       track = WGS84Track()
-      if not track.LoadGPX(u):
+      if not track.LoadGPX(u, trk):
         if uri == None:
+          u = next(uris, None)
           continue
         else:
           return
@@ -10747,6 +10832,7 @@ class GPXTweakerWebInterfaceServer():
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
         if uri == None:
           self.log(0, 'berror6')
+          u = next(uris, None)
           continue
         else:
           self.log(0, 'berror4')
@@ -10754,8 +10840,16 @@ class GPXTweakerWebInterfaceServer():
       track.Ind = len(self.Tracks)
       self.Tracks.append([u, track])
       self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
-    if uri != None:
-      self.Uri, self.Track = self.Tracks[0]
+      if uri != None:
+        self.Uri, self.Track = self.Tracks[0]
+        break
+      if nbtrk == None:
+        nbtrk = len(track.Track.getElementsByTagNameNS('*', 'trk'))
+      trk += 1
+      if trk >= nbtrk:
+        trk = 0
+        nbtrk = None
+        u = next(uris, None)
     minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat == None) else map_minlat))
     maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat == None) else map_maxlat))
     minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon == None) else map_minlon))
@@ -11054,6 +11148,9 @@ class GPXTweakerWebInterfaceServer():
     self.log(0, '3dbuilt')
     return True
 
+  def _build_folders_exp(self):
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, f, html.escape(self.Folders[f]), f, html.escape(self.Folders[f])) for f in range(len(self.Folders)))
+
   def _build_pathes_exp(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
     def _coord_to_vb(x, y):
@@ -11064,7 +11161,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_tracks_exp(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 5), f(self.Tracks[t][1].Name), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(f, (self.Tracks[t][1].Name, *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (str(len(self.Tracks[t][1].Pts)) , str(sum(len(s) for s in self.Tracks[t][1].Pts)), str(len(self.Tracks[t][1].Wpts)))))) for a in b)) for t in range(len(self.Tracks)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), f(self.Tracks[t][0]), *([t] * 2), f(self.Tracks[t][1].Name), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(f, (self.Tracks[t][1].Name, *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (str(len(self.Tracks[t][1].Pts)) , str(sum(len(s) for s in self.Tracks[t][1].Pts)), str(len(self.Tracks[t][1].Wpts)))))) for a in b)) for t in range(len(self.Tracks)))
 
   def _build_waydots_exp(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
@@ -11077,11 +11174,12 @@ class GPXTweakerWebInterfaceServer():
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
     declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydots_exp()
     tracks = self._build_tracks_exp()
     tsets = self._build_tsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##FOLDERS##', folders).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
     self.log(2, 'builtexp')
     return True
 
@@ -11115,20 +11213,35 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = None
     self.HTMLExp = ''
     if self.Track != None:
-      self.Track.Waypts = self.Track.UWaypts
-      self.Track.Trkpts = self.Track.UTrkpts
-      if self.Track.OTrack != self.Track.Track:
+      if self.Track.OTrack != self.Track.STrack:
         try:
           self.Track.OTrack.unlink()
         except:
           pass
-        self.Track.OTrack = self.Track.Track
+        self.Track.OTrack = self.Track.STrack
+      if self.Track.Track != self.Track.STrack:
+        try:
+          self.Track.Track.unlink()
+        except:
+          pass
+        self.Track.Track = self.Track.STrack
+      self.Track.ProcessGPX('a')
       if self.Mode == 'tiles':
         self.TracksBoundaries[self.Track.Ind] = (self.Minx, self.Maxx, self.Miny, self.Maxy)
         self.Minx = min((b[0] for b in self.TracksBoundaries), default=self.Minx)
         self.Maxx = max((b[1] for b in self.TracksBoundaries), default=self.Maxx)
         self.Miny = min((b[2] for b in self.TracksBoundaries), default=self.Miny)
         self.Maxy = max((b[3] for b in self.TracksBoundaries), default=self.Maxy)
+      for track in self.Tracks:
+        if track[1] != self.Track and track[0] == self.Uri:
+          try:
+            track[1].Track.unlink()
+          except:
+            pass
+          track[1].Track = self.Track.Track.cloneNode(True)
+          track[1].ProcessGPX('w')
+          track[1].OTrack = track[1].Track
+          track[1].STrack = track[1].Track
     self.log(1, 'buildexp')
     if self.BuildHTMLExp():
       if self.Track != None:
@@ -11176,6 +11289,7 @@ if __name__ == '__main__':
   parser = CustomArgumentParser()
   parser.add_argument('uri', metavar='URI', help=LSTRINGS['parser']['uri'], nargs='?', default=None)
   parser.add_argument('--conf', '-c', metavar='CONF', help=LSTRINGS['parser']['conf'], default='')
+  parser.add_argument('--trk', '-t', metavar='TRK', help=LSTRINGS['parser']['trk'], type=int, default=None)
   parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs ='?', const=' ', default='')
   parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const=' ', default='')
   parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: (list((p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 4), default='')
@@ -11188,7 +11302,7 @@ if __name__ == '__main__':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
   try:
-    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri != None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   except:
     log('interface', 0, 'berror')
     exit()
