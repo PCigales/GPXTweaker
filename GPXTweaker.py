@@ -11027,6 +11027,9 @@ class GPXTweakerWebInterfaceServer():
         while f2 < len(self.Folders):
           if os.path.commonpath((self.Folders[f1], self.Folders[f2])) == self.Folders[f1]:
             del self.Folders[f2]
+          elif os.path.commonpath((self.Folders[f1], self.Folders[f2])) == self.Folders[f2]:
+            del self.Folders[f1]
+            f2 = f1 + 1
           else:
             f2 += 1
         f1 += 1
