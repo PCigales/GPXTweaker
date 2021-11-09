@@ -129,6 +129,18 @@ FR_STRINGS = {
     'jswitchpoints': 'afficher / masquer les points et points de cheminement',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D',
+    'jascending': 'permuter l\'ordre de tri des traces sur croissant',
+    'jdescending': 'permuter l\'ordre de tri des traces sur décroissant',
+    'joset': 'sélectionner le critère de tri des traces',
+    'jsortnone': 'Aucun',
+    'jsortname': 'Nom',
+    'jsortfilepath': 'Chemin d\'accès',
+    'jsortduration': 'Durée',
+    'jsortdistance': 'Distance',
+    'jsortelegain': 'Dénivelé élévation',
+    'jsortaltgain': 'Dénivelé altitude',
+    'jsortdate': 'Date',
+    'jsortproximity': 'Proximité',
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
@@ -146,6 +158,7 @@ FR_STRINGS = {
     'jfilterpanel3': 'Plages calcul vitesse',
     'jspduration': '&nbsp;durée',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
+    'jfoldersw': 'Répertoires:',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jwaypoints': 'Points de cheminement',
@@ -341,6 +354,18 @@ EN_STRINGS = {
     'jswitchpoints': 'show / hide the points and waypoints',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer',
+    'jascending': 'switch the sort order of the tracks to ascending',
+    'jdescending': 'switch the sort order of the tracks to descending',
+    'joset': 'select the sort criterion of the tracks',
+    'jsortnone': 'None',
+    'jsortname': 'Name',
+    'jsortfilepath': 'File path',
+    'jsortduration': 'Duration',
+    'jsortdistance': 'Distance',
+    'jsortelegain': 'Elevation gain',
+    'jsortaltgain': 'Altitude gain',
+    'jsortdate': 'Date',
+    'jsortproximity': 'Proximity',
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
@@ -358,6 +383,7 @@ EN_STRINGS = {
     'jfilterpanel3': 'Ranges speed calcul',
     'jspduration': 'duration',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
+    'jfoldersw': 'Folders:',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
     'jwaypoints': 'Waypoints',
@@ -2729,6 +2755,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           '\r\n'
           resp_body = b''
           if req.path.lower() == '/GPXTweaker.html'.lower():
+            self.server.Interface.SLock.acquire()
+            self.server.Interface.SLock.release()
             if not self.server.Interface.HTML:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -2750,6 +2778,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower() == '/GPXExplorer.html'.lower():
+            self.server.Interface.SLock.acquire()
+            self.server.Interface.SLock.release()
             if self.server.Interface.HTMLExp == None:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -2961,9 +2991,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
+            self.server.Interface.SLock.acquire()
+            self.server.Interface.SLock.release()
             if not self.server.Interface.HTML:
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
-              if self.WebMercatorPts == None:
+              if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
             if self.server.Interface.Build3DHTML():
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
@@ -3000,10 +3032,13 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:5] == '/edit':
+            self.server.Interface.SLock.acquire()
+            self.server.Interface.SLock.release()
             try:
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
               self.server.Interface.HTML = ''
               self.server.Interface.EditMode()
+              self.server.Interface.HTML = self.server.Interface.HTML.replace('//        window.onunload', '        window.onunload').replace('//        document.addEventListener("DOMContentLoaded"', '        document.addEventListener("DOMContentLoaded"')
             except:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -3140,6 +3175,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:6] == '/track':
+            self.server.Interface.SLock.acquire()
             resp = 'HTTP/1.1 204 No content\r\n' \
             'Content-Length: 0\r\n' \
             'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
@@ -3165,12 +3201,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   self.server.Interface.log(2, 'rfailed', req.method, req.path)
                 except:
                   self.server.Interface.log(2, 'rerror', req.method, req.path)
+                self.server.Interface.SLock.release()
                 continue
               try:
                 self.request.sendall(resp.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+              self.server.Interface.SLock.release()
               continue
             nosave = False
             if self.server.Interface.HTML and '?' in req.path:
@@ -3237,19 +3275,21 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                       tr[1].OTrack = tr[1].Track
                       tr[1].STrack = tr[1].Track
                   tr_ind = int(req.body.split('=')[0][5:-4].rstrip('c'))
-                  nval = req.body.split('=', 1)[1]
+                  nval = html.escape(req.body.split('=', 1)[1])
                   if req.body.split('=')[0][-4:] == 'name':
                     pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sname"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos):]
                     pos = self.server.Interface.HTMLExp.find('<label for="track%svisible"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('>', pos) + 1] + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('<', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('title="', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onclick', pos):self.server.Interface.HTMLExp.find('>', pos) + 1] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('<', pos + 1):]
+                    pos = self.server.Interface.HTMLExp.find('<path id="path%s"' % str(tr_ind))
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('<title>', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('"</title>', pos):]
                   elif req.body.split('=')[0][-5:] == 'color':
                     pos = self.server.Interface.HTMLExp.find('<input type="color" id="track%scolor"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
                     pos = self.server.Interface.HTMLExp.find('<svg id="track%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(nval) + '" fill="' + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + nval + '" fill="' + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
                     pos = self.server.Interface.HTMLExp.find('<svg id="waydots%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + html.escape(nval) + '" fill="' + html.escape(nval) + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
+                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + nval + '" fill="' + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
               else:
                 raise
             except:
@@ -3258,6 +3298,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rfailed', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+              self.server.Interface.SLock.release()
               continue
             finally:
               if not self.server.Interface.HTML:
@@ -3267,6 +3308,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
+            self.server.Interface.SLock.release()
           else:
             try:
               self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -6836,6 +6878,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
   '      }\r\n' \
   '      function track_save(o3d=false) {\r\n' \
+  '        if (document.getElementById("save").disabled) {return;}\r\n' \
   '        if (! o3d) {document.getElementById("save_icon").style.fontSize = "10%";}\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
   '        let body = document.getElementById("name_track").value + "\\r\\n=\\r\\n";\r\n' \
@@ -7260,6 +7303,7 @@ class GPXTweakerWebInterfaceServer():
   '        segments_calc();\r\n' \
   '        wpt_calc();\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
+  '//        window.onunload = function () {window.history.replaceState({}, "", "/GPXExplorer.html")};\r\n' \
   '      }\r\n' \
   '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
   '        window.alert("{#jsession#}");\r\n' \
@@ -7268,6 +7312,7 @@ class GPXTweakerWebInterfaceServer():
   '        window.close();\r\n' \
   '        throw "{#jsession#}";\r\n' \
   '      }\r\n' \
+  '//        document.addEventListener("DOMContentLoaded", function () {window.history.replaceState({}, "", "/GPXTweaker.html");});\r\n' \
   '      page_load();\r\n' \
   '    </script>\r\n' \
   '  </body>\r\n' \
@@ -7299,9 +7344,9 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="waypoint%sele">{jele}</label>\r\n' \
   '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
@@ -7317,9 +7362,9 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
   '                      <label for="point%sele">{jele}</label>\r\n' \
   '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
   '                      <label for="point%salt">{jalt}</label>\r\n' \
@@ -8261,7 +8306,10 @@ class GPXTweakerWebInterfaceServer():
   '      input[type=text]:focus {\r\n' \
   '        color:rgb(200,250,240);\r\n' \
   '      }\r\n' \
-  '      input[id=filter_track] {\r\n' \
+  '      input[type=text]:invalid {\r\n' \
+  '        color:rgb(250,220,200);\r\n' \
+  '      }\r\n' \
+  '      input[id=tracksfilter] {\r\n' \
   '        width:calc(98vw - 60em);\r\n' \
   '        font-size:70%;\r\n' \
   '      }\r\n' \
@@ -8283,6 +8331,14 @@ class GPXTweakerWebInterfaceServer():
   '        width:100%;\r\n' \
   '        font-weight:bold;\r\n' \
   '      }\r\n' \
+  '      input[id$=visible] {\r\n' \
+  '        appearance:none;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        margin-left:0.3%;\r\n' \
+  '        margin-right:2.2%;\r\n' \
+  '        width:5.2%;\r\n' \
+  '        height:1.25em;\r\n' \
+  '      }\r\n' \
   '      input+label[id$=desc]:hover,input:hover+label[id$=desc] {\r\n' \
   '        background-color:green;\r\n' \
   '      }\r\n' \
@@ -8291,12 +8347,12 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '        width:calc(24em - 22px);\r\n' \
+  '        width:92.3%;\r\n' \
   '        min-height:1.35em;\r\n' \
   '      }\r\n' \
   '      input[type=color] {\r\n' \
   '        position:absolute;\r\n' \
-  '        right:0.3em;\r\n' \
+  '        right:0;\r\n' \
   '        top:calc(1em + 3px);\r\n' \
   '        width:1em;\r\n' \
   '        height:1em;\r\n' \
@@ -8456,8 +8512,10 @@ class GPXTweakerWebInterfaceServer():
   '      var focused = "";\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+'        var str_comp = new Intl.Collator().compare;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
+  '      var tracks_props = [];\r\n' \
   '      var msg_n = 0;\r\n' \
   '      class GPUStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
@@ -9087,6 +9145,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("scaleline").setAttribute("width", (sc / tscale * zoom * k).toFixed(0) + "px");\r\n' \
   '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n' \
   '        update_tiles() \r\n' \
+  '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
   '      }\r\n' \
   '      function prop_to_wmvalue(s) {\r\n' \
   '        return parseFloat(s.match(/-?\\d+[.]?\\d*/)[0]);\r\n' \
@@ -9529,7 +9588,9 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (gpucomp >= 1 && fpan != 1) {\r\n' \
-  '          if (gpustats.starts[gpustats.starts.length - 1] == 0) {return;}\r\n' \
+  '          if (gpustats.starts[gpustats.starts.length - 1] == 0) {\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          gpustats.trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '          gpustats.drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
@@ -9569,25 +9630,6 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (fpan == 0) {\r\n' \
-  '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
-  '            let segs = tracks_pts[t];\r\n' \
-  '            let ts = null;\r\n' \
-  '            let te = null;\r\n' \
-  '            for (let s=0; s<segs.length; s++) {\r\n' \
-  '              for (let p=0; p<segs[s].length; p++) {\r\n' \
-  '                let t = Date.parse(segs[s][p][4]);\r\n' \
-  '                if (! isNaN(t)) {\r\n' \
-  '                  ts = Math.min(t, ts==null?t:ts);\r\n' \
-  '                  te = Math.max(t, te==null?t:te);\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            if (ts != null) {\r\n' \
-  '              document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
   '        if (fpan <= 1 || (fpan == 2 && gpucomp == 2)) {\r\n' \
   '          for (let t=0; t<tracks_pts.length; t++) {\r\n' \
   '            let dur = null;\r\n' \
@@ -9603,8 +9645,45 @@ class GPXTweakerWebInterfaceServer():
   '              ele = ele==null?stat[2]:ele+stat[2];\r\n' \
   '              alt = alt==null?stat[3]:alt+stat[3];\r\n' \
   '            }\r\n' \
+  '            let noe = true;\r\n' \
+  '            let noa = true;\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              let segs = tracks_pts[t];\r\n' \
+  '              let ts = null;\r\n' \
+  '              let te = null;\r\n' \
+  '              let slat = null;\r\n' \
+  '              let slon = null;\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                for (let p=0; p<segs[s].length; p++) {\r\n' \
+  '                  let t = Date.parse(segs[s][p][4]);\r\n' \
+  '                  if (! isNaN(t)) {\r\n' \
+  '                    ts = Math.min(t, ts==null?t:ts);\r\n' \
+  '                    te = Math.max(t, te==null?t:te);\r\n' \
+  '                  }\r\n' \
+  '                  if (noe) {\r\n' \
+  '                    if (! isNaN(parseFloat(segs[s][p][2]))) {noe = false;}\r\n' \
+  '                  }\r\n' \
+  '                  if (noa) {\r\n' \
+  '                    if (! isNaN(parseFloat(segs[s][p][3]))) {noa = false;}\r\n' \
+  '                  }\r\n' \
+  '                  if (slat == null) {\r\n' \
+  '                    slat = segs[s][p][0];\r\n' \
+  '                    slon = segs[s][p][1];\r\n' \
+  '                  }\r\n' \
+  '                  if (! noe && ! noa && slat != null && ts != null) {break;}\r\n' \
+  '                }\r\n' \
+  '                if (! noe && ! noa && slat != null && ts != null) {break;}\r\n' \
+  '              }\r\n' \
+  '              tracks_props.push([ts==null?NaN:dur, dist==null?NaN:dist, noe?NaN:ele, noa?NaN:alt, ts==null?NaN:ts, slat==null?[NaN, NaN]:[slat, slon]]);\r\n' \
+  '              if (ts != null) {\r\n' \
+  '                document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              if (! isNaN(tracks_props[t][2])) {tracks_props[t][2] = ele;}\r\n' \
+  '              if (! isNaN(tracks_props[t][3])) {tracks_props[t][3] = alt;}\r\n' \
+  '            }\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
-  '            if (dur != null) {\r\n' \
+  '            if (! isNaN(tracks_props[t][0])) {\r\n' \
   '              dur = Math.round(dur);\r\n' \
   '              let dur_s = dur % 60;\r\n' \
   '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
@@ -9614,12 +9693,13 @@ class GPXTweakerWebInterfaceServer():
   '            let dist_c = "-km";\r\n' \
   '            if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
   '            let ele_c = "-m";\r\n' \
-  '            if (ele != null) {ele_c = ele.toFixed(0) + "m";}\r\n' \
+  '            if (! noe) {ele_c = ele.toFixed(0) + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
-  '            if (alt != null) {alt_c = alt.toFixed(0) + "m";}\r\n' \
+  '            if (! noa) {alt_c = alt.toFixed(0) + "m";}\r\n' \
   '            document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        tracks_sort();\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
@@ -9645,14 +9725,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function track_color(trk) {\r\n' \
-  '        let foc = trk.id.slice(0, -5);\r\n' \
-  '        let col = trk.value.toUpperCase();\r\n' \
-  '        if (document.getElementById(foc).getAttribute("stroke").toUpperCase() == col) {return;}\r\n' \
-  '        document.getElementById(foc).setAttribute("stroke", col);\r\n' \
-  '        document.getElementById(foc).setAttribute("fill", col);\r\n' \
-  '        document.getElementById(foc.replace("track", "waydots")).setAttribute("stroke", col);\r\n' \
-  '        document.getElementById(foc.replace("track", "waydots")).setAttribute("fill", col);\r\n' \
-  '        track_save(trk);\r\n' \
+  '        if (document.getElementById(trk.id.slice(0, -5)).getAttribute("stroke").toUpperCase() != trk.value.toUpperCase()) {track_save(trk);}\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
@@ -9869,6 +9942,7 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.stroke();\r\n' \
   '      }\r\n' \
   '      function open_3D() {\r\n' \
+  '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?" + focused.substring(5));\r\n' \
   '      }\r\n' \
@@ -9994,23 +10068,99 @@ class GPXTweakerWebInterfaceServer():
   '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function tracks_filter() {\r\n' \
+  '        let filt = document.getElementById("tracksfilter").value;\r\n' \
+  '        let trks = document.getElementById("tracksform").children;\r\n' \
+  '        for (let t=0; t<trks.length; t++) {\r\n' \
+  '          let tname = document.getElementById(trks[t].id.replace("cont", "name"));\r\n' \
+  '          if (tname.value.toLowerCase().indexOf(filt) >= 0) {\r\n' \
+  '            trks[t].style.display = document.getElementById(trks[t].id.replace("cont", "folder")).style.display;\r\n' \
+  '            tname.style.display = "";\r\n' \
+  '          } else {\r\n' \
+  '            trks[t].style.display = "none";\r\n' \
+  '            tname.style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (focused) {\r\n' \
+  '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function tracks_sort() {\r\n' \
+  '        let crit = document.getElementById("oset").selectedIndex;\r\n' \
+  '        let asc = document.getElementById("sortup").style.display != "none";\r\n' \
+  '        let trks = Array.from({length:tracks_props.length}).map((v,k)=>k);\r\n' \
+  '        let c = function (a, b) {return a - b};\r\n' \
+  '        let vals = [];\r\n' \
+  '        function flt_comp(a, b) {\r\n' \
+  '          if (a == b) {return 0;}\r\n' \
+  '          if (isNaN(a)) {return 1;}\r\n' \
+  '          if (isNaN(b)) {return -1;}\r\n' \
+  '          return asc?a-b:b-a;\r\n' \
+  '        }\r\n' \
+  '        switch (crit) {\r\n' \
+  '          case 0:\r\n' \
+  '            break;\r\n' \
+  '          case 1:\r\n' \
+  '          case 2:\r\n' \
+  '            vals = trks.map(function (t) {return document.getElementById("track" + t.toString() + (crit==1?"name":"visible")).value;});\r\n' \
+  '            c = function (a, b) {return asc?str_comp(vals[a], vals[b]):-str_comp(vals[a], vals[b]);};\r\n' \
+  '            break;\r\n' \
+  '          case 3:\r\n' \
+  '          case 4:\r\n' \
+  '          case 5:\r\n' \
+  '          case 6:\r\n' \
+  '          case 7:\r\n' \
+  '            c = function (a, b) {return flt_comp(tracks_props[a][crit - 3], tracks_props[b][crit - 3]);};\r\n' \
+  '            break;\r\n' \
+  '          case 8:\r\n' \
+  '            let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
+  '            vals = trks.map(function (t) {return (tracks_props[t][5][0]==null || tracks_props[t][5][1]==null)?NaN:distance(clat, clon, 0, tracks_props[t][5][0], tracks_props[t][5][1], 0);});\r\n' \
+  '            c = function (a, b) {return flt_comp(vals[a], vals[b]);};\r\n' \
+  '            break;\r\n' \
+  '        }\r\n' \
+  '        trks.sort(c);\r\n' \
+  '        let frag = document.createDocumentFragment();\r\n' \
+  '        for (let t of trks) {frag.appendChild(document.getElementById("track" + t.toString() + "cont"));}\r\n' \
+  '        document.getElementById("tracksform").appendChild(frag);\r\n' \
+  '      }\r\n' \
+  '      function switch_sortorder() {\r\n' \
+  '        let g = document.getElementById("sortup").style.display;\r\n' \
+  '        document.getElementById("sortup").style.display = document.getElementById("sortdown").style.display;\r\n' \
+  '        document.getElementById("sortdown").style.display = g;\r\n' \
+  '        tracks_sort();\r\n' \
+  '      }\r\n' \
   '      function switch_folderspanel() {\r\n' \
   '        let fp = document.getElementById("folderspanel");\r\n' \
   '        if (fp.style.display == "none") {fp.style.display="";} else {fp.style.display = "none";}\r\n' \
   '      }\r\n' \
-  '      function select_folders() {\r\n' \
+  '      function folders_select() {\r\n' \
   '        let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
   '        let t = 0;\r\n' \
-  '        for (let f=0; f<folders.length; f++) {\r\n' \
+  '        for (let f=1; f<folders.length; f++) {\r\n' \
   '          while (t < tracks_pts.length) {\r\n' \
   '            if (document.getElementById("track" + t.toString() + "folder" ).value.toLowerCase().indexOf(folders[f].value.toLowerCase()) >= 0) {\r\n' \
-  '              document.getElementById("track" + t.toString() + "cont").style.display = folders[f].checked?"":"none";\r\n' \
+  '              if (folders[f].checked) {\r\n' \
+  '                document.getElementById("track" + t.toString() + "cont").style.display = document.getElementById("track" + t.toString() + "name").style.display;\r\n' \
+  '                document.getElementById("track" + t.toString() + "folder").style.display = "";\r\n' \
+  '              } else {\r\n' \
+  '                document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
+  '                document.getElementById("track" + t.toString() + "folder").style.display = "none";\r\n' \
+  '              }\r\n' \
   '              t++;\r\n' \
   '            } else {\r\n' \
   '              break;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        if (focused) {\r\n' \
+  '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function folders_whole() {\r\n' \
+  '       let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
+  '       for (let f=1; f<folders.length; f++) {\r\n' \
+  '         folders[f].checked = folders[0].checked;\r\n' \
+  '       }\r\n' \
   '      }\r\n' \
   '      function switch_filterpanel(pa) {\r\n' \
   '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
@@ -10029,18 +10179,61 @@ class GPXTweakerWebInterfaceServer():
   '      function escape(s) {\r\n' \
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
   '      }\r\n' \
-  '      function load_cb(t) {\r\n' \
+  '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);\r\n' \
+  '          error_cb(null, prop);\r\n' \
+  '          document.getElementById("edit").disabled = false;\r\n' \
   '          return false;\r\n'\
   '        }\r\n' \
+  '        if (prop.id.slice(-4) == "file") {\r\n' \
+  '          let uri_ex = document.getElementById(prop.id.replace("file", "visible")).value;\r\n' \
+  '          let uri = uri_ex.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + prop.value);\r\n' \
+  '          let trks = document.getElementById("tracksform").children;\r\n' \
+  '          for (let t=0; t<trks.length; t++) {\r\n' \
+  '            if (trks[t].firstElementChild.value == uri_ex) {\r\n' \
+  '              trks[t].firstElementChild.value = uri;\r\n' \
+  '              document.getElementById(trks[t].id.replace("cont", "file")).value = prop.value;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          tracks_sort();\r\n' \
+  '        } else if (prop.id.slice(-4) == "name") {\r\n' \
+  '          document.getElementById(prop.id.replace("name", "desc")).innerHTML = document.getElementById(prop.id.replace("name", "desc")).innerHTML.replace(/.*(<br>.*)/, escape(prop.value) + "$1");\r\n' \
+  '          document.getElementById(prop.id.replace("name", "desc")).title = prop.value;\r\n' \
+  '          document.getElementById(prop.id.slice(0, -4).replace("track", "path")).firstElementChild.innerHTML = escape(prop.value);\r\n' \
+  '          tracks_sort();\r\n' \
+  '          tracks_filter();\r\n' \
+  '        } else if (prop.id.slice(-5) == "color") {\r\n' \
+  '          let trk = prop.id.slice(0, -5);\r\n' \
+  '          let col = prop.value.toUpperCase();\r\n' \
+  '          document.getElementById(trk).setAttribute("stroke", col);\r\n' \
+  '          document.getElementById(trk).setAttribute("fill", col);\r\n' \
+  '          document.getElementById(trk.replace("track", "waydots")).setAttribute("stroke", col);\r\n' \
+  '          document.getElementById(trk.replace("track", "waydots")).setAttribute("fill", col);\r\n' \
+  '        }\r\n' \
+  '        document.getElementById("edit").disabled = false;\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
-  '      function error_cb(t) {\r\n' \
-  '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
+  '      function error_cb(t, prop) {\r\n' \
+  '        if (t != null) {window.alert("{#jserror#}");}\r\n' \
+  '        if (prop.id.slice(-4) == "file") {\r\n' \
+  '          prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1);\r\n' \
+  '        } else if (prop.id.slice(-4) == "name") {\r\n' \
+  '          prop.value = document.getElementById(prop.id.replace("name", "desc")).title;\r\n' \
+  '        } else if (prop.id.slice(-5) == "color") {\r\n' \
+  '          prop.value = document.getElementById(prop.id.slice(0, -5)).getAttribute("stroke");\r\n' \
+  '        } \r\n' \
+  '        if (t != null) {document.getElementById("edit").disabled = false;}\r\n' \
   '      }\r\n' \
   '      function track_save(prop) {\r\n' \
+  '        if (document.getElementById("edit").disabled) {error_cb(null, prop);return;}\r\n' \
+  '        document.getElementById("edit").disabled = true;\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
+  '          if (! prop.checkValidity()) {\r\n' \
+  '            prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1);\r\n' \
+  '            document.getElementById("edit").disabled = false;\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          if (prop.value.slice(-4) != ".gpx") {\r\n' \
   '            if (prop.value.slice(-4).toLowerCase() != ".gpx") {\r\n' \
   '              prop.value = prop.value + ".gpx";\r\n' \
@@ -10048,19 +10241,11 @@ class GPXTweakerWebInterfaceServer():
   '              prop.value = prop.value.slice(0, -4) + ".gpx";\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          let trks = document.getElementById("tracksform").children;\r\n' \
-  '          for (let t=0; t<trks.length; t++) {\r\n' \
-  '            if (trks[t].id.slice(0, -4) != prop.id.slice(0, -4) && trks[t].firstElementChild.value == document.getElementById(prop.id.replace("file", "visible")).value) {\r\n' \
-  '              document.getElementById(trks[t].id.replace("cont", "file")).value = prop.value;\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        } else if (prop.id.slice(-4) == "name"){\r\n' \
-  '          document.getElementById(prop.id.replace("name", "desc")).innerHTML = document.getElementById(prop.id.replace("name", "desc")).innerHTML.replace(/.*(<br>.*)/, escape(prop.value) + "$1");\r\n' \
   '        }\r\n' \
   '        let body = prop.id + "=" + (prop.id.slice(-5)=="color"?prop.value.toUpperCase():prop.value);\r\n' \
   '        let msgn = show_msg("{#jmsave1#}", 0);\r\n' \
-  '        xhr.onload = (e) => {load_cb(e.target)?show_msg("{#jmsave2#}", 5, msgn):show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
-  '        xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '        xhr.onload = (e) => {load_cb(e.target, prop)?show_msg("{#jmsave2#}", 5, msgn):show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '        xhr.onerror = (e) => {error_cb(e.target, prop); show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
   '        xhr.open("POST", "/track");\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -10080,10 +10265,12 @@ class GPXTweakerWebInterfaceServer():
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
-  '           <input type="text" id="filter_track" name="filter_track" value="" disabled style="opacity:0;">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jedit#}" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
+  '           <input type="text" id="tracksfilter" name="tracksfilter" value="" oninput="tracks_filter()">\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="foldersform" autocomplete="off" onchange="select_folders()">\r\n' \
+  '              <form id="foldersform" autocomplete="off" onchange="folders_select()">\r\n' \
+  '                <input id="folders" type="checkbox" style="margin-left:1.5em;" checked="" name="folders" value="folders" onchange="folders_whole()">\r\n' \
+  '                <label for="folders" style="font-weight:bold;">{#jfoldersw#}</label><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
   '            </div>\r\n' \
@@ -10217,11 +10404,15 @@ class GPXTweakerWebInterfaceServer():
   '        document.oncontextmenu = null;\r\n' \
   '        if (elt) {\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
-  '            let trk = document.getElementById(elt.id.replace("path", "track") + "desc");\r\n' \
-  '            track_click(null, trk);\r\n' \
+  '            if (document.getElementById(elt.id.replace("path", "track") + "cont").style.display != "none") {\r\n' \
+  '              let trk = document.getElementById(elt.id.replace("path", "track") + "desc");\r\n' \
+  '              track_click(null, trk);\r\n' \
+  '            }\r\n' \
   '          } else if (elt.id.substring(0, 7) == "waydots") {\r\n' \
-  '            let trk = document.getElementById(elt.id.replace("waydots", "track") + "desc");\r\n' \
-  '            track_click(null, trk);\r\n' \
+  '            if (document.getElementById(elt.id.replace("waydots", "track") + "cont").style.display != "none") {\r\n' \
+  '              let trk = document.getElementById(elt.id.replace("waydots", "track") + "desc");\r\n' \
+  '              track_click(null, trk);\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -10265,6 +10456,7 @@ class GPXTweakerWebInterfaceServer():
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
   '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").slice(1).join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-"));\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
   '        window.alert("{#jexpfail#}");\r\n' \
@@ -10346,7 +10538,23 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
   '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
   '        }\r\n' \
+  '        prev_state = sessionStorage.getItem("state_exp");\r\n' \
+  '        if (prev_state != null) {\r\n' \
+  '          prev_state = prev_state.split("|");\r\n' \
+  '          document.getElementById("tracksfilter").value = prev_state[0].replace(/\\&;/g, "|").replace(/&amp;/g, "&");\r\n' \
+  '          document.getElementById("sortup").style.display = prev_state[1]=="true"?"":"none";\r\n' \
+  '          document.getElementById("sortdown").style.display = prev_state[1]=="true"?"none":"";\r\n' \
+  '          document.getElementById("oset").selectedIndex = parseInt(prev_state[2]);\r\n' \
+  '          let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
+  '          let st = prev_state[3].split("-");\r\n' \
+  '          for (let f=1; f<folders.length; f++) {folders[f].checked = st[f-1]=="t";}\r\n' \
+  '          st = prev_state[4].split("-");\r\n' \
+  '          for (let t=0; t<st.length; t++) {document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";}\r\n' \
+  '        }\r\n' \
   '        tracks_calc();\r\n' \
+  '        tracks_sort();\r\n' \
+  '        tracks_filter();\r\n' \
+  '        folders_select();\r\n' \
   '        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -10375,20 +10583,20 @@ class GPXTweakerWebInterfaceServer():
   '                <label for="folder%s">%s</label><br>\r\n'
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
-  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
-  '                    <label for="track%svisible" id="track%sdesc" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label><br>\r\n' \
+  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
+  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label><br>\r\n' \
   '                    <input type="color" id="track%scolor" value="%s" onchange="track_color(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '                    <span id="track%sfocus">\r\n' \
   '                      <label for="track%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="track%sname" name="track%sname" value="%s" onchange="track_save(this)"><br>\r\n' \
   '                      <label for="track%sfile">{jfile}</label>\r\n' \
-  '                      <input type="text" id="track%sfile" name="track%sfile" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\\\/\\?\\*:<>&quot;\\|]*" value="%s" onchange="track_save(this)"><br>\r\n' \
   '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
-  '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" disabled><br>\r\n' \
+  '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
   '                      <label for="track%speriod">{jperiod}</label>\r\n' \
-  '                      <input type="text" id="track%speriod" name="track%speriod" value="%s" disabled><br>\r\n' \
+  '                      <input type="text" id="track%speriod" name="track%speriod" value="%s" readOnly><br>\r\n' \
   '                      <label for="track%scontent">{jcontent}</label>\r\n' \
-  '                      <input type="text" id="track%scontent" name="track%scontent" value="%s" disabled><br>\r\n' \
+  '                      <input type="text" id="track%scontent" name="track%scontent" value="%s" readOnly><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -10776,6 +10984,7 @@ class GPXTweakerWebInterfaceServer():
     self.Maxx = None
     self.Miny = None
     self.Maxy = None
+    self.SLock = threading.Lock()
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
     if not self._load_config(cfg):
@@ -10812,6 +11021,15 @@ class GPXTweakerWebInterfaceServer():
     if uri != None:
       u = os.path.abspath(uri)
     else:
+      f1 = 0
+      while f1 < len(self.Folders):
+        f2 = f1 + 1
+        while f2 < len(self.Folders):
+          if os.path.commonpath((self.Folders[f1], self.Folders[f2])) == self.Folders[f1]:
+            del self.Folders[f2]
+          else:
+            f2 += 1
+        f1 += 1
       k = lambda f: f[2].lower() == 'gpx' and not f[0].lower().endswith(' - original') and not f[0].lower().endswith(' - backup')
       uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if k(f.rpartition('.')))
       trk = 0
@@ -11149,7 +11367,7 @@ class GPXTweakerWebInterfaceServer():
     return True
 
   def _build_folders_exp(self):
-    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, f, html.escape(self.Folders[f]), f, html.escape(self.Folders[f])) for f in range(len(self.Folders)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, *([f, html.escape(self.Folders[f])] * 2)) for f in range(len(self.Folders)))
 
   def _build_pathes_exp(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
@@ -11161,7 +11379,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_tracks_exp(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), f(self.Tracks[t][0]), *([t] * 2), f(self.Tracks[t][1].Name), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(f, (self.Tracks[t][1].Name, *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (str(len(self.Tracks[t][1].Pts)) , str(sum(len(s) for s in self.Tracks[t][1].Pts)), str(len(self.Tracks[t][1].Wpts)))))) for a in b)) for t in range(len(self.Tracks)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), f(self.Tracks[t][0]), *([t] * 2), *([f(self.Tracks[t][1].Name)] * 2), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(f, (self.Tracks[t][1].Name, *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (str(len(self.Tracks[t][1].Pts)) , str(sum(len(s) for s in self.Tracks[t][1].Pts)), str(len(self.Tracks[t][1].Wpts)))))) for a in b)) for t in range(len(self.Tracks)))
 
   def _build_waydots_exp(self):
     f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
