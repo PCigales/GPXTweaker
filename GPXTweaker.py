@@ -1,4 +1,4 @@
-﻿from functools import partial
+from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -145,6 +145,7 @@ FR_STRINGS = {
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
+    'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
     'jtrackedit': 'éditer la trace',
     'jzoomall': 'recadrer sur toutes les traces',
@@ -223,6 +224,19 @@ FR_STRINGS = {
     'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
     'jm3dviewer2': 'Visionneuse 3D démarrée',
     'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
+    'jmdetach1': 'Détachement en cours...',
+    'jmdetach2': 'Détachement effectué',
+    'jmdetach3': 'Échec du détachement',
+    'jmdetach4': 'Détachement annulé: trace ne faisant pas partie d\'un fichier multi-traces',
+    'jmincorporate1': 'Incorporation en cours...',
+    'jmincorporate2': 'Incorporation effectuée',
+    'jmincorporate3': 'Échec de l\'incorporation',
+    'jmincorporate4': 'Incorporation annulée: pas ou plus d\'une autre trace visible cochée',
+    'jmintegrate1': 'Intégration en cours...',
+    'jmintegrate2': 'Intégration effectuée',
+    'jmintegrate3': 'Échec de l\'Intégration',
+    'jmintegrate4': 'Intégration annulée: pas ou plus d\'une autre trace visible cochée',
+    'jmintegrate5': 'Intégration annulée: trace à intégrer faisant partie d\'un fichier multi-traces',
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jzscale': 'Échelle Z:',
@@ -372,6 +386,7 @@ EN_STRINGS = {
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
+    'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
     'jtrackedit': 'edit the track',
     'jzoomall': 'reframe on all tracks',
@@ -447,6 +462,19 @@ EN_STRINGS = {
     'jmsave1': 'Backup in progress...',
     'jmsave2': 'Backup completed',
     'jmsave3': 'Failure of the backup',
+    'jmdetach1': 'Detachment in progress...',
+    'jmdetach2': 'Detachment completed',
+    'jmdetach3': 'Failure of the detachment',
+    'jmdetach4': 'Detachment cancelled: track not part of a multi-tracks file',
+    'jmincorporate1': 'Incorporation in progress...',
+    'jmincorporate2': 'Incorporation completed',
+    'jmincorporate3': 'Failure of the incorporation',
+    'jmincorporate4': 'Incorporation cancelled: none or more than another visible ticked track',
+    'jmintegrate1': 'Integration in progress...',
+    'jmintegrate2': 'Integration completed',
+    'jmintegrate3': 'Failure of the integration',
+    'jmintegrate4': 'Integration cancelled: none or more than another visible ticked track',
+    'jmintegrate5': 'Integration cancelled: track to be integrated part of a multi-tracks file',
     'jm3dviewer1': 'Loading of the 3D viewer in progress...',
     'jm3dviewer2': '3D viewer started',
     'jm3dviewer3': 'Failure of the loading of the 3D viewer',
@@ -2694,8 +2722,8 @@ name)
       return False
     return True
 
-  def AppendToGPX(self, track, trkid=-1):
-    if trkid == -1:
+  def AppendToGPX(self, track, mode='s', trkid=None):
+    if trkid == None:
       trkid = self.TrkId
     if self.Track != self.OTrack and self.Track != self.STrack:
       try:
@@ -2712,10 +2740,14 @@ name)
           break
       for n in track.Track.getElementsByTagNameNS('*', 'wpt'):
         r.insertBefore(n.cloneNode(True), no)
-      if trkid == None:
-        r.appendChild(track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].cloneNode(true))
+      trks = r.getElementsByTagNameNS('*', 'trk')
+      trk = trks[trkid] if trkid < len(trks) else None
+      if mode == 't':
+        r.insertBefore(track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].cloneNode(True), trk)
+        if trkid != None:
+          if self.TrkId >= trkid:
+            self.TrkId += 1
       else:
-        trk = self.Track.getElementsByTagNameNS('*', 'trk')[trkid]
         for seg in track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].getElementsByTagNameNS('*', 'trkseg'):
           trk.appendChild(seg.cloneNode(True))
       if trkid == self.TrkId:
@@ -3197,7 +3229,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
-          elif req.path.lower()[:12] == '/incorporate':
+          elif req.path.lower()[:12] == '/incorporate' or req.path.lower()[:10] == '/integrate':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               try:
                 self.request.sendall(resp_bad.encode('ISO-8859-1'))
@@ -3205,33 +3237,43 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
               continue
+            mode = 's' if req.path.lower()[:12] == '/incorporate' else 't'
             self.server.Interface.SLock.acquire()
             try:
-              tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(','))
-              uri, track1 = self.server.Interface.Tracks[tr_ind1]
-              track2 = self.server.Interface.Tracks[tr_ind2][1]
-              if not track1.AppendToGPX(track2):
-                raise
-              uri_pre = uri.rsplit('.', 1)[0]
-              if not os.path.exists(uri_pre + ' - original.gpx'):
-                os.rename(uri, uri_pre + ' - original.gpx')
+              tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(',')[:2])
+              uri1, track1 = self.server.Interface.Tracks[tr_ind1]
+              uri2, track2 = self.server.Interface.Tracks[tr_ind2]
+              if mode == 's':
+                tgt = track1.TrkId
               else:
-                if os.path.exists(uri_pre + ' - backup.gpx'):
-                  os.remove(uri_pre + ' - backup.gpx')
-                  os.rename(uri, uri_pre + ' - backup.gpx')
-              if not track1.SaveGPX(uri):
-                try:
-                  track1.Track.unlink()
-                except:
-                  pass
-                track1.Track = track.OTrack
-                track1.ProcessGPX('a')
+                tgt = track1.TrkId + (1 if req.path[-1] == 'a' else 0)
+              if not track1.AppendToGPX(track2, mode, tgt):
                 raise
+              for uri in ((uri1,) if mode == 's' else (uri1, uri2)):
+                uri_pre = uri.rsplit('.', 1)[0]
+                if not os.path.exists(uri_pre + ' - original.gpx'):
+                  os.rename(uri, uri_pre + ' - original.gpx')
+                else:
+                  if os.path.exists(uri_pre + ' - backup.gpx'):
+                    os.remove(uri_pre + ' - backup.gpx')
+                    os.rename(uri, uri_pre + ' - backup.gpx')
+                if uri == uri1:
+                  if not track1.SaveGPX(uri1):
+                    try:
+                      track1.Track.unlink()
+                    except:
+                      pass
+                    track1.Track = track.OTrack
+                    track1.ProcessGPX('a')
+                    raise
               try:
                 track1.OTrack.unlink()
               except:
                 pass
               track1.OTrack = track1.Track
+              if mode == 't':
+                track2.TrkId = tgt
+                self.server.Interface.Tracks[tr_ind2][0] = uri1
             except:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -3243,21 +3285,17 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             resp_body = {}
             for t_ind in range(len(self.server.Interface.Tracks)):
               tr = self.server.Interface.Tracks[t_ind]
-              if tr[1] != track1 and tr[0] == uri:
+              if tr[1] != track1 and tr[0] == uri1:
                 try:
                   tr[1].Track.unlink()
                 except:
                   pass
-                tr[1].Track = track1.track.cloneNode(True)
+                tr[1].Track = track1.Track.cloneNode(True)
                 tr[1].ProcessGPX('w')
                 tr[1].OTrack = tr[1].Track
                 tr[1].STrack = tr[1].Track
               if self.server.Interface.Mode == 'tiles':
-                minlat = min((p[1][0] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLat)
-                maxlat = max((p[1][0] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLat)
-                minlon = min((p[1][1] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLon)
-                maxlon = max((p[1][1] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLon)
-                self.server.Interface.TracksBoundaries[t_ind] = WGS84WebMercator.WGS84toWebMercator(max(self.server.Interface.VMinLat, minlat - 0.008), max(self.server.Interface.VMinLon, minlon - 0.011)) + WGS84WebMercator.WGS84toWebMercator(min(self.server.Interface.VMaxLat, maxlat + 0.008), min(self.server.Interface.VMaxLon, maxlon + 0.011))
+                self.server.Interface.UpdateTrackBoundaries(t_ind)
               self.server.Interface.UpdateHTMLExp(t_ind, 'tpw', resp_body)
             self.server.Interface.SLock.release()
             resp_body = json.dumps(resp_body).encode('utf-8')
@@ -9906,7 +9944,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        tracks_sort();\r\n' \
+  '        if ([5, 6].includes(document.getElementById("oset").selectedIndex) && (fpan == 1 || fpan == 2)) {tracks_sort();}\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
@@ -10390,6 +10428,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(trk + "visible").value = document.getElementById(trk + "visible").value.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + t.response);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 2) {tracks_sort();}\r\n' \
+  '        return true;\r\n' \
   '      }\r\n' \
   '      function track_detach() {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
@@ -10399,11 +10438,13 @@ class GPXTweakerWebInterfaceServer():
   '        let uri = document.getElementById("track" + ind.toString() + "visible").value;\r\n' \
   '        let mt = false;\r\n' \
   '        for (let i=0; i<tracks_pts.length; i++) {\r\n' \
-  '          if (i != ind && document.getElementById("track" + i.toString() + "visible").value == uri) {mt = true; break}\r\n' \
+  '          if (i != ind && document.getElementById("track" + i.toString() + "visible").value == uri) {mt = true; break;}\r\n' \
   '        }\r\n' \
-  '        if (! mt) {return;}\r\n' \
+  '        if (! mt) {show_msg("{#jmdetach4#}", 10); return;}\r\n' \
   '        document.getElementById("edit").disabled = true;\r\n' \
-  '        xhrtr.onload = (e) => {load_tdcb(e.target, foc)};\r\n' \
+  '        let msgn = show_msg("{#jmdetach1#}", 0);\r\n' \
+  '        xhrtr.onload = (e) => {load_tdcb(e.target, foc)?show_msg("{#jmdetach2#}", 5, msgn):show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/detach?" + foc.substring(5));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrtr.send();\r\n' \
@@ -10411,16 +10452,38 @@ class GPXTweakerWebInterfaceServer():
   '      function load_ticb(t, ind1, ind2) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        let foc = focused;\r\n' \
+  '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        for (let n in msg) {\r\n' \
+  '          let ch = null;\r\n' \
+  '          if (n.indexOf("cont") >= 0) {\r\n' \
+  '            ch = document.getElementById(n.replace("cont", "visible")).checked;\r\n' \
+  '          } else {\r\n' \
+  '            ch = document.getElementById(n).style.display;\r\n' \
+  '          }\r\n' \
   '          document.getElementById(n).outerHTML = msg[n];\r\n' \
+  '          if (n.indexOf("cont") >= 0) {\r\n' \
+  '            document.getElementById(n.replace("cont", "visible")).checked = ch;\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById(n).style.display = ch;\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
-  '        tracks_pts[ind1] = tracks_pts[ind1].concat(tracks_pts[ind2]);\r\n' \
+  '        if (t.responseURL.indexOf("incorporate") >= 0) {\r\n' \
+  '          tracks_pts[ind1] = tracks_pts[ind1].concat(tracks_pts[ind2]);\r\n' \
+  '          track_click(null, document.getElementById("track" + ind1.toString() + "desc"));\r\n' \
+  '        } else {\r\n' \
+  '          track_click(null, document.getElementById("track" + ind2.toString() + "desc"));\r\n' \
+  '        }\r\n' \
   '        tracks_stats = [];\r\n' \
   '        tracks_props = [];\r\n' \
   '        tracks_calc(0);\r\n' \
+  '        document.getElementById("edit").disabled = false;\r\n' \
+  '        tracks_sort();\r\n' \
+  '        tracks_filter();\r\n' \
+  '        return true;\r\n' \
   '      }\r\n' \
-  '      function track_incorporate() {\r\n' \
+  '      function track_incorporate_integrate(after=null) {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        let foc = focused;\r\n' \
   '        if (foc == "") {return;}\r\n' \
@@ -10431,13 +10494,21 @@ class GPXTweakerWebInterfaceServer():
   '          if (t == ind1) {continue;}\r\n' \
   '          let tr = document.getElementById("track" + t.toString() + "cont");\r\n' \
   '          if (! tr.firstElementChild.checked || tr.style.display == "none") {continue;}\r\n' \
-  '          if (ind2 != null) {return;}\r\n' \
+  '          if (ind2 != null) {show_msg(after==null?"{#jmincorporate4#}":"{#jmintegrate4#}", 10); return;}\r\n' \
   '          ind2 = t;\r\n' \
   '        }\r\n' \
-  '        if (ind2 == null) {return;}\r\n' \
+  '        if (ind2 == null) {show_msg(after==null?"{#jmincorporate4#}":"{#jmintegrate4#}"); return;}\r\n' \
+  '        if (after != null) {\r\n' \
+  '          let uri = document.getElementById("track" + ind2.toString() + "visible").value;\r\n' \
+  '          for (let i=0; i<tracks_pts.length; i++) {\r\n' \
+  '            if (i != ind2 && document.getElementById("track" + i.toString() + "visible").value == uri) {show_msg("{#jmintegrate5#}"); return;}\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        document.getElementById("edit").disabled = true;\r\n' \
-  '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)};\r\n' \
-  '        xhrtr.open("GET", "/incorporate?" + ind1.toString() + "," + ind2.toString());\r\n' \
+  '        let msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
+  '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)?show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn):show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
+  '        xhrtr.open("GET", (after==null?"/incorporate?":"/integrate?") + ind1.toString() + "," + ind2.toString() + (after==null?"":","+(after?"a":"b")));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
@@ -10524,7 +10595,6 @@ class GPXTweakerWebInterfaceServer():
   '      var xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
   '      var xhrtr = new XMLHttpRequest();\r\n' \
-  '      xhrtr.addEventListener("error", error_trcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
@@ -10537,7 +10607,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="tracksfilter" name="tracksfilter" value="" oninput="tracks_filter()">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" id="detach" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackincorporate#}" id="incorporate" style="margin-left:0.25em;" onclick="track_incorporate()">&#128229;&#xfe0e;</button><button title="{#jtrackedit#}" id="edit" style="margin-left:0.75em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&#11120;</button><button title="{#jtrackedit#}" id="edit" style="margin-left:0.75em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onchange="folders_select()">\r\n' \
   '                <input id="folders" type="checkbox" style="margin-left:1.5em;" checked="" name="folders" value="folders" onchange="folders_whole()">\r\n' \
@@ -10820,7 +10890,10 @@ class GPXTweakerWebInterfaceServer():
   '          let st = prev_state[3].split("-");\r\n' \
   '          for (let f=1; f<folders.length; f++) {folders[f].checked = st[f-1]=="t";}\r\n' \
   '          st = prev_state[4].split("-");\r\n' \
-  '          for (let t=0; t<st.length; t++) {document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";}\r\n' \
+  '          for (let t=0; t<st.length; t++) {\r\n' \
+  '            document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";\r\n' \
+  '            track_checkbox(document.getElementById("track" + t.toString() + "visible"));\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        tracks_calc();\r\n' \
   '        tracks_sort();\r\n' \
@@ -11678,6 +11751,14 @@ class GPXTweakerWebInterfaceServer():
     self.log(2, 'builtexp')
     return True
 
+  def UpdateTrackBoundaries(self, t):
+    tr = self.Tracks[t]
+    minlat = min((p[1][0] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.DefLat)
+    maxlat = max((p[1][0] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.DefLat)
+    minlon = min((p[1][1] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.DefLon)
+    maxlon = max((p[1][1] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.DefLon)
+    self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011)), WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))))
+
   def UpdateHTMLExp(self, t, elts, retrieve=None):
     if self.HTMLExp == None:
       return False
@@ -11704,16 +11785,9 @@ class GPXTweakerWebInterfaceServer():
   def EditMode(self):
     if self.HTML == None:
       return False
-    if self.Mode == 'tiles':
-      if self.HTML != '':
-        minlat = min((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLat)
-        maxlat = max((p[1][0] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLat)
-        minlon = min((p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLon)
-        maxlon = max((p[1][1] for seg in (*self.Track.Pts, self.Track.Wpts) for p in seg), default=self.DefLon)
-        self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011))
-        self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))
-      else:
-        self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.TrackInd]
+    if self.Mode == 'tiles' and self.HTML != '':
+        self.UpdateTrackBoundaries(self.TrackInd)
+    self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.TrackInd]
     self.HTML = ''
     self.log(1, 'build')
     if not self.Track.BuildWebMercator():
@@ -11744,22 +11818,25 @@ class GPXTweakerWebInterfaceServer():
           pass
         self.Track.Track = self.Track.STrack
       self.Track.ProcessGPX('a')
+      for t_ind in range(len(self.Tracks)):
+        track = self.Tracks[t_ind]
+        if track[0] == self.Uri:
+          if track[1] != self.Track:
+            try:
+              track[1].Track.unlink()
+            except:
+              pass
+            track[1].Track = self.Track.Track.cloneNode(True)
+            track[1].ProcessGPX('w')
+            track[1].OTrack = track[1].Track
+            track[1].STrack = track[1].Track
+          if self.Mode == 'tiles':
+            self.UpdateTrackBoundaries(t_ind)
       if self.Mode == 'tiles':
-        self.TracksBoundaries[self.TrackInd] = (self.Minx, self.Maxx, self.Miny, self.Maxy)
         self.Minx = min((b[0] for b in self.TracksBoundaries), default=self.Minx)
         self.Maxx = max((b[1] for b in self.TracksBoundaries), default=self.Maxx)
         self.Miny = min((b[2] for b in self.TracksBoundaries), default=self.Miny)
         self.Maxy = max((b[3] for b in self.TracksBoundaries), default=self.Maxy)
-      for track in self.Tracks:
-        if track[1] != self.Track and track[0] == self.Uri:
-          try:
-            track[1].Track.unlink()
-          except:
-            pass
-          track[1].Track = self.Track.Track.cloneNode(True)
-          track[1].ProcessGPX('w')
-          track[1].OTrack = track[1].Track
-          track[1].STrack = track[1].Track
     self.log(1, 'buildexp')
     try:
       if self.BuildHTMLExp():
