@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -144,7 +144,9 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
-    'jedit': 'éditer la trace',
+    'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
+    'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
+    'jtrackedit': 'éditer la trace',
     'jzoomall': 'recadrer sur toutes les traces',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
@@ -175,7 +177,7 @@ FR_STRINGS = {
     'jfolder': 'Répe',
     'jperiod': 'Péri',
     'jcontent': 'Cont',
-    'jtrackcontent': '%s seg(s) | %s pt(s) | %s pt(s) de chem',
+    'jtrackcontent': '%d seg(s) | %d pt(s) | %d pt(s) de chem',
     'jgraphdistance': 'distance',
     'jgraphelevation': 'élévation',
     'jgraphaltitude': 'altitude',
@@ -369,7 +371,9 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
-    'jedit': 'edit the track',
+    'jtrackdetach': 'detach the track (from a multi-tracks files)',
+    'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
+    'jtrackedit': 'edit the track',
     'jzoomall': 'reframe on all tracks',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
@@ -400,7 +404,7 @@ EN_STRINGS = {
     'jfolder': 'Fold',
     'jperiod': 'Peri',
     'jcontent': 'Cont',
-    'jtrackcontent': '%s seg(s) | %s pt(s) | %s waypt(s)',
+    'jtrackcontent': '%d seg(s) | %d pt(s) | %d waypt(s)',
     'jgraphdistance': 'distance',
     'jgraphelevation': 'elevation',
     'jgraphaltitude': 'altitude',
@@ -2541,8 +2545,9 @@ name)
         node.insertBefore(n, no)
       node.removeChild(no)
     elif def_first:
+      no = node.firstChild
       for n in children:
-        node.insertBefore(n, node.firstChild)
+        node.insertBefore(n, no)
     else:
       for n in children:
         node.appendChild(n)
@@ -2667,6 +2672,66 @@ name)
       return False
     return True
 
+  def RemoveFromGPX(self, trkid=None):
+    if self.Track != self.OTrack and self.Track != self.STrack:
+      try:
+        self.Track.unlink()
+      except:
+        pass
+    self.Track = self.OTrack.cloneNode(True)
+    r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+    try:
+      if trkid == self.TrkId:
+        self._XMLUpdateChildNodes(r, 'trk', [self.OTrack.getElementsByTagNameNS('*', 'trk')[trkid].cloneNode(True)])
+        self.TrkId = 0
+      else:
+        r.removeChild(self.Track.getElementsByTagNameNS('*', 'trk')[trkid])
+        if self.TrkId > trkid:
+          self.TrkId -= 1
+    except:
+      self.Track.unlink()
+      self.Track = self.OTrack
+      return False
+    return True
+
+  def AppendToGPX(self, track, trkid=-1):
+    if trkid == -1:
+      trkid = self.TrkId
+    if self.Track != self.OTrack and self.Track != self.STrack:
+      try:
+        self.Track.unlink()
+      except:
+        pass
+    self.Track = self.OTrack.cloneNode(True)
+    r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+    try:
+      no = None
+      for n in r.childNodes:
+        if n.localName != 'wpt':
+          no = n
+          break
+      for n in track.Track.getElementsByTagNameNS('*', 'wpt'):
+        r.insertBefore(n.cloneNode(True), no)
+      if trkid == None:
+        r.appendChild(track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].cloneNode(true))
+      else:
+        trk = self.Track.getElementsByTagNameNS('*', 'trk')[trkid]
+        for seg in track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].getElementsByTagNameNS('*', 'trkseg'):
+          trk.appendChild(seg.cloneNode(True))
+      if trkid == self.TrkId:
+        self.ProcessGPX('a')
+      else:
+        self.ProcessGPX('w')
+    except:
+      self.Track.unlink()
+      self.Track = self.OTrack
+      if trkid == self.TrkId:
+        self.ProcessGPX('a')
+      else:
+        self.ProcessGPX('w')
+      return False
+    return True     
+
 
 class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
 
@@ -2779,16 +2844,17 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower() == '/GPXExplorer.html'.lower():
             self.server.Interface.SLock.acquire()
-            self.server.Interface.SLock.release()
             if self.server.Interface.HTMLExp == None:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
+                self.server.Interface.SLock.release()
               continue
             if self.server.Interface.HTMLExp == '':
               self.server.Interface.ExploreMode()
+            self.server.Interface.SLock.release()
             self.server.Interface.HTML = None
             if not self.server.Interface.HTMLExp:
               try:
@@ -2992,12 +3058,13 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
             self.server.Interface.SLock.acquire()
-            self.server.Interface.SLock.release()
             if not self.server.Interface.HTML:
-              self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
+              self.server.Interface.TrackInd = int(req.path.split('?')[1])
+              self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
             if self.server.Interface.Build3DHTML():
+              self.server.Interface.SLock.release()
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               try:
                 if req.method == 'GET':
@@ -3008,12 +3075,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
             else:
+              self.server.Interface.SLock.release()
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
             if not self.server.Interface.HTML:
+              self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
@@ -3031,28 +3100,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rnfound', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
-          elif req.path.lower()[:5] == '/edit':
-            self.server.Interface.SLock.acquire()
-            self.server.Interface.SLock.release()
-            try:
-              self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.path.split('?')[1])]
-              self.server.Interface.HTML = ''
-              self.server.Interface.EditMode()
-              self.server.Interface.HTML = self.server.Interface.HTML.replace('//        window.onunload', '        window.onunload').replace('//        document.addEventListener("DOMContentLoaded"', '        document.addEventListener("DOMContentLoaded"')
-            except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-              continue
-            self.server.Interface.HTMLExp = ''
-            self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
-            try:
-              self.request.sendall(resp_307.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
           elif req.path.lower() == '/GPXExplorer/data'.lower():
             if not self.server.Interface.HTMLExp:
               try:
@@ -3069,6 +3116,179 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
               else:
                 self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:7] == '/detach':
+            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+              try:
+                self.request.sendall(resp_bad.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rbad', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            self.server.Interface.SLock.acquire()
+            try:
+              tr_ind = int(req.path.split('?')[1])
+              ouri, track = self.server.Interface.Tracks[tr_ind]
+              trkid = track.TrkId
+              nuri = ouri.rsplit('.', 1)[0] + ' - trk.gpx'
+              suf = 0
+              while os.path.exists (nuri):
+                suf += 1
+                nuri = ouri.rsplit('.', 1)[0] + ' - trk (%d).gpx' % suf
+              if not track.RemoveFromGPX(trkid):
+                raise
+              if not track.SaveGPX(nuri):
+                try:
+                  track.Track.unlink()
+                except:
+                  pass
+                track.Track = track.OTrack
+                track.TrkId = trkid
+                raise
+              try:
+                track.OTrack.unlink()
+              except:
+                pass
+              track.OTrack = track.Track
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rfailed', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              self.server.Interface.SLock.release()
+              continue
+            self.server.Interface.Tracks[tr_ind][0] = nuri
+            self.server.Interface.UpdateHTMLExp(tr_ind, 't')
+            for tr in self.server.Interface.Tracks:
+              if tr[1] != track and tr[0] == ouri:
+                try:
+                  tr[1].RemoveFromGPX(trkid)
+                  if tr[1].TrkId == 0:
+                    uri_pre = ouri.rsplit('.', 1)[0]
+                    if not os.path.exists(uri_pre + ' - original.gpx'):
+                      os.rename(ouri, uri_pre + ' - original.gpx')
+                    else:
+                      if os.path.exists(uri_pre + ' - backup.gpx'):
+                        os.remove(uri_pre + ' - backup.gpx')
+                      os.rename(ouri, uri_pre + ' - backup.gpx')
+                    if not tr[1].SaveGPX(ouri):
+                      try:
+                        tr[1].Track.unlink()
+                      except:
+                        pass
+                      tr[1].Track = tr[1].OTrack
+                      if trkid == 0:
+                        tr[1].TrkId = 1
+                      break
+                    try:
+                      tr[1].OTrack.unlink()
+                    except:
+                      pass
+                    tr[1].OTrack = tr[1].Track
+                except:
+                  pass
+            self.server.Interface.SLock.release()
+            resp_body = nuri.rsplit('\\', 1)[1].encode('utf-8')
+            try:
+              self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:12] == '/incorporate':
+            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+              try:
+                self.request.sendall(resp_bad.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rbad', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              continue
+            self.server.Interface.SLock.acquire()
+            try:
+              tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(','))
+              uri, track1 = self.server.Interface.Tracks[tr_ind1]
+              track2 = self.server.Interface.Tracks[tr_ind2][1]
+              if not track1.AppendToGPX(track2):
+                raise
+              uri_pre = uri.rsplit('.', 1)[0]
+              if not os.path.exists(uri_pre + ' - original.gpx'):
+                os.rename(uri, uri_pre + ' - original.gpx')
+              else:
+                if os.path.exists(uri_pre + ' - backup.gpx'):
+                  os.remove(uri_pre + ' - backup.gpx')
+                  os.rename(uri, uri_pre + ' - backup.gpx')
+              if not track1.SaveGPX(uri):
+                try:
+                  track1.Track.unlink()
+                except:
+                  pass
+                track1.Track = track.OTrack
+                track1.ProcessGPX('a')
+                raise
+              try:
+                track1.OTrack.unlink()
+              except:
+                pass
+              track1.OTrack = track1.Track
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rfailed', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              self.server.Interface.SLock.release()
+              continue
+            resp_body = {}
+            for t_ind in range(len(self.server.Interface.Tracks)):
+              tr = self.server.Interface.Tracks[t_ind]
+              if tr[1] != track1 and tr[0] == uri:
+                try:
+                  tr[1].Track.unlink()
+                except:
+                  pass
+                tr[1].Track = track1.track.cloneNode(True)
+                tr[1].ProcessGPX('w')
+                tr[1].OTrack = tr[1].Track
+                tr[1].STrack = tr[1].Track
+              if self.server.Interface.Mode == 'tiles':
+                minlat = min((p[1][0] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLat)
+                maxlat = max((p[1][0] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLat)
+                minlon = min((p[1][1] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLon)
+                maxlon = max((p[1][1] for seg in (*tr[1].Pts, tr[1].Wpts) for p in seg), default=self.server.Interface.DefLon)
+                self.server.Interface.TracksBoundaries[t_ind] = WGS84WebMercator.WGS84toWebMercator(max(self.server.Interface.VMinLat, minlat - 0.008), max(self.server.Interface.VMinLon, minlon - 0.011)) + WGS84WebMercator.WGS84toWebMercator(min(self.server.Interface.VMaxLat, maxlat + 0.008), min(self.server.Interface.VMaxLon, maxlon + 0.011))
+              self.server.Interface.UpdateHTMLExp(t_ind, 'tpw', resp_body)
+            self.server.Interface.SLock.release()
+            resp_body = json.dumps(resp_body).encode('utf-8')
+            try:
+              self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+              self.server.Interface.log(2, 'response', req.method, req.path)
+            except:
+              self.server.Interface.log(2, 'rerror', req.method, req.path)
+          elif req.path.lower()[:5] == '/edit':
+            self.server.Interface.SLock.acquire()
+            try:
+              self.server.Interface.TrackInd = int(req.path.split('?')[1])
+              self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
+              self.server.Interface.HTML = ''
+              self.server.Interface.EditMode()
+              self.server.Interface.HTML = self.server.Interface.HTML.replace('//        window.onunload', '        window.onunload').replace('//        document.addEventListener("DOMContentLoaded"', '        document.addEventListener("DOMContentLoaded"')
+            except:
+              try:
+                self.request.sendall(resp_err.encode('ISO-8859-1'))
+                self.server.Interface.log(2, 'rnfound', req.method, req.path)
+              except:
+                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              self.server.Interface.TrackInd = None
+              self.server.Interface.Uri, self.server.Interface.Track = None, None
+              continue
+            finally:
+              self.server.Interface.SLock.release()
+            self.server.Interface.HTMLExp = ''
+            self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
+            try:
+              self.request.sendall(resp_307.encode('ISO-8859-1'))
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
@@ -3193,22 +3413,21 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   tr = self.server.Interface.Tracks[tr_ind]
                   if tr[0] == ouri:
                     tr[0] = nuri
-                    pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sfile"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + html.escape(req.body.split('=', 1)[1])  + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
+                    self.server.Interface.UpdateHTMLExp(tr_ind, 't')
               except:
                 try:
                   self.request.sendall(resp_err.encode('ISO-8859-1'))
                   self.server.Interface.log(2, 'rfailed', req.method, req.path)
                 except:
                   self.server.Interface.log(2, 'rerror', req.method, req.path)
-                self.server.Interface.SLock.release()
                 continue
+              finally:
+                self.server.Interface.SLock.release()
               try:
                 self.request.sendall(resp.encode('ISO-8859-1'))
                 self.server.Interface.log(2, 'response', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
-              self.server.Interface.SLock.release()
               continue
             nosave = False
             if self.server.Interface.HTML and '?' in req.path:
@@ -3223,7 +3442,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
             try:
               if not self.server.Interface.HTML:
-                self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[int(req.body.split('=')[0][5:-4].rstrip('c'))]
+                self.server.Interface.TrackInd = int(req.body.split('=')[0][5:-4].rstrip('c'))
+                self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.UpdateGPX(req.body):
                 if nosave:
                   self.server.Interface.Track.BuildWebMercator()
@@ -3243,11 +3463,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf):
                     if not self.server.Interface.HTML:
                       try:
-                        if self.server.Interface.Track != self.server.Interface.OTrack:
-                          self.server.Interface.Track.unlink()
+                        if self.server.Interface.Track.Track != self.server.Interface.Track.OTrack:
+                          self.server.Interface.Track.Track.unlink()
                       except:
                         pass
-                      self.server.Interface.Track = self.server.Interface.OTrack
+                      self.server.Interface.Track.Track = self.server.Interface.Track.OTrack
                       self.server.Interface.Track.ProcessGPX('e')
                     raise
                   if self.server.Interface.HTML:
@@ -3259,11 +3479,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                       self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
                 if not self.server.Interface.HTML:
                   try:
-                    if self.server.Interface.OTrack != self.server.Interface.STrack:
-                      self.server.Interface.OTrack.unlink()
+                    if self.server.Interface.Track.OTrack != self.server.Interface.Track.STrack:
+                      self.server.Interface.Track.OTrack.unlink()
                   except:
                     pass
-                  self.server.Interface.OTrack = self.server.Interface.Track
+                  self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
                   for tr in self.server.Interface.Tracks:
                     if tr[1] != self.server.Interface.Track and tr[0] == self.server.Interface.Uri:
                       try:
@@ -3274,22 +3494,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                       tr[1].ProcessGPX('e')
                       tr[1].OTrack = tr[1].Track
                       tr[1].STrack = tr[1].Track
-                  tr_ind = int(req.body.split('=')[0][5:-4].rstrip('c'))
-                  nval = html.escape(req.body.split('=', 1)[1])
-                  if req.body.split('=')[0][-4:] == 'name':
-                    pos = self.server.Interface.HTMLExp.find('<input type="text" id="track%sname"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos):]
-                    pos = self.server.Interface.HTMLExp.find('<label for="track%svisible"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('title="', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onclick', pos):self.server.Interface.HTMLExp.find('>', pos) + 1] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('<', pos + 1):]
-                    pos = self.server.Interface.HTMLExp.find('<path id="path%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('<title>', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('"</title>', pos):]
-                  elif req.body.split('=')[0][-5:] == 'color':
-                    pos = self.server.Interface.HTMLExp.find('<input type="color" id="track%scolor"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('value="', pos) + 7] + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" onchange', pos + 1):]
-                    pos = self.server.Interface.HTMLExp.find('<svg id="track%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + nval + '" fill="' + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
-                    pos = self.server.Interface.HTMLExp.find('<svg id="waydots%s"' % str(tr_ind))
-                    self.server.Interface.HTMLExp = self.server.Interface.HTMLExp[:self.server.Interface.HTMLExp.find('stroke="', pos) + 8] + nval + '" fill="' + nval + self.server.Interface.HTMLExp[self.server.Interface.HTMLExp.find('" style', pos):]
+                  self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'tp')
+                  if req.body.split('=')[0][-5:] == 'color':
+                    self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'w')
               else:
                 raise
             except:
@@ -3298,17 +3505,17 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rfailed', req.method, req.path)
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
-              self.server.Interface.SLock.release()
               continue
             finally:
+              self.server.Interface.SLock.release()
               if not self.server.Interface.HTML:
+                self.server.Interface.TrackInd = None
                 self.server.Interface.Uri, self.server.Interface.Track = None, None
             try:
               self.request.sendall(resp.encode('ISO-8859-1'))
               self.server.Interface.log(2, 'response', req.method, req.path)
             except:
               self.server.Interface.log(2, 'rerror', req.method, req.path)
-            self.server.Interface.SLock.release()
           else:
             try:
               self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -8512,7 +8719,7 @@ class GPXTweakerWebInterfaceServer():
   '      var focused = "";\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
-'        var str_comp = new Intl.Collator().compare;\r\n' \
+  '      var str_comp = new Intl.Collator().compare;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' \
@@ -10172,6 +10379,68 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function error_trcb() {\r\n' \
+  '        document.getElementById("edit").disabled = false;\r\n' \
+  '        return false;\r\n' \
+  '      } \r\n' \
+  '      function load_tdcb(t, trk) {\r\n' \
+  '        if (t.status != 200) {return error_trcb();}\r\n' \
+  '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        document.getElementById(trk + "file").value = t.response;\r\n' \
+  '        document.getElementById(trk + "visible").value = document.getElementById(trk + "visible").value.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + t.response);\r\n' \
+  '        document.getElementById("edit").disabled = false;\r\n' \
+  '        if (document.getElementById("oset").selectedIndex == 2) {tracks_sort();}\r\n' \
+  '      }\r\n' \
+  '      function track_detach() {\r\n' \
+  '        if (document.getElementById("edit").disabled) {return;}\r\n' \
+  '        let foc = focused;\r\n' \
+  '        if (foc == "") {return;}\r\n' \
+  '        let ind = parseInt(foc.substring(5));\r\n' \
+  '        let uri = document.getElementById("track" + ind.toString() + "visible").value;\r\n' \
+  '        let mt = false;\r\n' \
+  '        for (let i=0; i<tracks_pts.length; i++) {\r\n' \
+  '          if (i != ind && document.getElementById("track" + i.toString() + "visible").value == uri) {mt = true; break}\r\n' \
+  '        }\r\n' \
+  '        if (! mt) {return;}\r\n' \
+  '        document.getElementById("edit").disabled = true;\r\n' \
+  '        xhrtr.onload = (e) => {load_tdcb(e.target, foc)};\r\n' \
+  '        xhrtr.open("GET", "/detach?" + foc.substring(5));\r\n' \
+  '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrtr.send();\r\n' \
+  '      }\r\n' \
+  '      function load_ticb(t, ind1, ind2) {\r\n' \
+  '        if (t.status != 200) {return error_trcb();}\r\n' \
+  '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        let msg = JSON.parse(t.response);\r\n' \
+  '        for (let n in msg) {\r\n' \
+  '          document.getElementById(n).outerHTML = msg[n];\r\n' \
+  '        }\r\n' \
+  '        tracks_pts[ind1] = tracks_pts[ind1].concat(tracks_pts[ind2]);\r\n' \
+  '        tracks_stats = [];\r\n' \
+  '        tracks_props = [];\r\n' \
+  '        tracks_calc(0);\r\n' \
+  '      }\r\n' \
+  '      function track_incorporate() {\r\n' \
+  '        if (document.getElementById("edit").disabled) {return;}\r\n' \
+  '        let foc = focused;\r\n' \
+  '        if (foc == "") {return;}\r\n' \
+  '        let ind1 = parseInt(foc.substring(5));\r\n' \
+  '        let ind2 = null;\r\n' \
+  '        let trks = document.getElementById("tracksform").children;\r\n' \
+  '        for (let t=0; t<trks.length; t++) {\r\n' \
+  '          if (t == ind1) {continue;}\r\n' \
+  '          let tr = document.getElementById("track" + t.toString() + "cont");\r\n' \
+  '          if (! tr.firstElementChild.checked || tr.style.display == "none") {continue;}\r\n' \
+  '          if (ind2 != null) {return;}\r\n' \
+  '          ind2 = t;\r\n' \
+  '        }\r\n' \
+  '        if (ind2 == null) {return;}\r\n' \
+  '        document.getElementById("edit").disabled = true;\r\n' \
+  '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)};\r\n' \
+  '        xhrtr.open("GET", "/incorporate?" + ind1.toString() + "," + ind2.toString());\r\n' \
+  '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrtr.send();\r\n' \
+  '      }\r\n' \
   '      function track_edit() {\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5)));\r\n' \
@@ -10196,12 +10465,12 @@ class GPXTweakerWebInterfaceServer():
   '              document.getElementById(trks[t].id.replace("cont", "file")).value = prop.value;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          tracks_sort();\r\n' \
+  '          if (document.getElementById("oset").selectedIndex == 2) {tracks_sort();}\r\n' \
   '        } else if (prop.id.slice(-4) == "name") {\r\n' \
   '          document.getElementById(prop.id.replace("name", "desc")).innerHTML = document.getElementById(prop.id.replace("name", "desc")).innerHTML.replace(/.*(<br>.*)/, escape(prop.value) + "$1");\r\n' \
   '          document.getElementById(prop.id.replace("name", "desc")).title = prop.value;\r\n' \
   '          document.getElementById(prop.id.slice(0, -4).replace("track", "path")).firstElementChild.innerHTML = escape(prop.value);\r\n' \
-  '          tracks_sort();\r\n' \
+  '          if (document.getElementById("oset").selectedIndex == 1) {tracks_sort();}\r\n' \
   '          tracks_filter();\r\n' \
   '        } else if (prop.id.slice(-5) == "color") {\r\n' \
   '          let trk = prop.id.slice(0, -5);\r\n' \
@@ -10254,6 +10523,8 @@ class GPXTweakerWebInterfaceServer():
   '      var xhr = new XMLHttpRequest();\r\n' \
   '      var xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
+  '      var xhrtr = new XMLHttpRequest();\r\n' \
+  '      xhrtr.addEventListener("error", error_trcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
@@ -10266,7 +10537,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="tracksfilter" name="tracksfilter" value="" oninput="tracks_filter()">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" id="detach" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackincorporate#}" id="incorporate" style="margin-left:0.25em;" onclick="track_incorporate()">&#128229;&#xfe0e;</button><button title="{#jtrackedit#}" id="edit" style="margin-left:0.75em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onchange="folders_select()">\r\n' \
   '                <input id="folders" type="checkbox" style="margin-left:1.5em;" checked="" name="folders" value="folders" onchange="folders_whole()">\r\n' \
@@ -10590,7 +10861,7 @@ class GPXTweakerWebInterfaceServer():
   '                      <label for="track%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="track%sname" name="track%sname" value="%s" onchange="track_save(this)"><br>\r\n' \
   '                      <label for="track%sfile">{jfile}</label>\r\n' \
-  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\\\/\\?\\*:<>&quot;\\|]*" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\/\?\*:<>&quot;\|]*(?<!\s-\s(original|backup)(\.gpx)?)" value="%s" onchange="track_save(this)"><br>\r\n' \
   '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
   '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
   '                      <label for="track%speriod">{jperiod}</label>\r\n' \
@@ -10939,7 +11210,6 @@ class GPXTweakerWebInterfaceServer():
     return True
 
   def __init__(self, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
-    self.Uri = None
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
     self.PSessionId = None
@@ -10969,7 +11239,9 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationMapSets = []
     self.ItinerariesProviders = []
     self.Tracks = []
+    self.Uri = None
     self.Track = None
+    self.TrackInd = None
     self.TilesSet = None
     self.MapSet = None
     self.ElevationMapSet = None
@@ -11058,11 +11330,11 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.log(0, 'berror4')
           return
-      track.Ind = len(self.Tracks)
       self.Tracks.append([u, track])
       self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
       if uri != None:
         self.Uri, self.Track = self.Tracks[0]
+        self.TrackInd = 0
         break
       if nbtrk == None:
         nbtrk = len(track.Track.getElementsByTagNameNS('*', 'trk'))
@@ -11372,23 +11644,25 @@ class GPXTweakerWebInterfaceServer():
   def _build_folders_exp(self):
     return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, *([f, html.escape(self.Folders[f])] * 2)) for f in range(len(self.Folders)))
 
+  def _build_path_exp(self, t):
+    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', "&rsaquo; " * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, html.escape(self.Tracks[t][1].Name or ''), t, t)
+
   def _build_pathes_exp(self):
-    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    def _coord_to_vb(x, y):
-      return '%.1f %.1f' % (x - self.Minx, self.Maxy - y)
-    pathes = ''
-    pathes = ''.join(GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', "&rsaquo; " * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, f(self.Tracks[t][1].Name), t, t) for t in range(len(self.Tracks)))
-    return pathes
+    return ''.join(self._build_path_exp(t) for t in range(len(self.Tracks)))
+
+  def _build_track_exp(self, t):
+    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), html.escape(self.Tracks[t][0]), *([t] * 2), *([html.escape(self.Tracks[t][1].Name or '')] * 2), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(html.escape, (self.Tracks[t][1].Name or '', *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(self.Tracks[t][1].Pts) , sum(len(s) for s in self.Tracks[t][1].Pts), len(self.Tracks[t][1].Wpts))))) for a in b))
 
   def _build_tracks_exp(self):
-    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), f(self.Tracks[t][0]), *([t] * 2), *([f(self.Tracks[t][1].Name)] * 2), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(f, (self.Tracks[t][1].Name, *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (str(len(self.Tracks[t][1].Pts)) , str(sum(len(s) for s in self.Tracks[t][1].Pts)), str(len(self.Tracks[t][1].Wpts)))))) for a in b)) for t in range(len(self.Tracks)))
+    return ''.join(self._build_track_exp(t) for t in range(len(self.Tracks)))
 
-  def _build_waydots_exp(self):
-    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    def _coord_to_vb(x, y, t):
+  def _build_waydots_exp(self, t):
+    def _coord_to_vb(x, y):
       return '%.1f' % (x - self.TracksBoundaries[t][0]), '%.1f' % (self.TracksBoundaries[t][3] - y)
-    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (*_coord_to_vb(*WGS84Track.WGS84toWebMercator(*pt[1][0:2]), t), f(pt[1][4])) for pt in self.Tracks[t][1].Wpts)) for t in range(len(self.Tracks)))
+    return GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (*_coord_to_vb(*WGS84Track.WGS84toWebMercator(*pt[1][0:2])), html.escape(pt[1][4] or '')) for pt in self.Tracks[t][1].Wpts))
+
+  def _build_waydotss_exp(self):
+    return ''.join(self._build_waydots_exp(t) for t in range(len(self.Tracks)))
 
   def BuildHTMLExp(self):
     if self.HTMLExp == None:
@@ -11397,11 +11671,34 @@ class GPXTweakerWebInterfaceServer():
     declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
-    waydots = self._build_waydots_exp()
+    waydots = self._build_waydotss_exp()
     tracks = self._build_tracks_exp()
     tsets = self._build_tsets()
     self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##FOLDERS##', folders).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
     self.log(2, 'builtexp')
+    return True
+
+  def UpdateHTMLExp(self, t, elts, retrieve=None):
+    if self.HTMLExp == None:
+      return False
+    if 't' in elts:
+      pos = self.HTMLExp.find('<div id="track%dcont"' % t)
+      n = self._build_track_exp(t)
+      self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</div>', pos):]
+      if retrieve != None:
+        retrieve['track%dcont' % t] = n.strip('\r\n ')
+    if 'p' in elts:
+      pos = self.HTMLExp.find('<svg id="track%d"' % t)
+      n = self._build_path_exp(t)
+      self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos):]
+      if retrieve != None:
+        retrieve['track%d' % t] = n.strip('\r\n ')
+    if 'w' in elts:
+      pos = self.HTMLExp.find('<svg id="waydots%d"' % t)
+      n = self._build_waydots_exp(t)
+      self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos):]
+      if retrieve != None:
+        retrieve['waydots%d' % t] = n.strip('\r\n ')
     return True
 
   def EditMode(self):
@@ -11416,7 +11713,7 @@ class GPXTweakerWebInterfaceServer():
         self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011))
         self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))
       else:
-        self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.Track.Ind]
+        self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.TrackInd]
     self.HTML = ''
     self.log(1, 'build')
     if not self.Track.BuildWebMercator():
@@ -11448,7 +11745,7 @@ class GPXTweakerWebInterfaceServer():
         self.Track.Track = self.Track.STrack
       self.Track.ProcessGPX('a')
       if self.Mode == 'tiles':
-        self.TracksBoundaries[self.Track.Ind] = (self.Minx, self.Maxx, self.Miny, self.Maxy)
+        self.TracksBoundaries[self.TrackInd] = (self.Minx, self.Maxx, self.Miny, self.Maxy)
         self.Minx = min((b[0] for b in self.TracksBoundaries), default=self.Minx)
         self.Maxx = max((b[1] for b in self.TracksBoundaries), default=self.Maxx)
         self.Miny = min((b[2] for b in self.TracksBoundaries), default=self.Miny)
@@ -11464,14 +11761,19 @@ class GPXTweakerWebInterfaceServer():
           track[1].OTrack = track[1].Track
           track[1].STrack = track[1].Track
     self.log(1, 'buildexp')
-    if self.BuildHTMLExp():
-      if self.Track != None:
-        self.HTMLExp = self.HTMLExp.replace('var focused = ""', 'var focused = "track' + str(self.Track.Ind) + '"')
-        self.Track = None
-      self.log(1, 'builtexp')
-      return True
-    else:
-      return False    
+    try:
+      if self.BuildHTMLExp():
+        if self.TrackInd != None:
+          self.HTMLExp = self.HTMLExp.replace('var focused = ""', 'var focused = "track' + str(self.TrackInd) + '"')
+          self.Track = None
+          self.Uri = None
+          self.TrackInd = None
+        self.log(1, 'builtexp')
+        return True
+      else:
+        return False
+    except:
+      return False
 
   def _start_webserver(self, ind):
     with ThreadedDualStackServer((self.Ip, self.Ports[0] + ind), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
