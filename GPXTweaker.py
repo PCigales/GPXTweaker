@@ -6,6 +6,7 @@ import ssl
 import http.client
 import math
 from xml.dom import minidom
+import types
 import html
 import socket
 import socketserver
@@ -2394,7 +2395,7 @@ class WGS84Track(WGS84WebMercator):
       while l > 0:
         n = node.childNodes[l - 1]
         if n.nodeType == minidom.Node.TEXT_NODE:
-          if n.data.strip('\r\n ') == '':
+          if n.data.strip('\r\n\t ') == '':
             node.removeChild(n)
         else:
           self._XMLClean(n)
@@ -2501,10 +2502,36 @@ class WGS84Track(WGS84WebMercator):
       self.WebMercatorPts = []
     return True
 
-  def SaveGPX(self, uri):
+  @staticmethod
+  def _write_pt_xml(self, writer, *args, **kwargs):
+    writer.write(args[0])
+    minidom.Element.writexml(self, writer, '', '', '', *args[3:], **kwargs)
+    writer.write(args[2])
+
+  def BackupGPX(self, uri):
+    try:
+      uri_pre = uri.rsplit('.', 1)[0]
+      if not os.path.exists(uri_pre + ' - original.gpx'):
+        os.rename(uri, uri_pre + ' - original.gpx')
+      else:
+        if os.path.exists(uri_pre + ' - backup.gpx'):
+          os.remove(uri_pre + ' - backup.gpx')
+        os.rename(uri, uri_pre + ' - backup.gpx')
+    except:
+      return False
+    return True
+
+  def SaveGPX(self, uri, backup=True):
     self.log(1, 'save', uri)
     if self.Track:
       try:
+        if backup and os.path.exists(uri):
+          if not self.BackupGPX(uri):
+            raise
+        for n in self.Track.getElementsByTagNameNS('*', 'wpt'):
+          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n);
+        for n in self.Track.getElementsByTagNameNS('*', 'trkpt'):
+          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n);
         f = open(uri, 'wb')
         f.write(self.Track.toprettyxml(indent='  ', encoding='utf-8'))
         f.close()
@@ -3171,7 +3198,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 nuri = ouri.rsplit('.', 1)[0] + ' - trk (%d).gpx' % suf
               if not track.RemoveFromGPX(trkid):
                 raise
-              if not track.SaveGPX(nuri):
+              if not track.SaveGPX(nuri, False):
                 try:
                   track.Track.unlink()
                 except:
@@ -3199,13 +3226,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 try:
                   tr[1].RemoveFromGPX(trkid)
                   if tr[1].TrkId == 0:
-                    uri_pre = ouri.rsplit('.', 1)[0]
-                    if not os.path.exists(uri_pre + ' - original.gpx'):
-                      os.rename(ouri, uri_pre + ' - original.gpx')
-                    else:
-                      if os.path.exists(uri_pre + ' - backup.gpx'):
-                        os.remove(uri_pre + ' - backup.gpx')
-                      os.rename(ouri, uri_pre + ' - backup.gpx')
                     if not tr[1].SaveGPX(ouri):
                       try:
                         tr[1].Track.unlink()
@@ -3249,29 +3269,21 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 tgt = track1.TrkId + (1 if req.path[-1] == 'a' else 0)
               if not track1.AppendToGPX(track2, mode, tgt):
                 raise
-              for uri in ((uri1,) if mode == 's' else (uri1, uri2)):
-                uri_pre = uri.rsplit('.', 1)[0]
-                if not os.path.exists(uri_pre + ' - original.gpx'):
-                  os.rename(uri, uri_pre + ' - original.gpx')
-                else:
-                  if os.path.exists(uri_pre + ' - backup.gpx'):
-                    os.remove(uri_pre + ' - backup.gpx')
-                    os.rename(uri, uri_pre + ' - backup.gpx')
-                if uri == uri1:
-                  if not track1.SaveGPX(uri1):
-                    try:
-                      track1.Track.unlink()
-                    except:
-                      pass
-                    track1.Track = track.OTrack
-                    track1.ProcessGPX('a')
-                    raise
+              if not track1.SaveGPX(uri1):
+                try:
+                  track1.Track.unlink()
+                except:
+                  pass
+                track1.Track = track.OTrack
+                track1.ProcessGPX('a')
+                raise
               try:
                 track1.OTrack.unlink()
               except:
                 pass
               track1.OTrack = track1.Track
               if mode == 't':
+                track2.BackupGPX(uri2)
                 track2.TrkId = tgt
                 self.server.Interface.Tracks[tr_ind2][0] = uri1
             except:
@@ -3491,14 +3503,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   else:
                     uri_suf = ' - ' + req.header('If-Match') + '.gpx'
                   uri_pre = self.server.Interface.Uri.rsplit('.', 1)[0]
-                  if os.path.exists(self.server.Interface.Uri):
-                    if not os.path.exists(uri_pre + ' - original.gpx'):
-                      os.rename(self.server.Interface.Uri, uri_pre + ' - original.gpx')
-                    else:
-                      if os.path.exists(uri_pre + ' - backup.gpx'):
-                        os.remove(uri_pre + ' - backup.gpx')
-                      os.rename(self.server.Interface.Uri, uri_pre + ' - backup.gpx')
-                  if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf):
+                  if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf, uri_suf == '.gpx'):
                     if not self.server.Interface.HTML:
                       try:
                         if self.server.Interface.Track.Track != self.server.Interface.Track.OTrack:
