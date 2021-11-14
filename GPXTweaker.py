@@ -10409,14 +10409,14 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        function comp_name(a, b) {\r\n' \
   '          if (a == b) {return 0;}\r\n' \
-  '          a_s = a.match(/(.*?)(\\d*)\\)?$/);\r\n' \
-  '          b_s = b.match(/(.*?)(\\d*)\\)?$/);\r\n' \
-  '          return (asc?1:-1) * ((a_s[2] && b_s[2])?(str_comp(a_s[1], b_s[1]) || (parseInt(a_s[2]) - parseInt(b_s[2]))):str_comp(a,b));\r\n' \
+  '          let a_s = a.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
+  '          let b_s = b.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
+  '          return str_comp(a_s[1], b_s[1]) || ((a_s[2]==undefined?-1:parseInt(a_s[2])) - (b_s[2]==undefined?-1:parseInt(b_s[2]))) || ((a_s[3]==undefined?-1:parseInt(a_s[3])) - (b_s[3]==undefined?-1:parseInt(b_s[3])));\r\n' \
   '        }\r\n' \
   '        function comp_filepath(a, b) {\r\n' \
   '          if (a == b) {return 0;}\r\n' \
-  '          a_s = a.replace(/\\.gpx$/i,"").match(/((?:.*\\\\)|)(.*)/);\r\n' \
-  '          b_s = b.replace(/\\.gpx$/i,"").match(/((?:.*\\\\)|)(.*)/);\r\n' \
+  '          let a_s = a.replace(/\\.gpx$/i,"").match(/((?:.*\\\\)|)(.*)/);\r\n' \
+  '          let b_s = b.replace(/\\.gpx$/i,"").match(/((?:.*\\\\)|)(.*)/);\r\n' \
   '          return (comp_name(a_s[1], b_s[1]) || comp_name(a_s[2], b_s[2]));\r\n' \
   '        }\r\n' \
   '        switch (crit) {\r\n' \
@@ -10630,17 +10630,17 @@ class GPXTweakerWebInterfaceServer():
   '        let msg = JSON.parse(t.response);\r\n' \
   '        for (let n in msg) {\r\n' \
   '          if (n.indexOf("cont") >= 0) {\r\n' \
-  '            document.getElementById("tracksform").innerHTML = document.getElementById("tracksform").innerHTML + msg[n];\r\n' \
+  '            let e = document.createElement("span");\r\n' \
+  '            document.getElementById("tracksform").appendChild(e);\r\n' \
+  '            e.outerHTML = msg[n];\r\n' \
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
-  '            let pos = document.getElementById("handle").innerHTML.indexOf(\'<svg id="waydots\');\r\n' \
-  '            if (pos >= 0) {\r\n' \
-  '              pos = document.getElementById("handle").innerHTML.lastIndexOf(">", pos) + 1;\r\n' \
-  '              document.getElementById("handle").innerHTML = document.getElementById("handle").innerHTML.slice(0, pos) + msg[n] +  document.getElementById("handle").innerHTML.slice(pos);\r\n' \
-  '            } else {\r\n' \
-  '              document.getElementById("handle").innerHTML = document.getElementById("handle").innerHTML + msg[n] + "\\r\\n";\r\n' \
-  '            }\r\n' \
+  '            let e = document.createElement("svg");\r\n' \
+  '            document.getElementById("handle").insertBefore(e, document.getElementById("waydots0"));\r\n' \
+  '            e.outerHTML = msg[n];\r\n' \
   '          } else {\r\n' \
-  '            document.getElementById("handle").innerHTML = document.getElementById("handle").innerHTML + msg[n];\r\n' \
+  '            let e = document.createElement("svg");\r\n' \
+  '            document.getElementById("handle").appendChild(e);\r\n' \
+  '            e.outerHTML = msg[n];\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\d+/, (tracks_pts.length + 1).toString());\r\n' \
@@ -11941,6 +11941,7 @@ class GPXTweakerWebInterfaceServer():
       else:
         pos = self.HTMLExp.find('\r\n                </form>', self.HTMLExp.find('<form id="tracksform"')) 
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
+        n = n.strip('\r\n ')
         pos = self.HTMLExp.find('<br>', self.HTMLExp.find('<div id="tracks"'))
         self.HTMLExp = self.HTMLExp[:self.HTMLExp.rfind('(', 0, pos)] + '(%d)' % len(self.Tracks) + self.HTMLExp[pos:]
       if retrieve != None:
@@ -11956,6 +11957,7 @@ class GPXTweakerWebInterfaceServer():
         if pos < 0:
           pos = self.HTMLExp.find('\r\n              </div>\r\n              <div id="scalebox"')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
+        n = n.strip('\r\n ')
       if retrieve != None:
         retrieve['track%d' % t] = n
     if 'w' in elts:
@@ -11967,6 +11969,7 @@ class GPXTweakerWebInterfaceServer():
       else:
         pos = self.HTMLExp.find('              </div>\r\n              <div id="scalebox"')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
+        n = n.strip('\r\n ')
       if retrieve != None:
         retrieve['waydots%d' % t] = n
     return True
