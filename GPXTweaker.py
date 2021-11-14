@@ -235,7 +235,7 @@ FR_STRINGS = {
     'jmincorporate4': 'Incorporation annulée: pas ou plus d\'une autre trace visible cochée',
     'jmintegrate1': 'Intégration en cours...',
     'jmintegrate2': 'Intégration effectuée',
-    'jmintegrate3': 'Échec de l\'Intégration',
+    'jmintegrate3': 'Échec de l\'intégration',
     'jmintegrate4': 'Intégration annulée: pas ou plus d\'une autre trace visible cochée',
     'jmintegrate5': 'Intégration annulée: trace à intégrer faisant partie d\'un fichier multi-traces',
     'jtilt': 'Inclinaison:',
@@ -2375,9 +2375,7 @@ class WGS84Itinerary(WGS84Map):
 class WGS84Track(WGS84WebMercator):
 
   def __init__(self):
-    self.OTrack = None
-    self.STrack = None
-    self.Track = None
+    self._tracks = [None, None, None]
     self.TrkId = None
     self.Name = None
     self.Color = None
@@ -2388,6 +2386,57 @@ class WGS84Track(WGS84WebMercator):
     self.log = partial(log, 'track')
     self.log(1, 'init')
 
+  @property
+  def OTrack(self):
+    return self._tracks[0]
+  
+  @OTrack.setter
+  def OTrack(self, value):
+    self._tracks[0] = value
+
+  @OTrack.deleter
+  def OTrack(self):
+    if self._tracks[0] != self._tracks[1] and self._tracks[0] != self._tracks[2]:
+      try:
+        self._tracks[0].unlink()
+      except:
+        pass
+    self._tracks[0] = None
+
+  @property
+  def STrack(self):
+    return self._tracks[1]
+  
+  @STrack.setter
+  def STrack(self, value):
+    self._tracks[1] = value
+
+  @STrack.deleter
+  def STrack(self):
+    if self._tracks[1] != self._tracks[0] and self._tracks[1] != self._tracks[2]:
+      try:
+        self._tracks[1].unlink()
+      except:
+        pass
+    self._tracks[1] = None
+
+  @property
+  def Track(self):
+    return self._tracks[2]
+  
+  @Track.setter
+  def Track(self, value):
+    self._tracks[2] = value
+
+  @Track.deleter
+  def Track(self):
+    if self._tracks[2] != self._tracks[0] and self._tracks[2] != self._tracks[1]:
+      try:
+        self._tracks[2].unlink()
+      except:
+        pass
+    self._tracks[2] = None
+
   def _XMLClean(self, node=None):
     node = node or self.Track
     if node.hasChildNodes():
@@ -2396,7 +2445,7 @@ class WGS84Track(WGS84WebMercator):
         n = node.childNodes[l - 1]
         if n.nodeType == minidom.Node.TEXT_NODE:
           if n.data.strip('\r\n\t ') == '':
-            node.removeChild(n)
+            node.removeChild(n).unlink()
         else:
           self._XMLClean(n)
         l -= 1
@@ -2448,28 +2497,31 @@ class WGS84Track(WGS84WebMercator):
         return False
     return True
 
-  def LoadGPX(self, uri, trkid=None):
+  def LoadGPX(self, uri, trkid=None, source=None):
+    if self.Track:
+      return False
     self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
     try:
-      if '://' in uri:
-        rep = HTTPRequest(uri, 'GET', headers)
-        track = rep.body
+      if source:
+        self._tracks = source._tracks
       else:
-        try:
-          f = open(uri, 'rb')
-          track = f.read()
-        except:
+        if '://' in uri:
+          rep = HTTPRequest(uri, 'GET', headers)
+          track = rep.body
+        else:
           try:
-            f.close()
+            f = open(uri, 'rb')
+            track = f.read()
           except:
-            if trkid:
-              raise
-          track = b'<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="GPXTweaker" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mytrails="http://www.frogsparks.com/mytrails" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"></gpx>'
-          self.log(0, 'new', uri)
-      self.Track = minidom.parseString(track)
-      self._XMLClean()
-      self.OTrack = self.Track
-      self.STrack = self.Track
+            try:
+              f.close()
+            except:
+              if trkid:
+                raise
+            track = b'<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="GPXTweaker" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mytrails="http://www.frogsparks.com/mytrails" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"></gpx>'
+            self.log(0, 'new', uri)
+        self.Track = minidom.parseString(track)
+        self._XMLClean()
     except:
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
@@ -2479,13 +2531,14 @@ class WGS84Track(WGS84WebMercator):
       if not self.ProcessGPX('a'):
         raise
     except:
-      try:
-        self.Track.unlink()
-      except:
-        pass
+      if not source:
+        del self.Track
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
       return False
+    if not source:
+      self.OTrack = self.Track
+      self.STrack = self.Track
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid != None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
@@ -2545,11 +2598,7 @@ class WGS84Track(WGS84WebMercator):
     else:
       self.log(0, 'serror', uri)
       return False
-    if self.STrack != self.OTrack and self.STrack != self.Track:
-      try:
-        self.STrack.unlink()
-      except:
-        pass
+    del self.STrack
     self.STrack = self.Track
     self.log(0, 'saved', uri)
     return True
@@ -2557,7 +2606,7 @@ class WGS84Track(WGS84WebMercator):
   def _XMLUpdateAttribute(self, node, name, value):
     node.setAttribute(name, value)
     for n in node.getElementsByTagNameNS('*', name):
-      self.Track.removeChild(n)
+      self.Track.removeChild(n).unlink()
 
   def _XMLUpdateNodeText(self, model, node, name, text, def_first=False, cdata=False):
     if node.hasAttribute(name):
@@ -2567,7 +2616,7 @@ class WGS84Track(WGS84WebMercator):
     if nl:
       no = nl[0]
     for n in nl[1:] :
-      node.removeChild(n)
+      node.removeChild(n).unlink()
     if text:
       if cdata:
         t = self.Track.createCDATASection(text)
@@ -2592,13 +2641,13 @@ name)
         if not no:
           no = cn[i]
         else:
-          node.removeChild(cn[i])
+          node.removeChild(cn[i]).unlink()
           i -= 1
       i += 1
     if no:
       for n in children:
         node.insertBefore(n, no)
-      node.removeChild(no)
+      node.removeChild(no).unlink()
     elif def_first:
       no = node.firstChild
       for n in children:
@@ -2607,12 +2656,8 @@ name)
       for n in children:
         node.appendChild(n)
 
-  def UpdateGPX(self, msg):
-    if self.Track != self.OTrack and self.Track != self.STrack:
-      try:
-        self.Track.unlink()
-      except:
-        pass
+  def UpdateGPX(self, msg, uri=None, backup=True):
+    del self.Track
     self.Track = self.OTrack.cloneNode(True)
     r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
     trk = self.Track.getElementsByTagNameNS('*', 'trk')[self.TrkId]
@@ -2657,14 +2702,17 @@ name)
         wpmsg = msgp[1].splitlines()
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = self.Track.getElementsByTagNameNS('*', 'wpt')
-        pts = list(list(pt for pt in seg.getElementsByTagNameNS('*', 'trkpt')) for seg in trk.getElementsByTagNameNS('*', 'trkseg')) or [[]]
+        pts = list(pt for seg in trk.getElementsByTagNameNS('*', 'trkseg') for pt in seg.getElementsByTagNameNS('*', 'trkpt'))
         self._XMLUpdateNodeText(trk, trk, 'name', (nmsg or [''])[0], def_first=True, cdata=True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
             v = wp.split('&')
             if int(v[0]) < len(wpts):
-              nwp = wpts[int(v[0])].cloneNode(True)
+              if int(v[0]):
+                nwp = wpts[int(v[0])].parentNode.removeChild(wpts[int(v[0])])
+              else:
+                nwp = wpts[int(v[0])].cloneNode(True)
             else:
               nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
             self._XMLUpdateAttribute(nwp, 'lat', v[1])
@@ -2673,11 +2721,13 @@ name)
             self._XMLUpdateNodeText(trk, nwp, 'time', urllib.parse.unquote(v[4]))
             self._XMLUpdateNodeText(trk, nwp, 'name', urllib.parse.unquote(v[5]), cdata=True)
           else:
-            nwp = wpts[int(wp)].cloneNode(True)
+            if int(wp):
+              nwp = wpts[int(wp)].parentNode.removeChild(wpts[int(wp)])
+            else:
+              nwp = wpts[int(wp)].cloneNode(True)
           wpn.append(nwp)
         self._XMLUpdateChildNodes(r, 'wpt', wpn, def_first=True)
         sn = []
-        opts = list(pt for seg in pts for pt in seg)
         for s in smsg:
           ns = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkseg' if trk.prefix else 'trkseg')
           pn = []
@@ -2685,8 +2735,8 @@ name)
           for p in pmsg:
             if '&' in p:
               v = p.split('&')
-              if int(v[0]) < len(opts):
-                np = opts[int(v[0])].cloneNode(True)
+              if int(v[0]) < len(pts):
+                np = pts[int(v[0])].parentNode.removeChild(pts[int(v[0])])
               else:
                 np = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkpt' if trk.prefix else 'trkpt')
               self._XMLUpdateAttribute(np, 'lat', v[1])
@@ -2711,84 +2761,117 @@ name)
                 self._XMLUpdateChildNodes(e, 'ele_alt', [a])
               self._XMLUpdateNodeText(trk, np, 'time', urllib.parse.unquote(v[5]))
             else:
-              np = opts[int(p)].cloneNode(True)
+              np = pts[int(p)].parentNode.removeChild(pts[int(p)])
             pn.append(np)
           self._XMLUpdateChildNodes(ns, 'trkpt', pn)
           sn.append(ns)
         self._XMLUpdateChildNodes(trk, 'trkseg', sn)
         if not self.ProcessGPX('a'):
           raise
-        self.WebMercatorWpts = None
-        self.WebMercatorPts = None
+      if uri:
+        if not self.SaveGPX(uri, backup):
+          raise
     except:
-      self.Track.unlink()
-      self.Track = self.OTrack
+      del self.Track
+      self.Track = self.STrack
       self.ProcessGPX('a' if '\r\n=\r\n' in msg else 'e')
       return False
+    self.WebMercatorWpts = None
+    self.WebMercatorPts = None
     return True
 
-  def RemoveFromGPX(self, trkid=None):
-    if self.Track != self.OTrack and self.Track != self.STrack:
-      try:
-        self.Track.unlink()
-      except:
-        pass
+  def DetachFromGPX(self, others, uri=None, backup=True):
+    _tracks = self._tracks
+    trkid = self.TrkId
     self.Track = self.OTrack.cloneNode(True)
+    self._tracks = [self.OTrack, None, self.OTrack.cloneNode(True)]
     r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+    nuri = None
     try:
-      if trkid == self.TrkId:
-        self._XMLUpdateChildNodes(r, 'trk', [self.OTrack.getElementsByTagNameNS('*', 'trk')[trkid].cloneNode(True)])
-        self.TrkId = 0
-      else:
-        r.removeChild(self.Track.getElementsByTagNameNS('*', 'trk')[trkid])
-        if self.TrkId > trkid:
-          self.TrkId -= 1
+      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.getElementsByTagNameNS('*', 'trk')[trkid])])
+      _tracks[2].getElementsByTagNameNS('*', 'gpx')[0].removeChild(_tracks[2].getElementsByTagNameNS('*', 'trk')[trkid]).unlink()
+      if uri:
+        nuri = uri.rsplit('.', 1)[0] + ' - trk.gpx'
+        suf = 0
+        while os.path.exists (nuri):
+          suf += 1
+          nuri = uri.rsplit('.', 1)[0] + ' - trk (%d).gpx' % suf
+        if not self.SaveGPX(nuri, False):
+          raise
     except:
-      self.Track.unlink()
+      del self.Track
+      self._tracks = _tracks
+      del self.Track
       self.Track = self.OTrack
       return False
-    return True
+    self.TrkId = 0
+    try:
+      for tr in others:
+        if uri:
+          try:
+            if not tr.SaveGPX(uri, backup):
+              raise
+          except:
+            del tr.Track
+            tr.Track = tr.OTrack
+            raise
+          uri = None
+        if tr.TrkId > trkid:
+          tr.TrkId -= 1
+    except:
+      pass
+    return nuri or True
 
-  def AppendToGPX(self, track, mode='s', trkid=None):
-    if trkid == None:
-      trkid = self.TrkId
-    if self.Track != self.OTrack and self.Track != self.STrack:
-      try:
-        self.Track.unlink()
-      except:
-        pass
+  def AppendToGPX(self, track, others, mode='s', uri=None, backup=True):
+    trkid = self.TrkId
+    del self.Track
     self.Track = self.OTrack.cloneNode(True)
     r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
     try:
       no = None
       for n in r.childNodes:
-        if n.localName != 'wpt':
+        if no == None and n.localName == 'wpt':
+          no = n
+        if no != None and n.localName != 'wpt':
           no = n
           break
+      if no == None:
+        no = r.firstChild
       for n in track.Track.getElementsByTagNameNS('*', 'wpt'):
         r.insertBefore(n.cloneNode(True), no)
       trks = r.getElementsByTagNameNS('*', 'trk')
-      trk = trks[trkid] if trkid < len(trks) else None
+      trk = trks[trkid] if mode != 'ta' else (trks[trkid + 1] if trkid < len(trks) - 1 else None)
       if mode == 't':
         r.insertBefore(track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].cloneNode(True), trk)
-        if trkid != None:
-          if self.TrkId >= trkid:
-            self.TrkId += 1
       else:
         for seg in track.Track.getElementsByTagNameNS('*', 'trk')[track.TrkId].getElementsByTagNameNS('*', 'trkseg'):
           trk.appendChild(seg.cloneNode(True))
-      if trkid == self.TrkId:
+      if mode == 's':
         self.ProcessGPX('a')
       else:
         self.ProcessGPX('w')
+      if uri:
+        if not self.SaveGPX(uri, backup):
+          raise
     except:
-      self.Track.unlink()
+      del self.Track
       self.Track = self.OTrack
-      if trkid == self.TrkId:
+      if mode == 's':
         self.ProcessGPX('a')
       else:
         self.ProcessGPX('w')
       return False
+    if mode == 'ta' or mode == 'tb':
+      track._tracks = self._tracks
+      track.TrkId = trkid if mode == 'tb' else trkid + 1
+      track.ProcessGPX('w')
+      if mode == 'tb':
+        self.TrkId += 1
+    for tr in others:
+      if mode == 'ta' or mode == 'tb':
+        if tr.TrkId >= trkid:
+          tr.TrkId += 1
+      tr.ProcessGPX('w')
     return True     
 
 
@@ -2880,7 +2963,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           resp_body = b''
           if req.path.lower() == '/GPXTweaker.html'.lower():
             self.server.Interface.SLock.acquire()
-            self.server.Interface.SLock.release()
             if not self.server.Interface.HTML:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -2893,6 +2975,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             else:
               resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
+            self.server.Interface.SLock.release()
             try:
               if req.method == 'GET':
                 self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -3191,26 +3274,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               tr_ind = int(req.path.split('?')[1])
               ouri, track = self.server.Interface.Tracks[tr_ind]
               trkid = track.TrkId
-              nuri = ouri.rsplit('.', 1)[0] + ' - trk.gpx'
-              suf = 0
-              while os.path.exists (nuri):
-                suf += 1
-                nuri = ouri.rsplit('.', 1)[0] + ' - trk (%d).gpx' % suf
-              if not track.RemoveFromGPX(trkid):
+              _tracks = track._tracks
+              nuri = track.DetachFromGPX((tr[1] for tr in self.server.Interface.Tracks if tr[1] != track and tr[0] == ouri), ouri)
+              if not nuri:
                 raise
-              if not track.SaveGPX(nuri, False):
-                try:
-                  track.Track.unlink()
-                except:
-                  pass
-                track.Track = track.OTrack
-                track.TrkId = trkid
-                raise
-              try:
-                track.OTrack.unlink()
-              except:
-                pass
-              track.OTrack = track.Track
             except:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -3219,29 +3286,15 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
               self.server.Interface.SLock.release()
               continue
+            del track.OTrack
+            track.OTrack = track.Track
             self.server.Interface.Tracks[tr_ind][0] = nuri
             self.server.Interface.UpdateHTMLExp(tr_ind, 't')
-            for tr in self.server.Interface.Tracks:
-              if tr[1] != track and tr[0] == ouri:
-                try:
-                  tr[1].RemoveFromGPX(trkid)
-                  if tr[1].TrkId == 0:
-                    if not tr[1].SaveGPX(ouri):
-                      try:
-                        tr[1].Track.unlink()
-                      except:
-                        pass
-                      tr[1].Track = tr[1].OTrack
-                      if trkid == 0:
-                        tr[1].TrkId = 1
-                      break
-                    try:
-                      tr[1].OTrack.unlink()
-                    except:
-                      pass
-                    tr[1].OTrack = tr[1].Track
-                except:
-                  pass
+            try:
+              _tracks[0].unlink()
+            except:
+              pass
+            _tracks[0] = _tracks[2]
             self.server.Interface.SLock.release()
             resp_body = nuri.rsplit('\\', 1)[1].encode('utf-8')
             try:
@@ -3257,35 +3310,16 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
               continue
-            mode = 's' if req.path.lower()[:12] == '/incorporate' else 't'
+            mode = 's' if req.path.lower()[:12] == '/incorporate' else ('ta' if req.path.lower()[:15] == '/integrateafter' else 'tb')
             self.server.Interface.SLock.acquire()
             try:
-              tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(',')[:2])
+              tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(','))
               uri1, track1 = self.server.Interface.Tracks[tr_ind1]
               uri2, track2 = self.server.Interface.Tracks[tr_ind2]
-              if mode == 's':
-                tgt = track1.TrkId
-              else:
-                tgt = track1.TrkId + (1 if req.path[-1] == 'a' else 0)
-              if not track1.AppendToGPX(track2, mode, tgt):
+              if not track1.AppendToGPX(track2, (tr[1] for tr in self.server.Interface.Tracks if tr[1] != track1 and tr[0] == uri1), mode, uri1):
                 raise
-              if not track1.SaveGPX(uri1):
-                try:
-                  track1.Track.unlink()
-                except:
-                  pass
-                track1.Track = track.OTrack
-                track1.ProcessGPX('a')
-                raise
-              try:
-                track1.OTrack.unlink()
-              except:
-                pass
+              del track1.OTrack
               track1.OTrack = track1.Track
-              if mode == 't':
-                track2.BackupGPX(uri2)
-                track2.TrkId = tgt
-                self.server.Interface.Tracks[tr_ind2][0] = uri1
             except:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -3294,21 +3328,16 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.log(2, 'rerror', req.method, req.path)
               self.server.Interface.SLock.release()
               continue
+            if mode == 'ta' or mode == 'tb':
+              track2.BackupGPX(uri2)
+              self.server.Interface.Tracks[tr_ind2][0] = uri1
             resp_body = {}
             for t_ind in range(len(self.server.Interface.Tracks)):
               tr = self.server.Interface.Tracks[t_ind]
-              if tr[1] != track1 and tr[0] == uri1:
-                try:
-                  tr[1].Track.unlink()
-                except:
-                  pass
-                tr[1].Track = track1.Track.cloneNode(True)
-                tr[1].ProcessGPX('w')
-                tr[1].OTrack = tr[1].Track
-                tr[1].STrack = tr[1].Track
-              if self.server.Interface.Mode == 'tiles':
-                self.server.Interface.UpdateTrackBoundaries(t_ind)
-              self.server.Interface.UpdateHTMLExp(t_ind, 'tpw', resp_body)
+              if tr[0] == uri1:
+                if self.server.Interface.Mode == 'tiles':
+                  self.server.Interface.UpdateTrackBoundaries(t_ind)
+                self.server.Interface.UpdateHTMLExp(t_ind, 'tpw', resp_body)
             self.server.Interface.SLock.release()
             resp_body = json.dumps(resp_body).encode('utf-8')
             try:
@@ -3484,64 +3513,42 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               nosave = req.path.split('?')[1].lower() == 'save=no'
             if self.server.Interface.HTML and req.header('If-Match') == self.server.Interface.SessionId:
               self.server.Interface.PSessionId = self.server.Interface.SessionId
-              if self.server.Interface.Track.OTrack != self.server.Interface.Track.Track and self.server.Interface.Track.OTrack != self.server.Interface.Track.STrack:
-                try:
-                  self.server.Interface.Track.OTrack.unlink()
-                except:
-                  pass
-                self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
+              del self.server.Interface.Track.OTrack
+              self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
             try:
               if not self.server.Interface.HTML:
                 self.server.Interface.TrackInd = int(req.body.split('=')[0][5:-4].rstrip('c'))
                 self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
-              if self.server.Interface.Track.UpdateGPX(req.body):
-                if nosave:
-                  self.server.Interface.Track.BuildWebMercator()
+              if not nosave:
+                if req.header('If-Match') in (self.server.Interface.PSessionId, self.server.Interface.SessionId):
+                  uri_suf = '.gpx'
                 else:
-                  if req.header('If-Match') in (self.server.Interface.PSessionId, self.server.Interface.SessionId):
-                    uri_suf = '.gpx'
-                  else:
-                    uri_suf = ' - ' + req.header('If-Match') + '.gpx'
-                  uri_pre = self.server.Interface.Uri.rsplit('.', 1)[0]
-                  if not self.server.Interface.Track.SaveGPX(uri_pre + uri_suf, uri_suf == '.gpx'):
-                    if not self.server.Interface.HTML:
-                      try:
-                        if self.server.Interface.Track.Track != self.server.Interface.Track.OTrack:
-                          self.server.Interface.Track.Track.unlink()
-                      except:
-                        pass
-                      self.server.Interface.Track.Track = self.server.Interface.Track.OTrack
-                      self.server.Interface.Track.ProcessGPX('e')
-                    raise
-                  if self.server.Interface.HTML:
-                    try:
-                      self.server.Interface.EditMode()
-                    except:
-                      pass
-                    if self.server.Interface.SessionId == self.server.Interface.PSessionId:
-                      self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
-                if not self.server.Interface.HTML:
+                  uri_suf = ' - ' + req.header('If-Match') + '.gpx'
+                uri = self.server.Interface.Uri.rsplit('.', 1)[0] + uri_suf
+              else:
+                uri_suf = None
+                uri = None
+              if not self.server.Interface.Track.UpdateGPX(req.body, uri, uri_suf == '.gpx'):
+                raise
+              if nosave:
+                self.server.Interface.Track.BuildWebMercator()
+              else:
+                if self.server.Interface.HTML:
                   try:
-                    if self.server.Interface.Track.OTrack != self.server.Interface.Track.STrack:
-                      self.server.Interface.Track.OTrack.unlink()
+                    self.server.Interface.EditMode()
                   except:
                     pass
-                  self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
-                  for tr in self.server.Interface.Tracks:
-                    if tr[1] != self.server.Interface.Track and tr[0] == self.server.Interface.Uri:
-                      try:
-                        tr[1].Track.unlink()
-                      except:
-                        pass
-                      tr[1].Track = self.server.Interface.Track.Track.cloneNode(True)
-                      tr[1].ProcessGPX('e')
-                      tr[1].OTrack = tr[1].Track
-                      tr[1].STrack = tr[1].Track
-                  self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'tp')
-                  if req.body.split('=')[0][-5:] == 'color':
-                    self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'w')
-              else:
-                raise
+                  if self.server.Interface.SessionId == self.server.Interface.PSessionId:
+                    self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
+              if not self.server.Interface.HTML:
+                del self.server.Interface.Track.OTrack
+                self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
+                for tr in self.server.Interface.Tracks:
+                  if tr[1] != self.server.Interface.Track and tr[0] == self.server.Interface.Uri:
+                    tr[1].ProcessGPX('e')
+                self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'tp')
+                if req.body.split('=')[0][-5:] == 'color':
+                  self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'w')
             except:
               try:
                 self.request.sendall(resp_err.encode('ISO-8859-1'))
@@ -10513,7 +10520,7 @@ class GPXTweakerWebInterfaceServer():
   '        let msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
   '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)?show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn):show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("GET", (after==null?"/incorporate?":"/integrate?") + ind1.toString() + "," + ind2.toString() + (after==null?"":","+(after?"a":"b")));\r\n' \
+  '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + ind1.toString() + "," + ind2.toString());\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
@@ -11388,11 +11395,13 @@ class GPXTweakerWebInterfaceServer():
       trk = 0
       nbtrk = None
       u = next(uris, None)
+    trck = None
     while u != None:
       track = WGS84Track()
-      if not track.LoadGPX(u, trk):
+      if not track.LoadGPX(u, trk, trck):
         if uri == None:
           u = next(uris, None)
+          trck = None
           continue
         else:
           return
@@ -11403,24 +11412,27 @@ class GPXTweakerWebInterfaceServer():
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
         if uri == None:
           self.log(0, 'berror6')
-          u = next(uris, None)
-          continue
         else:
           self.log(0, 'berror4')
           return
-      self.Tracks.append([u, track])
-      self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
-      if uri != None:
+      else:
+        self.Tracks.append([u, track])
+        self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
+      if uri == None:
+        if nbtrk == None:
+          nbtrk = len(track.Track.getElementsByTagNameNS('*', 'trk'))
+        trk += 1
+        if trk >= nbtrk:
+          trk = 0
+          nbtrk = None
+          u = next(uris, None)
+          trck = None
+        elif not trck:
+          trck = track
+      else:
         self.Uri, self.Track = self.Tracks[0]
         self.TrackInd = 0
         break
-      if nbtrk == None:
-        nbtrk = len(track.Track.getElementsByTagNameNS('*', 'trk'))
-      trk += 1
-      if trk >= nbtrk:
-        trk = 0
-        nbtrk = None
-        u = next(uris, None)
     minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat == None) else map_minlat))
     maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat == None) else map_maxlat))
     minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon == None) else map_minlon))
@@ -11810,31 +11822,16 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = None
     self.HTMLExp = ''
     if self.Track != None:
-      if self.Track.OTrack != self.Track.STrack:
-        try:
-          self.Track.OTrack.unlink()
-        except:
-          pass
-        self.Track.OTrack = self.Track.STrack
-      if self.Track.Track != self.Track.STrack:
-        try:
-          self.Track.Track.unlink()
-        except:
-          pass
-        self.Track.Track = self.Track.STrack
+      del self.Track.Track
+      self.Track.Track = self.Track.STrack
       self.Track.ProcessGPX('a')
+      del self.Track.OTrack
+      self.Track.OTrack = self.Track.STrack
       for t_ind in range(len(self.Tracks)):
         track = self.Tracks[t_ind]
         if track[0] == self.Uri:
           if track[1] != self.Track:
-            try:
-              track[1].Track.unlink()
-            except:
-              pass
-            track[1].Track = self.Track.Track.cloneNode(True)
             track[1].ProcessGPX('w')
-            track[1].OTrack = track[1].Track
-            track[1].STrack = track[1].Track
           if self.Mode == 'tiles':
             self.UpdateTrackBoundaries(t_ind)
       if self.Mode == 'tiles':
