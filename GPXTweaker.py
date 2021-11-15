@@ -2904,6 +2904,69 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
 class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
 
   def handle(self):
+    def _send_err(e):
+      resp_e = 'HTTP/1.1 %d %s\r\n' \
+      'Content-Length: 0\r\n' \
+      'Date: %s\r\n' \
+      'Server: GPXTweaker\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True))
+      try:
+        self.request.sendall(resp_e.encode('ISO-8859-1'))
+        if e != 501:
+          self.server.Interface.log(2, {404: 'rnfound', 412: 'rbad', 422: 'rfailed'}.get(e, 'rnfound'), req.method, req.path)
+      except:
+        self.server.Interface.log(2, 'rerror', req.method, req.path)
+    def _send_err_ni():
+      _send_err(501)
+    def _send_err_nf():
+      _send_err(404)
+    def _send_err_bad():
+      _send_err(412)
+    def _send_err_fail():
+      _send_err(422)
+    def _send_resp(btype):
+      resp_200 = 'HTTP/1.1 200 OK\r\n' \
+      'Content-Type: ##type##\r\n' \
+      'Content-Length: ##len##\r\n' \
+      'Date: %s\r\n' \
+      'Server: GPXTweaker\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      'Access-Control-Allow-Origin: %s\r\n' \
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      try:
+        if req.method == 'GET' or req.method == 'POST':
+          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+        else:
+          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+        self.server.Interface.log(2, 'response', req.method, req.path)
+      except:
+        self.server.Interface.log(2, 'rerror', req.method, req.path)
+    def _send_resp_nc():
+      resp_204 = 'HTTP/1.1 204 No content\r\n' \
+      'Content-Length: 0\r\n' \
+      'Date: %s\r\n' \
+      'Server: GPXTweaker\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      '\r\n' % email.utils.formatdate(time.time(), usegmt=True)
+      try:
+        self.request.sendall(resp_204.encode('ISO-8859-1'))
+        self.server.Interface.log(2, 'response', req.method, req.path)
+      except:
+        self.server.Interface.log(2, 'rerror', req.method, req.path)
+    def _send_resp_tr(loc):
+      resp_307 = 'HTTP/1.1 307 Temporary Redirect\r\n' \
+      'Content-Length: 0\r\n' \
+      'Location: %s\r\n' \
+      'Date: %s\r\n' \
+      'Server: GPXTweaker\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      '\r\n' % (loc, email.utils.formatdate(time.time(), usegmt=True))
+      try:
+        self.request.sendall(resp_307.encode('ISO-8859-1'))
+        self.server.Interface.log(2, 'response', req.method, req.path)
+      except:
+        self.server.Interface.log(2, 'rerror', req.method, req.path)
     with selectors.DefaultSelector() as selector:
       selector.register(self.request, selectors.EVENT_READ)
       closed = False
@@ -2922,6 +2985,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           closed = True
           continue
         self.server.Interface.log(2, 'request', req.method, req.path)
+        resp_body = b''
         if req.method == 'OPTIONS':
           resp = 'HTTP/1.1 200 OK\r\n' \
           'Content-Length: 0\r\n' \
@@ -2935,20 +2999,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           except:
             self.server.Interface.log(2, 'rerror', req.method, req.path)
         elif req.method in ('GET', 'HEAD'):
-          resp = 'HTTP/1.1 200 OK\r\n' \
-          'Content-Type: ##type##\r\n' \
-          'Content-Length: ##len##\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          'Access-Control-Allow-Origin: %s\r\n' \
-          '\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
-          resp_204 = 'HTTP/1.1 204 No content\r\n' \
-          'Content-Length: 0\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
           resp_307 = 'HTTP/1.1 307 Temporary Redirect\r\n' \
           'Content-Length: 0\r\n' \
           'Location: GPXTweaker.html\r\n' \
@@ -2956,27 +3006,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           'Server: GPXTweaker\r\n' \
           'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
           '\r\n'
-          resp_err = 'HTTP/1.1 404 File not found\r\n' \
-          'Content-Length: 0\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
-          resp_bad = 'HTTP/1.1 412 Precondition failed\r\n' \
-          'Content-Length: 0\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
-          resp_body = b''
           if req.path.lower() == '/GPXTweaker.html'.lower():
             self.server.Interface.SLock.acquire()
             if not self.server.Interface.HTML:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
+              self.server.Interface.SLock.release()
               continue
             if self.server.Interface.SessionId == None:
               self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
@@ -2984,34 +3018,19 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             else:
               resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             self.server.Interface.SLock.release()
-            try:
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp('text/html; charset=utf-8')
           elif req.path.lower() == '/GPXExplorer.html'.lower():
             self.server.Interface.SLock.acquire()
             if self.server.Interface.HTMLExp == None:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-                self.server.Interface.SLock.release()
+              _send_err_nf()
+              self.server.Interface.SLock.release()
               continue
             if self.server.Interface.HTMLExp == '':
               self.server.Interface.ExploreMode()
             self.server.Interface.SLock.release()
             self.server.Interface.HTML = None
             if not self.server.Interface.HTMLExp:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
               continue
             self.server.Interface.PSessionId = None
             if self.server.Interface.SessionId == None:
@@ -3019,21 +3038,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             else:
               resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
-            try:
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp('text/html; charset=utf-8')
           elif req.path.lower()[:13] == '/tiles/switch':
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
             if 'set' in q:
@@ -3041,20 +3049,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][3]}).encode('utf-8')
                 self.server.Interface.TilesSet = int(q['set'][0])
               except:
-                try:
-                  self.request.sendall(resp_err.encode('ISO-8859-1'))
-                  self.server.Interface.log(2, 'rnfound', req.method, req.path)
-                except:
-                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                _send_err_bad()
                 continue
-              try:
-                if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-                else:
-                  self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_resp('application/json; charset=utf-8')
             else:
               l1 = 0
               if 'auto' in q:
@@ -3090,73 +3087,35 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 except:
                   pass
               if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
-                try:
-                  self.request.sendall(resp_err.encode('ISO-8859-1'))
-                  self.server.Interface.log(2, 'rnfound', req.method, req.path)
-                except:
-                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                _send_err_bad()
               else:
                 try:
                   resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img')), 'level': l1}).encode('utf-8')
-                  if req.method == 'GET':
-                    self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-                  else:
-                    self.request.sendall(resp.replace('##type##', 'application/json').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-                  self.server.Interface.log(2, 'response', req.method, req.path)
+                  _send_resp('application/json; charset=utf-8')
                 except:
-                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                  _send_err_bad()
           elif req.path.lower()[:12] == '/tiles/tile-':
             try:
               if req.path.lower()[12:].split('?')[-1].split(',') != [str(self.server.Interface.TilesSet), str(self.server.Interface.Map.TilesInfos['matrix'])]:
-                try:
-                  self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                  self.server.Interface.log(2, 'rnfound', req.method, req.path)
-                except:
-                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                _send_err_bad()
                 continue
               row, col = req.path.lower()[12:].split('.')[0].split('-')
               resp_body = self.server.Interface.Map.Tiles[(int(row), int(col))](10)
             except:
               pass
             if resp_body:
-              try:
-                if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos.get('format')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-                else:
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.TilesInfos.get('format')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_resp(self.server.Interface.Map.TilesInfos.get('format'))
             else:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
           elif req.path.lower()[:8] == '/map/map':
             resp_body = self.server.Interface.Map.Map
             if resp_body:
-              try:
-                if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', 'image/*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-                else:
-                  self.request.sendall(resp.replace('##type##', self.server.Interface.Map.MapInfos.get('format', 'image/*')).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_resp(self.server.Interface.Map.MapInfos.get('format', 'image/*'))
             else:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
             try:
@@ -3170,24 +3129,12 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               continue
-            try:
-              self.request.sendall(resp_204.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp_nc()
           elif req.path.lower()[:28] == '/itinerariesproviders/switch' :
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
             try:
@@ -3195,17 +3142,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.ItineraryProviderSel = int(q['iset'][0])
               self.server.Interface.log(1, 'itinerary', self.server.Interface.ItinerariesProviders[int(q['iset'][0])][0])
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               continue
-            try:
-              self.request.sendall(resp_204.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp_nc()
           elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
             self.server.Interface.SLock.acquire()
             if not self.server.Interface.HTML:
@@ -3216,66 +3155,32 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             if self.server.Interface.Build3DHTML():
               self.server.Interface.SLock.release()
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
-              try:
-                if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-                else:
-                  self.request.sendall(resp.replace('##type##', 'text/html').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_resp('text/html; charset=utf-8')
             else:
               self.server.Interface.SLock.release()
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
-              try:
-                if req.method == 'GET':
-                  self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(self.server.Interface.HTML3DData))).encode('ISO-8859-1') + self.server.Interface.HTML3DData)
-                else:
-                  self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(self.server.Interface.HTML3DData))).encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              resp_body = self.server.Interface.HTML3DData
+              _send_resp('application/octet-stream')
             else:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
           elif req.path.lower() == '/GPXExplorer/data'.lower():
             if not self.server.Interface.HTMLExp:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_nf()
               continue
             try:
-              resp_body = b''
               f = lambda e: '' if e == None else urllib.parse.quote(str(e))
               resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('&'.join(map(f, p[1])) for p in seg) for seg in track.Pts) for track in map(lambda t: t[1], self.server.Interface.Tracks)).encode('utf-8')
-              if req.method == 'GET':
-                self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              else:
-                self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
+              _send_resp('application/octet-stream')
             except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
           elif req.path.lower()[:7] == '/detach':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
             self.server.Interface.SLock.acquire()
             try:
@@ -3287,11 +3192,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               if not nuri:
                 raise
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rfailed', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               self.server.Interface.SLock.release()
               continue
             del track.OTrack
@@ -3305,18 +3206,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             _tracks[0] = _tracks[2]
             self.server.Interface.SLock.release()
             resp_body = nuri.rsplit('\\', 1)[1].encode('utf-8')
-            try:
-              self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp('text/plain; charset=utf-8')
           elif req.path.lower()[:12] == '/incorporate' or req.path.lower()[:10] == '/integrate':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
             mode = 's' if req.path.lower()[:12] == '/incorporate' else ('ta' if req.path.lower()[:15] == '/integrateafter' else 'tb')
             self.server.Interface.SLock.acquire()
@@ -3329,11 +3222,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               del track1.OTrack
               track1.OTrack = track1.Track
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rfailed', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               self.server.Interface.SLock.release()
               continue
             if mode == 'ta' or mode == 'tb':
@@ -3348,18 +3237,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.UpdateHTMLExp(t_ind, 'tpw', resp_body)
             self.server.Interface.SLock.release()
             resp_body = json.dumps(resp_body).encode('utf-8')
-            try:
-              self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp('application/json; charset=utf-8')
           elif req.path.lower()[:4] == '/new':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
             self.server.Interface.SLock.acquire()
             try:
@@ -3379,22 +3260,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               if self.server.Interface.Mode == 'tiles':
                 self.server.Interface.UpdateTrackBoundaries(len(self.server.Interface.Tracks) - 1)
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rfailed', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               self.server.Interface.SLock.release()
               continue
             resp_body = {}
             self.server.Interface.UpdateHTMLExp(len(self.server.Interface.Tracks) - 1, 'tpw', resp_body)
             self.server.Interface.SLock.release()
             resp_body = json.dumps(resp_body).encode('utf-8')
-            try:
-              self.request.sendall(resp.replace('##type##', 'application/octet-stream').replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp('application/json; charset=utf-8')
           elif req.path.lower()[:5] == '/edit':
             self.server.Interface.SLock.acquire()
             try:
@@ -3404,11 +3277,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.EditMode()
               self.server.Interface.HTML = self.server.Interface.HTML.replace('//        window.onunload', '        window.onunload').replace('//        document.addEventListener("DOMContentLoaded"', '        document.addEventListener("DOMContentLoaded"')
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
               continue
@@ -3416,47 +3285,15 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.SLock.release()
             self.server.Interface.HTMLExp = ''
             self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
-            try:
-              self.request.sendall(resp_307.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp_tr('GPXTweaker.html')
           else:
-            try:
-              self.request.sendall(resp_err.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'rnfound', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_err_nf()
         elif req.method == 'POST':
-          resp_err = 'HTTP/1.1 422 Unprocessable Entity\r\n' \
-          'Content-Length: 0\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
-          resp_bad = 'HTTP/1.1 412 Precondition failed\r\n' \
-          'Content-Length: 0\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
           if req.path.lower()[:4] == '/ele':
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
-            resp = 'HTTP/1.1 200 OK\r\n' \
-            'Content-Type: text/csv; charset=utf-8\r\n' \
-            'Content-Length: ##len##\r\n' \
-            'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-            'Server: GPXTweaker\r\n' \
-            'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-            '\r\n'
             lpoints = req.body.splitlines()
-            resp_body = b''
             points = []
             ids = []
             try:
@@ -3471,32 +3308,13 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   resp_body = resp_body + (id_ele[0] + ',' + ('%.1f' % id_ele[1]) + '\r\n').encode('utf-8')
                 except:
                   resp_body = resp_body + (id_ele[0] + ', \r\n').encode('utf-8')
-              try:
-                self.request.sendall(resp.replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_resp('text/csv; charset=utf-8')
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
           elif req.path.lower()[:5] == '/path':
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
-              try:
-                self.request.sendall(resp_bad.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rbad', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_bad()
               continue
-            resp = 'HTTP/1.1 200 OK\r\n' \
-            'Content-Type: text/csv; charset=utf-8\r\n' \
-            'Content-Length: ##len##\r\n' \
-            'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-            'Server: GPXTweaker\r\n' \
-            'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-            '\r\n'
             lpoints = req.body.splitlines()
             try:
               if len(lpoints) != 2:
@@ -3512,25 +3330,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               if math.dist(iti[-1], map(float, points[1])) < 0.000001:
                 del iti[-1]
               resp_body = ('\r\n'.join('%.6f,%.6f' % (*p,) for p in iti)).encode('utf-8')
+              _send_resp('text/csv; charset=utf-8')
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rnfound', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
-            try:
-              self.request.sendall(resp.replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
           elif req.path.lower()[:6] == '/track':
             self.server.Interface.SLock.acquire()
-            resp = 'HTTP/1.1 204 No content\r\n' \
-            'Content-Length: 0\r\n' \
-            'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-            'Server: GPXTweaker\r\n' \
-            'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-            '\r\n'
             if not self.server.Interface.HTML and req.body.split('=')[0][-4:] == 'file':
               try:
                 ouri = self.server.Interface.Tracks[int(req.body.split('=')[0][5:-4].rstrip('c'))][0]
@@ -3544,19 +3348,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                     tr[0] = nuri
                     self.server.Interface.UpdateHTMLExp(tr_ind, 't')
               except:
-                try:
-                  self.request.sendall(resp_err.encode('ISO-8859-1'))
-                  self.server.Interface.log(2, 'rfailed', req.method, req.path)
-                except:
-                  self.server.Interface.log(2, 'rerror', req.method, req.path)
+                _send_err_fail()
                 continue
               finally:
                 self.server.Interface.SLock.release()
-              try:
-                self.request.sendall(resp.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'response', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_resp_nc()
               continue
             nosave = False
             if self.server.Interface.HTML and '?' in req.path:
@@ -3600,40 +3396,18 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 if req.body.split('=')[0][-5:] == 'color':
                   self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'w')
             except:
-              try:
-                self.request.sendall(resp_err.encode('ISO-8859-1'))
-                self.server.Interface.log(2, 'rfailed', req.method, req.path)
-              except:
-                self.server.Interface.log(2, 'rerror', req.method, req.path)
+              _send_err_fail()
               continue
             finally:
               self.server.Interface.SLock.release()
               if not self.server.Interface.HTML:
                 self.server.Interface.TrackInd = None
                 self.server.Interface.Uri, self.server.Interface.Track = None, None
-            try:
-              self.request.sendall(resp.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'response', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_resp_nc()
           else:
-            try:
-              self.request.sendall(resp_err.encode('ISO-8859-1'))
-              self.server.Interface.log(2, 'rnfound', req.method, req.path)
-            except:
-              self.server.Interface.log(2, 'rerror', req.method, req.path)
+            _send_err_nf()
         elif req.method:
-          resp_err = 'HTTP/1.1 501 Not Implemented\r\n' \
-          'Content-Length: 0\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
-          try:
-            self.request.sendall(resp_err.encode('ISO-8859-1'))
-            self.server.Interface.log(2, 'rnfound', req.method, req.path)
-          except:
-            self.server.Interface.log(2, 'rerror', req.method, req.path)
+          _send_err_ni()
 
 
 class GPXTweakerWebInterfaceServer():
@@ -9485,9 +9259,11 @@ class GPXTweakerWebInterfaceServer():
   '        let gmaxx = null;\r\n' \
   '        let gmaxy = null;\r\n' \
   '        for (let t=0; t<tracks.length; t++) {\r\n' \
-  '          let empt = true;\r\n' \
-  '          for (let s=0; s<tracks_pts[t].length; s++) {\r\n' \
-  '            if (tracks_pts[t][s].length > 0) {empt = false; break;}\r\n' \
+  '          let empt = document.getElementById("waydots" + t.toString()).childElementCount == 0;\r\n' \
+  '          if (empt) {\r\n' \
+  '            for (let s=0; s<tracks_pts[t].length; s++) {\r\n' \
+  '              if (tracks_pts[t][s].length > 0) {empt = false; break;}\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          if (empt) {continue;}\r\n' \
   '          let minx = prop_to_wmvalue(tracks[t].style.left);\r\n' \
@@ -10378,7 +10154,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function tracks_filter() {\r\n' \
-  '        let filt = document.getElementById("tracksfilter").value;\r\n' \
+  '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
   '        for (let t=0; t<trks.length; t++) {\r\n' \
   '          let tname = document.getElementById(trks[t].id.replace("cont", "name"));\r\n' \
@@ -10411,12 +10187,12 @@ class GPXTweakerWebInterfaceServer():
   '          if (a == b) {return 0;}\r\n' \
   '          let a_s = a.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
   '          let b_s = b.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
-  '          return str_comp(a_s[1], b_s[1]) || ((a_s[2]==undefined?-1:parseInt(a_s[2])) - (b_s[2]==undefined?-1:parseInt(b_s[2]))) || ((a_s[3]==undefined?-1:parseInt(a_s[3])) - (b_s[3]==undefined?-1:parseInt(b_s[3])));\r\n' \
+  '          return (asc?1:-1) * (str_comp(a_s[1], b_s[1]) || ((a_s[2]==undefined?-1:parseInt(a_s[2])) - (b_s[2]==undefined?-1:parseInt(b_s[2]))) || ((a_s[3]==undefined?-1:parseInt(a_s[3])) - (b_s[3]==undefined?-1:parseInt(b_s[3]))));\r\n' \
   '        }\r\n' \
   '        function comp_filepath(a, b) {\r\n' \
   '          if (a == b) {return 0;}\r\n' \
-  '          let a_s = a.replace(/\\.gpx$/i,"").match(/((?:.*\\\\)|)(.*)/);\r\n' \
-  '          let b_s = b.replace(/\\.gpx$/i,"").match(/((?:.*\\\\)|)(.*)/);\r\n' \
+  '          let a_s = a.match(/(.*(?=\\\\)|)\\\\?(.*?)(?:\\.gpx)?$/i);\r\n' \
+  '          let b_s = b.match(/(.*(?=\\\\)|)\\\\?(.*?)(?:\\.gpx)?$/i);\r\n' \
   '          return (comp_name(a_s[1], b_s[1]) || comp_name(a_s[2], b_s[2]));\r\n' \
   '        }\r\n' \
   '        switch (crit) {\r\n' \
@@ -10563,7 +10339,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (t.responseURL.indexOf("incorporate") >= 0) {\r\n' \
   '          tracks_pts[ind1] = tracks_pts[ind1].concat(tracks_pts[ind2]);\r\n' \
-  '          track_click(null, document.getElementById("track" + ind1.toString() + "desc"));\r\n' \
   '        } else {\r\n' \
   '          for (let i=0; i<tracks_pts.length; i++) {\r\n' \
   '            if (no_sort[i] > no_sort[ind1] && no_sort[i] < no_sort[ind2]) {no_sort[i]++;}\r\n' \
@@ -10584,14 +10359,13 @@ class GPXTweakerWebInterfaceServer():
   '              no_sort[ind2] = no_sort[ind1] + 1;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          track_click(null, document.getElementById("track" + ind2.toString() + "desc"));\r\n' \
   '        }\r\n' \
+  '        track_click(null, document.getElementById("track" + ind1.toString() + "desc"));\r\n' \
   '        tracks_stats = [];\r\n' \
   '        tracks_props = [];\r\n' \
   '        tracks_calc(0);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        tracks_sort();\r\n' \
-  '        tracks_filter();\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function track_incorporate_integrate(after=null) {\r\n' \
@@ -10635,8 +10409,9 @@ class GPXTweakerWebInterfaceServer():
   '            e.outerHTML = msg[n];\r\n' \
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
   '            let e = document.createElement("svg");\r\n' \
-  '            document.getElementById("handle").insertBefore(e, document.getElementById("waydots0"));\r\n' \
-  '            e.outerHTML = msg[n];\r\n' \
+  '            let w = document.getElementById("waydots0");\r\n' \
+  '            document.getElementById("handle").insertBefore(e, w);\r\n' \
+  '            e.outerHTML = w==null?msg[n]:(msg[n].substring(2)+"  ");\r\n' \
   '          } else {\r\n' \
   '            let e = document.createElement("svg");\r\n' \
   '            document.getElementById("handle").appendChild(e);\r\n' \
@@ -10649,9 +10424,10 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_stats.push([]);\r\n' \
   '        tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
-  '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
+  '        document.getElementById("tracksfilter").value = "";\r\n' \
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
+  '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function track_new() {\r\n' \
@@ -10719,7 +10495,7 @@ class GPXTweakerWebInterfaceServer():
   '      function error_cb(t, prop) {\r\n' \
   '        if (t != null) {window.alert("{#jserror#}");}\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
-  '          prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1);\r\n' \
+  '          prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1)[0];\r\n' \
   '        } else if (prop.id.slice(-4) == "name") {\r\n' \
   '          prop.value = document.getElementById(prop.id.replace("name", "desc")).title;\r\n' \
   '        } else if (prop.id.slice(-5) == "color") {\r\n' \
@@ -10732,7 +10508,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
   '          if (! prop.checkValidity()) {\r\n' \
-  '            prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1);\r\n' \
+  '            prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1)[0];\r\n' \
   '            document.getElementById("edit").disabled = false;\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
@@ -10826,8 +10602,8 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
-  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS##' \
-  '              </div>\r\n' \
+  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
+  '              ##PATHES####WAYDOTS##</div>\r\n' \
   '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
   '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
   '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
@@ -10894,9 +10670,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (elt && e.button == 2) {\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
   '            let cb = document.getElementById(elt.id.replace("path", "track") + "visible");\r\n' \
-  '            cb.checked = ! cb.checked;\r\n' \
+  '            cb.checked = false;\r\n' \
   '            track_checkbox(cb);\r\n' \
-  '            cb.scrollIntoView({block:"nearest"});\r\n' \
+  '            if (document.getElementById(elt.id.replace("path", "track") + "cont").style.display != "none") {\r\n' \
+  '              cb.scrollIntoView({block:"nearest"});\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -10908,13 +10686,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (elt) {\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
   '            if (document.getElementById(elt.id.replace("path", "track") + "cont").style.display != "none") {\r\n' \
-  '              let trk = document.getElementById(elt.id.replace("path", "track") + "desc");\r\n' \
-  '              track_click(null, trk);\r\n' \
+  '              track_click(null, document.getElementById(elt.id.replace("path", "track") + "desc"));\r\n' \
   '            }\r\n' \
   '          } else if (elt.id.substring(0, 7) == "waydots") {\r\n' \
   '            if (document.getElementById(elt.id.replace("waydots", "track") + "cont").style.display != "none") {\r\n' \
-  '              let trk = document.getElementById(elt.id.replace("waydots", "track") + "desc");\r\n' \
-  '              track_click(null, trk);\r\n' \
+  '              track_click(null, document.getElementById(elt.id.replace("waydots", "track") + "desc"));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -11099,7 +10875,7 @@ class GPXTweakerWebInterfaceServer():
   '                      <label for="track%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="track%sname" name="track%sname" value="%s" onchange="track_save(this)"><br>\r\n' \
   '                      <label for="track%sfile">{jfile}</label>\r\n' \
-  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\/\?\*:<>&quot;\|]*(?<!\s-\s(original|backup)(\.gpx)?)" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s" onchange="track_save(this)"><br>\r\n' \
   '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
   '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
   '                      <label for="track%speriod">{jperiod}</label>\r\n' \
@@ -11110,20 +10886,19 @@ class GPXTweakerWebInterfaceServer():
   '                  </div>'
   HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
   HTMLExp_PATH_TEMPLATE = \
-  '\r\n' \
-  '              <svg id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '                <path id="path%s" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" d="M0 0">\r\n' \
-  '                  <title>%s</title>;\r\n' \
-  '                </path>\r\n' \
-  '                <text id="patharrows%s" dy="0.25em">\r\n' \
-  '                  <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
-  '                </text>\r\n' \
-  '              </svg>'
+  '  <svg id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
+  '                  <path id="path%s" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" d="M0 0">\r\n' \
+  '                   <title>%s</title>;\r\n' \
+  '                  </path>\r\n' \
+  '                  <text id="patharrows%s" dy="0.25em">\r\n' \
+  '                    <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
+  '                  </text>\r\n' \
+  '                </svg>\r\n              '
   HTMLExp_WAYDOT_TEMPLATE = \
-  '                <circle onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this.parentNode)" cx="%s" cy="%s"><title>%s</title></circle>\r\n'
+  '                  <circle onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this.parentNode)" cx="%s" cy="%s"><title>%s</title></circle>\r\n'
   HTMLExp_WAYDOTS_TEMPLATE = \
-  '              <svg id="waydots%s" pointer-events="none" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
-  '              </svg>\r\n'
+  '  <svg id="waydots%s" pointer-events="none" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
+  '                </svg>\r\n              '
 
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     try:
@@ -11303,16 +11078,10 @@ class GPXTweakerWebInterfaceServer():
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
         elif scur == 'folders':
-          if l.rstrip().endswith('*'):
-            self.Folders.insert(0, os.path.abspath(os.path.expandvars(l.lstrip().rstrip(' *'))))
-            if not os.path.isdir(self.Folders[0]):
-              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-              return False
-          else:
-            self.Folders.append(os.path.abspath(os.path.expandvars(l.lstrip().rstrip())))
-            if not os.path.isdir(self.Folders[-1]):
-              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-              return False
+          self.Folders.append(os.path.abspath(os.path.expandvars(l.lstrip().rstrip())))
+          if not os.path.isdir(self.Folders[-1]):
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
         elif scur == 'statistics':
           if field == 'gpu_comp':
             self.GpuComp = 0 if value == None else value
@@ -11941,7 +11710,6 @@ class GPXTweakerWebInterfaceServer():
       else:
         pos = self.HTMLExp.find('\r\n                </form>', self.HTMLExp.find('<form id="tracksform"')) 
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
-        n = n.strip('\r\n ')
         pos = self.HTMLExp.find('<br>', self.HTMLExp.find('<div id="tracks"'))
         self.HTMLExp = self.HTMLExp[:self.HTMLExp.rfind('(', 0, pos)] + '(%d)' % len(self.Tracks) + self.HTMLExp[pos:]
       if retrieve != None:
@@ -11953,11 +11721,10 @@ class GPXTweakerWebInterfaceServer():
         n = n.strip('\r\n ')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 6:]
       else:
-        pos = self.HTMLExp.find('\r\n              <svg id="waydots')
+        pos = self.HTMLExp.find('  <svg id="waydots')
         if pos < 0:
-          pos = self.HTMLExp.find('\r\n              </div>\r\n              <div id="scalebox"')
+          pos = self.HTMLExp.find('</div>\r\n              <div id="scalebox"')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
-        n = n.strip('\r\n ')
       if retrieve != None:
         retrieve['track%d' % t] = n
     if 'w' in elts:
@@ -11967,9 +11734,8 @@ class GPXTweakerWebInterfaceServer():
         n = n.strip('\r\n ')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 6:]
       else:
-        pos = self.HTMLExp.find('              </div>\r\n              <div id="scalebox"')
+        pos = self.HTMLExp.find('</div>\r\n              <div id="scalebox"')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
-        n = n.strip('\r\n ')
       if retrieve != None:
         retrieve['waydots%d' % t] = n
     return True
