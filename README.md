@@ -42,7 +42,7 @@ Syntaxe:
   GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--noopen|-n] [--v|-v VERBOSITY]  
 où:  
   -h: afficher l'aide  
-  URI: le chemin d'accès à la trace (en local ou, en lecture seule, sur un serveur)  
+  URI: le chemin d'accès à la trace (en local ou, en lecture seule, sur un serveur) ou argument pas mentionné pour démarrer avec l'explorateur de traces  
   CONF: le chemin d'accès au fichier de configuration (même répertoire que le script par défaut)  
   TRK: l'indice de la trace (commençant à 0, pour les fichiers gpx contenant plusieurs traces) (0, c'est à dire la première, par défaut)  
   MAP: le chemin d'accès complet à la carte (en local ou sur un serveur) ou le nom d'un fournisseur de carte paramétré dans le fichier de configuration ou vide pour utiliser le premier founisseur de carte configuré, ou non mentionné pour utiliser les fournisseurs de tuiles définis dans ce même fichier  
@@ -54,6 +54,7 @@ où:
 
 Exemples:  
 
+  GPXTweaker -v 1  
   GPXTweaker t.gpx  
   GPXTweaker t.gpx -m "d:\maps\m.png" -v 1  
   GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -s "3000, 6000"
@@ -115,7 +116,7 @@ Syntax:
   GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--noopen|-n] [--v|-v VERBOSITY]  
 where:  
   -h: shows the help  
-  URI: the path to the track (on local or, in read only mode, on a server)  
+  URI: the path to the track (on local or, in read only mode, on a server) or argument not mentioned to start with the explorer of tracks  
   CONF: the path to the configuration file (same folder as the script by default)  
   TRK: the index of the track (starting at 0, for the gpx files containing several tracks) (0, that is to say the first one, by défault)  
   MAP: the full path to the map (on local or on a server) or the name of a map provider set in the configuration file or blank to use the first map provider configured, or not mentioned in order to use the tiles providers defined in this file  
@@ -127,6 +128,7 @@ where:
 
 Examples:  
 
+  GPXTweaker -v 1  
   GPXTweaker t.gpx  
   GPXTweaker t.gpx -m "d:\maps\m.png" -v 1  
   GPXTweaker t.gpx -c "%appdata%\gpxtweaker\" -m "IGN PLANV2" -e -s "3000, 6000"
