@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -3560,7 +3560,8 @@ class GPXTweakerWebInterfaceServer():
   HTML_GPUSTATS_TEMPLATE = \
   '      class GPUStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
-  '        constructor () {\r\n' \
+  '        constructor (mode) {\r\n' \
+  '          this.mode = mode;\r\n' \
   '          this.canvas = document.createElement("canvas");\r\n' \
   '          this.gl = this.canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '          this.gl_programs = new Map();\r\n' \
@@ -3745,9 +3746,12 @@ class GPXTweakerWebInterfaceServer():
   '            void main() {\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
-  '          this.program_create("pprogram", vertex_pshader_s, fragment_shader_s);\r\n' \
-  '          this.program_create("d1program", vertex_d1shader_s, fragment_shader_s);\r\n' \
-  '          this.program_create("d2program", vertex_d2shader_s, fragment_shader_s);\r\n' \
+  '          if (this.mode == "tweaker") {\r\n' \
+  '            this.program_create("dprogram", vertex_d1shader_s, fragment_shader_s);\r\n' \
+  '          } else if (this.mode == "explorer") {\r\n' \
+  '            this.program_create("pprogram", vertex_pshader_s, fragment_shader_s);\r\n' \
+  '            this.program_create("dprogram", vertex_d2shader_s, fragment_shader_s);\r\n' \
+  '          }\r\n' \
   '          this.program_create("s1program", vertex_s1shader_s, fragment_shader_s);\r\n' \
   '          this.program_create("s2program", vertex_s2shader_s, fragment_shader_s);\r\n' \
   '        }\r\n' \
@@ -3921,33 +3925,28 @@ class GPXTweakerWebInterfaceServer():
   '            this.gl.finish();\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        calc(mode="tweaker") {\r\n' \
+  '        calc(param="") {\r\n' \
   '          for (let n of this.gl_programs.keys()) {\r\n' \
-  '            if (mode != "explorer_pos" && (n == "pprogram" || n == "d2program")) {continue;}\r\n' \
-  '            if (mode != "tweaker" && n == "d1program") {continue;}\r\n' \
+  '            if ((this.mode != "explorer" || param != "pos") && n == "pprogram") {continue;}\r\n' \
+  '            if (this.mode == "explorer" && param != "pos" && n == "dprogram") {continue;}\r\n' \
   '            this.program_use(n);\r\n' \
   '            this.program_attributes();\r\n' \
   '            this.program_uniforms("static");\r\n' \
   '          }\r\n' \
-  '          if (mode == "tweaker") {\r\n' \
-  '            this.program_use("d1program");\r\n' \
-  '            this._calc();\r\n' \
-  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '            this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
-  '            this.feedbacks();\r\n' \
-  '          }\r\n' \
-  '          if (mode == "explorer_pos") {\r\n' \
+  '          if (this.mode == "explorer" && param == "pos") {\r\n' \
   '            this.program_use("pprogram");\r\n' \
   '            this._calc();\r\n' \
   '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
   '            this.feedbacks();\r\n' \
-  '            this.program_use("d2program");\r\n' \
+  '          }\r\n' \
+  '          if (this.mode != "explorer" || param == "pos") {\r\n' \
+  '            this.program_use("dprogram");\r\n' \
   '            this._calc();\r\n' \
   '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
   '            this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
   '            this.feedbacks();\r\n' \
   '          }\r\n' \
-  '          this.program_use("s1program");\r\n' \
+   '          this.program_use("s1program");\r\n' \
   '          this._calc();\r\n' \
   '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
   '          this.sss_texture = this.texture_load(this.gl.TEXTURE0 + this.ssstex, 3, this.vsss, this.sss_texture);\r\n' \
@@ -3987,8 +3986,7 @@ class GPXTweakerWebInterfaceServer():
   '        get ssss() {\r\n' \
   '          return this._ssss;\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats();}\r\n'
+  '      }\r\n'
   HTML_MSG_TEMPLATE = \
   '      var msg_n = 0;\r\n' \
   '      function show_msg(msg, dur, msgn=null) {\r\n' \
@@ -4237,6 +4235,186 @@ class GPXTweakerWebInterfaceServer():
   '      function escape(s) {\r\n' \
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
   '      }\r\n'
+  HTML_SEGCALC_1_TEMPLATE = \
+  '          let stat = Array(7).fill(0);\r\n' \
+  '          let stat_p = null;\r\n' \
+  '          let stat_i = 0;\r\n' \
+  '          let t_s = null;\r\n' \
+  '          let lat_p = null;\r\n' \
+  '          let lon_p = null;\r\n' \
+  '          let lat = null;\r\n' \
+  '          let lon = null;\r\n' \
+  '          let ea_s = [0, 0];\r\n' \
+  '          let ea_p = [NaN, NaN];\r\n' \
+  '          let ea_l = [null, null];\r\n' \
+  '          let ea_h = [null, null];\r\n' \
+  '          let ea_g = [null, null];\r\n' \
+  '          let ea_ic = [null, null];\r\n' \
+  '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
+  '          let el_s = 0;\r\n' \
+  '          let el = null;\r\n' \
+  '          let el_p = NaN;\r\n' \
+  '          let p_p = null;\r\n'
+  HTML_SEGCALC_2_TEMPLATE = \
+  '              if (isNaN(t)) {\r\n' \
+  '                stat[0] = t_s==null?0:stat_p[0];\r\n' \
+  '              } else {\r\n' \
+  '                if (t_s == null) {\r\n' \
+  '                  t_s = t;\r\n' \
+  '                } else {\r\n' \
+  '                  stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(ea[1])) {\r\n' \
+  '                el = ea[1];\r\n' \
+  '                if (isNaN(el_p)) {\r\n' \
+  '                  el_p = el;\r\n' \
+  '                  el_s = el_p;\r\n' \
+  '                }\r\n' \
+  '              } else if (! isNaN(ea[0])) {\r\n' \
+  '                el = ea[0];\r\n' \
+  '                if (isNaN(el_p)) {\r\n' \
+  '                  el_p = el;\r\n' \
+  '                  el_s = el_p;\r\n' \
+  '                }\r\n' \
+  '              } else {\r\n' \
+  '                el = isNaN(el_p)?0:el_p;\r\n' \
+  '              }\r\n' \
+  '            }\r\n'
+  HTML_SEGCALC_3_TEMPLATE = \
+  '            lat_p = lat;\r\n' \
+  '            lon_p = lon;\r\n' \
+  '            stat_p = stat.slice();\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              stats[seg_ind].push(stat_p);\r\n' \
+  '              if (! isNaN(el_p)) {el_p = el;}\r\n' \
+  '            } else if (fpan == 1) {\r\n' \
+  '              stats[seg_ind][p][2] = stat_p[2];\r\n' \
+  '              stats[seg_ind][p][3] = stat_p[3];\r\n' \
+  '            } else if (fpan == 2 && gpucomp == 0) {\r\n' \
+  '              stats[seg_ind][p][4] = stat_p[4];\r\n' \
+  '              stats[seg_ind][p][5] = stat_p[5];\r\n' \
+  '            }\r\n' \
+  '            stat_i++;\r\n' \
+  '            p_p = p;\r\n' \
+  '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
+  '              for (let v=0; v<2; v++) {\r\n' \
+  '                if (! isNaN(ea[v])) {\r\n' \
+  '                  if (ea[v] > ea_p[v]) {\r\n' \
+  '                    ea_p[v] = ea[v];\r\n' \
+  '                    if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
+  '                      ea_g[v] = "+";\r\n' \
+  '                      ea_ic[v] = null;\r\n' \
+  '                      ea_h[v] = ea[v];\r\n' \
+  '                    }\r\n' \
+  '                    if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
+  '                      ea_ic[v] = p - 1;\r\n' \
+  '                    }\r\n' \
+  '                  }\r\n' \
+  '                  if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
+  '                    if (ea_ic[v] != null) {\r\n' \
+  '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
+  '                      for (let i=ea_ic[v]+1; i<=p; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
+  '                      ea_ic[v] = null;\r\n' \
+  '                    }\r\n' \
+  '                    if (ea_g[v] == "+") {\r\n' \
+  '                      ea_l[v] = ea[v];\r\n' \
+  '                    } else {\r\n' \
+  '                      ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
+  '                    }\r\n' \
+  '                    ea_g[v] = "-";\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (! isNaN(ea[0])) {ea_p[0] = ea[0];}\r\n' \
+  '            if (! isNaN(ea[1])) {ea_p[1] = ea[1];}\r\n' \
+  '          }\r\n' \
+  '          if (! stat_p) {return;}\r\n' \
+  '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
+  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '              if (isNaN(stats[seg_ind][p][4])) {\r\n' \
+  '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
+  '                if (isNaN(stats[seg_ind][p][5])) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
+  '              } else if (isNaN(stats[seg_ind][p][5])) {\r\n' \
+  '                stats[seg_ind][p][5] = ea_s[1];\r\n' \
+  '              } else {break;}\r\n' \
+  '            }\r\n'
+  HTML_SEGCALC_4_TEMPLATE = \
+  '        if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
+  '          let drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
+  '          let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
+  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '            let ea = stats[seg_ind][p].slice(4,6);\r\n' \
+  '            stats[seg_ind][p][4]=0;\r\n' \
+  '            stats[seg_ind][p][5]=0;\r\n' \
+  '            let ps = p;\r\n' \
+  '            for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
+  '              if (stats[seg_ind][ps][1] > stats[seg_ind][p][1] + drange) {break;}\r\n' \
+  '              if (stats[seg_ind][ps][1] - stats[seg_ind][p][1] == 0) {continue;}\r\n' \
+  '              stats[seg_ind][p][4] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][4] - ea[0]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
+  '              stats[seg_ind][p][5] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][5] - ea[1]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
+  '            }\r\n' \
+  '            if (stats[seg_ind][ps - 1][1] - stats[seg_ind][p][1] != 0) {\r\n' \
+  '              let c = (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1]) / (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]);\r\n' \
+  '              stats[seg_ind][p][4] = (stats[seg_ind][p][4] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][4] - ea[0]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
+  '              stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][5] - ea[1]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
+  '            }\r\n' \
+  '            stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
+  '            stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
+  '          }\r\n' \
+  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
+  '            if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
+  '              let ps = p;\r\n' \
+  '              let s = [0, 0];\r\n' \
+  '              let su = 0;\r\n' \
+  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
+  '                if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - drange) {break;}\r\n' \
+  '                let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
+  '                s[0] += stats[seg_ind][ps][4] * c;\r\n' \
+  '                s[1] += stats[seg_ind][ps][5] * c;\r\n' \
+  '                su += c;\r\n' \
+  '              }\r\n' \
+  '              if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
+  '                stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2 ) / (1 + su/2)));\r\n' \
+  '                stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2 ) / (1 + su/2)));\r\n' \
+  '            }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (gpucomp == 0 && (fpan == 0 || fpan == 3)) {\r\n' \
+  '          let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
+  '          let spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
+  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '            stats[seg_ind][p][6] = 0;\r\n' \
+  '            let ps = p;\r\n' \
+  '            for (ps=p+1; ps<stats[seg_ind].length; ps++) {\r\n' \
+  '              if (stats[seg_ind][ps][0] > stats[seg_ind][p][0] + trange) {break;}\r\n' \
+  '              if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
+  '              stats[seg_ind][p][6] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
+  '            }\r\n' \
+  '            if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
+  '              stats[seg_ind][p][6] = (stats[seg_ind][p][6] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
+  '            }\r\n' \
+  '            stats[seg_ind][p][6] = Math.min(stats[seg_ind][p][6], spmax);\r\n' \
+  '          }\r\n' \
+  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
+  '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
+  '              let ps = p;\r\n' \
+  '              let s = 0;\r\n' \
+  '              let su = 0;\r\n' \
+  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
+  '                if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
+  '                let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
+  '                s += stats[seg_ind][ps][6] * c;\r\n' \
+  '                su += c;\r\n' \
+  '              }\r\n' \
+  '              if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
+  '                stats[seg_ind][p][6] = Math.min(spmax, (stats[seg_ind][p][6] + s/2 ) / (1 + su/2));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n'
   HTML_GRAPH1_TEMPLATE = \
   '      function switch_filterpanel(pa) {\r\n' \
   '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
@@ -4301,8 +4479,47 @@ class GPXTweakerWebInterfaceServer():
   '        let dur = 0;\r\n' \
   '        let dist = 0;\r\n' \
   '        let ele = 0;\r\n' \
-  '        let alt = 0;\r\n'
+  '        let alt = 0;\r\n' \
+  '        let gx_ind = document.getElementById("graphx").selectedIndex;\r\n' \
+  '        let gy_ind = document.getElementById("graphy").selectedIndex;\r\n'
   HTML_GRAPH2_TEMPLATE = \
+  '            let dr = true;\r\n' \
+  '            switch (gy_ind) {\r\n' \
+  '              case 0:\r\n' \
+  '                gy.push(dist + stat[1]);\r\n' \
+  '                break;\r\n' \
+  '              case 1:\r\n' \
+  '              case 2:\r\n' \
+  '                if (isNaN(ea)) {\r\n' \
+  '                  dr = false;\r\n' \
+  '                } else {\r\n' \
+  '                  gy.push(ea);\r\n' \
+  '                }\r\n' \
+  '                break;\r\n' \
+  '              case 3:\r\n' \
+  '                gy.push(ele + stat[2]);\r\n' \
+  '                break;\r\n' \
+  '              case 4:\r\n' \
+  '                gy.push(alt + stat[3]);\r\n' \
+  '                break;\r\n' \
+  '              case 5:\r\n' \
+  '              case 6:\r\n' \
+  '                gy.push(stat[gy_ind - 1] * 100);\r\n' \
+  '                break;\r\n' \
+  '              case 7:\r\n' \
+  '                gy.push(stat[6] * 3.6);\r\n' \
+  '                break;\r\n' \
+  '            }\r\n' \
+  '            if (dr) {\r\n' \
+  '              switch (gx_ind) {\r\n' \
+  '                case 0:\r\n' \
+  '                  gx.push(dur + stat[0]);\r\n' \
+  '                  break;\r\n' \
+  '                case 1:\r\n' \
+  '                  gx.push(dist + stat[1]);\r\n' \
+  '                  break;\r\n' \
+  '              }\r\n'
+  HTML_GRAPH3_TEMPLATE = \
   '        let minx = gx[0];\r\n' \
   '        let maxx = gx[0];\r\n' \
   '        let miny = gy[0];\r\n' \
@@ -4318,7 +4535,7 @@ class GPXTweakerWebInterfaceServer():
   '        let cx = (xr - xl) / (maxx - minx);\r\n' \
   '        let cy = (yb - yt) / (maxy - miny);\r\n' \
   '        let yl = 0;\r\n' \
-  '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '        if (gy_ind == 0) {\r\n' \
   '          yl = yb;\r\n' \
   '        } else if (maxy < 0) {\r\n' \
   '          yl = yt;\r\n' \
@@ -4362,7 +4579,7 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.textBaseline = "top";\r\n' \
   '        x = xl;\r\n' \
   '        while (x <= xr) {\r\n' \
-  '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
+  '          if (gx_ind == 0) {\r\n' \
   '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
   '            let dur_m = (dur / 60) % 60;\r\n' \
   '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
@@ -4381,11 +4598,11 @@ class GPXTweakerWebInterfaceServer():
   '        let fin = false;\r\n' \
   '        while (true) {\r\n' \
   '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
-  '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '            if (gy_ind == 0) {\r\n' \
   '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 5 || document.getElementById("graphy").selectedIndex == 6) {\r\n' \
+  '            } else if (gy_ind == 5 || gy_ind == 6) {\r\n' \
   '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 7) {\r\n' \
+  '            } else if (gy_ind == 7) {\r\n' \
   '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
   '            } else {\r\n' \
   '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
@@ -4604,6 +4821,56 @@ class GPXTweakerWebInterfaceServer():
   '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '      </svg>\r\n' \
   '    </div>\r\n'
+  HTML_PAGE_LOAD_TEMPLATE = \
+  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
+  '          document.getElementById("tset").focus();\r\n' \
+  '          document.getElementById("tset").blur();\r\n' \
+  '        }\r\n' \
+  '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        let prev_state = sessionStorage.getItem("state");\r\n' \
+  '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
+  '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          add_tile();\r\n' \
+  '          rescale();\r\n' \
+  '        } else {\r\n' \
+  '          if (prev_state == null) {\r\n' \
+  '            switch_tiles(0, 0);\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
+  '            switch_tiles(parseInt(prev_state[0]), parseInt(prev_state[1]));\r\n' \
+  '            if (prev_state[2] == "true") {switch_tlock(false);}\r\n' \
+  '          }\r\n' \
+  '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
+  '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
+  '          if (tlevel == 0) {rescale();}\r\n' \
+  '        }\r\n' \
+  '        scroll_to_all();\r\n' \
+  '        if (prev_state != null) {\r\n' \
+  '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
+  '          eset = parseInt(prev_state[6]);\r\n' \
+  '          iset = parseInt(prev_state[7]);\r\n' \
+  '          document.getElementById("egstren").innerHTML = prev_state[8];\r\n' \
+  '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
+  '          document.getElementById("agstren").innerHTML = prev_state[9];\r\n' \
+  '          document.getElementById("agfilter").value = parseFloat(prev_state[9]);\r\n' \
+  '          document.getElementById("sldist").innerHTML = prev_state[10];\r\n' \
+  '          document.getElementById("sldfilter").value = parseFloat(prev_state[10]);\r\n' \
+  '          document.getElementById("slmax").innerHTML = prev_state[11];\r\n' \
+  '          document.getElementById("slmfilter").value = parseFloat(prev_state[11]);\r\n' \
+  '          document.getElementById("sptime").innerHTML = prev_state[12];\r\n' \
+  '          document.getElementById("sptfilter").value = parseFloat(prev_state[12]);\r\n' \
+  '          document.getElementById("spmax").innerHTML = prev_state[13];\r\n' \
+  '          document.getElementById("spmfilter").value = parseFloat(prev_state[13]);\r\n' \
+  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
+  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
+  '        }\r\n'
+  HTML_PAGE_UNLOAD_TEMPLATE = \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (! filter) {filter = "none";}\r\n' \
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -4669,7 +4936,8 @@ class GPXTweakerWebInterfaceServer():
   '      var gpu_part = gpucomp >=1?true:false;\r\n' \
   '      var point_stat = [];\r\n' \
   '      var graph_ip = null;\r\n' \
-  '      var graph_px = null;\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_MSG_TEMPLATE + \
+  '      var graph_px = null;\r\n' + HTML_GPUSTATS_TEMPLATE + \
+  '      if (gpucomp > 0) {var gpustats = new GPUStats("tweaker");}\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
@@ -5445,26 +5713,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (! seg.firstElementChild.checked) {return;}\r\n' \
   '        if (fpan == 0 || fpan == 1 || (fpan == 2 && gpucomp == 0) || gpu_part) {\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' \
-  '          let stat = Array(7).fill(0);\r\n' \
-  '          let stat_p = null;\r\n' \
-  '          let stat_i = 0;\r\n' \
-  '          let t_s = null;\r\n' \
-  '          let lat_p = null;\r\n' \
-  '          let lon_p = null;\r\n' \
-  '          let lat = null;\r\n' \
-  '          let lon = null;\r\n' \
-  '          let ea_s = [0, 0];\r\n' \
-  '          let ea_p = [NaN, NaN];\r\n' \
-  '          let ea_l = [null, null];\r\n' \
-  '          let ea_h = [null, null];\r\n' \
-  '          let ea_g = [null, null];\r\n' \
-  '          let ea_ic = [null, null];\r\n' \
-  '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
-  '          let el_s = 0;\r\n' \
-  '          let el = null;\r\n' \
-  '          let el_p = NaN;\r\n' \
-  '          let p_p = null;\r\n' \
+  '          let spans = seg.getElementsByTagName("span");\r\n' + HTML_SEGCALC_1_TEMPLATE + \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
   '            if (point_stat[parseInt(spans[p].id.slice(5, -5))] == null) {continue;}\r\n' \
   '            let p_c = spans[p].children;\r\n' \
@@ -5480,32 +5729,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (fpan == 0 || (gpucomp >= 1 && fpan != 1)) {\r\n' \
   '              let t = Date.parse(p_c[13].value);\r\n' \
   '              lat = parseFloat(p_c[1].value);\r\n' \
-  '              lon = parseFloat(p_c[4].value);\r\n' \
-  '              if (isNaN(t)) {\r\n' \
-  '                stat[0] = t_s==null?0:stat_p[0];\r\n' \
-  '              } else {\r\n' \
-  '                if (t_s == null) {\r\n' \
-  '                  t_s = t;\r\n' \
-  '                } else {\r\n' \
-  '                  stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              if (! isNaN(ea[1])) {\r\n' \
-  '                el = ea[1];\r\n' \
-  '                if (isNaN(el_p)) {\r\n' \
-  '                  el_p = el;\r\n' \
-  '                  el_s = el_p;\r\n' \
-  '                }\r\n' \
-  '              } else if (! isNaN(ea[0])) {\r\n' \
-  '                el = ea[0];\r\n' \
-  '                if (isNaN(el_p)) {\r\n' \
-  '                  el_p = el;\r\n' \
-  '                  el_s = el_p;\r\n' \
-  '                }\r\n' \
-  '              } else {\r\n' \
-  '                el = isNaN(el_p)?0:el_p;\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
+  '              lon = parseFloat(p_c[4].value);\r\n'  + HTML_SEGCALC_2_TEMPLATE + \
   '            if (p_p == null) {\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
@@ -5531,65 +5755,7 @@ class GPXTweakerWebInterfaceServer():
   '                teas.set([stat[0], isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1]], 3 * ind);\r\n' \
   '                ind++;\r\n' \
   '              }\r\n' \
-  '            }\r\n' \
-  '            lat_p = lat;\r\n' \
-  '            lon_p = lon;\r\n' \
-  '            stat_p = stat.slice();\r\n' \
-  '            if (fpan == 0) {\r\n' \
-  '              stats[seg_ind].push(stat_p);\r\n' \
-  '              if (! isNaN(el_p)) {el_p = el;}\r\n' \
-  '            } else if (fpan == 1) {\r\n' \
-  '              stats[seg_ind][stat_i][2] = stat_p[2];\r\n' \
-  '              stats[seg_ind][stat_i][3] = stat_p[3];\r\n' \
-  '            } else if (fpan == 2 && gpucomp == 0) {\r\n' \
-  '              stats[seg_ind][stat_i][4] = stat_p[4];\r\n' \
-  '              stats[seg_ind][stat_i][5] = stat_p[5];\r\n' \
-  '            }\r\n' \
-  '            stat_i++;\r\n' \
-  '            p_p = p;\r\n' \
-  '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '              for (let v=0; v<2; v++) {\r\n' \
-  '                if (! isNaN(ea[v])) {\r\n' \
-  '                  if (ea[v] > ea_p[v]) {\r\n' \
-  '                    ea_p[v] = ea[v];\r\n' \
-  '                    if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
-  '                      ea_g[v] = "+";\r\n' \
-  '                      ea_ic[v] = null;\r\n' \
-  '                      ea_h[v] = ea[v];\r\n' \
-  '                    }\r\n' \
-  '                    if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
-  '                      ea_ic[v] = stat_i - 2;\r\n' \
-  '                    }\r\n' \
-  '                  }\r\n' \
-  '                  if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
-  '                    if (ea_ic[v] != null) {\r\n' \
-  '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
-  '                      for (let i=ea_ic[v]+1; i<stat_i; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
-  '                      ea_ic[v] = null;\r\n' \
-  '                    }\r\n' \
-  '                    if (ea_g[v] == "+") {\r\n' \
-  '                      ea_l[v] = ea[v];\r\n' \
-  '                    } else {\r\n' \
-  '                      ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
-  '                    }\r\n' \
-  '                    ea_g[v] = "-";\r\n' \
-  '                  }\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            if (! isNaN(ea[0])) {ea_p[0] = ea[0];}\r\n' \
-  '            if (! isNaN(ea[1])) {ea_p[1] = ea[1];}\r\n' \
-  '          }\r\n' \
-  '          if (! stat_p) {return;}\r\n' \
-  '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '            for (let p=0; p<stat_i; p++) {\r\n' \
-  '              if (isNaN(stats[seg_ind][p][4])) {\r\n' \
-  '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
-  '                if (isNaN(stats[seg_ind][p][5])) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
-  '              } else if (isNaN(stats[seg_ind][p][5])) {\r\n' \
-  '                stats[seg_ind][p][5] = ea_s[1];\r\n' \
-  '              } else {break;}\r\n' \
-  '            }\r\n' \
+  '            }\r\n' + HTML_SEGCALC_3_TEMPLATE + \
   '          } else if (gpucomp != 0 && (fpan == 0 || gpu_part) && fpan != 1) {\r\n' \
   '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
   '              if (isNaN(mmlhs[4 * i + 3])) {mmlhs[4 * i + 3] = el_s;} else {break;}\r\n' \
@@ -5619,81 +5785,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (fpan == 1) {\r\n' \
   '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\d+m\|/, stat_p[2].toFixed(0) + "m|").replace(/\d+m\)/, stat_p[3].toFixed(0) + "m)");\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '        if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '          let drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
-  '          let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
-  '            let ea = stats[seg_ind][p].slice(4,6);\r\n' \
-  '            stats[seg_ind][p][4]=0;\r\n' \
-  '            stats[seg_ind][p][5]=0;\r\n' \
-  '            let ps = p;\r\n' \
-  '            for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
-  '              if (stats[seg_ind][ps][1] > stats[seg_ind][p][1] + drange) {break;}\r\n' \
-  '              if (stats[seg_ind][ps][1] - stats[seg_ind][p][1] == 0) {continue;}\r\n' \
-  '              stats[seg_ind][p][4] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][4] - ea[0]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
-  '              stats[seg_ind][p][5] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][5] - ea[1]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
-  '            }\r\n' \
-  '            if (stats[seg_ind][ps - 1][1] - stats[seg_ind][p][1] != 0) {\r\n' \
-  '              let c = (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1]) / (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]);\r\n' \
-  '              stats[seg_ind][p][4] = (stats[seg_ind][p][4] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][4] - ea[0]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
-  '              stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][5] - ea[1]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
-  '            }\r\n' \
-  '            stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
-  '            stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
-  '          }\r\n' \
-  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
-  '            if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
-  '              let ps = p;\r\n' \
-  '              let s = [0, 0];\r\n' \
-  '              let su = 0;\r\n' \
-  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
-  '                if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - drange) {break;}\r\n' \
-  '                let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
-  '                s[0] += stats[seg_ind][ps][4] * c;\r\n' \
-  '                s[1] += stats[seg_ind][ps][5] * c;\r\n' \
-  '                su += c;\r\n' \
-  '              }\r\n' \
-  '              if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
-  '                stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2 ) / (1 + su/2)));\r\n' \
-  '                stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2 ) / (1 + su/2)));\r\n' \
-  '            }\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (gpucomp == 0 && (fpan == 0 || fpan == 3)) {\r\n' \
-  '          let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
-  '          let spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
-  '            stats[seg_ind][p][6] = 0;\r\n' \
-  '            let ps = p;\r\n' \
-  '            for (ps=p+1; ps<stats[seg_ind].length; ps++) {\r\n' \
-  '              if (stats[seg_ind][ps][0] > stats[seg_ind][p][0] + trange) {break;}\r\n' \
-  '              if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
-  '              stats[seg_ind][p][6] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
-  '            }\r\n' \
-  '            if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
-  '              stats[seg_ind][p][6] = (stats[seg_ind][p][6] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
-  '            }\r\n' \
-  '            stats[seg_ind][p][6] = Math.min(stats[seg_ind][p][6], spmax);\r\n' \
-  '          }\r\n' \
-  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
-  '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
-  '              let ps = p;\r\n' \
-  '              let s = 0;\r\n' \
-  '              let su = 0;\r\n' \
-  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
-  '                if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
-  '                let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
-  '                s += stats[seg_ind][ps][6] * c;\r\n' \
-  '                su += c;\r\n' \
-  '              }\r\n' \
-  '              if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
-  '                stats[seg_ind][p][6] = Math.min(spmax, (stats[seg_ind][p][6] + s/2 ) / (1 + su/2));\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
+  '        }\r\n' + HTML_SEGCALC_4_TEMPLATE + \
   '      }\r\n' \
   '      function wpt_calc() {\r\n' \
   '        let nbpt = 0;\r\n' \
@@ -6697,52 +6789,8 @@ class GPXTweakerWebInterfaceServer():
   '            let st = point_stat[parseInt(spans[p].id.slice(5, -5))];\r\n' \
   '            if (st == null) {continue;}\r\n' \
   '            stat = stats[seg_ind][st];\r\n' \
-  '            let dr = true;\r\n' \
-  '            switch (document.getElementById("graphy").selectedIndex) {\r\n' \
-  '              case 0:\r\n' \
-  '                gy.push(dist + stat[1]);\r\n' \
-  '                break;\r\n' \
-  '              case 1:\r\n' \
-  '                let e = parseFloat(document.getElementById(spans[p].id.replace("focus", "ele")).value);\r\n' \
-  '                if (isNaN(e)) {\r\n' \
-  '                  dr = false;\r\n' \
-  '                } else {\r\n' \
-  '                  gy.push(e);\r\n' \
-  '                }\r\n' \
-  '                break;\r\n' \
-  '              case 2:\r\n' \
-  '                let a = parseFloat(document.getElementById(spans[p].id.replace("focus", "alt")).value);\r\n' \
-  '                if (isNaN(a)) {\r\n' \
-  '                  dr = false;\r\n' \
-  '                } else {\r\n' \
-  '                  gy.push(a);\r\n' \
-  '                }\r\n' \
-  '                break;\r\n' \
-  '              case 3:\r\n' \
-  '                gy.push(ele + stat[2]);\r\n' \
-  '                break;\r\n' \
-  '              case 4:\r\n' \
-  '                gy.push(alt + stat[3]);\r\n' \
-  '                break;\r\n' \
-  '              case 5:\r\n' \
-  '                gy.push(stat[4] * 100);\r\n' \
-  '                break;\r\n' \
-  '              case 6:\r\n' \
-  '                gy.push(stat[5] * 100);\r\n' \
-  '                break;\r\n' \
-  '              case 7:\r\n' \
-  '                gy.push(stat[6] * 3.6);\r\n' \
-  '                break;\r\n' \
-  '            }\r\n' \
-  '            if (dr) {\r\n' \
-  '              switch (document.getElementById("graphx").selectedIndex) {\r\n' \
-  '                case 0:\r\n' \
-  '                  gx.push(dur + stat[0]);\r\n' \
-  '                  break;\r\n' \
-  '                case 1:\r\n' \
-  '                  gx.push(dist + stat[1]);\r\n' \
-  '                  break;\r\n' \
-  '              }\r\n' \
+  '            let ea = null;\r\n' \
+  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(document.getElementById(spans[p].id.replace("focus", gy_ind==1?"ele":"alt")).value);}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '              graph_ip.push(parseInt(spans[p].id.slice(5, -5)));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -6754,7 +6802,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gx.length < 2) {\r\n' \
   '          graph_point();\r\n' \
   '          return;\r\n' \
-  '        }\r\n' + HTML_GRAPH2_TEMPLATE + \
+  '        }\r\n' + HTML_GRAPH3_TEMPLATE + \
   '        for (let i=0; i<gx.length; i++) {\r\n' \
   '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
   '          if (i == gc[0]) {\r\n' \
@@ -7413,10 +7461,7 @@ class GPXTweakerWebInterfaceServer():
   '          scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")));\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function page_unload() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
+  '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
   '      function page_load() {\r\n' \
@@ -7425,60 +7470,17 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("waypoints").style.overflowY = "auto";\r\n' \
   '            document.getElementById("waypoints").style.borderRight = "solid rgb(34,37,42) 17px";\r\n' \
   '          }\r\n' \
-  '          document.getElementById("tset").focus();\r\n' \
-  '          document.getElementById("tset").blur();\r\n' \
-  '        }\r\n' \
-  '        let prev_state = sessionStorage.getItem("state");\r\n' \
-  '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
-  '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          add_tile();\r\n' \
-  '          rescale();\r\n' \
-  '        } else {\r\n' \
-  '          if (prev_state == null) {\r\n' \
-  '            switch_tiles(0, 0);\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
-  '            switch_tiles(parseInt(prev_state[0]), parseInt(prev_state[1]));\r\n' \
-  '            if (prev_state[2] == "true") {switch_tlock(false);}\r\n' \
-  '          }\r\n' \
-  '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
-  '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
-  '          if (tlevel == 0) {rescale();}\r\n' \
-  '        }\r\n' \
-  '        scroll_to_all();\r\n' \
+  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE + \
   '        if (prev_state != null) {\r\n' \
   '          if (prev_state[4] == "true") {switch_dots();}\r\n' \
-  '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
-  '          if (prev_state[6] != "0") {\r\n' \
-  '            eset = parseInt(prev_state[6]);\r\n' \
-  '          }\r\n' \
-  '          if (prev_state[7] != "0") {\r\n' \
-  '            iset = parseInt(prev_state[7]);\r\n' \
-  '          }\r\n' \
-  '          document.getElementById("egstren").innerHTML = prev_state[8];\r\n' \
-  '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
-  '          document.getElementById("agstren").innerHTML = prev_state[9];\r\n' \
-  '          document.getElementById("agfilter").value = parseFloat(prev_state[9]);\r\n' \
-  '          document.getElementById("sldist").innerHTML = prev_state[10];\r\n' \
-  '          document.getElementById("sldfilter").value = parseFloat(prev_state[10]);\r\n' \
-  '          document.getElementById("slmax").innerHTML = prev_state[11];\r\n' \
-  '          document.getElementById("slmfilter").value = parseFloat(prev_state[11]);\r\n' \
-  '          document.getElementById("sptime").innerHTML = prev_state[12];\r\n' \
-  '          document.getElementById("sptfilter").value = parseFloat(prev_state[12]);\r\n' \
-  '          document.getElementById("spmax").innerHTML = prev_state[13];\r\n' \
-  '          document.getElementById("spmfilter").value = parseFloat(prev_state[13]);\r\n' \
-  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
-  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
+  '          document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '          document.getElementById("iset").selectedIndex = iset;\r\n' \
   '        }\r\n' \
   '        point_desc();\r\n' \
   '        window.onresize = (e) => {document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";rescale();refresh_graph()};\r\n' \
   '        document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
   '        document.getElementById("waypoints").style.height = "";\r\n' \
   '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        segments_calc();\r\n' \
   '        wpt_calc();\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
@@ -8555,7 +8557,8 @@ class GPXTweakerWebInterfaceServer():
   '      var no_sort = null;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
-  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_MSG_TEMPLATE + \
+  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
+  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
@@ -8700,25 +8703,7 @@ class GPXTweakerWebInterfaceServer():
   '          while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
   '          stats[seg_ind] = [];\r\n' \
   '        }\r\n' \
-  '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0)) {\r\n' \
-  '          let stat = Array(7).fill(0);\r\n' \
-  '          let stat_p = null;\r\n' \
-  '          let t_s = null;\r\n' \
-  '          let lat_p = null;\r\n' \
-  '          let lon_p = null;\r\n' \
-  '          let lat = null;\r\n' \
-  '          let lon = null;\r\n' \
-  '          let ea_s = [0, 0];\r\n' \
-  '          let ea_p = [NaN, NaN];\r\n' \
-  '          let ea_l = [null, null];\r\n' \
-  '          let ea_h = [null, null];\r\n' \
-  '          let ea_g = [null, null];\r\n' \
-  '          let ea_ic = [null, null];\r\n' \
-  '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
-  '          let el_s = 0;\r\n' \
-  '          let el = null;\r\n' \
-  '          let el_p = NaN;\r\n' \
-  '          let p_p = null;\r\n' \
+  '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0)) {\r\n' + HTML_SEGCALC_1_TEMPLATE + \
   '          for (let p=0; p<seg.length; p++) {\r\n' \
   '            let pt = seg[p];\r\n' \
   '            let ea = [parseFloat(pt[2]), parseFloat(pt[3])];\r\n' \
@@ -8733,32 +8718,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (fpan == 0) {\r\n' \
   '              let t = Date.parse(pt[4]);\r\n' \
   '              lat = parseFloat(pt[0]);\r\n' \
-  '              lon = parseFloat(pt[1]);\r\n' \
-  '              if (isNaN(t)) {\r\n' \
-  '                stat[0] = t_s==null?0:stat_p[0];\r\n' \
-  '              } else {\r\n' \
-  '                if (t_s == null) {\r\n' \
-  '                  t_s = t;\r\n' \
-  '                } else {\r\n' \
-  '                  stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              if (! isNaN(ea[1])) {\r\n' \
-  '                el = ea[1];\r\n' \
-  '                if (isNaN(el_p)) {\r\n' \
-  '                  el_p = el;\r\n' \
-  '                  el_s = el_p;\r\n' \
-  '                }\r\n' \
-  '              } else if (! isNaN(ea[0])) {\r\n' \
-  '                el = ea[0];\r\n' \
-  '                if (isNaN(el_p)) {\r\n' \
-  '                  el_p = el;\r\n' \
-  '                  el_s = el_p;\r\n' \
-  '                }\r\n' \
-  '              } else {\r\n' \
-  '                el = isNaN(el_p)?0:el_p;\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
+  '              lon = parseFloat(pt[1]);\r\n'  + HTML_SEGCALC_2_TEMPLATE + \
   '            if (p_p == null) {\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
@@ -8784,150 +8744,19 @@ class GPXTweakerWebInterfaceServer():
   '                teas.set([stat[0], isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1]], 3 * ind);\r\n' \
   '                ind++;\r\n' \
   '              }\r\n' \
-  '            }\r\n' \
-  '            lat_p = lat;\r\n' \
-  '            lon_p = lon;\r\n' \
-  '            stat_p = stat.slice();\r\n' \
-  '            if (fpan == 0) {\r\n' \
-  '              stats[seg_ind].push(stat_p);\r\n' \
-  '              if (! isNaN(el_p)) {el_p = el;}\r\n' \
-  '            } else if (fpan == 1) {\r\n' \
-  '              stats[seg_ind][p][2] = stat_p[2];\r\n' \
-  '              stats[seg_ind][p][3] = stat_p[3];\r\n' \
-  '            } else if (fpan == 2 && gpucomp == 0) {\r\n' \
-  '              stats[seg_ind][p][4] = stat_p[4];\r\n' \
-  '              stats[seg_ind][p][5] = stat_p[5];\r\n' \
-  '            }\r\n' \
-  '            p_p = p;\r\n' \
-  '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '              for (let v=0; v<2; v++) {\r\n' \
-  '                if (! isNaN(ea[v])) {\r\n' \
-  '                  if (ea[v] > ea_p[v]) {\r\n' \
-  '                    ea_p[v] = ea[v];\r\n' \
-  '                    if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
-  '                      ea_g[v] = "+";\r\n' \
-  '                      ea_ic[v] = null;\r\n' \
-  '                      ea_h[v] = ea[v];\r\n' \
-  '                    }\r\n' \
-  '                    if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
-  '                      ea_ic[v] = p - 1;\r\n' \
-  '                    }\r\n' \
-  '                  }\r\n' \
-  '                  if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
-  '                    if (ea_ic[v] != null) {\r\n' \
-  '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
-  '                      for (let i=ea_ic[v]+1; i<=p; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
-  '                      ea_ic[v] = null;\r\n' \
-  '                    }\r\n' \
-  '                    if (ea_g[v] == "+") {\r\n' \
-  '                      ea_l[v] = ea[v];\r\n' \
-  '                    } else {\r\n' \
-  '                      ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
-  '                    }\r\n' \
-  '                    ea_g[v] = "-";\r\n' \
-  '                  }\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            if (! isNaN(ea[0])) {ea_p[0] = ea[0];}\r\n' \
-  '            if (! isNaN(ea[1])) {ea_p[1] = ea[1];}\r\n' \
-  '          }\r\n' \
-  '          if (! stat_p) {return;}\r\n' \
-  '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
-  '              if (isNaN(stats[seg_ind][p][4])) {\r\n' \
-  '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
-  '                if (isNaN(stats[seg_ind][p][5])) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
-  '              } else if (isNaN(stats[seg_ind][p][5])) {\r\n' \
-  '                stats[seg_ind][p][5] = ea_s[1];\r\n' \
-  '              } else {break;}\r\n' \
-  '            }\r\n' \
+  '            }\r\n' + HTML_SEGCALC_3_TEMPLATE + \
   '          } else if (gpucomp != 0 && fpan == 0) {\r\n' \
-  '            for (let i=ind-stats[seg_ind].length; i<ind; i++) {\r\n' \
+  '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
   '              if (isNaN(llhs[3 * i + 2])) {llhs[3 * i + 2] = el_s;} else {break;}\r\n' \
   '            }\r\n' \
-  '            for (let i=ind-stats[seg_ind].length; i<ind; i++) {\r\n' \
+  '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
   '              if (isNaN(teas[3 * i + 1])) {teas[3 * i + 1] = ea_s[0];} else {break;}\r\n' \
   '            }\r\n' \
-  '            for (let i=ind-stats[seg_ind].length; i<ind; i++) {\r\n' \
+  '            for (let i=ind-stat_i; i<ind; i++) {\r\n' \
   '              if (isNaN(teas[3 * i + 2])) {teas[3 * i + 2] = ea_s[1];} else {break;}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '        if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '          let drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
-  '          let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
-  '            let ea = stats[seg_ind][p].slice(4,6);\r\n' \
-  '            stats[seg_ind][p][4]=0;\r\n' \
-  '            stats[seg_ind][p][5]=0;\r\n' \
-  '            let ps = p;\r\n' \
-  '            for (ps=p+1;ps<stats[seg_ind].length;ps++) {\r\n' \
-  '              if (stats[seg_ind][ps][1] > stats[seg_ind][p][1] + drange) {break;}\r\n' \
-  '              if (stats[seg_ind][ps][1] - stats[seg_ind][p][1] == 0) {continue;}\r\n' \
-  '              stats[seg_ind][p][4] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][4] - ea[0]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
-  '              stats[seg_ind][p][5] += slope(stats[seg_ind][ps][1] - stats[seg_ind][p][1], stats[seg_ind][ps][5] - ea[1]) * (stats[seg_ind][ps][1] - stats[seg_ind][ps-1][1]);\r\n' \
-  '            }\r\n' \
-  '            if (stats[seg_ind][ps - 1][1] - stats[seg_ind][p][1] != 0) {\r\n' \
-  '              let c = (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1]) / (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]);\r\n' \
-  '              stats[seg_ind][p][4] = (stats[seg_ind][p][4] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][4] - ea[0]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
-  '              stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(stats[seg_ind][ps-1][1] - stats[seg_ind][p][1], stats[seg_ind][ps-1][5] - ea[1]) * (drange + stats[seg_ind][p][1] - stats[seg_ind][ps-1][1])) / drange;\r\n' \
-  '            }\r\n' \
-  '            stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
-  '            stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
-  '          }\r\n' \
-  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
-  '            if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
-  '              let ps = p;\r\n' \
-  '              let s = [0, 0];\r\n' \
-  '              let su = 0;\r\n' \
-  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
-  '                if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - drange) {break;}\r\n' \
-  '                let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
-  '                s[0] += stats[seg_ind][ps][4] * c;\r\n' \
-  '                s[1] += stats[seg_ind][ps][5] * c;\r\n' \
-  '                su += c;\r\n' \
-  '              }\r\n' \
-  '              if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
-  '                stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2 ) / (1 + su/2)));\r\n' \
-  '                stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2 ) / (1 + su/2)));\r\n' \
-  '            }\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (gpucomp == 0 && (fpan == 0 || fpan == 3)) {\r\n' \
-  '          let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
-  '          let spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
-  '            stats[seg_ind][p][6] = 0;\r\n' \
-  '            let ps = p;\r\n' \
-  '            for (ps=p+1; ps<stats[seg_ind].length; ps++) {\r\n' \
-  '              if (stats[seg_ind][ps][0] > stats[seg_ind][p][0] + trange) {break;}\r\n' \
-  '              if (stats[seg_ind][ps][0] - stats[seg_ind][p][0] == 0) {continue;}\r\n' \
-  '              stats[seg_ind][p][6] += (stats[seg_ind][ps][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps][0] - stats[seg_ind][p][0]) * (stats[seg_ind][ps][0] - stats[seg_ind][ps-1][0]);\r\n' \
-  '            }\r\n' \
-  '            if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
-  '              stats[seg_ind][p][6] = (stats[seg_ind][p][6] + (stats[seg_ind][ps-1][1] - stats[seg_ind][p][1]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
-  '            }\r\n' \
-  '            stats[seg_ind][p][6] = Math.min(stats[seg_ind][p][6], spmax);\r\n' \
-  '          }\r\n' \
-  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
-  '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
-  '              let ps = p;\r\n' \
-  '              let s = 0;\r\n' \
-  '              let su = 0;\r\n' \
-  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
-  '                if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
-  '                let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
-  '                s += stats[seg_ind][ps][6] * c;\r\n' \
-  '                su += c;\r\n' \
-  '              }\r\n' \
-  '              if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
-  '                stats[seg_ind][p][6] = Math.min(spmax, (stats[seg_ind][p][6] + s/2 ) / (1 + su/2));\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
+  '        }\r\n' + HTML_SEGCALC_4_TEMPLATE + \
   '      }\r\n' \
   '      function tracks_calc(fpan=0) {\r\n' \
   '        let starts = null;\r\n' \
@@ -9004,7 +8833,7 @@ class GPXTweakerWebInterfaceServer():
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '          gpustats.drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '          gpustats.calc(fpan==0?"explorer_pos":"explorer");\r\n' \
+  '          gpustats.calc(fpan==0?"pos":"");\r\n' \
   '          let ds = gpustats.ds;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let xys = gpustats.xys;\r\n' \
@@ -9145,52 +8974,8 @@ class GPXTweakerWebInterfaceServer():
   '          for (let p=0; p<stats[s].length; p++) {\r\n' \
   '            stat = stats[s][p];\r\n' \
   '            let pt = tracks_pts[parseInt(focused.substring(5))][s][p];\r\n' \
-  '            let dr = true;\r\n' \
-  '            switch (document.getElementById("graphy").selectedIndex) {\r\n' \
-  '              case 0:\r\n' \
-  '                gy.push(dist + stat[1]);\r\n' \
-  '                break;\r\n' \
-  '              case 1:\r\n' \
-  '                let e = parseFloat(pt[2]);\r\n' \
-  '                if (isNaN(e)) {\r\n' \
-  '                  dr = false;\r\n' \
-  '                } else {\r\n' \
-  '                  gy.push(e);\r\n' \
-  '                }\r\n' \
-  '                break;\r\n' \
-  '              case 2:\r\n' \
-  '                let a = parseFloat(pt[3]);\r\n' \
-  '                if (isNaN(a)) {\r\n' \
-  '                  dr = false;\r\n' \
-  '                } else {\r\n' \
-  '                  gy.push(a);\r\n' \
-  '                }\r\n' \
-  '                break;\r\n' \
-  '              case 3:\r\n' \
-  '                gy.push(ele + stat[2]);\r\n' \
-  '                break;\r\n' \
-  '              case 4:\r\n' \
-  '                gy.push(alt + stat[3]);\r\n' \
-  '                break;\r\n' \
-  '              case 5:\r\n' \
-  '                gy.push(stat[4] * 100);\r\n' \
-  '                break;\r\n' \
-  '              case 6:\r\n' \
-  '                gy.push(stat[5] * 100);\r\n' \
-  '                break;\r\n' \
-  '              case 7:\r\n' \
-  '                gy.push(stat[6] * 3.6);\r\n' \
-  '                break;\r\n' \
-  '            }\r\n' \
-  '            if (dr) {\r\n' \
-  '              switch (document.getElementById("graphx").selectedIndex) {\r\n' \
-  '                case 0:\r\n' \
-  '                  gx.push(dur + stat[0]);\r\n' \
-  '                  break;\r\n' \
-  '                case 1:\r\n' \
-  '                  gx.push(dist + stat[1]);\r\n' \
-  '                  break;\r\n' \
-  '              }\r\n' \
+  '            let ea = null;\r\n' \
+  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '            }\r\n' \
   '          }\r\n' \
   '          dur += stat[0];\r\n' \
@@ -9198,7 +8983,7 @@ class GPXTweakerWebInterfaceServer():
   '          ele += stat[2];\r\n' \
   '          alt += stat[3];\r\n' \
   '        }\r\n' \
-  '        if (gx.length < 2) {return;}\r\n' + HTML_GRAPH2_TEMPLATE + \
+  '        if (gx.length < 2) {return;}\r\n' + HTML_GRAPH3_TEMPLATE + \
   '        for (let i=0; i<gx.length; i++) {\r\n' \
   '          if (i == gc[0]) {\r\n' \
   '            gctx.moveTo((gx[i] - minx) * cx + xl, (maxy - gy[i]) * cy + yt);\r\n' \
@@ -9745,10 +9530,7 @@ class GPXTweakerWebInterfaceServer():
   '        } while (! tr.firstElementChild.checked || tr.style.display == "none")\r\n' \
   '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
   '      }\r\n' \
-  '      function page_unload() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n' \
+  '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").slice(1).join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-"));\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
@@ -9787,49 +9569,9 @@ class GPXTweakerWebInterfaceServer():
   '          xhrd.open("GET", "/GPXExplorer/data");\r\n' \
   '          xhrd.send();\r\n' \
   '          return;\r\n' \
-  '        }\r\n' \
-  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
-  '          document.getElementById("tset").focus();\r\n' \
-  '          document.getElementById("tset").blur();\r\n' \
-  '        }\r\n' \
-  '        let prev_state = sessionStorage.getItem("state");\r\n' \
-  '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
-  '        if (prev_state != null) {zoom_s = prev_state[3]}\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          add_tile();\r\n' \
-  '          rescale();\r\n' \
-  '        } else {\r\n' \
-  '          if (prev_state == null) {\r\n' \
-  '            switch_tiles(0, null);\r\n' \
-  '            scroll_to_all();\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
-  '            switch_tiles(parseInt(prev_state[0]), parseInt(prev_state[1]));\r\n' \
-  '            if (prev_state[2] == "true") {switch_tlock(false);}\r\n' \
-  '          }\r\n' \
-  '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
-  '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
-  '          if (tlevel == 0) {rescale();}\r\n' \
-  '        }\r\n' \
+  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(0, 0)', 'switch_tiles(0, null)') + \
   '        if (prev_state != null) {\r\n' \
   '          dots_visible = prev_state[4] == "true";\r\n' \
-  '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
-  '          eset = parseInt(prev_state[6]);\r\n' \
-  '          iset = parseInt(prev_state[7]);\r\n' \
-  '          document.getElementById("egstren").innerHTML = prev_state[8];\r\n' \
-  '          document.getElementById("egfilter").value = parseFloat(prev_state[8]);\r\n' \
-  '          document.getElementById("agstren").innerHTML = prev_state[9];\r\n' \
-  '          document.getElementById("agfilter").value = parseFloat(prev_state[9]);\r\n' \
-  '          document.getElementById("sldist").innerHTML = prev_state[10];\r\n' \
-  '          document.getElementById("sldfilter").value = parseFloat(prev_state[10]);\r\n' \
-  '          document.getElementById("slmax").innerHTML = prev_state[11];\r\n' \
-  '          document.getElementById("slmfilter").value = parseFloat(prev_state[11]);\r\n' \
-  '          document.getElementById("sptime").innerHTML = prev_state[12];\r\n' \
-  '          document.getElementById("sptfilter").value = parseFloat(prev_state[12]);\r\n' \
-  '          document.getElementById("spmax").innerHTML = prev_state[13];\r\n' \
-  '          document.getElementById("spmfilter").value = parseFloat(prev_state[13]);\r\n' \
-  '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
-  '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
   '        }\r\n' \
   '        prev_state = sessionStorage.getItem("state_exp");\r\n' \
   '        if (prev_state != null) {\r\n' \
@@ -9856,9 +9598,6 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_filter();\r\n' \
   '        folders_select();\r\n' \
   '        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
-  '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
   '        if (focused != "") {\r\n' \
   '          foc = focused;\r\n' \
