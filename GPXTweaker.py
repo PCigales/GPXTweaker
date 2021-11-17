@@ -3412,12 +3412,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
 
 class GPXTweakerWebInterfaceServer():
 
-  HTML_TEMPLATE = \
-  '<!DOCTYPE html>\r\n' \
-  '<html lang="fr-FR">\r\n' \
-  '  <head>\r\n' \
-  '    <meta charset="utf-8">\r\n' \
-  '    <title>GPXTweaker</title>\r\n' \
+  HTML_STYLES_TEMPLATE = \
   '    <style type="text/css">\r\n' \
   '      :root {\r\n' \
   '        --scale:1;\r\n' \
@@ -3435,18 +3430,10 @@ class GPXTweakerWebInterfaceServer():
   '      input[type=text]:focus {\r\n' \
   '        color:rgb(200,250,240);\r\n' \
   '      }\r\n' \
-  '      input[id=name_track] {\r\n' \
-  '        width:calc(98vw - 60em);\r\n' \
-  '        font-size:70%;\r\n' \
-  '      }\r\n' \
-  '      form[id*=point] {\r\n' \
-  '        overflow-x:hidden;\r\n' \
-  '        margin-right: 4px;\r\n' \
-  '      }\r\n' \
   '      input[type=checkbox] {\r\n' \
   '        appearance:none;\r\n' \
   '        vertical-align:middle;\r\n' \
-  '        margin-left:3px;\r\n' \
+  '        margin-left:1px;\r\n' \
   '        width:1.25em;\r\n' \
   '        height:1.25em;\r\n' \
   '      }\r\n' \
@@ -3457,42 +3444,13 @@ class GPXTweakerWebInterfaceServer():
   '        width:100%;\r\n' \
   '        font-weight:bold;\r\n' \
   '      }\r\n' \
-  '      input[type=checkbox][id^=segment] {\r\n' \
-  '        margin-left:1px;\r\n' \
-  '      }\r\n' \
-  '      input+label:hover,input:hover+label {\r\n' \
+  '      input+label[id$=desc]:hover,input:hover+label[id$=desc] {\r\n' \
   '        background-color:green;\r\n' \
-  '      }\r\n' \
-  '      label[id^=segment], label[id^=point], div[id^=point][id$=cont] {\r\n' \
-  '        text-decoration:inherit;\r\n' \
-  '      }\r\n' \
-  '      label[id$=desc] {\r\n' \
-  '        cursor:cell;\r\n' \
-  '        display:inline-block;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        white-space:nowrap;\r\n' \
-  '        max-width:calc(24em - 22px);\r\n' \
-  '        min-height:1.35em;\r\n' \
-  '      }\r\n' \
-  '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name] {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        width:2em;\r\n' \
-  '        padding-left:1em;\r\n' \
-  '      }\r\n' \
-  '      input[id$=lat], input[id$=lon], input[id$=ele], input[id$=alt], input[id$=time], input[id$=name] {\r\n' \
-  '        height:1.35em;\r\n' \
-  '        width:75%;\r\n' \
-  '        font-size:100%;\r\n' \
-  '      }\r\n' \
-  '      br+span {\r\n' \
-  '        display:none;\r\n' \
   '      }\r\n' \
   '      svg[id*=dot] {\r\n' \
   '        position:absolute;\r\n' \
   '        cursor:pointer;\r\n' \
   '        stroke-width:1.5;\r\n' \
-  '        stroke:gray;\r\n' \
-  '        fill:none;\r\n' \
   '      }\r\n' \
   '      path {\r\n' \
   '        pointer-events:stroke;\r\n' \
@@ -3506,8 +3464,6 @@ class GPXTweakerWebInterfaceServer():
   '        stroke-width:1.5;\r\n' \
   '        stroke-linecap:round;\r\n' \
   '        stroke-linejoin:round;\r\n' \
-  '        stroke:red;\r\n' \
-  '        fill:red;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] text {\r\n' \
   '        pointer-events:none;\r\n' \
@@ -3551,13 +3507,6 @@ class GPXTweakerWebInterfaceServer():
   '      select option {\r\n' \
   '        color:rgb(225,225,225);\r\n' \
   '      }\r\n' \
-  '      label[for$=filter] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:1.5em;\r\n' \
-  '        text-align:center;\r\n' \
-  '        font-weight:normal;\r\n' \
-  '        font-size:90%;\r\n' \
-  '      }\r\n' \
   '      span[id$=stren], span[id^=sl] ,span[id^=sp] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
@@ -3581,9 +3530,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      img {\r\n' \
   '        filter:var(--filter);\r\n' \
-  '      }\r\n' \
-  '    </style>\r\n' \
-  '    <script>\r\n' \
+  '      }\r\n'
+  HTML_GLOBALVARS_TEMPLATE = \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
   '      var cleft = null;\r\n' \
   '      var cright = null;\r\n' \
@@ -3607,17 +3555,9 @@ class GPXTweakerWebInterfaceServer():
   '      var iset = 0;\r\n' \
   '      var dots_visible = false;\r\n' \
   '      var focused = "";\r\n' \
-  '      var hist = [[], []];\r\n' \
-  '      var hist_b = 0;\r\n' \
-  '      var foc_old = null;\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
-  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
-  '      var stats = [];\r\n' \
-  '      var gpu_part = gpucomp >=1?true:false;\r\n' \
-  '      var point_stat = [];\r\n' \
-  '      var graph_ip = null;\r\n' \
-  '      var graph_px = null;\r\n' \
-  '      var msg_n = 0;\r\n' \
+  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n'
+  HTML_GPUSTATS_TEMPLATE = \
   '      class GPUStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
   '        constructor () {\r\n' \
@@ -3626,33 +3566,53 @@ class GPXTweakerWebInterfaceServer():
   '          this.gl_programs = new Map();\r\n' \
   '          this.cur_prog = null;\r\n' \
   '          this.gl_attributes = new Map([["vstart", ["int", 1]]]);\r\n' \
-  '          this.gl_static_uniforms = new Map([["mmlhtex", "sampler2D"], ["teatex", "sampler2D"], ["dtex", "sampler2D"], ["ssstex", "sampler2D"], ["trange", "float"], ["spmax", "float"], ["drange", "float"], ["slmax", "float"]]);\r\n' \
-  '          this.gl_dynamic_uniforms = new Map([["vlength", "int"]]);\r\n' \
-  '          this.gl_feedbacks = new Map([["vd", "float"], ["vsss", "vec3"]]);\r\n' \
+  '          this.gl_static_uniforms = new Map([["mmlhtex", "sampler2D"], ["llhtex", "sampler2D"], ["teatex", "sampler2D"], ["dtex", "sampler2D"], ["ssstex", "sampler2D"], ["trange", "float"], ["spmax", "float"], ["drange", "float"], ["slmax", "float"]]);\r\n' \
+  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"], ["vlength", "int"]]);\r\n' \
+  '          this.gl_feedbacks = new Map([["vxy", "vec2"], ["vd", "float"], ["vsss", "vec3"]]);\r\n' \
   '          this._starts = null;\r\n' \
   '          this.tlength = null;\r\n' \
+  '          this._rlats = null;\r\n' \
   '          this._mmlhs = null;\r\n' \
+  '          this._llhs = null;\r\n' \
   '          this._teas = null;\r\n' \
   '          this.vstart = null;\r\n' \
   '          this.mmlhtex = 0;\r\n' \
+  '          this.llhtex = 0;\r\n' \
   '          this.teatex = 1;\r\n' \
   '          this.dtex = 2;\r\n' \
   '          this.ssstex = 3;\r\n' \
   '          this.mmlh_texture = null;\r\n' \
+  '          this.llh_texture = null;\r\n' \
   '          this.tea_texture = null;\r\n' \
   '          this.d_texture = null;\r\n' \
   '          this.sss_texture = null;\r\n' \
+  '          this.trlat = null;\r\n' \
+  '          this.rlat = null;\r\n' \
   '          this.vlength = 0;\r\n' \
   '          this.trange = 300 / 2;\r\n' \
   '          this.spmax = 8 / 3.6;\r\n' \
   '          this.drange = 500 / 2;\r\n' \
   '          this.slmax = 50 / 100;\r\n' \
+  '          this.vxy = null;\r\n' \
   '          this.vd = null;\r\n' \
   '          this.vsss = null;\r\n' \
+  '          this._xys = null;\r\n' \
   '          this._ds = null;\r\n' \
   '          this._ssss = null;\r\n' \
   '          this.gl.enable(this.gl.RASTERIZER_DISCARD);\r\n' \
-  '          let vertex_dshader_s = `#version 300 es\r\n' \
+  '          let vertex_pshader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform float trlat;\r\n' \
+  '            uniform sampler2D llhtex;\r\n' \
+  '            out vec2 vxy;\r\n' \
+  '            void main() {\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec2 ll = texelFetch(llhtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626);\r\n' \
+  '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
+  '              vxy = vec2(ll.t * 12756274.0, log((1.0 + t * trlat) / (1.0 - t / trlat)) * 6378137.0);\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let vertex_d1shader_s = `#version 300 es\r\n' \
   '            in int vstart;\r\n' \
   '            uniform sampler2D mmlhtex;\r\n' \
   '            out float vd;\r\n' \
@@ -3662,6 +3622,20 @@ class GPXTweakerWebInterfaceServer():
   '              vec2 lhs = gl_InstanceID > 0 ? texelFetch(mmlhtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).pq * vec2(0.0174532925, 1.0) : mmlhe.pq;\r\n' \
   '              float a = sqrt(pow(mmlhe.s, 2.0) - pow(mmlhe.s, 4.0) / 3.0 + cos(lhs.s) * cos(mmlhe.p) * (pow(mmlhe.t, 2.0) - pow(mmlhe.t, 4.0) / 3.0));\r\n' \
   '              vd = sqrt(pow(12756274.0 * (a + pow(a, 3.0) / 6.0), 2.0) + pow(mmlhe.q - lhs.t, 2.0));\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let vertex_d2shader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform float rlat;\r\n' \
+  '            uniform sampler2D llhtex;\r\n' \
+  '            out float vd;\r\n' \
+  '            void main() {\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec3 llhe = texelFetch(llhtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 1.0);\r\n' \
+  '              vec3 llhs = gl_InstanceID > 0 ? texelFetch(llhtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 1.0) : llhe.stp;\r\n' \
+  '              vec3 dll = llhe - llhs;\r\n' \
+  '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - llhs.s * 2.0) * cos(rlat - llhe.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
+  '              vd = sqrt(pow(12756274.0 * (a + pow(a, 3.0) / 6.0), 2.0) + pow(llhe.p - llhs.p, 2.0));\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
   '          let vertex_s1shader_s = `#version 300 es\r\n' \
@@ -3771,7 +3745,9 @@ class GPXTweakerWebInterfaceServer():
   '            void main() {\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
-  '          this.program_create("dprogram", vertex_dshader_s, fragment_shader_s);\r\n' \
+  '          this.program_create("pprogram", vertex_pshader_s, fragment_shader_s);\r\n' \
+  '          this.program_create("d1program", vertex_d1shader_s, fragment_shader_s);\r\n' \
+  '          this.program_create("d2program", vertex_d2shader_s, fragment_shader_s);\r\n' \
   '          this.program_create("s1program", vertex_s1shader_s, fragment_shader_s);\r\n' \
   '          this.program_create("s2program", vertex_s2shader_s, fragment_shader_s);\r\n' \
   '        }\r\n' \
@@ -3858,6 +3834,9 @@ class GPXTweakerWebInterfaceServer():
   '                case "float":\r\n' \
   '                  s = 4;\r\n' \
   '                  break;\r\n' \
+  '                case "vec2":\r\n' \
+  '                  s = 8;\r\n' \
+  '                  break;\r\n' \
   '                case "vec3":\r\n' \
   '                  s = 12;\r\n' \
   '                  break;\r\n' \
@@ -3906,9 +3885,21 @@ class GPXTweakerWebInterfaceServer():
   '          this.tlength = this._starts[this._starts.length - 1];\r\n' \
   '          this.vstart = this.buffer_load(new Int32Array(this._starts), this.gl.STATIC_DRAW, this.vstart);\r\n' \
   '        }\r\n' \
+  '        get starts() {\r\n' \
+  '          return this._starts;\r\n' \
+  '        }\r\n' \
+  '        set rlats(a) {\r\n' \
+  '          this._rlats = a.map(function (tl) {return tl[0] * Math.PI / 180});\r\n' \
+  '        }\r\n' \
   '        set mmlhs(a) {\r\n' \
   '          this._mmlhs = a;\r\n' \
   '          this.mmlh_texture = this.texture_load(this.gl.TEXTURE0 + this.mmlhtex, 4, this._mmlhs, this.mmlh_texture);\r\n' \
+  '          this.vd = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vd);\r\n' \
+  '         }\r\n' \
+  '        set llhs(a) {\r\n' \
+  '          this._llhs = a;\r\n' \
+  '          this.llh_texture = this.texture_load(this.gl.TEXTURE0 + this.llhtex, 3, this._llhs, this.llh_texture);\r\n' \
+  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vxy);\r\n' \
   '          this.vd = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vd);\r\n' \
   '         }\r\n' \
   '        set teas(a) {\r\n' \
@@ -3920,6 +3911,8 @@ class GPXTweakerWebInterfaceServer():
   '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
   '            this.vlength = this._starts[s + 1] - this._starts[s];\r\n' \
   '            if (this.vlength == 0) {continue;}\r\n' \
+  '            if (this.cur_prog == "pprogram")  {this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);}\r\n' \
+  '            if (this.cur_prog == "d2program") {this.rlat = this._rlats[s];}\r\n' \
   '            this.program_uniforms();\r\n' \
   '            this.program_feedbacks(this._starts[s], this.vlength);\r\n' \
   '            this.gl.beginTransformFeedback(this.gl.POINTS);\r\n' \
@@ -3928,17 +3921,32 @@ class GPXTweakerWebInterfaceServer():
   '            this.gl.finish();\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        calc() {\r\n' \
+  '        calc(mode="tweaker") {\r\n' \
   '          for (let n of this.gl_programs.keys()) {\r\n' \
+  '            if (mode != "explorer_pos" && (n == "pprogram" || n == "d2program")) {continue;}\r\n' \
+  '            if (mode != "tweaker" && n == "d1program") {continue;}\r\n' \
   '            this.program_use(n);\r\n' \
   '            this.program_attributes();\r\n' \
   '            this.program_uniforms("static");\r\n' \
   '          }\r\n' \
-  '          this.program_use("dprogram");\r\n' \
-  '          this._calc();\r\n' \
-  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '          this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
-  '          this.feedbacks();\r\n' \
+  '          if (mode == "tweaker") {\r\n' \
+  '            this.program_use("d1program");\r\n' \
+  '            this._calc();\r\n' \
+  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '            this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
+  '            this.feedbacks();\r\n' \
+  '          }\r\n' \
+  '          if (mode == "explorer_pos") {\r\n' \
+  '            this.program_use("pprogram");\r\n' \
+  '            this._calc();\r\n' \
+  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '            this.feedbacks();\r\n' \
+  '            this.program_use("d2program");\r\n' \
+  '            this._calc();\r\n' \
+  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
+  '            this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
+  '            this.feedbacks();\r\n' \
+  '          }\r\n' \
   '          this.program_use("s1program");\r\n' \
   '          this._calc();\r\n' \
   '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
@@ -3955,6 +3963,9 @@ class GPXTweakerWebInterfaceServer():
   '                case "float":\r\n' \
   '                  this[n.replace("v", "_") + "s"] = new Float32Array(this.tlength);\r\n' \
   '                  break;\r\n' \
+'                case "vec2":\r\n' \
+  '                  this[n.replace("v", "_") + "s"] = new Float32Array(2 * this.tlength);\r\n' \
+  '                  break;\r\n' \
   '                case "vec3":\r\n' \
   '                  this[n.replace("v", "_") + "s"] = new Float32Array(3 * this.tlength);\r\n' \
   '                  break;\r\n' \
@@ -3967,6 +3978,9 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null) ;\r\n' \
   '        }\r\n' \
+  '        get xys() {\r\n' \
+  '          return this._xys;\r\n' \
+  '        }\r\n' \
   '        get ds() {\r\n' \
   '          return this._ds;\r\n' \
   '        }\r\n' \
@@ -3974,7 +3988,9 @@ class GPXTweakerWebInterfaceServer():
   '          return this._ssss;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats();}\r\n' \
+  '      if (gpucomp > 0) {var gpustats = new GPUStats();}\r\n'
+  HTML_MSG_TEMPLATE = \
+  '      var msg_n = 0;\r\n' \
   '      function show_msg(msg, dur, msgn=null) {\r\n' \
   '        let m = null;\r\n' \
   '        if (msgn == null) {\r\n' \
@@ -3988,7 +4004,8 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("message").insertBefore(m, document.getElementById("message").firstElementChild);\r\n' \
   '        if (dur) {setTimeout(function() {document.getElementById("message").removeChild(m);}, dur * 1000);}\r\n' \
   '        return msgn;\r\n' \
-  '      }\r\n' \
+  '      }\r\n'
+  HTML_TILES_TEMPLATE = \
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
@@ -4004,11 +4021,15 @@ class GPXTweakerWebInterfaceServer():
   '        window.stop();\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        if (nset == null) {\r\n' \
-  '          tlevel = nlevel;\r\n' \
-  '          if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
+  '          if (nlevel == null) {\r\n' \
+  '            if (tlock) {switch_tlock(false);}\r\n' \
+  '            tlevel = msg.level;\r\n' \
+  '          } else {\r\n' \
+  '            tlevel = nlevel;\r\n' \
+  '          }\r\n' \
+  '          if (! kzoom || nlevel == null) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '          ttopx = msg.topx;\r\n' \
   '          ttopy = msg.topy;\r\n' \
-  '          let sta = twidth == 0;\r\n' \
   '          twidth = msg.width;\r\n' \
   '          theight = msg.height\r\n' \
   '          text = msg.ext;\r\n' \
@@ -4016,7 +4037,6 @@ class GPXTweakerWebInterfaceServer():
   '          tscale = msg.scale;\r\n' \
   '          cleft = null;\r\n' \
   '          rescale(tscale_ex);\r\n' \
-  '          if (sta) {scroll_to_all()}\r\n' \
   '        } else {\r\n' \
   '          tset = document.getElementById("tset").selectedIndex;\r\n' \
   '          let matrix = null;\r\n' \
@@ -4077,18 +4097,6 @@ class GPXTweakerWebInterfaceServer():
   '      function error_tcb() {\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '      } \r\n' \
-  '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
-  '        let q = "";\r\n' \
-  '        if (nset != null) {\r\n' \
-  '          q = "set=" + encodeURIComponent(nset);\r\n' \
-  '        } else {\r\n' \
-  '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
-  '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom)};\r\n' \
-  '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
-  '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
-  '        xhrt.send();\r\n' \
-  '      }\r\n' \
   '      function add_tile(row=0, col=0) {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -4189,8 +4197,9 @@ class GPXTweakerWebInterfaceServer():
   '        sc = parseFloat(sc_s) * b;\r\n' \
   '        document.getElementById("scaleline").setAttribute("width", (sc / tscale * zoom * k).toFixed(0) + "px");\r\n' \
   '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n' \
-  '        update_tiles() \r\n' \
-  '      }\r\n' \
+  '        update_tiles();\r\n' \
+  '      }\r\n'
+  HTML_UTIL_TEMPLATE = \
   '      function prop_to_wmvalue(s) {\r\n' \
   '        return parseFloat(s.match(/-?\\d+[.]?\\d*/)[0]);\r\n' \
   '      }\r\n' \
@@ -4211,6 +4220,470 @@ class GPXTweakerWebInterfaceServer():
   '        hpy += dy;\r\n' \
   '        reframe();\r\n' \
   '      }\r\n' \
+  '      function WGS84toWebMercator(lat, lon) {\r\n' \
+  '        return [lon * Math.PI / 180 * 6378137, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137];\r\n' \
+  '      }\r\n' \
+  '      function WebMercatortoWGS84(x, y) {\r\n' \
+  '        return [(2 * Math.atan(Math.exp(y / 6378137)) - Math.PI / 2) * 180 / Math.PI, x * 180 / Math.PI / 6378137];\r\n' \
+  '      }\r\n' \
+  '      function distance(lat1, lon1, ele1, lat2, lon2, ele2) {\r\n' \
+  '        let d = 2 * 6378137 * Math.asin(Math.sqrt((Math.sin((lat2 - lat1) * Math.PI / 360)) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos (lat2 * Math.PI / 180) * (Math.sin((lon2 - lon1) * Math.PI / 360)) ** 2));\r\n' \
+  '        if (ele1 != null && ele2 != null) {d = Math.sqrt(d ** 2 + (ele2 - ele1) ** 2);}\r\n' \
+  '        return d;\r\n' \
+  '      }\r\n' \
+  '      function slope(dist, heig) {\r\n' \
+  '        return dist>Math.abs(heig)?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
+  '      }\r\n' \
+  '      function escape(s) {\r\n' \
+  '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
+  '      }\r\n'
+  HTML_GRAPH1_TEMPLATE = \
+  '      function switch_filterpanel(pa) {\r\n' \
+  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
+  '        for (let p=1; p<=3; p++) {\r\n' \
+  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
+  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
+  '          } else {\r\n' \
+  '            fp[p].style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function refresh_graph(sw=false) {\r\n' \
+  '        let graph = document.getElementById("graph");\r\n' \
+  '        let graphc = document.getElementById("graphc");\r\n' \
+  '        let gwidth = null;\r\n' \
+  '        let gheight = null;\r\n' \
+  '        let gctx = graphc.getContext("2d");\r\n' \
+  '        if (sw) {\r\n' \
+  '          if (graph.style.display == "none") {\r\n' \
+  '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '            graph.style.display = "block";\r\n' \
+  '            gctx.lineWidth = 1;\r\n' \
+  '            gctx.lineJoin = "round";\r\n' \
+  '            gctx.lineCap = "square";\r\n' \
+  '            rescale();\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            graph.style.display = "none";\r\n' \
+  '            document.getElementById("gbar").style.display = "none";\r\n' \
+  '            document.getElementById("gbarc").style.display = "none";\r\n' \
+  '            if (typeof graph_ip != typeof undefined) {\r\n' \
+  '              graph_ip = null;\r\n' \
+  '              graph_px = null;\r\n' \
+  '            }\r\n' \
+  '            rescale();\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (graph.style.display == "none") {return;}\r\n' \
+  '        }\r\n' \
+  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '        gheight = graph.offsetHeight;\r\n' \
+  '        graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '        graphc.setAttribute("height", gheight.toString());\r\n' \
+  '        let gbar = document.getElementById("gbar");\r\n' \
+  '        gbar.style.top= "10px";\r\n' \
+  '        gbar.setAttribute("height", (gheight - 25).toString());\r\n' \
+  '        let gbarc = document.getElementById("gbarc");\r\n' \
+  '        gbarc.style.top= "10px";\r\n' \
+  '        gbarc.setAttribute("height", (gheight - 25).toString());\r\n' \
+  '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
+  '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
+  '        let xl = 45;\r\n' \
+  '        let xr = gwidth - 20;\r\n' \
+  '        let yt = 10;\r\n' \
+  '        let yb = gheight - 15;\r\n' \
+  '        let gx = [];\r\n' \
+  '        let gy = [];\r\n' \
+  '        let gc = [0];\r\n' \
+  '        let dur = 0;\r\n' \
+  '        let dist = 0;\r\n' \
+  '        let ele = 0;\r\n' \
+  '        let alt = 0;\r\n'
+  HTML_GRAPH2_TEMPLATE = \
+  '        let minx = gx[0];\r\n' \
+  '        let maxx = gx[0];\r\n' \
+  '        let miny = gy[0];\r\n' \
+  '        let maxy = gy[0];\r\n' \
+  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '          if (minx > gx[i]) {minx = gx[i];}\r\n' \
+  '          if (maxx < gx[i]) {maxx = gx[i];}\r\n' \
+  '          if (miny > gy[i]) {miny = gy[i];}\r\n' \
+  '          if (maxy < gy[i]) {maxy = gy[i];}\r\n' \
+  '        }\r\n' \
+  '        if (maxx == minx) {maxx++;}\r\n' \
+  '        if (maxy == miny) {maxy++;}\r\n' \
+  '        let cx = (xr - xl) / (maxx - minx);\r\n' \
+  '        let cy = (yb - yt) / (maxy - miny);\r\n' \
+  '        let yl = 0;\r\n' \
+  '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '          yl = yb;\r\n' \
+  '        } else if (maxy < 0) {\r\n' \
+  '          yl = yt;\r\n' \
+  '        } else if (miny > 0) {\r\n' \
+  '          yl = yb;\r\n' \
+  '        } else {\r\n' \
+  '          yl = maxy * cy + yt;\r\n' \
+  '        }\r\n' \
+  '        gctx.strokeStyle = "rgb(56,56,56)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        let x = xl;\r\n' \
+  '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
+  '        while (x <= xr) {\r\n' \
+  '          gctx.moveTo(x, yb + 1);\r\n' \
+  '          gctx.lineTo(x, yt);\r\n' \
+  '          if (x == xr) {break;}\r\n' \
+  '          x += dx;\r\n' \
+  '          if (x > xr) {x = xr;}\r\n' \
+  '        }\r\n' \
+  '        let y = yb;\r\n' \
+  '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
+  '        while (y >= yt) {\r\n' \
+  '          gctx.moveTo(xl + 1, y);\r\n' \
+  '          gctx.lineTo(xr, y);\r\n' \
+  '          if (y == yt) {break;}\r\n' \
+  '          y -= dy;\r\n' \
+  '          if (y < yt) {y = yt;}\r\n' \
+  '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
+  '        gctx.beginPath();\r\n' \
+  '        gctx.moveTo(xl, yb);\r\n' \
+  '        gctx.lineTo(xl, yt);\r\n' \
+  '        gctx.moveTo(xl, yl);\r\n' \
+  '        gctx.lineTo(xr, yl);\r\n' \
+  '        gctx.lineTo(xr, yl - 1);\r\n' \
+  '        gctx.lineTo(xr, yl + 1);\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        gctx.fillStyle = "rgb(225,225,255)";\r\n' \
+  '        gctx.textAlign = "center";\r\n' \
+  '        gctx.textBaseline = "top";\r\n' \
+  '        x = xl;\r\n' \
+  '        while (x <= xr) {\r\n' \
+  '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
+  '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
+  '            let dur_m = (dur / 60) % 60;\r\n' \
+  '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
+  '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
+  '            gctx.fillText(dur_c, x, yl + 3);\r\n' \
+  '          } else {\r\n' \
+  '            gctx.fillText(((minx + (x - xl) / cx) / 1000).toFixed(1) + "km", x, yl + 3);\r\n' \
+  '          }\r\n' \
+  '          if (x == xr) {break;}\r\n' \
+  '          x += dx;\r\n' \
+  '          if (x > xr) {x = xr;}\r\n' \
+  '        }\r\n' \
+  '        gctx.textAlign = "right";\r\n' \
+  '        gctx.textBaseline = "middle";\r\n' \
+  '        y = yb;\r\n' \
+  '        let fin = false;\r\n' \
+  '        while (true) {\r\n' \
+  '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
+  '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
+  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
+  '            } else if (document.getElementById("graphy").selectedIndex == 5 || document.getElementById("graphy").selectedIndex == 6) {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
+  '            } else if (document.getElementById("graphy").selectedIndex == 7) {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
+  '            } else {\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
+  '            }\r\n' \
+  '            if (fin) {break;}\r\n' \
+  '          }\r\n' \
+  '          if (y == yt) {\r\n' \
+  '            y = yl;\r\n' \
+  '            fin = true;\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          y -= dy;\r\n' \
+  '          if (y < yt) {y = yt;}\r\n' \
+  '        }\r\n' \
+  '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
+  '        gctx.beginPath();\r\n'
+  HTML_MAP_TEMPLATE = \
+  '      function rescale(tscale_ex=tscale) {\r\n' \
+  '        let zoom_ex = zoom;\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
+  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
+  '        } else {\r\n' \
+  '          zoom = eval(zoom_s);\r\n' \
+  '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
+  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
+  '        }\r\n' \
+  '        document.documentElement.style.setProperty("--scale", tscale / zoom);\r\n' \
+  '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
+  '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
+  '        if (focused) {\r\n' \
+  '          if (focused.indexOf("segment") >= 0) {\r\n' \
+  '            scroll_to_track(document.getElementById(focused.replace("segment", "track")));\r\n' \
+  '          } else if (focused.indexOf("track") >= 0){\r\n' \
+  '            scroll_to_track(document.getElementById(focused));\r\n' \
+  '          } else {\r\n' \
+  '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
+  '        }\r\n' \
+  '        reframe();\r\n' \
+  '      }\r\n' \
+  '      function switch_tlock(resc=true) {\r\n' \
+  '        if (mode == "map") {return;}\r\n' \
+  '        let zoom_s_ex = zoom_s;\r\n' \
+  '        if (tlock) {\r\n' \
+  '          if (tlevel == 0) {return;}\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128275;";\r\n' \
+  '          let nlevel = tlevel;\r\n' \
+  '          if (eval(zoom_s) < eval(tlevels[tlevel][1])) {\r\n' \
+  '            while (nlevel > 1) {\r\n' \
+  '              if (tlevels[nlevel - 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
+  '              if (eval(zoom_s) <= eval(tlevels[nlevel - 1][1])) {nlevel--;} else {break;}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (eval(zoom_s) > eval(tlevels[tlevel][1])) {\r\n' \
+  '            while (nlevel < tlevels.length - 1) {\r\n' \
+  '              if (tlevels[nlevel + 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
+  '              if (eval(zoom_s) >= eval(tlevels[nlevel + 1][1])) {nlevel++;} else {break;}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          tlevel = nlevel;\r\n' \
+  '          zoom_s = tlevels[nlevel][1];\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("tlock").innerHTML = "&#128274;";\r\n' \
+  '        }\r\n' \
+  '        tlock = ! tlock;\r\n' \
+  '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
+  '        rescale();\r\n' \
+  '      }\r\n' \
+  '      function zoom_change(o) {\r\n' \
+  '        let zoom_s_ex = zoom_s;\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          if (o < 0) {\r\n' \
+  '            zoom_s = ([zooms[0]].concat(zooms))[zooms.indexOf(zoom_s)];\r\n' \
+  '          } else {\r\n' \
+  '            zoom_s = (zooms.concat(zooms[zooms.length - 1]))[zooms.indexOf(zoom_s) + 1];\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (tlock) {\r\n' \
+  '            if (o < 0) {\r\n' \
+  '              let ind = zooms.length;\r\n' \
+  '              while (ind >= 0) {\r\n' \
+  '                if (eval(zooms[ind]) < zoom) {break;}\r\n' \
+  '                ind --;\r\n' \
+  '              }\r\n' \
+  '              if (ind >=0) {zoom_s = zooms[ind]} else {return;}\r\n' \
+  '            } else {\r\n' \
+  '              let ind = 0;\r\n' \
+  '              while (ind < zooms.length) {\r\n' \
+  '                if (eval(zooms[ind]) > zoom) {break;}\r\n' \
+  '                ind ++;\r\n' \
+  '              }\r\n' \
+  '              if (ind < zooms.length) {zoom_s = zooms[ind]} else {return;}\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            let ntlevel = tlevel;\r\n' \
+  '            if (o < 0) {\r\n' \
+  '              if (tlevel <= 1) {return;}\r\n' \
+  '              ntlevel = tlevel - 1;\r\n' \
+  '            } else {\r\n' \
+  '              if (tlevel >= tlevels.length - 1) {return;}\r\n' \
+  '              ntlevel = tlevel + 1;\r\n' \
+  '            }\r\n' \
+  '            if (tlevels[ntlevel][0] != tlevels[tlevel][0]) {\r\n' \
+  '              switch_tiles(null, ntlevel);\r\n' \
+  '              return;\r\n' \
+  '            }\r\n' \
+  '            tlevel = ntlevel;\r\n' \
+  '            zoom_s = tlevels[tlevel][1];\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (zoom_s == zoom_s_ex) {return;}\r\n' \
+  '        rescale();\r\n' \
+  '      }\r\n' \
+  '      function zoom_dec() {\r\n' \
+  '        zoom_change(-1);\r\n' \
+  '      }\r\n' \
+  '      function zoom_inc() {\r\n' \
+  '        zoom_change(1);\r\n' \
+  '      }\r\n' \
+  '      function opacity_dec() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        let opacity = 1;\r\n' \
+  '        if (filter && filter != "none") {\r\n' \
+  '          opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
+  '        }\r\n' \
+  '        if (opacity > 0.19) {\r\n' \
+  '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function opacity_inc() {\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (filter && filter != "none") {\r\n' \
+  '          let opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
+  '          if (opacity < 0.81) {\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
+  '          } else {filter = "none";}\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        }\r\n' \
+  '      }\r\n'
+  HTML_FILTERPANEL_TEMPLATE = \
+  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel1#}</span>\r\n' \
+  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(1)">\r\n' \
+  '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
+  '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
+  '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
+  '                <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="##EGTHRESHOLD##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="agstren" style="right:0.7em;">##AGTHRESHOLD##</span>\r\n' \
+  '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel2#}</span>\r\n' \
+  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(2)">\r\n' \
+  '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
+  '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
+  '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
+  '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
+  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#jfilterpanel3#}</span>\r\n' \
+  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(3)">\r\n' \
+  '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
+  '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
+  '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
+  '                <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="##SPRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="spmax" style="right:0.7em;">##SPMAX##</span>\r\n' \
+  '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n'
+  HTML_SCALEBOX_GRAPH_TEMPLATE = \
+  '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
+  '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
+  '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
+  '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
+  '                  <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
+  '                </svg>\r\n' \
+  '                <span id="scalevalue" style="font-size:70%;color:black;">0 m</span>\r\n' \
+  '              </div>\r\n' \
+  '            </div>\r\n' \
+  '          </td>\r\n' \
+  '        </tr>\r\n' \
+  '      </tbody>\r\n' \
+  '      <tfoot>\r\n' \
+  '        <tr>\r\n' \
+  '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
+  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
+  '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
+  '            </div>\r\n' \
+  '          </th>\r\n' \
+  '        </tr>\r\n' \
+  '      </tfoot>\r\n' \
+  '    </table>\r\n' \
+  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
+  '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
+  '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
+  '      </div>\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event, this)">\r\n' \
+  '      </canvas>\r\n' \
+  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '      </svg> \r\n' \
+  '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;" pointer-events="none">\r\n' \
+  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '      </svg>\r\n' \
+  '    </div>\r\n'
+  HTML_TEMPLATE = \
+  '<!DOCTYPE html>\r\n' \
+  '<html lang="fr-FR">\r\n' \
+  '  <head>\r\n' \
+  '    <meta charset="utf-8">\r\n' \
+  '    <title>GPXTweaker</title>\r\n'  + HTML_STYLES_TEMPLATE + \
+  '      input[id=name_track] {\r\n' \
+  '        width:calc(98vw - 60em);\r\n' \
+  '        font-size:70%;\r\n' \
+  '      }\r\n' \
+  '      form[id*=point] {\r\n' \
+  '        overflow-x:hidden;\r\n' \
+  '        margin-right: 4px;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox][id*=point] {\r\n' \
+  '        margin-left:3px;\r\n' \
+  '      }\r\n' \
+  '      label[id^=segment], label[id^=point], div[id^=point][id$=cont] {\r\n' \
+  '        text-decoration:inherit;\r\n' \
+  '      }\r\n' \
+  '      label[id$=desc] {\r\n' \
+  '        cursor:cell;\r\n' \
+  '        display:inline-block;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        white-space:nowrap;\r\n' \
+  '        max-width:calc(24em - 22px);\r\n' \
+  '        min-height:1.35em;\r\n' \
+  '      }\r\n' \
+  '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name] {\r\n' \
+  '        display:inline-block;\r\n' \
+  '        width:2em;\r\n' \
+  '        padding-left:1em;\r\n' \
+  '      }\r\n' \
+  '      input[id$=lat], input[id$=lon], input[id$=ele], input[id$=alt], input[id$=time], input[id$=name] {\r\n' \
+  '        height:1.35em;\r\n' \
+  '        width:75%;\r\n' \
+  '        font-size:100%;\r\n' \
+  '      }\r\n' \
+  '      br+span {\r\n' \
+  '        display:none;\r\n' \
+  '      }\r\n' \
+  '      svg[id*=dot] {\r\n' \
+  '        stroke:gray;\r\n' \
+  '        fill:none;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=track] {\r\n' \
+  '        stroke:red;\r\n' \
+  '        fill:red;\r\n' \
+  '      }\r\n' \
+  '      label[for$=filter] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:1.5em;\r\n' \
+  '        text-align:center;\r\n' \
+  '        font-weight:normal;\r\n' \
+  '        font-size:90%;\r\n' \
+  '      }\r\n' \
+  '    </style>\r\n' \
+  '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
+  '      var hist = [[], []];\r\n' \
+  '      var hist_b = 0;\r\n' \
+  '      var foc_old = null;\r\n' \
+  '      var stats = [];\r\n' \
+  '      var gpu_part = gpucomp >=1?true:false;\r\n' \
+  '      var point_stat = [];\r\n' \
+  '      var graph_ip = null;\r\n' \
+  '      var graph_px = null;\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_MSG_TEMPLATE + \
+  '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
+  '        let q = "";\r\n' \
+  '        let sta = false;\r\n' \
+  '        if (nset != null) {\r\n' \
+  '          q = "set=" + encodeURIComponent(nset);\r\n' \
+  '        } else {\r\n' \
+  '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
+  '          let sta = twidth == 0;\r\n' \
+  '        }\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_all();};};\r\n' \
+  '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
+  '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrt.send();\r\n' \
+  '      }\r\n' + HTML_TILES_TEMPLATE + HTML_UTIL_TEMPLATE + \
   '      function scroll_to_dot(dot) {\r\n' \
   '        scroll_view(htopx + prop_to_wmvalue(dot.style.left), htopy - prop_to_wmvalue(dot.style.top));\r\n' \
   '      }\r\n' \
@@ -4387,12 +4860,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        graph_point();\r\n' \
   '      }\r\n' \
-  '      function WGS84toWebMercator(lat, lon) {\r\n' \
-  '        return [lon * Math.PI / 180 * 6378137, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137];\r\n' \
-  '      }\r\n' \
-  '      function WebMercatortoWGS84(x, y) {\r\n' \
-  '        return [(2 * Math.atan(Math.exp(y / 6378137)) - Math.PI / 2) * 180 / Math.PI, x * 180 / Math.PI / 6378137];\r\n' \
-  '      }\r\n' \
   '      function point_to_position(pt) {\r\n' \
   '        let lat = parseFloat(document.getElementById(pt.htmlFor + "lat").value);\r\n' \
   '        let lon = parseFloat(document.getElementById(pt.htmlFor + "lon").value);\r\n' \
@@ -4486,9 +4953,6 @@ class GPXTweakerWebInterfaceServer():
   '        let [x, y] = WGS84toWebMercator(lat, lon);\r\n' \
   '        rebase_track(x, y, track);\r\n' \
   '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1)\r\n' \
-  '      }\r\n' \
-  '      function escape(s) {\r\n' \
-  '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
   '      }\r\n' \
   '      function point_desc(ptspan = null) {\r\n' \
   '        if (! ptspan) {\r\n' \
@@ -4968,14 +5432,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt.value == "error") {pt.checked = ! pt.checked;}\r\n' \
   '        if (pt.checked) {point_undelete(pt, batch);} else {point_delete(pt, batch);}\r\n' \
   '      }\r\n' \
-  '      function distance(lat1, lon1, ele1, lat2, lon2, ele2) {\r\n' \
-  '        let d = 2 * 6378137 * Math.asin(Math.sqrt((Math.sin((lat2 - lat1) * Math.PI / 360)) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos (lat2 * Math.PI / 180) * (Math.sin((lon2 - lon1) * Math.PI / 360)) ** 2));\r\n' \
-  '        if (ele1 != null && ele2 != null) {d = Math.sqrt(d ** 2 + (ele2 - ele1) ** 2);}\r\n' \
-  '        return d;\r\n' \
-  '      }\r\n' \
-  '      function slope(dist, heig) {\r\n' \
-  '        return dist>Math.abs(heig)?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
-  '      }\r\n' \
   '      function segment_calc(seg, fpan=0, ind=null, mmlhs=null, teas=null) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
@@ -5360,7 +5816,7 @@ class GPXTweakerWebInterfaceServer():
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '          gpustats.drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '          gpustats.calc();\r\n' \
+  '          gpustats.calc("tweaker");\r\n' \
   '          let ds = gpustats.ds;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let i = 0;\r\n' \
@@ -6226,59 +6682,7 @@ class GPXTweakerWebInterfaceServer():
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
   '        spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
-  '      }\r\n' \
-  '      function refresh_graph(sw=false) {\r\n' \
-  '        let graph = document.getElementById("graph");\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let gwidth = null;\r\n' \
-  '        let gheight = null;\r\n' \
-  '        let gctx = graphc.getContext("2d");\r\n' \
-  '        if (sw) {\r\n' \
-  '          if (graph.style.display == "none") {\r\n' \
-  '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            graph.style.display = "block";\r\n' \
-  '            gctx.lineWidth = 1;\r\n' \
-  '            gctx.lineJoin = "round";\r\n' \
-  '            gctx.lineCap = "square";\r\n' \
-  '            rescale();\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            graph.style.display = "none";\r\n' \
-  '            document.getElementById("gbar").style.display = "none";\r\n' \
-  '            document.getElementById("gbarc").style.display = "none";\r\n' \
-  '            graph_ip = null;\r\n' \
-  '            graph_px = null;\r\n' \
-  '            rescale();\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
-  '        } else {\r\n' \
-  '          if (graph.style.display == "none") {return;}\r\n' \
-  '        }\r\n' \
-  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
-  '        gheight = graph.offsetHeight;\r\n' \
-  '        graphc.setAttribute("width", gwidth.toString());\r\n' \
-  '        graphc.setAttribute("height", gheight.toString());\r\n' \
-  '        let gbar = document.getElementById("gbar");\r\n' \
-  '        gbar.style.top= "10px";\r\n' \
-  '        gbar.setAttribute("height", (gheight - 25).toString());\r\n' \
-  '        let gbarc = document.getElementById("gbarc");\r\n' \
-  '        gbarc.style.top= "10px";\r\n' \
-  '        gbarc.setAttribute("height", (gheight - 25).toString());\r\n' \
-  '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
-  '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
-  '        let xl = 45;\r\n' \
-  '        let xr = gwidth - 20;\r\n' \
-  '        let yt = 10;\r\n' \
-  '        let yb = gheight - 15;\r\n' \
-  '        let gx = [];\r\n' \
-  '        let gy = [];\r\n' \
-  '        let gc = [0];\r\n' \
-  '        let dur = 0;\r\n' \
-  '        let dist = 0;\r\n' \
-  '        let ele = 0;\r\n' \
-  '        let alt = 0;\r\n' \
+  '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
   '        graph_ip = [];\r\n' \
   '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
@@ -6350,106 +6754,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gx.length < 2) {\r\n' \
   '          graph_point();\r\n' \
   '          return;\r\n' \
-  '        }\r\n' \
-  '        let minx = gx[0];\r\n' \
-  '        let maxx = gx[0];\r\n' \
-  '        let miny = gy[0];\r\n' \
-  '        let maxy = gy[0];\r\n' \
-  '        for (let i=0; i<gx.length; i++) {\r\n' \
-  '          if (minx > gx[i]) {minx = gx[i];}\r\n' \
-  '          if (maxx < gx[i]) {maxx = gx[i];}\r\n' \
-  '          if (miny > gy[i]) {miny = gy[i];}\r\n' \
-  '          if (maxy < gy[i]) {maxy = gy[i];}\r\n' \
-  '        }\r\n' \
-  '        if (maxx == minx) {maxx++;}\r\n' \
-  '        if (maxy == miny) {maxy++;}\r\n' \
-  '        let cx = (xr - xl) / (maxx - minx);\r\n' \
-  '        let cy = (yb - yt) / (maxy - miny);\r\n' \
-  '        let yl = 0;\r\n' \
-  '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
-  '          yl = yb;\r\n' \
-  '        } else if (maxy < 0) {\r\n' \
-  '          yl = yt;\r\n' \
-  '        } else if (miny > 0) {\r\n' \
-  '          yl = yb;\r\n' \
-  '        } else {\r\n' \
-  '          yl = maxy * cy + yt;\r\n' \
-  '        }\r\n' \
-  '        gctx.strokeStyle = "rgb(56,56,56)";\r\n' \
-  '        gctx.beginPath();\r\n' \
-  '        let x = xl;\r\n' \
-  '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
-  '        while (x <= xr) {\r\n' \
-  '          gctx.moveTo(x, yb + 1);\r\n' \
-  '          gctx.lineTo(x, yt);\r\n' \
-  '          if (x == xr) {break;}\r\n' \
-  '          x += dx;\r\n' \
-  '          if (x > xr) {x = xr;}\r\n' \
-  '        }\r\n' \
-  '        let y = yb;\r\n' \
-  '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
-  '        while (y >= yt) {\r\n' \
-  '          gctx.moveTo(xl + 1, y);\r\n' \
-  '          gctx.lineTo(xr, y);\r\n' \
-  '          if (y == yt) {break;}\r\n' \
-  '          y -= dy;\r\n' \
-  '          if (y < yt) {y = yt;}\r\n' \
-  '        }\r\n' \
-  '        gctx.stroke();\r\n' \
-  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
-  '        gctx.beginPath();\r\n' \
-  '        gctx.moveTo(xl, yb);\r\n' \
-  '        gctx.lineTo(xl, yt);\r\n' \
-  '        gctx.moveTo(xl, yl);\r\n' \
-  '        gctx.lineTo(xr, yl);\r\n' \
-  '        gctx.lineTo(xr, yl - 1);\r\n' \
-  '        gctx.lineTo(xr, yl + 1);\r\n' \
-  '        gctx.stroke();\r\n' \
-  '        gctx.fillStyle = "rgb(225,225,255)";\r\n' \
-  '        gctx.textAlign = "center";\r\n' \
-  '        gctx.textBaseline = "top";\r\n' \
-  '        x = xl;\r\n' \
-  '        while (x <= xr) {\r\n' \
-  '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
-  '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
-  '            let dur_m = (dur / 60) % 60;\r\n' \
-  '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
-  '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
-  '            gctx.fillText(dur_c, x, yl + 3);\r\n' \
-  '          } else {\r\n' \
-  '            gctx.fillText(((minx + (x - xl) / cx) / 1000).toFixed(1) + "km", x, yl + 3);\r\n' \
-  '          }\r\n' \
-  '          if (x == xr) {break;}\r\n' \
-  '          x += dx;\r\n' \
-  '          if (x > xr) {x = xr;}\r\n' \
-  '        }\r\n' \
-  '        gctx.textAlign = "right";\r\n' \
-  '        gctx.textBaseline = "middle";\r\n' \
-  '        y = yb;\r\n' \
-  '        let fin = false;\r\n' \
-  '        while (true) {\r\n' \
-  '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
-  '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
-  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 5 || document.getElementById("graphy").selectedIndex == 6) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 7) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
-  '            } else {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
-  '            }\r\n' \
-  '            if (fin) {break;}\r\n' \
-  '          }\r\n' \
-  '          if (y == yt) {\r\n' \
-  '            y = yl;\r\n' \
-  '            fin = true;\r\n' \
-  '            continue;\r\n' \
-  '          }\r\n' \
-  '          y -= dy;\r\n' \
-  '          if (y < yt) {y = yt;}\r\n' \
-  '        }\r\n' \
-  '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
-  '        gctx.beginPath();\r\n' \
+  '        }\r\n' + HTML_GRAPH2_TEMPLATE + \
   '        for (let i=0; i<gx.length; i++) {\r\n' \
   '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
   '          if (i == gc[0]) {\r\n' \
@@ -6745,61 +7050,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_3D() {\r\n' \
   '        track_save(true);\r\n' \
-  '      }\r\n' \
-  '      function rescale(tscale_ex=tscale) {\r\n' \
-  '        let zoom_ex = zoom;\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
-  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
-  '        } else {\r\n' \
-  '          zoom = eval(zoom_s);\r\n' \
-  '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
-  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
-  '        }\r\n' \
-  '        document.documentElement.style.setProperty("--scale", tscale / zoom);\r\n' \
-  '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
-  '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
-  '        if (focused) {\r\n' \
-  '          if (focused.indexOf("segment") >= 0) {\r\n' \
-  '            scroll_to_track(document.getElementById(focused.replace("segment", "track")));\r\n' \
-  '          } else {\r\n' \
-  '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
-  '          }\r\n' \
-  '        } else {\r\n' \
-  '          let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
-  '          hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
-  '          hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
-  '        }\r\n' \
-  '        reframe();\r\n' \
-  '      }\r\n' \
-  '      function switch_tlock(resc=true) {\r\n' \
-  '        if (mode == "map") {return;}\r\n' \
-  '        let zoom_s_ex = zoom_s;\r\n' \
-  '        if (tlock) {\r\n' \
-  '          if (tlevel == 0) {return;}\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128275;";\r\n' \
-  '          let nlevel = tlevel;\r\n' \
-  '          if (eval(zoom_s) < eval(tlevels[tlevel][1])) {\r\n' \
-  '            while (nlevel > 1) {\r\n' \
-  '              if (tlevels[nlevel - 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
-  '              if (eval(zoom_s) <= eval(tlevels[nlevel - 1][1])) {nlevel--;} else {break;}\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          if (eval(zoom_s) > eval(tlevels[tlevel][1])) {\r\n' \
-  '            while (nlevel < tlevels.length - 1) {\r\n' \
-  '              if (tlevels[nlevel + 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
-  '              if (eval(zoom_s) >= eval(tlevels[nlevel + 1][1])) {nlevel++;} else {break;}\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          tlevel = nlevel;\r\n' \
-  '          zoom_s = tlevels[nlevel][1];\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128274;";\r\n' \
-  '        }\r\n' \
-  '        tlock = ! tlock;\r\n' \
-  '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
-  '        rescale();\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function switch_sel(e, s) {\r\n' \
   '        if (e.altKey) {\r\n' \
   '          e.preventDefault();\r\n' \
@@ -6824,78 +7075,6 @@ class GPXTweakerWebInterfaceServer():
   '            s.style.display = "none";\r\n' \
   '            document.getElementById("iset").style.display = "inline-block";\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function zoom_change(o) {\r\n' \
-  '        let zoom_s_ex = zoom_s;\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          if (o < 0) {\r\n' \
-  '            zoom_s = ([zooms[0]].concat(zooms))[zooms.indexOf(zoom_s)];\r\n' \
-  '          } else {\r\n' \
-  '            zoom_s = (zooms.concat(zooms[zooms.length - 1]))[zooms.indexOf(zoom_s) + 1];\r\n' \
-  '          }\r\n' \
-  '        } else {\r\n' \
-  '          if (tlock) {\r\n' \
-  '            if (o < 0) {\r\n' \
-  '              let ind = zooms.length;\r\n' \
-  '              while (ind >= 0) {\r\n' \
-  '                if (eval(zooms[ind]) < zoom) {break;}\r\n' \
-  '                ind --;\r\n' \
-  '              }\r\n' \
-  '              if (ind >=0) {zoom_s = zooms[ind]} else {return;}\r\n' \
-  '            } else {\r\n' \
-  '              let ind = 0;\r\n' \
-  '              while (ind < zooms.length) {\r\n' \
-  '                if (eval(zooms[ind]) > zoom) {break;}\r\n' \
-  '                ind ++;\r\n' \
-  '              }\r\n' \
-  '              if (ind < zooms.length) {zoom_s = zooms[ind]} else {return;}\r\n' \
-  '            }\r\n' \
-  '          } else {\r\n' \
-  '            let ntlevel = tlevel;\r\n' \
-  '            if (o < 0) {\r\n' \
-  '              if (tlevel <= 1) {return;}\r\n' \
-  '              ntlevel = tlevel - 1;\r\n' \
-  '            } else {\r\n' \
-  '              if (tlevel >= tlevels.length - 1) {return;}\r\n' \
-  '              ntlevel = tlevel + 1;\r\n' \
-  '            }\r\n' \
-  '            if (tlevels[ntlevel][0] != tlevels[tlevel][0]) {\r\n' \
-  '              switch_tiles(null, ntlevel);\r\n' \
-  '              return;\r\n' \
-  '            }\r\n' \
-  '            tlevel = ntlevel;\r\n' \
-  '            zoom_s = tlevels[tlevel][1];\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (zoom_s == zoom_s_ex) {return;}\r\n' \
-  '        rescale();\r\n' \
-  '      }\r\n' \
-  '      function zoom_dec() {\r\n' \
-  '        zoom_change(-1);\r\n' \
-  '      }\r\n' \
-  '      function zoom_inc() {\r\n' \
-  '        zoom_change(1);\r\n' \
-  '      }\r\n' \
-  '      function opacity_dec() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        let opacity = 1;\r\n' \
-  '        if (filter && filter != "none") {\r\n' \
-  '          opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
-  '        }\r\n' \
-  '        if (opacity > 0.19) {\r\n' \
-  '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
-  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function opacity_inc() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (filter && filter != "none") {\r\n' \
-  '          let opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
-  '          if (opacity < 0.81) {\r\n' \
-  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
-  '          } else {filter = "none";}\r\n' \
-  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function load_epcb(t) {\r\n' \
@@ -6931,16 +7110,6 @@ class GPXTweakerWebInterfaceServer():
   '        xhrip.open("GET", "/itinerariesproviders/switch?" + q);\r\n' \
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrip.send();\r\n' \
-  '      }\r\n' \
-  '      function switch_filterpanel(pa) {\r\n' \
-  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
-  '        for (let p=1; p<=3; p++) {\r\n' \
-  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
-  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
-  '          } else {\r\n' \
-  '            fp[p].style.display = "none";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
   '      }\r\n' \
   '      function load_cb(t) {\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
@@ -7024,41 +7193,8 @@ class GPXTweakerWebInterfaceServer():
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
-  '           <input type="text" id="name_track" name="name_track" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
-  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
-  '              <span>{#jfilterpanel1#}</span>\r\n' \
-  '              <form id="filterform1" autocomplete="off" onchange="segments_calc(1)">\r\n' \
-  '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
-  '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
-  '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
-  '                <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="##EGTHRESHOLD##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="agstren" style="right:0.7em;">##AGTHRESHOLD##</span>\r\n' \
-  '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
-  '              <span>{#jfilterpanel2#}</span>\r\n' \
-  '              <form id="filterform2" autocomplete="off" onchange="segments_calc(2)">\r\n' \
-  '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
-  '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
-  '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
-  '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
-  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
-  '              <span>{#jfilterpanel3#}</span>\r\n' \
-  '              <form id="filterform3" autocomplete="off" onchange="segments_calc(3)">\r\n' \
-  '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
-  '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
-  '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
-  '                <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="##SPRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="spmax" style="right:0.7em;">##SPMAX##</span>\r\n' \
-  '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
+  '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;width:10em;height:1.7em;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -7080,12 +7216,12 @@ class GPXTweakerWebInterfaceServer():
   '              </div>\r\n' \
   '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
   '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
-  '                <form id="waypointsform" autocomplete="off">\r\n                  ##WAYPOINTS##\r\n' \
+  '                <form id="waypointsform" autocomplete="off" onsubmit="return(false);">\r\n                  ##WAYPOINTS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;height:88%;font-size:80%">\r\n' \
   '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
-  '                <form id="pointsform" autocomplete="off">\r\n                  ##POINTS##\r\n' \
+  '                <form id="pointsform" autocomplete="off" onsubmit="return(false);">\r\n                  ##POINTS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
@@ -7093,45 +7229,7 @@ class GPXTweakerWebInterfaceServer():
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS####DOTS##' \
-  '              </div>\r\n' \
-  '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
-  '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
-  '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
-  '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
-  '                  <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
-  '                </svg>\r\n' \
-  '                <span id="scalevalue" style="font-size:70%;color:black;">0 m</span>\r\n' \
-  '              </div>\r\n' \
-  '            </div>\r\n' \
-  '          </td>\r\n' \
-  '        </tr>\r\n' \
-  '      </tbody>\r\n' \
-  '      <tfoot>\r\n' \
-  '        <tr>\r\n' \
-  '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
-  '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '            </div>\r\n' \
-  '          </th>\r\n' \
-  '        </tr>\r\n' \
-  '      </tfoot>\r\n' \
-  '    </table>\r\n' \
-  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
-  '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
-  '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
-  '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
-  '      </div>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event, this)">\r\n' \
-  '      </canvas>\r\n' \
-  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
-  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
-  '      </svg> \r\n' \
-  '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;left:20px;top:1px;" pointer-events="none">\r\n' \
-  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
-  '      </svg>\r\n' \
-  '    </div>\r\n' \
+  '              </div>\r\n' + HTML_SCALEBOX_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
@@ -8366,51 +8464,21 @@ class GPXTweakerWebInterfaceServer():
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
   '    <meta charset="utf-8">\r\n' \
-  '    <title>GPXExplorer</title>\r\n' \
-  '    <style type="text/css">\r\n' \
-  '      :root {\r\n' \
-  '        --scale:1;\r\n' \
-  '        --zoom:1;\r\n' \
-  '        --wsp:6em;\r\n' \
-  '        --filter:none;\r\n' \
-  '      }\r\n' \
+  '    <title>GPXExplorer</title>\r\n' + HTML_STYLES_TEMPLATE + \
   '      div[id$=cont] {\r\n' \
   '        position:relative;\r\n' \
-  '      }\r\n' \
-  '      input {\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
-  '      }\r\n' \
-  '      input[type=text] {\r\n' \
-  '        border-width:0.5px;\r\n' \
-  '      }\r\n' \
-  '      input[type=text]:focus {\r\n' \
-  '        color:rgb(200,250,240);\r\n' \
   '      }\r\n' \
   '      input[type=text]:invalid {\r\n' \
   '        color:rgb(250,220,200);\r\n' \
   '      }\r\n' \
   '      input[id=tracksfilter] {\r\n' \
-  '        width:calc(98vw - 60em);\r\n' \
+  '        max-width:calc(98vw - 62em);\r\n' \
+  '        width:25em;\r\n' \
   '        font-size:70%;\r\n' \
   '      }\r\n' \
   '      form[id^=track] {\r\n' \
   '        overflow-x:hidden;\r\n' \
   '        margin-right: 4px;\r\n' \
-  '      }\r\n' \
-  '      input[type=checkbox] {\r\n' \
-  '        appearance:none;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        margin-left:1px;\r\n' \
-  '        width:1.25em;\r\n' \
-  '        height:1.25em;\r\n' \
-  '      }\r\n' \
-  '      input[type=checkbox]:checked::before {\r\n' \
-  '        content:"\\2714";\r\n' \
-  '        display:inline-block;\r\n' \
-  '        text-align:center;\r\n' \
-  '        width:100%;\r\n' \
-  '        font-weight:bold;\r\n' \
   '      }\r\n' \
   '      input[id$=visible] {\r\n' \
   '        appearance:none;\r\n' \
@@ -8419,9 +8487,6 @@ class GPXTweakerWebInterfaceServer():
   '        margin-right:2.2%;\r\n' \
   '        width:5.2%;\r\n' \
   '        height:1.25em;\r\n' \
-  '      }\r\n' \
-  '      input+label[id$=desc]:hover,input:hover+label[id$=desc] {\r\n' \
-  '        background-color:green;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
@@ -8465,66 +8530,8 @@ class GPXTweakerWebInterfaceServer():
   '      span[id$=focus] {\r\n' \
   '        display:none;\r\n' \
   '      }\r\n' \
-  '      svg[id*=dot] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        cursor:pointer;\r\n' \
-  '        stroke-width:1.5;\r\n' \
-  '      }\r\n' \
-  '      path {\r\n' \
-  '        pointer-events:stroke;\r\n' \
-  '        cursor:pointer;\r\n' \
-  '        fill:none;\r\n' \
-  '        vector-effect:non-scaling-stroke;\r\n' \
-  '      }\r\n' \
-  '      svg[id^=track] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        pointer-events:none;\r\n' \
-  '        stroke-width:1.5;\r\n' \
-  '        stroke-linecap:round;\r\n' \
-  '        stroke-linejoin:round;\r\n' \
-  '      }\r\n' \
   '      svg[id^=track] text {\r\n' \
-  '        pointer-events:none;\r\n' \
-  '        font-size:calc(24px * var(--scale));\r\n' \
-  '        word-spacing:var(--wsp);\r\n' \
-  '        stroke:none;\r\n' \
   '        display:none;\r\n' \
-  '      }\r\n' \
-  '      button {\r\n' \
-  '        border:none;\r\n' \
-  '        padding-left:0;\r\n' \
-  '        padding-right:0;\r\n' \
-  '        width:1.4em;\r\n' \
-  '        height:1.4em;\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
-  '        line-height:1.2em;\r\n' \
-  '        font-size:100%;\r\n' \
-  '        cursor:pointer;\r\n' \
-  '      }\r\n' \
-  '      select {\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
-  '        border-width:0.5px;\r\n' \
-  '      }\r\n' \
-  '      select:focus {\r\n' \
-  '          color:rgb(200,250,240);\r\n' \
-  '      }\r\n' \
-  '      @-moz-document url-prefix() {\r\n' \
-  '        select {\r\n' \
-  '          appearance:none;\r\n' \
-  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
-  '          background-repeat:no-repeat;\r\n' \
-  '          background-position-x:right;\r\n' \
-  '          background-position-y:bottom;\r\n' \
-  '          background-size:2em 1em;\r\n' \
-  '        }\r\n' \
-  '        select:focus {\r\n' \
-  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(200,250,240)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      select option {\r\n' \
-  '        color:rgb(225,225,225);\r\n' \
   '      }\r\n' \
   '      label[for^=folder] {\r\n' \
   '        display:inline-block;\r\n' \
@@ -8538,581 +8545,26 @@ class GPXTweakerWebInterfaceServer():
   '        font-weight:normal;\r\n' \
   '        font-size:90%;\r\n' \
   '      }\r\n' \
-  '      span[id$=stren], span[id^=sl] ,span[id^=sp] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:2.8em;\r\n' \
-  '        width:2em;\r\n' \
-  '        font-size:90%;\r\n' \
-  '      }\r\n' \
-  '      input[type=range] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:3em;\r\n' \
-  '        max-width:40vh;\r\n' \
-  '        width:9em;\r\n' \
-  '        margin-right:0;\r\n' \
-  '        transform:rotate(-90deg);\r\n' \
-  '        transform-origin:right center;\r\n' \
-  '        font-size:100%;\r\n' \
-  '      }\r\n' \
-  '      span+span[id^=message] {\r\n' \
-  '        margin-left:0.4em;\r\n' \
-  '        padding-left:0.4em;\r\n' \
-  '        border-left:1px rgb(225,225,225) solid;\r\n' \
-  '      }\r\n' \
-  '      img {\r\n' \
-  '        filter:var(--filter);\r\n' \
-  '      }\r\n' \
   '      svg circle {\r\n' \
   '        r:calc(3px * var(--scale));\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
-  '    <script>\r\n' \
-  '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
-  '      var cleft = null;\r\n' \
-  '      var cright = null;\r\n' \
-  '      var ctop = null;\r\n' \
-  '      var cbottom = null;\r\n' \
-  '      var hpx = 0;\r\n' \
-  '      var hpy = 0;\r\n' \
-  '      var zoom = 1;\r\n' \
-  '      if (mode == "map") {\r\n' \
-  '        var zooms = ["1", "1.5", "2", "3", "4", "6", "10", "15", "25"];\r\n' \
-  '        var zoom_s = "1";\r\n' \
-  '      } else {\r\n' \
-  '        var tset = 0;\r\n' \
-  '        var tlevels = [];\r\n' \
-  '        var tlevel = 0;\r\n' \
-  '        var zooms = ["1/8", "1/4", "1/2", "3/4", "1", "1.5", "2", "3", "4", "6", "8"];\r\n' \
-  '        var tlock = false;\r\n' \
-  '        var zoom_s = "1";\r\n' \
-  '      }\r\n' \
-  '      var eset = 0;\r\n' \
-  '      var iset = 0;\r\n' \
-  '      var dots_visible = false;\r\n' \
-  '      var focused = "";\r\n' \
-  '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
-  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+  '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
   '      var str_comp = new Intl.Collator().compare;\r\n' \
   '      var no_sort = null;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
-  '      var tracks_props = [];\r\n' \
-  '      var msg_n = 0;\r\n' \
-  '      class GPUStats {\r\n' \
-  '        static get tw() {return 1024;}\r\n' \
-  '        constructor () {\r\n' \
-  '          this.canvas = document.createElement("canvas");\r\n' \
-  '          this.gl = this.canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
-  '          this.gl_programs = new Map();\r\n' \
-  '          this.cur_prog = null;\r\n' \
-  '          this.gl_attributes = new Map([["vstart", ["int", 1]]]);\r\n' \
-  '          this.gl_static_uniforms = new Map([["llhtex", "sampler2D"], ["teatex", "sampler2D"], ["dtex", "sampler2D"], ["ssstex", "sampler2D"], ["trange", "float"], ["spmax", "float"], ["drange", "float"], ["slmax", "float"]]);\r\n' \
-  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"], ["vlength", "int"]]);\r\n' \
-  '          this.gl_feedbacks = new Map([["vxy", "vec2"], ["vd", "float"], ["vsss", "vec3"]]);\r\n' \
-  '          this._starts = null;\r\n' \
-  '          this.tlength = null;\r\n' \
-  '          this._rlats = null;\r\n' \
-  '          this._llhs = null;\r\n' \
-  '          this._teas = null;\r\n' \
-  '          this.vstart = null;\r\n' \
-  '          this.llhtex = 0;\r\n' \
-  '          this.teatex = 1;\r\n' \
-  '          this.dtex = 2;\r\n' \
-  '          this.ssstex = 3;\r\n' \
-  '          this.llh_texture = null;\r\n' \
-  '          this.tea_texture = null;\r\n' \
-  '          this.d_texture = null;\r\n' \
-  '          this.sss_texture = null;\r\n' \
-  '          this.trlat = null;\r\n' \
-  '          this.rlat = null;\r\n' \
-  '          this.vlength = 0;\r\n' \
-  '          this.trange = 300 / 2;\r\n' \
-  '          this.spmax = 8 / 3.6;\r\n' \
-  '          this.drange = 500 / 2;\r\n' \
-  '          this.slmax = 50 / 100;\r\n' \
-  '          this.vxy = null;\r\n' \
-  '          this.vd = null;\r\n' \
-  '          this.vsss = null;\r\n' \
-  '          this._xys = null;\r\n' \
-  '          this._ds = null;\r\n' \
-  '          this._ssss = null;\r\n' \
-  '          this.gl.enable(this.gl.RASTERIZER_DISCARD);\r\n' \
-  '          let vertex_pshader_s = `#version 300 es\r\n' \
-  '            in int vstart;\r\n' \
-  '            uniform float trlat;\r\n' \
-  '            uniform sampler2D llhtex;\r\n' \
-  '            out vec2 vxy;\r\n' \
-  '            void main() {\r\n' \
-  '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 ll = texelFetch(llhtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626);\r\n' \
-  '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
-  '              vxy = vec2(ll.t * 12756274.0, log((1.0 + t * trlat) / (1.0 - t / trlat)) * 6378137.0);\r\n' \
-  '            }\r\n' \
-  '          `;\r\n' \
-  '          let vertex_dshader_s = `#version 300 es\r\n' \
-  '            in int vstart;\r\n' \
-  '            uniform float rlat;\r\n' \
-  '            uniform sampler2D llhtex;\r\n' \
-  '            out float vd;\r\n' \
-  '            void main() {\r\n' \
-  '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec3 llhe = texelFetch(llhtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 1.0);\r\n' \
-  '              vec3 llhs = gl_InstanceID > 0 ? texelFetch(llhtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 1.0) : llhe.stp;\r\n' \
-  '              vec3 dll = llhe - llhs;\r\n' \
-  '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - llhs.s * 2.0) * cos(rlat - llhe.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
-  '              vd = sqrt(pow(12756274.0 * (a + pow(a, 3.0) / 6.0), 2.0) + pow(llhe.p - llhs.p, 2.0));\r\n' \
-  '            }\r\n' \
-  '          `;\r\n' \
-  '          let vertex_s1shader_s = `#version 300 es\r\n' \
-  '            in int vstart;\r\n' \
-  '            uniform sampler2D teatex;\r\n' \
-  '            uniform sampler2D dtex;\r\n' \
-  '            uniform int vlength;\r\n' \
-  '            uniform float trange;\r\n' \
-  '            uniform float spmax;\r\n' \
-  '            uniform float drange;\r\n' \
-  '            uniform float slmax;\r\n' \
-  '            out vec3 vsss;\r\n' \
-  '            vec2 slope(float d, vec2 h) {\r\n' \
-  '              return mix(slmax * sign(h), h / sqrt(d * d - h * h), lessThan(abs(h), vec2(d)));\r\n' \
-  '            }\r\n' \
-  '            void main() {\r\n' \
-  '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec4 tdeas;\r\n' \
-  '              tdeas.spq = texelFetch(teatex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp;\r\n' \
-  '              tdeas.t = texelFetch(dtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s;\r\n' \
-  '              vec2 tde = tdeas.st;\r\n' \
-  '              vec2 tdp = tde;\r\n' \
-  '              vsss = vec3(0.0);\r\n' \
-  '              for (int p = pc + 1; p < vstart + vlength; p++) {\r\n' \
-  '                tde = vec2(texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(dtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + tde.t);\r\n' \
-  '                if (tde.s > tdeas.s + trange) {break;}\r\n' \
-  '                if (tde.s == tdeas.s) {continue;}\r\n' \
-  '                vsss.s += (tde.t - tdeas.t) / (tde.s - tdeas.s) * (tde.s - tdp.s);\r\n' \
-  '                tdp = tde;\r\n' \
-  '              }\r\n' \
-  '              if (tdp.s != tdeas.s) {\r\n' \
-  '                vsss.s = (vsss.s + (tdp.t - tdeas.t) / (tdp.s - tdeas.s) * (trange + tdeas.s - tdp.s)) / trange;\r\n' \
-  '              }\r\n' \
-  '              vsss.s = min(vsss.s, spmax);\r\n' \
-  '              vec3 deae = tdeas.tpq;\r\n' \
-  '              vec3 deap = deae;\r\n' \
-  '              for (int p = pc + 1; p < vstart + vlength; p++) {\r\n' \
-  '                deae = vec3(texelFetch(dtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + deae.s, texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tp);\r\n' \
-  '                if (deae.s > tdeas.t + drange) {break;}\r\n' \
-  '                if (deae.s == tdeas.t) {continue;}\r\n' \
-  '                vsss.tp += slope(deae.s - tdeas.t, deae.tp - tdeas.pq) * (deae.s - deap.s);\r\n' \
-  '                deap = deae;\r\n' \
-  '              }\r\n' \
-  '              if (deap.s != tdeas.t) {\r\n' \
-  '                vsss.tp = (vsss.tp + slope(deap.s - tdeas.t, deap.tp - tdeas.pq) * (drange + tdeas.t - deap.s)) / drange;\r\n' \
-  '              }\r\n' \
-  '              vsss.tp = clamp(vsss.tp, vec2(-slmax), vec2(slmax));\r\n' \
-  '            }\r\n' \
-  '          `;\r\n' \
-  '          let vertex_s2shader_s = `#version 300 es\r\n' \
-  '            in int vstart;\r\n' \
-  '            uniform sampler2D teatex;\r\n' \
-  '            uniform sampler2D dtex;\r\n' \
-  '            uniform sampler2D ssstex;\r\n' \
-  '            uniform int vlength;\r\n' \
-  '            uniform float trange;\r\n' \
-  '            uniform float spmax;\r\n' \
-  '            uniform float drange;\r\n' \
-  '            uniform float slmax;\r\n' \
-  '            out vec3 vsss;\r\n' \
-  '            void main() {\r\n' \
-  '              vsss = vec3(0.0);\r\n' \
-  '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 tsc = vec2(texelFetch(teatex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s);\r\n' \
-  '              vec2 tsf = tsc;\r\n' \
-  '              vec2 tsn = tsc;\r\n' \
-  '              vsss.s = tsc.t;\r\n' \
-  '              float c;\r\n' \
-  '              float su = 0.0;\r\n' \
-  '              float s = 0.0;\r\n' \
-  '              if (texelFetch(teatex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
-  '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                  tsf = vec2(texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s);\r\n' \
-  '                  if (tsf.s < tsc.s - trange) {break;}\r\n' \
-  '                  c = (tsn.s - tsf.s) / (tsc.s - tsf.s + 1.0);\r\n' \
-  '                  s += tsf.t * c;\r\n' \
-  '                  su += c;\r\n' \
-  '                  tsn = tsf;\r\n' \
-  '                }\r\n' \
-  '                if (tsc.s != tsn.s) {\r\n' \
-  '                  vsss.s = min((vsss.s + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              vec3 dssc = vec3(texelFetch(dtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).tp);\r\n' \
-  '              vec3 dssf = dssc;\r\n' \
-  '              vec3 dssn = dssc;\r\n' \
-  '              vsss.tp = dssc.tp;\r\n' \
-  '              su = 0.0;\r\n' \
-  '              vec2 ss = vec2(0.0);\r\n' \
-  '              if (texelFetch(dtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s <= drange) {\r\n' \
-  '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                  dssf = vec3(dssf.s - texelFetch(dtex, ivec2((p + 1) % ${GPUStats.tw}, (p + 1) / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tp);\r\n' \
-  '                  if (dssf.s < dssc.s - drange) {break;}\r\n' \
-  '                  c = (dssn.s - dssf.s) / (dssc.s - dssf.s + 1.0);\r\n' \
-  '                  ss += dssf.tp * c;\r\n' \
-  '                  su += c;\r\n' \
-  '                  dssn = dssf;\r\n' \
-  '                }\r\n' \
-  '                if (dssc.s != dssn.s) {\r\n' \
-  '                  vsss.tp = clamp((vsss.tp + ss / 2.0) / (1.0 + su / 2.0), vec2(-slmax), vec2(slmax));\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '          `;\r\n' \
-  '          let fragment_shader_s = `#version 300 es\r\n' \
-  '            precision highp float;\r\n' \
-  '            void main() {\r\n' \
-  '            }\r\n' \
-  '          `;\r\n' \
-  '          this.program_create("pprogram", vertex_pshader_s, fragment_shader_s);\r\n' \
-  '          this.program_create("dprogram", vertex_dshader_s, fragment_shader_s);\r\n' \
-  '          this.program_create("s1program", vertex_s1shader_s, fragment_shader_s);\r\n' \
-  '          this.program_create("s2program", vertex_s2shader_s, fragment_shader_s);\r\n' \
-  '        }\r\n' \
-  '        program_create(name, vshader_s, fshader_s) {\r\n' \
-  '          let vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER);\r\n' \
-  '          this.gl.shaderSource(vertex_shader, vshader_s);\r\n' \
-  '          this.gl.compileShader(vertex_shader);\r\n' \
-  '          let fragment_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER);\r\n' \
-  '          this.gl.shaderSource(fragment_shader, fshader_s);\r\n' \
-  '          this.gl.compileShader(fragment_shader);\r\n' \
-  '          let prog = this.gl.createProgram();\r\n' \
-  '          this.gl.attachShader(prog, vertex_shader);\r\n' \
-  '          this.gl.attachShader(prog, fragment_shader);\r\n' \
-  '          this.gl_programs.set(name, new Map());\r\n' \
-  '          this.gl_programs.get(name).set("program", prog);\r\n' \
-  '          let f = [];\r\n' \
-  '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
-  '            if (vshader_s.indexOf("out " + t + " " + n) >= 0) {\r\n' \
-  '              this.gl_programs.get(name).set(n, f.length);\r\n' \
-  '              f.push(n);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          if (f.length > 0) {\r\n' \
-  '            this.gl.transformFeedbackVaryings(prog, f, this.gl.SEPARATE_ATTRIBS);\r\n' \
-  '          }\r\n' \
-  '          this.gl.linkProgram(prog);\r\n' \
-  '          this.gl_programs.get(name).set("vao", this.gl.createVertexArray());\r\n' \
-  '          if (f.length > 0) {\r\n' \
-  '            this.gl_programs.get(name).set("tf", this.gl.createTransformFeedback());\r\n' \
-  '          }\r\n' \
-  '          for (let [n, ts] of this.gl_attributes) {\r\n' \
-  '            if (vshader_s.indexOf("in " + ts[0] + " " + n) >= 0) {\r\n' \
-  '              this.gl_programs.get(name).set(n, this.gl.getAttribLocation(prog, n));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          for (let [n, t] of [...this.gl_static_uniforms.entries(), ...this.gl_dynamic_uniforms.entries()]) {\r\n' \
-  '            if (vshader_s.indexOf("uniform " + t + " " + n) >= 0 || fshader_s.indexOf("uniform " + t + " " + n) >= 0) {\r\n' \
-  '              this.gl_programs.get(name).set(n, this.gl.getUniformLocation(prog, n));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        program_use(name) {\r\n' \
-  '          this.cur_prog = name;\r\n' \
-  '          this.gl.useProgram(this.gl_programs.get(name).get("program"));\r\n' \
-  '          this.gl.bindVertexArray(this.gl_programs.get(name).get("vao"));\r\n' \
-  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, this.gl_programs.get(name).get("tf"));\r\n' \
-  '        }\r\n' \
-  '        program_attributes() {\r\n' \
-  '          for (let [n, ts] of this.gl_attributes) {\r\n' \
-  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
-  '              this.gl.enableVertexAttribArray(this.gl_programs.get(this.cur_prog).get(n));\r\n' \
-  '              this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this[n]);\r\n' \
-  '              if (ts[0] == "int") {\r\n' \
-  '                this.gl.vertexAttribIPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.INT, false, 0, 0);\r\n' \
-  '              } else {\r\n' \
-  '                this.gl.vertexAttribPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.FLOAT, false, 0, 0);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
-  '        }\r\n' \
-  '        program_uniforms(type="dynamic") {\r\n' \
-  '          for (let [n, t] of type=="static"?this.gl_static_uniforms:this.gl_dynamic_uniforms) {\r\n' \
-  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
-  '              switch (t) {\r\n' \
-  '                case "float":\r\n' \
-  '                  this.gl.uniform1f(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
-  '                  break;\r\n' \
-  '                case "sampler2D":\r\n' \
-  '                case "int":\r\n' \
-  '                  this.gl.uniform1i(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
-  '                  break;\r\n' \
-  '                default:\r\n' \
-  '                  this.gl.uniform1f(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        program_feedbacks(offset, size) {\r\n' \
-  '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
-  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
-  '              let s = 0;\r\n' \
-  '              switch (t) {\r\n' \
-  '                case "float":\r\n' \
-  '                  s = 4;\r\n' \
-  '                  break;\r\n' \
-  '                case "vec2":\r\n' \
-  '                  s = 8;\r\n' \
-  '                  break;\r\n' \
-  '                case "vec3":\r\n' \
-  '                  s = 12;\r\n' \
-  '                  break;\r\n' \
-  '                default:\r\n' \
-  '                  s = 4;\r\n' \
-  '              }\r\n' \
-  '              this.gl.bindBufferRange(this.gl.TRANSFORM_FEEDBACK_BUFFER, this.gl_programs.get(this.cur_prog).get(n), this[n], offset * s, size * s);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        static pad(s) {\r\n' \
-  '          return (Math.floor((s - 1) / GPUStats.tw) + 1) * GPUStats.tw;\r\n' \
-  '        }\r\n' \
-  '        texture_load(unit, ncomp, src, tex=null) {\r\n' \
-  '          let gl_texture = tex;\r\n' \
-  '          if (tex == null) {gl_texture = this.gl.createTexture();}\r\n' \
-  '          this.gl.activeTexture(unit);\r\n' \
-  '          this.gl.bindTexture(this.gl.TEXTURE_2D, gl_texture);\r\n' \
-  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);\r\n' \
-  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);\r\n' \
-  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);\r\n' \
-  '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);\r\n' \
-  '          if (Array.isArray(src)) {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, new Float32Array(src));\r\n' \
-  '          } else if (src instanceof Float32Array) {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, src);\r\n' \
-  '          } else if (src instanceof WebGLBuffer) {\r\n' \
-  '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, src);\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, this.gl.getBufferParameter(this.gl.PIXEL_UNPACK_BUFFER, this.gl.BUFFER_SIZE) / ncomp / 4 / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
-  '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, null);\r\n' \
-  '          } else {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
-  '          }\r\n' \
-  '          return gl_texture;\r\n' \
-  '        }\r\n' \
-  '        buffer_load(src, use, buf=null) {\r\n' \
-  '          let gl_buffer = buf;\r\n' \
-  '          if (buf == null) {gl_buffer = this.gl.createBuffer();}\r\n' \
-  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, gl_buffer);\r\n' \
-  '          this.gl.bufferData(this.gl.ARRAY_BUFFER, src, use);\r\n' \
-  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
-  '          return gl_buffer;\r\n' \
-  '        }\r\n' \
-  '        set starts(a) {\r\n' \
-  '          this._starts = a;\r\n' \
-  '          this.tlength = this._starts[this._starts.length - 1];\r\n' \
-  '          this.vstart = this.buffer_load(new Int32Array(this._starts), this.gl.STATIC_DRAW, this.vstart);\r\n' \
-  '        }\r\n' \
-  '        get starts() {\r\n' \
-  '          return this._starts;\r\n' \
-  '        }\r\n' \
-  '        set rlats(a) {\r\n' \
-  '          this._rlats = a.map(function (tl) {return tl[0] * Math.PI / 180});\r\n' \
-  '        }\r\n' \
-  '        set llhs(a) {\r\n' \
-  '          this._llhs = a;\r\n' \
-  '          this.llh_texture = this.texture_load(this.gl.TEXTURE0 + this.llhtex, 3, this._llhs, this.llh_texture);\r\n' \
-  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vxy);\r\n' \
-  '          this.vd = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vd);\r\n' \
-  '         }\r\n' \
-  '        set teas(a) {\r\n' \
-  '          this._teas = a;\r\n' \
-  '          this.tea_texture = this.texture_load(this.gl.TEXTURE0 + this.teatex, 3, this._teas, this.tea_texture);\r\n' \
-  '          this.vsss = this.buffer_load(3 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vsss);\r\n' \
-  '        }\r\n' \
-  '        _calc() {\r\n' \
-  '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
-  '            this.vlength = this._starts[s + 1] - this._starts[s];\r\n' \
-  '            if (this.vlength == 0) {continue;}\r\n' \
-  '            if (this.cur_prog == "pprogram")  {this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);}\r\n' \
-  '            if (this.cur_prog == "dprogram") {this.rlat = this._rlats[s];}\r\n' \
-  '            this.program_uniforms();\r\n' \
-  '            this.program_feedbacks(this._starts[s], this.vlength);\r\n' \
-  '            this.gl.beginTransformFeedback(this.gl.POINTS);\r\n' \
-  '            this.gl.drawArraysInstanced(this.gl.POINTS, s, 1, this.vlength - (this.cur_prog=="s2program"?1:0));\r\n' \
-  '            this.gl.endTransformFeedback();\r\n' \
-  '            this.gl.finish();\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        calc(pos=true) {\r\n' \
-  '          for (let n of this.gl_programs.keys()) {\r\n' \
-  '            this.program_use(n);\r\n' \
-  '            this.program_attributes();\r\n' \
-  '            this.program_uniforms("static");\r\n' \
-  '          }\r\n' \
-  '          if (pos) {\r\n' \
-  '            this.program_use("pprogram");\r\n' \
-  '            this._calc();\r\n' \
-  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '            this.feedbacks();\r\n' \
-  '            this.program_use("dprogram");\r\n' \
-  '            this._calc();\r\n' \
-  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '            this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
-  '          this.feedbacks();\r\n' \
-  '          }\r\n' \
-  '          this.program_use("s1program");\r\n' \
-  '          this._calc();\r\n' \
-  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '          this.sss_texture = this.texture_load(this.gl.TEXTURE0 + this.ssstex, 3, this.vsss, this.sss_texture);\r\n' \
-  '          this.program_use("s2program");\r\n' \
-  '          this._calc();\r\n' \
-  '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '          this.feedbacks();\r\n' \
-  '        }\r\n' \
-  '        feedbacks() {\r\n' \
-  '          for (let [n, t] of this.gl_feedbacks) {\r\n' \
-  '            if (this.gl_programs.get(this.cur_prog).has(n)) {\r\n' \
-  '              switch (t) {\r\n' \
-  '                case "float":\r\n' \
-  '                  this[n.replace("v", "_") + "s"] = new Float32Array(this.tlength);\r\n' \
-  '                  break;\r\n' \
-'                case "vec2":\r\n' \
-  '                  this[n.replace("v", "_") + "s"] = new Float32Array(2 * this.tlength);\r\n' \
-  '                  break;\r\n' \
-  '                case "vec3":\r\n' \
-  '                  this[n.replace("v", "_") + "s"] = new Float32Array(3 * this.tlength);\r\n' \
-  '                  break;\r\n' \
-  '                default:\r\n' \
-  '                  this[n.replace("v", "_") + "s"] = new Float32Array(this.tlength);\r\n' \
-  '              }\r\n' \
-  '              this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this[n]) ;\r\n' \
-  '              this.gl.getBufferSubData(this.gl.ARRAY_BUFFER, 0, this[n.replace("v", "_") + "s"], 0, this[n.replace("v", "_") + "s"].length);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null) ;\r\n' \
-  '        }\r\n' \
-  '        get xys() {\r\n' \
-  '          return this._xys;\r\n' \
-  '        }\r\n' \
-  '        get ds() {\r\n' \
-  '          return this._ds;\r\n' \
-  '        }\r\n' \
-  '        get ssss() {\r\n' \
-  '          return this._ssss;\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats();}\r\n' \
-  '      function show_msg(msg, dur, msgn=null) {\r\n' \
-  '        let m = null;\r\n' \
-  '        if (msgn == null) {\r\n' \
-  '          msgn = ++msg_n;\r\n' \
-  '          m = document.createElement("span");\r\n' \
-  '          m.id = "message" + msgn.toString();\r\n' \
-  '        } else {\r\n' \
-  '          m = document.getElementById("message" + msgn.toString());\r\n' \
-  '        }\r\n' \
-  '        m.innerHTML = msg;\r\n' \
-  '        document.getElementById("message").insertBefore(m, document.getElementById("message").firstElementChild);\r\n' \
-  '        if (dur) {setTimeout(function() {document.getElementById("message").removeChild(m);}, dur * 1000);}\r\n' \
-  '        return msgn;\r\n' \
-  '      }\r\n' \
-  '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
-  '        if (t.status != 200) {\r\n' \
-  '          document.getElementById("tset").selectedIndex = tset;\r\n' \
-  '          if (nset == null) {\r\n' \
-  '            window.stop();\r\n' \
-  '            tlevel = nlevel;\r\n' \
-  '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
-  '            cleft = null;\r\n' \
-  '            rescale();\r\n' \
-  '          }\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        window.stop();\r\n' \
-  '        let msg = JSON.parse(t.response);\r\n' \
-  '        if (nset == null) {\r\n' \
-  '          if (nlevel == null) {\r\n' \
-  '            if (tlock) {switch_tlock(false);}\r\n' \
-  '            tlevel = msg.level;\r\n' \
-  '          } else {\r\n' \
-  '            tlevel = nlevel;\r\n' \
-  '          }\r\n' \
-  '          if (! kzoom || nlevel == null) {zoom_s = tlevels[tlevel][1];}\r\n' \
-  '          ttopx = msg.topx;\r\n' \
-  '          ttopy = msg.topy;\r\n' \
-  '          twidth = msg.width;\r\n' \
-  '          theight = msg.height\r\n' \
-  '          text = msg.ext;\r\n' \
-  '          let tscale_ex = tscale;\r\n' \
-  '          tscale = msg.scale;\r\n' \
-  '          cleft = null;\r\n' \
-  '          rescale(tscale_ex);\r\n' \
-  '          if (nlevel == null) {scroll_to_all();}\r\n' \
-  '        } else {\r\n' \
-  '          tset = document.getElementById("tset").selectedIndex;\r\n' \
-  '          let matrix = null;\r\n' \
-  '          let lf = false;\r\n' \
-  '          if (nlevel >= 0) {\r\n' \
-  '            tlevels = msg.tlevels;\r\n' \
-  '            if (nlevel == 0) {\r\n' \
-  '              nlevel = tlevels[0];\r\n' \
-  '              zoom_s = tlevels[nlevel][1];\r\n' \
-  '            }\r\n' \
-  '          } else {\r\n' \
-  '            nlevel = tlevels[0];\r\n' \
-  '            matrix = tlevels[tlevel][0];\r\n' \
-  '            tlevels = msg.tlevels;\r\n' \
-  '            for (let i=1; i<tlevels.length; i++) {\r\n' \
-  '              if (tlevels[i][0] <= matrix) {nlevel = i;}\r\n' \
-  '              if (tlevels[i][0] == matrix) {\r\n' \
-  '                lf = true;\r\n' \
-  '                break;\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            if (! lf) {\r\n' \
-  '              let zoom_t = Math.pow(2, matrix - tlevels[nlevel][0]) * zoom;\r\n' \
-  '              zoom_s = zooms[0];\r\n' \
-  '              let i = 0;\r\n' \
-  '              while (i < zooms.length) {\r\n' \
-  '                if (eval(zooms[i]) <= zoom_t) {zoom_s = zooms[i]}\r\n' \
-  '                if (eval(zooms[i]) >= zoom_t) {break;}\r\n' \
-  '                i ++;\r\n' \
-  '              }\r\n' \
-  '              matrix = tlevels[nlevel][0];\r\n' \
-  '              for (let i=1; i<tlevels.length; i++) {\r\n' \
-  '                if (tlevels[i][0] == matrix) {\r\n' \
-  '                  nlevel = i;\r\n' \
-  '                  break;\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              for (let i=nlevel; i<tlevels.length; i++) {\r\n' \
-  '                if (tlevels[i][0] != matrix) {break;}\r\n' \
-  '                if (eval(tlevels[i][1]) <= zoom_t) {nlevel = i;}\r\n' \
-  '              }\r\n' \
-  '              if (! tlock) {switch_tlock(false);}\r\n' \
-  '            } else  {\r\n' \
-  '              let zf = false;\r\n' \
-  '              for (let i=1; i<tlevels.length; i++) {\r\n' \
-  '                if (tlevels[i][0] == matrix && eval(tlevels[i][1]) <= eval(zoom_s)) {nlevel = i;}\r\n' \
-  '                if (tlevels[i][0] == matrix && tlevels[i][1] == zoom_s) {\r\n' \
-  '                  zf = true;\r\n' \
-  '                  break;\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              if (! tlock && ! zf) {switch_tlock(false);}\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          switch_tiles(null, nlevel, true);\r\n' \
-  '        }\r\n' \
-  '      } \r\n' \
-  '      function error_tcb() {\r\n' \
-  '        document.getElementById("tset").selectedIndex = tset;\r\n' \
-  '      } \r\n' \
+  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        let q = "";\r\n' \
+  '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
   '          q = "set=" + encodeURIComponent(nset);\r\n' \
   '        } else if (nlevel != null) {\r\n' \
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '        } else {\r\n' \
+  '          sta = true;\r\n' \
   '          let b = track_boundaries();\r\n' \
   '          if (b == null) {\r\n' \
   '            nlevel = tlevels[0];\r\n' \
@@ -9121,127 +8573,13 @@ class GPXTweakerWebInterfaceServer():
   '            q = "auto=" + encodeURIComponent(((b[1] - b[0]) / viewpane.offsetWidth).toString() + "|" + ((b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom)};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_all();};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
-  '      }\r\n' \
-  '      function add_tile(row=0, col=0) {\r\n' \
-  '        let tile = document.createElement("img");\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          tile.id = "map";\r\n' \
-  '          tile.src = "/map/" + tile.id + text;\r\n' \
-  '        } else {\r\n' \
-  '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
-  '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
-  '          tile.src = "http://" + location.hostname + ":" + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
-  '        }\r\n' \
-  '        tile.alt = "";\r\n' \
-  '        tile.style.position = "absolute";\r\n' \
-  '        tile.style.width = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
-  '        tile.style.height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
-  '        tile.style.left = "calc(var(--zoom) * " + ((ttopx - htopx) / tscale + col * twidth).toString() + "px)";\r\n' \
-  '        tile.style.top = "calc(var(--zoom) * " + ((htopy - ttopy) / tscale + row * theight).toString() + "px";\r\n' \
-  '        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
-  '      }\r\n' \
-  '      function update_tiles() {\r\n' \
-  '        if (mode == "map") {return;}\r\n' \
-  '        let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
-  '        let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
-  '        let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
-  '        let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
-  '        let tiles = handle.getElementsByTagName("img");\r\n' \
-  '        let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
-  '        let rright = parseInt(vright / twidth + 1.5);\r\n' \
-  '        let rtop = parseInt(vtop / theight - 1.5);\r\n' \
-  '        let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
-  '        if (cleft == null) {\r\n' \
-  '          let i = tiles.length - 1;\r\n' \
-  '            while (i >= 0) {\r\n' \
-  '              handle.removeChild(tiles[i]);\r\n' \
-  '              i--;\r\n' \
-  '            } \r\n' \
-  '          cleft = rleft - 1;\r\n' \
-  '          cright = rleft - 1;\r\n' \
-  '          ctop = rtop - 1;\r\n' \
-  '          cbottom = rtop - 1;\r\n' \
-  '        }\r\n' \
-  '        let i = tiles.length - 1;\r\n' \
-  '        if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
-  '          while (i >= 0) {\r\n' \
-  '            let [r, c] = tiles[i].id.split("-").slice(1, 3);\r\n' \
-  '            let row = parseInt(r);\r\n' \
-  '            let col = parseInt(c);\r\n' \
-  '            if (row < rtop || row > rbottom || col < rleft || col > rright) {\r\n' \
-  '              handle.removeChild(tiles[i]);\r\n' \
-  '            }\r\n' \
-  '            i--;\r\n' \
-  '          } \r\n' \
-  '          for (let col=rleft; col<cleft; col++) {\r\n' \
-  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
-  '          for (let col=cright+1; col<=rright; col++) {\r\n' \
-  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
-  '          cleft = rleft;\r\n' \
-  '          cright = rright;\r\n' \
-  '          for (let row=rtop; row<ctop; row++) {\r\n' \
-  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
-  '          for (let row=cbottom + 1; row<=rbottom; row++) {\r\n' \
-  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
-  '          ctop = rtop;\r\n' \
-  '          cbottom = rbottom;\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function reframe() {\r\n' \
-  '        hpx = Math.round(Math.min(Math.max(hpx, (htopx - vmaxx) * zoom / tscale + viewpane.offsetWidth), (htopx - vminx) * zoom / tscale));\r\n' \
-  '        hpy = Math.round(Math.min(Math.max(hpy, (vminy - htopy) * zoom / tscale + viewpane.offsetHeight), (vmaxy - htopy) * zoom / tscale));\r\n' \
-  '        handle.style.left = hpx.toString() + "px";\r\n' \
-  '        handle.style.top = hpy.toString() + "px";\r\n' \
-  '        let k = Math.cosh((htopy + (hpy - viewpane.offsetHeight) * tscale / zoom) / 6378137);\r\n' \
-  '        let sc = 150 * tscale / zoom / k;\r\n' \
-  '        let unit = "m";\r\n' \
-  '        let b = 1;\r\n' \
-  '        if (sc >= 1000) {\r\n' \
-  '          unit = "km";\r\n' \
-  '          b = 1000;\r\n' \
-  '        } else if (sc < 0.1) {\r\n' \
-  '          unit = "mm";\r\n' \
-  '          b = 1/1000;\r\n' \
-  '        } else if (sc < 1) {\r\n' \
-  '          unit = "cm";\r\n' \
-  '          b = 1/100;\r\n' \
-  '        }\r\n' \
-  '        let sc_c = (sc / b).toFixed(0);\r\n' \
-  '        let sc_s = "";\r\n' \
-  '        if (sc_c[0] == "1") {\r\n' \
-  '          sc_s = "1".padEnd(sc_c.length, "0");\r\n' \
-  '        } else if (sc_c[0] == "2" || sc_c[0] == "3" || sc_c[0] == "4") {\r\n' \
-  '          sc_s = "2".padEnd(sc_c.length, "0");\r\n' \
-  '        } else {\r\n' \
-  '          sc_s = "5".padEnd(sc_c.length, "0");\r\n' \
-  '        }\r\n' \
-  '        sc = parseFloat(sc_s) * b;\r\n' \
-  '        document.getElementById("scaleline").setAttribute("width", (sc / tscale * zoom * k).toFixed(0) + "px");\r\n' \
-  '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n' \
-  '        update_tiles() \r\n' \
+  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit(';\r\n', 1)[0] + ';\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
-  '      }\r\n' \
-  '      function prop_to_wmvalue(s) {\r\n' \
-  '        return parseFloat(s.match(/-?\\d+[.]?\\d*/)[0]);\r\n' \
-  '      }\r\n' \
-  '      function scroll_view(x, y) {\r\n' \
-  '        hpx = viewpane.offsetWidth / 2 + (htopx - x) * zoom / tscale;\r\n' \
-  '        hpy = viewpane.offsetHeight / 2 + (y - htopy) * zoom / tscale;\r\n' \
-  '        reframe();\r\n' \
-  '      }\r\n' \
-  '      function scroll_dview(dx, dy) {\r\n' \
-  '        hpx += dx;\r\n' \
-  '        hpy += dy;\r\n' \
-  '        reframe();\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(track=null) {\r\n' \
   '        let tracks = [];\r\n' \
   '        if (track != null) {\r\n' \
@@ -9342,12 +8680,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
-  '      function WGS84toWebMercator(lat, lon) {\r\n' \
-  '        return [lon * Math.PI / 180 * 6378137, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137];\r\n' \
-  '      }\r\n' \
-  '      function WebMercatortoWGS84(x, y) {\r\n' \
-  '        return [(2 * Math.atan(Math.exp(y / 6378137)) - Math.PI / 2) * 180 / Math.PI, x * 180 / Math.PI / 6378137];\r\n' \
-  '      }\r\n' \
   '      function track_over(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
@@ -9362,14 +8694,6 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = foc==focused?"1":"";\r\n' \
   '        document.getElementById(foc).style.zIndex = foc==focused?"1":"";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = foc==focused?"inline":"";\r\n' \
-  '      }\r\n' \
-  '      function distance(lat1, lon1, ele1, lat2, lon2, ele2) {\r\n' \
-  '        let d = 2 * 6378137 * Math.asin(Math.sqrt((Math.sin((lat2 - lat1) * Math.PI / 360)) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos (lat2 * Math.PI / 180) * (Math.sin((lon2 - lon1) * Math.PI / 360)) ** 2));\r\n' \
-  '        if (ele1 != null && ele2 != null) {d = Math.sqrt(d ** 2 + (ele2 - ele1) ** 2);}\r\n' \
-  '        return d;\r\n' \
-  '      }\r\n' \
-  '      function slope(dist, heig) {\r\n' \
-  '        return dist>Math.abs(heig)?(heig / Math.sqrt(dist**2 - heig**2)):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, seg_ind, stats, fpan=0, ind=null, tl=null, llhs=null, teas=null) {\r\n' \
   '        if (fpan == 0) {\r\n' \
@@ -9680,7 +9004,7 @@ class GPXTweakerWebInterfaceServer():
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '          gpustats.drange = parseFloat(document.getElementById("sldist").innerHTML) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '          gpustats.calc(fpan==0);\r\n' \
+  '          gpustats.calc(fpan==0?"explorer_pos":"explorer");\r\n' \
   '          let ds = gpustats.ds;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let xys = gpustats.xys;\r\n' \
@@ -9811,50 +9135,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_color(trk) {\r\n' \
   '        if (document.getElementById(trk.id.slice(0, -5)).getAttribute("stroke").toUpperCase() != trk.value.toUpperCase()) {track_save(trk);}\r\n' \
-  '      }\r\n' \
-  '      function refresh_graph(sw=false) {\r\n' \
-  '        let graph = document.getElementById("graph");\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let gwidth = null;\r\n' \
-  '        let gheight = null;\r\n' \
-  '        let gctx = graphc.getContext("2d");\r\n' \
-  '        if (sw) {\r\n' \
-  '          if (graph.style.display == "none") {\r\n' \
-  '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            graph.style.display = "block";\r\n' \
-  '            gctx.lineWidth = 1;\r\n' \
-  '            gctx.lineJoin = "round";\r\n' \
-  '            gctx.lineCap = "square";\r\n' \
-  '            rescale();\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            graph.style.display = "none";\r\n' \
-  '            rescale();\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
-  '        } else {\r\n' \
-  '          if (graph.style.display == "none") {return;}\r\n' \
-  '        }\r\n' \
-  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
-  '        gheight = graph.offsetHeight;\r\n' \
-  '        graphc.setAttribute("width", gwidth.toString());\r\n' \
-  '        graphc.setAttribute("height", gheight.toString());\r\n' \
-  '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
-  '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
+  '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
   '        if (focused == "") {return;}\r\n' \
-  '        let xl = 45;\r\n' \
-  '        let xr = gwidth - 20;\r\n' \
-  '        let yt = 10;\r\n' \
-  '        let yb = gheight - 15;\r\n' \
-  '        let gx = [];\r\n' \
-  '        let gy = [];\r\n' \
-  '        let gc = [];\r\n' \
-  '        let dur = 0;\r\n' \
-  '        let dist = 0;\r\n' \
-  '        let ele = 0;\r\n' \
-  '        let alt = 0;\r\n' \
   '        let stats = tracks_stats[parseInt(focused.substring(5))];\r\n' \
   '        for (let s=0; s<stats.length; s++) {\r\n' \
   '          if (stats[s].length == 0) {continue;}\r\n' \
@@ -9916,106 +9198,7 @@ class GPXTweakerWebInterfaceServer():
   '          ele += stat[2];\r\n' \
   '          alt += stat[3];\r\n' \
   '        }\r\n' \
-  '        if (gx.length < 2) {return;}\r\n' \
-  '        let minx = gx[0];\r\n' \
-  '        let maxx = gx[0];\r\n' \
-  '        let miny = gy[0];\r\n' \
-  '        let maxy = gy[0];\r\n' \
-  '        for (let i=0; i<gx.length; i++) {\r\n' \
-  '          if (minx > gx[i]) {minx = gx[i];}\r\n' \
-  '          if (maxx < gx[i]) {maxx = gx[i];}\r\n' \
-  '          if (miny > gy[i]) {miny = gy[i];}\r\n' \
-  '          if (maxy < gy[i]) {maxy = gy[i];}\r\n' \
-  '        }\r\n' \
-  '        if (maxx == minx) {maxx++;}\r\n' \
-  '        if (maxy == miny) {maxy++;}\r\n' \
-  '        let cx = (xr - xl) / (maxx - minx);\r\n' \
-  '        let cy = (yb - yt) / (maxy - miny);\r\n' \
-  '        let yl = 0;\r\n' \
-  '        if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
-  '          yl = yb;\r\n' \
-  '        } else if (maxy < 0) {\r\n' \
-  '          yl = yt;\r\n' \
-  '        } else if (miny > 0) {\r\n' \
-  '          yl = yb;\r\n' \
-  '        } else {\r\n' \
-  '          yl = maxy * cy + yt;\r\n' \
-  '        }\r\n' \
-  '        gctx.strokeStyle = "rgb(56,56,56)";\r\n' \
-  '        gctx.beginPath();\r\n' \
-  '        let x = xl;\r\n' \
-  '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
-  '        while (x <= xr) {\r\n' \
-  '          gctx.moveTo(x, yb + 1);\r\n' \
-  '          gctx.lineTo(x, yt);\r\n' \
-  '          if (x == xr) {break;}\r\n' \
-  '          x += dx;\r\n' \
-  '          if (x > xr) {x = xr;}\r\n' \
-  '        }\r\n' \
-  '        let y = yb;\r\n' \
-  '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
-  '        while (y >= yt) {\r\n' \
-  '          gctx.moveTo(xl + 1, y);\r\n' \
-  '          gctx.lineTo(xr, y);\r\n' \
-  '          if (y == yt) {break;}\r\n' \
-  '          y -= dy;\r\n' \
-  '          if (y < yt) {y = yt;}\r\n' \
-  '        }\r\n' \
-  '        gctx.stroke();\r\n' \
-  '        gctx.strokeStyle = "rgb(225,225,225)";\r\n' \
-  '        gctx.beginPath();\r\n' \
-  '        gctx.moveTo(xl, yb);\r\n' \
-  '        gctx.lineTo(xl, yt);\r\n' \
-  '        gctx.moveTo(xl, yl);\r\n' \
-  '        gctx.lineTo(xr, yl);\r\n' \
-  '        gctx.lineTo(xr, yl - 1);\r\n' \
-  '        gctx.lineTo(xr, yl + 1);\r\n' \
-  '        gctx.stroke();\r\n' \
-  '        gctx.fillStyle = "rgb(225,225,255)";\r\n' \
-  '        gctx.textAlign = "center";\r\n' \
-  '        gctx.textBaseline = "top";\r\n' \
-  '        x = xl;\r\n' \
-  '        while (x <= xr) {\r\n' \
-  '          if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
-  '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
-  '            let dur_m = (dur / 60) % 60;\r\n' \
-  '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
-  '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
-  '            gctx.fillText(dur_c, x, yl + 3);\r\n' \
-  '          } else {\r\n' \
-  '            gctx.fillText(((minx + (x - xl) / cx) / 1000).toFixed(1) + "km", x, yl + 3);\r\n' \
-  '          }\r\n' \
-  '          if (x == xr) {break;}\r\n' \
-  '          x += dx;\r\n' \
-  '          if (x > xr) {x = xr;}\r\n' \
-  '        }\r\n' \
-  '        gctx.textAlign = "right";\r\n' \
-  '        gctx.textBaseline = "middle";\r\n' \
-  '        y = yb;\r\n' \
-  '        let fin = false;\r\n' \
-  '        while (true) {\r\n' \
-  '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
-  '            if (document.getElementById("graphy").selectedIndex == 0) {\r\n' \
-  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 5 || document.getElementById("graphy").selectedIndex == 6) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
-  '            } else if (document.getElementById("graphy").selectedIndex == 7) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
-  '            } else {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
-  '            }\r\n' \
-  '            if (fin) {break;}\r\n' \
-  '          }\r\n' \
-  '          if (y == yt) {\r\n' \
-  '            y = yl;\r\n' \
-  '            fin = true;\r\n' \
-  '            continue;\r\n' \
-  '          }\r\n' \
-  '          y -= dy;\r\n' \
-  '          if (y < yt) {y = yt;}\r\n' \
-  '        }\r\n' \
-  '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
-  '        gctx.beginPath();\r\n' \
+  '        if (gx.length < 2) {return;}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '        for (let i=0; i<gx.length; i++) {\r\n' \
   '          if (i == gc[0]) {\r\n' \
   '            gctx.moveTo((gx[i] - minx) * cx + xl, (maxy - gy[i]) * cy + yt);\r\n' \
@@ -10030,129 +9213,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?" + focused.substring(5));\r\n' \
-  '      }\r\n' \
-  '      function rescale(tscale_ex=tscale) {\r\n' \
-  '        let zoom_ex = zoom;\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
-  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
-  '        } else {\r\n' \
-  '          zoom = eval(zoom_s);\r\n' \
-  '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
-  '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
-  '        }\r\n' \
-  '        document.documentElement.style.setProperty("--scale", tscale / zoom);\r\n' \
-  '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
-  '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
-  '        if (focused) {\r\n' \
-  '          scroll_to_track(document.getElementById(focused));\r\n' \
-  '        } else {\r\n' \
-  '          let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
-  '          hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
-  '          hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
-  '        }\r\n' \
-  '        reframe();\r\n' \
-  '      }\r\n' \
-  '      function switch_tlock(resc=true) {\r\n' \
-  '        if (mode == "map") {return;}\r\n' \
-  '        let zoom_s_ex = zoom_s;\r\n' \
-  '        if (tlock) {\r\n' \
-  '          if (tlevel == 0) {return;}\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128275;";\r\n' \
-  '          let nlevel = tlevel;\r\n' \
-  '          if (eval(zoom_s) < eval(tlevels[tlevel][1])) {\r\n' \
-  '            while (nlevel > 1) {\r\n' \
-  '              if (tlevels[nlevel - 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
-  '              if (eval(zoom_s) <= eval(tlevels[nlevel - 1][1])) {nlevel--;} else {break;}\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          if (eval(zoom_s) > eval(tlevels[tlevel][1])) {\r\n' \
-  '            while (nlevel < tlevels.length - 1) {\r\n' \
-  '              if (tlevels[nlevel + 1][0] != tlevels[tlevel][0]) {break;}\r\n' \
-  '              if (eval(zoom_s) >= eval(tlevels[nlevel + 1][1])) {nlevel++;} else {break;}\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          tlevel = nlevel;\r\n' \
-  '          zoom_s = tlevels[nlevel][1];\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("tlock").innerHTML = "&#128274;";\r\n' \
-  '        }\r\n' \
-  '        tlock = ! tlock;\r\n' \
-  '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
-  '        rescale();\r\n' \
-  '      }\r\n' \
-  '      function zoom_change(o) {\r\n' \
-  '        let zoom_s_ex = zoom_s;\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          if (o < 0) {\r\n' \
-  '            zoom_s = ([zooms[0]].concat(zooms))[zooms.indexOf(zoom_s)];\r\n' \
-  '          } else {\r\n' \
-  '            zoom_s = (zooms.concat(zooms[zooms.length - 1]))[zooms.indexOf(zoom_s) + 1];\r\n' \
-  '          }\r\n' \
-  '        } else {\r\n' \
-  '          if (tlock) {\r\n' \
-  '            if (o < 0) {\r\n' \
-  '              let ind = zooms.length;\r\n' \
-  '              while (ind >= 0) {\r\n' \
-  '                if (eval(zooms[ind]) < zoom) {break;}\r\n' \
-  '                ind --;\r\n' \
-  '              }\r\n' \
-  '              if (ind >=0) {zoom_s = zooms[ind]} else {return;}\r\n' \
-  '            } else {\r\n' \
-  '              let ind = 0;\r\n' \
-  '              while (ind < zooms.length) {\r\n' \
-  '                if (eval(zooms[ind]) > zoom) {break;}\r\n' \
-  '                ind ++;\r\n' \
-  '              }\r\n' \
-  '              if (ind < zooms.length) {zoom_s = zooms[ind]} else {return;}\r\n' \
-  '            }\r\n' \
-  '          } else {\r\n' \
-  '            let ntlevel = tlevel;\r\n' \
-  '            if (o < 0) {\r\n' \
-  '              if (tlevel <= 1) {return;}\r\n' \
-  '              ntlevel = tlevel - 1;\r\n' \
-  '            } else {\r\n' \
-  '              if (tlevel >= tlevels.length - 1) {return;}\r\n' \
-  '              ntlevel = tlevel + 1;\r\n' \
-  '            }\r\n' \
-  '            if (tlevels[ntlevel][0] != tlevels[tlevel][0]) {\r\n' \
-  '              switch_tiles(null, ntlevel);\r\n' \
-  '              return;\r\n' \
-  '            }\r\n' \
-  '            tlevel = ntlevel;\r\n' \
-  '            zoom_s = tlevels[tlevel][1];\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (zoom_s == zoom_s_ex) {return;}\r\n' \
-  '        rescale();\r\n' \
-  '      }\r\n' \
-  '      function zoom_dec() {\r\n' \
-  '        zoom_change(-1);\r\n' \
-  '      }\r\n' \
-  '      function zoom_inc() {\r\n' \
-  '        zoom_change(1);\r\n' \
-  '      }\r\n' \
-  '      function opacity_dec() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        let opacity = 1;\r\n' \
-  '        if (filter && filter != "none") {\r\n' \
-  '          opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
-  '        }\r\n' \
-  '        if (opacity > 0.19) {\r\n' \
-  '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
-  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function opacity_inc() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (filter && filter != "none") {\r\n' \
-  '          let opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
-  '          if (opacity < 0.81) {\r\n' \
-  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
-  '          } else {filter = "none";}\r\n' \
-  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
@@ -10169,6 +9230,22 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused) {\r\n' \
   '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function tracks_filter_history() {\r\n' \
+  '        let filt = document.getElementById("tracksfilter").value;\r\n' \
+  '        if (! filt) {return;}\r\n' \
+  '        let fhist = document.getElementById("tracksfilterhistory");\r\n' \
+  '        let fopts = fhist.getElementsByTagName("option");\r\n' \
+  '        let opt = null;\r\n' \
+  '        for (let o=0; o<fopts.length; o++) {\r\n' \
+  '          if (fopts[o].value.toLowerCase() == filt.toLowerCase()) {\r\n' \
+  '            opt = fhist.removeChild(fopts[o]);\r\n' \
+  '            break;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (opt == null) {opt = document.createElement("option");}\r\n' \
+  '        opt.value = filt;\r\n' \
+  '        fhist.insertBefore(opt, fhist.firstElementChild);\r\n' \
   '      }\r\n' \
   '      function tracks_sort() {\r\n' \
   '        let crit = document.getElementById("oset").selectedIndex;\r\n' \
@@ -10262,16 +9339,6 @@ class GPXTweakerWebInterfaceServer():
   '       for (let f=1; f<folders.length; f++) {\r\n' \
   '         folders[f].checked = folders[0].checked;\r\n' \
   '       }\r\n' \
-  '      }\r\n' \
-  '      function switch_filterpanel(pa) {\r\n' \
-  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
-  '        for (let p=1; p<=3; p++) {\r\n' \
-  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
-  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
-  '          } else {\r\n' \
-  '            fp[p].style.display = "none";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
@@ -10454,9 +9521,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused == "") {return;}\r\n' \
   '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5)));\r\n' \
   '      }\r\n' \
-  '      function escape(s) {\r\n' \
-  '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
-  '      }\r\n' \
   '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);\r\n' \
@@ -10544,48 +9608,19 @@ class GPXTweakerWebInterfaceServer():
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
-  '           <input type="text" id="tracksfilter" name="tracksfilter" value="" oninput="tracks_filter()">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&#11120;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jgraph#}" style="margin-left:1em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button><button title="{#jzoomall#}" style="margin-left:0.25em;" onclick="switch_tiles(null, null);scroll_to_all()">&target;</button></span>\r\n' \
+  '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
+  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" oninput="tracks_filter()" onchange="tracks_filter_history()">\r\n' \
+  '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
+  '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
+  '           </form>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jzoomall#}" style="margin-left:1em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25 em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtsetonly#}" autocomplete="off" style="width:10em;height:1.7em;margin-left:0.75em;" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="foldersform" autocomplete="off" onchange="folders_select()">\r\n' \
+  '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <input id="folders" type="checkbox" style="margin-left:1.5em;" checked="" name="folders" value="folders" onchange="folders_whole()">\r\n' \
   '                <label for="folders" style="font-weight:bold;">{#jfoldersw#}</label><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
-  '              <span>{#jfilterpanel1#}</span>\r\n' \
-  '              <form id="filterform1" autocomplete="off" onchange="tracks_calc(1)">\r\n' \
-  '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
-  '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
-  '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
-  '                <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="##EGTHRESHOLD##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="agstren" style="right:0.7em;">##AGTHRESHOLD##</span>\r\n' \
-  '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
-  '              <span>{#jfilterpanel2#}</span>\r\n' \
-  '              <form id="filterform2" autocomplete="off" onchange="tracks_calc(2)">\r\n' \
-  '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
-  '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
-  '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
-  '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
-  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size: 75%;text-align:center;font-weight:normal;">\r\n' \
-  '              <span>{#jfilterpanel3#}</span>\r\n' \
-  '              <form id="filterform3" autocomplete="off" onchange="tracks_calc(3)">\r\n' \
-  '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
-  '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
-  '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
-  '                <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="##SPRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="spmax" style="right:0.7em;">##SPMAX##</span>\r\n' \
-  '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
+  '            </div>\r\n' + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -10595,7 +9630,7 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
   '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%">\r\n' \
   '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
-  '                <form id="tracksform" autocomplete="off">\r\n                  ##TRACKS##\r\n' \
+  '                <form id="tracksform" autocomplete="off" onsubmit="return(false);">\r\n                  ##TRACKS##\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
@@ -10603,35 +9638,7 @@ class GPXTweakerWebInterfaceServer():
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
-  '              ##PATHES####WAYDOTS##</div>\r\n' \
-  '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
-  '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
-  '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
-  '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
-  '                  <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
-  '                </svg>\r\n' \
-  '                <span id="scalevalue" style="font-size:70%;color:black;">0 m</span>\r\n' \
-  '              </div>\r\n' \
-  '            </div>\r\n' \
-  '          </td>\r\n' \
-  '        </tr>\r\n' \
-  '      </tbody>\r\n' \
-  '      <tfoot>\r\n' \
-  '        <tr>\r\n' \
-  '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
-  '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jexphelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '            </div>\r\n' \
-  '          </th>\r\n' \
-  '        </tr>\r\n' \
-  '      </tfoot>\r\n' \
-  '    </table>\r\n' \
-  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="height:1.7em;width:7em;position:absolute;left:0;bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;">\r\n' \
-  '      </canvas>\r\n' \
-  '    </div>\r\n' \
+  '              ##PATHES####WAYDOTS##</div>\r\n' + HTML_SCALEBOX_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
@@ -10640,6 +9647,7 @@ class GPXTweakerWebInterfaceServer():
   '      var hand = null;\r\n' \
   '      function mouse_down(e, elt) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
+  '        document.getElementById("tracksfilter").blur();\r\n' \
   '        mousex = e.pageX;\r\n' \
   '        mousey = e.pageY;\r\n' \
   '        e.stopPropagation();\r\n' \
@@ -10684,14 +9692,20 @@ class GPXTweakerWebInterfaceServer():
   '        document.onclick = null;\r\n' \
   '        document.oncontextmenu = null;\r\n' \
   '        if (elt) {\r\n' \
+  '          let trk = null;\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
   '            if (document.getElementById(elt.id.replace("path", "track") + "cont").style.display != "none") {\r\n' \
-  '              track_click(null, document.getElementById(elt.id.replace("path", "track") + "desc"));\r\n' \
+  '              trk = document.getElementById(elt.id.replace("path", "track") + "desc");\r\n' \
   '            }\r\n' \
   '          } else if (elt.id.substring(0, 7) == "waydots") {\r\n' \
   '            if (document.getElementById(elt.id.replace("waydots", "track") + "cont").style.display != "none") {\r\n' \
-  '              track_click(null, document.getElementById(elt.id.replace("waydots", "track") + "desc"));\r\n' \
+  '              trk = document.getElementById(elt.id.replace("waydots", "track") + "desc");\r\n' \
   '            }\r\n' \
+  '          }\r\n' \
+  '          if (trk) {track_click(null, trk, false);}\r\n' \
+  '          if (trk && focused) {\r\n' \
+  '            trk.scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -10821,6 +9835,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (prev_state != null) {\r\n' \
   '          prev_state = prev_state.split("|");\r\n' \
   '          document.getElementById("tracksfilter").value = prev_state[0].replace(/\\&;/g, "|").replace(/&amp;/g, "&");\r\n' \
+  '          tracks_filter_history();\r\n' \
   '          no_sort = prev_state[1].split("-");\r\n' \
   '          document.getElementById("sortup").style.display = prev_state[2]=="true"?"":"none";\r\n' \
   '          document.getElementById("sortdown").style.display = prev_state[2]=="true"?"none":"";\r\n' \
