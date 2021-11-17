@@ -1,4 +1,4 @@
-﻿from functools import partial
+from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -3946,7 +3946,7 @@ class GPXTweakerWebInterfaceServer():
   '            this.d_texture = this.texture_load(this.gl.TEXTURE0 + this.dtex, 1, this.vd, this.d_texture);\r\n' \
   '            this.feedbacks();\r\n' \
   '          }\r\n' \
-   '          this.program_use("s1program");\r\n' \
+  '          this.program_use("s1program");\r\n' \
   '          this._calc();\r\n' \
   '          this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
   '          this.sss_texture = this.texture_load(this.gl.TEXTURE0 + this.ssstex, 3, this.vsss, this.sss_texture);\r\n' \
