@@ -1,4 +1,4 @@
-﻿from functools import partial
+from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -6518,7 +6518,7 @@ class GPXTweakerWebInterfaceServer():
   '        return np;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
-  '        if (! fromalt && eset < 0) {show_msg("{#jmelevationsno#}", 10, msgn); return;}\r\n' \
+  '        if (! fromalt && eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        let pts = [];\r\n' \
   '        let b = "";\r\n' \
   '        let spans = null;\r\n' \
@@ -7154,7 +7154,7 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n'\
   '      } \r\n' \
   '      function build_path() {\r\n' \
-  '        if (iset < 0) {show_msg("{#jmpathno#}", 10, msgn); return;}\r\n' \
+  '        if (iset < 0) {show_msg("{#jmpathno#}", 10); return;}\r\n' \
   '        let foc = focused;\r\n' \
   '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
   '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
@@ -7189,7 +7189,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrp.send(b);\r\n' \
   '      }\r\n' \
   '      function open_3D() {\r\n' \
-  '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10, msgn); return;}\r\n' \
+  '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        track_save(true);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function load_ipcb(t) {\r\n' \
@@ -9057,7 +9057,7 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.stroke();\r\n' \
   '      }\r\n' \
   '      function open_3D() {\r\n' \
-  '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10, msgn);}\r\n' \
+  '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?" + focused.substring(5));\r\n' \
