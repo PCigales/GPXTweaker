@@ -2683,16 +2683,28 @@ name)
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
         if msgp[0][-5:] == 'color':
-          if not r.hasAttribute('xmlns:mytrails'):
-            r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
-          ext = trk.getElementsByTagNameNS('*', 'extensions')
+          r.setAttribute('xmlns:mytrails', 'http://www.frogspark.com/mytrails')
+          r.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+          sl = r.getAttribute('xsi:schemaLocation')
+          if not 'http://www.topografix.com/GPX/1/1' in sl:
+            sl = sl + ' http://www.topografix.com/GPX/1/1'
+          if not 'http://www.topografix.com/GPX/1/1/gpx.xsd' in sl:
+            sl = sl + ' http://www.topografix.com/GPX/1/1/gpx.xsd'
+          r.setAttribute('xsi:schemaLocation', sl)
+          ext = list(n for n in trk.childNodes if n.localName == 'extensions')
           if not ext:
             e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
-            e_ = None
-            trk.appendChild(e)
+            e_ = e
+            if trk.hasChildNodes():
+              if trk.firstChild.localName == 'name':
+                trk.insertBefore(e, trk.firstChild.nextSibling)
+              else:
+                trk.insertBefore(e, trk.firstChild)
+            else:
+              trk.insertBefore(e, trk.firstChild)
           else:
             e = ext[0]
-            e_ = None
+            e_ = ext[0]
             for ex in ext:
               if ex.getElementsByTagName('mytrails:color'):
                 e = ex
@@ -2706,8 +2718,22 @@ name)
           t = self.Track.createTextNode(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
           self._XMLUpdateChildNodes(e, 'color', [a])
-          if e_:
-            self._XMLUpdateNodeText(*([e_.getElementsByTagNameNS('*', 'line')[0]] * 2), 'color', msgp[1].lstrip('#'))
+          if e_.getElementsByTagNameNS('*', 'line'):
+            a = e_.getElementsByTagNameNS('*', 'line')[0].cloneNode(True)
+          else:
+            a = self.Track.createElement('line')
+            a.setAttribute('xmlns', 'http://www.topografix.com/GPX/gpx_style/0/2')
+          if a.getElementsByTagNameNS('*', 'color'):
+            b = a.getElementsByTagNameNS('*', 'color')[0]
+          else:
+            b = self.Track.createElement('color')
+            b.setAttribute('xmlns', 'http://www.topografix.com/GPX/gpx_style/0/2')
+            a.appendChild(b)
+          t = self.Track.createTextNode(msgp[1].lstrip('#'))
+          while b.hasChildNodes():
+            b.removeChild(b.firstChild)
+          b.appendChild(t)
+          self._XMLUpdateChildNodes(e_, 'line', [a])
         elif msgp[0][-4:] == 'name':
           self._XMLUpdateNodeText(trk, trk, 'name', msgp[1], def_first=True, cdata=True)
         else:
@@ -9162,7 +9188,7 @@ class GPXTweakerWebInterfaceServer():
   '      function folders_select() {\r\n' \
   '        let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
   '        let t = 0;\r\n' \
-  '        for (let f=1; f<folders.length; f++) {\r\n' \
+  '        for (let f=0; f<folders.length; f++) {\r\n' \
   '          while (t < tracks_pts.length) {\r\n' \
   '            if (document.getElementById("track" + t.toString() + "folder" ).value.toLowerCase().indexOf(folders[f].value.toLowerCase()) >= 0) {\r\n' \
   '              if (folders[f].checked) {\r\n' \
@@ -9182,10 +9208,10 @@ class GPXTweakerWebInterfaceServer():
   '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function folders_whole() {\r\n' \
+  '      function folders_whole(tick) {\r\n' \
   '       let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
-  '       for (let f=1; f<folders.length; f++) {\r\n' \
-  '         folders[f].checked = folders[0].checked;\r\n' \
+  '       for (let f=0; f<folders.length; f++) {\r\n' \
+  '         folders[f].checked = tick;\r\n' \
   '       }\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
@@ -9350,9 +9376,9 @@ class GPXTweakerWebInterfaceServer():
   '        let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
   '        let t = 0;\r\n' \
   '        let f_ind = null;\r\n' \
-  '        for (let f=1; f<folders.length; f++) {\r\n' \
+  '        for (let f=0; f<folders.length; f++) {\r\n' \
   '          if (folders[f].checked) {\r\n' \
-  '            f_ind = f - 1;\r\n' \
+  '            f_ind = f;\r\n' \
   '            break;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -9473,8 +9499,8 @@ class GPXTweakerWebInterfaceServer():
   '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jzoomall#}" style="margin-left:1em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25 em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
-  '                <input id="folders" type="checkbox" style="margin-left:1.5em;" checked="" name="folders" value="folders" onchange="folders_whole()">\r\n' \
-  '                <label for="folders" style="font-weight:bold;">{#jfoldersw#}</label><br>\r\n' \
+  '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
+  '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
   '            </div>\r\n' + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + \
@@ -9603,7 +9629,7 @@ class GPXTweakerWebInterfaceServer():
   '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
   '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").slice(1).join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString());\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString());\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
   '        window.alert("{#jexpfail#}");\r\n' \
@@ -9656,7 +9682,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("oset").selectedIndex = parseInt(prev_state[3]);\r\n' \
   '          let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
   '          let st = prev_state[4].split("-");\r\n' \
-  '          for (let f=1; f<folders.length; f++) {folders[f].checked = st[f-1]=="t";}\r\n' \
+  '          for (let f=0; f<folders.length; f++) {folders[f].checked = st[f]=="t";}\r\n' \
   '          st = prev_state[5].split("-");\r\n' \
   '          for (let t=0; t<st.length; t++) {\r\n' \
   '            document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";\r\n' \
