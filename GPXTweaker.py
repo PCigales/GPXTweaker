@@ -129,7 +129,7 @@ FR_STRINGS = {
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
     'jswitchpoints': 'afficher / masquer les points et points de cheminement',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
-    'j3dviewer': 'ouvrir la visionneuse 3D',
+    'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
     'jdescending': 'permuter l\'ordre de tri des traces sur décroissant',
     'joset': 'sélectionner le critère de tri des traces',
@@ -169,6 +169,7 @@ FR_STRINGS = {
     'jfoldersw': 'Répertoires:',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;entrée pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -263,6 +264,8 @@ FR_STRINGS = {
     'jdimmingshadow': 'Ombrage',
     'jltilt': 'Inclinaison lumière:',
     'jlrotation': 'Rotation lumière:',
+    'jpace': 'Progression:',
+    'jvfov': 'Champ de vue vertical:',
     'start': 'démarrage',
     'close': 'fermeture',
   },
@@ -379,7 +382,7 @@ EN_STRINGS = {
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
     'jswitchpoints': 'show / hide the points and waypoints',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
-    'j3dviewer': 'open the 3D viewer',
+    'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt:open the 3D viewer in subjective view mode',
     'jascending': 'switch the sort order of the tracks to ascending',
     'jdescending': 'switch the sort order of the tracks to descending',
     'joset': 'select the sort criterion of the tracks',
@@ -419,6 +422,7 @@ EN_STRINGS = {
     'jfoldersw': 'Folders:',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
+    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;enter to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -513,6 +517,8 @@ EN_STRINGS = {
     'jdimmingshadow': 'Shadow',
     'jltilt': 'Light tilt:',
     'jlrotation': 'Light rotation:',
+    'jpace': 'Progression:',
+    'jvfov': 'Vertical field of view:',
     'start': 'start-up',
     'close': 'shutdown',
   },
@@ -3198,13 +3204,20 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             _send_resp_nc()
           elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
+            try:
+              mode3d = req.path.split('?3d=')[1].lower()
+              if mode3d != 'p' and mode3d != 's':
+                raise
+            except:
+              _send_err_nf()
+              continue
             self.server.Interface.SLock.acquire()
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = int(req.path.split('?')[1])
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
-            if self.server.Interface.Build3DHTML():
+            if self.server.Interface.Build3DHTML(mode3d):
               self.server.Interface.SLock.release()
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               _send_resp('text/html; charset=utf-8')
@@ -4992,7 +5005,7 @@ class GPXTweakerWebInterfaceServer():
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
   '    <meta charset="utf-8">\r\n' \
-  '    <title>GPXTweaker</title>\r\n'  + HTML_STYLES_TEMPLATE + \
+  '    <title>GPXTweaker</title>\r\n' + HTML_STYLES_TEMPLATE + \
   '      input[id=name_track] {\r\n' \
   '        width:calc(98vw - 60em);\r\n' \
   '        font-size:70%;\r\n' \
@@ -7214,9 +7227,9 @@ class GPXTweakerWebInterfaceServer():
   '        xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrp.send(b);\r\n' \
   '      }\r\n' \
-  '      function open_3D() {\r\n' \
+  '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        track_save(true);\r\n' \
+  '        track_save(mode);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function load_ipcb(t) {\r\n' \
   '        if (t.status != 204) {\r\n' \
@@ -7235,14 +7248,14 @@ class GPXTweakerWebInterfaceServer():
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrip.send();\r\n' \
   '      }\r\n' \
-  '      function load_cb(t) {\r\n' \
+  '      function load_cb(t, mode3d=null) {\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
-  '        } else if (t.responseURL.indexOf("?") > 0) {\r\n' \
-  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html");\r\n' \
+  '        } else if (mode3d) {\r\n' \
+  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode3d);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
@@ -7251,9 +7264,9 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
   '      }\r\n' \
-  '      function track_save(o3d=false) {\r\n' \
+  '      function track_save(mode3d=null) {\r\n' \
   '        if (document.getElementById("save").disabled) {return;}\r\n' \
-  '        if (! o3d) {document.getElementById("save_icon").style.fontSize = "10%";}\r\n' \
+  '        if (! mode3d) {document.getElementById("save_icon").style.fontSize = "10%";}\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
   '        let body = document.getElementById("name_track").value + "\\r\\n=\\r\\n";\r\n' \
   '        let spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
@@ -7284,9 +7297,9 @@ class GPXTweakerWebInterfaceServer():
   '             }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (o3d) {\r\n' \
+  '        if (mode3d) {\r\n' \
   '          let msgn = show_msg("{#jm3dviewer1#}", 0);\r\n' \
-  '           xhr.onload = (e) => {load_cb(e.target)?show_msg("{#jm3dviewer2#}", 2, msgn):show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
+  '           xhr.onload = (e) => {load_cb(e.target, mode3d)?show_msg("{#jm3dviewer2#}", 2, msgn):show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
   '           xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
   '           xhr.open("POST", "/track?save=no");\r\n' \
   '        } else {\r\n' \
@@ -7318,7 +7331,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -7651,12 +7664,7 @@ class GPXTweakerWebInterfaceServer():
   '              <svg id="dot%s" width="7" height="7" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
   '                <rect x="1" y="1" width="5" height="5"/>\r\n' \
   '              </svg>\r\n'
-  HTML_3D_TEMPLATE = \
-  '<!DOCTYPE html>\r\n' \
-  '<html lang="fr-FR">\r\n' \
-  '  <head>\r\n' \
-  '    <meta charset="utf-8">\r\n' \
-  '    <title>GPXTweaker 3DViewer</title>\r\n' \
+  HTML_3D_STYLES_TEMPLATE = \
   '    <style type="text/css">\r\n' \
   '      table {\r\n' \
   '        border: none;\r\n' \
@@ -7672,81 +7680,88 @@ class GPXTweakerWebInterfaceServer():
   '      button {\r\n' \
   '        border:none;\r\n' \
   '        background-color:transparent;\r\n' \
-  '        padding-left:5px;\r\n' \
-  '        padding-right:5px;\r\n' \
   '        vertical-align:top;\r\n' \
   '        color:inherit;\r\n' \
-  '        font-size:100%;\r\n' \
+  '        font-size:inherit;\r\n' \
   '      }\r\n' \
   '      button:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
-  '      input[type=range] {\r\n' \
-  '        width:80px;\r\n' \
+  '      input {\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        color:inherit;\r\n' \
+  '        font-size:inherit;\r\n' \
+  '        margin-left:0.7em;\r\n' \
   '      }\r\n' \
-  '      input[type=range]:enabled {\r\n' \
+  '      input:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      input[type=range] {\r\n' \
+  '        width:9em;\r\n' \
+  '      }\r\n' \
+  '      span {\r\n' \
+  '        display:inline-block;\r\n' \
+  '        text-align:center;\r\n' \
+  '      }\r\n' \
+  '      br+span {\r\n' \
+  '        width:1.4em;\r\n' \
+  '      }\r\n' \
+  '      br+span+span {\r\n' \
+  '        width:6em;\r\n' \
+  '        margin-left:0.8em;\r\n' \
+  '      }\r\n' \
+  '      input:focus+br+span+span, input:focus+button+br+span+span, input:focus+input+br+span+span  {\r\n' \
+  '        color:rgb(200,250,240);\r\n' \
+  '      }\r\n' \
+  '      br+span+span+span {\r\n' \
+  '        width:3em;\r\n' \
   '      }\r\n' \
   '      input[type=radio] {\r\n' \
   '        vertical-align:top;\r\n' \
-  '        margin-bottom:5px;\r\n' \
+  '        margin-bottom:0.4em;\r\n' \
   '      }\r\n' \
-  '      input[type=radio]:enabled {\r\n' \
-  '        cursor:pointer;\r\n' \
+  '      input[type=checkbox] {\r\n' \
+  '        appearance:none;\r\n' \
+  '        vertical-align:top;\r\n' \
+  '        width:1.2em;\r\n' \
+  '        height:1.2em;\r\n' \
+  '        margin-left:0.1em;\r\n' \
   '      }\r\n' \
-  '    </style>\r\n' \
-  '    <script>\r\n' \
-  '      var size = Math.min(window.innerWidth, window.innerHeight).toString();\r\n' \
-  '    </script>\r\n' \
-  '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
-  '    <table>\r\n' \
-  '      <colgroup>\r\n' \
-  '        <col style="width:calc(100vw - 200px);">\r\n' \
-  '        <col style="width:200px;">\r\n' \
-  '      </colgroup>\r\n' \
-  '      <tbody>\r\n' \
-  '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;vertical-align:top;height:100vh;">\r\n' \
-  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;"></canvas>\r\n' \
-  '        </td>\r\n' \
-  '        <td style="display:table-cell;vertical-align:top;border-left:1px solid dimgray;">\r\n' \
-  '          <div style="overflow:auto;max-height:100vh;padding-left:5px;">\r\n' \
-  '            <p>{#jtilt#}</p>\r\n' \
-  '            <input type="range" id="cursor_tangle" min="0" max="90" step="any" value="0" autocomplete="off" disabled oninput="set_param(\'t\')">\r\n' \
-  '            <br><span>0</span><span id = "cursorv_tangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>90</span>\r\n' \
+  '      input[type=checkbox]:checked::before {\r\n' \
+  '        content:"\\2714";\r\n' \
+  '        display:inline-block;\r\n' \
+  '        text-align:center;\r\n' \
+  '        width:100%;\r\n' \
+  '        font-size:90%;\r\n' \
+  '        font-weight:bold;\r\n' \
+  '      }\r\n' \
+  '    </style>\r\n'
+  HTML_3D_FORM1_TEMPLATE = \
   '            <br><br>\r\n' \
-  '            <p>{#jrotation#}</p>\r\n' \
-  '            <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" autocomplete="off" disabled oninput="set_param(\'r\')">&nbsp;&nbsp;<button id="button_rangle" disabled onclick="toggle_rotation()">&#9199;</button>\r\n' \
-  '            <br><span>0</span><span id = "cursorv_rangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>360</span>\r\n' \
-  '            <br><br>\r\n' \
-  '            <p>{#jzscale#}</p>\r\n' \
-  '            <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" autocomplete="off" disabled oninput="set_param(\'zs\')">\r\n' \
-  '            <br><span>{#jzscaleiso#}</span><span id = "cursorv_tangle" style="display:inline-block;width:calc(80px - 2em);text-align:center;"></span><span>{#jzscalemax#}</span>\r\n' \
+  '            <p><label for="cursor_rangle">{#jrotation#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" disabled oninput="set_param(\'r\')">&nbsp;&nbsp;<button id="button_rangle" disabled onclick="toggle_rotation()">&#9199;</button>\r\n' \
+  '            <br><span>0</span><span id="cursorv_rangle">0</span><span>360</span>\r\n' \
+  '            <br><br>\r\n'
+  HTML_3D_FORM2_TEMPLATE = \
   '            <br><br>\r\n' \
   '            <p>{#jtexture#}</p>\r\n' \
-  '            <input type="radio" id="radio_yiso" name="texture" checked autocomplete="off" disabled onclick="toggle_filling(0)"><label for="radio_yiso">{#jtextureyiso#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_ziso" name="texture" autocomplete="off" disabled onclick="toggle_filling(1)"><label for="radio_ziso">{#jtextureziso#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_map" name="texture" autocomplete="off" disabled onclick="toggle_filling(2)"><label for="radio_map">{#jtexturemap#}</label>\r\n' \
+  '            <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)"><label for="radio_yiso">{#jtextureyiso#}</label><br>\r\n' \
+  '            <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)"><label for="radio_ziso">{#jtextureziso#}</label><br>\r\n' \
+  '            <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)"><label for="radio_map">{#jtexturemap#}</label>\r\n' \
   '            <br><br>\r\n' \
   '            <p>{#jdimming#}</p>\r\n' \
-  '            <input type="radio" id="radio_dimn" name="dimming" autocomplete="off" disabled onclick="toggle_dimming(0)"><label for="radio_dimn">{#jdimmingnone#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_dimz" name="dimming" autocomplete="off" disabled onclick="toggle_dimming(1)"><label for="radio_dimz">{#jdimmingz#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_dimd" name="dimming" checked autocomplete="off" disabled onclick="toggle_dimming(2)"><label for="radio_dimd">{#jdimmingdeclivity#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_dims" name="dimming" autocomplete="off" disabled onclick="toggle_dimming(3)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' \
+  '            <input type="radio" id="radio_dimn" name="dimming" disabled onclick="toggle_dimming(0)"><label for="radio_dimn">{#jdimmingnone#}</label><br>\r\n' \
+  '            <input type="radio" id="radio_dimz" name="dimming" disabled onclick="toggle_dimming(1)"><label for="radio_dimz">{#jdimmingz#}</label><br>\r\n'
+  HTML_3D_FORM3_TEMPLATE = \
   '            <br><br>\r\n' \
-  '            <p>{#jltilt#}</p>\r\n' \
-  '            <input type="range" id="cursor_ltangle" min="0" max="90" step="any" value ="0" autocomplete="off" disabled oninput="set_param(\'lt\')">\r\n' \
-  '            <br><span>0</span><span id = "cursorv_ltangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>90</span>\r\n' \
+  '            <p><label for="cursor_ltangle">{#jltilt#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_ltangle" min="0" max="90" step="any" value ="0" disabled oninput="set_param(\'lt\')">\r\n' \
+  '            <br><span>0</span><span id="cursorv_ltangle">0</span><span>90</span>\r\n' \
   '            <br><br>\r\n' \
-  '            <p>{#jlrotation#}:</p>\r\n' \
-  '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" autocomplete="off" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
-  '            <br><span>0</span><span id = "cursorv_lrangle" style="display:inline-block;width:calc(80px - 1em);text-align:center;">0</span><span>360</span>\r\n' \
-  '          </div>\r\n' \
-  '        </td>\r\n' \
-  '      </tbody>\r\n' \
-  '    </table>\r\n' \
-  '    <script>\r\n' \
+  '            <p><label for="cursor_lrangle">{#jlrotation#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
+  '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
+  HTML_3D_GLOBALVARS_TEMPLATE = \
   '      var canvas = document.getElementById("canvas");\r\n' \
   '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
@@ -7754,121 +7769,63 @@ class GPXTweakerWebInterfaceServer():
   '      var c_rangle = document.getElementById("cursor_rangle");\r\n' \
   '      var cv_rangle = document.getElementById("cursorv_rangle");\r\n' \
   '      var b_rangle = document.getElementById("button_rangle");\r\n' \
-  '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
   '      var r_yiso = document.getElementById("radio_yiso");\r\n' \
   '      var r_ziso = document.getElementById("radio_ziso");\r\n' \
   '      var r_map = document.getElementById("radio_map");\r\n' \
   '      var r_dimn = document.getElementById("radio_dimn");\r\n' \
   '      var r_dimz = document.getElementById("radio_dimz");\r\n' \
-  '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
   '      var r_dims = document.getElementById("radio_dims");\r\n' \
   '      var c_ltangle = document.getElementById("cursor_ltangle");\r\n' \
   '      var cv_ltangle = document.getElementById("cursorv_ltangle");\r\n' \
   '      var c_lrangle = document.getElementById("cursor_lrangle");\r\n' \
   '      var cv_lrangle = document.getElementById("cursorv_lrangle");\r\n' \
   '      var b_lrangle = document.getElementById("button_lrangle");\r\n' \
-  '      var gl_programs = new Map();\r\n' \
-  '      var cur_prog = null;\r\n' \
-  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["lvposition", ["vec4", 3]]]);\r\n' \
-  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["ftex", "sampler2D"], ["dtex", "sampler2D"]]);\r\n' \
-  '      var gl_dynamic_uniforms = new Map([["zfact", "float"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ylmag", "float"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"]]);\r\n' \
+  '      var lvx = null;\r\n' \
+  '      var lvy = null;\r\n' \
   '      var vpositions = null;\r\n' \
+  '      var vnormals = null;\r\n' \
   '      var trpositions = null;\r\n' \
   '      var tvposition = null;\r\n' \
-  '      var lvposition = null;\r\n' \
+  '      var tvnormal = null;\r\n' \
+  '      var ldirection = null;\r\n' \
   '      var vmatrix = null\r\n' \
   '      var lmatrix = null;\r\n' \
   '      var ltype = null;\r\n' \
-  '      const m_size = 2048;\r\n' \
-  '      const tr_size = 2048;\r\n' \
-  '      const s_size = 2048;\r\n' \
+  '      const max_size = gl.getParameter(gl.MAX_TEXTURE_SIZE);\r\n' \
   '      var mtex = 0;\r\n' \
   '      var trtex = 1;\r\n' \
-  '      var ftex = 2;\r\n' \
-  '      var dtex = 3;\r\n' \
+  '      var dtex = 2;\r\n' \
   '      var map_texture = null;\r\n' \
   '      var tr_texture = null;\r\n' \
-  '      var f_texture = null;\r\n' \
   '      var d_texture = null;\r\n' \
   '      var sfrbuf = null;\r\n' \
-  '      function set_param(p, v=null) {\r\n' \
-  '        if (p == "zs") {\r\n' \
-  '          if (v != null) {c_zfact.value = v.toString();}\r\n' \
-  '          zfact = parseFloat(c_zfact.value);\r\n' \
-  '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
-  '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
-  '          cltangle = Math.cos(angle);\r\n' \
-  '          sltangle = Math.sin(angle)\r\n' \
-  '        } else {\r\n' \
-  '          let angle = null;\r\n' \
-  '          let angle0 = null;\r\n' \
-  '          switch (p) {\r\n' \
-  '            case "t":\r\n' \
-  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
-  '              angle = (90 - parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
-  '              break;\r\n' \
-  '            case "r":\r\n' \
-  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
-  '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
-  '              break;\r\n' \
-  '            case "lt":\r\n' \
-  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
-  '              angle0 = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
-  '              clt0angle = Math.cos(angle0);\r\n' \
-  '              slt0angle = Math.sin(angle0);\r\n' \
-  '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
-  '              break;\r\n' \
-  '            case "lr":\r\n' \
-  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
-  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
-  '              break;\r\n' \
-  '          }\r\n' \
-  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
-  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
-  '          if (p == "t") {\r\n' \
-  '            angle0 = Math.atan(stangle / ctangle * zfact);\r\n' \
-  '            cv_tangle.innerHTML = Math.round(90 - angle0 * 180 / Math.PI).toString();\r\n' \
-  '          } else if (p == "lt") {\r\n' \
-  '            cv_ltangle.innerHTML = Math.round(angle0 * 180 / Math.PI + 90).toString();\r\n' \
-  '          } else {\r\n' \
-  '            window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
-  '          }\r\n' \
-  '\r\n' \
-  '        }\r\n' \
-  '        if (v == null) {canvas_redraw();}\r\n' \
-  '      }\r\n' \
   '      var fillmode = 0;\r\n' \
   '      var pmode = 0;\r\n' \
   '      var dmode = 2;\r\n' \
-  '      var zfact = 1;\r\n' \
   '      var ylmag = 1;\r\n' \
   '      var ctangle = null;\r\n' \
   '      var stangle = null;\r\n' \
-  '      set_param("t", 30);\r\n' \
   '      var crangle = null;\r\n' \
   '      var srangle = null;\r\n' \
-  '      set_param("r", 0);\r\n' \
   '      var nrot = 0;\r\n' \
   '      var nlrot = 0;\r\n' \
   '      var rep_rot = null;\r\n' \
   '      var rep_lrot = null;\r\n' \
   '      var ltangle_rotmax = null;\r\n' \
-  '      var clt0angle = null;\r\n' \
-  '      var slt0angle = null;\r\n' \
   '      var cltangle = null;\r\n' \
   '      var sltangle = null;\r\n' \
-  '      set_param("lt", 35);\r\n' \
   '      var clrangle = null;\r\n' \
   '      var slrangle = null;\r\n' \
-  '      set_param("lr", 315);\r\n' \
-  '      set_param("zs", 1);##DECLARATIONS##\r\n' \
+  '      var gl_programs = new Map();\r\n' \
+  '      var cur_prog = null;\r\n'
+  HTML_3D_MAT_TEMPLATE = \
   '      function mat4_mult(p, m) {\r\n' \
   '        let q = m.slice();\r\n' \
   '        for (let r=0; r<4; r++) {\r\n' \
   '          for (let c=0; c<4; c++) {\r\n' \
   '            let v = 0;\r\n' \
   '            for (let i=0; i<4; i++) {v += p[4 * r + i] * q[4 * i + c];}\r\n' \
-  '            m[4* r + c] = v;\r\n' \
+  '            m[4 * r + c] = v;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -7911,13 +7868,8 @@ class GPXTweakerWebInterfaceServer():
   '          0, 0, 1, 0,\r\n' \
   '          0, 0, 0, 1\r\n' \
   '        ]);\r\n' \
-  '      }\r\n' \
-  '      function canvas_resize() {\r\n' \
-  '        size = Math.min(window.innerWidth, window.innerHeight).toString();\r\n' \
-  '        canvas.setAttribute("width", size);\r\n' \
-  '        canvas.setAttribute("height", size);\r\n' \
-  '        gl.viewport(0, 0, canvas.width, canvas.height);\r\n' \
-  '      }\r\n' \
+  '      }\r\n'
+  HTML_3D_UTIL_TEMPLATE = \
   '      function program_create(name, vshader_s, fshader_s) {\r\n' \
   '        let vertex_shader = gl.createShader(gl.VERTEX_SHADER);\r\n' \
   '        gl.shaderSource(vertex_shader, vshader_s);\r\n' \
@@ -7964,6 +7916,12 @@ class GPXTweakerWebInterfaceServer():
   '              case "float":\r\n' \
   '                gl.uniform1f(gl_programs.get(cur_prog).get(n), window[n]);\r\n' \
   '                break;\r\n' \
+  '              case "vec2":\r\n' \
+  '                gl.uniform2fv(gl_programs.get(cur_prog).get(n), window[n]);\r\n' \
+  '                break;\r\n' \
+  '              case "vec3":\r\n' \
+  '                gl.uniform3fv(gl_programs.get(cur_prog).get(n), window[n]);\r\n' \
+  '                break;\r\n' \
   '              case "vec4":\r\n' \
   '                gl.uniform4fv(gl_programs.get(cur_prog).get(n), window[n]);\r\n' \
   '                break;\r\n' \
@@ -7972,6 +7930,7 @@ class GPXTweakerWebInterfaceServer():
   '                gl.finish();\r\n' \
   '                break;\r\n' \
   '              case "sampler2D":\r\n' \
+  '              case "sampler2DShadow":\r\n' \
   '              case "int":\r\n' \
   '                gl.uniform1i(gl_programs.get(cur_prog).get(n), window[n]);\r\n' \
   '                break;\r\n' \
@@ -7980,6 +7939,13 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function buffer_load(src) {\r\n' \
+  '        let gl_buffer = this.gl.createBuffer();\r\n' \
+  '        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, gl_buffer);\r\n' \
+  '        this.gl.bufferData(this.gl.ARRAY_BUFFER, src, gl.STATIC_DRAW);\r\n' \
+  '        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
+  '        return gl_buffer;\r\n' \
   '      }\r\n' \
   '      function texture_load(unit, src) {\r\n' \
   '        let gl_texture = gl.createTexture();\r\n' \
@@ -7997,137 +7963,21 @@ class GPXTweakerWebInterfaceServer():
   '        gl.generateMipmap(gl.TEXTURE_2D);\r\n' \
   '        return gl_texture;\r\n' \
   '      }\r\n' \
-  '      function texture_attach(unit, type) {\r\n' \
+  '      function texture_attach(unit) {\r\n' \
   '        let gl_texture = gl.createTexture();\r\n' \
   '        gl.activeTexture(unit);\r\n' \
   '        gl.bindTexture(gl.TEXTURE_2D, gl_texture);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);\r\n' \
-  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);\r\n' \
-  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);\r\n' \
-  '        gl.texImage2D(gl.TEXTURE_2D, 0, type=="depth"?gl.DEPTH_COMPONENT16:gl.R8, s_size, s_size, 0, type=="depth"?gl.DEPTH_COMPONENT:gl.RED, type=="depth"?gl.UNSIGNED_SHORT:gl.UNSIGNED_BYTE, null);\r\n' \
-  '        gl.framebufferTexture2D(gl.FRAMEBUFFER, type=="depth"?gl.DEPTH_ATTACHMENT:gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gl_texture, 0);\r\n' \
+  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);\r\n' \
+  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);\r\n' \
+  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);\r\n' \
+  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);\r\n' \
+  '        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16, d_size, d_size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);\r\n' \
+  '        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, gl_texture, 0);\r\n' \
   '        return gl_texture;\r\n' \
-  '      }\r\n' \
-  '      function canvas_init() {\r\n' \
-  '        gl.enable(gl.DEPTH_TEST);\r\n' \
-  '        canvas_resize();\r\n' \
-  '        let vertex_tcshader_s = `#version 300 es\r\n' \
-  '          in vec4 tvposition;\r\n' \
-  '          uniform float zfact;\r\n' \
-  '          uniform float zfactmax;\r\n' \
-  '          uniform mat4 vmatrix;\r\n' \
-  '          uniform mat4 lmatrix;\r\n' \
-  '          uniform int dmode;\r\n' \
-  '          out vec2 pcoord;\r\n' \
-  '          out float nz;\r\n' \
-  '          out float dim;\r\n' \
-  '          out vec4 lposition;\r\n' \
-  '          void main() {\r\n' \
-  '            nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
-  '            gl_Position = vmatrix * tvposition;\r\n' \
-  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
-  '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
-  '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let vertex_ttshader_s = `#version 300 es\r\n' \
-  '          in vec4 tvposition;\r\n' \
-  '          uniform float zfact;\r\n' \
-  '          uniform float zfactmax;\r\n' \
-  '          uniform mat4 vmatrix;\r\n' \
-  '          uniform mat4 lmatrix;\r\n' \
-  '          uniform int dmode;\r\n' \
-  '          out vec2 pcoord;\r\n' \
-  '          out float dim;\r\n' \
-  '          out vec4 lposition;\r\n' \
-  '          void main() {\r\n' \
-  '            gl_Position = vmatrix * tvposition;\r\n' \
-  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
-  '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
-  '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let vertex_lshader_s = `#version 300 es\r\n' \
-  '          in vec4 lvposition;\r\n' \
-  '          uniform mat4 vmatrix;\r\n' \
-  '          uniform int ltype;\r\n' \
-  '          out vec4 color;\r\n' \
-  '          void main() {\r\n' \
-  '            gl_Position = vmatrix * lvposition;\r\n' \
-  '            color = ltype == 0 ? vec4(vec3(0.35 * lvposition.z + 0.65), 1) : vec4(1, 1, 0, 1);\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let vertex_sshader_s = `#version 300 es\r\n' \
-  '          in vec4 tvposition;\r\n' \
-  '          uniform float zfact;\r\n' \
-  '          uniform mat4 lmatrix;\r\n' \
-  '          void main() {\r\n' \
-  '            gl_Position = lmatrix * tvposition;\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let fragment_cshader_s = `#version 300 es\r\n' \
-  '          precision highp float;\r\n' \
-  '          precision highp int;\r\n' \
-  '          in vec2 pcoord;\r\n' \
-  '          in float nz;\r\n' \
-  '          in float dim;\r\n' \
-  '          in vec4 lposition;\r\n' \
-  '          uniform sampler2D trtex;\r\n' \
-  '          uniform sampler2D ftex;\r\n' \
-  '          uniform sampler2D dtex;\r\n' \
-  '          uniform float ylmag;\r\n' \
-  '          uniform int pmode;\r\n' \
-  '          uniform int dmode;\r\n' \
-  '          out vec4 pcolor;\r\n' \
-  '          void main() {\r\n' \
-  '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
-  '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
-  '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
-  '            vec3 norm = dmode >= 2 ? vec3((texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x), (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag), 1) : vec3(0);\r\n' \
-  '            float cinc = dmode >= 2 ? (dmode == 2 ? dot(vec3(0, 0.82 , 0.57), norm) : 1.0) / length(norm) : 0.0;\r\n' \
-  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
-  '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let fragment_tshader_s = `#version 300 es\r\n' \
-  '          precision highp float;\r\n' \
-  '          precision highp int;\r\n' \
-  '          in vec2 pcoord;\r\n' \
-  '          in float dim;\r\n' \
-  '          in vec4 lposition;\r\n' \
-  '          uniform sampler2D mtex;\r\n' \
-  '          uniform sampler2D trtex;\r\n' \
-  '          uniform sampler2D ftex;\r\n' \
-  '          uniform sampler2D dtex;\r\n' \
-  '          uniform float ylmag;\r\n' \
-  '          uniform vec4 mpos;\r\n' \
-  '          uniform int dmode;\r\n' \
-  '          out vec4 pcolor;\r\n' \
-  '          void main() {\r\n' \
-  '            vec2 pix = dmode >= 2 ? vec2(1) / vec2(textureSize(dtex, 0)) : vec2(0);\r\n' \
-  '            vec2 pos = (lposition.xy / lposition.w + 1.0) / 2.0;\r\n' \
-  '            vec3 norm = dmode >= 2 ? vec3((texture(dtex, pos + vec2(pix.x, 0)).r - texture(dtex, pos - vec2(pix.x, 0)).r) / (2.0 * pix.x), (texture(dtex, pos + vec2(0, pix.y)).r - texture(dtex, pos - vec2(0, pix.y)).r) / (2.0 * pix.y / ylmag), 1) : vec3(0);\r\n' \
-  '            float cinc = dmode >= 2 ? (dmode == 2 ? dot(vec3(0, 0.82 , 0.57), norm) : 1.0) / length(norm) : 0.0;\r\n' \
-  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : mix(((texture(ftex, pos).r < 0.5) ^^ gl_FrontFacing) ? 0.2 : 0.3 + 0.7 * cinc, 0.2, lposition.z / lposition.w + 0.99 + 0.009 * cinc > 2.0 * texture(dtex, pos).r);\r\n' \
-  '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let fragment_lshader_s = `#version 300 es\r\n' \
-  '          precision highp float;\r\n' \
-  '          in vec4 color;\r\n' \
-  '          out vec4 pcolor;\r\n' \
-  '          void main() {\r\n' \
-  '            pcolor = color;\r\n' \
-  '          }\r\n' \
-  '        `;\r\n' \
-  '        let fragment_sshader_s = `#version 300 es\r\n' \
-  '          precision highp float;\r\n' \
-  '          out float pcolor;\r\n' \
-  '          void main() {\r\n' \
-  '            pcolor = gl_FrontFacing ? 0.0 : 1.0;\r\n' \
-  '          }\r\n' \
-  '      `;\r\n' \
+  '      }\r\n'
+  HTML_3D_MAP_TEMPLATE = \
   '        function create_map() {\r\n' \
   '          let nrow = tmaxrow + 1 - tminrow;\r\n' \
   '          let ncol = tmaxcol + 1 - tmincol;\r\n' \
@@ -8165,7 +8015,370 @@ class GPXTweakerWebInterfaceServer():
   '              tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '        }\r\n'
+  HTML_3D_ROT_TEMPLATE = \
+  '      function canvas_rotate(number=null) {\r\n' \
+  '        if (number != null) {\r\n' \
+  '          if (nrot >= number) {\r\n' \
+  '            window.clearInterval(rep_rot);\r\n' \
+  '            set_param("r", 0);\r\n' \
+  '            canvas_redraw();\r\n' \
+  '            c_rangle.disabled = false;\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
+  '        let rangle = parseFloat(c_rangle.value) + 2;\r\n' \
+  '        if (rangle >= 360) {\r\n' \
+  '          nrot ++;\r\n' \
+  '          rangle -= 360;\r\n' \
+  '        }\r\n' \
+  '        set_param("r", rangle);\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '      function canvas_lrotate(number=null) {\r\n' \
+  '        if (number != null) {\r\n' \
+  '          if (nlrot >= number) {\r\n' \
+  '            window.clearInterval(rep_lrot);\r\n' \
+  '            set_param("lr", 0);\r\n' \
+  '            set_param("lt", ltangle_rotmax);\r\n' \
+  '            canvas_redraw();\r\n' \
+  '            c_lrangle.disabled = false;\r\n' \
+  '            c_ltangle.disabled = false;\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        let lrangle = parseFloat(c_lrangle.value) + 2;\r\n' \
+  '        if (lrangle >= 270) {\r\n' \
+  '          nlrot ++;\r\n' \
+  '          lrangle -= 180;\r\n' \
+  '        }\r\n' \
+  '        set_param("lr", lrangle);\r\n' \
+  '        set_param("lt", Math.sin((lrangle - 90) * Math.PI / 180) * ltangle_rotmax);\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n'
+  HTML_3D_LOAD_TEMPLATE = \
+  '      function data_load() {\r\n' \
+  '        function derror_cb(t) {\r\n' \
+  '        }\r\n' \
+  '        function dload_cb(t) {\r\n' \
+  '          if (t.status != 200) {derror_cb(); return;}\r\n' \
+  '          lvx = (new Uint32Array(t.response, 0, 1))[0];\r\n' \
+  '          let vx = new Float32Array(t.response, 4, lvx);\r\n' \
+  '          lvy = (new Uint32Array(t.response, 4 * (1 + lvx), 1))[0];\r\n' \
+  '          let vy = new Float32Array(t.response, 4 * (2 + lvx) , lvy);\r\n' \
+  '          let lvz = (new Uint32Array(t.response, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
+  '          let vz = new Float32Array(t.response, 4 * (3 + lvx + lvy), lvz);\r\n' \
+  '          vpositions = new Float32Array((lvy - 1) * (lvx + 1) * 6);\r\n' \
+  '          vnormals = new Float32Array((lvy - 1) * (lvx + 1) * 6);\r\n' \
+  '          let i = 0;\r\n' \
+  '          let n = 0;\r\n' \
+  '          for (let iy=0; iy<lvy-1; iy++) {\r\n' \
+  '            for (let ix=0; ix<lvx; ix++) {\r\n' \
+  '              vpositions[i] = vx[ix];\r\n' \
+  '              vpositions[i + 1] = vy[iy];\r\n' \
+  '              vpositions[i + 2] = vz[iy * lvx + ix];\r\n' \
+  '              vpositions[i + 3] = vx[ix];\r\n' \
+  '              vpositions[i + 4] = vy[iy + 1];\r\n' \
+  '              vpositions[i + 5] = vz[(iy + 1) * lvx + ix];\r\n' \
+  '              if (iy == 0) {\r\n' \
+  '                vnormals[i] = (vz[iy * lvx + Math.min(ix + 1, lvx - 1)] - vz[iy * lvx + Math.max(ix - 1, 0)]) / (vx[Math.min(ix + 1, lvx - 1)] - vx[Math.max(ix - 1, 0)]);\r\n' \
+  '                vnormals[i + 1] = (vz[(iy + 1) * lvx + ix] - vz[Math.max(iy - 1, 0) * lvx + ix]) / (vy[iy + 1] - vy[Math.max(iy - 1, 0)]);\r\n' \
+  '                vnormals[i + 2] = 1;\r\n' \
+  '                n = Math.sqrt(vnormals[i]**2 + vnormals[i + 1]**2 + 1);\r\n' \
+  '                vnormals[i] /= -n;\r\n' \
+  '                vnormals[i + 1] /= -n;\r\n' \
+  '                vnormals[i + 2] /= n;\r\n' \
+  '              } else {\r\n' \
+  '                vnormals[i] = vnormals[i + 3 - 6 * (lvx + 1)];\r\n' \
+  '                vnormals[i + 1] = vnormals[i + 4 - 6 * (lvx + 1)];\r\n' \
+  '                vnormals[i + 2] = vnormals[i + 5 - 6 * (lvx + 1)];\r\n' \
+  '              }\r\n' \
+  '              vnormals[i + 3] = (vz[(iy + 1) * lvx + Math.min(ix + 1, lvx - 1)] - vz[(iy + 1) * lvx + Math.max(ix - 1, 0)]) / (vx[Math.min(ix + 1, lvx - 1)] - vx[Math.max(ix - 1, 0)]);\r\n' \
+  '              vnormals[i + 4] = (vz[Math.min(iy + 2, lvy - 1) * lvx + ix] - vz[iy * lvx + ix]) / (vy[Math.min(iy + 2, lvy - 1)] - vy[iy]);\r\n' \
+  '              vnormals[i + 5] = 1;\r\n' \
+  '              n = Math.sqrt(vnormals[i + 3]**2 + vnormals[i + 4]**2 + 1);\r\n' \
+  '              vnormals[i + 3] /= -n;\r\n' \
+  '              vnormals[i + 4] /= -n;\r\n' \
+  '              vnormals[i + 5] /= n;\r\n' \
+  '              i += 6;\r\n' \
+  '            }\r\n' \
+  '            vpositions[i] = vx[lvx - 1];\r\n' \
+  '            vpositions[i + 1] = vy[iy + 1];\r\n' \
+  '            vpositions[i + 2] = vz[(iy + 1) * lvx + lvx - 1];\r\n' \
+  '            vpositions[i + 3] = vx[0];\r\n' \
+  '            vpositions[i + 4] = vy[iy + 1];\r\n' \
+  '            vpositions[i + 5] = vz[(iy + 1) * lvx];\r\n' \
+  '            vnormals[i] = vnormals[i - 3];\r\n' \
+  '            vnormals[i + 1] = vnormals[i - 2];\r\n' \
+  '            vnormals[i + 2] = vnormals[i - 1];\r\n' \
+  '            vnormals[i + 3] = vnormals[i + 3 - 6 * lvx];\r\n' \
+  '            vnormals[i + 4] = vnormals[i + 4 - 6 * lvx];\r\n' \
+  '            vnormals[i + 5] = vnormals[i + 5 - 6 * lvx];\r\n' \
+  '            i += 6;\r\n' \
+  '          }\r\n' \
+  '          let ns = (new Uint32Array(t.response, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
+  '          trpositions = new Array(ns);\r\n' \
+  '          i = 0;\r\n' \
+  '          for (let s=0; s<ns; s++) {\r\n' \
+  '            let nspts = (new Uint32Array(t.response, 4 * (4 + lvx + lvy + lvz + s + 2 * i), 1))[0];\r\n' \
+  '            trpositions[s] = (new Float32Array(t.response, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts));\r\n' \
+  '            i += nspts;\r\n' \
+  '          }\r\n' \
+  '          canvas_init();\r\n'
+  HTML_3D_TOGGLE_TEMPLATE = \
+    '      function toggle_rotation(number=null) {\r\n' \
+  '        if (c_rangle.disabled) {\r\n' \
+  '          window.clearInterval(rep_rot);\r\n' \
+  '          c_rangle.disabled = false;\r\n' \
+  '        } else {\r\n' \
+  '          c_rangle.disabled = true;\r\n' \
+  '          nrot = 0;\r\n' \
+  '          rep_rot = window.setInterval(function() {canvas_rotate(number);}, 100);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_lrotation(number=null) {\r\n' \
+  '        if (c_lrangle.disabled) {\r\n' \
+  '          window.clearInterval(rep_lrot);\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '        } else {\r\n' \
+  '          c_lrangle.disabled = true;\r\n' \
+  '          c_ltangle.disabled = true;\r\n' \
+  '          ltangle_rotmax = parseFloat(c_ltangle.value);\r\n' \
+  '          set_param("lt", 0);\r\n' \
+  '          set_param("lr", (90 + parseFloat(c_rangle.value)) % 360);\r\n' \
+  '          nlrot = 0;\r\n' \
+  '          rep_lrot = window.setInterval(function() {canvas_lrotate(number);}, 100);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_filling(mode) {\r\n' \
+  '        if (mode == fillmode) {return;};\r\n' \
+  '        fillmode = mode;\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n'
+  HTML_3DP_TEMPLATE = \
+  '<!DOCTYPE html>\r\n' \
+  '<html lang="fr-FR">\r\n' \
+  '  <head>\r\n' \
+  '    <meta charset="utf-8">\r\n' \
+  '    <title>GPXTweaker 3DViewer Panoramic</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
+  '  </head>\r\n' \
+  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
+  '    <table>\r\n' \
+  '      <colgroup>\r\n' \
+  '        <col style="width:calc(100vw - 14em);">\r\n' \
+  '        <col style="width:14em;">\r\n' \
+  '      </colgroup>\r\n' \
+  '      <tbody>\r\n' \
+  '        <tr style="display:table-row;">\r\n' \
+  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;">\r\n' \
+  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;"></canvas>\r\n' \
+  '        </td>\r\n' \
+  '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
+  '          <form autocomplete="off" onsubmit="return(false)" style="overflow:auto;max-height:100vh;padding-left:0.3em;">\r\n' \
+  '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_tangle" min="0" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
+  '            <br><span>0</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
+  '            <p><label for="cursor_zfact">{#jzscale#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" disabled oninput="set_param(\'zs\')">\r\n' \
+  '            <br><span>{#jzscaleiso#}</span><span id="cursorv_zfact"></span><span>{#jzscalemax#}</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
+  '            <input type="radio" id="radio_dimd" name="dimming" checked disabled onclick="toggle_dimming(2)"><label for="radio_dimd">{#jdimmingdeclivity#}</label><br>\r\n' \
+  '            <input type="radio" id="radio_dims" name="dimming" disabled onclick="toggle_dimming(3)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
+  '          </form>\r\n' \
+  '        </td>\r\n' \
+  '      </tbody>\r\n' \
+  '    </table>\r\n' \
+  '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec4", 3]], ["lvposition", ["vec4", 3]]]);\r\n' \
+  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
+  '      var gl_dynamic_uniforms = new Map([["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"]]);\r\n' \
+  '      var zfact = 1;\r\n' \
+  '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
+  '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
+  '      var lvposition = null;\r\n' \
+  '      const ssampling = 1;\r\n' \
+  '      const m_size = Math.min(2048, max_size);\r\n' \
+  '      const tr_size = Math.min(2048, max_size);\r\n' \
+  '      const d_size = Math.min(2048, max_size);\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "zs") {\r\n' \
+  '          if (v != null) {c_zfact.value = v.toString();}\r\n' \
+  '          zfact = parseFloat(c_zfact.value);\r\n' \
+  '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
+  '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '          cltangle = Math.cos(angle);\r\n' \
+  '          sltangle = Math.sin(angle)\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          let angle0 = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 - parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle0 = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              clt0angle = Math.cos(angle0);\r\n' \
+  '              slt0angle = Math.sin(angle0);\r\n' \
+  '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          if (p == "t") {\r\n' \
+  '            angle0 = Math.atan(stangle / ctangle * zfact);\r\n' \
+  '            cv_tangle.innerHTML = Math.round(90 - angle0 * 180 / Math.PI).toString();\r\n' \
+  '          } else if (p == "lt") {\r\n' \
+  '            cv_ltangle.innerHTML = Math.round(angle0 * 180 / Math.PI + 90).toString();\r\n' \
+  '          } else {\r\n' \
+  '            window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      var clt0angle = null;\r\n' \
+  '      var slt0angle = null;\r\n' \
+  '      set_param("t", 30);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 35);\r\n' \
+  '      set_param("lr", 315);\r\n' \
+  '      set_param("zs", 1);\r\n##DECLARATIONS##\r\n' + HTML_3D_MAT_TEMPLATE + \
+  '      function canvas_resize() {\r\n' \
+  '        let size = Math.min(canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight);\r\n' \
+  '        canvas.style.width = size.toString() + "px";\r\n' \
+  '        canvas.style.height = size.toString() + "px";\r\n' \
+  '        size *= ssampling;\r\n' \
+  '        canvas.setAttribute("width", size.toString());\r\n' \
+  '        canvas.setAttribute("height", size.toString());\r\n' \
+  '        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
+  '      }\r\n' + HTML_3D_UTIL_TEMPLATE + \
+  '      function canvas_init() {\r\n' \
+  '        gl.enable(gl.DEPTH_TEST);\r\n' \
+  '        canvas_resize();\r\n' \
+  '        let vertex_tcshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          in vec4 tvnormal;\r\n' \
+  '          uniform float zfactmax;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          uniform mat4 lmatrix;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec2 pcoord;\r\n' \
+  '          out float nz;\r\n' \
+  '          out float dim;\r\n' \
+  '          out vec4 lposition;\r\n' \
+  '          out float cinc;\r\n' \
+  '          void main() {\r\n' \
+  '            nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
+  '            gl_Position = vmatrix * tvposition;\r\n' \
+  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
+  '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
+  '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
+  '            cinc = dmode >= 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let vertex_ttshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          in vec4 tvnormal;\r\n' \
+  '          uniform float zfactmax;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          uniform mat4 lmatrix;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec2 pcoord;\r\n' \
+  '          out float dim;\r\n' \
+  '          out vec4 lposition;\r\n' \
+  '          out float cinc;\r\n' \
+  '          void main() {\r\n' \
+  '            gl_Position = vmatrix * tvposition;\r\n' \
+  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
+  '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
+  '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
+  '            cinc = dmode >= 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let vertex_lshader_s = `#version 300 es\r\n' \
+  '          in vec4 lvposition;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          uniform int ltype;\r\n' \
+  '          out vec4 color;\r\n' \
+  '          void main() {\r\n' \
+  '            gl_Position = vmatrix * lvposition;\r\n' \
+  '            color = ltype == 0 ? vec4(vec3(0.35 * lvposition.z + 0.65), 1) : vec4(1, 1, 0, 1);\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let vertex_sshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          uniform mat4 lmatrix;\r\n' \
+  '          void main() {\r\n' \
+  '            gl_Position = lmatrix * tvposition;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_cshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          precision highp int;\r\n' \
+  '          precision highp sampler2D;\r\n' \
+  '          precision highp sampler2DShadow;\r\n' \
+  '          in vec2 pcoord;\r\n' \
+  '          in float nz;\r\n' \
+  '          in float dim;\r\n' \
+  '          in vec4 lposition;\r\n' \
+  '          in float cinc;\r\n' \
+  '          uniform sampler2D trtex;\r\n' \
+  '          uniform sampler2DShadow dtex;\r\n' \
+  '          uniform int pmode;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec4 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
+  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
+  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
+  '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(pdim, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_tshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          precision highp int;\r\n' \
+  '          precision highp sampler2D;\r\n' \
+  '          precision highp sampler2DShadow;\r\n' \
+  '          in vec2 pcoord;\r\n' \
+  '          in float dim;\r\n' \
+  '          in vec4 lposition;\r\n' \
+  '          in float cinc;\r\n' \
+  '          uniform sampler2D mtex;\r\n' \
+  '          uniform sampler2D trtex;\r\n' \
+  '          uniform sampler2DShadow dtex;\r\n' \
+  '          uniform vec4 mpos;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec4 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
+  '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
+  '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(pdim, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_lshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          in vec4 color;\r\n' \
+  '          out vec4 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            pcolor = color;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_sshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          void main() {\r\n' \
+  '          }\r\n' \
+  '      `;\r\n' + HTML_3D_MAP_TEMPLATE + \
   '        function create_track_map() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
   '            if (d) {\r\n' \
@@ -8256,12 +8469,9 @@ class GPXTweakerWebInterfaceServer():
   '        texture_load(gl.TEXTURE0, [0, 127, 0, 255]);\r\n' \
   '        texture_load(gl.TEXTURE1, [0, 0, 0, 255]);\r\n' \
   '        create_track_map();\r\n' \
-  '        tvposition = gl.createBuffer();\r\n' \
-  '        gl.bindBuffer(gl.ARRAY_BUFFER, tvposition);\r\n' \
-  '        gl.bufferData(gl.ARRAY_BUFFER, vpositions, gl.STATIC_DRAW);\r\n' \
-  '        lvposition = gl.createBuffer();\r\n' \
-  '        gl.bindBuffer(gl.ARRAY_BUFFER, lvposition);\r\n' \
-  '        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([\r\n' \
+  '        tvposition = buffer_load(vpositions);\r\n' \
+  '        tvnormal = buffer_load(vnormals);\r\n' \
+  '        lvposition = buffer_load(new Float32Array([\r\n' \
   '          0, 0, -1,\r\n' \
   '          1.225, 0, -1,\r\n' \
   '          0, 0, -1,\r\n' \
@@ -8290,7 +8500,7 @@ class GPXTweakerWebInterfaceServer():
   '          0.5, -0.02, 1.55,\r\n' \
   '          0.5, 0, 1.5,\r\n' \
   '          0.5, 0.02, 1.55\r\n' \
-  '        ]), gl.STATIC_DRAW);\r\n' \
+  '        ]));\r\n' \
   '        for (let n of gl_programs.keys()) {\r\n' \
   '          program_use(n);\r\n' \
   '          program_attributes();\r\n' \
@@ -8298,36 +8508,37 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        sfrbuf = gl.createFramebuffer();\r\n' \
   '        gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
-  '        d_texture = texture_attach(gl.TEXTURE3, "depth");\r\n' \
-  '        f_texture = texture_attach(gl.TEXTURE2, "shadow");\r\n' \
+  '        d_texture = texture_attach(gl.TEXTURE2);\r\n' \
   '        gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
   '      }\r\n' \
   '      function canvas_redraw() {\r\n' \
   '        vmatrix = mat4_zscale(zfact);\r\n' \
   '        mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
   '        lmatrix = mat4_zscale(1);\r\n' \
+  '        ldirection = new Float32Array([0, 0, 0]);\r\n' \
   '        mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
   '        mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '        if (dmode >= 2) {\r\n' \
   '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
   '          if (dmode == 2) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
   '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
-  '          if (dmode == 2) {;\r\n' \
+  '          mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '          ldirection.set([-lmatrix[8], -lmatrix[9], -lmatrix[10]]);\r\n' \
+  '          if (dmode == 2) {\r\n' \
   '            ylmag = 1;\r\n' \
-  '          } else {;\r\n' \
-  '            mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '          } else {\r\n' \
   '            ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
   '            mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
   '          }\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
-  '          gl.viewport(0, 0, s_size, s_size);\r\n' \
+  '          gl.viewport(0, 0, d_size, d_size);\r\n' \
   '          gl.clearColor(0, 0, 0, 0);\r\n' \
   '          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
   '          program_use("sprogram");\r\n' \
   '          program_uniforms();\r\n' \
   '          gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
-  '          gl.viewport(0, 0, canvas.width, canvas.height);\r\n' \
+  '          gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
   '        }\r\n' \
   '        gl.clearColor(0, 0, 0, 0);\r\n' \
   '        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
@@ -8364,90 +8575,7 @@ class GPXTweakerWebInterfaceServer():
   '          program_uniforms();\r\n' \
   '          gl.drawArrays(gl.LINES, 10, 18);\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function canvas_rotate(number=null) {\r\n' \
-  '        if (number != null) {\r\n' \
-  '          if (nrot >= number) {\r\n' \
-  '            window.clearInterval(rep_rot);\r\n' \
-  '            set_param("r", 0);\r\n' \
-  '            canvas_redraw();\r\n' \
-  '            c_rangle.disabled = false;\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        let rangle = parseFloat(c_rangle.value) + 2;\r\n' \
-  '        if (rangle >= 360) {\r\n' \
-  '          nrot ++;\r\n' \
-  '          rangle -= 360;\r\n' \
-  '        }\r\n' \
-  '        set_param("r", rangle);\r\n' \
-  '        canvas_redraw();\r\n' \
-  '      }\r\n' \
-  '      function canvas_lrotate(number=null) {\r\n' \
-  '        if (number != null) {\r\n' \
-  '          if (nlrot >= number) {\r\n' \
-  '            window.clearInterval(rep_lrot);\r\n' \
-  '            set_param("lr", 0);\r\n' \
-  '            set_param("lt", ltangle_rotmax);\r\n' \
-  '            canvas_redraw();\r\n' \
-  '            c_lrangle.disabled = false;\r\n' \
-  '            c_ltangle.disabled = false;\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        let lrangle = parseFloat(c_lrangle.value) + 2;\r\n' \
-  '        if (lrangle >= 270 + parseFloat(c_rangle.value) || (lrangle < 90 + parseFloat(c_rangle.value) && lrangle >= parseFloat(c_rangle.value) - 90)) {\r\n' \
-  '          nlrot ++;\r\n' \
-  '          lrangle -= 180;\r\n' \
-  '        }\r\n' \
-  '        if (lrangle < 0) {lrangle += 360}\r\n' \
-  '        if (lrangle >= 360) {lrangle -= 360}\r\n' \
-  '        set_param("lr", lrangle);\r\n' \
-  '        set_param("lt", Math.sin((lrangle - 90 - parseFloat(c_rangle.value)) * Math.PI / 180) * ltangle_rotmax);\r\n' \
-  '        canvas_redraw();\r\n' \
-  '      }\r\n' \
-  '      function data_load() {\r\n' \
-  '        function derror_cb(t) {\r\n' \
-  '        }\r\n' \
-  '        function dload_cb(t) {\r\n' \
-  '          if (t.status != 200) {derror_cb(); return;}\r\n' \
-  '          let lvx = (new Uint32Array(t.response, 0, 1))[0];\r\n' \
-  '          let vx = new Float32Array(t.response, 4, lvx);\r\n' \
-  '          let lvy = (new Uint32Array(t.response, 4 * (1 + lvx), 1))[0];\r\n' \
-  '          let vy = new Float32Array(t.response, 4 * (2 + lvx) , lvy);\r\n' \
-  '          let lvz = (new Uint32Array(t.response, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
-  '          let vz = new Float32Array(t.response, 4 * (3 + lvx + lvy), lvz);\r\n' \
-  '          let nx = vx.length;\r\n' \
-  '          let ny = vy.length;\r\n' \
-  '          vpositions = new Float32Array((ny - 1) * (nx + 1) * 6);\r\n' \
-  '          let i = 0;\r\n' \
-  '          for (let iy=0; iy<ny-1; iy++) {\r\n' \
-  '            for (let ix=0; ix<nx; ix++) {\r\n' \
-  '              vpositions[i] = vx[ix];\r\n' \
-  '              vpositions[i + 1] = vy[iy];\r\n' \
-  '              vpositions[i + 2] = vz[iy * nx + ix];\r\n' \
-  '              vpositions[i + 3] = vx[ix];\r\n' \
-  '              vpositions[i + 4] = vy[iy + 1];\r\n' \
-  '              vpositions[i + 5] = vz[(iy + 1) * nx + ix];\r\n' \
-  '              i += 6;\r\n' \
-  '            }\r\n' \
-  '            vpositions[i] = vx[nx - 1];\r\n' \
-  '            vpositions[i + 1] = vy[iy + 1];\r\n' \
-  '            vpositions[i + 2] = vz[(iy + 1) * nx + nx - 1];\r\n' \
-  '            vpositions[i + 3] = vx[0];\r\n' \
-  '            vpositions[i + 4] = vy[iy + 1];\r\n' \
-  '            vpositions[i + 5] = vz[(iy + 1) * nx];\r\n' \
-  '            i += 6;\r\n' \
-  '          }\r\n' \
-  '          let ns = (new Uint32Array(t.response, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
-  '          trpositions = new Array(ns);\r\n' \
-  '          i = 0;\r\n' \
-  '          for (let s=0; s<ns; s++) {\r\n' \
-  '            let nspts = (new Uint32Array(t.response, 4 * (4 + lvx + lvy + lvz + s + 2 * i), 1))[0];\r\n' \
-  '            trpositions[s] = (new Float32Array(t.response, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts));\r\n' \
-  '            i += nspts;\r\n' \
-  '          }\r\n' \
-  '          canvas_init();\r\n' \
+  '      }\r\n' + HTML_3D_ROT_TEMPLATE + HTML_3D_LOAD_TEMPLATE + \
   '          canvas_redraw();\r\n' \
   '          window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
   '          c_tangle.disabled = false;\r\n' \
@@ -8473,37 +8601,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhr.responseType = "arraybuffer";\r\n' \
   '        xhr.send();\r\n' \
   '      }\r\n' \
-  '      data_load();\r\n' \
-  '      function toggle_rotation(number=null) {\r\n' \
-  '        if (c_rangle.disabled) {\r\n' \
-  '          window.clearInterval(rep_rot);\r\n' \
-  '          c_rangle.disabled = false;\r\n' \
-  '        } else {\r\n' \
-  '          c_rangle.disabled = true;\r\n' \
-  '          nrot = 0;\r\n' \
-  '          rep_rot = window.setInterval(function() {canvas_rotate(number);}, 100);\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function toggle_lrotation(number=null) {\r\n' \
-  '        if (c_lrangle.disabled) {\r\n' \
-  '          window.clearInterval(rep_lrot);\r\n' \
-  '          c_lrangle.disabled = false;\r\n' \
-  '          c_ltangle.disabled = false;\r\n' \
-  '        } else {\r\n' \
-  '          c_lrangle.disabled = true;\r\n' \
-  '          c_ltangle.disabled = true;\r\n' \
-  '          ltangle_rotmax = parseFloat(c_ltangle.value);\r\n' \
-  '          set_param("lt", 0);\r\n' \
-  '          set_param("lr", (90 + parseFloat(c_rangle.value)) % 360);\r\n' \
-  '          nlrot = 0;\r\n' \
-  '          rep_lrot = window.setInterval(function() {canvas_lrotate(number);}, 100);\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function toggle_filling(mode) {\r\n' \
-  '        if (mode == fillmode) {return;};\r\n' \
-  '        fillmode = mode;\r\n' \
-  '        canvas_redraw();\r\n' \
-  '      }\r\n' \
+  '      data_load();\r\n' + HTML_3D_TOGGLE_TEMPLATE + \
   '      function toggle_dimming(mode) {\r\n' \
   '        if (mode == dmode) {return;};\r\n' \
   '        dmode = mode;\r\n' \
@@ -8525,8 +8623,8 @@ class GPXTweakerWebInterfaceServer():
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
-  HTML_3D_TEMPLATE = HTML_3D_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
-  HTML_3D_DECLARATIONS_TEMPLATE = \
+  HTML_3DP_TEMPLATE = HTML_3DP_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
+  HTML_3DP_DECLARATIONS_TEMPLATE = \
   '      var portmin = ##PORTMIN##;\r\n' \
   '      var portmax = ##PORTMAX##;\r\n' \
   '      var zfactmax = ##ZFACTMAX##;\r\n' \
@@ -8534,7 +8632,540 @@ class GPXTweakerWebInterfaceServer():
   '      var tminrow = ##TMINROW##;\r\n' \
   '      var tmincol = ##TMINCOL##;\r\n' \
   '      var tmaxrow = ##TMAXROW##;\r\n' \
-  '      var tmaxcol = ##TMAXCOL##;\r\n'
+  '      var tmaxcol = ##TMAXCOL##;'
+  HTML_3DS_TEMPLATE = \
+  '<!DOCTYPE html>\r\n' \
+  '<html lang="fr-FR">\r\n' \
+  '  <head>\r\n' \
+  '    <meta charset="utf-8">\r\n' \
+  '    <title>GPXTweaker 3DViewer Subjective</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
+  '  </head>\r\n' \
+  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
+  '    <table>\r\n' \
+  '      <colgroup>\r\n' \
+  '        <col style="width:calc(100vw - 14em);">\r\n' \
+  '        <col style="width:14em;">\r\n' \
+  '      </colgroup>\r\n' \
+  '      <tbody>\r\n' \
+  '        <tr style="display:table-row;">\r\n' \
+  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;">\r\n' \
+  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)"></canvas>\r\n' \
+  '          <svg viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;">\r\n' \
+  '            <path id="track" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
+  '            <text dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
+  '              <textPath href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
+  '            </text>\r\n' \
+  '            <path id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" transform="rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 h0.3 l-0.15 -0.4"/>\r\n' \
+  '          </svg>\r\n' \
+  '        </td>\r\n' \
+  '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
+  '          <div title="{#jhelp3d#}" style="position:absolute;right:1px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
+  '          <form autocomplete="off" onsubmit="return(false)" style="overflow:auto;max-height:100vh;padding-left:0.3em;">\r\n' \
+  '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
+  '            <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
+  '            <p><label for="cursor_pace">{#jpace#}</label><label for="checkbox_pace" style="position:absolute;right:1.6em;padding-top:0.4em;font-size:130%;">&orarr;</label></p>\r\n' \
+  '            <input type="range" id="cursor_pace" min="0" max="0" step="1" value="0" disabled oninput="set_param(\'p\')">&nbsp;&nbsp;<input type="checkbox" id="checkbox_pace" checked disabled onclick="toggle_auto_rotation()">\r\n' \
+  '            <br><span>0</span><span id="cursorv_pace">0</span><span>0</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
+  '            <input type="radio" id="radio_dims" name="dimming" disabled onclick="toggle_dimming(2)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
+  '            <br><br>\r\n' \
+  '            <p><label for="cursor_vfov">{#jvfov#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_vfov" min="10" max="150" step="any" value="60" disabled oninput="set_param(\'f\')">\r\n' \
+  '            <br><span>10</span><span id="cursorv_vfov">60</span><span>150</span>\r\n' \
+  '          </form>\r\n' \
+  '        </td>\r\n' \
+  '      </tbody>\r\n' \
+  '    </table>\r\n' \
+  '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec4", 3]], ["rvposition", ["vec4", 3]]]);\r\n' \
+  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
+  '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
+  '      var track = document.getElementById("track");\r\n' \
+  '      var eye = document.getElementById("eye");\r\n' \
+  '      var c_pace = document.getElementById("cursor_pace");\r\n' \
+  '      var cv_pace = document.getElementById("cursorv_pace");\r\n' \
+  '      var cb_pace = document.getElementById("checkbox_pace");\r\n' \
+  '      var c_vfov = document.getElementById("cursor_vfov");\r\n' \
+  '      var cv_vfov = document.getElementById("cursorv_vfov");\r\n' \
+  '      var trpaces = null;\r\n' \
+  '      var rpositions = null;\r\n' \
+  '      var rvposition = null;\r\n' \
+  '      var eposition = null;\r\n' \
+  '      const ssampling = 2;\r\n' \
+  '      const m_size = Math.min(8192, max_size / 2);\r\n' \
+  '      const tr_size = Math.min(8192, max_size / 2);\r\n' \
+  '      const d_size = max_size;\r\n' \
+  '      const rnt = 36;\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "p") {\r\n' \
+  '          if (v != null) {c_pace.value = v.toString();}\r\n' \
+  '          cv_pace.innerHTML = c_pace.value;\r\n' \
+  '          pace = parseInt(c_pace.value);\r\n' \
+  '          eposition.set([trpaces[pace][0], trpaces[pace][1]]);\r\n' \
+  '          if (cb_pace.checked) {\r\n' \
+  '            if (c_rangle.disabled) {toggle_rotation();}\r\n' \
+  '            set_param("r", (450 - trpaces[pace][3] / Math.PI * 180) % 360);\r\n' \
+  '          }\r\n' \
+  '        } else if (p == "f") {\r\n' \
+  '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
+  '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
+  '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 + parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / -180;\r\n' \
+  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)})`);}\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              lmatrix = null;\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              lmatrix = null;\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      set_param("t", 0);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 20);\r\n' \
+  '      set_param("lr", 0);\r\n' \
+  '      var pace = 0;\r\n' \
+  '      var vfov = null;\r\n' \
+  '      set_param("f", 60);\r\n##DECLARATIONS##\r\n' + \
+  '      var radius = 6378137 / scale;\r\n' \
+  '      var pace_length = 10 / scale;\r\n' \
+  '      var zoff = 2 / scale;\r\n' + HTML_3D_MAT_TEMPLATE + \
+  '      function mat4_translation(xt, yt, zt) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, xt,\r\n' \
+  '          0, 1, 0, yt,\r\n' \
+  '          0, 0, 1, zt,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_perspective() {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          vfov / 4 / canvas.clientWidth * canvas.clientHeight, 0, 0, 0,\r\n' \
+  '          0, vfov / 4, 0, 0,\r\n' \
+  '          0, 0, 1/2, -1,\r\n' \
+  '          0, 0, 1/4, 0,\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function canvas_resize() {\r\n' \
+  '        canvas.setAttribute("width", (canvas.parentNode.offsetWidth * ssampling).toString());\r\n' \
+  '        canvas.setAttribute("height", (canvas.parentNode.offsetHeight * ssampling).toString());\r\n' \
+  '        canvas.style.width = canvas.parentNode.offsetWidth.toString() + "px";;\r\n' \
+  '        canvas.style.height = canvas.parentNode.offsetHeight.toString() + "px";\r\n' \
+  '        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
+  '        gl.bindBuffer(gl.ARRAY_BUFFER, rvposition);\r\n' \
+  '        let rr = canvas.clientHeight / canvas.clientWidth;\r\n' \
+  '        let ra = 2 * Math.PI / rnt;\r\n' \
+  '        for (let i=0; i<=rnt;i++) {rpositions.set([0.01 * rr * Math.cos(i * ra), 0.01 * Math.sin(i * ra), 0], 3 + 3 * i);}\r\n' \
+  '        gl.bufferData(gl.ARRAY_BUFFER, rpositions, gl.DYNAMIC_DRAW);\r\n' \
+  '      }\r\n' + HTML_3D_UTIL_TEMPLATE + \
+  '      function canvas_init() {\r\n' \
+  '        gl.enable(gl.DEPTH_TEST);\r\n' \
+  '        rpositions = new Float32Array(6 + 3 * rnt);\r\n' \
+  '        rpositions.set([0, 0, 0]);\r\n' \
+  '        rvposition = gl.createBuffer();\r\n' \
+  '        canvas_resize();\r\n' \
+  '        let vertex_tcshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          in vec4 tvnormal;\r\n' \
+  '          uniform float zfactmax;\r\n' \
+  '          uniform vec2 eposition;\r\n' \
+  '          uniform float radius;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          uniform mat4 lmatrix;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec2 pcoord;\r\n' \
+  '          out float nz;\r\n' \
+  '          out float dim;\r\n' \
+  '          out vec4 lposition;\r\n' \
+  '          out float cinc;\r\n' \
+  '          void main() {\r\n' \
+  '            nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
+  '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
+  '            gl_Position.z *= gl_Position.w;\r\n' \
+  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
+  '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
+  '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
+  '            cinc = dmode == 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let vertex_ttshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          in vec4 tvnormal;\r\n' \
+  '          uniform float zfactmax;\r\n' \
+  '          uniform vec2 eposition;\r\n' \
+  '          uniform float radius;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          uniform mat4 lmatrix;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec2 pcoord;\r\n' \
+  '          out float dim;\r\n' \
+  '          out vec4 lposition;\r\n' \
+  '          out float cinc;\r\n' \
+  '          void main() {\r\n' \
+  '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
+  '            gl_Position.z *= gl_Position.w;\r\n' \
+  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
+  '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
+  '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
+  '            cinc = dmode == 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let vertex_sshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          uniform mat4 lmatrix;\r\n' \
+  '          void main() {\r\n' \
+  '            gl_Position = lmatrix * tvposition;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let vertex_rshader_s = `#version 300 es\r\n' \
+  '          in vec4 rvposition;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          void main() {\r\n' \
+  '            gl_Position = vmatrix * vec4(0, 0, 1, 1) + vec4(rvposition.xyz, 0);\r\n' \
+  '            gl_Position.z *= gl_Position.w;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_cshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          precision highp int;\r\n' \
+  '          precision highp sampler2D;\r\n' \
+  '          precision highp sampler2DShadow;\r\n' \
+  '          in vec2 pcoord;\r\n' \
+  '          in float nz;\r\n' \
+  '          in float dim;\r\n' \
+  '          in vec4 lposition;\r\n' \
+  '          in float cinc;\r\n' \
+  '          uniform sampler2D trtex;\r\n' \
+  '          uniform sampler2DShadow dtex;\r\n' \
+  '          uniform int pmode;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec4 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
+  '            vec4 pos = vec4(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc), 2.0);\r\n' \
+  '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, textureProj(dtex, pos));\r\n' \
+  '            pcolor = mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_tshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          precision highp int;\r\n' \
+  '          precision highp sampler2D;\r\n' \
+  '          precision highp sampler2DShadow;\r\n' \
+  '          in vec2 pcoord;\r\n' \
+  '          in float dim;\r\n' \
+  '          in vec4 lposition;\r\n' \
+  '          in float cinc;\r\n' \
+  '          uniform sampler2D mtex;\r\n' \
+  '          uniform sampler2D trtex;\r\n' \
+  '          uniform sampler2DShadow dtex;\r\n' \
+  '          uniform vec4 mpos;\r\n' \
+  '          uniform int dmode;\r\n' \
+  '          out vec4 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            vec4 pos = vec4(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc), 2.0);\r\n' \
+  '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, textureProj(dtex, pos));\r\n' \
+  '            pcolor = mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '        let fragment_sshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          void main() {\r\n' \
+  '          }\r\n' \
+  '       `;\r\n' \
+  '        let fragment_rshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          out vec4 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            pcolor = vec4(1, 1, 0, 1);\r\n' \
+  '            gl_FragDepth = 1.0;\r\n' \
+  '          }\r\n' \
+  '       `;\r\n' + HTML_3D_MAP_TEMPLATE + \
+  '        function create_track_map() {\r\n' \
+  '          function move_to(x, y, d=true) {\r\n' \
+  '            if (d) {\r\n' \
+  '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '            } else {\r\n' \
+  '              ctx.moveTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let cnv2d = document.createElement("canvas");\r\n' \
+  '          let ctx = cnv2d.getContext("2d");\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          ctx.lineWidth = 2;\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          trpaces = [];\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dr = false;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ptg = false;\r\n' \
+  '            let pac = true;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (! dr) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind+1];\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 2, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                move_to(px, py, false);\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind+1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                  if (! ptg) {\r\n' \
+  '                    ptg = true;\r\n' \
+  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (dist < pace_length) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind+1];\r\n' \
+  '                  pac = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
+  '                  move_to(px, py);\r\n' \
+  '                } else {\r\n' \
+  '                  pac = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
+  '                  py = trpositions[s][ind+1] - (dist - pace_length) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              dr = true;\r\n' \
+  '              if (pac) {\r\n' \
+  '                let ix = 0;\r\n' \
+  '                let iy = 0;\r\n' \
+  '                while (ix < lvx - 1 && vpositions[ix * 6] <= px) {ix++;}\r\n' \
+  '                while (iy < lvy - 1 && vpositions[(iy * (lvx + 1)) * 6 + 4] <= py) {iy++;}\r\n' \
+  '                let cx = (px - vpositions[(ix - 1) * 6]) / (vpositions[ix * 6] - vpositions[(ix - 1) * 6]);\r\n' \
+  '                let cy = (py - vpositions[(iy * (lvx + 1)) * 6 + 1]) / (vpositions[(iy * (lvx + 1)) * 6 + 4] - vpositions[(iy * (lvx + 1)) * 6 + 1]);\r\n' \
+  '                let pz = (1 - cy) * ((1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 2] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 2]) + cy * ((1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 5]);\r\n' \
+  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '            track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(2)):(" " + (-c).toFixed(2)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '          }\r\n' \
+  '          tr_texture = texture_load(gl.TEXTURE1, cnv2d);\r\n' \
+  '          create_map();\r\n' \
+  '        }\r\n' \
+  '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
+  '        program_create("ttprogram", vertex_ttshader_s, fragment_tshader_s);\r\n' \
+  '        program_create("sprogram", vertex_sshader_s, fragment_sshader_s);\r\n' \
+  '        program_create("rprogram", vertex_rshader_s, fragment_rshader_s);\r\n' \
+  '        texture_load(gl.TEXTURE0, [0, 127, 0, 255]);\r\n' \
+  '        texture_load(gl.TEXTURE1, [0, 0, 0, 255]);\r\n' \
+  '        create_track_map();\r\n' \
+  '        tvposition = buffer_load(vpositions);\r\n' \
+  '        tvnormal = buffer_load(vnormals);\r\n' \
+  '        for (let n of gl_programs.keys()) {\r\n' \
+  '          program_use(n);\r\n' \
+  '          program_attributes();\r\n' \
+  '          program_uniforms("static");\r\n' \
+  '        }\r\n' \
+  '        sfrbuf = gl.createFramebuffer();\r\n' \
+  '        gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
+  '        d_texture = texture_attach(gl.TEXTURE2);\r\n' \
+  '        gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '      }\r\n' \
+  '      function canvas_redraw() {\r\n' \
+  '        if (! lmatrix) {\r\n' \
+  '          lmatrix = mat4_zscale(1);\r\n' \
+  '          ldirection = new Float32Array([0, 0, 0]);\r\n' \
+  '          if (dmode == 2) {\r\n' \
+  '            mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(cltangle, sltangle), lmatrix);\r\n' \
+  '            ldirection.set([-lmatrix[8], -lmatrix[9], -lmatrix[10]]);\r\n' \
+  '            ylmag = 1.732 / (1.415 * cltangle - sltangle / zfactmax);\r\n' \
+  '            mat4_mult(mat4_yscale(ylmag, 1.415 * cltangle - sltangle), lmatrix);\r\n' \
+  '            gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
+  '            gl.viewport(0, 0, d_size, d_size);\r\n' \
+  '            gl.clearColor(0, 0, 0, 0);\r\n' \
+  '            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
+  '            program_use("sprogram");\r\n' \
+  '            program_uniforms();\r\n' \
+  '            gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
+  '            gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        gl.clearColor(0.46, 0.68, 0.95, 1);\r\n' \
+  '        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
+  '        program_use(fillmode<2?"tcprogram":"ttprogram");\r\n' \
+  '        pmode = fillmode==1?1:0;\r\n' \
+  '        vmatrix = mat4_zscale(1);\r\n' \
+  '        mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
+  '        mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '        mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '        mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '        program_uniforms();\r\n' \
+  '        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
+  '        if (dmode == 2) {\r\n' \
+  '          program_use("rprogram");\r\n' \
+  '          vmatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_tilt(cltangle, -sltangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_rotation(clrangle, -slrangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '          program_uniforms();\r\n' \
+  '          gl.depthFunc(gl.LEQUAL)\r\n' \
+  '          gl.drawArrays(gl.TRIANGLE_FAN, 0, rnt + 2);\r\n' \
+  '          gl.depthFunc(gl.LESS)\r\n' \
+  '        }\r\n' \
+  '      }\r\n' + HTML_3D_ROT_TEMPLATE + HTML_3D_LOAD_TEMPLATE + \
+  '          eposition = new Float32Array(2);\r\n' \
+  '          set_param("p", 0);\r\n' \
+  '          canvas_redraw();\r\n' \
+  '          window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
+  '          c_tangle.disabled = false;\r\n' \
+  '          c_rangle.disabled = false;\r\n' \
+  '          b_rangle.disabled = false;\r\n' \
+  '          c_pace.max = (trpaces.length - 1).toString();\r\n' \
+  '          cv_pace.nextElementSibling.innerHTML = (trpaces.length - 1).toString();\r\n' \
+  '          c_pace.disabled = false;\r\n' \
+  '          cb_pace.disabled = false\r\n' \
+  '          r_yiso.disabled = false;\r\n' \
+  '          r_ziso.disabled = false;\r\n' \
+  '          r_dimn.disabled = false;\r\n' \
+  '          r_dimz.disabled = false\r\n' \
+  '          r_dims.disabled = false;\r\n' \
+  '          c_vfov.disabled = false;\r\n' \
+  '          canvas.focus();\r\n' \
+  '          canvas.style.outline="none";\r\n' \
+  '           <!-- toggle_rotation(1); -->\r\n' \
+  '           <!-- toggle_lrotation(1); -->\r\n' \
+  '        }\r\n' \
+  '        let xhr = new XMLHttpRequest();\r\n' \
+  '        xhr.onerror = (e) => derror_cb(e.target);\r\n' \
+  '        xhr.onload = (e) => dload_cb(e.target);\r\n' \
+  '        xhr.open("GET", "/3D/data");\r\n' \
+  '        xhr.responseType = "arraybuffer";\r\n' \
+  '        xhr.send();\r\n' \
+  '      }\r\n' \
+  '      data_load();\r\n' + HTML_3D_TOGGLE_TEMPLATE + \
+  '      function toggle_auto_rotation() {\r\n' \
+  '        if (cb_pace.checked) {\r\n' \
+  '          if (c_rangle.disabled) {toggle_rotation();}\r\n' \
+  '          set_param("p")\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_dimming(mode) {\r\n' \
+  '        if (mode == dmode) {return;};\r\n' \
+  '        dmode = mode;\r\n' \
+  '        if (dmode == 2) {\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          b_lrangle.disabled = false;\r\n' \
+  '          lmatrix = null;\r\n' \
+  '        } else {\r\n' \
+  '          c_ltangle.disabled = true;\r\n' \
+  '          c_lrangle.disabled = true;\r\n' \
+  '          b_lrangle.disabled = true;\r\n' \
+  '        }\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '      function process_key(e) {\r\n' \
+  '        let rd = false;\r\n' \
+  '        let alt = false;\r\n' \
+  '        switch (e.key.toLowerCase()) {\r\n' \
+  '          case "end":\r\n' \
+  '            alt = true;\r\n' \
+  '          case "arrowup":\r\n' \
+  '            if (pace < parseInt(c_pace.max)) {\r\n' \
+  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.repeat?10:1),parseInt(c_pace.max)));\r\n' \
+  '              rd = true;\r\n' \
+  '            } else {return;}\r\n' \
+  '            break;\r\n' \
+  '          case "home":\r\n' \
+  '            alt = true;\r\n' \
+  '          case "arrowdown":\r\n' \
+  '            if (pace > 0) {\r\n' \
+  '              set_param("p", alt?0:Math.max(pace-(e.repeat?10:1),0));\r\n' \
+  '              rd = true;\r\n' \
+  '            } else {return;}\r\n' \
+  '            break;\r\n' \
+  '          case "arrowleft":\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.repeat?355:359)) % 360);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "arrowright":\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.repeat?5:1)) % 360);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "pageup":\r\n' \
+  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.repeat?2:1), 90));\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "pagedown":\r\n' \
+  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.repeat?2:1), -90));\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "delete":\r\n' \
+  '            cb_pace.checked = ! cb_pace.checked;\r\n' \
+  '            toggle_auto_rotation();\r\n' \
+  '            break;\r\n' \
+  '          case "enter":\r\n' \
+  '            if (document.fullscreenElement) {document.exitFullscreen();} else { canvas.parentNode.requestFullscreen();}\r\n' \
+  '            break;\r\n' \
+  '          default:\r\n' \
+  '            return;\r\n' \
+  '        }\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        if (rd) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '    </script>\r\n' \
+  '  </body>\r\n' \
+  '</html>'
+  HTML_3DS_TEMPLATE = HTML_3DS_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
+  HTML_3DS_DECLARATIONS_TEMPLATE = HTML_3DP_DECLARATIONS_TEMPLATE + '\r\n' + \
+  '      scale = ##SCALE##;'
   HTMLExp_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -10407,7 +11038,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(2, 'built')
     return True
 
-  def Build3DHTML(self):
+  def Build3DHTML(self, mode3d):
     self.HTML3D = None
     self.HTML3DData = None
     if next((p for seg in self.Track.Pts for p in seg), None) == None:
@@ -10488,16 +11119,17 @@ class GPXTweakerWebInterfaceServer():
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     xy_den = max(maxx - minx, maxy - miny) / 2
-    z_den = (maxele - minele) / 2
+    moyx = (minx + maxx) / 2
+    moyy = (miny + maxy) / 2
+    cor = math.cosh(moyy / 6378137)
+    z_den = (maxele - minele) / 2 * cor
     if xy_den > z_den:
       den = xy_den
       zfactor = xy_den / z_den
     else:
       den = z_den
       zfactor = 1
-    moyx = (minx + maxx) / 2
-    moyy = (miny + maxy) / 2
-    self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
+    self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) * cor / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, self.Elevation.MapInfos.get('source', ''))
     if self.Mode == 'map':
       minrow, mincol = 1, 1
@@ -10525,8 +11157,8 @@ class GPXTweakerWebInterfaceServer():
     bx = (moyx - tminx - den) / (tmaxx - tminx)
     ay = 2 * den / (tmaxy - tminy)
     by = (moyy - tminy - den) / (tmaxy - tminy)
-    declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol))
-    self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3D_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath)
+    declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor))
+    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath)
     self.log(0, '3dbuilt')
     return True
 
