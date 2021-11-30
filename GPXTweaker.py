@@ -169,7 +169,7 @@ FR_STRINGS = {
     'jfoldersw': 'Répertoires:',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;entrée pour activer / quitter le mode plein écran',
+    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -257,6 +257,7 @@ FR_STRINGS = {
     'jtextureyiso': 'Isoplèthes Y',
     'jtextureziso': 'Isoplèthes Z',
     'jtexturemap': 'Carte',
+    'jtexturemaploading': 'Carte (en cours: %s%...)',
     'jdimming': 'Estompage:',
     'jdimmingnone': 'Sans',
     'jdimmingz': 'Altitude',
@@ -422,7 +423,7 @@ EN_STRINGS = {
     'jfoldersw': 'Folders:',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
-    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;enter to toggle the fullscreen mode',
+    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -510,6 +511,7 @@ EN_STRINGS = {
     'jtextureyiso': 'Y isopleths',
     'jtextureziso': 'Z isopleths',
     'jtexturemap': 'Map',
+    'jtexturemaploading': 'Map (in progress: %s%...)',
     'jdimming': 'Dimming:',
     'jdimmingnone': 'Without',
     'jdimmingz': 'Elevation',
@@ -3205,7 +3207,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             _send_resp_nc()
           elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
             try:
-              mode3d = req.path.split('?3d=')[1].lower()
+              mode3d = req.path.split('?3d=')[1][0].lower()
               if mode3d != 'p' and mode3d != 's':
                 raise
             except:
@@ -3213,7 +3215,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             self.server.Interface.SLock.acquire()
             if not self.server.Interface.HTML:
-              self.server.Interface.TrackInd = int(req.path.split('?')[1])
+              self.server.Interface.TrackInd = int(req.path.split('?3d=')[1][2:])
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
@@ -7717,11 +7719,13 @@ class GPXTweakerWebInterfaceServer():
   '        width:3em;\r\n' \
   '      }\r\n' \
   '      input[type=radio] {\r\n' \
-  '        vertical-align:top;\r\n' \
+  '        vertical-align:middle;\r\n' \
   '        margin-bottom:0.4em;\r\n' \
   '      }\r\n' \
   '      input[type=checkbox] {\r\n' \
   '        appearance:none;\r\n' \
+  '        position:absolute;\r\n' \
+  '        left:10.5em;\r\n' \
   '        vertical-align:top;\r\n' \
   '        width:1.2em;\r\n' \
   '        height:1.2em;\r\n' \
@@ -7927,7 +7931,6 @@ class GPXTweakerWebInterfaceServer():
   '                break;\r\n' \
   '              case "mat4":\r\n' \
   '                gl.uniformMatrix4fv(gl_programs.get(cur_prog).get(n), true, window[n]);\r\n' \
-  '                gl.finish();\r\n' \
   '                break;\r\n' \
   '              case "sampler2D":\r\n' \
   '              case "sampler2DShadow":\r\n' \
@@ -7979,11 +7982,14 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n'
   HTML_3D_MAP_TEMPLATE = \
   '        function create_map() {\r\n' \
+  '          r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", "0");\r\n' \
   '          let nrow = tmaxrow + 1 - tminrow;\r\n' \
   '          let ncol = tmaxcol + 1 - tmincol;\r\n' \
   '          let mheight = m_size * nrow / Math.max(nrow, ncol);\r\n' \
   '          let mwidth = m_size * ncol / Math.max(nrow, ncol);\r\n' \
   '          let ntiles = nrow * ncol;\r\n' \
+  '          let ltiles = 0;\r\n' \
+  '          let ltp = "0%";\r\n' \
   '          let cnv2d = document.createElement("canvas");\r\n' \
   '          let ctx = cnv2d.getContext("2d");\r\n' \
   '          cnv2d.height = mheight;\r\n' \
@@ -7996,11 +8002,17 @@ class GPXTweakerWebInterfaceServer():
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
   '            map_texture = texture_load(gl.TEXTURE0, cnv2d);\r\n' \
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
+  '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
   '            r_map.disabled = false;\r\n' \
   '          }\r\n' \
   '          function terr_cb() {\r\n' \
-  '            ntiles--;\r\n' \
-  '            if (ntiles == 0) {map_complete();}\r\n' \
+  '            ltiles++;\r\n' \
+  '            let ltpn = Math.floor(100 * ltiles / ntiles).toString();\r\n' \
+  '            if (ltpn != ltp) {\r\n' \
+  '              ltp = ltpn;\r\n' \
+  '              r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", ltp);\r\n' \
+  '            }\r\n' \
+  '            if (ltiles == ntiles) {map_complete();}\r\n' \
   '          }\r\n' \
   '          function tload_cb(tile, row, col) {\r\n' \
   '            ctx.drawImage(tile, Math.round((col - tmincol) / ncol * mwidth), Math.round((row - tminrow) / nrow * mheight), Math.round((col + 1 - tmincol) / ncol * mwidth) - Math.round((col - tmincol) / ncol * mwidth), Math.round((row + 1 - tminrow) / nrow * mheight) - Math.round((row - tminrow) / nrow * mheight));\r\n' \
@@ -8207,7 +8219,7 @@ class GPXTweakerWebInterfaceServer():
   '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
   '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
   '          cltangle = Math.cos(angle);\r\n' \
-  '          sltangle = Math.sin(angle)\r\n' \
+  '          sltangle = Math.sin(angle);\r\n' \
   '        } else {\r\n' \
   '          let angle = null;\r\n' \
   '          let angle0 = null;\r\n' \
@@ -8219,6 +8231,7 @@ class GPXTweakerWebInterfaceServer():
   '            case "r":\r\n' \
   '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
   '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
+  '              if (dmode == 2) {lmatrix = null;}\r\n' \
   '              break;\r\n' \
   '            case "lt":\r\n' \
   '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
@@ -8226,10 +8239,12 @@ class GPXTweakerWebInterfaceServer():
   '              clt0angle = Math.cos(angle0);\r\n' \
   '              slt0angle = Math.sin(angle0);\r\n' \
   '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '              lmatrix = null;\r\n' \
   '              break;\r\n' \
   '            case "lr":\r\n' \
   '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
   '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              lmatrix = null;\r\n' \
   '              break;\r\n' \
   '          }\r\n' \
   '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
@@ -8340,7 +8355,7 @@ class GPXTweakerWebInterfaceServer():
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
   '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
-  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
+  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
   '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(pdim, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
@@ -8361,7 +8376,7 @@ class GPXTweakerWebInterfaceServer():
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
-  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
+  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
   '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(pdim, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
@@ -8378,7 +8393,7 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp float;\r\n' \
   '          void main() {\r\n' \
   '          }\r\n' \
-  '      `;\r\n' + HTML_3D_MAP_TEMPLATE + \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
   '        function create_track_map() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
   '            if (d) {\r\n' \
@@ -8512,38 +8527,39 @@ class GPXTweakerWebInterfaceServer():
   '        gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
   '      }\r\n' \
   '      function canvas_redraw() {\r\n' \
-  '        vmatrix = mat4_zscale(zfact);\r\n' \
-  '        mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
-  '        lmatrix = mat4_zscale(1);\r\n' \
-  '        ldirection = new Float32Array([0, 0, 0]);\r\n' \
-  '        mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
-  '        mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
-  '        if (dmode >= 2) {\r\n' \
-  '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
-  '          if (dmode == 2) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
-  '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
-  '          mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
-  '          ldirection.set([-lmatrix[8], -lmatrix[9], -lmatrix[10]]);\r\n' \
-  '          if (dmode == 2) {\r\n' \
-  '            ylmag = 1;\r\n' \
-  '          } else {\r\n' \
-  '            ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
-  '            mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '        if (! lmatrix) {\r\n' \
+  '          lmatrix = mat4_zscale(1);\r\n' \
+  '          ldirection = new Float32Array([0, 0, 0]);\r\n' \
+  '          if (dmode >= 2) {\r\n' \
+  '            mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '            if (dmode == 2) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '            ldirection.set([-lmatrix[8], -lmatrix[9], -lmatrix[10]]);\r\n' \
+  '            if (dmode == 2) {\r\n' \
+  '              ylmag = 1;\r\n' \
+  '            } else {\r\n' \
+  '              ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
+  '              mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '              gl.viewport(0, 0, d_size, d_size);\r\n' \
+  '              gl.clearColor(0, 0, 0, 0);\r\n' \
+  '              gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
+  '              program_use("sprogram");\r\n' \
+  '              program_uniforms();\r\n' \
+  '              gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
+  '              gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '              gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
-  '          gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
-  '          gl.viewport(0, 0, d_size, d_size);\r\n' \
-  '          gl.clearColor(0, 0, 0, 0);\r\n' \
-  '          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
-  '          program_use("sprogram");\r\n' \
-  '          program_uniforms();\r\n' \
-  '          gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
-  '          gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
-  '          gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
   '        }\r\n' \
   '        gl.clearColor(0, 0, 0, 0);\r\n' \
   '        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
   '        program_use(fillmode<2?"tcprogram":"ttprogram");\r\n' \
   '        pmode = fillmode==1?1:0;\r\n' \
+  '        vmatrix = mat4_zscale(zfact);\r\n' \
+  '        mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
+  '        mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '        mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '        program_uniforms();\r\n' \
   '        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
   '        program_use("lprogram");\r\n' \
@@ -8609,6 +8625,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_ltangle.disabled = false;\r\n' \
   '          c_lrangle.disabled = false;\r\n' \
   '          b_lrangle.disabled = false;\r\n' \
+  '          lmatrix = null;\r\n' \
   '        } else {\r\n' \
   '          c_ltangle.disabled = true;\r\n' \
   '          c_lrangle.disabled = true;\r\n' \
@@ -8616,6 +8633,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (dmode == 2) {\r\n' \
   '            set_param("lt", 35);\r\n' \
   '            set_param("lr", 315);\r\n' \
+  '            lmatrix = null;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        canvas_redraw();\r\n' \
@@ -8649,7 +8667,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
   '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;">\r\n' \
-  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)"></canvas>\r\n' \
+  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" ></canvas>\r\n' \
   '          <svg viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;">\r\n' \
   '            <path id="track" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
   '            <text dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
@@ -8659,19 +8677,19 @@ class GPXTweakerWebInterfaceServer():
   '          </svg>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
-  '          <div title="{#jhelp3d#}" style="position:absolute;right:1px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '          <form autocomplete="off" onsubmit="return(false)" style="overflow:auto;max-height:100vh;padding-left:0.3em;">\r\n' \
+  '          <div title="{#jhelp3d#}" style="position:absolute;z-index:10;right:20px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
+  '          <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:auto;max-height:100vh;padding-left:0.3em;">\r\n' \
   '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
   '            <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
   '            <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
-  '            <p><label for="cursor_pace">{#jpace#}</label><label for="checkbox_pace" style="position:absolute;right:1.6em;padding-top:0.4em;font-size:130%;">&orarr;</label></p>\r\n' \
+  '            <p><label for="cursor_pace">{#jpace#}</label><label for="checkbox_pace" style="position:absolute;left:8.15em;padding-top:0.4em;font-size:130%;">&orarr;</label></p>\r\n' \
   '            <input type="range" id="cursor_pace" min="0" max="0" step="1" value="0" disabled oninput="set_param(\'p\')">&nbsp;&nbsp;<input type="checkbox" id="checkbox_pace" checked disabled onclick="toggle_auto_rotation()">\r\n' \
   '            <br><span>0</span><span id="cursorv_pace">0</span><span>0</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
-  '            <input type="radio" id="radio_dims" name="dimming" disabled onclick="toggle_dimming(2)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
+  '            <input type="radio" id="radio_dims" name="dimming" checked disabled onclick="toggle_dimming(2)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
   '            <br><br>\r\n' \
   '            <p><label for="cursor_vfov">{#jvfov#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_vfov" min="10" max="150" step="any" value="60" disabled oninput="set_param(\'f\')">\r\n' \
-  '            <br><span>10</span><span id="cursorv_vfov">60</span><span>150</span>\r\n' \
+  '            <input type="range" id="cursor_vfov" min="10" max="150" step="any" value="55" disabled oninput="set_param(\'f\')">\r\n' \
+  '            <br><span>10</span><span id="cursorv_vfov">55</span><span>150</span>\r\n' \
   '          </form>\r\n' \
   '        </td>\r\n' \
   '      </tbody>\r\n' \
@@ -8741,11 +8759,11 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      set_param("t", 0);\r\n' \
   '      set_param("r", 0);\r\n' \
-  '      set_param("lt", 20);\r\n' \
-  '      set_param("lr", 0);\r\n' \
+  '      set_param("lt", 25);\r\n' \
+  '      set_param("lr", 90);\r\n' \
   '      var pace = 0;\r\n' \
   '      var vfov = null;\r\n' \
-  '      set_param("f", 60);\r\n##DECLARATIONS##\r\n' + \
+  '      set_param("f", 55);\r\n##DECLARATIONS##\r\n' + \
   '      var radius = 6378137 / scale;\r\n' \
   '      var pace_length = 10 / scale;\r\n' \
   '      var zoff = 2 / scale;\r\n' + HTML_3D_MAT_TEMPLATE + \
@@ -8897,7 +8915,7 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp float;\r\n' \
   '          void main() {\r\n' \
   '          }\r\n' \
-  '       `;\r\n' \
+  '        `;\r\n' \
   '        let fragment_rshader_s = `#version 300 es\r\n' \
   '          precision highp float;\r\n' \
   '          out vec4 pcolor;\r\n' \
@@ -8905,7 +8923,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcolor = vec4(1, 1, 0, 1);\r\n' \
   '            gl_FragDepth = 1.0;\r\n' \
   '          }\r\n' \
-  '       `;\r\n' + HTML_3D_MAP_TEMPLATE + \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
   '        function create_track_map() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
   '            if (d) {\r\n' \
@@ -8983,7 +9001,7 @@ class GPXTweakerWebInterfaceServer():
   '                while (iy < lvy - 1 && vpositions[(iy * (lvx + 1)) * 6 + 4] <= py) {iy++;}\r\n' \
   '                let cx = (px - vpositions[(ix - 1) * 6]) / (vpositions[ix * 6] - vpositions[(ix - 1) * 6]);\r\n' \
   '                let cy = (py - vpositions[(iy * (lvx + 1)) * 6 + 1]) / (vpositions[(iy * (lvx + 1)) * 6 + 4] - vpositions[(iy * (lvx + 1)) * 6 + 1]);\r\n' \
-  '                let pz = (1 - cy) * ((1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 2] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 2]) + cy * ((1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 5]);\r\n' \
+  '                let pz = cx + cy <= 1 ? (1 - cx - cy) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 2] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 2] + cy  * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] : (1 - cy) * vpositions[(ix + iy * (lvx + 1)) * 6 + 2] + (1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] + (cx + cy - 1) * vpositions[(ix + iy * (lvx + 1)) * 6 + 5];\r\n' \
   '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -9075,6 +9093,9 @@ class GPXTweakerWebInterfaceServer():
   '          r_dimn.disabled = false;\r\n' \
   '          r_dimz.disabled = false\r\n' \
   '          r_dims.disabled = false;\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          b_lrangle.disabled = false;\r\n' \
   '          c_vfov.disabled = false;\r\n' \
   '          canvas.focus();\r\n' \
   '          canvas.style.outline="none";\r\n' \
@@ -9118,7 +9139,7 @@ class GPXTweakerWebInterfaceServer():
   '            alt = true;\r\n' \
   '          case "arrowup":\r\n' \
   '            if (pace < parseInt(c_pace.max)) {\r\n' \
-  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.repeat?10:1),parseInt(c_pace.max)));\r\n' \
+  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.shiftKey?10:(e.repeat?2:1)),parseInt(c_pace.max)));\r\n' \
   '              rd = true;\r\n' \
   '            } else {return;}\r\n' \
   '            break;\r\n' \
@@ -9126,24 +9147,24 @@ class GPXTweakerWebInterfaceServer():
   '            alt = true;\r\n' \
   '          case "arrowdown":\r\n' \
   '            if (pace > 0) {\r\n' \
-  '              set_param("p", alt?0:Math.max(pace-(e.repeat?10:1),0));\r\n' \
+  '              set_param("p", alt?0:Math.max(pace-(e.shiftKey?10:(e.repeat?2:1)),0));\r\n' \
   '              rd = true;\r\n' \
   '            } else {return;}\r\n' \
   '            break;\r\n' \
   '          case "arrowleft":\r\n' \
-  '            set_param("r", (parseFloat(c_rangle.value) + (e.repeat?355:359)) % 360);\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?350:(e.repeat?358:359))) % 360);\r\n' \
   '            rd = true;\r\n' \
   '            break;\r\n' \
   '          case "arrowright":\r\n' \
-  '            set_param("r", (parseFloat(c_rangle.value) + (e.repeat?5:1)) % 360);\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?10:(e.repeat?2:1))) % 360);\r\n' \
   '            rd = true;\r\n' \
   '            break;\r\n' \
   '          case "pageup":\r\n' \
-  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.repeat?2:1), 90));\r\n' \
+  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
   '            rd = true;\r\n' \
   '            break;\r\n' \
   '          case "pagedown":\r\n' \
-  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.repeat?2:1), -90));\r\n' \
+  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
   '            rd = true;\r\n' \
   '            break;\r\n' \
   '          case "delete":\r\n' \
@@ -9156,8 +9177,10 @@ class GPXTweakerWebInterfaceServer():
   '          default:\r\n' \
   '            return;\r\n' \
   '        }\r\n' \
-  '        e.stopPropagation();\r\n' \
-  '        e.preventDefault();\r\n' \
+  '        if (e instanceof KeyboardEvent) {\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          e.preventDefault();\r\n' \
+  '        }\r\n' \
   '        if (rd) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '    </script>\r\n' \
@@ -9713,11 +9736,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        gctx.stroke();\r\n' \
   '      }\r\n' \
-  '      function open_3D() {\r\n' \
+  '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?" + focused.substring(5));\r\n' \
+  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
@@ -10127,7 +10150,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jzoomall#}" style="margin-left:1em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25 em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D()">3D</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jzoomall#}" style="margin-left:1em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25 em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D(event.altKey?\'s\':\'p\')">3D</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
