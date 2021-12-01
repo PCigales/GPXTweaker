@@ -1106,8 +1106,10 @@ class WebMercatorMap(WGS84WebMercator):
   TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_TERRAIN = {'alias': 'GOOGLE_TERRAIN', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=p&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_SATELLITE = {'alias': 'GOOGLE_SATELLITE', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=s&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_BING_SOURCE = 'https://ecn.t0.tiles.virtualearth.net'
   TS_BING_MAP = {'alias': 'BING_MAP', 'pattern': TS_BING_SOURCE + '/tiles/r{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_AERIAL = {'alias': 'BING_AERIAL', 'pattern': TS_BING_SOURCE + '/tiles/a{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_BING_HYBRID = {'alias': 'BING_HYBRID', 'pattern': TS_BING_SOURCE + '/tiles/h{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
@@ -8723,6 +8725,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (cb_pace.checked) {\r\n' \
   '            if (c_rangle.disabled) {toggle_rotation();}\r\n' \
   '            set_param("r", (450 - trpaces[pace][3] / Math.PI * 180) % 360);\r\n' \
+  '          } else if (eposition != null) {\r\n' \
+  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)})`);\r\n' \
   '          }\r\n' \
   '        } else if (p == "f") {\r\n' \
   '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
@@ -8937,7 +8941,7 @@ class GPXTweakerWebInterfaceServer():
   '          cnv2d.height = tr_size;\r\n' \
   '          cnv2d.width = tr_size;\r\n' \
   '          ctx.strokeStyle = "red";\r\n' \
-  '          ctx.lineWidth = 2;\r\n' \
+  '          ctx.lineWidth = 4000 / scale;\r\n' \
   '          ctx.lineJoin = "round";\r\n' \
   '          ctx.lineCap = "round";\r\n' \
   '          ctx.fillStyle = "red";\r\n' \
