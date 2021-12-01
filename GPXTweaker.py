@@ -169,7 +169,7 @@ FR_STRINGS = {
     'jfoldersw': 'Répertoires:',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
+    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -423,7 +423,7 @@ EN_STRINGS = {
     'jfoldersw': 'Folders:',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
-    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
+    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -7909,7 +7909,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (gl_programs.get(cur_prog).has(n)) {\r\n' \
   '            gl.enableVertexAttribArray(gl_programs.get(cur_prog).get(n));\r\n' \
   '            gl.bindBuffer(gl.ARRAY_BUFFER, window[n]);\r\n' \
-  '            gl.vertexAttribPointer(gl_programs.get(cur_prog).get(n), ts[1], ts[0].substring(0, 3) == "vec" ? gl.FLOAT : gl.FLOAT, false, 0, 0);\r\n' \
+  '            gl.vertexAttribPointer(gl_programs.get(cur_prog).get(n), ts[1], gl.FLOAT, false, 0, 0);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -8201,7 +8201,7 @@ class GPXTweakerWebInterfaceServer():
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
-  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec4", 3]], ["lvposition", ["vec4", 3]]]);\r\n' \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["lvposition", ["vec4", 3]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"]]);\r\n' \
   '      var zfact = 1;\r\n' \
@@ -8281,7 +8281,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas_resize();\r\n' \
   '        let vertex_tcshader_s = `#version 300 es\r\n' \
   '          in vec4 tvposition;\r\n' \
-  '          in vec4 tvnormal;\r\n' \
+  '          in vec3 tvnormal;\r\n' \
   '          uniform float zfactmax;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
@@ -8298,12 +8298,12 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
   '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode >= 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '            cinc = dmode >= 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_ttshader_s = `#version 300 es\r\n' \
   '          in vec4 tvposition;\r\n' \
-  '          in vec4 tvnormal;\r\n' \
+  '          in vec3 tvnormal;\r\n' \
   '          uniform float zfactmax;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
@@ -8318,7 +8318,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
   '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode >= 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '            cinc = dmode >= 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_lshader_s = `#version 300 es\r\n' \
@@ -8429,7 +8429,7 @@ class GPXTweakerWebInterfaceServer():
   '            while (ind < trpositions[s].length - 1) {\r\n' \
   '              if (! dr) {\r\n' \
   '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind+1];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
   '                ctx.beginPath();\r\n' \
   '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10, 0, 2 * Math.PI);\r\n' \
   '                ctx.stroke()\r\n' \
@@ -8439,7 +8439,7 @@ class GPXTweakerWebInterfaceServer():
   '                ind += 2;\r\n' \
   '              } else {\r\n' \
   '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind+1] - py;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
   '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
   '                if (td > 0) {\r\n' \
   '                  tx = tdx / td;\r\n' \
@@ -8448,7 +8448,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (dist < ar_d) {\r\n' \
   '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind+1];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
   '                  ar = false;\r\n' \
   '                  ind += 2;\r\n' \
   '                  if (ind >= trpositions[s].length - 1) {\r\n' \
@@ -8459,7 +8459,7 @@ class GPXTweakerWebInterfaceServer():
   '                } else {\r\n' \
   '                  ar = true;\r\n' \
   '                  px = trpositions[s][ind] - (dist - ar_d) * tx;\r\n' \
-  '                  py = trpositions[s][ind+1] - (dist - ar_d) * ty;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - ar_d) * ty;\r\n' \
   '                  dist = 0;\r\n' \
   '                  ar_d = ar_s;\r\n' \
   '                }\r\n' \
@@ -8695,7 +8695,7 @@ class GPXTweakerWebInterfaceServer():
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
-  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec4", 3]], ["rvposition", ["vec4", 3]]]);\r\n' \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec4", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
   '      var track = document.getElementById("track");\r\n' \
@@ -8859,10 +8859,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_rshader_s = `#version 300 es\r\n' \
-  '          in vec4 rvposition;\r\n' \
+  '          in vec3 rvposition;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          void main() {\r\n' \
-  '            gl_Position = vmatrix * vec4(0, 0, 1, 1) + vec4(rvposition.xyz, 0);\r\n' \
+  '            gl_Position = vmatrix * vec4(0, 0, 1, 1) + vec4(rvposition, 0);\r\n' \
   '            gl_Position.z *= gl_Position.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -8958,7 +8958,7 @@ class GPXTweakerWebInterfaceServer():
   '            while (ind < trpositions[s].length - 1) {\r\n' \
   '              if (! dr) {\r\n' \
   '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind+1];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
   '                ctx.beginPath();\r\n' \
   '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 2, 0, 2 * Math.PI);\r\n' \
   '                ctx.stroke()\r\n' \
@@ -8968,7 +8968,7 @@ class GPXTweakerWebInterfaceServer():
   '                ind += 2;\r\n' \
   '              } else {\r\n' \
   '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind+1] - py;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
   '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
   '                if (td > 0) {\r\n' \
   '                  tx = tdx / td;\r\n' \
@@ -8981,7 +8981,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (dist < pace_length) {\r\n' \
   '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind+1];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
   '                  pac = false;\r\n' \
   '                  ind += 2;\r\n' \
   '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
@@ -8989,7 +8989,7 @@ class GPXTweakerWebInterfaceServer():
   '                } else {\r\n' \
   '                  pac = true;\r\n' \
   '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
-  '                  py = trpositions[s][ind+1] - (dist - pace_length) * ty;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
   '                  dist = 0;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -9170,6 +9170,10 @@ class GPXTweakerWebInterfaceServer():
   '          case "delete":\r\n' \
   '            cb_pace.checked = ! cb_pace.checked;\r\n' \
   '            toggle_auto_rotation();\r\n' \
+  '            break;\r\n' \
+  '          case "insert":\r\n' \
+  '            set_param("t", 0);\r\n' \
+  '            rd = true;\r\n' \
   '            break;\r\n' \
   '          case "enter":\r\n' \
   '            if (document.fullscreenElement) {document.exitFullscreen();} else { canvas.parentNode.requestFullscreen();}\r\n' \
