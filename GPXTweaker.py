@@ -8695,7 +8695,7 @@ class GPXTweakerWebInterfaceServer():
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
-  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec4", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
   '      var track = document.getElementById("track");\r\n' \
@@ -8803,7 +8803,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas_resize();\r\n' \
   '        let vertex_tcshader_s = `#version 300 es\r\n' \
   '          in vec4 tvposition;\r\n' \
-  '          in vec4 tvnormal;\r\n' \
+  '          in vec3 tvnormal;\r\n' \
   '          uniform float zfactmax;\r\n' \
   '          uniform vec2 eposition;\r\n' \
   '          uniform float radius;\r\n' \
@@ -8824,12 +8824,12 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode == 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_ttshader_s = `#version 300 es\r\n' \
   '          in vec4 tvposition;\r\n' \
-  '          in vec4 tvnormal;\r\n' \
+  '          in vec3 tvnormal;\r\n' \
   '          uniform float zfactmax;\r\n' \
   '          uniform vec2 eposition;\r\n' \
   '          uniform float radius;\r\n' \
@@ -8848,7 +8848,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode == 2 ? dot(tvnormal.xyz, ldirection) : 0.0;\r\n' \
+  '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_sshader_s = `#version 300 es\r\n' \
