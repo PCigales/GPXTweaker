@@ -10822,7 +10822,7 @@ class GPXTweakerWebInterfaceServer():
     self.SpeedRange = 60
     self.SpeedMax = 8
     self.V3DPanoMargin = 0.5
-    self.V3DSubjMargin = 1
+    self.V3DSubjMargin = 2
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
