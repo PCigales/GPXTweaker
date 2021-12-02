@@ -129,7 +129,7 @@ FR_STRINGS = {
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
     'jswitchpoints': 'afficher / masquer les points et points de cheminement',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
-    'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective',
+    'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective&#13;&#10;+ctrl: afficher / masquer les contrôles de la marge autour de la trace',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
     'jdescending': 'permuter l\'ordre de tri des traces sur décroissant',
     'joset': 'sélectionner le critère de tri des traces',
@@ -166,6 +166,9 @@ FR_STRINGS = {
     'jfilterpanel3': 'Plages calcul vitesse',
     'jspduration': '&nbsp;durée',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
+    'j3dpanel': 'Marges vue 3D',
+    'j3dpanoramic': 'panoram',
+    'j3dsubjective': 'subject',
     'jfoldersw': 'Répertoires:',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
@@ -383,7 +386,7 @@ EN_STRINGS = {
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
     'jswitchpoints': 'show / hide the points and waypoints',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
-    'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt:open the 3D viewer in subjective view mode',
+    'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt: open the 3D viewer in subjective view mode&#13;&#10;+ctrl: show / hide the controls of the margin around the track',
     'jascending': 'switch the sort order of the tracks to ascending',
     'jdescending': 'switch the sort order of the tracks to descending',
     'joset': 'select the sort criterion of the tracks',
@@ -420,6 +423,9 @@ EN_STRINGS = {
     'jfilterpanel3': 'Ranges speed calcul',
     'jspduration': 'duration',
     'jsmax': 'max&nbsp;&nbsp;&nbsp;',
+    'j3dpanel': 'Margins 3D view',
+    'j3dpanoramic': 'panoram',
+    'j3dsubjective': 'subject',
     'jfoldersw': 'Folders:',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
@@ -2610,9 +2616,9 @@ class WGS84Track(WGS84WebMercator):
           if not self.BackupGPX(uri):
             raise
         for n in self.Track.getElementsByTagNameNS('*', 'wpt'):
-          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n);
+          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n)
         for n in self.Track.getElementsByTagNameNS('*', 'trkpt'):
-          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n);
+          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n)
         f = open(uri, 'wb')
         f.write(self.Track.toprettyxml(indent='  ', encoding='utf-8'))
         f.close()
@@ -3212,16 +3218,17 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               mode3d = req.path.split('?3d=')[1][0].lower()
               if mode3d != 'p' and mode3d != 's':
                 raise
+              margin = float(req.path.split('?3d=')[1][1:].split(',')[0])
             except:
               _send_err_nf()
               continue
             self.server.Interface.SLock.acquire()
             if not self.server.Interface.HTML:
-              self.server.Interface.TrackInd = int(req.path.split('?3d=')[1][2:])
+              self.server.Interface.TrackInd = int(req.path.split(',')[1])
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
-            if self.server.Interface.Build3DHTML(mode3d):
+            if self.server.Interface.Build3DHTML(mode3d, margin):
               self.server.Interface.SLock.release()
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               _send_resp('text/html; charset=utf-8')
@@ -3586,7 +3593,14 @@ class GPXTweakerWebInterfaceServer():
   '        width:7em;\r\n' \
   '        height:1.7em;\r\n' \
   '      }\r\n' \
-  '      span[id$=stren], span[id^=sl] ,span[id^=sp] {\r\n' \
+  '      label[for$=filter], label[for$=margin] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:1.5em;\r\n' \
+  '        text-align:center;\r\n' \
+  '        font-weight:normal;\r\n' \
+  '        font-size:90%;\r\n' \
+  '      }\r\n' \
+  '      span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
   '        width:2em;\r\n' \
@@ -4504,6 +4518,7 @@ class GPXTweakerWebInterfaceServer():
   '            fp[p].style.display = "none";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
@@ -4699,6 +4714,15 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
   '        gctx.beginPath();\r\n'
   HTML_MAP_TEMPLATE = \
+  '      function switch_3Dpanel() {\r\n' \
+  '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
+  '        if (document.getElementById("v3Dpanel").style.display == "none") {\r\n' \
+  '          document.getElementById("v3Dpanel").style.display = "";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
+  '        }\r\n' \
+  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
+  '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
   '        let zoom_ex = zoom;\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -4904,6 +4928,18 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n'
+  HTML_3DPANEL_TEMPLATE = \
+  '            <div id="v3Dpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '              <span>{#j3dpanel#}</span>\r\n' \
+  '              <form id="v3dform" autocomplete="off" onsubmit="return(false);">\r\n' \
+  '                <label for="v3dpmargin" style="left:2px;">{#j3dpanoramic#}</label>\r\n' \
+  '                <label for="v3dsmargin" style="right:2px;">{#j3dsubjective#}</label>\r\n' \
+  '                <span id="v3dpdist" style="left:0.7em;">##V3DPMARGIN##</span>\r\n' \
+  '                <input type="range" id="v3dpmargin" name="v3dpmargin" min="0.5" max="20" step="0.5" value="##V3DPMARGIN##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="v3dsdist" style="right:0.7em;">##V3DSMARGIN##</span>\r\n' \
+  '                <input type="range" id="v3dsmargin" name="v3dsmargin" min="0.5" max="20" step="0.5" value="##V3DSMARGIN##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n'
   HTML_SCALEBOX_GRAPH_TEMPLATE = \
   '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
   '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
@@ -4951,6 +4987,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
+  '        document.getElementById("v3Dpanel").style.right = "calc(2vw + " + (mode=="tiles"?"11.7":"9") + "em - 30px)";\r\n' \
   '        let prev_state = sessionStorage.getItem("state");\r\n' \
   '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
   '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
@@ -4996,6 +5033,10 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("spmfilter").value = parseFloat(prev_state[13]);\r\n' \
   '          document.getElementById("graphx").selectedIndex = parseInt(prev_state[14]);\r\n' \
   '          document.getElementById("graphy").selectedIndex = parseInt(prev_state[15]);\r\n' \
+  '          document.getElementById("v3dpdist").innerHTML = prev_state[16];\r\n' \
+  '          document.getElementById("v3dpmargin").value = parseFloat(prev_state[16]);\r\n' \
+  '          document.getElementById("v3dsdist").innerHTML = prev_state[17];\r\n' \
+  '          document.getElementById("v3dsmargin").value = parseFloat(prev_state[17]);\r\n' \
   '        } else {\r\n' \
   '          eset = document.getElementById("eset").selectedIndex;\r\n' \
   '          if (document.getElementById("iset").name == "iset") {iset = document.getElementById("iset").selectedIndex;}\r\n' \
@@ -5003,7 +5044,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_PAGE_UNLOAD_TEMPLATE = \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString());\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML);\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -5052,13 +5093,6 @@ class GPXTweakerWebInterfaceServer():
   '      svg[id^=track] {\r\n' \
   '        stroke:red;\r\n' \
   '        fill:red;\r\n' \
-  '      }\r\n' \
-  '      label[for$=filter] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:1.5em;\r\n' \
-  '        text-align:center;\r\n' \
-  '        font-weight:normal;\r\n' \
-  '        font-size:90%;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
@@ -7259,7 +7293,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
   '        } else if (mode3d) {\r\n' \
-  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode3d);\r\n' \
+  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
@@ -7335,7 +7369,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -7952,20 +7986,20 @@ class GPXTweakerWebInterfaceServer():
   '        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
   '        return gl_buffer;\r\n' \
   '      }\r\n' \
-  '      function texture_load(unit, src) {\r\n' \
+  '      function texture_load(unit, src, mipmap=true) {\r\n' \
   '        let gl_texture = gl.createTexture();\r\n' \
   '        gl.activeTexture(unit);\r\n' \
   '        gl.bindTexture(gl.TEXTURE_2D, gl_texture);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);\r\n' \
-  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);\r\n' \
+  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, mipmap?gl.LINEAR_MIPMAP_LINEAR:gl.LINEAR);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);\r\n' \
   '        if (Array.isArray(src)) {\r\n' \
   '          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(src))\r\n' \
   '        } else {\r\n' \
   '          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);\r\n' \
   '        }\r\n' \
-  '        gl.generateMipmap(gl.TEXTURE_2D);\r\n' \
+  '        if (mipmap) {gl.generateMipmap(gl.TEXTURE_2D);}\r\n' \
   '        return gl_texture;\r\n' \
   '      }\r\n' \
   '      function texture_attach(unit) {\r\n' \
@@ -8411,7 +8445,7 @@ class GPXTweakerWebInterfaceServer():
   '          cnv2d.height = tr_size;\r\n' \
   '          cnv2d.width = tr_size;\r\n' \
   '          ctx.strokeStyle = "red";\r\n' \
-  '          ctx.lineWidth = 8;\r\n' \
+  '          ctx.lineWidth = Math.max(1, tr_size / 256);\r\n' \
   '          ctx.lineJoin = "round";\r\n' \
   '          ctx.lineCap = "round";\r\n' \
   '          ctx.fillStyle = "red";\r\n' \
@@ -8433,7 +8467,7 @@ class GPXTweakerWebInterfaceServer():
   '                px = trpositions[s][ind];\r\n' \
   '                py = trpositions[s][ind + 1];\r\n' \
   '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10, 0, 2 * Math.PI);\r\n' \
+  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10 * tr_size / 2048, 0, 2 * Math.PI);\r\n' \
   '                ctx.stroke()\r\n' \
   '                ctx.fill();\r\n' \
   '                ctx.beginPath();\r\n' \
@@ -8675,7 +8709,7 @@ class GPXTweakerWebInterfaceServer():
   '            <text dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
   '              <textPath href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
   '            </text>\r\n' \
-  '            <path id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" transform="rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 h0.3 l-0.15 -0.4"/>\r\n' \
+  '            <path id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" transform="scale(1) rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 l0.15 -0.1 l0.15 0.1 l-0.15 -0.4"/>\r\n' \
   '          </svg>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
@@ -8698,7 +8732,7 @@ class GPXTweakerWebInterfaceServer():
   '    </table>\r\n' \
   '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
   '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
-  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
+  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["scale", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
   '      var track = document.getElementById("track");\r\n' \
   '      var eye = document.getElementById("eye");\r\n' \
@@ -8708,6 +8742,7 @@ class GPXTweakerWebInterfaceServer():
   '      var c_vfov = document.getElementById("cursor_vfov");\r\n' \
   '      var cv_vfov = document.getElementById("cursorv_vfov");\r\n' \
   '      var trpaces = null;\r\n' \
+  '      var trscale = null;\r\n' \
   '      var rpositions = null;\r\n' \
   '      var rvposition = null;\r\n' \
   '      var eposition = null;\r\n' \
@@ -8726,7 +8761,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (c_rangle.disabled) {toggle_rotation();}\r\n' \
   '            set_param("r", (450 - trpaces[pace][3] / Math.PI * 180) % 360);\r\n' \
   '          } else if (eposition != null) {\r\n' \
-  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)})`);\r\n' \
+  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale})`);\r\n' \
   '          }\r\n' \
   '        } else if (p == "f") {\r\n' \
   '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
@@ -8742,7 +8777,7 @@ class GPXTweakerWebInterfaceServer():
   '            case "r":\r\n' \
   '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
   '              angle =  parseFloat(c_rangle.value) * Math.PI / -180;\r\n' \
-  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)})`);}\r\n' \
+  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale})`);}\r\n' \
   '              break;\r\n' \
   '            case "lt":\r\n' \
   '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
@@ -8821,12 +8856,12 @@ class GPXTweakerWebInterfaceServer():
   '          out vec4 lposition;\r\n' \
   '          out float cinc;\r\n' \
   '          void main() {\r\n' \
-  '            nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
+  '            nz = 1.0 * (tvposition.z + 1.0) - 1.0;\r\n' \
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
   '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
   '            gl_Position.z *= gl_Position.w;\r\n' \
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
-  '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
+  '            dim = dmode == 1 ? pow(0.5 * zfactmax * nz + 0.5, 0.7) : 0.7;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
   '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
   '          }\r\n' \
@@ -8880,16 +8915,17 @@ class GPXTweakerWebInterfaceServer():
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
   '          in float cinc;\r\n' \
+  '          uniform float scale;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
   '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
-  '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
+  '            float color = fract(pmode == 0 ? pcoord.y * scale / 25.0 : (1.0 + nz) * scale / 50.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
   '            vec4 pos = vec4(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc), 2.0);\r\n' \
   '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, textureProj(dtex, pos));\r\n' \
-  '            pcolor = mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '            pcolor = texture(trtex, pcoord).r < 0.3 ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color) : vec4(1, 0, 0, 1);\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -8911,7 +8947,7 @@ class GPXTweakerWebInterfaceServer():
   '          void main() {\r\n' \
   '            vec4 pos = vec4(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc), 2.0);\r\n' \
   '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, textureProj(dtex, pos));\r\n' \
-  '            pcolor = mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(1, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '            pcolor = texture(trtex, pcoord).r < 0.3 ? texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0) : vec4(1, 0, 0, 1);\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -8941,7 +8977,7 @@ class GPXTweakerWebInterfaceServer():
   '          cnv2d.height = tr_size;\r\n' \
   '          cnv2d.width = tr_size;\r\n' \
   '          ctx.strokeStyle = "red";\r\n' \
-  '          ctx.lineWidth = 4000 / scale;\r\n' \
+  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale);\r\n' \
   '          ctx.lineJoin = "round";\r\n' \
   '          ctx.lineCap = "round";\r\n' \
   '          ctx.fillStyle = "red";\r\n' \
@@ -8964,7 +9000,7 @@ class GPXTweakerWebInterfaceServer():
   '                px = trpositions[s][ind];\r\n' \
   '                py = trpositions[s][ind + 1];\r\n' \
   '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 2, 0, 2 * Math.PI);\r\n' \
+  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 2 * tr_size / 8192, 0, 2 * Math.PI);\r\n' \
   '                ctx.stroke()\r\n' \
   '                ctx.fill();\r\n' \
   '                ctx.beginPath();\r\n' \
@@ -9010,9 +9046,17 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            ctx.stroke();\r\n' \
-  '            track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(2)):(" " + (-c).toFixed(2)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '            track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '            let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
+  '            trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
+  '            trb[0] = (trb[0] + trb[1]) / 2 - trscale;\r\n' \
+  '            trb[1] = (trb[0] + trb[1]) / 2 + trscale;\r\n' \
+  '            trb[2] = (trb[2] + trb[3]) / 2 - trscale;\r\n' \
+  '            trb[3] = (trb[2] + trb[3]) / 2 + trscale;\r\n' \
+  '            track.parentNode.setAttribute("viewBox", [trb[0], trb[2], 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '            track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
   '          }\r\n' \
-  '          tr_texture = texture_load(gl.TEXTURE1, cnv2d);\r\n' \
+  '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '          create_map();\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
@@ -9196,7 +9240,7 @@ class GPXTweakerWebInterfaceServer():
   '</html>'
   HTML_3DS_TEMPLATE = HTML_3DS_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTML_3DS_DECLARATIONS_TEMPLATE = HTML_3DP_DECLARATIONS_TEMPLATE + '\r\n' + \
-  '      scale = ##SCALE##;'
+  '      var scale = ##SCALE##;'
   HTMLExp_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -9275,13 +9319,6 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '      }\r\n' \
-  '      label[for$=filter] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:1.5em;\r\n' \
-  '        text-align:center;\r\n' \
-  '        font-weight:normal;\r\n' \
-  '        font-size:90%;\r\n' \
   '      }\r\n' \
   '      svg circle {\r\n' \
   '        r:calc(3px * var(--scale));\r\n' \
@@ -9748,7 +9785,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode + "," + focused.substring(5));\r\n' \
+  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
@@ -10158,14 +10195,14 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jzoomall#}" style="margin-left:1em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25 em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="open_3D(event.altKey?\'s\':\'p\')">3D</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + \
+  '            </div>\r\n' + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -10470,7 +10507,7 @@ class GPXTweakerWebInterfaceServer():
       if l[0] == '[' and l[-1] == ']':
         scur = l[1:-1].lower()
         if hcur == 'global':
-          if not scur in ('interfaceserver', 'tilesbuffer', 'boundaries', 'statistics'):
+          if not scur in ('interfaceserver', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
@@ -10504,7 +10541,7 @@ class GPXTweakerWebInterfaceServer():
           elif value.lower() == 'none':
             value = None
           elif value.lower() == '':
-            value = None if scur in ('boundaries', 'statistics', 'handling') else ''
+            value = None if scur in ('boundaries', 'statistics', '3dviewer', 'handling') else ''
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
           return False
@@ -10621,6 +10658,16 @@ class GPXTweakerWebInterfaceServer():
           elif field == 'speed_max':
             if value != None:
               self.SpeedMax = int(value)
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == '3dviewer':
+          if field == 'pano_margin':
+            if value != None:
+              self.V3DPanoMargin = round(2 * float(value)) / 2
+          elif field == 'subj_margin':
+            if value != None:
+              self.V3DSubjMargin = round(2 * float(value)) / 2
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -10767,13 +10814,15 @@ class GPXTweakerWebInterfaceServer():
     self.DefLon = None
     self.Folders = []
     self.WebMappingServices = []
-    self.GpuComp = 0;
-    self.EleGainThreshold = 4;
-    self.AltGainThreshold = 3;
-    self.SlopeRange = 100;
-    self.SlopeMax = 50;
-    self.SpeedRange = 60;
-    self.SpeedMax = 8;
+    self.GpuComp = 0
+    self.EleGainThreshold = 4
+    self.AltGainThreshold = 3
+    self.SlopeRange = 100
+    self.SlopeMax = 50
+    self.SpeedRange = 60
+    self.SpeedMax = 8
+    self.V3DPanoMargin = 0.5
+    self.V3DSubjMargin = 1
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -10793,6 +10842,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = None
     self.HTML3D = None
     self.HTML3DData = None
+    self.HTML3DElevationProvider = None
     self.HTMLExp = None
     self.TracksBoundaries = []
     self.Minx = None
@@ -11065,11 +11115,11 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     isets = self._build_isets()
-    self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots)
+    self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots)
     self.log(2, 'built')
     return True
 
-  def Build3DHTML(self, mode3d):
+  def Build3DHTML(self, mode3d, margin=0.5):
     self.HTML3D = None
     self.HTML3DData = None
     if next((p for seg in self.Track.Pts for p in seg), None) == None:
@@ -11077,39 +11127,52 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, '3dbuild')
     vminlat, vminlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
     vmaxlat, vmaxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
-    minlat = max(vminlat, min(p[1][0] for seg in self.Track.Pts for p in seg) - 0.005)
-    maxlat = min(vmaxlat, max(p[1][0] for seg in self.Track.Pts for p in seg) + 0.005)
-    minlon = max(vminlon, min(p[1][1] for seg in self.Track.Pts for p in seg) - 0.006)
-    maxlon = min(vmaxlon, max(p[1][1] for seg in self.Track.Pts for p in seg) + 0.006)
-    try:
-      if self.EMode == 'map':
-        tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
-        if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
+    marginlat = margin * 180000 / (WGS84WebMercator.R * math.pi)
+    minlat = max(vminlat, min(p[1][0] for seg in self.Track.Pts for p in seg) - marginlat)
+    maxlat = min(vmaxlat, max(p[1][0] for seg in self.Track.Pts for p in seg) + marginlat)
+    marginlon = marginlat / math.cos ((minlat + maxlat) / 360 * math.pi)
+    minlon = max(vminlon, min(p[1][1] for seg in self.Track.Pts for p in seg) - marginlon)
+    maxlon = min(vmaxlon, max(p[1][1] for seg in self.Track.Pts for p in seg) + marginlon)
+    if self.Elevation.Map and self.HTML3DElevationProvider == self.ElevationProviderSel:
+      tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
+      if tminlat > minlat or tminlon > minlon or tmaxlat < maxlat or tmaxlon < maxlon:
+        if self.EMode == 'map':
           self.log(0, '3derror1')
           return False
-      elif self.EMode == 'tiles':
-        infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
-        if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2]):
+        else:
+          self.Elevation.Map = None
+          self.Elevation.MapInfos = {}
+          self.Elevation.MapResolution = None
+    else:
+      self.Elevation.Map = None
+      self.Elevation.MapInfos = {}
+      self.Elevation.MapResolution = None
+    if not self.Elevation.Map:
+      try:
+        if self.EMode == 'tiles':
+          infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
+          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2]):
+            self.log(0, '3derror1')
+            return False
+        elif self.EMode == 'api':
+          infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
+          if not self.Elevation.GenerateBil32Map(infos, minlat, maxlat, minlon, maxlon, 65536, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10)):
+            self.log(0, '3derror1')
+            return False
+        else:
           self.log(0, '3derror1')
           return False
-      elif self.EMode == 'api':
-        infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
-        if not self.Elevation.GenerateBil32Map(infos, minlat, maxlat, minlon, maxlon, 65536, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10)):
-          self.log(0, '3derror1')
-          return False
-      else:
+      except:
         self.log(0, '3derror1')
         return False
-    except:
-      self.log(0, '3derror1')
-      return False
+      tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
+      self.HTML3DElevationProvider = self.ElevationProviderSel
     if self.Elevation.MapInfos.get('format') != 'image/x-bil;bits=32' and self.Elevation.MapInfos.get('format') != 'image/hgt':
       self.log(0, '3derror1')
       return False
     scale = self.Elevation.MapResolution
     width = self.Elevation.MapInfos['width']
     height = self.Elevation.MapInfos['height']
-    tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
     minpx = max(0, math.floor((minlon - tminlon) / scale))
     minlon = tminlon + (minpx + 0.5) * scale
     maxpx = min(math.floor((maxlon - tminlon) / scale), width - 1)
@@ -11128,8 +11191,11 @@ class GPXTweakerWebInterfaceServer():
       stepx = 1
       stepy = 1
     else:
-      step = math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 262144)
-      c = math.sqrt(math.cos(minlat))
+      if mode3d != 's':
+        step = math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 262144)
+      else:
+        step = max(25 * 180 / (WGS84WebMercator.R * math.pi) / scale, math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 4194304))
+      c = math.sqrt(math.cos((minlat + maxlat) / 2))
       stepy = math.ceil(step)
       if math.ceil(step * c) < stepy:
         stepx = math.ceil(step / c)
@@ -11152,7 +11218,7 @@ class GPXTweakerWebInterfaceServer():
     xy_den = max(maxx - minx, maxy - miny) / 2
     moyx = (minx + maxx) / 2
     moyy = (miny + maxy) / 2
-    cor = math.cosh(moyy / 6378137)
+    cor = math.cosh(moyy / WGS84WebMercator.R)
     z_den = (maxele - minele) / 2 * cor
     if xy_den > z_den:
       den = xy_den
