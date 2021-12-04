@@ -172,7 +172,7 @@ FR_STRINGS = {
     'jfoldersw': 'Répertoires:',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
+    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -270,6 +270,7 @@ FR_STRINGS = {
     'jlrotation': 'Rotation lumière:',
     'jpace': 'Progression:',
     'jvfov': 'Champ de vue vertical:',
+    'jheight': 'Hauteur de vue:',
     'start': 'démarrage',
     'close': 'fermeture',
   },
@@ -429,7 +430,7 @@ EN_STRINGS = {
     'jfoldersw': 'Folders:',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
-    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
+    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to  lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -527,6 +528,7 @@ EN_STRINGS = {
     'jlrotation': 'Light rotation:',
     'jpace': 'Progression:',
     'jvfov': 'Vertical field of view:',
+    'jheight': 'Height of view:',
     'start': 'start-up',
     'close': 'shutdown',
   },
@@ -7804,6 +7806,8 @@ class GPXTweakerWebInterfaceServer():
   HTML_3D_GLOBALVARS_TEMPLATE = \
   '      var canvas = document.getElementById("canvas");\r\n' \
   '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
+  '      canvas.addEventListener("webglcontextlost", function(event) {event.preventDefault();gl_programs=new Map();}, false);\r\n' \
+  '      canvas.addEventListener("webglcontextrestored", function(event) {gl=canvas.getContext("webgl2", {preserveDrawingBuffer:true});canvas_init();canvas_redraw();}, false);\r\n' \
   '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
   '      var cv_tangle = document.getElementById("cursorv_tangle");\r\n' \
   '      var c_rangle = document.getElementById("cursor_rangle");\r\n' \
@@ -8187,6 +8191,8 @@ class GPXTweakerWebInterfaceServer():
   '      function toggle_lrotation(number=null) {\r\n' \
   '        if (c_lrangle.disabled) {\r\n' \
   '          window.clearInterval(rep_lrot);\r\n' \
+  '          set_param("lt", ltangle_rotmax);\r\n' \
+  '          canvas_redraw();\r\n' \
   '          c_lrangle.disabled = false;\r\n' \
   '          c_ltangle.disabled = false;\r\n' \
   '        } else {\r\n' \
@@ -8194,7 +8200,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_ltangle.disabled = true;\r\n' \
   '          ltangle_rotmax = parseFloat(c_ltangle.value);\r\n' \
   '          set_param("lt", 0);\r\n' \
-  '          set_param("lr", (90 + parseFloat(c_rangle.value)) % 360);\r\n' \
+  '          set_param("lr", 90);\r\n' \
   '          nlrot = 0;\r\n' \
   '          rep_lrot = window.setInterval(function() {canvas_lrotate(number);}, 100);\r\n' \
   '        }\r\n' \
@@ -8322,19 +8328,21 @@ class GPXTweakerWebInterfaceServer():
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
   '          uniform vec3 ldirection;\r\n' \
+  '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec2 pcoord;\r\n' \
-  '          out float nz;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
   '          out float cinc;\r\n' \
+  '          out float isov;\r\n' \
   '          void main() {\r\n' \
-  '            nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
+  '            float nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
   '            gl_Position = vmatrix * tvposition;\r\n' \
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
   '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
   '            cinc = dmode >= 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
+  '            isov = pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_ttshader_s = `#version 300 es\r\n' \
@@ -8345,13 +8353,14 @@ class GPXTweakerWebInterfaceServer():
   '          uniform mat4 lmatrix;\r\n' \
   '          uniform vec3 ldirection;\r\n' \
   '          uniform int dmode;\r\n' \
-  '          out vec2 pcoord;\r\n' \
+  '          uniform vec4 mpos;\r\n' \
+  '          out vec4 pcoord;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
   '          out float cinc;\r\n' \
   '          void main() {\r\n' \
   '            gl_Position = vmatrix * tvposition;\r\n' \
-  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
+  '            pcoord = vec4(vec2(0.5), mpos.st) * vec4(tvposition.xy, tvposition.xy) + vec4(vec2(0.5), mpos.pq);\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
   '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
   '            cinc = dmode >= 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
@@ -8380,18 +8389,17 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp sampler2D;\r\n' \
   '          precision highp sampler2DShadow;\r\n' \
   '          in vec2 pcoord;\r\n' \
-  '          in float nz;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
   '          in float cinc;\r\n' \
+  '          in float isov;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
-  '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
-  '            float color = fract(pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
-  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
+  '            float color = fract(isov) <= 0.15 ? 0.0 : 1.0;\r\n' \
+  '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
   '            pcolor = gl_FrontFacing ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.47, 0.42, 0.35), 1), color) : mix(mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color), vec4(pdim, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
   '          }\r\n' \
@@ -8401,20 +8409,19 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp int;\r\n' \
   '          precision highp sampler2D;\r\n' \
   '          precision highp sampler2DShadow;\r\n' \
-  '          in vec2 pcoord;\r\n' \
+  '          in vec4 pcoord;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
   '          in float cinc;\r\n' \
   '          uniform sampler2D mtex;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
-  '          uniform vec4 mpos;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
-  '            vec3 pos = vec3(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
+  '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
-  '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0), vec4(pdim, 0, 0, 1), texture(trtex, pcoord).r);\r\n' \
+  '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, pcoord.pq) * vec4(vec3(pdim), 1.0), vec4(pdim, 0, 0, 1), texture(trtex, pcoord.st).r);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let fragment_lshader_s = `#version 300 es\r\n' \
@@ -8656,6 +8663,7 @@ class GPXTweakerWebInterfaceServer():
   '      data_load();\r\n' + HTML_3D_TOGGLE_TEMPLATE + \
   '      function toggle_dimming(mode) {\r\n' \
   '        if (mode == dmode) {return;};\r\n' \
+  '        if (dmode == 3 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
   '        dmode = mode;\r\n' \
   '        if (dmode == 3) {\r\n' \
   '          c_ltangle.disabled = false;\r\n' \
@@ -8726,13 +8734,17 @@ class GPXTweakerWebInterfaceServer():
   '            <p><label for="cursor_vfov">{#jvfov#}</label></p>\r\n' \
   '            <input type="range" id="cursor_vfov" min="10" max="150" step="any" value="55" disabled oninput="set_param(\'f\')">\r\n' \
   '            <br><span>10</span><span id="cursorv_vfov">55</span><span>150</span>\r\n' \
+  '            <br><br>\r\n' \
+  '            <p><label for="cursor_height">{#jheight#}</label></p>\r\n' \
+  '            <input type="range" id="cursor_height" min="0" max="100" step="any" value="4" disabled oninput="set_param(\'h\')">\r\n' \
+  '            <br><span>0.2</span><span id="cursorv_height">2</span><span>1000</span>\r\n' \
   '          </form>\r\n' \
   '        </td>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
   '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
-  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["scale", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
+  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["scale", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trpos", "vec4"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
   '      var track = document.getElementById("track");\r\n' \
   '      var eye = document.getElementById("eye");\r\n' \
@@ -8741,13 +8753,15 @@ class GPXTweakerWebInterfaceServer():
   '      var cb_pace = document.getElementById("checkbox_pace");\r\n' \
   '      var c_vfov = document.getElementById("cursor_vfov");\r\n' \
   '      var cv_vfov = document.getElementById("cursorv_vfov");\r\n' \
+  '      var c_height = document.getElementById("cursor_height");\r\n' \
+  '      var cv_height = document.getElementById("cursorv_height");\r\n' \
   '      var trpaces = null;\r\n' \
   '      var trscale = null;\r\n' \
   '      var rpositions = null;\r\n' \
   '      var rvposition = null;\r\n' \
   '      var eposition = null;\r\n' \
   '      const ssampling = 2;\r\n' \
-  '      const m_size = Math.min(8192, max_size / 2);\r\n' \
+  '      const m_size = Math.min(11008, max_size);\r\n' \
   '      const tr_size = Math.min(8192, max_size / 2);\r\n' \
   '      const d_size = max_size;\r\n' \
   '      const rnt = 36;\r\n' \
@@ -8767,6 +8781,17 @@ class GPXTweakerWebInterfaceServer():
   '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
   '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
   '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
+  '        } else if (p == "h") {\r\n' \
+  '          if (v != null) {\r\n' \
+  '            c_height.value = (Math.min(v, 10) * 2 + Math.min(Math.max(v - 10, 0), 40) / 2 + Math.min(Math.max(v - 50, 0), 150) / 7.5 + Math.min(Math.max(v - 200, 0), 300) / 15 + Math.max(v - 500, 0) / 25).toString();\r\n' \
+  '            cv_height.innerHTML = (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10).toString();\r\n' \
+  '            zoff = v / scale;\r\n' \
+  '          } else {\r\n' \
+  '            let hv = parseFloat(c_height.value);\r\n' \
+  '            let height = Math.max(Math.min(hv, 20) / 2, 0.2) + Math.min(Math.max(hv - 20, 0), 20) * 2 + Math.min(Math.max(hv - 40, 0), 20) * 7.5 + Math.min(Math.max(hv - 60, 0), 20) * 15 + Math.max(hv - 80, 0) * 25;\r\n' \
+  '            cv_height.innerHTML = (height >= 10 ? Math.round(height) : Math.round(height * 10) / 10).toString();\r\n' \
+  '            zoff = height / scale;\r\n' \
+  '          }\r\n' \
   '        } else {\r\n' \
   '          let angle = null;\r\n' \
   '          switch (p) {\r\n' \
@@ -8803,9 +8828,11 @@ class GPXTweakerWebInterfaceServer():
   '      var pace = 0;\r\n' \
   '      var vfov = null;\r\n' \
   '      set_param("f", 55);\r\n##DECLARATIONS##\r\n' + \
+  '      var trpos = new Float32Array(4);\r\n' \
   '      var radius = 6378137 / scale;\r\n' \
   '      var pace_length = 10 / scale;\r\n' \
-  '      var zoff = 2 / scale;\r\n' + HTML_3D_MAT_TEMPLATE + \
+  '      var zoff = null;\r\n' \
+  '      set_param("h", 2);\r\n' + HTML_3D_MAT_TEMPLATE + \
   '      function mat4_translation(xt, yt, zt) {\r\n' \
   '        return new Float32Array([\r\n' \
   '          1, 0, 0, xt,\r\n' \
@@ -8844,26 +8871,29 @@ class GPXTweakerWebInterfaceServer():
   '          in vec4 tvposition;\r\n' \
   '          in vec3 tvnormal;\r\n' \
   '          uniform float zfactmax;\r\n' \
+  '          uniform float scale;\r\n' \
   '          uniform vec2 eposition;\r\n' \
   '          uniform float radius;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
   '          uniform vec3 ldirection;\r\n' \
+  '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
+  '          uniform vec4 trpos;\r\n' \
   '          out vec2 pcoord;\r\n' \
-  '          out float nz;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
   '          out float cinc;\r\n' \
+  '          out float isov;\r\n' \
   '          void main() {\r\n' \
-  '            nz = 1.0 * (tvposition.z + 1.0) - 1.0;\r\n' \
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
   '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
   '            gl_Position.z *= gl_Position.w;\r\n' \
-  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
-  '            dim = dmode == 1 ? pow(0.5 * zfactmax * nz + 0.5, 0.7) : 0.7;\r\n' \
+  '            pcoord = trpos.st * tvposition.xy + trpos.pq;\r\n' \
+  '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 0.7;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
   '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
+  '            isov = ((pmode == 0 ? tvposition.y : tvposition.z) + 1.0) * scale / 50.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_ttshader_s = `#version 300 es\r\n' \
@@ -8876,7 +8906,9 @@ class GPXTweakerWebInterfaceServer():
   '          uniform mat4 lmatrix;\r\n' \
   '          uniform vec3 ldirection;\r\n' \
   '          uniform int dmode;\r\n' \
-  '          out vec2 pcoord;\r\n' \
+  '          uniform vec4 trpos;\r\n' \
+  '          uniform vec4 mpos;\r\n' \
+  '          out vec4 pcoord;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
   '          out float cinc;\r\n' \
@@ -8884,7 +8916,7 @@ class GPXTweakerWebInterfaceServer():
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
   '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
   '            gl_Position.z *= gl_Position.w;\r\n' \
-  '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
+  '            pcoord = vec4(trpos.st, mpos.st) * vec4(tvposition.xy, tvposition.xy) + vec4(trpos.pq, mpos.pq);\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
   '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
@@ -8911,21 +8943,19 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp sampler2D;\r\n' \
   '          precision highp sampler2DShadow;\r\n' \
   '          in vec2 pcoord;\r\n' \
-  '          in float nz;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
   '          in float cinc;\r\n' \
-  '          uniform float scale;\r\n' \
+  '          in float isov;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
-  '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
-  '            float color = fract(pmode == 0 ? pcoord.y * scale / 25.0 : (1.0 + nz) * scale / 50.0) <= 0.15 ? 0.0 : 1.0;\r\n' \
-  '            vec4 pos = vec4(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc), 2.0);\r\n' \
-  '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, textureProj(dtex, pos));\r\n' \
-  '            pcolor = texture(trtex, pcoord).r < 0.3 ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color) : vec4(1, 0, 0, 1);\r\n' \
+  '            float color = fract(isov) <= 0.15 ? 0.0 : 1.0;\r\n' \
+  '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
+  '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, texture(dtex, pos));\r\n' \
+  '            pcolor = texture(trtex, pcoord.st).r < 0.3 ? mix(vec4(0, 0, pdim, 1), vec4(pdim * vec3(0.82, 1, 0.74), 1), color) : vec4(1, 0, 0, 1);\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -8934,20 +8964,19 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp int;\r\n' \
   '          precision highp sampler2D;\r\n' \
   '          precision highp sampler2DShadow;\r\n' \
-  '          in vec2 pcoord;\r\n' \
+  '          in vec4 pcoord;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
   '          in float cinc;\r\n' \
   '          uniform sampler2D mtex;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
-  '          uniform vec4 mpos;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
-  '            vec4 pos = vec4(lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc), 2.0);\r\n' \
-  '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, textureProj(dtex, pos));\r\n' \
-  '            pcolor = texture(trtex, pcoord).r < 0.3 ? texture(mtex, mpos.st * pcoord + mpos.pq) * vec4(vec3(pdim), 1.0) : vec4(1, 0, 0, 1);\r\n' \
+  '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
+  '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, texture(dtex, pos));\r\n' \
+  '            pcolor = texture(trtex, pcoord.st).r < 0.3 ? texture(mtex, pcoord.pq) * vec4(vec3(pdim), 1.0) : vec4(1, 0, 0, 1);\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -8967,9 +8996,9 @@ class GPXTweakerWebInterfaceServer():
   '        function create_track_map() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
   '            if (d) {\r\n' \
-  '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
   '            } else {\r\n' \
-  '              ctx.moveTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          let cnv2d = document.createElement("canvas");\r\n' \
@@ -8977,7 +9006,10 @@ class GPXTweakerWebInterfaceServer():
   '          cnv2d.height = tr_size;\r\n' \
   '          cnv2d.width = tr_size;\r\n' \
   '          ctx.strokeStyle = "red";\r\n' \
-  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale);\r\n' \
+  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
+  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
+  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
+  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale / trscale);\r\n' \
   '          ctx.lineJoin = "round";\r\n' \
   '          ctx.lineCap = "round";\r\n' \
   '          ctx.fillStyle = "red";\r\n' \
@@ -9000,7 +9032,7 @@ class GPXTweakerWebInterfaceServer():
   '                px = trpositions[s][ind];\r\n' \
   '                py = trpositions[s][ind + 1];\r\n' \
   '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 2 * tr_size / 8192, 0, 2 * Math.PI);\r\n' \
+  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
   '                ctx.stroke()\r\n' \
   '                ctx.fill();\r\n' \
   '                ctx.beginPath();\r\n' \
@@ -9046,16 +9078,11 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            ctx.stroke();\r\n' \
-  '            track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
-  '            let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
-  '            trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
-  '            trb[0] = (trb[0] + trb[1]) / 2 - trscale;\r\n' \
-  '            trb[1] = (trb[0] + trb[1]) / 2 + trscale;\r\n' \
-  '            trb[2] = (trb[2] + trb[3]) / 2 - trscale;\r\n' \
-  '            trb[3] = (trb[2] + trb[3]) / 2 + trscale;\r\n' \
-  '            track.parentNode.setAttribute("viewBox", [trb[0], trb[2], 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
-  '            track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
   '          }\r\n' \
+  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, (trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '          create_map();\r\n' \
   '        }\r\n' \
@@ -9145,6 +9172,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_lrangle.disabled = false;\r\n' \
   '          b_lrangle.disabled = false;\r\n' \
   '          c_vfov.disabled = false;\r\n' \
+  '          c_height.disabled = false;\r\n' \
   '          canvas.focus();\r\n' \
   '          canvas.style.outline="none";\r\n' \
   '           <!-- toggle_rotation(1); -->\r\n' \
@@ -9166,6 +9194,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function toggle_dimming(mode) {\r\n' \
   '        if (mode == dmode) {return;};\r\n' \
+  '        if (dmode == 2 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
   '        dmode = mode;\r\n' \
   '        if (dmode == 2) {\r\n' \
   '          c_ltangle.disabled = false;\r\n' \
@@ -9222,6 +9251,14 @@ class GPXTweakerWebInterfaceServer():
   '          case "insert":\r\n' \
   '            set_param("t", 0);\r\n' \
   '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "-":\r\n' \
+  '            c_height.value = Math.max(parseFloat(c_height.value) - 1, 0).toString();\r\n' \
+  '            set_param("h");\r\n' \
+  '            break;\r\n' \
+  '          case "+":\r\n' \
+  '            c_height.value = Math.min(parseFloat(c_height.value) + 1, 100).toString();\r\n' \
+  '            set_param("h");\r\n' \
   '            break;\r\n' \
   '          case "enter":\r\n' \
   '            if (document.fullscreenElement) {document.exitFullscreen();} else { canvas.parentNode.requestFullscreen();}\r\n' \
@@ -11250,10 +11287,10 @@ class GPXTweakerWebInterfaceServer():
     else:
       self.log(0, '3derror2')
       return False
-    ax = 2 * den / (tmaxx - tminx)
-    bx = (moyx - tminx - den) / (tmaxx - tminx)
-    ay = 2 * den / (tmaxy - tminy)
-    by = (moyy - tminy - den) / (tmaxy - tminy)
+    ax = den / (tmaxx - tminx)
+    bx = (moyx - tminx) / (tmaxx - tminx)
+    ay = den / (tmaxy - tminy)
+    by = (moyy - tminy) / (tmaxy - tminy)
     declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor))
     self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath)
     self.log(0, '3dbuilt')
@@ -11297,7 +11334,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
     self.log(2, 'builtexp')
     return True
 
