@@ -4384,11 +4384,11 @@ class GPXTweakerWebInterfaceServer():
   '              stats[seg_ind].push(stat_p);\r\n' \
   '              if (! isNaN(el_p)) {el_p = el;}\r\n' \
   '            } else if (fpan == 1) {\r\n' \
-  '              stats[seg_ind][p][2] = stat_p[2];\r\n' \
-  '              stats[seg_ind][p][3] = stat_p[3];\r\n' \
+  '              stats[seg_ind][stat_i][2] = stat_p[2];\r\n' \
+  '              stats[seg_ind][stat_i][3] = stat_p[3];\r\n' \
   '            } else if (fpan == 2 && gpucomp == 0) {\r\n' \
-  '              stats[seg_ind][p][4] = stat_p[4];\r\n' \
-  '              stats[seg_ind][p][5] = stat_p[5];\r\n' \
+  '              stats[seg_ind][stat_i][4] = stat_p[4];\r\n' \
+  '              stats[seg_ind][stat_i][5] = stat_p[5];\r\n' \
   '            }\r\n' \
   '            stat_i++;\r\n' \
   '            p_p = p;\r\n' \
@@ -4403,13 +4403,13 @@ class GPXTweakerWebInterfaceServer():
   '                      ea_h[v] = ea[v];\r\n' \
   '                    }\r\n' \
   '                    if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
-  '                      ea_ic[v] = p - 1;\r\n' \
+  '                      ea_ic[v] = stat_i - 1;\r\n' \
   '                    }\r\n' \
   '                  }\r\n' \
   '                  if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
   '                    if (ea_ic[v] != null) {\r\n' \
   '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
-  '                      for (let i=ea_ic[v]+1; i<=p; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
+  '                      for (let i=ea_ic[v]+1; i<stat_i; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
   '                      ea_ic[v] = null;\r\n' \
   '                    }\r\n' \
   '                    if (ea_g[v] == "+") {\r\n' \
@@ -4427,7 +4427,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (! stat_p) {return;}\r\n' \
   '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
+  '            for (let p=0; p<stat_i; p++) {\r\n' \
   '              if (isNaN(stats[seg_ind][p][4])) {\r\n' \
   '                stats[seg_ind][p][4] = ea_s[0];\r\n' \
   '                if (isNaN(stats[seg_ind][p][5])) {stats[seg_ind][p][5] = ea_s[1];}\r\n' \
@@ -9741,8 +9741,14 @@ class GPXTweakerWebInterfaceServer():
   '                document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              if (! isNaN(tracks_props[t][2])) {tracks_props[t][2] = ele;}\r\n' \
-  '              if (! isNaN(tracks_props[t][3])) {tracks_props[t][3] = alt;}\r\n' \
+  '              if (! isNaN(tracks_props[t][2])) {\r\n' \
+  '                tracks_props[t][2] = ele;\r\n' \
+  '                noe = false;\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(tracks_props[t][3])) {\r\n' \
+  '                tracks_props[t][3] = alt;\r\n' \
+  '                noa = false;\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
   '            if (! isNaN(tracks_props[t][0])) {\r\n' \
@@ -9949,6 +9955,7 @@ class GPXTweakerWebInterfaceServer():
   '       for (let f=0; f<folders.length; f++) {\r\n' \
   '         folders[f].checked = tick;\r\n' \
   '       }\r\n' \
+  '       folders_select();\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
@@ -10713,10 +10720,9 @@ class GPXTweakerWebInterfaceServer():
           return False
       elif hcur == 'explorer':
         if scur == 'folders':
-          self.Folders.append(os.path.abspath(os.path.expandvars(l.lstrip().rstrip())))
-          if not os.path.isdir(self.Folders[-1]):
-            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-            return False
+          fold = os.path.abspath(os.path.expandvars(l.lstrip().rstrip()))
+          if os.path.isdir(fold):
+            self.Folders.append(fold)
         elif scur[:11] == 'webmapping ':
           if field == 'alias':
             s[1] = WebMapping.WMAlias(value)
