@@ -4011,7 +4011,7 @@ class GPXTweakerWebInterfaceServer():
   '            this.vlength = this._starts[s + 1] - this._starts[s];\r\n' \
   '            if (this.vlength == 0) {continue;}\r\n' \
   '            if (this.cur_prog == "pprogram")  {this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);}\r\n' \
-  '            if (this.cur_prog == "d2program") {this.rlat = this._rlats[s];}\r\n' \
+  '            if (this.mode == "explorer" && this.cur_prog == "dprogram") {this.rlat = this._rlats[s];}\r\n' \
   '            this.program_uniforms();\r\n' \
   '            this.program_feedbacks(this._starts[s], this.vlength);\r\n' \
   '            this.gl.beginTransformFeedback(this.gl.POINTS);\r\n' \
