@@ -2097,7 +2097,6 @@ class WGS84Map(WebMercatorMap):
   CRS = 'EPSG:4326'
   CRS_MPU = math.pi / 180 * WGS84WebMercator.R
   WMS_BBOX = '{miny},{minx},{maxy},{maxx}'
-  TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
 
   @staticmethod
   def WGS84toCoord(lat, lon):
@@ -2107,6 +2106,7 @@ class WGS84Map(WebMercatorMap):
 class WGS84Elevation(WGS84Map):
 
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': 'elevations', 'nodata': -99999, 'limit': 200}
+  TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
   TS_SRTM_SOURCE = 'http://step.esa.int/auxdata/dem'
   TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'pattern': TS_SRTM_SOURCE + '/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
 
@@ -7834,7 +7834,6 @@ class GPXTweakerWebInterfaceServer():
   '      var ldirection = null;\r\n' \
   '      var vmatrix = null\r\n' \
   '      var lmatrix = null;\r\n' \
-  '      var ltype = null;\r\n' \
   '      const max_size = gl.getParameter(gl.MAX_TEXTURE_SIZE);\r\n' \
   '      var mtex = 0;\r\n' \
   '      var trtex = 1;\r\n' \
@@ -7949,7 +7948,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (gl_programs.get(cur_prog).has(n)) {\r\n' \
   '            gl.enableVertexAttribArray(gl_programs.get(cur_prog).get(n));\r\n' \
   '            gl.bindBuffer(gl.ARRAY_BUFFER, window[n]);\r\n' \
-  '            gl.vertexAttribPointer(gl_programs.get(cur_prog).get(n), ts[1], gl.FLOAT, false, 0, 0);\r\n' \
+  '            gl.vertexAttribPointer(gl_programs.get(cur_prog).get(n), ts[1], gl.FLOAT, false, ts.length>2?ts[2]:0, ts.length>3?ts[3]:0);\r\n' \
+  '            if (ts.length > 4) {gl.vertexAttribDivisor(gl_programs.get(cur_prog).get(n), ts[4]);}\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -7990,20 +7990,20 @@ class GPXTweakerWebInterfaceServer():
   '        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
   '        return gl_buffer;\r\n' \
   '      }\r\n' \
-  '      function texture_load(unit, src, mipmap=true) {\r\n' \
+  '      function texture_load(unit, src, rgb=true) {\r\n' \
   '        let gl_texture = gl.createTexture();\r\n' \
   '        gl.activeTexture(unit);\r\n' \
   '        gl.bindTexture(gl.TEXTURE_2D, gl_texture);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);\r\n' \
-  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, mipmap?gl.LINEAR_MIPMAP_LINEAR:gl.LINEAR);\r\n' \
+  '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, rgb?gl.LINEAR_MIPMAP_LINEAR:gl.LINEAR);\r\n' \
   '        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);\r\n' \
   '        if (Array.isArray(src)) {\r\n' \
-  '          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(src))\r\n' \
+  '          gl.texImage2D(gl.TEXTURE_2D, 0, rgb?gl.RGB:gl.R8, 1, 1, 0, rgb?gl.RGB:gl.RED, gl.UNSIGNED_BYTE, new Uint8Array(src))\r\n' \
   '        } else {\r\n' \
-  '          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);\r\n' \
+  '          gl.texImage2D(gl.TEXTURE_2D, 0, rgb?gl.RGB:gl.R8, rgb?gl.RGB:gl.RED, gl.UNSIGNED_BYTE, src);\r\n' \
   '        }\r\n' \
-  '        if (mipmap) {gl.generateMipmap(gl.TEXTURE_2D);}\r\n' \
+  '        if (rgb) {gl.generateMipmap(gl.TEXTURE_2D);}\r\n' \
   '        return gl_texture;\r\n' \
   '      }\r\n' \
   '      function texture_attach(unit) {\r\n' \
@@ -8243,14 +8243,19 @@ class GPXTweakerWebInterfaceServer():
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
-  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["lvposition", ["vec4", 3]]]);\r\n' \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["lvposition1", ["vec4", 3, 24, 0, 1]], ["lvposition2", ["vec4", 3, 24, 12, 1]], ["lvoffset", ["vec2", 2]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
-  '      var gl_dynamic_uniforms = new Map([["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"]]);\r\n' \
+  '      var gl_dynamic_uniforms = new Map([["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"], ["hwidth", "float"]]);\r\n' \
   '      var zfact = 1;\r\n' \
   '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
   '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
-  '      var lvposition = null;\r\n' \
-  '      const ssampling = 1;\r\n' \
+  '      var lvposition1 = null;\r\n' \
+  '      var lvposition2 = null;\r\n' \
+  '      var lvoffset = null;\r\n' \
+  '      var ltype = null;\r\n' \
+  '      var hwidth = null;;\r\n' \
+  '      var ldirection = null;\r\n' \
+  '      const ssampling = 2;\r\n' \
   '      const m_size = Math.min(2048, max_size);\r\n' \
   '      const tr_size = Math.min(2048, max_size);\r\n' \
   '      const d_size = Math.min(2048, max_size);\r\n' \
@@ -8313,6 +8318,7 @@ class GPXTweakerWebInterfaceServer():
   '        let size = Math.min(canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight);\r\n' \
   '        canvas.style.width = size.toString() + "px";\r\n' \
   '        canvas.style.height = size.toString() + "px";\r\n' \
+  '        hwidth = 2.5 / size;\r\n' \
   '        size *= ssampling;\r\n' \
   '        canvas.setAttribute("width", size.toString());\r\n' \
   '        canvas.setAttribute("height", size.toString());\r\n' \
@@ -8367,13 +8373,18 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_lshader_s = `#version 300 es\r\n' \
-  '          in vec4 lvposition;\r\n' \
+  '          in vec4 lvposition1;\r\n' \
+  '          in vec4 lvposition2;\r\n' \
+  '          in vec2 lvoffset;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform int ltype;\r\n' \
+  '          uniform float hwidth;\\r\n' \
   '          out vec4 color;\r\n' \
   '          void main() {\r\n' \
-  '            gl_Position = vmatrix * lvposition;\r\n' \
-  '            color = ltype == 0 ? vec4(vec3(0.35 * lvposition.z + 0.65), 1) : vec4(1, 1, 0, 1);\r\n' \
+  '            vec4 lpos1 = vmatrix * lvposition1;\r\n' \
+  '            vec4 lpos2 = vmatrix * lvposition2;\r\n' \
+  '            gl_Position = gl_InstanceID < ltype * 5 ? vec4(2) : (gl_VertexID <= 2 ? lpos1 : lpos2) + vec4(mat2(lvoffset.s, -lvoffset.t, lvoffset.t, lvoffset.s) * normalize(lpos2.xy - lpos1.xy) * hwidth, 0, 0);\r\n' \
+  '            color = ltype == 0 ? vec4(vec3(0.35 * (gl_VertexID <= 2 ? lvposition1.z : lvposition2.z) + 0.65), 1) : vec4(1, 1, 0, 1);\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_sshader_s = `#version 300 es\r\n' \
@@ -8524,12 +8535,12 @@ class GPXTweakerWebInterfaceServer():
   '        program_create("ttprogram", vertex_ttshader_s, fragment_tshader_s);\r\n' \
   '        program_create("lprogram", vertex_lshader_s, fragment_lshader_s);\r\n' \
   '        program_create("sprogram", vertex_sshader_s, fragment_sshader_s);\r\n' \
-  '        texture_load(gl.TEXTURE0, [0, 127, 0, 255]);\r\n' \
-  '        texture_load(gl.TEXTURE1, [0, 0, 0, 255]);\r\n' \
+  '        texture_load(gl.TEXTURE0, [0, 127, 0]);\r\n' \
+  '        texture_load(gl.TEXTURE1, [0], false);\r\n' \
   '        create_track_map();\r\n' \
   '        tvposition = buffer_load(vpositions);\r\n' \
   '        tvnormal = buffer_load(vnormals);\r\n' \
-  '        lvposition = buffer_load(new Float32Array([\r\n' \
+  '        lvposition1 = buffer_load(new Float32Array([\r\n' \
   '          0, 0, -1,\r\n' \
   '          1.225, 0, -1,\r\n' \
   '          0, 0, -1,\r\n' \
@@ -8559,6 +8570,15 @@ class GPXTweakerWebInterfaceServer():
   '          0.5, 0, 1.5,\r\n' \
   '          0.5, 0.02, 1.55\r\n' \
   '        ]));\r\n' \
+  '        lvposition2 = lvposition1;\r\n' \
+  '        lvoffset = buffer_load(new Float32Array([\r\n' \
+  '          0.5, 0,\r\n' \
+  '          0, -1,\r\n' \
+  '          0, 1,\r\n' \
+  '          0, -1,\r\n' \
+  '          0, 1,\r\n' \
+  '          0.5, 0\r\n' \
+  '        ]));\r\n' \
   '        for (let n of gl_programs.keys()) {\r\n' \
   '          program_use(n);\r\n' \
   '          program_attributes();\r\n' \
@@ -8584,6 +8604,7 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              ylmag = 1.732 / (1.415 * clt0angle - slt0angle / zfactmax);\r\n' \
   '              mat4_mult(mat4_yscale(ylmag, 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '              gl.bindFramebuffer(gl.FRAMEBUFFER, sfrbuf);\r\n' \
   '              gl.viewport(0, 0, d_size, d_size);\r\n' \
   '              gl.clearColor(0, 0, 0, 0);\r\n' \
   '              gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);\r\n' \
@@ -8612,7 +8633,7 @@ class GPXTweakerWebInterfaceServer():
   '        mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '        ltype = 0;\r\n' \
   '        program_uniforms();\r\n' \
-  '        gl.drawArrays(gl.LINES, 0, 10);\r\n' \
+  '        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, 5);\r\n' \
   '        if (dmode >= 2) {\r\n' \
   '          ltype = 1;\r\n' \
   '          vmatrix = mat4_zscale(1);\r\n' \
@@ -8622,7 +8643,7 @@ class GPXTweakerWebInterfaceServer():
   '          mat4_mult(mat4_rotation(clrangle, -slrangle), vmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '          program_uniforms();\r\n' \
-  '          gl.drawArrays(gl.LINES, 10, 18);\r\n' \
+  '          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, 14);\r\n' \
   '        } \r\n' \
   '        if (dmode == 3) {\r\n' \
   '          vmatrix = mat4_zscale(1);\r\n' \
@@ -8632,7 +8653,7 @@ class GPXTweakerWebInterfaceServer():
   '          mat4_mult(mat4_rotation(clrangle, -slrangle), vmatrix);\r\n' \
   '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '          program_uniforms();\r\n' \
-  '          gl.drawArrays(gl.LINES, 10, 18);\r\n' \
+  '          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, 14);\r\n' \
   '        }\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + HTML_3D_LOAD_TEMPLATE + \
   '          canvas_redraw();\r\n' \
@@ -9090,8 +9111,8 @@ class GPXTweakerWebInterfaceServer():
   '        program_create("ttprogram", vertex_ttshader_s, fragment_tshader_s);\r\n' \
   '        program_create("sprogram", vertex_sshader_s, fragment_sshader_s);\r\n' \
   '        program_create("rprogram", vertex_rshader_s, fragment_rshader_s);\r\n' \
-  '        texture_load(gl.TEXTURE0, [0, 127, 0, 255]);\r\n' \
-  '        texture_load(gl.TEXTURE1, [0, 0, 0, 255]);\r\n' \
+  '        texture_load(gl.TEXTURE0, [0, 127, 0]);\r\n' \
+  '        texture_load(gl.TEXTURE1, [0], false);\r\n' \
   '        create_track_map();\r\n' \
   '        tvposition = buffer_load(vpositions);\r\n' \
   '        tvnormal = buffer_load(vnormals);\r\n' \
@@ -11237,7 +11258,7 @@ class GPXTweakerWebInterfaceServer():
       if mode3d != 's':
         step = math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 262144)
       else:
-        step = max(25 * 180 / (WGS84WebMercator.R * math.pi) / scale, math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 4194304))
+        step = max(min(15 / (WGS84Map.CRS_MPU * scale), max(10 / (WGS84Map.CRS_MPU * scale), math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 262144))), math.sqrt((maxpx - minpx + 1) * (maxpy - minpy + 1) / 4194304))
       c = math.sqrt(math.cos((minlat + maxlat) / 2))
       stepy = math.ceil(step)
       if math.ceil(step * c) < stepy:
