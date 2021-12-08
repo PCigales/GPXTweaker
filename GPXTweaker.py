@@ -3438,7 +3438,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             if self.server.Interface.HTML and req.header('If-Match') == self.server.Interface.SessionId:
               self.server.Interface.PSessionId = self.server.Interface.SessionId
               del self.server.Interface.Track.OTrack
-              self.server.Interface.Track.OTrack = self.server.Interface.Track.Track
+              self.server.Interface.Track.OTrack = self.server.Interface.Track.STrack
             try:
               if not self.server.Interface.HTML:
                 self.server.Interface.TrackInd = int(req.body.split('=')[0][5:-4].rstrip('c'))
@@ -8908,7 +8908,7 @@ class GPXTweakerWebInterfaceServer():
   '          out float isov;\r\n' \
   '          void main() {\r\n' \
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
-  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
+  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * radius, 0.0));\r\n' \
   '            gl_Position.z *= gl_Position.w;\r\n' \
   '            pcoord = trpos.st * tvposition.xy + trpos.pq;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 0.7;\r\n' \
@@ -8935,7 +8935,7 @@ class GPXTweakerWebInterfaceServer():
   '          out float cinc;\r\n' \
   '          void main() {\r\n' \
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
-  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
+  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * radius, 0.0));\r\n' \
   '            gl_Position.z *= gl_Position.w;\r\n' \
   '            pcoord = vec4(trpos.st, mpos.st) * vec4(tvposition.xy, tvposition.xy) + vec4(trpos.pq, mpos.pq);\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
@@ -9432,10 +9432,11 @@ class GPXTweakerWebInterfaceServer():
   '        let gmaxx = null;\r\n' \
   '        let gmaxy = null;\r\n' \
   '        for (let t=0; t<tracks.length; t++) {\r\n' \
-  '          let empt = document.getElementById("waydots" + t.toString()).childElementCount == 0;\r\n' \
+  '          let trind = parseInt(tracks[t].id.substring(5));\r\n' \
+  '          let empt = document.getElementById("waydots" + trind.toString()).childElementCount == 0;\r\n' \
   '          if (empt) {\r\n' \
-  '            for (let s=0; s<tracks_pts[t].length; s++) {\r\n' \
-  '              if (tracks_pts[t][s].length > 0) {empt = false; break;}\r\n' \
+  '            for (let s=0; s<tracks_pts[trind].length; s++) {\r\n' \
+  '              if (tracks_pts[trind][s].length > 0) {empt = false; break;}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (empt) {continue;}\r\n' \
@@ -11276,7 +11277,7 @@ class GPXTweakerWebInterfaceServer():
     ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') and e > -100 else 0
     eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
     minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
-    maxele = max(eles[row][col] for row in range(nrow) for col in range(ncol))
+    maxele = max(max(eles[row][col] for row in range(nrow) for col in range(ncol)), minele + 1)
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     xy_den = max(maxx - minx, maxy - miny) / 2
@@ -11443,6 +11444,8 @@ class GPXTweakerWebInterfaceServer():
       self.Track.ProcessGPX('a')
       del self.Track.OTrack
       self.Track.OTrack = self.Track.STrack
+      self.Track.WebMercatorWpts = None
+      self.Track.WebMercatorPts = None
       for t_ind in range(len(self.Tracks)):
         track = self.Tracks[t_ind]
         if track[0] == self.Uri:
