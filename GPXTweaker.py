@@ -2552,8 +2552,9 @@ class WGS84Track(WGS84WebMercator):
             try:
               f.close()
             except:
-              if trkid:
-                raise
+              pass
+            if trkid:
+              raise
             track = b'<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="GPXTweaker" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mytrails="http://www.frogsparks.com/mytrails" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"></gpx>'
             self.log(0, 'new', uri)
         self.Track = minidom.parseString(track)
@@ -2710,7 +2711,7 @@ name)
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
         if msgp[0][-5:] == 'color':
-          r.setAttribute('xmlns:mytrails', 'http://www.frogspark.com/mytrails')
+          r.setAttribute('xmlns:mytrails', 'http://www.frogsparks.com/mytrails')
           ext = list(n for n in trk.childNodes if n.localName == 'extensions')
           if not ext:
             e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
@@ -2734,7 +2735,7 @@ name)
                 e_ = ex
                 if ex.getElementsByTagNameNS('*', 'line')[0].getElementsByTagNameNS('*', 'color'):
                   break
-          a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:color')
+          a = self.Track.createElementNS('http://www.frogsparks.com/mytrails', 'mytrails:color')
           t = self.Track.createTextNode(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
           self._XMLUpdateChildNodes(e, 'color', [a])
@@ -2808,7 +2809,7 @@ name)
               self._XMLUpdateNodeText(trk, np, 'ele', v[3])
               if v[4]:
                 if not r.hasAttribute('xmlns:mytrails'):
-                  r.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
+                  r.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:mytrails', 'http://www.frogsparks.com/mytrails')
                 ext = np.getElementsByTagNameNS('*', 'extensions')
                 if not ext:
                   e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
@@ -2819,7 +2820,7 @@ name)
                     if ex.getElementsByTagNameNS('*', 'ele_alt'):
                       e = ex
                       break
-                a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:ele_alt')
+                a = self.Track.createElementNS('http://www.frogsparks.com/mytrails', 'mytrails:ele_alt')
                 t = self.Track.createTextNode(v[4])
                 a.appendChild(t)
                 self._XMLUpdateChildNodes(e, 'ele_alt', [a])
