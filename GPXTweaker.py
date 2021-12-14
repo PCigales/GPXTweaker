@@ -2696,19 +2696,21 @@ name)
     del self.Track
     self.Track = self.OTrack.cloneNode(True)
     r = self.Track.getElementsByTagNameNS('*', 'gpx')[0]
+    r.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+    sl = r.getAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'schemaLocation')
+    if not 'http://www.topografix.com/GPX/1/1' in sl:
+      sl = (sl + ' http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd').strip()
+    if not 'http://www.topografix.com/GPX/gpx_style/0/2' in sl:
+      sl = (sl + ' http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd')
+    if r.hasAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'schemaLocation'):
+      r.removeAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'schemaLocation')
+    r.setAttribute('xsi:schemaLocation', sl)
     trk = self.Track.getElementsByTagNameNS('*', 'trk')[self.TrkId]
     try:
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
         if msgp[0][-5:] == 'color':
           r.setAttribute('xmlns:mytrails', 'http://www.frogspark.com/mytrails')
-          r.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-          sl = r.getAttribute('xsi:schemaLocation')
-          if not 'http://www.topografix.com/GPX/1/1' in sl:
-            sl = sl + ' http://www.topografix.com/GPX/1/1'
-          if not 'http://www.topografix.com/GPX/1/1/gpx.xsd' in sl:
-            sl = sl + ' http://www.topografix.com/GPX/1/1/gpx.xsd'
-          r.setAttribute('xsi:schemaLocation', sl)
           ext = list(n for n in trk.childNodes if n.localName == 'extensions')
           if not ext:
             e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
@@ -2729,8 +2731,8 @@ name)
                 break
             for ex in ext:
               if ex.getElementsByTagNameNS('*', 'line'):
+                e_ = ex
                 if ex.getElementsByTagNameNS('*', 'line')[0].getElementsByTagNameNS('*', 'color'):
-                  e_ = ex
                   break
           a = self.Track.createElementNS('http://www.frogspark.com/mytrails', 'mytrails:color')
           t = self.Track.createTextNode(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
@@ -2806,7 +2808,7 @@ name)
               self._XMLUpdateNodeText(trk, np, 'ele', v[3])
               if v[4]:
                 if not r.hasAttribute('xmlns:mytrails'):
-                  r.setAttributeNS('xmls', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
+                  r.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:mytrails', 'http://www.frogspark.com/mytrails')
                 ext = np.getElementsByTagNameNS('*', 'extensions')
                 if not ext:
                   e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
@@ -2934,7 +2936,7 @@ name)
         if tr.TrkId >= trkid:
           tr.TrkId += 1
       tr.ProcessGPX('w')
-    return True     
+    return True
 
 
 class WebMapping():
@@ -3113,15 +3115,15 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
+            self.server.Interface.TLock.acquire()
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
             if 'set' in q:
               try:
                 resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][3]}).encode('utf-8')
                 self.server.Interface.TilesSet = int(q['set'][0])
+                _send_resp('application/json; charset=utf-8')
               except:
-                _send_err_bad()
-                continue
-              _send_resp('application/json; charset=utf-8')
+                _send_err_fail()
             else:
               l1 = 0
               if 'auto' in q:
@@ -3157,17 +3159,18 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 except:
                   pass
               if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
-                _send_err_bad()
+                _send_err_fail()
               else:
                 try:
                   resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img')), 'level': l1}).encode('utf-8')
                   _send_resp('application/json; charset=utf-8')
                 except:
-                  _send_err_bad()
+                  _send_err_fail()
+            self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
             try:
               if req.path.lower()[12:].split('?')[-1].split(',') != [str(self.server.Interface.TilesSet), str(self.server.Interface.Map.TilesInfos['matrix'])]:
-                _send_err_bad()
+                _send_err_fail()
                 continue
               row, col = req.path.lower()[12:].split('.')[0].split('-')
               resp_body = self.server.Interface.Map.Tiles[(int(row), int(col))](10)
@@ -4108,6 +4111,7 @@ class GPXTweakerWebInterfaceServer():
   '            cleft = null;\r\n' \
   '            rescale();\r\n' \
   '          }\r\n' \
+  '          document.getElementById("tset").disabled = false;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        window.stop();\r\n' \
@@ -4129,6 +4133,7 @@ class GPXTweakerWebInterfaceServer():
   '          tscale = msg.scale;\r\n' \
   '          cleft = null;\r\n' \
   '          rescale(tscale_ex);\r\n' \
+  '          document.getElementById("tset").disabled = false;\r\n' \
   '        } else {\r\n' \
   '          tset = document.getElementById("tset").selectedIndex;\r\n' \
   '          let matrix = null;\r\n' \
@@ -4188,6 +4193,7 @@ class GPXTweakerWebInterfaceServer():
   '      } \r\n' \
   '      function error_tcb() {\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
+  '        document.getElementById("tset").disabled = false;\r\n' \
   '      } \r\n' \
   '      function add_tile(row=0, col=0) {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
@@ -4753,7 +4759,7 @@ class GPXTweakerWebInterfaceServer():
   '        reframe();\r\n' \
   '      }\r\n' \
   '      function switch_tlock(resc=true) {\r\n' \
-  '        if (mode == "map") {return;}\r\n' \
+  '        if (mode == "map" || (document.getElementById("tset").disabled && resc)) {return;}\r\n' \
   '        let zoom_s_ex = zoom_s;\r\n' \
   '        if (tlock) {\r\n' \
   '          if (tlevel == 0) {return;}\r\n' \
@@ -4826,10 +4832,10 @@ class GPXTweakerWebInterfaceServer():
   '        rescale();\r\n' \
   '      }\r\n' \
   '      function zoom_dec() {\r\n' \
-  '        zoom_change(-1);\r\n' \
+  '        if (! document.getElementById("tset").disabled) {zoom_change(-1);}\r\n' \
   '      }\r\n' \
   '      function zoom_inc() {\r\n' \
-  '        zoom_change(1);\r\n' \
+  '        if (! document.getElementById("tset").disabled) {zoom_change(1);}\r\n' \
   '      }\r\n' \
   '      function opacity_dec() {\r\n' \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
@@ -5107,6 +5113,7 @@ class GPXTweakerWebInterfaceServer():
   '      var graph_px = null;\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("tweaker");}\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
+  '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
@@ -9390,6 +9397,7 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
+  '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
@@ -10260,7 +10268,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -10914,6 +10922,7 @@ class GPXTweakerWebInterfaceServer():
     self.Miny = None
     self.Maxy = None
     self.SLock = threading.Lock()
+    self.TLock = threading.Lock()
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
     if not self._load_config(cfg):
