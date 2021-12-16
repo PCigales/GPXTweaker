@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -1436,7 +1436,7 @@ class WebMercatorMap(WGS84WebMercator):
         if '{hgt}' in infos['pattern']:
           lat = 89 - infos['row']
           lon = infos['col'] - 180
-          hgt = ("N" if lat >= 0 else "S") + ('%02i' % abs(lat)) + ("E" if lon >= 0 else "O") + ('%03i' % abs(lon))
+          hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
         else:
           hgt = ''
         if key:
@@ -1582,7 +1582,7 @@ class WebMercatorMap(WGS84WebMercator):
         ext = 'hgt.xz'
         lat = 89 - infos['row']
         lon = infos['col'] - 180
-        hgt = ("N" if lat >= 0 else "S") + ('%02i' % abs(lat)) + ("E" if lon >= 0 else "O") + ('%03i' % abs(lon))
+        hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
       else:
         ext = 'img'
       filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''), 'ext': ext, 'hgt': hgt}})
@@ -1640,7 +1640,7 @@ class WebMercatorMap(WGS84WebMercator):
       if infos['format'] == 'image/hgt':
         lat = 89 - infos['row']
         lon = infos['col'] - 180
-        hgt = ("N" if lat >= 0 else "S") + ('%02i' % abs(lat)) + ("E" if lon >= 0 else "O") + ('%03i' % abs(lon))
+        hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
       try:
         filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''),'ext': ext, 'hgt': hgt}})
         if just_refresh:
@@ -2414,7 +2414,9 @@ class WGS84Itinerary(WGS84Map):
 
 class ExpatGPXBuilder:
 
-  def _get_children(parent, uri, localname):
+  def _get_children(parent, localname, uri=' '):
+    if uri == ' ':
+      uri = parent.namespaceURI
     nodes = []
     for node in parent.childNodes:
       if node.nodeType == xml.dom.Node.ELEMENT_NODE:
@@ -2422,17 +2424,47 @@ class ExpatGPXBuilder:
           nodes.append(node)
     return nodes
 
-  def _get_attribute(node, uri, localname, unprefixed=True):
-    attr = None
+  def _get_attribute(node, localname, uri=xml.dom.EMPTY_NAMESPACE):
     if node._attrsNS:
-      for u, n in node._attrsNS:
-        if ((not u and unprefixed) or uri == '*' or u == uri) and (localname == '*' or n == localname):
-          attr = node._attrsNS[(u, n)]
-          break
-    return attr
+      return node._attrsNS.get((uri, localname)) or (node._attrsNS.get((node.namespaceURI, localname)) if uri == xml.dom.EMPTY_NAMESPACE else None)
+    else:
+      return None
+
+  def _create_element(doc, localname, uri, qname, prefix):
+    e = minidom.Element(qname, uri, prefix, localname)
+    e.ownerDocument = doc
+    return e
+
+  def _set_attribute(node, localname, value, uri=xml.dom.EMPTY_NAMESPACE, qname='', prefix=xml.dom.EMPTY_PREFIX):
+    attr = node.GetAttribute(localname, uri)
+    if attr == None:
+      if uri == xml.dom.EMPTY_NAMESPACE:
+        qname = localname
+        prefix = xml.dom.EMPTY_PREFIX
+      attr = minidom.Attr(qname, uri, localname, prefix)
+      attr.value = value
+      attr.ownerDocument = node.ownerDocument
+      node.setAttributeNode(attr)
+    else:
+      attr.value = value
 
   minidom.Node.GetChildren = _get_children
   minidom.Node.GetAttribute = _get_attribute
+  minidom.Document.CreateElement = _create_element
+  minidom.Node.SetAttribute = _set_attribute
+
+  def __new__(cls):
+    b = object.__new__(cls)
+    b.intern_dict = {}
+    b.intern = b.intern_dict.setdefault
+    b.XMLNS = b.intern('xmlns', 'xmlns')
+    b.XMLNS_NAMESPACE = b.intern(xml.dom.XMLNS_NAMESPACE, xml.dom.XMLNS_NAMESPACE)
+    b.XSI = b.intern('xsi', 'xsi')
+    b.XMLNS_XSI = b.intern('xmlns:xsi', 'xmlns:xsi')
+    b.XSI_NAMESPACE = b.intern('http://www.w3.org/2001/XMLSchema-instance', 'http://www.w3.org/2001/XMLSchema-instance')
+    b.GPX_NAMESPACE = b.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
+    b.GPXSTYLE_NAMESPACE = b.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
+    return b
 
   def __init__(self):
     self.Parser = None
@@ -2444,7 +2476,19 @@ class ExpatGPXBuilder:
 
   def NewParser(self):
     self.__init__()
-    self.Parser = expat.ParserCreate(namespace_separator=" ")
+    try:
+      self.Parser = expat.ParserCreate(namespace_separator=' ', intern = self.intern_dict)
+    except:
+      self.Parser = expat.ParserCreate(namespace_separator=' ')
+      self.intern_dict = self.Parser.intern
+      self.intern = self.intern_dict.setdefault
+      self.XMLNS = self.intern('xmlns', 'xmlns')
+      self.XMLNS_NAMESPACE = self.intern(xml.dom.XMLNS_NAMESPACE, xml.dom.XMLNS_NAMESPACE)
+      self.XSI = self.intern('xsi', 'xsi')
+      self.XMLNS_XSI = self.inter('xmlns:xsi', 'xmlns:xsi')
+      self.XSI_NAMESPACE = self.intern('http://www.w3.org/2001/XMLSchema-instance', 'http://www.w3.org/2001/XMLSchema-instance')
+      self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
+      self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
     self.Parser.buffer_text = True
     self.Parser.ordered_attributes = True
     self.Parser.specified_attributes = True
@@ -2460,7 +2504,6 @@ class ExpatGPXBuilder:
     self.Parser.EndNamespaceDeclHandler = self.EndNamespaceDeclHandler
     self.Parser.CommentHandler = self.CommentHandler
     self.Parser.DefaultHandler = self.DefaultHandler
-    self.intern = self.Parser.intern.setdefault
     
   def Parse(self, xmlstring):
     self.NewParser()
@@ -2469,24 +2512,24 @@ class ExpatGPXBuilder:
     self.CurText = ''
     try:
       self.Parser.Parse(xmlstring, True)
-      r = self.Document.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')
+      r = self.Document.GetChildren('gpx', self.GPX_NAMESPACE)
       if len(r) != 1:
         raise
       r = r[0]
       if not r.hasAttribute('xmlns'):
-        r.setAttributeNS(xml.dom.XMLNS_NAMESPACE, 'xmlns', 'http://www.topografix.com/GPX/1/1')
-      r.setAttributeNS(xml.dom.XMLNS_NAMESPACE, 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-      sla = r.GetAttribute('http://www.w3.org/2001/XMLSchema-instance', 'schemaLocation', False)
+        r.SetAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+      r.SetAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI, self.XMLNS)
+      sla = r.GetAttribute('schemaLocation', self.XSI_NAMESPACE)
       if sla == None:
         sl = ''
       else:
         sl = sla.value
         r.removeAttributeNode(sla)
-      if not 'http://www.topografix.com/GPX/1/1' in sl:
+      if not self.GPX_NAMESPACE in sl:
         sl = (sl + ' http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd').lstrip()
-      if not 'http://www.topografix.com/GPX/gpx_style/0/2' in sl:
+      if not self.GPXSTYLE_NAMESPACE in sl:
         sl = (sl + ' http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd')
-      r.setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:schemaLocation', sl)
+      r.SetAttribute(self.intern('schemaLocation', 'schemaLocation'), sl, self.XSI_NAMESPACE, self.intern('xsi:schemaLocation', 'xsi:schemaLocation'), self.XSI)
     except:
       self.Document = None
     doc = self.Document
@@ -2542,19 +2585,19 @@ class ExpatGPXBuilder:
       node._attrsNS = {}
       for prefix, uri in self.CurNodeNSDecl:
         if prefix:
-          a = minidom.Attr(self.intern('xmlns:' + prefix, 'xmlns:' + prefix), xml.dom.XMLNS_NAMESPACE, prefix, 'xmlns')
+          a = minidom.Attr(self.intern('xmlns:' + prefix, 'xmlns:' + prefix), self.XMLNS_NAMESPACE, prefix, self.XMLNS)
           node._attrs[a.name] = a
-          node._attrsNS[(xml.dom.XMLNS_NAMESPACE, prefix)] = a
+          node._attrsNS[(self.XMLNS_NAMESPACE, prefix)] = a
         else:
-          a = minidom.Attr('xmlns', xml.dom.XMLNS_NAMESPACE, 'xmlns', xml.dom.EMPTY_PREFIX)
-          node._attrs['xmlns'] = a
-          node._attrsNS[(xml.dom.XMLNS_NAMESPACE, 'xmlns')] = a
+          a = minidom.Attr(self.XMLNS, self.XMLNS_NAMESPACE, self.XMLNS, xml.dom.EMPTY_PREFIX)
+          node._attrs[self.XMLNS] = a
+          node._attrsNS[(self.XMLNS_NAMESPACE, self.XMLNS)] = a
         a.value = uri
         a.ownerDocument = self.Document
         a.ownerElement = node
       self.CurNodeNSDecl = []
     if attributes:
-      if node._attrs == None:
+      if node._attrsNS == None:
         node._attrs = {}
         node._attrsNS = {}
       for i in range(0, len(attributes), 2):
@@ -2632,6 +2675,8 @@ class WGS84Track(WGS84WebMercator):
     self.Pts = None
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
+    self.intern_dict = None
+    self.intern = None
     self.log = partial(log, 'track')
     self.log(1, 'init')
 
@@ -2686,52 +2731,58 @@ class WGS84Track(WGS84WebMercator):
         pass
     self._tracks[2] = None
 
+  def _XMLNewNode(self, name, model=None, uri=None, prefix=None):
+    if model != None:
+      return self.Track.CreateElement(self.intern(name, name), model.namespaceURI, self.intern(model.prefix + ':' + name, model.prefix + ':' + name) if model.prefix != xml.dom.EMPTY_PREFIX else self.intern(name, name), self.intern(model.prefix, model.prefix) if model.prefix != xml.dom.EMPTY_PREFIX else xml.dom.EMPTY_PREFIX)
+    else:
+      return self.Track.CreateElement(self.intern(name, name), self.intern(uri, uri), self.intern(prefix + ':' + name, prefix + ':' + name) if prefix != None else self.intern(name, name), self.intern(prefix, prefix) if prefix != None else xml.dom.EMPTY_PREFIX)
+
   def ProcessGPX(self, mode='a'):
     flt = lambda s: float(s) if (s != None and s.strip() != '') else None
-    r = self.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
+    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
     if mode == 'a' or mode == 'w':
-      wpts = r.GetChildren('http://www.topografix.com/GPX/1/1', 'wpt')
+      wpts = r.GetChildren('wpt')
       try:
-        self.Wpts = list(zip(range(len(wpts)), ((float(pt.GetAttribute('http://www.topografix.com/GPX/1/1', 'lat').value), float(pt.GetAttribute('http://www.topografix.com/GPX/1/1', 'lon').value), flt(_XMLGetNodeText(pt.GetChildren('http://www.topografix.com/GPX/1/1', 'ele'))), _XMLGetNodeText(pt.GetChildren('http://www.topografix.com/GPX/1/1', 'time')) or None, _XMLGetNodeText(pt.GetChildren('http://www.topografix.com/GPX/1/1', 'name')) or None) for pt in wpts)))
+        self.Wpts = list(zip(range(len(wpts)), ((float(pt.GetAttribute('lat').value), float(pt.GetAttribute('lon').value), flt(_XMLGetNodeText(pt.GetChildren('ele'))), _XMLGetNodeText(pt.GetChildren('time')) or None, _XMLGetNodeText(pt.GetChildren('name')) or None) for pt in wpts)))
       except:
         return False
     try:
-      trk = r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')[self.TrkId]
+      trk = r.GetChildren('trk')[self.TrkId]
     except:
       if mode != 'a' or self.TrkId > 0:
         return False
-      trk = self.Track.createElementNS(r.namespaceURI, r.prefix + ':trk' if r.prefix else 'trk')
+      trk = self._XMLNewNode('trk', r)
       r.appendChild(trk)
     if mode == 'a' or mode == 'e':
       try:
-        self.Name = _XMLGetNodeText(trk.GetChildren('http://www.topografix.com/GPX/1/1', 'name')[0]).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+        self.Name = _XMLGetNodeText(trk.GetChildren('name')[0]).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
       except:
         self.Name = ''
       self.Color = ''
       try:
-        ext = trk.GetChildren('http://www.topografix.com/GPX/1/1', 'extensions')
+        ext = trk.GetChildren('extensions')
         for e in ext:
-          c = e.GetChildren('http://www.frogsparks.com/mytrails', 'color')
+          c = e.GetChildren('color', self.MT_NAMESPACE)
           if c:
-            self.Color = '#' + hex(int(_XMLGetNodeText(c[0])) % (1 << 24))[2:][-6:].rjust(6, "0").upper()
+            self.Color = '#' + hex(int(_XMLGetNodeText(c[0])) % (1 << 24))[2:][-6:].rjust(6, '0').upper()
             break
         if not self.Color:
           for e in ext:
-            l = e.GetChildren('*', 'line')
+            l = e.GetChildren('line', '*')
             if l:
-              c = l[0].GetChildren('*', 'color')
+              c = l[0].GetChildren('color', '*')
               if c:
-                self.Color = '#' + hex(int(_XMLGetNodeText(c[0]), 16))[2:][-6:].rjust(6, "0").upper()
+                self.Color = '#' + hex(int(_XMLGetNodeText(c[0]), 16))[2:][-6:].rjust(6, '0').upper()
                 break
       except:
         pass
     if mode == 'a':
-      pts = list(list(pt for pt in seg.GetChildren('http://www.topografix.com/GPX/1/1', 'trkpt')) for seg in trk.GetChildren('http://www.topografix.com/GPX/1/1', 'trkseg')) or [[]]
+      pts = list(list(pt for pt in seg.GetChildren('trkpt')) for seg in trk.GetChildren('trkseg')) or [[]]
       self.Pts = []
       sn = 0
       try:
         for seg in pts:
-          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.GetAttribute('http://www.topografix.com/GPX/1/1', 'lat').value), float(pt.GetAttribute('http://www.topografix.com/GPX/1/1', 'lon').value), flt(_XMLGetNodeText(pt.GetChildren('http://www.topografix.com/GPX/1/1', 'ele'))), flt(_XMLGetNodeText(list(n for e in pt.GetChildren('http://www.topografix.com/GPX/1/1', 'extensions') for n in e.GetChildren('http://www.frogsparks.com/mytrails', 'ele_alt')))), _XMLGetNodeText(pt.GetChildren('http://www.topografix.com/GPX/1/1', 'time')) or None) for pt in seg))))
+          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.GetAttribute('lat').value), float(pt.GetAttribute('lon').value), flt(_XMLGetNodeText(pt.GetChildren('ele'))), flt(_XMLGetNodeText(list(n for e in pt.GetChildren('extensions') for n in e.GetChildren('ele_alt', self.MT_NAMESPACE)))), _XMLGetNodeText(pt.GetChildren('time')) or None) for pt in seg))))
           sn += len(seg)
       except:
         return False
@@ -2744,6 +2795,7 @@ class WGS84Track(WGS84WebMercator):
     try:
       if source:
         self._tracks = source._tracks
+        self.intern_dict = source.intern_dict
       else:
         if '://' in uri:
           rep = HTTPRequest(uri, 'GET')
@@ -2765,6 +2817,17 @@ class WGS84Track(WGS84WebMercator):
         if not builder:
           builder = ExpatGPXBuilder()
         self.Track = builder.Parse(track)
+        if not self.Track:
+          raise
+        self.intern_dict = builder.intern_dict
+      self.intern = self.intern_dict.setdefault
+      self.XMLNS = self.intern('xmlns', 'xmlns')
+      self.XMLNS_NAMESPACE = self.intern(xml.dom.XMLNS_NAMESPACE, xml.dom.XMLNS_NAMESPACE)
+      self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
+      self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
+      self.MT = self.intern('mytrails', 'mytrails')
+      self.XMLNS_MT = self.intern('xmlns:mytrails', 'xmlns:mytrails')
+      self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
     except:
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
@@ -2824,12 +2887,12 @@ class WGS84Track(WGS84WebMercator):
         if backup and os.path.exists(uri):
           if not self.BackupGPX(uri):
             raise
-        r = self.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
-        for n in r.GetChildren('http://www.topografix.com/GPX/1/1', 'wpt'):
+        r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
+        for n in r.GetChildren('wpt'):
           n.writexml = types.MethodType(WGS84Track._write_pt_xml, n)
-        for t in r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk'):
-          for s in t.GetChildren('http://www.topografix.com/GPX/1/1', 'trkseg'):
-            for n in s.GetChildren('http://www.topografix.com/GPX/1/1', 'trkpt'):
+        for t in r.GetChildren('trk'):
+          for s in t.GetChildren('trkseg'):
+            for n in s.GetChildren('trkpt'):
               n.writexml = types.MethodType(WGS84Track._write_pt_xml, n)
         f = open(uri, 'wb')
         f.write(self.Track.toprettyxml(indent='  ', encoding='utf-8'))
@@ -2850,10 +2913,10 @@ class WGS84Track(WGS84WebMercator):
     return True
 
   def _XMLUpdateAttribute(self, node, name, value):
-    node.setAttributeNS(node.namespaceURI, node.prefix + ':' + name if node.prefix else name, value)
+    node.SetAttribute(self.intern(name, name), value)
 
   def _XMLUpdateNodeText(self, node, name, text, predecessors='*', cdata=False):
-    nl = node.GetChildren(node.namespaceURI, name)
+    nl = node.GetChildren(name)
     no = None
     if nl:
       no = nl[0]
@@ -2864,8 +2927,7 @@ class WGS84Track(WGS84WebMercator):
         t = self.Track.createCDATASection(text)
       else:
         t = self.Track.createTextNode(text)
-      n = self.Track.createElementNS(node.namespaceURI, node.prefix + ':' + name if node.prefix else 
-name)
+      n = self._XMLNewNode(name, node)
       n.appendChild(t)
       if no:
         node.replaceChild(n, no).unlink()
@@ -2874,7 +2936,7 @@ name)
         no = node.firstChild
       elif isinstance(predecessors, (list, tuple)):
         for e in predecessors:
-          cn = node.GetChildren(node.namespaceURI, e)
+          cn = node.GetChildren(e)
           if cn:
             no = cn[-1]
             break
@@ -2888,7 +2950,7 @@ name)
 
   def _XMLUpdateChildNodes(self, node, name, children, predecessors='*', uri=None):
     no = None
-    cn = node.GetChildren(uri if uri != None else node.namespaceURI, name)
+    cn = node.GetChildren(name, uri if uri != None else node.namespaceURI)
     for n in cn:
       if not no:
         no = n
@@ -2903,7 +2965,7 @@ name)
       no = node.firstChild
     elif isinstance(predecessors, (list, tuple)):
       for e in predecessors:
-        cn = node.GetChildren(node.namespaceURI, e)
+        cn = node.GetChildren(e)
         if cn:
           no = cn[-1]
           break
@@ -2917,21 +2979,21 @@ name)
   def UpdateGPX(self, msg, uri=None, backup=True):
     del self.Track
     self.Track = self.OTrack.cloneNode(True)
-    r = self.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
-    trk = r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')[self.TrkId]
-    mt = r.hasAttribute('xmlns:mytrails')
+    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
+    trk = r.GetChildren('trk')[self.TrkId]
+    mt = r.hasAttribute(self.XMLNS_MT)
     try:
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
         if msgp[0][-5:] == 'color':
           if not mt:
-            r.setAttributeNS(xml.dom.XMLNS_NAMESPACE, 'xmlns:mytrails', 'http://www.frogsparks.com/mytrails')
-          ext = trk.GetChildren('http://www.topografix.com/GPX/1/1', 'extensions')
+            r.SetAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT, self.XMLNS)
+          ext = trk.GetChildren('extensions')
           l = []
           if not ext:
-            e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
+            e = self._XMLNewNode('extensions', trk)
             e_ = e
-            s = trk.GetChildren('http://www.topografix.com/GPX/1/1', 'trkseg')
+            s = trk.GetChildren('trkseg')
             if s:
               trk.insertBefore(e, s[0])
             else:
@@ -2940,32 +3002,32 @@ name)
             e = ext[0]
             e_ = ext[0]
             for ex in ext:
-              if ex.GetChildren('http://www.frogsparks.com/mytrails', 'color'):
+              if ex.GetChildren('color', self.MT_NAMESPACE):
                 e = ex
                 break
             for ex in ext:
-              l = ex.GetChildren('*', 'line')
+              l = ex.GetChildren('line', '*')
               if l:
                 e_ = ex
-                if l[0].GetChildren('*', 'color'):
+                if l[0].GetChildren('color', '*'):
                   break
-          a = self.Track.createElementNS('http://www.frogsparks.com/mytrails', 'mytrails:color')
+          a = self._XMLNewNode('color', None, self.MT_NAMESPACE, self.MT)
           t = self.Track.createTextNode(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
-          self._XMLUpdateChildNodes(e, 'color', [a], '*', 'http://www.frogsparks.com/mytrails')
+          self._XMLUpdateChildNodes(e, 'color', [a], '*', self.MT_NAMESPACE)
           if l:
             a = l[0]
-            if not a.namespaceURI or a.namespaceURI == 'http://www.topografix.com/GPX/1/1':
-              a.setAttribute('xmlns', 'http://www.topografix.com/GPX/gpx_style/0/2')
+            if not a.namespaceURI or a.namespaceURI == self.GPX_NAMESPACE:
+              a.SetAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
           else:
-            a = self.Track.createElementNS('http://www.topografix.com/GPX/gpx_style/0/2', 'line')
-            a.setAttribute('xmlns', 'http://www.topografix.com/GPX/gpx_style/0/2')
+            a = self._XMLNewNode('line', None, self.GPXSTYLE_NAMESPACE)
+            a.SetAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
             e_.appendChild(a)
-          b = a.GetChildren('*', 'color')
+          b = a.GetChildren('color', '*')
           if b:
             b = b[0]
           else:
-            b = self.Track.createElementNS('http://www.topografix.com/GPX/gpx_style/0/2', 'color')
+            b = self._XMLNewNode('color', None, self.GPXSTYLE_NAMESPACE)
             a.appendChild(b)
           t = self.Track.createTextNode(msgp[1].lstrip('#'))
           while b.hasChildNodes():
@@ -2982,8 +3044,8 @@ name)
         nmsg = msgp[0].splitlines()
         wpmsg = msgp[1].splitlines()
         smsg = msgp[2].split('-\r\n')[1:]
-        wpts = r.GetChildren('http://www.topografix.com/GPX/1/1', 'wpt')
-        pts = list(pt for seg in trk.GetChildren('http://www.topografix.com/GPX/1/1', 'trkseg') for pt in seg.GetChildren('http://www.topografix.com/GPX/1/1', 'trkpt'))
+        wpts = r.GetChildren('wpt')
+        pts = list(pt for seg in trk.GetChildren('trkseg') for pt in seg.GetChildren('trkpt'))
         self._XMLUpdateNodeText(trk, 'name', (nmsg or [''])[0], None, True)
         wpn = []
         for wp in wpmsg:
@@ -2995,7 +3057,7 @@ name)
               else:
                 nwp = wpts[int(v[0])].cloneNode(True)
             else:
-              nwp = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':wpt' if trk.prefix else 'wpt')
+              nwp = self._XMLNewNode('wpt', trk)
             self._XMLUpdateAttribute(nwp, 'lat', v[1])
             self._XMLUpdateAttribute(nwp, 'lon', v[2])
             self._XMLUpdateNodeText(nwp, 'ele', v[3], None)
@@ -3010,7 +3072,7 @@ name)
         self._XMLUpdateChildNodes(r, 'wpt', wpn, ('metadata',))
         sn = []
         for s in smsg:
-          ns = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkseg' if trk.prefix else 'trkseg')
+          ns = self._XMLNewNode('trkseg', trk)
           pn = []
           pmsg = s.splitlines()
           for p in pmsg:
@@ -3019,31 +3081,31 @@ name)
               if int(v[0]) < len(pts):
                 np = pts[int(v[0])].parentNode.removeChild(pts[int(v[0])])
               else:
-                np = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':trkpt' if trk.prefix else 'trkpt')
+                np = self._XMLNewNode('trkpt', trk)
               self._XMLUpdateAttribute(np, 'lat', v[1])
               self._XMLUpdateAttribute(np, 'lon', v[2])
               self._XMLUpdateNodeText(np, 'ele', v[3], None)
               if v[4]:
                 if not mt:
-                  r.setAttributeNS(xml.dom.XMLNS_NAMESPACE, 'xmlns:mytrails', 'http://www.frogsparks.com/mytrails')
+                  r.SetAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT, self.XMLNS)
                   mt = True
-                ext = np.GetChildren('*', 'extensions')
+                ext = np.GetChildren('extensions')
                 if not ext:
-                  e = self.Track.createElementNS(trk.namespaceURI, trk.prefix + ':extensions' if trk.prefix else 'extensions')
+                  e = self._XMLNewNode('extensions', trk)
                   np.appendChild(e)
                 else:
                   e = ext[0]
                   for ex in ext:
-                    if ex.GetChildren('http://www.frogsparks.com/mytrails', 'ele_alt'):
+                    if ex.GetChildren('ele_alt', self.MT_NAMESPACE):
                       e = ex
                       break
-                a = self.Track.createElementNS('http://www.frogsparks.com/mytrails', 'mytrails:ele_alt')
+                a = self._XMLNewNode('ele_alt', None, self.MT_NAMESPACE, self.MT)
                 t = self.Track.createTextNode(v[4])
                 a.appendChild(t)
-                self._XMLUpdateChildNodes(e, 'ele_alt', [a], '*', 'http://www.frogsparks.com/mytrails')
+                self._XMLUpdateChildNodes(e, 'ele_alt', [a], '*', self.MT_NAMESPACE)
               elif mt:
-                for ex in np.GetChildren('*', 'extensions'):
-                  self._XMLUpdateChildNodes(ex, 'ele_alt', [], '*', 'http://www.frogsparks.com/mytrails')
+                for ex in np.GetChildren('extensions'):
+                  self._XMLUpdateChildNodes(ex, 'ele_alt', [], '*', self.MT_NAMESPACE)
               self._XMLUpdateNodeText(np, 'time', urllib.parse.unquote(v[5]), ('ele',))
             else:
               np = pts[int(p)].parentNode.removeChild(pts[int(p)])
@@ -3070,12 +3132,12 @@ name)
     trkid = self.TrkId
     self.Track = self.OTrack.cloneNode(True)
     self._tracks = [self.OTrack, None, self.OTrack.cloneNode(True)]
-    r = self.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
+    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
     nuri = None
     try:
-      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')[trkid])])
-      _r = _tracks[2].GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
-      _r.removeChild(_r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')[trkid]).unlink()
+      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.GetChildren('trk')[trkid])])
+      _r = _tracks[2].GetChildren('gpx', self.GPX_NAMESPACE)[0]
+      _r.removeChild(_r.GetChildren('trk')[trkid]).unlink()
       if uri:
         nuri = uri.rsplit('.', 1)[0] + ' - trk.gpx'
         suf = 0
@@ -3112,27 +3174,27 @@ name)
     trkid = self.TrkId
     del self.Track
     self.Track = self.OTrack.cloneNode(True)
-    r = self.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
+    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
     try:
       no = None
-      cn = r.GetChildren('http://www.topografix.com/GPX/1/1', 'wpt')
+      cn = r.GetChildren('wpt')
       if cn:
         no = cn[-1].nextSibling
       else:
-        cn = r.GetChildren('http://www.topografix.com/GPX/1/1', 'metadata')
+        cn = r.GetChildren('metadata')
         if cn:
           no = cn[-1].nextSibling
         else:
           no = r.firstChild
-      _r = track.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0]
-      for n in _r.GetChildren('http://www.topografix.com/GPX/1/1', 'wpt'):
+      _r = track.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
+      for n in _r.GetChildren('wpt'):
         r.insertBefore(n.cloneNode(True), no)
-      trks = r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')
+      trks = r.GetChildren('trk')
       trk = trks[trkid] if mode != 'ta' else (trks[trkid + 1] if trkid < len(trks) - 1 else None)
       if mode == 'ta' or mode == 'tb':
-        r.insertBefore(_r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')[track.TrkId].cloneNode(True), trk)
+        r.insertBefore(_r.GetChildren('trk')[track.TrkId].cloneNode(True), trk)
       else:
-        for seg in _r.GetChildren('http://www.topografix.com/GPX/1/1', 'trk')[track.TrkId].GetChildren('http://www.topografix.com/GPX/1/1', 'trkseg'):
+        for seg in _r.GetChildren('trk')[track.TrkId].GetChildren('trkseg'):
           trk.appendChild(seg.cloneNode(True))
       if mode == 's':
         self.ProcessGPX('a')
@@ -3422,7 +3484,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], matrix=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1].get('matrix'), **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
               else:
-                self.server.Interface.EMode = "api"
+                self.server.Interface.EMode = 'api'
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
             except:
@@ -3537,7 +3599,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               if next((tr for tr in self.server.Interface.Tracks if tr[0] == uri2), None) == None:
                 for i in range(3):
                   try:
-                    print(_tracks[i].childNodes)
                     _tracks[i].unlink()
                   except:
                     pass
@@ -10760,7 +10821,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
     try:
-      f = open(uri, "rt", encoding='utf-8')
+      f = open(uri, 'rt', encoding='utf-8')
       cfg = f.read()
     except:
       self.log(0, 'cerror', uri)
@@ -11235,7 +11296,7 @@ class GPXTweakerWebInterfaceServer():
         self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
       if uri == None:
         if nbtrk == None:
-          nbtrk = len(track.Track.GetChildren('http://www.topografix.com/GPX/1/1', 'gpx')[0].GetChildren('http://www.topografix.com/GPX/1/1', 'trk'))
+          nbtrk = len(track.Track.GetChildren('gpx', track.GPX_NAMESPACE)[0].GetChildren('trk'))
         trk += 1
         if trk >= nbtrk:
           trk = 0
@@ -11266,7 +11327,7 @@ class GPXTweakerWebInterfaceServer():
         self.TilesSets = [['Map']]
       else:
         for i in range(len(self.MapSets)):
-          if self.MapSets[i][0].lower() == bmap.lower() or bmap == " ":
+          if self.MapSets[i][0].lower() == bmap.lower() or bmap == ' ':
             self.MapSet = i
             break
         if self.MapSet == None:
@@ -11327,7 +11388,7 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'eerror', emap)
       else:
         for i in range(len(self.ElevationMapSets)):
-          if self.ElevationMapSets[i][0].lower() == emap.lower() or emap == " ":
+          if self.ElevationMapSets[i][0].lower() == emap.lower() or emap == ' ':
             self.ElevationMapSet = i
             break
         if self.ElevationMapSet == None:
@@ -11352,7 +11413,7 @@ class GPXTweakerWebInterfaceServer():
         self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
         self.log(1, 'elevation', self.ElevationsProviders[0][0])
       else:
-        self.EMode = "api"
+        self.EMode = 'api'
         self.ElevationProvider = partial(self.Elevation.RequestElevation, self.ElevationsProviders[0][1], **self.ElevationsProviders[0][2])
         self.log(1, 'elevation', self.ElevationsProviders[0][0])
     else:
@@ -11384,7 +11445,7 @@ class GPXTweakerWebInterfaceServer():
     def _coord_to_vb(x, y):
       return '%.1f %.1f' % (x - self.Minx, self.Maxy - y)
     pathes = ''
-    pathes = ''.join(GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('##ARROWS##', "&rsaquo; " * 500) % (s, s, 'M0 0' + ''.join(' M' + _coord_to_vb(*pt[1]) for pt in self.Track.WebMercatorPts[s][0:1]) + ''.join(' L' + _coord_to_vb(*pt[1]) for pt in self.Track.WebMercatorPts[s][1:]), s) for s in range(len(self.Track.WebMercatorPts)))
+    pathes = ''.join(GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('##ARROWS##', '&rsaquo; ' * 500) % (s, s, 'M0 0' + ''.join(' M' + _coord_to_vb(*pt[1]) for pt in self.Track.WebMercatorPts[s][0:1]) + ''.join(' L' + _coord_to_vb(*pt[1]) for pt in self.Track.WebMercatorPts[s][1:]), s) for s in range(len(self.Track.WebMercatorPts)))
     return pathes
 
   def _build_waypoints(self):
@@ -11574,7 +11635,7 @@ class GPXTweakerWebInterfaceServer():
     return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, *([f, html.escape(self.Folders[f])] * 2)) for f in range(len(self.Folders)))
 
   def _build_path_exp(self, t):
-    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', "&rsaquo; " * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, html.escape(self.Tracks[t][1].Name or ''), t, t)
+    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', '&rsaquo; ' * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, html.escape(self.Tracks[t][1].Name or ''), t, t)
 
   def _build_pathes_exp(self):
     return ''.join(self._build_path_exp(t) for t in range(len(self.Tracks)))
