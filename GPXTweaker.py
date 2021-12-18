@@ -5,7 +5,6 @@ import selectors
 import ssl
 import http.client
 import math
-import xml.dom
 from xml.dom import minidom
 from xml.parsers import expat
 import types
@@ -23,7 +22,7 @@ import zlib
 import gzip
 import lzma
 import zipfile
-from io import BytesIO
+from io import BytesIO, StringIO
 import ctypes, ctypes.wintypes
 import subprocess
 import struct
@@ -32,6 +31,7 @@ import webbrowser
 import msvcrt
 import locale
 import argparse
+import io
 
 FR_STRINGS = {
   'tilescache': {
@@ -574,7 +574,7 @@ def _XMLGetNodeText(nodes):
     nodes = (nodes,)
   for node in nodes:
     if node.nodeType in (minidom.Node.TEXT_NODE, minidom.Node.CDATA_SECTION_NODE):
-      text.append(childNode.data)
+      text.append(node.data)
     elif node.hasChildNodes():
       for childNode in node.childNodes:
         if childNode.nodeType in (minidom.Node.TEXT_NODE, minidom.Node.CDATA_SECTION_NODE):
@@ -1722,12 +1722,12 @@ class WebMercatorMap(WGS84WebMercator):
       pipe_r = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x00000001), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
     except:
       return None
-    tr = threading.Thread(target = pipe_read, args=(pipe_r,), daemon=False)
+    tr = threading.Thread(target=pipe_read, args=(pipe_r,), daemon=False)
     tr.start()
-    tw1 = threading.Thread(target = pipe_write, args=(pipe_w1, i1), daemon=False)
+    tw1 = threading.Thread(target=pipe_write, args=(pipe_w1, i1), daemon=False)
     tw1.start()
     if i2:
-      tw2 = threading.Thread(target = pipe_write, args=(pipe_w2, i2), daemon=False)
+      tw2 = threading.Thread(target=pipe_write, args=(pipe_w2, i2), daemon=False)
       tw2.start()
     try:
       process = subprocess.Popen(r'"%s\%s"' % (path, 'jpegtran.bat'), env={**os.environ, 'command': cmd.replace('##i1##', r'\\.\pipe\write1_' + name).replace('##i2##', r'\\.\pipe\write2_' + name).replace('##o##', r'\\.\pipe\read_' + name)}, creationflags=subprocess.CREATE_NO_WINDOW, startupinfo=subprocess.STARTUPINFO(dwFlags=subprocess.STARTF_USESHOWWINDOW, wShowWindow=6))
@@ -2412,53 +2412,377 @@ class WGS84Itinerary(WGS84Map):
       return None
 
 
-class ExpatGPXBuilder:
+class Node():
 
-  def _get_children(parent, localname, uri=' '):
-    if uri == ' ':
-      uri = parent.namespaceURI
-    nodes = []
-    for node in parent.childNodes:
-      if node.nodeType == xml.dom.Node.ELEMENT_NODE:
-        if (uri == '*' or node.namespaceURI == uri) and (localname == '*' or node.localName == localname):
-          nodes.append(node)
-    return nodes
+  __slots__ = ('name', 'namespaceURI', 'prefix', 'localName', 'parentNode', 'nextSibling', 'previousSibling')
 
-  def _get_attribute(node, localname, uri=xml.dom.EMPTY_NAMESPACE):
-    if node._attrsNS:
-      return node._attrsNS.get((uri, localname)) or (node._attrsNS.get((node.namespaceURI, localname)) if uri == xml.dom.EMPTY_NAMESPACE else None)
+  EMPTY_NAMESPACE = None
+  XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
+  EMPTY_PREFIX = None
+  DOCUMENT_NODE = 1
+  ELEMENT_NODE = 2
+  TEXT_NODE = 3
+  CDATA_SECTION_NODE = 4
+  COMMENT_NODE = 5
+
+  nodeType = 0
+
+  def __bool__(self):
+    return True
+
+  def hasChildNodes(self):
+    return bool(self.childNodes)
+
+  @property
+  def firstChild(self):
+    return self.childNodes[0] if self.childNodes else None
+
+  @firstChild.setter
+  def firstChild(self, value):
+    raise
+
+  @property
+  def lastChild(self):
+    return self.childNodes[-1] if self.childNodes else None
+
+  @lastChild.setter
+  def lastChild(self, value):
+    raise
+
+  def unlink(self):
+    self.parentNode = None
+    self.previousSibling = None
+    self.nextSibling = None
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, et, ev, tb):
+    self.unlink()
+
+  def toxml(self, indent='  ', newl='\n'):
+    writer = StringIO()
+    self.writexml(writer, '', indent, newl)
+    return writer.getvalue().encode('utf-8')
+
+
+class Element(Node):
+
+  __slots__ = ('childNodes', 'attributes')
+
+  nodeType = Node.ELEMENT_NODE
+
+  def __init__(self, name, namespaceuri=Node.EMPTY_NAMESPACE, prefix=Node.EMPTY_PREFIX, localname=''):
+    self.name = name
+    self.namespaceURI = namespaceuri
+    self.prefix = prefix
+    self.localName = localname
+    self.attributes = None
+    self.childNodes = []
+
+  def unlink(self):
+    if self.childNodes:
+      for child in self.childNodes:
+        child.unlink()
+      self.childNodes = []
+    self.attributes = None
+    Node.unlink(self)
+
+  def cloneNode(self):
+    clone = Element(self.name, self.namespaceURI, self.prefix, self.localName)
+    if self.attributes:
+      clone.attributes = {}
+      for k, v in self.attributes.items():
+        clone.attributes[k] = v[:]
+    if self.childNodes:
+      childclone_ = None
+      for child in self.childNodes:
+        childclone = child.cloneNode()
+        if childclone_ is not None:
+          childclone.previousSibling = childclone_
+          childclone_.nextSibling = childclone
+        else:
+          childclone.previousSibling = None
+        childclone_ = childclone
+        clone.childNodes.append(childclone)
+        childclone.parentNode = clone
+      else:
+        childclone.nextSibling = None
+    return clone
+
+  def getAttribute(self, localname, namespaceuri=Node.EMPTY_NAMESPACE):
+    if self.attributes:
+      return self.attributes.get((namespaceuri, localname), [None, None])[1]
     else:
       return None
 
-  def _create_element(doc, localname, uri, qname, prefix):
-    e = minidom.Element(qname, uri, prefix, localname)
-    e.ownerDocument = doc
-    return e
+  def setAttribute(self, localname, value, namespaceuri=Node.EMPTY_NAMESPACE, name=''):
+    if namespaceuri == Node.EMPTY_NAMESPACE:
+      name = localname
+    if self.attributes is None:
+      self.attributes = {}
+    self.attributes[(namespaceuri, localname)] = [name, value]
 
-  def _set_attribute(node, localname, value, uri=xml.dom.EMPTY_NAMESPACE, qname='', prefix=xml.dom.EMPTY_PREFIX):
-    attr = node.GetAttribute(localname, uri)
-    if attr == None:
-      if uri == xml.dom.EMPTY_NAMESPACE:
-        qname = localname
-        prefix = xml.dom.EMPTY_PREFIX
-      attr = minidom.Attr(qname, uri, localname, prefix)
-      attr.value = value
-      attr.ownerDocument = node.ownerDocument
-      node.setAttributeNode(attr)
+  def removeAttribute(self, localname, namespaceuri=Node.EMPTY_NAMESPACE):
+    if self.attributes:
+      self.attributes.pop((namespaceuri, localname), None)
+
+  def hasAttribute(self, localname, namespaceuri=Node.EMPTY_NAMESPACE):
+    if self.attributes:
+      return (namespaceuri, localname) in self.attributes
     else:
-      attr.value = value
+      return False
 
-  minidom.Node.GetChildren = _get_children
-  minidom.Node.GetAttribute = _get_attribute
-  minidom.Document.CreateElement = _create_element
-  minidom.Node.SetAttribute = _set_attribute
+  def getChildren(self, localname, namespaceuri=' '):
+    if namespaceuri == ' ':
+      namespaceuri = self.namespaceURI
+    nodes = []
+    for node in self.childNodes:
+      if node.nodeType == Node.ELEMENT_NODE:
+        if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname):
+          nodes.append(node)
+    return nodes
+
+  def insertBefore(self, newChildren, refChild):
+    if not isinstance(newChildren, (tuple, list)):
+      newChildren = (newChildren,)
+    elif not newChildren:
+      return
+    if refChild is None:
+      for newChild in newChildren:
+        self.appendChild(newChild)
+    else:
+      index = self.childNodes.index(refChild)
+      node = self.childNodes[index - 1] if index else None
+      for newChild in newChildren:
+        newChild.parentNode = self
+        self.childNodes.insert(index, newChild)
+        newChild.previousSibling = node
+        if node is not None:
+          node.nextSibling = newChild
+        index += 1
+        node = newChild
+      else:
+        refChild.previousSibling = newChild
+        newChild.nextSibling = refChild
+    return newChild
+
+  def insertAfter(self, newChildren, refChild):
+    if not isinstance(newChildren, (tuple, list)):
+      newChildren = (newChildren,)
+    elif not newChildren:
+      return
+    index = self.childNodes.index(refChild) + 1 if refChild is not None else 0
+    if index < len(self.childNodes):
+      node = refChild
+      for newChild in newChildren:
+        newChild.parentNode = self
+        self.childNodes.insert(index, newChild)
+        newChild.previousSibling = node
+        if node is not None:
+          node.nextSibling = newChild
+        index += 1
+        node = newChild
+      else:
+        node = self.childNodes[index]
+        node.previousSibling = newChild
+        newChild.nextSibling = node
+    else:
+      for newChild in newChildren:
+        self.appendChild(newChild)
+    return newChild
+
+  def appendChild(self, newChild):
+    newChild.parentNode = self
+    if self.childNodes:
+      node = self.childNodes[-1]
+      newChild.previousSibling = node
+      node.nextSibling = newChild
+    else:
+      newChild.previousSibling = None
+    self.childNodes.append(newChild)
+    newChild.nextSibling = None
+    return newChild
+
+  def replaceChild(self, newChild, oldChild):
+    if newChild is oldChild:
+      return
+    index = self.childNodes.index(oldChild)
+    self.childNodes[index] = newChild
+    newChild.parentNode = self
+    newChild.nextSibling = oldChild.nextSibling
+    newChild.previousSibling = oldChild.previousSibling
+    Node.unlink(oldChild)
+    if newChild.previousSibling is not None:
+      newChild.previousSibling.nextSibling = newChild
+    if newChild.nextSibling is not None:
+      newChild.nextSibling.previousSibling = newChild
+    return oldChild
+
+  def removeChild(self, oldChild):
+    self.childNodes.remove(oldChild)
+    if oldChild.nextSibling is not None:
+      oldChild.nextSibling.previousSibling = oldChild.previousSibling
+    if oldChild.previousSibling is not None:
+      oldChild.previousSibling.nextSibling = oldChild.nextSibling
+    Node.unlink(oldChild)
+    return oldChild
+
+  def getText(self):
+    return ''.join(childnode.data for childnode in self.childNodes if childnode.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE))
+
+  def getChildrenText(self, localname, namespaceuri=' '):
+    return ''.join(node.getText() for node in self.getChildren(localname, namespaceuri))
+
+  def __repr__(self):
+    return '<DOM Element: %s at %#x>' % (self.name, id(self))
+
+  def writexml(self, writer, indent='', addindent='', newl=''):
+    writer.write(f'{indent}<{self.name}')
+    if self.attributes:
+      for n_v in self.attributes.values():
+        v = (n_v[1] or '').replace('&', '&amp;').replace('<', '&lt;').replace('"', '&quot;').replace('>', '&gt;')
+        writer.write(f' {n_v[0]}="{v}"')
+    if self.childNodes:
+      writer.write('>')
+      if len(self.childNodes) == 1 and self.childNodes[0].nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
+        self.childNodes[0].writexml(writer, '', '', '')
+      elif self.name == 'wpt' or self.name == 'trkpt':
+        for node in self.childNodes:
+          node.writexml(writer, '', '', '')
+      else:
+        writer.write(newl)
+        for node in self.childNodes:
+          node.writexml(writer, indent + addindent, addindent, newl)
+        writer.write(indent)
+      writer.write(f'</{self.name}>{newl}')
+    else:
+      writer.write(f'/>{newl}')
+
+
+class CharacterData(Node):
+
+  __slots__ = ('data',)
+  
+  namespaceURI = Node.EMPTY_NAMESPACE
+  prefix = Node.EMPTY_PREFIX
+
+  def __init__(self, data=''):
+    self.data = data
+
+  @property
+  def childNodes(self):
+    return []
+
+  @childNodes.setter
+  def childNodes(self, value):
+    raise
+
+  def __repr__(self):
+    return '<DOM %s node "%r">' % (self.__class__.__name__, (self.data[0:10] + '...' if len(self.data) > 10 else self.data))
+
+
+class Text(CharacterData):
+
+  __slots__ = ()
+  
+  nodeType = Node.TEXT_NODE
+  name = "#text"
+  localName = "#text"
+
+  def cloneNode(self):
+    return Text(self.data)
+
+  def writexml(self, writer, indent='', addindent='', newl=''):
+    d = (self.data or '').replace('&', '&amp;').replace('<', '&lt;').replace('"', '&quot;').replace('>', '&gt;')
+    writer.write(f'{indent}{d}{newl}')
+
+
+class CDATASection(CharacterData):
+
+  __slots__ = ()
+
+  nodeType = Node.CDATA_SECTION_NODE
+  name = "#cdata-section"
+  localName = "#cdata-section"
+
+  def cloneNode(self):
+    return CDATASection(self.data)
+
+  def writexml(self, writer, indent='', addindent='', newl=''):
+    writer.write(f'<![CDATA[{self.data or ""}]]>')
+
+
+class Comment(CharacterData):
+
+  __slots__ = ()
+
+  nodeType = Node.COMMENT_NODE
+  name = "#comment"
+  localName = "#cdata-section"
+
+  def cloneNode(self):
+    return Comment(self.data)
+
+  def writexml(self, writer, indent='', addindent='', newl=''):
+    writer.write(f'{indent}<!--{self.data or ""}-->{newl}')
+
+
+class Document(Node):
+
+  __slots__ = ('version', 'encoding', 'childNodes')
+
+  nodeType = Node.DOCUMENT_NODE
+  name = "#document"
+  namespaceURI = Node.EMPTY_NAMESPACE
+  prefix = Node.EMPTY_PREFIX
+  localName = "#document"
+  parentNode = nextSibling = previousSibling = None
+
+  def __init__(self, version=None, encoding='utf-8'):
+    self.version = version
+    self.encoding = encoding
+    self.childNodes = []
+
+  documentElement = Node.firstChild
+
+  def unlink(self):
+    if self.documentElement is not None:
+      self.documentElement.unlink()
+    self.childNodes = []
+
+  def cloneNode(self):
+    clone = Document(self.version, self.encoding)
+    if self.documentElement is not None:
+      childclone = self.documentElement.cloneNode()
+      clone.childNodes.append(childclone)
+      childclone.parentNode = clone
+      childclone.previousSibling = childclone.nextSibling = None
+    return clone
+
+  def appendChild(self, newChild):
+    if self.hasChildNodes():
+      raise
+    self.childNodes.append(newChild)
+    newChild.previousSibling = None
+    newChild.nextSibling = None
+    newChild.parentNode = self
+    return newChild
+
+  def writexml(self, writer, indent='', addindent='', newl=''):
+    writer.write(f'<?xml version="1.0" encoding="utf-8"?>{newl}')
+    for node in self.childNodes:
+      node.writexml(writer, indent, addindent, newl)
+
+
+class ExpatGPXBuilder:
 
   def __new__(cls):
     b = object.__new__(cls)
     b.intern_dict = {}
     b.intern = b.intern_dict.setdefault
     b.XMLNS = b.intern('xmlns', 'xmlns')
-    b.XMLNS_NAMESPACE = b.intern(xml.dom.XMLNS_NAMESPACE, xml.dom.XMLNS_NAMESPACE)
+    b.XMLNS_NAMESPACE = b.intern(Node.XMLNS_NAMESPACE, Node.XMLNS_NAMESPACE)
     b.XSI = b.intern('xsi', 'xsi')
     b.XMLNS_XSI = b.intern('xmlns:xsi', 'xmlns:xsi')
     b.XSI_NAMESPACE = b.intern('http://www.w3.org/2001/XMLSchema-instance', 'http://www.w3.org/2001/XMLSchema-instance')
@@ -2483,9 +2807,9 @@ class ExpatGPXBuilder:
       self.intern_dict = self.Parser.intern
       self.intern = self.intern_dict.setdefault
       self.XMLNS = self.intern('xmlns', 'xmlns')
-      self.XMLNS_NAMESPACE = self.intern(xml.dom.XMLNS_NAMESPACE, xml.dom.XMLNS_NAMESPACE)
+      self.XMLNS_NAMESPACE = self.intern(Node.XMLNS_NAMESPACE, Node.XMLNS_NAMESPACE)
       self.XSI = self.intern('xsi', 'xsi')
-      self.XMLNS_XSI = self.inter('xmlns:xsi', 'xmlns:xsi')
+      self.XMLNS_XSI = self.intern('xmlns:xsi', 'xmlns:xsi')
       self.XSI_NAMESPACE = self.intern('http://www.w3.org/2001/XMLSchema-instance', 'http://www.w3.org/2001/XMLSchema-instance')
       self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
       self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
@@ -2496,7 +2820,6 @@ class ExpatGPXBuilder:
     self.Parser.XmlDeclHandler = self.XmlDeclHandler
     self.Parser.StartElementHandler = self.StartElementHandler
     self.Parser.EndElementHandler = self.EndElementHandler
-    self.Parser.ProcessingInstructionHandler = self.ProcessingInstructionHandler
     self.Parser.StartCdataSectionHandler = self.StartCdataSectionHandler
     self.Parser.EndCdataSectionHandler = self.EndCdataSectionHandler
     self.Parser.CharacterDataHandler = self.CharacterDataHandler
@@ -2507,29 +2830,24 @@ class ExpatGPXBuilder:
     
   def Parse(self, xmlstring):
     self.NewParser()
-    self.Document = xml.dom.getDOMImplementation().createDocument(xml.dom.EMPTY_NAMESPACE, None, None)
+    self.Document = Document()
     self.CurNode = self.Document
     self.CurText = ''
     try:
       self.Parser.Parse(xmlstring, True)
-      r = self.Document.GetChildren('gpx', self.GPX_NAMESPACE)
-      if len(r) != 1:
+      if len(self.Document.childNodes) != 1:
         raise
-      r = r[0]
+      r = self.Document.documentElement
+      r.nextSibling = None
       if not r.hasAttribute('xmlns'):
-        r.SetAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
-      r.SetAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI, self.XMLNS)
-      sla = r.GetAttribute('schemaLocation', self.XSI_NAMESPACE)
-      if sla == None:
-        sl = ''
-      else:
-        sl = sla.value
-        r.removeAttributeNode(sla)
+        r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+      r.setAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI)
+      sl = r.getAttribute('schemaLocation', self.XSI_NAMESPACE) or ''
       if not self.GPX_NAMESPACE in sl:
         sl = (sl + ' http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd').lstrip()
       if not self.GPXSTYLE_NAMESPACE in sl:
         sl = (sl + ' http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd')
-      r.SetAttribute(self.intern('schemaLocation', 'schemaLocation'), sl, self.XSI_NAMESPACE, self.intern('xsi:schemaLocation', 'xsi:schemaLocation'), self.XSI)
+      r.setAttribute(self.intern('schemaLocation', 'schemaLocation'), sl, self.XSI_NAMESPACE, self.intern('xsi:schemaLocation', 'xsi:schemaLocation'))
     except:
       self.Document = None
     doc = self.Document
@@ -2539,8 +2857,11 @@ class ExpatGPXBuilder:
   def _append_child(self, node):
     nodes = self.CurNode.childNodes
     if nodes:
-      node.previousSibling = nodes[-1]
-      nodes[-1].nextSibling = node
+      _node = nodes[-1] 
+      node.previousSibling = _node
+      _node.nextSibling = node
+    else:
+      node.previousSibling = None
     nodes.append(node)
     node.parentNode = self.CurNode
 
@@ -2550,9 +2871,8 @@ class ExpatGPXBuilder:
     if l == 2:
       uri, localname = parts
       uri = self.intern(uri, uri)
-      prefix = xml.dom.EMPTY_PREFIX
-      localname = self.intern(localname, localname)
-      qname = localname
+      prefix = Node.EMPTY_PREFIX
+      qname = localname = self.intern(localname, localname)
     elif l == 3:
       uri, localname, prefix = parts
       uri = self.intern(uri, uri)
@@ -2561,10 +2881,9 @@ class ExpatGPXBuilder:
       qname = prefix + ':' + localname
       qname = self.intern(qname, qname)
     elif l == 1:
-      uri = xml.dom.EMPTY_NAMESPACE
-      prefix = xml.dom.EMPTY_PREFIX
-      localname = self.intern(name, name)
-      qname = localname
+      uri = Node.EMPTY_NAMESPACE
+      prefix = Node.EMPTY_PREFIX
+      qname = localname = self.intern(name, name)
     else:
       raise
     return uri, localname, prefix, qname
@@ -2576,54 +2895,39 @@ class ExpatGPXBuilder:
   def StartElementHandler(self, name, attributes):
     self.CurText = ''
     uri, localname, prefix, qname = self._parse_ns_name(name)
-    node = minidom.Element(qname, uri, prefix, localname)
-    node.ownerDocument = self.Document
+    node = Element(qname, uri, prefix, localname)
     self._append_child(node)
     self.CurNode = node
     if self.CurNodeNSDecl:
-      node._attrs = {}
-      node._attrsNS = {}
-      for prefix, uri in self.CurNodeNSDecl:
+      node.attributes = {}
+      for prefix, uri2 in self.CurNodeNSDecl:
         if prefix:
-          a = minidom.Attr(self.intern('xmlns:' + prefix, 'xmlns:' + prefix), self.XMLNS_NAMESPACE, prefix, self.XMLNS)
-          node._attrs[a.name] = a
-          node._attrsNS[(self.XMLNS_NAMESPACE, prefix)] = a
+          node.attributes[(self.XMLNS_NAMESPACE, prefix)] = [self.intern('xmlns:' + prefix, 'xmlns:' + prefix), uri2]
         else:
-          a = minidom.Attr(self.XMLNS, self.XMLNS_NAMESPACE, self.XMLNS, xml.dom.EMPTY_PREFIX)
-          node._attrs[self.XMLNS] = a
-          node._attrsNS[(self.XMLNS_NAMESPACE, self.XMLNS)] = a
-        a.value = uri
-        a.ownerDocument = self.Document
-        a.ownerElement = node
+          node.attributes[(self.XMLNS_NAMESPACE, self.XMLNS)] = [self.XMLNS, uri2]
       self.CurNodeNSDecl = []
     if attributes:
-      if node._attrsNS == None:
-        node._attrs = {}
-        node._attrsNS = {}
+      if node.attributes is None:
+        node.attributes = {}
       for i in range(0, len(attributes), 2):
         name = attributes[i]
         if ' ' in name:
-          uri, localname, prefix, qname = self._parse_ns_name(name)
-          a = minidom.Attr(qname, uri, localname, prefix)
-          node._attrs[qname] = a
-          node._attrsNS[(uri, localname)] = a
+          uri2, localname, prefix, qname = self._parse_ns_name(name)
+          if uri2 is uri:
+            node.attributes[(Node.EMPTY_NAMESPACE, localname)] = [localname, attributes[i + 1]]
+          else:
+            node.attributes[(uri2, localname)] = [qname, attributes[i + 1]]
         else:
-          a = minidom.Attr(name, xml.dom.EMPTY_NAMESPACE, name, xml.dom.EMPTY_PREFIX)
-          node._attrs[name] = a
-          node._attrsNS[(xml.dom.EMPTY_NAMESPACE, name)] = a
-        a.value = attributes[i + 1]
-        a.ownerDocument = self.Document
-        a.ownerElement = node
+          node.attributes[(Node.EMPTY_NAMESPACE, name)] = [name, attributes[i + 1]]
 
   def EndElementHandler(self, name):
     if self.CurText and not self.CurNode.childNodes:
-      self._append_child(self.Document.createTextNode(self.CurText))
-      self.CurText = ''
-    self.CurNode = self.CurNode.parentNode
-
-  def ProcessingInstructionHandler(self, target, data):
+      self._append_child(Text(self.CurText))
     self.CurText = ''
-    self._append_child(self.Document.createProcessingInstruction(target, data))
+    nodes = self.CurNode.childNodes
+    if nodes:
+      nodes[-1].nextSibling = None
+    self.CurNode = self.CurNode.parentNode
 
   def StartCdataSectionHandler(self):
     self.CurText = ''
@@ -2636,18 +2940,18 @@ class ExpatGPXBuilder:
     nodes = self.CurNode.childNodes
     if self.CDataSection:
       if nodes:
-        if nodes[-1].nodeType == xml.dom.Node.CDATA_SECTION_NODE:
+        if nodes[-1].nodeType == Node.CDATA_SECTION_NODE:
           nodes[-1].data += data
           return
-      self._append_child(self.Document.createCDATASection(data))
+      self._append_child(CDATASection(data))
     else:
       if nodes:
-        if nodes[-1].nodeType == xml.dom.Node.TEXT_NODE:
+        if nodes[-1].nodeType == Node.TEXT_NODE:
            nodes[-1].data += data
            return
       self.CurText += data
       if data.strip('\r\n\t '):
-        self._append_child(self.Document.createTextNode(self.CurText))
+        self._append_child(Text(self.CurText))
         self.CurText = ''
 
   def StartNamespaceDeclHandler(self, prefix, uri):
@@ -2658,7 +2962,7 @@ class ExpatGPXBuilder:
 
   def CommentHandler(self, data):
     self.CurText = ''
-    self._append_child(self.Document.createComment(data))
+    self._append_child(Comment(data))
 
   def DefaultHandler(self, data):
     self.CurText = ''
@@ -2666,7 +2970,8 @@ class ExpatGPXBuilder:
 
 class WGS84Track(WGS84WebMercator):
 
-  def __init__(self):
+  def __init__(self, unlink_lock=None):
+    self.ULock = unlink_lock
     self._tracks = [None, None, None]
     self.TrkId = None
     self.Name = None
@@ -2680,6 +2985,20 @@ class WGS84Track(WGS84WebMercator):
     self.log = partial(log, 'track')
     self.log(1, 'init')
 
+  def _unlink(self, track):
+    if self.ULock is not None:
+      self.ULock.acquire()
+      self.ULock.release()
+    try:
+      track.unlink()
+    except:
+      pass
+
+  def unlink(self, track):
+    if track is not None:
+      tu = threading.Thread(target=self._unlink, args=(track,))
+      tu.start()
+
   @property
   def OTrack(self):
     return self._tracks[0]
@@ -2691,10 +3010,7 @@ class WGS84Track(WGS84WebMercator):
   @OTrack.deleter
   def OTrack(self):
     if self._tracks[0] != self._tracks[1] and self._tracks[0] != self._tracks[2]:
-      try:
-        self._tracks[0].unlink()
-      except:
-        pass
+      self.unlink(self._tracks[0])
     self._tracks[0] = None
 
   @property
@@ -2708,10 +3024,7 @@ class WGS84Track(WGS84WebMercator):
   @STrack.deleter
   def STrack(self):
     if self._tracks[1] != self._tracks[0] and self._tracks[1] != self._tracks[2]:
-      try:
-        self._tracks[1].unlink()
-      except:
-        pass
+       self.unlink(self._tracks[1])
     self._tracks[1] = None
 
   @property
@@ -2725,64 +3038,61 @@ class WGS84Track(WGS84WebMercator):
   @Track.deleter
   def Track(self):
     if self._tracks[2] != self._tracks[0] and self._tracks[2] != self._tracks[1]:
-      try:
-        self._tracks[2].unlink()
-      except:
-        pass
+        self.unlink(self._tracks[2])
     self._tracks[2] = None
 
-  def _XMLNewNode(self, name, model=None, uri=None, prefix=None):
-    if model != None:
-      return self.Track.CreateElement(self.intern(name, name), model.namespaceURI, self.intern(model.prefix + ':' + name, model.prefix + ':' + name) if model.prefix != xml.dom.EMPTY_PREFIX else self.intern(name, name), self.intern(model.prefix, model.prefix) if model.prefix != xml.dom.EMPTY_PREFIX else xml.dom.EMPTY_PREFIX)
+  def _XMLNewNode(self, localname, model=None, uri=None, prefix=None):
+    if model is not None:
+      return Element(self.intern(model.prefix + ':' + localname, model.prefix + ':' + localname) if model.prefix != Node.EMPTY_PREFIX else self.intern(localname, localname), model.namespaceURI, self.intern(model.prefix, model.prefix) if model.prefix != Node.EMPTY_PREFIX else Node.EMPTY_PREFIX, self.intern(localname, localname))
     else:
-      return self.Track.CreateElement(self.intern(name, name), self.intern(uri, uri), self.intern(prefix + ':' + name, prefix + ':' + name) if prefix != None else self.intern(name, name), self.intern(prefix, prefix) if prefix != None else xml.dom.EMPTY_PREFIX)
+      return Element(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix != None else self.intern(localname, localname), self.intern(uri, uri), self.intern(prefix, prefix) if prefix != None else Node.EMPTY_PREFIX, self.intern(localname, localname))
 
   def ProcessGPX(self, mode='a'):
     flt = lambda s: float(s) if (s != None and s.strip() != '') else None
-    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
+    r = self.Track.documentElement
     if mode == 'a' or mode == 'w':
-      wpts = r.GetChildren('wpt')
+      wpts = r.getChildren('wpt')
       try:
-        self.Wpts = list(zip(range(len(wpts)), ((float(pt.GetAttribute('lat').value), float(pt.GetAttribute('lon').value), flt(_XMLGetNodeText(pt.GetChildren('ele'))), _XMLGetNodeText(pt.GetChildren('time')) or None, _XMLGetNodeText(pt.GetChildren('name')) or None) for pt in wpts)))
+        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time') or None, pt.getChildrenText('name') or None) for pt in wpts)))
       except:
         return False
     try:
-      trk = r.GetChildren('trk')[self.TrkId]
+      trk = r.getChildren('trk')[self.TrkId]
     except:
       if mode != 'a' or self.TrkId > 0:
         return False
       trk = self._XMLNewNode('trk', r)
       r.appendChild(trk)
     if mode == 'a' or mode == 'e':
-      try:
-        self.Name = _XMLGetNodeText(trk.GetChildren('name')[0]).replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
-      except:
-        self.Name = ''
+      self.Name = trk.getChildrenText('name').replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
       self.Color = ''
+      ext = trk.getChildren('extensions')
       try:
-        ext = trk.GetChildren('extensions')
         for e in ext:
-          c = e.GetChildren('color', self.MT_NAMESPACE)
+          c = e.getChildren('color', self.MT_NAMESPACE)
           if c:
-            self.Color = '#' + hex(int(_XMLGetNodeText(c[0])) % (1 << 24))[2:][-6:].rjust(6, '0').upper()
+            self.Color = '#' + hex(int(c[0].getText()) % (1 << 24))[2:][-6:].rjust(6, '0').upper()
             break
-        if not self.Color:
-          for e in ext:
-            l = e.GetChildren('line', '*')
-            if l:
-              c = l[0].GetChildren('color', '*')
-              if c:
-                self.Color = '#' + hex(int(_XMLGetNodeText(c[0]), 16))[2:][-6:].rjust(6, '0').upper()
-                break
       except:
         pass
+      if not self.Color:
+        try:
+          for e in ext:
+            l = e.getChildren('line', '*')
+            if l:
+              c = l[0].getChildren('color', '*')
+              if c:
+                self.Color = '#' + hex(int(c[0].getText(), 16))[2:][-6:].rjust(6, '0').upper()
+                break
+        except:
+          pass
     if mode == 'a':
-      pts = list(list(pt for pt in seg.GetChildren('trkpt')) for seg in trk.GetChildren('trkseg')) or [[]]
+      pts = list(list(pt for pt in seg.getChildren('trkpt')) for seg in trk.getChildren('trkseg')) or [[]]
       self.Pts = []
       sn = 0
       try:
         for seg in pts:
-          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.GetAttribute('lat').value), float(pt.GetAttribute('lon').value), flt(_XMLGetNodeText(pt.GetChildren('ele'))), flt(_XMLGetNodeText(list(n for e in pt.GetChildren('extensions') for n in e.GetChildren('ele_alt', self.MT_NAMESPACE)))), _XMLGetNodeText(pt.GetChildren('time')) or None) for pt in seg))))
+          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), flt(''.join(e.getChildrenText('ele_alt', self.MT_NAMESPACE) for e in pt.getChildren('extensions'))), pt.getChildrenText('time') or None) for pt in seg))))
           sn += len(seg)
       except:
         return False
@@ -2822,7 +3132,7 @@ class WGS84Track(WGS84WebMercator):
         self.intern_dict = builder.intern_dict
       self.intern = self.intern_dict.setdefault
       self.XMLNS = self.intern('xmlns', 'xmlns')
-      self.XMLNS_NAMESPACE = self.intern(xml.dom.XMLNS_NAMESPACE, xml.dom.XMLNS_NAMESPACE)
+      self.XMLNS_NAMESPACE = self.intern(Node.XMLNS_NAMESPACE, Node.XMLNS_NAMESPACE)
       self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
       self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
       self.MT = self.intern('mytrails', 'mytrails')
@@ -2861,12 +3171,6 @@ class WGS84Track(WGS84WebMercator):
       self.WebMercatorPts = []
     return True
 
-  @staticmethod
-  def _write_pt_xml(self, writer, *args, **kwargs):
-    writer.write(args[0])
-    minidom.Element.writexml(self, writer, '', '', '', *args[3:], **kwargs)
-    writer.write(args[2])
-
   def BackupGPX(self, uri):
     try:
       uri_pre = uri.rsplit('.', 1)[0]
@@ -2887,15 +3191,8 @@ class WGS84Track(WGS84WebMercator):
         if backup and os.path.exists(uri):
           if not self.BackupGPX(uri):
             raise
-        r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
-        for n in r.GetChildren('wpt'):
-          n.writexml = types.MethodType(WGS84Track._write_pt_xml, n)
-        for t in r.GetChildren('trk'):
-          for s in t.GetChildren('trkseg'):
-            for n in s.GetChildren('trkpt'):
-              n.writexml = types.MethodType(WGS84Track._write_pt_xml, n)
         f = open(uri, 'wb')
-        f.write(self.Track.toprettyxml(indent='  ', encoding='utf-8'))
+        f.write(self.Track.toxml())
         f.close()
       except:
         try:
@@ -2913,87 +3210,72 @@ class WGS84Track(WGS84WebMercator):
     return True
 
   def _XMLUpdateAttribute(self, node, name, value):
-    node.SetAttribute(self.intern(name, name), value)
+    node.setAttribute(self.intern(name, name), value)
 
-  def _XMLUpdateNodeText(self, node, name, text, predecessors='*', cdata=False):
-    nl = node.GetChildren(name)
+  def _XMLUpdateNodeText(self, node, localname, text, predecessors='*', cdata=False):
     no = None
-    if nl:
-      no = nl[0]
-      for n in nl[1:] :
+    cn = node.getChildren(localname)
+    if cn:
+      no = cn[0]
+      for n in cn[1:]:
         node.removeChild(n).unlink()
     if text:
       if cdata:
-        t = self.Track.createCDATASection(text)
+        t = CDATASection(text)
       else:
-        t = self.Track.createTextNode(text)
-      n = self._XMLNewNode(name, node)
+        t = Text(text)
+      n = self._XMLNewNode(localname, node)
       n.appendChild(t)
-      if no:
+      if no is not None:
         node.replaceChild(n, no).unlink()
         return
-      elif not predecessors:
-        no = node.firstChild
       elif isinstance(predecessors, (list, tuple)):
         for e in predecessors:
-          cn = node.GetChildren(e)
+          cn = node.getChildren(e)
           if cn:
             no = cn[-1]
             break
-        if no:
-          no = no.nextSibling
-        else:
-          no = node.firstChild
-      node.insertBefore(n, no)
+      node.insertAfter(n, no)
     elif no:
       node.removeChild(no).unlink()
 
-  def _XMLUpdateChildNodes(self, node, name, children, predecessors='*', uri=None):
+  def _XMLUpdateChildNodes(self, node, localname, children, predecessors='*', uri=None):
     no = None
-    cn = node.GetChildren(name, uri if uri != None else node.namespaceURI)
-    for n in cn:
-      if not no:
-        no = n
-      else:
+    cn = node.getChildren(localname, uri if uri != None else node.namespaceURI)
+    if cn:
+      no = cn[0]
+      for n in cn[1:]:
         node.removeChild(n).unlink()
-    if no:
-      for n in children:
-        node.insertBefore(n, no)
+    if no is not None:
+      node.insertBefore(children, no)
       node.removeChild(no).unlink()
       return
-    elif not predecessors:
-      no = node.firstChild
     elif isinstance(predecessors, (list, tuple)):
       for e in predecessors:
-        cn = node.GetChildren(e)
+        cn = node.getChildren(e)
         if cn:
           no = cn[-1]
           break
-      if no:
-        no = no.nextSibling
-      else:
-        no = node.firstChild
-    for n in children:
-      node.insertBefore(n, no)
+    node.insertAfter(children, no)
 
   def UpdateGPX(self, msg, uri=None, backup=True):
     del self.Track
-    self.Track = self.OTrack.cloneNode(True)
-    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
-    trk = r.GetChildren('trk')[self.TrkId]
+    self.Track = self.OTrack.cloneNode()
+    r = self.Track.documentElement
+    trk = r.getChildren('trk')[self.TrkId]
     mt = r.hasAttribute(self.XMLNS_MT)
     try:
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
         if msgp[0][-5:] == 'color':
           if not mt:
-            r.SetAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT, self.XMLNS)
-          ext = trk.GetChildren('extensions')
+            r.setAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT)
+          ext = trk.getChildren('extensions')
           l = []
           if not ext:
             e = self._XMLNewNode('extensions', trk)
             e_ = e
-            s = trk.GetChildren('trkseg')
+            s = trk.getChildren('trkseg')
             if s:
               trk.insertBefore(e, s[0])
             else:
@@ -3002,34 +3284,34 @@ class WGS84Track(WGS84WebMercator):
             e = ext[0]
             e_ = ext[0]
             for ex in ext:
-              if ex.GetChildren('color', self.MT_NAMESPACE):
+              if ex.getChildren('color', self.MT_NAMESPACE):
                 e = ex
                 break
             for ex in ext:
-              l = ex.GetChildren('line', '*')
+              l = ex.getChildren('line', '*')
               if l:
                 e_ = ex
-                if l[0].GetChildren('color', '*'):
+                if l[0].getChildren('color', '*'):
                   break
           a = self._XMLNewNode('color', None, self.MT_NAMESPACE, self.MT)
-          t = self.Track.createTextNode(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
+          t = Text(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
           self._XMLUpdateChildNodes(e, 'color', [a], '*', self.MT_NAMESPACE)
           if l:
             a = l[0]
             if not a.namespaceURI or a.namespaceURI == self.GPX_NAMESPACE:
-              a.SetAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+              a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
           else:
             a = self._XMLNewNode('line', None, self.GPXSTYLE_NAMESPACE)
-            a.SetAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+            a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
             e_.appendChild(a)
-          b = a.GetChildren('color', '*')
+          b = a.getChildren('color', '*')
           if b:
             b = b[0]
           else:
             b = self._XMLNewNode('color', None, self.GPXSTYLE_NAMESPACE)
             a.appendChild(b)
-          t = self.Track.createTextNode(msgp[1].lstrip('#'))
+          t = Text(msgp[1].lstrip('#'))
           while b.hasChildNodes():
             b.removeChild(b.firstChild).unlink()
           b.appendChild(t)
@@ -3044,18 +3326,15 @@ class WGS84Track(WGS84WebMercator):
         nmsg = msgp[0].splitlines()
         wpmsg = msgp[1].splitlines()
         smsg = msgp[2].split('-\r\n')[1:]
-        wpts = r.GetChildren('wpt')
-        pts = list(pt for seg in trk.GetChildren('trkseg') for pt in seg.GetChildren('trkpt'))
+        wpts = r.getChildren('wpt')
+        pts = list(pt for seg in trk.getChildren('trkseg') for pt in seg.getChildren('trkpt'))
         self._XMLUpdateNodeText(trk, 'name', (nmsg or [''])[0], None, True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
             v = wp.split('&')
             if int(v[0]) < len(wpts):
-              if int(v[0]):
-                nwp = wpts[int(v[0])].parentNode.removeChild(wpts[int(v[0])])
-              else:
-                nwp = wpts[int(v[0])].cloneNode(True)
+              nwp = wpts[int(v[0])].parentNode.removeChild(wpts[int(v[0])])
             else:
               nwp = self._XMLNewNode('wpt', trk)
             self._XMLUpdateAttribute(nwp, 'lat', v[1])
@@ -3064,10 +3343,7 @@ class WGS84Track(WGS84WebMercator):
             self._XMLUpdateNodeText(nwp, 'time', urllib.parse.unquote(v[4]), ('ele',))
             self._XMLUpdateNodeText(nwp, 'name', urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
           else:
-            if int(wp):
-              nwp = wpts[int(wp)].parentNode.removeChild(wpts[int(wp)])
-            else:
-              nwp = wpts[int(wp)].cloneNode(True)
+            nwp = wpts[int(wp)].parentNode.removeChild(wpts[int(wp)])
           wpn.append(nwp)
         self._XMLUpdateChildNodes(r, 'wpt', wpn, ('metadata',))
         sn = []
@@ -3087,24 +3363,24 @@ class WGS84Track(WGS84WebMercator):
               self._XMLUpdateNodeText(np, 'ele', v[3], None)
               if v[4]:
                 if not mt:
-                  r.SetAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT, self.XMLNS)
+                  r.setAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT)
                   mt = True
-                ext = np.GetChildren('extensions')
+                ext = np.getChildren('extensions')
                 if not ext:
                   e = self._XMLNewNode('extensions', trk)
                   np.appendChild(e)
                 else:
                   e = ext[0]
                   for ex in ext:
-                    if ex.GetChildren('ele_alt', self.MT_NAMESPACE):
+                    if ex.getChildren('ele_alt', self.MT_NAMESPACE):
                       e = ex
                       break
                 a = self._XMLNewNode('ele_alt', None, self.MT_NAMESPACE, self.MT)
-                t = self.Track.createTextNode(v[4])
+                t = Text(v[4])
                 a.appendChild(t)
                 self._XMLUpdateChildNodes(e, 'ele_alt', [a], '*', self.MT_NAMESPACE)
               elif mt:
-                for ex in np.GetChildren('extensions'):
+                for ex in np.getChildren('extensions'):
                   self._XMLUpdateChildNodes(ex, 'ele_alt', [], '*', self.MT_NAMESPACE)
               self._XMLUpdateNodeText(np, 'time', urllib.parse.unquote(v[5]), ('ele',))
             else:
@@ -3130,14 +3406,14 @@ class WGS84Track(WGS84WebMercator):
   def DetachFromGPX(self, others, uri=None, backup=True):
     _tracks = self._tracks
     trkid = self.TrkId
-    self.Track = self.OTrack.cloneNode(True)
-    self._tracks = [self.OTrack, None, self.OTrack.cloneNode(True)]
-    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
+    self.Track = self.OTrack.cloneNode()
+    self._tracks = [self.OTrack, None, self.OTrack.cloneNode()]
+    r = self.Track.documentElement
     nuri = None
     try:
-      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.GetChildren('trk')[trkid])])
-      _r = _tracks[2].GetChildren('gpx', self.GPX_NAMESPACE)[0]
-      _r.removeChild(_r.GetChildren('trk')[trkid]).unlink()
+      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.getChildren('trk')[trkid])])
+      _r = _tracks[2].documentElement
+      _r.removeChild(_r.getChildren('trk')[trkid]).unlink()
       if uri:
         nuri = uri.rsplit('.', 1)[0] + ' - trk.gpx'
         suf = 0
@@ -3173,29 +3449,30 @@ class WGS84Track(WGS84WebMercator):
   def AppendToGPX(self, track, others, mode='s', uri=None, backup=True):
     trkid = self.TrkId
     del self.Track
-    self.Track = self.OTrack.cloneNode(True)
-    r = self.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
+    self.Track = self.OTrack.cloneNode()
+    r = self.Track.documentElement
     try:
       no = None
-      cn = r.GetChildren('wpt')
+      cn = r.getChildren('wpt')
       if cn:
-        no = cn[-1].nextSibling
+        no = cn[-1 if mode != 'tb' else 0]
       else:
-        cn = r.GetChildren('metadata')
+        cn = r.getChildren('metadata')
         if cn:
-          no = cn[-1].nextSibling
-        else:
-          no = r.firstChild
-      _r = track.Track.GetChildren('gpx', self.GPX_NAMESPACE)[0]
-      for n in _r.GetChildren('wpt'):
-        r.insertBefore(n.cloneNode(True), no)
-      trks = r.GetChildren('trk')
-      trk = trks[trkid] if mode != 'ta' else (trks[trkid + 1] if trkid < len(trks) - 1 else None)
-      if mode == 'ta' or mode == 'tb':
-        r.insertBefore(_r.GetChildren('trk')[track.TrkId].cloneNode(True), trk)
+          no = cn[-1]
+      _r = track.Track.documentElement
+      if mode == 'tb':
+        r.insertBefore(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
       else:
-        for seg in _r.GetChildren('trk')[track.TrkId].GetChildren('trkseg'):
-          trk.appendChild(seg.cloneNode(True))
+        r.insertAfter(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
+      trk = r.getChildren('trk')[trkid]
+      if mode == 'tb':
+        r.insertBefore(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
+      elif mode == 'ta':
+        r.insertAfter(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
+      else:
+        for seg in _r.getChildren('trk')[track.TrkId].getChildren('trkseg'):
+          trk.appendChild(seg.cloneNode())
       if mode == 's':
         self.ProcessGPX('a')
       else:
@@ -3385,8 +3662,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             if self.server.Interface.HTMLExp == '':
               self.server.Interface.ExploreMode()
-            self.server.Interface.SLock.release()
             self.server.Interface.HTML = None
+            self.server.Interface.SLock.release()
             if not self.server.Interface.HTMLExp:
               _send_err_nf()
               continue
@@ -3520,15 +3797,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
             if self.server.Interface.Build3DHTML(mode3d, margin):
-              self.server.Interface.SLock.release()
               resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
               _send_resp('text/html; charset=utf-8')
             else:
-              self.server.Interface.SLock.release()
               _send_err_nf()
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
+            self.server.Interface.SLock.release()
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
               resp_body = self.server.Interface.HTML3DData
@@ -3566,14 +3842,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             track.OTrack = track.Track
             self.server.Interface.Tracks[tr_ind][0] = nuri
             self.server.Interface.UpdateHTMLExp(tr_ind, 't')
-            try:
-              _tracks[0].unlink()
-            except:
-              pass
+            track.unlink(_tracks[0])
             _tracks[0] = _tracks[2]
-            self.server.Interface.SLock.release()
             resp_body = nuri.rsplit('\\', 1)[1].encode('utf-8')
             _send_resp('text/plain; charset=utf-8')
+            self.server.Interface.SLock.release()
           elif req.path.lower()[:12] == '/incorporate' or req.path.lower()[:10] == '/integrate':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
@@ -3609,9 +3882,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 if self.server.Interface.Mode == 'tiles':
                   self.server.Interface.UpdateTrackBoundaries(t_ind)
                 self.server.Interface.UpdateHTMLExp(t_ind, 'tpw', resp_body)
-            self.server.Interface.SLock.release()
             resp_body = json.dumps(resp_body).encode('utf-8')
             _send_resp('application/json; charset=utf-8')
+            self.server.Interface.SLock.release()
           elif req.path.lower()[:4] == '/new':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
@@ -3624,7 +3897,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               while os.path.exists(uri):
                 suf += 1
                 uri = os.path.join(self.server.Interface.Folders[f_ind], 'new (%d).gpx' % suf)
-              track = WGS84Track()
+              track = WGS84Track(self.server.Interface.SLock)
               if not track.LoadGPX(uri, None, None, self.server.Interface.Builder):
                 raise
               if not track.SaveGPX(uri):
@@ -3639,9 +3912,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             resp_body = {}
             self.server.Interface.UpdateHTMLExp(len(self.server.Interface.Tracks) - 1, 'tpw', resp_body)
-            self.server.Interface.SLock.release()
             resp_body = json.dumps(resp_body).encode('utf-8')
             _send_resp('application/json; charset=utf-8')
+            self.server.Interface.SLock.release()
           elif req.path.lower()[:5] == '/edit':
             self.server.Interface.SLock.acquire()
             try:
@@ -3649,6 +3922,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               self.server.Interface.HTML = ''
               self.server.Interface.EditMode()
+              self.server.Interface.HTMLExp = ''
+              self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
             except:
               _send_err_fail()
               self.server.Interface.TrackInd = None
@@ -3656,8 +3931,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             finally:
               self.server.Interface.SLock.release()
-            self.server.Interface.HTMLExp = ''
-            self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
             _send_resp_tr('GPXTweaker.html')
           else:
             _send_err_nf()
@@ -3720,12 +3993,12 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                   if tr[0] == ouri:
                     tr[0] = nuri
                     self.server.Interface.UpdateHTMLExp(tr_ind, 't')
+                _send_resp_nc()
               except:
                 _send_err_fail()
                 continue
               finally:
                 self.server.Interface.SLock.release()
-              _send_resp_nc()
               continue
             nosave = False
             if self.server.Interface.HTML and '?' in req.path:
@@ -3768,15 +4041,15 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'tp')
                 if req.body.split('=')[0][-5:] == 'color':
                   self.server.Interface.UpdateHTMLExp(self.server.Interface.TrackInd, 'w')
+              _send_resp_nc()
             except:
               _send_err_fail()
               continue
             finally:
-              self.server.Interface.SLock.release()
               if not self.server.Interface.HTML:
                 self.server.Interface.TrackInd = None
                 self.server.Interface.Uri, self.server.Interface.Track = None, None
-            _send_resp_nc()
+              self.server.Interface.SLock.release()
           else:
             _send_err_nf()
         elif req.method:
@@ -10741,7 +11014,7 @@ class GPXTweakerWebInterfaceServer():
   '          prev_state = prev_state.split("|");\r\n' \
   '          document.getElementById("tracksfilter").value = prev_state[0].replace(/\\&;/g, "|").replace(/&amp;/g, "&");\r\n' \
   '          tracks_filter_history();\r\n' \
-  '          no_sort = prev_state[1].split("-");\r\n' \
+  '          no_sort = prev_state[1].split("-").map(Number);\r\n' \
   '          document.getElementById("sortup").style.display = prev_state[2]=="true"?"":"none";\r\n' \
   '          document.getElementById("sortdown").style.display = prev_state[2]=="true"?"none":"";\r\n' \
   '          document.getElementById("oset").selectedIndex = parseInt(prev_state[3]);\r\n' \
@@ -11273,7 +11546,7 @@ class GPXTweakerWebInterfaceServer():
     trck = None
     ti = time.time()
     while u != None:
-      track = WGS84Track()
+      track = WGS84Track(self.SLock)
       if not track.LoadGPX(u, trk, trck, self.Builder):
         if uri == None:
           u = next(uris, None)
@@ -11296,7 +11569,7 @@ class GPXTweakerWebInterfaceServer():
         self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
       if uri == None:
         if nbtrk == None:
-          nbtrk = len(track.Track.GetChildren('gpx', track.GPX_NAMESPACE)[0].GetChildren('trk'))
+          nbtrk = len(track.Track.documentElement.getChildren('trk'))
         trk += 1
         if trk >= nbtrk:
           trk = 0
