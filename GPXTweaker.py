@@ -31,7 +31,6 @@ import webbrowser
 import msvcrt
 import locale
 import argparse
-import io
 
 FR_STRINGS = {
   'tilescache': {
@@ -3024,7 +3023,7 @@ class WGS84Track(WGS84WebMercator):
   @STrack.deleter
   def STrack(self):
     if self._tracks[1] != self._tracks[0] and self._tracks[1] != self._tracks[2]:
-       self.unlink(self._tracks[1])
+      self.unlink(self._tracks[1])
     self._tracks[1] = None
 
   @property
@@ -3038,7 +3037,7 @@ class WGS84Track(WGS84WebMercator):
   @Track.deleter
   def Track(self):
     if self._tracks[2] != self._tracks[0] and self._tracks[2] != self._tracks[1]:
-        self.unlink(self._tracks[2])
+      self.unlink(self._tracks[2])
     self._tracks[2] = None
 
   def _XMLNewNode(self, localname, model=None, uri=None, prefix=None):
