@@ -4911,8 +4911,8 @@ class GPXTweakerWebInterfaceServer():
   '          let lon = null;\r\n' \
   '          let ea_s = [0, 0];\r\n' \
   '          let ea_p = [NaN, NaN];\r\n' \
-  '          let ea_l = [null, null];\r\n' \
-  '          let ea_h = [null, null];\r\n' \
+  '          let ea_r = [NaN, NaN];\r\n' \
+  '          let ea_b = [NaN, NaN];\r\n' \
   '          let ea_g = [null, null];\r\n' \
   '          let ea_ic = [null, null];\r\n' \
   '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
@@ -4965,35 +4965,36 @@ class GPXTweakerWebInterfaceServer():
   '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
   '              for (let v=0; v<2; v++) {\r\n' \
   '                if (! isNaN(ea[v])) {\r\n' \
-  '                  if (ea[v] > ea_p[v]) {\r\n' \
-  '                    ea_p[v] = ea[v];\r\n' \
-  '                    if (ea[v] >= ea_l[v] + ea_f[v]) {\r\n' \
-  '                      ea_g[v] = "+";\r\n' \
-  '                      ea_ic[v] = null;\r\n' \
-  '                      ea_h[v] = ea[v];\r\n' \
-  '                    }\r\n' \
-  '                    if (ea_g[v] != "+" && ea_ic[v] == null) {\r\n' \
-  '                      ea_ic[v] = stat_i - 1;\r\n' \
-  '                    }\r\n' \
+  '                  if (ea[v] > ea_r[v] + ea_f[v] || (ea[v] >= ea_r[v] && ea_g[v] == "+")) {\r\n' \
+  '                    ea_r[v] = ea[v];\r\n' \
+  '                    ea_b[v] = ea[v];\r\n' \
+  '                    ea_g[v] = "+";\r\n' \
+  '                    ea_ic[v] = null;\r\n' \
   '                  }\r\n' \
-  '                  if (ea[v] < ea_p[v] && ((ea[v] <= ea_h[v] - ea_f[v]) || ea_g[v] == "-")) {\r\n' \
+  '                  else if (ea[v] < ea_r[v] - ea_f[v] || (ea[v] <= ea_r[v] && ea_g[v] == "-")) {\r\n' \
   '                    if (ea_ic[v] != null) {\r\n' \
   '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
   '                      for (let i=ea_ic[v]+1; i<stat_i; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
   '                      ea_ic[v] = null;\r\n' \
   '                    }\r\n' \
-  '                    if (ea_g[v] == "+") {\r\n' \
-  '                      ea_l[v] = ea[v];\r\n' \
-  '                    } else {\r\n' \
-  '                      ea_l[v] = Math.min(ea_l[v], ea[v]);\r\n' \
-  '                    }\r\n' \
+  '                    ea_r[v] = ea[v];\r\n' \
+  '                    ea_b[v] = ea[v];\r\n' \
   '                    ea_g[v] = "-";\r\n' \
+  '                  } else if (ea[v] > ea_b[v]) {\r\n' \
+  '                    ea_b[v] = ea[v];\r\n' \
+  '                    if (ea_ic[v] == null) {ea_ic[v] = stat_i - 2;}\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            if (! isNaN(ea[0])) {ea_p[0] = ea[0];}\r\n' \
   '            if (! isNaN(ea[1])) {ea_p[1] = ea[1];}\r\n' \
+  '          }\r\n' \
+  '          for (let v=0; v<2; v++) {\r\n' \
+  '            if (ea_ic[v] != null) {\r\n' \
+  '              stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
+  '              for (let i=ea_ic[v]+1; i<stat_i; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          if (! stat_p) {return;}\r\n' \
   '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
@@ -6461,10 +6462,10 @@ class GPXTweakerWebInterfaceServer():
   '            for (let v=0; v<2; v++) {\r\n' \
   '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
+  '                ea_r[v] = ea[v];\r\n' \
+  '                ea_b[v] = ea[v];\r\n' \
   '                ea_s[v] = ea_p[v];\r\n' \
   '              }\r\n' \
-  '              if (! isNaN(ea[v]) && ea_l[v] == null) {ea_l[v] = ea[v];}\r\n' \
-  '              if (! isNaN(ea[v]) && ea_h[v] == null) {ea_h[v] = ea[v];}\r\n' \
   '            }\r\n' \
   '            if (fpan == 0 || (gpucomp >= 1 && fpan != 1)) {\r\n' \
   '              let t = Date.parse(p_c[13].value);\r\n' \
@@ -6481,8 +6482,8 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            } else {\r\n' \
   '              if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
-  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
+  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_b[0]));\r\n' \
+  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_b[1]));\r\n' \
   '              }\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0) {\r\n' \
@@ -10128,10 +10129,10 @@ class GPXTweakerWebInterfaceServer():
   '            for (let v=0; v<2; v++) {\r\n' \
   '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
+  '                ea_r[v] = ea[v];\r\n' \
+  '                ea_b[v] = ea[v];\r\n' \
   '                ea_s[v] = ea_p[v];\r\n' \
   '              }\r\n' \
-  '              if (! isNaN(ea[v]) && ea_l[v] == null) {ea_l[v] = ea[v];}\r\n' \
-  '              if (! isNaN(ea[v]) && ea_h[v] == null) {ea_h[v] = ea[v];}\r\n' \
   '            }\r\n' \
   '            if (fpan == 0) {\r\n' \
   '              let t = Date.parse(pt[4]);\r\n' \
@@ -10148,8 +10149,8 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            } else {\r\n' \
   '              if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_p[0]));\r\n' \
-  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_p[1]));\r\n' \
+  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_b[0]));\r\n' \
+  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_b[1]));\r\n' \
   '              }\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0) {\r\n' \
