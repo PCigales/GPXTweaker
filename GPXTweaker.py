@@ -3,13 +3,10 @@ import urllib.parse
 import socket
 import selectors
 import ssl
-import http.client
 import math
 from xml.dom import minidom
 from xml.parsers import expat
-import types
-import html
-import socket
+from html import escape
 import socketserver
 import email.utils
 import time
@@ -2411,7 +2408,7 @@ class WGS84Itinerary(WGS84Map):
       return None
 
 
-class Node():
+class XMLNode():
 
   __slots__ = ('name', 'namespaceURI', 'prefix', 'localName', 'parentNode', 'nextSibling', 'previousSibling')
 
@@ -2465,13 +2462,13 @@ class Node():
     return writer.getvalue().encode('utf-8')
 
 
-class Element(Node):
+class XMLElement(XMLNode):
 
   __slots__ = ('childNodes', 'attributes')
 
-  nodeType = Node.ELEMENT_NODE
+  nodeType = XMLNode.ELEMENT_NODE
 
-  def __init__(self, name, namespaceuri=Node.EMPTY_NAMESPACE, prefix=Node.EMPTY_PREFIX, localname=''):
+  def __init__(self, name, namespaceuri=XMLNode.EMPTY_NAMESPACE, prefix=XMLNode.EMPTY_PREFIX, localname=''):
     self.name = name
     self.namespaceURI = namespaceuri
     self.prefix = prefix
@@ -2485,10 +2482,10 @@ class Element(Node):
         child.unlink()
       self.childNodes = []
     self.attributes = None
-    Node.unlink(self)
+    XMLNode.unlink(self)
 
   def cloneNode(self):
-    clone = Element(self.name, self.namespaceURI, self.prefix, self.localName)
+    clone = XMLElement(self.name, self.namespaceURI, self.prefix, self.localName)
     if self.attributes:
       clone.attributes = {}
       for k, v in self.attributes.items():
@@ -2509,24 +2506,24 @@ class Element(Node):
         childclone.nextSibling = None
     return clone
 
-  def getAttribute(self, localname, namespaceuri=Node.EMPTY_NAMESPACE):
+  def getAttribute(self, localname, namespaceuri=XMLNode.EMPTY_NAMESPACE):
     if self.attributes:
       return self.attributes.get((namespaceuri, localname), [None, None])[1]
     else:
       return None
 
-  def setAttribute(self, localname, value, namespaceuri=Node.EMPTY_NAMESPACE, name=''):
-    if namespaceuri == Node.EMPTY_NAMESPACE:
+  def setAttribute(self, localname, value, namespaceuri=XMLNode.EMPTY_NAMESPACE, name=''):
+    if namespaceuri == XMLNode.EMPTY_NAMESPACE:
       name = localname
     if self.attributes is None:
       self.attributes = {}
     self.attributes[(namespaceuri, localname)] = [name, value]
 
-  def removeAttribute(self, localname, namespaceuri=Node.EMPTY_NAMESPACE):
+  def removeAttribute(self, localname, namespaceuri=XMLNode.EMPTY_NAMESPACE):
     if self.attributes:
       self.attributes.pop((namespaceuri, localname), None)
 
-  def hasAttribute(self, localname, namespaceuri=Node.EMPTY_NAMESPACE):
+  def hasAttribute(self, localname, namespaceuri=XMLNode.EMPTY_NAMESPACE):
     if self.attributes:
       return (namespaceuri, localname) in self.attributes
     else:
@@ -2537,7 +2534,7 @@ class Element(Node):
       namespaceuri = self.namespaceURI
     nodes = []
     for node in self.childNodes:
-      if node.nodeType == Node.ELEMENT_NODE:
+      if node.nodeType == XMLNode.ELEMENT_NODE:
         if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname):
           nodes.append(node)
     return nodes
@@ -2611,7 +2608,7 @@ class Element(Node):
     newChild.parentNode = self
     newChild.nextSibling = oldChild.nextSibling
     newChild.previousSibling = oldChild.previousSibling
-    Node.unlink(oldChild)
+    XMLNode.unlink(oldChild)
     if newChild.previousSibling is not None:
       newChild.previousSibling.nextSibling = newChild
     if newChild.nextSibling is not None:
@@ -2624,11 +2621,11 @@ class Element(Node):
       oldChild.nextSibling.previousSibling = oldChild.previousSibling
     if oldChild.previousSibling is not None:
       oldChild.previousSibling.nextSibling = oldChild.nextSibling
-    Node.unlink(oldChild)
+    XMLNode.unlink(oldChild)
     return oldChild
 
   def getText(self):
-    return ''.join(childnode.data for childnode in self.childNodes if childnode.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE))
+    return ''.join(childnode.data for childnode in self.childNodes if childnode.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE))
 
   def getChildrenText(self, localname, namespaceuri=' '):
     return ''.join(node.getText() for node in self.getChildren(localname, namespaceuri))
@@ -2644,7 +2641,7 @@ class Element(Node):
         writer.write(f' {n_v[0]}="{v}"')
     if self.childNodes:
       writer.write('>')
-      if len(self.childNodes) == 1 and self.childNodes[0].nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
+      if len(self.childNodes) == 1 and self.childNodes[0].nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
         self.childNodes[0].writexml(writer, '', '', '')
       elif self.name == 'wpt' or self.name == 'trkpt':
         for node in self.childNodes:
@@ -2659,12 +2656,12 @@ class Element(Node):
       writer.write(f'/>{newl}')
 
 
-class CharacterData(Node):
+class XMLCharacterData(XMLNode):
 
   __slots__ = ('data',)
   
-  namespaceURI = Node.EMPTY_NAMESPACE
-  prefix = Node.EMPTY_PREFIX
+  namespaceURI = XMLNode.EMPTY_NAMESPACE
+  prefix = XMLNode.EMPTY_PREFIX
 
   def __init__(self, data=''):
     self.data = data
@@ -2681,61 +2678,57 @@ class CharacterData(Node):
     return '<DOM %s node "%r">' % (self.__class__.__name__, (self.data[0:10] + '...' if len(self.data) > 10 else self.data))
 
 
-class Text(CharacterData):
+class XMLText(XMLCharacterData):
 
   __slots__ = ()
   
-  nodeType = Node.TEXT_NODE
-  name = "#text"
-  localName = "#text"
+  nodeType = XMLNode.TEXT_NODE
+  name = localName = "#text"
 
   def cloneNode(self):
-    return Text(self.data)
+    return XMLText(self.data)
 
   def writexml(self, writer, indent='', addindent='', newl=''):
     d = (self.data or '').replace('&', '&amp;').replace('<', '&lt;').replace('"', '&quot;').replace('>', '&gt;')
     writer.write(f'{indent}{d}{newl}')
 
 
-class CDATASection(CharacterData):
+class XMLCDATASection(XMLCharacterData):
 
   __slots__ = ()
 
-  nodeType = Node.CDATA_SECTION_NODE
-  name = "#cdata-section"
-  localName = "#cdata-section"
+  nodeType = XMLNode.CDATA_SECTION_NODE
+  name = localName = "#cdata-section"
 
   def cloneNode(self):
-    return CDATASection(self.data)
+    return XMLCDATASection(self.data)
 
   def writexml(self, writer, indent='', addindent='', newl=''):
     writer.write(f'<![CDATA[{self.data or ""}]]>')
 
 
-class Comment(CharacterData):
+class XMLComment(XMLCharacterData):
 
   __slots__ = ()
 
-  nodeType = Node.COMMENT_NODE
-  name = "#comment"
-  localName = "#cdata-section"
+  nodeType = XMLNode.COMMENT_NODE
+  name = localName = "#comment"
 
   def cloneNode(self):
-    return Comment(self.data)
+    return XMLComment(self.data)
 
   def writexml(self, writer, indent='', addindent='', newl=''):
     writer.write(f'{indent}<!--{self.data or ""}-->{newl}')
 
 
-class Document(Node):
+class XMLDocument(XMLNode):
 
   __slots__ = ('version', 'encoding', 'childNodes')
 
-  nodeType = Node.DOCUMENT_NODE
-  name = "#document"
-  namespaceURI = Node.EMPTY_NAMESPACE
-  prefix = Node.EMPTY_PREFIX
-  localName = "#document"
+  nodeType = XMLNode.DOCUMENT_NODE
+  name = localName = "#document"
+  namespaceURI = XMLNode.EMPTY_NAMESPACE
+  prefix = XMLNode.EMPTY_PREFIX
   parentNode = nextSibling = previousSibling = None
 
   def __init__(self, version=None, encoding='utf-8'):
@@ -2743,7 +2736,7 @@ class Document(Node):
     self.encoding = encoding
     self.childNodes = []
 
-  documentElement = Node.firstChild
+  documentElement = XMLNode.firstChild
 
   def unlink(self):
     if self.documentElement is not None:
@@ -2751,7 +2744,7 @@ class Document(Node):
     self.childNodes = []
 
   def cloneNode(self):
-    clone = Document(self.version, self.encoding)
+    clone = XMLDocument(self.version, self.encoding)
     if self.documentElement is not None:
       childclone = self.documentElement.cloneNode()
       clone.childNodes.append(childclone)
@@ -2763,8 +2756,7 @@ class Document(Node):
     if self.hasChildNodes():
       raise
     self.childNodes.append(newChild)
-    newChild.previousSibling = None
-    newChild.nextSibling = None
+    newChild.previousSibling = newChild.nextSibling = None
     newChild.parentNode = self
     return newChild
 
@@ -2781,7 +2773,7 @@ class ExpatGPXBuilder:
     b.intern_dict = {}
     b.intern = b.intern_dict.setdefault
     b.XMLNS = b.intern('xmlns', 'xmlns')
-    b.XMLNS_NAMESPACE = b.intern(Node.XMLNS_NAMESPACE, Node.XMLNS_NAMESPACE)
+    b.XMLNS_NAMESPACE = b.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
     b.XSI = b.intern('xsi', 'xsi')
     b.XMLNS_XSI = b.intern('xmlns:xsi', 'xmlns:xsi')
     b.XSI_NAMESPACE = b.intern('http://www.w3.org/2001/XMLSchema-instance', 'http://www.w3.org/2001/XMLSchema-instance')
@@ -2806,7 +2798,7 @@ class ExpatGPXBuilder:
       self.intern_dict = self.Parser.intern
       self.intern = self.intern_dict.setdefault
       self.XMLNS = self.intern('xmlns', 'xmlns')
-      self.XMLNS_NAMESPACE = self.intern(Node.XMLNS_NAMESPACE, Node.XMLNS_NAMESPACE)
+      self.XMLNS_NAMESPACE = self.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
       self.XSI = self.intern('xsi', 'xsi')
       self.XMLNS_XSI = self.intern('xmlns:xsi', 'xmlns:xsi')
       self.XSI_NAMESPACE = self.intern('http://www.w3.org/2001/XMLSchema-instance', 'http://www.w3.org/2001/XMLSchema-instance')
@@ -2829,7 +2821,7 @@ class ExpatGPXBuilder:
     
   def Parse(self, xmlstring):
     self.NewParser()
-    self.Document = Document()
+    self.Document = XMLDocument()
     self.CurNode = self.Document
     self.CurText = ''
     try:
@@ -2837,6 +2829,8 @@ class ExpatGPXBuilder:
       if len(self.Document.childNodes) != 1:
         raise
       r = self.Document.documentElement
+      if r.localName != 'gpx' or (r.namespaceURI != XMLNode.EMPTY_NAMESPACE and r.namespaceURI != self.GPX_NAMESPACE):
+        raise
       r.nextSibling = None
       if not r.hasAttribute('xmlns'):
         r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
@@ -2870,7 +2864,7 @@ class ExpatGPXBuilder:
     if l == 2:
       uri, localname = parts
       uri = self.intern(uri, uri)
-      prefix = Node.EMPTY_PREFIX
+      prefix = XMLNode.EMPTY_PREFIX
       qname = localname = self.intern(localname, localname)
     elif l == 3:
       uri, localname, prefix = parts
@@ -2880,8 +2874,8 @@ class ExpatGPXBuilder:
       qname = prefix + ':' + localname
       qname = self.intern(qname, qname)
     elif l == 1:
-      uri = Node.EMPTY_NAMESPACE
-      prefix = Node.EMPTY_PREFIX
+      uri = XMLNode.EMPTY_NAMESPACE
+      prefix = XMLNode.EMPTY_PREFIX
       qname = localname = self.intern(name, name)
     else:
       raise
@@ -2894,7 +2888,7 @@ class ExpatGPXBuilder:
   def StartElementHandler(self, name, attributes):
     self.CurText = ''
     uri, localname, prefix, qname = self._parse_ns_name(name)
-    node = Element(qname, uri, prefix, localname)
+    node = XMLElement(qname, uri, prefix, localname)
     self._append_child(node)
     self.CurNode = node
     if self.CurNodeNSDecl:
@@ -2913,15 +2907,15 @@ class ExpatGPXBuilder:
         if ' ' in name:
           uri2, localname, prefix, qname = self._parse_ns_name(name)
           if uri2 is uri:
-            node.attributes[(Node.EMPTY_NAMESPACE, localname)] = [localname, attributes[i + 1]]
+            node.attributes[(XMLNode.EMPTY_NAMESPACE, localname)] = [localname, attributes[i + 1]]
           else:
             node.attributes[(uri2, localname)] = [qname, attributes[i + 1]]
         else:
-          node.attributes[(Node.EMPTY_NAMESPACE, name)] = [name, attributes[i + 1]]
+          node.attributes[(XMLNode.EMPTY_NAMESPACE, name)] = [name, attributes[i + 1]]
 
   def EndElementHandler(self, name):
     if self.CurText and not self.CurNode.childNodes:
-      self._append_child(Text(self.CurText))
+      self._append_child(XMLText(self.CurText))
     self.CurText = ''
     nodes = self.CurNode.childNodes
     if nodes:
@@ -2939,18 +2933,18 @@ class ExpatGPXBuilder:
     nodes = self.CurNode.childNodes
     if self.CDataSection:
       if nodes:
-        if nodes[-1].nodeType == Node.CDATA_SECTION_NODE:
+        if nodes[-1].nodeType == XMLNode.CDATA_SECTION_NODE:
           nodes[-1].data += data
           return
-      self._append_child(CDATASection(data))
+      self._append_child(XMLCDATASection(data))
     else:
       if nodes:
-        if nodes[-1].nodeType == Node.TEXT_NODE:
+        if nodes[-1].nodeType == XMLNode.TEXT_NODE:
            nodes[-1].data += data
            return
       self.CurText += data
       if data.strip('\r\n\t '):
-        self._append_child(Text(self.CurText))
+        self._append_child(XMLText(self.CurText))
         self.CurText = ''
 
   def StartNamespaceDeclHandler(self, prefix, uri):
@@ -2961,7 +2955,7 @@ class ExpatGPXBuilder:
 
   def CommentHandler(self, data):
     self.CurText = ''
-    self._append_child(Comment(data))
+    self._append_child(XMLComment(data))
 
   def DefaultHandler(self, data):
     self.CurText = ''
@@ -3042,12 +3036,12 @@ class WGS84Track(WGS84WebMercator):
 
   def _XMLNewNode(self, localname, model=None, uri=None, prefix=None):
     if model is not None:
-      return Element(self.intern(model.prefix + ':' + localname, model.prefix + ':' + localname) if model.prefix != Node.EMPTY_PREFIX else self.intern(localname, localname), model.namespaceURI, self.intern(model.prefix, model.prefix) if model.prefix != Node.EMPTY_PREFIX else Node.EMPTY_PREFIX, self.intern(localname, localname))
+      return XMLElement(self.intern(model.prefix + ':' + localname, model.prefix + ':' + localname) if model.prefix != XMLNode.EMPTY_PREFIX else self.intern(localname, localname), model.namespaceURI, self.intern(model.prefix, model.prefix) if model.prefix != XMLNode.EMPTY_PREFIX else XMLNode.EMPTY_PREFIX, self.intern(localname, localname))
     else:
-      return Element(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix != None else self.intern(localname, localname), self.intern(uri, uri), self.intern(prefix, prefix) if prefix != None else Node.EMPTY_PREFIX, self.intern(localname, localname))
+      return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(prefix, prefix) if prefix is not None else XMLNode.EMPTY_PREFIX, self.intern(localname, localname))
 
   def ProcessGPX(self, mode='a'):
-    flt = lambda s: float(s) if (s != None and s.strip() != '') else None
+    flt = lambda s: float(s) if (s is not None and s.strip() != '') else None
     r = self.Track.documentElement
     if mode == 'a' or mode == 'w':
       wpts = r.getChildren('wpt')
@@ -3100,7 +3094,7 @@ class WGS84Track(WGS84WebMercator):
   def LoadGPX(self, uri, trkid=None, source=None, builder=None):
     if self.Track:
       return False
-    self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
+    self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
     try:
       if source:
         self._tracks = source._tracks
@@ -3131,7 +3125,7 @@ class WGS84Track(WGS84WebMercator):
         self.intern_dict = builder.intern_dict
       self.intern = self.intern_dict.setdefault
       self.XMLNS = self.intern('xmlns', 'xmlns')
-      self.XMLNS_NAMESPACE = self.intern(Node.XMLNS_NAMESPACE, Node.XMLNS_NAMESPACE)
+      self.XMLNS_NAMESPACE = self.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
       self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
       self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
       self.MT = self.intern('mytrails', 'mytrails')
@@ -3139,7 +3133,7 @@ class WGS84Track(WGS84WebMercator):
       self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
     except:
       self.__init__()
-      self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
+      self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
       return False
     self.TrkId = trkid or 0
     try:
@@ -3149,14 +3143,14 @@ class WGS84Track(WGS84WebMercator):
       if not source:
         del self.Track
       self.__init__()
-      self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid != None else ''))
+      self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
       return False
     if not source:
       self.OTrack = self.Track
       self.STrack = self.Track
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
-    self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid != None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
+    self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
     return True
 
   def BuildWebMercator(self):
@@ -3220,9 +3214,9 @@ class WGS84Track(WGS84WebMercator):
         node.removeChild(n).unlink()
     if text:
       if cdata:
-        t = CDATASection(text)
+        t = XMLCDATASection(text)
       else:
-        t = Text(text)
+        t = XMLText(text)
       n = self._XMLNewNode(localname, node)
       n.appendChild(t)
       if no is not None:
@@ -3240,7 +3234,7 @@ class WGS84Track(WGS84WebMercator):
 
   def _XMLUpdateChildNodes(self, node, localname, children, predecessors='*', uri=None):
     no = None
-    cn = node.getChildren(localname, uri if uri != None else node.namespaceURI)
+    cn = node.getChildren(localname, uri if uri is not None else node.namespaceURI)
     if cn:
       no = cn[0]
       for n in cn[1:]:
@@ -3293,7 +3287,7 @@ class WGS84Track(WGS84WebMercator):
                 if l[0].getChildren('color', '*'):
                   break
           a = self._XMLNewNode('color', None, self.MT_NAMESPACE, self.MT)
-          t = Text(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
+          t = XMLText(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
           self._XMLUpdateChildNodes(e, 'color', [a], '*', self.MT_NAMESPACE)
           if l:
@@ -3310,7 +3304,7 @@ class WGS84Track(WGS84WebMercator):
           else:
             b = self._XMLNewNode('color', None, self.GPXSTYLE_NAMESPACE)
             a.appendChild(b)
-          t = Text(msgp[1].lstrip('#'))
+          t = XMLText(msgp[1].lstrip('#'))
           while b.hasChildNodes():
             b.removeChild(b.firstChild).unlink()
           b.appendChild(t)
@@ -3375,7 +3369,7 @@ class WGS84Track(WGS84WebMercator):
                       e = ex
                       break
                 a = self._XMLNewNode('ele_alt', None, self.MT_NAMESPACE, self.MT)
-                t = Text(v[4])
+                t = XMLText(v[4])
                 a.appendChild(t)
                 self._XMLUpdateChildNodes(e, 'ele_alt', [a], '*', self.MT_NAMESPACE)
               elif mt:
@@ -4228,9 +4222,9 @@ class GPXTweakerWebInterfaceServer():
   '          this.gl = this.canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '          this.gl_programs = new Map();\r\n' \
   '          this.cur_prog = null;\r\n' \
-  '          this.gl_attributes = new Map([["vstart", ["int", 1]]]);\r\n' \
+  '          this.gl_attributes = new Map([["vstart", ["int", 1]], ["vend", ["int", 1, 4]]]);\r\n' \
   '          this.gl_static_uniforms = new Map([["mmlhtex", "sampler2D"], ["llhtex", "sampler2D"], ["teatex", "sampler2D"], ["dtex", "sampler2D"], ["ssstex", "sampler2D"], ["trange", "float"], ["spmax", "float"], ["drange", "float"], ["slmax", "float"]]);\r\n' \
-  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"], ["vlength", "int"]]);\r\n' \
+  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"]]);\r\n' \
   '          this.gl_feedbacks = new Map([["vxy", "vec2"], ["vd", "float"], ["vsss", "vec3"]]);\r\n' \
   '          this._starts = null;\r\n' \
   '          this.tlength = null;\r\n' \
@@ -4239,6 +4233,7 @@ class GPXTweakerWebInterfaceServer():
   '          this._llhs = null;\r\n' \
   '          this._teas = null;\r\n' \
   '          this.vstart = null;\r\n' \
+  '          this.vend = null;\r\n' \
   '          this.mmlhtex = 0;\r\n' \
   '          this.llhtex = 0;\r\n' \
   '          this.teatex = 1;\r\n' \
@@ -4251,7 +4246,6 @@ class GPXTweakerWebInterfaceServer():
   '          this.sss_texture = null;\r\n' \
   '          this.trlat = null;\r\n' \
   '          this.rlat = null;\r\n' \
-  '          this.vlength = 0;\r\n' \
   '          this.trange = 300 / 2;\r\n' \
   '          this.spmax = 8 / 3.6;\r\n' \
   '          this.drange = 500 / 2;\r\n' \
@@ -4303,9 +4297,9 @@ class GPXTweakerWebInterfaceServer():
   '          `;\r\n' \
   '          let vertex_s1shader_s = `#version 300 es\r\n' \
   '            in int vstart;\r\n' \
+  '            in int vend;\r\n' \
   '            uniform sampler2D teatex;\r\n' \
   '            uniform sampler2D dtex;\r\n' \
-  '            uniform int vlength;\r\n' \
   '            uniform float trange;\r\n' \
   '            uniform float spmax;\r\n' \
   '            uniform float drange;\r\n' \
@@ -4322,7 +4316,7 @@ class GPXTweakerWebInterfaceServer():
   '              vec2 tde = tdeas.st;\r\n' \
   '              vec2 tdp = tde;\r\n' \
   '              vsss = vec3(0.0);\r\n' \
-  '              for (int p = pc + 1; p < vstart + vlength; p++) {\r\n' \
+  '              for (int p = pc + 1; p < vend; p++) {\r\n' \
   '                tde = vec2(texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(dtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + tde.t);\r\n' \
   '                if (tde.s > tdeas.s + trange) {break;}\r\n' \
   '                if (tde.s == tdeas.s) {continue;}\r\n' \
@@ -4335,7 +4329,7 @@ class GPXTweakerWebInterfaceServer():
   '              vsss.s = min(vsss.s, spmax);\r\n' \
   '              vec3 deae = tdeas.tpq;\r\n' \
   '              vec3 deap = deae;\r\n' \
-  '              for (int p = pc + 1; p < vstart + vlength; p++) {\r\n' \
+  '              for (int p = pc + 1; p < vend; p++) {\r\n' \
   '                deae = vec3(texelFetch(dtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + deae.s, texelFetch(teatex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tp);\r\n' \
   '                if (deae.s > tdeas.t + drange) {break;}\r\n' \
   '                if (deae.s == tdeas.t) {continue;}\r\n' \
@@ -4353,7 +4347,6 @@ class GPXTweakerWebInterfaceServer():
   '            uniform sampler2D teatex;\r\n' \
   '            uniform sampler2D dtex;\r\n' \
   '            uniform sampler2D ssstex;\r\n' \
-  '            uniform int vlength;\r\n' \
   '            uniform float trange;\r\n' \
   '            uniform float spmax;\r\n' \
   '            uniform float drange;\r\n' \
@@ -4467,9 +4460,9 @@ class GPXTweakerWebInterfaceServer():
   '              this.gl.enableVertexAttribArray(this.gl_programs.get(this.cur_prog).get(n));\r\n' \
   '              this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this[n]);\r\n' \
   '              if (ts[0] == "int") {\r\n' \
-  '                this.gl.vertexAttribIPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.INT, false, 0, 0);\r\n' \
+  '                this.gl.vertexAttribIPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.INT, 0, ts.length>2?ts[2]:0);\r\n' \
   '              } else {\r\n' \
-  '                this.gl.vertexAttribPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.FLOAT, false, 0, 0);\r\n' \
+  '                this.gl.vertexAttribPointer(this.gl_programs.get(this.cur_prog).get(n), ts[1], this.gl.FLOAT, false, 0, ts.length>2?ts[2]:0);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -4483,7 +4476,6 @@ class GPXTweakerWebInterfaceServer():
   '                  this.gl.uniform1f(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
   '                  break;\r\n' \
   '                case "sampler2D":\r\n' \
-  '                case "int":\r\n' \
   '                  this.gl.uniform1i(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
   '                  break;\r\n' \
   '                default:\r\n' \
@@ -4550,6 +4542,7 @@ class GPXTweakerWebInterfaceServer():
   '          this._starts = a;\r\n' \
   '          this.tlength = this._starts[this._starts.length - 1];\r\n' \
   '          this.vstart = this.buffer_load(new Int32Array(this._starts), this.gl.STATIC_DRAW, this.vstart);\r\n' \
+  '          this.vend = this.vstart;\r\n' \
   '        }\r\n' \
   '        get starts() {\r\n' \
   '          return this._starts;\r\n' \
@@ -4575,14 +4568,19 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        _calc() {\r\n' \
   '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
-  '            this.vlength = this._starts[s + 1] - this._starts[s];\r\n' \
-  '            if (this.vlength == 0) {continue;}\r\n' \
-  '            if (this.cur_prog == "pprogram")  {this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);}\r\n' \
-  '            if (this.mode == "explorer" && this.cur_prog == "dprogram") {this.rlat = this._rlats[s];}\r\n' \
-  '            this.program_uniforms();\r\n' \
-  '            this.program_feedbacks(this._starts[s], this.vlength);\r\n' \
+  '            let vlength = this._starts[s + 1] - this._starts[s];\r\n' \
+  '            if (vlength == 0) {continue;}\r\n' \
+  '            if (this.cur_prog == "pprogram")  {\r\n' \
+  '              this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);\r\n' \
+  '              this.program_uniforms();\r\n' \
+  '            }\r\n' \
+  '            if (this.mode == "explorer" && this.cur_prog == "dprogram") {\r\n' \
+  '              this.rlat = this._rlats[s];\r\n' \
+  '              this.program_uniforms();\r\n' \
+  '            }\r\n' \
+  '            this.program_feedbacks(this._starts[s], vlength);\r\n' \
   '            this.gl.beginTransformFeedback(this.gl.POINTS);\r\n' \
-  '            this.gl.drawArraysInstanced(this.gl.POINTS, s, 1, this.vlength - (this.cur_prog=="s2program"?1:0));\r\n' \
+  '            this.gl.drawArraysInstanced(this.gl.POINTS, s, 1, vlength - (this.cur_prog=="s2program"?1:0));\r\n' \
   '            this.gl.endTransformFeedback();\r\n' \
   '            this.gl.finish();\r\n' \
   '          }\r\n' \
@@ -4965,20 +4963,19 @@ class GPXTweakerWebInterfaceServer():
   '            if (gpucomp <= 1 && fpan <= 1) {\r\n' \
   '              for (let v=0; v<2; v++) {\r\n' \
   '                if (! isNaN(ea[v])) {\r\n' \
-  '                  if (ea[v] > ea_r[v] + ea_f[v] || (ea[v] >= ea_r[v] && ea_g[v] == "+")) {\r\n' \
-  '                    ea_r[v] = ea[v];\r\n' \
-  '                    ea_b[v] = ea[v];\r\n' \
+  '                  if (ea[v] >= ea_r[v] && ea_g[v] == "+") {\r\n' \
+  '                    ea_r[v] = ea_b[v] = ea[v];\r\n' \
+  '                  } else if (ea[v] > ea_r[v] + ea_f[v]) {\r\n' \
+  '                    ea_r[v] = ea_b[v] = ea[v];\r\n' \
   '                    ea_g[v] = "+";\r\n' \
   '                    ea_ic[v] = null;\r\n' \
-  '                  }\r\n' \
-  '                  else if (ea[v] < ea_r[v] - ea_f[v] || (ea[v] <= ea_r[v] && ea_g[v] == "-")) {\r\n' \
+  '                  } else if ((ea[v] <= ea_r[v] && ea_g[v] == "-") || ea[v] < ea_r[v] - ea_f[v]) {\r\n' \
   '                    if (ea_ic[v] != null) {\r\n' \
   '                      stat_p[v + 2] = stats[seg_ind][ea_ic[v]][v + 2];\r\n' \
   '                      for (let i=ea_ic[v]+1; i<stat_i; i++) {stats[seg_ind][i][v + 2] = stat_p[v + 2];}\r\n' \
   '                      ea_ic[v] = null;\r\n' \
   '                    }\r\n' \
-  '                    ea_r[v] = ea[v];\r\n' \
-  '                    ea_b[v] = ea[v];\r\n' \
+  '                    ea_r[v] = ea_b[v] = ea[v];\r\n' \
   '                    ea_g[v] = "-";\r\n' \
   '                  } else if (ea[v] > ea_b[v]) {\r\n' \
   '                    ea_b[v] = ea[v];\r\n' \
@@ -6462,8 +6459,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (let v=0; v<2; v++) {\r\n' \
   '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
-  '                ea_r[v] = ea[v];\r\n' \
-  '                ea_b[v] = ea[v];\r\n' \
+  '                ea_r[v] = ea_b[v] = ea[v];\r\n' \
   '                ea_s[v] = ea_p[v];\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -10129,8 +10125,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (let v=0; v<2; v++) {\r\n' \
   '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
-  '                ea_r[v] = ea[v];\r\n' \
-  '                ea_b[v] = ea[v];\r\n' \
+  '                ea_r[v] = ea_b[v] = ea[v];\r\n' \
   '                ea_s[v] = ea_p[v];\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -11206,65 +11201,65 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif scur == 'tilesbuffer':
           if field == 'size':
-            self.TilesBufferSize = None if value == None else int(value)
+            self.TilesBufferSize = None if value is None else int(value)
           elif field == 'threads':
-            self.TilesBufferThreads = None if value == None else int(value)
+            self.TilesBufferThreads = None if value is None else int(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'boundaries':
           if field == 'min_lat':
-            if value == None:
+            if value is None:
               self.VMinLat = None
             else:
               self.VMinLat = float(value)
               if self.VMinLat < -math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2):
                 self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                 return False
-              if self.VMaxLat != None:
+              if self.VMaxLat is not None:
                 if self.VMinLat >= self.VMaxLat:
                   self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                   return False
           elif field == 'max_lat':
-            if value == None:
+            if value is None:
               self.VMaxLat = None
             else:
               self.VMaxLat = float(value)
               if self.VMaxLat > math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2):
                 self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                 return False
-              if self.VMinLat != None:
+              if self.VMinLat is not None:
                 if self.VMinLat >= self.VMaxLat:
                   self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                   return False
           elif field == 'min_lon':
-            if value == None:
+            if value is None:
               self.VMinLon = None
             else:
               self.VMinLon = float(value)
               if self.VMinLon < -180:
                 self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                 return False
-              if self.VMaxLon != None:
+              if self.VMaxLon is not None:
                 if self.VMinLon >= self.VMaxLon:
                   self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                   return False
           elif field == 'max_lon':
-            if value == None:
+            if value is None:
               self.VMaxLon = None
             else:
               self.VMaxLon = float(value)
               if self.VMaxLon > 180:
                 self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                 return False
-              if self.VMinLon != None:
+              if self.VMinLon is not None:
                 if self.VMinLon >= self.VMaxLon:
                   self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                   return False
           elif field == 'def_lat':
-            self.DefLat = None if value == None else float(value)
+            self.DefLat = None if value is None else float(value)
           elif field == 'def_lon':
-            self.DefLon = None if value == None else float(value)
+            self.DefLon = None if value is None else float(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -11278,34 +11273,34 @@ class GPXTweakerWebInterfaceServer():
               return False
         elif scur == 'statistics':
           if field == 'gpu_comp':
-            self.GpuComp = 0 if value == None else value
+            self.GpuComp = 0 if value is None else value
           elif field == 'ele_gain_threshold':
-            if value != None:
+            if value is not None:
               self.EleGainThreshold = int(value)
           elif field == 'alt_gain_threshold':
-            if value != None:
+            if value is not None:
               self.AltGainThreshold = int(value)
           elif field == 'slope_range':
-            if value != None:
+            if value is not None:
               self.SlopeRange = int(value)
           elif field == 'slope_max':
-            if value != None:
+            if value is not None:
               self.SlopeMax = int(value)
           elif field == 'speed_range':
-            if value != None:
+            if value is not None:
               self.SpeedRange = int(value)
           elif field == 'speed_max':
-            if value != None:
+            if value is not None:
               self.SpeedMax = int(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == '3dviewer':
           if field == 'pano_margin':
-            if value != None:
+            if value is not None:
               self.V3DPanoMargin = round(2 * float(value)) / 2
           elif field == 'subj_margin':
-            if value != None:
+            if value is not None:
               self.V3DSubjMargin = round(2 * float(value)) / 2
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
@@ -11496,22 +11491,22 @@ class GPXTweakerWebInterfaceServer():
       return
     self.GPXTweakerInterfaceServerInstances = [None] * (self.Ports[1] - self.Ports[0] + 1)
     err = False
-    if map_minlat != None:
+    if map_minlat is not None:
       if map_minlat < self.VMinLat:
         err = True
       if bmap:
         self.VMinLat = map_minlat
-    if map_maxlat != None:
+    if map_maxlat is not None:
       if map_maxlat > self.VMaxLat:
         err = True
       if bmap:
         self.VMaxLat = map_maxlat
-    if map_minlon != None:
+    if map_minlon is not None:
       if map_minlon < self.VMinLon:
         err = True
       if bmap:
         self.VMinLon = map_minlon
-    if map_maxlat != None:
+    if map_maxlat is not None:
       if map_maxlat > self.VMaxLat:
         err = True
       if bmap:
@@ -11519,11 +11514,11 @@ class GPXTweakerWebInterfaceServer():
     if err:
       self.log(0, 'berror4')
       return
-    self.DefLat = self.DefLat if self.DefLat != None else (self.VMinLat + self.VMaxLat) / 2
-    self.DefLon = self.DefLon if self.DefLon != None else (self.VMinLon + self.VMaxLon) / 2
+    self.DefLat = self.DefLat if self.DefLat is not None else (self.VMinLat + self.VMaxLat) / 2
+    self.DefLon = self.DefLon if self.DefLon is not None else (self.VMinLon + self.VMaxLon) / 2
     if len(self.Folders) == 0:
       self.Folders.append(os.path.abspath(''))
-    if uri != None:
+    if uri is not None:
       u = os.path.abspath(uri)
     else:
       f1 = 0
@@ -11545,21 +11540,21 @@ class GPXTweakerWebInterfaceServer():
       u = next(uris, None)
     trck = None
     ti = time.time()
-    while u != None:
+    while u is not None:
       track = WGS84Track(self.SLock)
       if not track.LoadGPX(u, trk, trck, self.Builder):
-        if uri == None:
+        if uri is None:
           u = next(uris, None)
           trck = None
           continue
         else:
           return
-      minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat == None) else map_minlat))
-      maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat == None) else map_maxlat))
-      minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_minlon == None) else map_minlon))
-      maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon == None) else map_maxlon))
+      minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
+      maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
+      minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
+      maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
-        if uri == None:
+        if uri is None:
           self.log(0, 'berror6')
         else:
           self.log(0, 'berror4')
@@ -11567,8 +11562,8 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.Tracks.append([u, track])
         self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
-      if uri == None:
-        if nbtrk == None:
+      if uri is None:
+        if nbtrk is None:
           nbtrk = len(track.Track.documentElement.getChildren('trk'))
         trk += 1
         if trk >= nbtrk:
@@ -11583,10 +11578,10 @@ class GPXTweakerWebInterfaceServer():
         self.TrackInd = 0
         break
     self.log(0, 'bloaded', len(self.Tracks), time.time() - ti)
-    minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat == None) else map_minlat))
-    maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat == None) else map_maxlat))
-    minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon == None) else map_minlon))
-    maxlon = max((b[3] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_maxlon == None) else map_maxlon))
+    minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
+    maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
+    minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
+    maxlon = max((b[3] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
     if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
       self.log(0, 'berror4')
       return
@@ -11603,13 +11598,13 @@ class GPXTweakerWebInterfaceServer():
           if self.MapSets[i][0].lower() == bmap.lower() or bmap == ' ':
             self.MapSet = i
             break
-        if self.MapSet == None:
+        if self.MapSet is None:
           self.log(0, 'berror3', bmap)
           return
-        minlat = minlat if map_minlat == None else map_minlat
-        maxlat = maxlat if map_maxlat == None else map_maxlat
-        minlon = minlon if map_minlon == None else map_minlon
-        maxlon = maxlon if map_maxlon == None else map_maxlon
+        minlat = minlat if map_minlat is None else map_minlat
+        maxlat = maxlat if map_maxlat is None else map_maxlat
+        minlon = minlon if map_minlon is None else map_minlon
+        maxlon = maxlon if map_maxlon is None else map_maxlon
         if not self.Map.FetchMap(self.MapSets[self.MapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
           self.log(0, 'berror')
           return
@@ -11625,7 +11620,7 @@ class GPXTweakerWebInterfaceServer():
       maxlat -= 0.014
       minlon += 0.019
       maxlon -= 0.019
-      if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) != None:
+      if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
         self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
         self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
         if self.Minx < self.VMinx or self.Maxx > self.VMaxx or self.Miny < self.VMiny or self.Maxy > self.VMaxy:
@@ -11664,13 +11659,13 @@ class GPXTweakerWebInterfaceServer():
           if self.ElevationMapSets[i][0].lower() == emap.lower() or emap == ' ':
             self.ElevationMapSet = i
             break
-        if self.ElevationMapSet == None:
+        if self.ElevationMapSet is None:
           self.log(0, 'eerror', emap)
         else:
-          minlat = minlat if map_minlat == None else map_minlat
-          maxlat = maxlat if map_maxlat == None else map_maxlat
-          minlon = minlon if map_minlon == None else map_minlon
-          maxlon = maxlon if map_maxlon == None else map_maxlon
+          minlat = minlat if map_minlat is None else map_minlat
+          maxlat = maxlat if map_maxlat is None else map_maxlat
+          minlon = minlon if map_minlon is None else map_minlon
+          maxlon = maxlon if map_maxlon is None else map_maxlon
           if self.Elevation.FetchMap(self.ElevationMapSets[self.ElevationMapSet][1], max(self.VMinLat, minlat - 0.014), min(self.VMaxLat, maxlat + 0.014), max(self.VMinLon, minlon - 0.019), min(self.VMaxLon, maxlon + 0.019), map_maxheight, map_maxwidth, dpi=map_dpi, **self.ElevationMapSets[self.ElevationMapSet][2]):
             self.EMode = 'map'
             self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
@@ -11709,7 +11704,7 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
     else:
       self.ItineraryProvider = None
-    if uri != None:
+    if uri is not None:
       self.HTML = ''
     else:
       self.HTMLExp = ''
@@ -11722,12 +11717,12 @@ class GPXTweakerWebInterfaceServer():
     return pathes
 
   def _build_waypoints(self):
-    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
+    f = lambda e: '' if e is None else escape(e) if isinstance(e, str) else e
     return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
 
   def _build_points(self):
-    f = lambda e: '' if e == None else html.escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[str(pt[0])] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) +   '</div>' for s in range(len(self.Track.Pts)))
+    f = lambda e: '' if e is None else escape(e) if isinstance(e, str) else e
+    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) + '</div>' for s in range(len(self.Track.Pts)))
 
   def _build_waydots(self):
     return ''.join(GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for pt in self.Track.WebMercatorWpts)
@@ -11736,16 +11731,16 @@ class GPXTweakerWebInterfaceServer():
     return ''.join(GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for s in range(len(self.Track.WebMercatorPts)) for pt in self.Track.WebMercatorPts[s])
 
   def _build_tsets(self):
-    return ''.join('<option value="%s">%s</option>' % (*([html.escape(tset[0])] * 2),) for tset in self.TilesSets)
+    return ''.join('<option value="%s">%s</option>' % (*([escape(tset[0])] * 2),) for tset in self.TilesSets)
 
   def _build_esets(self):
-    return ''.join('<option value="%s">%s</option>' % (*([html.escape(epro[0])] * 2),) for epro in self.ElevationsProviders)
+    return ''.join('<option value="%s">%s</option>' % (*([escape(epro[0])] * 2),) for epro in self.ElevationsProviders)
 
   def _build_isets(self):
-    return ''.join('<option value="%s">%s</option>' % (*([html.escape(ipro[0])] * 2),) for ipro in self.ItinerariesProviders)
+    return ''.join('<option value="%s">%s</option>' % (*([escape(ipro[0])] * 2),) for ipro in self.ItinerariesProviders)
 
   def BuildHTML(self):
-    if self.HTML == None:
+    if self.HTML is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
     declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
@@ -11758,16 +11753,16 @@ class GPXTweakerWebInterfaceServer():
     esets = self._build_esets()
     isets = self._build_isets()
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
-    if self.HTMLExp != None:
+    if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', html.escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots)
     self.log(2, 'built')
     return True
 
   def Build3DHTML(self, mode3d, margin=0.5):
     self.HTML3D = None
     self.HTML3DData = None
-    if next((p for seg in self.Track.Pts for p in seg), None) == None:
+    if next((p for seg in self.Track.Pts for p in seg), None) is None:
       return False
     self.log(1, '3dbuild')
     vminlat, vminlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
@@ -11905,16 +11900,16 @@ class GPXTweakerWebInterfaceServer():
     return True
 
   def _build_folders_exp(self):
-    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, *([f, html.escape(self.Folders[f])] * 2)) for f in range(len(self.Folders)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, *([f, escape(self.Folders[f])] * 2)) for f in range(len(self.Folders)))
 
   def _build_path_exp(self, t):
-    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', '&rsaquo; ' * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, html.escape(self.Tracks[t][1].Name or ''), t, t)
+    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', '&rsaquo; ' * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, escape(self.Tracks[t][1].Name or ''), t, t)
 
   def _build_pathes_exp(self):
     return ''.join(self._build_path_exp(t) for t in range(len(self.Tracks)))
 
   def _build_track_exp(self, t):
-    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), html.escape(self.Tracks[t][0]), *([t] * 2), *([html.escape(self.Tracks[t][1].Name or '')] * 2), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(html.escape, (self.Tracks[t][1].Name or '', *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(self.Tracks[t][1].Pts) , sum(len(s) for s in self.Tracks[t][1].Pts), len(self.Tracks[t][1].Wpts))))) for a in b))
+    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), escape(self.Tracks[t][0]), *([t] * 2), *([escape(self.Tracks[t][1].Name or '')] * 2), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(escape, (self.Tracks[t][1].Name or '', *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(self.Tracks[t][1].Pts) , sum(len(s) for s in self.Tracks[t][1].Pts), len(self.Tracks[t][1].Wpts))))) for a in b))
 
   def _build_tracks_exp(self):
     return ''.join(self._build_track_exp(t) for t in range(len(self.Tracks)))
@@ -11922,16 +11917,16 @@ class GPXTweakerWebInterfaceServer():
   def _build_waydots_exp(self, t):
     def _coord_to_vb(x, y):
       return '%.1f' % (x - self.TracksBoundaries[t][0]), '%.1f' % (self.TracksBoundaries[t][3] - y)
-    return GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (*_coord_to_vb(*WGS84Track.WGS84toWebMercator(*pt[1][0:2])), html.escape(pt[1][4] or '')) for pt in self.Tracks[t][1].Wpts))
+    return GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (*_coord_to_vb(*WGS84Track.WGS84toWebMercator(*pt[1][0:2])), escape(pt[1][4] or '')) for pt in self.Tracks[t][1].Wpts))
 
   def _build_waydotss_exp(self):
     return ''.join(self._build_waydots_exp(t) for t in range(len(self.Tracks)))
 
   def _build_wmsets(self):
-    return ''.join('<option value="%s">%s</option>' % (html.escape(wmpro[1].get('pattern', '')), html.escape(wmpro[0])) for wmpro in self.WebMappingServices)
+    return ''.join('<option value="%s">%s</option>' % (escape(wmpro[1].get('pattern', '')), escape(wmpro[0])) for wmpro in self.WebMappingServices)
 
   def BuildHTMLExp(self):
-    if self.HTMLExp == None:
+    if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
     declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.Minx)).replace('##TTOPY##', str(self.Maxy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
@@ -11955,7 +11950,7 @@ class GPXTweakerWebInterfaceServer():
     self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(max(self.VMinLat, minlat - 0.008), max(self.VMinLon, minlon - 0.011)), WGS84WebMercator.WGS84toWebMercator(min(self.VMaxLat, maxlat + 0.008), min(self.VMaxLon, maxlon + 0.011))))
 
   def UpdateHTMLExp(self, t, elts, retrieve=None):
-    if self.HTMLExp == None:
+    if self.HTMLExp is None:
       return False
     if 't' in elts:
       pos = self.HTMLExp.find('<div id="track%dcont"' % t)
@@ -11968,7 +11963,7 @@ class GPXTweakerWebInterfaceServer():
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
         pos = self.HTMLExp.find('<br>', self.HTMLExp.find('<div id="tracks"'))
         self.HTMLExp = self.HTMLExp[:self.HTMLExp.rfind('(', 0, pos)] + '(%d)' % len(self.Tracks) + self.HTMLExp[pos:]
-      if retrieve != None:
+      if retrieve is not None:
         retrieve['track%dcont' % t] = n
     if 'p' in elts:
       pos = self.HTMLExp.find('<svg id="track%d"' % t)
@@ -11981,7 +11976,7 @@ class GPXTweakerWebInterfaceServer():
         if pos < 0:
           pos = self.HTMLExp.find('</div>\r\n              <div id="scalebox"')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
-      if retrieve != None:
+      if retrieve is not None:
         retrieve['track%d' % t] = n
     if 'w' in elts:
       pos = self.HTMLExp.find('<svg id="waydots%d"' % t)
@@ -11992,15 +11987,15 @@ class GPXTweakerWebInterfaceServer():
       else:
         pos = self.HTMLExp.find('</div>\r\n              <div id="scalebox"')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
-      if retrieve != None:
+      if retrieve is not None:
         retrieve['waydots%d' % t] = n
     return True
 
   def EditMode(self):
-    if self.HTML == None:
+    if self.HTML is None:
       return False
     if self.Mode == 'tiles' and self.HTML != '':
-        self.UpdateTrackBoundaries(self.TrackInd)
+      self.UpdateTrackBoundaries(self.TrackInd)
     self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.TrackInd]
     self.HTML = ''
     self.log(1, 'build')
@@ -12014,14 +12009,15 @@ class GPXTweakerWebInterfaceServer():
       return False
 
   def ExploreMode(self):
-    if self.HTMLExp == None:
+    if self.HTMLExp is None:
       return False
     self.HTML = None
     self.HTMLExp = ''
-    if self.Track != None:
-      del self.Track.Track
-      self.Track.Track = self.Track.STrack
-      self.Track.ProcessGPX('a')
+    if self.Track is not None:
+      if self.Track.Track is not self.Track.STrack:
+        del self.Track.Track
+        self.Track.Track = self.Track.STrack
+        self.Track.ProcessGPX('a')
       del self.Track.OTrack
       self.Track.OTrack = self.Track.STrack
       self.Track.WebMercatorWpts = None
@@ -12029,7 +12025,7 @@ class GPXTweakerWebInterfaceServer():
       for t_ind in range(len(self.Tracks)):
         track = self.Tracks[t_ind]
         if track[0] == self.Uri:
-          if track[1] != self.Track:
+          if track[1] is not self.Track:
             track[1].ProcessGPX('w')
           if self.Mode == 'tiles':
             self.UpdateTrackBoundaries(t_ind)
@@ -12041,7 +12037,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'buildexp')
     try:
       if self.BuildHTMLExp():
-        if self.TrackInd != None:
+        if self.TrackInd is not None:
           self.HTMLExp = self.HTMLExp.replace('var focused = ""', 'var focused = "track' + str(self.TrackInd) + '"')
           self.Track = None
           self.Uri = None
@@ -12060,7 +12056,7 @@ class GPXTweakerWebInterfaceServer():
 
   def run(self):
     try:
-      if not (self.EditMode() if self.Uri != None else self.ExploreMode()):
+      if not (self.EditMode() if self.Uri is not None else self.ExploreMode()):
         return False
     except:
       return False
@@ -12098,21 +12094,21 @@ if __name__ == '__main__':
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
-  if args.uri != None:
+  if args.uri is not None:
     if args.uri.rpartition('.')[2] != 'gpx':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
   try:
-    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri != None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   except:
     log('interface', 0, 'berror')
     exit()
   if not GPXTweakerInterface.run():
     exit()
   if args.noopen:
-    print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri != None else 'Explorer'))))
+    print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri is not None else 'Explorer'))))
   else:
-    webbrowser.open('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri != None else 'Explorer')))
+    webbrowser.open('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri is not None else 'Explorer')))
   print(LSTRINGS['parser']['keyboard'])
   while True:
     k = msvcrt.getch()
