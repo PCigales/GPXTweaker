@@ -78,7 +78,7 @@ FR_STRINGS = {
     'cloaded': 'configuration chargée',
     'build': 'génération de la page d\'interface',
     'buildexp': 'génération de la page d\'interface de l\'explorateur',
-    'bloaded': '%s trace(s) chargée(s) en %.2fs',
+    'bloaded': '%s trace(s) chargée(s) en %.1fs',
     'berror': 'échec de la génération de la page d\'interface',
     'berror1': 'échec de la génération de la page d\'interface (conversion en WebMercator)',
     'berror2': 'échec de la génération de la page d\'interface (trace vide sans délimitation du cadre)',
