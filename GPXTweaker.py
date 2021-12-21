@@ -78,7 +78,7 @@ FR_STRINGS = {
     'cloaded': 'configuration chargée',
     'build': 'génération de la page d\'interface',
     'buildexp': 'génération de la page d\'interface de l\'explorateur',
-    'bloaded': '%s trace(s) chargée(s) en %.1fs',
+    'bloaded': '%s trace(s) chargée(s) en %.2fs',
     'berror': 'échec de la génération de la page d\'interface',
     'berror1': 'échec de la génération de la page d\'interface (conversion en WebMercator)',
     'berror2': 'échec de la génération de la page d\'interface (trace vide sans délimitation du cadre)',
@@ -2410,7 +2410,7 @@ class WGS84Itinerary(WGS84Map):
 
 class XMLNode():
 
-  __slots__ = ('name', 'namespaceURI', 'prefix', 'localName', 'parentNode', 'nextSibling', 'previousSibling')
+  __slots__ = ()
 
   EMPTY_NAMESPACE = None
   XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
@@ -2445,11 +2445,6 @@ class XMLNode():
   def lastChild(self, value):
     raise
 
-  def unlink(self):
-    self.parentNode = None
-    self.previousSibling = None
-    self.nextSibling = None
-
   def __enter__(self):
     return self
 
@@ -2464,7 +2459,7 @@ class XMLNode():
 
 class XMLElement(XMLNode):
 
-  __slots__ = ('childNodes', 'attributes')
+  __slots__ = ('name', 'namespaceURI', 'prefix', 'localName', 'childNodes', 'attributes')
 
   nodeType = XMLNode.ELEMENT_NODE
 
@@ -2476,13 +2471,15 @@ class XMLElement(XMLNode):
     self.attributes = None
     self.childNodes = []
 
+  def hasAttributes(self):
+    return bool(self.attributes)
+
   def unlink(self):
     if self.childNodes:
       for child in self.childNodes:
         child.unlink()
       self.childNodes = []
     self.attributes = None
-    XMLNode.unlink(self)
 
   def cloneNode(self):
     clone = XMLElement(self.name, self.namespaceURI, self.prefix, self.localName)
@@ -2491,19 +2488,8 @@ class XMLElement(XMLNode):
       for k, v in self.attributes.items():
         clone.attributes[k] = v[:]
     if self.childNodes:
-      childclone_ = None
       for child in self.childNodes:
-        childclone = child.cloneNode()
-        if childclone_ is not None:
-          childclone.previousSibling = childclone_
-          childclone_.nextSibling = childclone
-        else:
-          childclone.previousSibling = None
-        childclone_ = childclone
-        clone.childNodes.append(childclone)
-        childclone.parentNode = clone
-      else:
-        childclone.nextSibling = None
+        clone.childNodes.append(child.cloneNode())
     return clone
 
   def getAttribute(self, localname, namespaceuri=XMLNode.EMPTY_NAMESPACE):
@@ -2544,23 +2530,10 @@ class XMLElement(XMLNode):
       newChildren = (newChildren,)
     elif not newChildren:
       return
-    if refChild is None:
-      for newChild in newChildren:
-        self.appendChild(newChild)
-    else:
-      index = self.childNodes.index(refChild)
-      node = self.childNodes[index - 1] if index else None
-      for newChild in newChildren:
-        newChild.parentNode = self
-        self.childNodes.insert(index, newChild)
-        newChild.previousSibling = node
-        if node is not None:
-          node.nextSibling = newChild
-        index += 1
-        node = newChild
-      else:
-        refChild.previousSibling = newChild
-        newChild.nextSibling = refChild
+    index = self.childNodes.index(refChild) if refChild is not None else len(self.childNodes)
+    for newChild in newChildren:
+      self.childNodes.insert(index, newChild)
+      index += 1
     return newChild
 
   def insertAfter(self, newChildren, refChild):
@@ -2569,59 +2542,23 @@ class XMLElement(XMLNode):
     elif not newChildren:
       return
     index = self.childNodes.index(refChild) + 1 if refChild is not None else 0
-    if index < len(self.childNodes):
-      node = refChild
-      for newChild in newChildren:
-        newChild.parentNode = self
-        self.childNodes.insert(index, newChild)
-        newChild.previousSibling = node
-        if node is not None:
-          node.nextSibling = newChild
-        index += 1
-        node = newChild
-      else:
-        node = self.childNodes[index]
-        node.previousSibling = newChild
-        newChild.nextSibling = node
-    else:
-      for newChild in newChildren:
-        self.appendChild(newChild)
+    for newChild in newChildren:
+      self.childNodes.insert(index, newChild)
+      index += 1
     return newChild
 
   def appendChild(self, newChild):
-    newChild.parentNode = self
-    if self.childNodes:
-      node = self.childNodes[-1]
-      newChild.previousSibling = node
-      node.nextSibling = newChild
-    else:
-      newChild.previousSibling = None
     self.childNodes.append(newChild)
-    newChild.nextSibling = None
     return newChild
 
   def replaceChild(self, newChild, oldChild):
     if newChild is oldChild:
       return
-    index = self.childNodes.index(oldChild)
-    self.childNodes[index] = newChild
-    newChild.parentNode = self
-    newChild.nextSibling = oldChild.nextSibling
-    newChild.previousSibling = oldChild.previousSibling
-    XMLNode.unlink(oldChild)
-    if newChild.previousSibling is not None:
-      newChild.previousSibling.nextSibling = newChild
-    if newChild.nextSibling is not None:
-      newChild.nextSibling.previousSibling = newChild
+    self.childNodes[self.childNodes.index(oldChild)] = newChild
     return oldChild
 
   def removeChild(self, oldChild):
     self.childNodes.remove(oldChild)
-    if oldChild.nextSibling is not None:
-      oldChild.nextSibling.previousSibling = oldChild.previousSibling
-    if oldChild.previousSibling is not None:
-      oldChild.previousSibling.nextSibling = oldChild.nextSibling
-    XMLNode.unlink(oldChild)
     return oldChild
 
   def getText(self):
@@ -2643,7 +2580,7 @@ class XMLElement(XMLNode):
       writer.write('>')
       if len(self.childNodes) == 1 and self.childNodes[0].nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
         self.childNodes[0].writexml(writer, '', '', '')
-      elif self.name == 'wpt' or self.name == 'trkpt':
+      elif self.namespaceURI == 'http://www.topografix.com/GPX/1/1' and (self.localName == 'wpt' or self.localName == 'trkpt'):
         for node in self.childNodes:
           node.writexml(writer, '', '', '')
       else:
@@ -2674,6 +2611,9 @@ class XMLCharacterData(XMLNode):
   def childNodes(self, value):
     raise
 
+  def unlink(self):
+    pass
+
   def __repr__(self):
     return '<DOM %s node "%r">' % (self.__class__.__name__, (self.data[0:10] + '...' if len(self.data) > 10 else self.data))
 
@@ -2683,7 +2623,7 @@ class XMLText(XMLCharacterData):
   __slots__ = ()
   
   nodeType = XMLNode.TEXT_NODE
-  name = localName = "#text"
+  name = localName = '#text'
 
   def cloneNode(self):
     return XMLText(self.data)
@@ -2698,7 +2638,7 @@ class XMLCDATASection(XMLCharacterData):
   __slots__ = ()
 
   nodeType = XMLNode.CDATA_SECTION_NODE
-  name = localName = "#cdata-section"
+  name = localName = '#cdata-section'
 
   def cloneNode(self):
     return XMLCDATASection(self.data)
@@ -2712,7 +2652,7 @@ class XMLComment(XMLCharacterData):
   __slots__ = ()
 
   nodeType = XMLNode.COMMENT_NODE
-  name = localName = "#comment"
+  name = localName = '#comment'
 
   def cloneNode(self):
     return XMLComment(self.data)
@@ -2726,10 +2666,9 @@ class XMLDocument(XMLNode):
   __slots__ = ('version', 'encoding', 'childNodes')
 
   nodeType = XMLNode.DOCUMENT_NODE
-  name = localName = "#document"
+  name = localName = '#document'
   namespaceURI = XMLNode.EMPTY_NAMESPACE
   prefix = XMLNode.EMPTY_PREFIX
-  parentNode = nextSibling = previousSibling = None
 
   def __init__(self, version=None, encoding='utf-8'):
     self.version = version
@@ -2746,19 +2685,17 @@ class XMLDocument(XMLNode):
   def cloneNode(self):
     clone = XMLDocument(self.version, self.encoding)
     if self.documentElement is not None:
-      childclone = self.documentElement.cloneNode()
-      clone.childNodes.append(childclone)
-      childclone.parentNode = clone
-      childclone.previousSibling = childclone.nextSibling = None
+      clone.childNodes.append(self.documentElement.cloneNode())
     return clone
 
   def appendChild(self, newChild):
     if self.hasChildNodes():
       raise
     self.childNodes.append(newChild)
-    newChild.previousSibling = newChild.nextSibling = None
-    newChild.parentNode = self
     return newChild
+
+  def __repr__(self):
+    return '<DOM Document at %#x>' % id(self)
 
   def writexml(self, writer, indent='', addindent='', newl=''):
     writer.write(f'<?xml version="1.0" encoding="utf-8"?>{newl}')
@@ -2786,8 +2723,9 @@ class ExpatGPXBuilder:
     self.Document = None
     self.CurNode = None
     self.CurNodeNSDecl = []
+    self.ParNodes = []
     self.CDataSection = False
-    self.CurText = None
+    self.CurText = ''
 
   def NewParser(self):
     self.__init__()
@@ -2821,9 +2759,6 @@ class ExpatGPXBuilder:
     
   def Parse(self, xmlstring):
     self.NewParser()
-    self.Document = XMLDocument()
-    self.CurNode = self.Document
-    self.CurText = ''
     try:
       self.Parser.Parse(xmlstring, True)
       if len(self.Document.childNodes) != 1:
@@ -2831,7 +2766,6 @@ class ExpatGPXBuilder:
       r = self.Document.documentElement
       if r.localName != 'gpx' or (r.namespaceURI != XMLNode.EMPTY_NAMESPACE and r.namespaceURI != self.GPX_NAMESPACE):
         raise
-      r.nextSibling = None
       if not r.hasAttribute('xmlns'):
         r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
       r.setAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI)
@@ -2846,17 +2780,6 @@ class ExpatGPXBuilder:
     doc = self.Document
     self.__init__()
     return doc
-
-  def _append_child(self, node):
-    nodes = self.CurNode.childNodes
-    if nodes:
-      _node = nodes[-1] 
-      node.previousSibling = _node
-      _node.nextSibling = node
-    else:
-      node.previousSibling = None
-    nodes.append(node)
-    node.parentNode = self.CurNode
 
   def _parse_ns_name(self, name):
     parts = name.split(' ')
@@ -2882,14 +2805,15 @@ class ExpatGPXBuilder:
     return uri, localname, prefix, qname
 
   def XmlDeclHandler(self, version, encoding, standalone):
-    self.Document.version = version
-    self.Document.encoding = encoding
+    self.Document = XMLDocument(version, encoding)
+    self.CurNode = self.Document
 
   def StartElementHandler(self, name, attributes):
     self.CurText = ''
     uri, localname, prefix, qname = self._parse_ns_name(name)
     node = XMLElement(qname, uri, prefix, localname)
-    self._append_child(node)
+    self.CurNode.childNodes.append(node)
+    self.ParNodes.append(self.CurNode)
     self.CurNode = node
     if self.CurNodeNSDecl:
       node.attributes = {}
@@ -2915,12 +2839,9 @@ class ExpatGPXBuilder:
 
   def EndElementHandler(self, name):
     if self.CurText and not self.CurNode.childNodes:
-      self._append_child(XMLText(self.CurText))
+      self.CurNode.childNodes.append(XMLText(self.CurText))
     self.CurText = ''
-    nodes = self.CurNode.childNodes
-    if nodes:
-      nodes[-1].nextSibling = None
-    self.CurNode = self.CurNode.parentNode
+    self.CurNode = self.ParNodes.pop()
 
   def StartCdataSectionHandler(self):
     self.CurText = ''
@@ -2936,15 +2857,15 @@ class ExpatGPXBuilder:
         if nodes[-1].nodeType == XMLNode.CDATA_SECTION_NODE:
           nodes[-1].data += data
           return
-      self._append_child(XMLCDATASection(data))
+      self.CurNode.childNodes.append(XMLCDATASection(data))
     else:
       if nodes:
         if nodes[-1].nodeType == XMLNode.TEXT_NODE:
-           nodes[-1].data += data
-           return
+          nodes[-1].data += data
+          return
       self.CurText += data
       if data.strip('\r\n\t '):
-        self._append_child(XMLText(self.CurText))
+        self.CurNode.childNodes.append(XMLText(self.CurText))
         self.CurText = ''
 
   def StartNamespaceDeclHandler(self, prefix, uri):
@@ -2955,7 +2876,7 @@ class ExpatGPXBuilder:
 
   def CommentHandler(self, data):
     self.CurText = ''
-    self._append_child(XMLComment(data))
+    self.CurNode.childNodes.append(XMLComment(data))
 
   def DefaultHandler(self, data):
     self.CurText = ''
@@ -3320,14 +3241,14 @@ class WGS84Track(WGS84WebMercator):
         wpmsg = msgp[1].splitlines()
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = r.getChildren('wpt')
-        pts = list(pt for seg in trk.getChildren('trkseg') for pt in seg.getChildren('trkpt'))
+        pts = list((seg, pt) for seg in trk.getChildren('trkseg') for pt in seg.getChildren('trkpt'))
         self._XMLUpdateNodeText(trk, 'name', (nmsg or [''])[0], None, True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
             v = wp.split('&')
             if int(v[0]) < len(wpts):
-              nwp = wpts[int(v[0])].parentNode.removeChild(wpts[int(v[0])])
+              nwp = r.removeChild(wpts[int(v[0])])
             else:
               nwp = self._XMLNewNode('wpt', trk)
             self._XMLUpdateAttribute(nwp, 'lat', v[1])
@@ -3336,7 +3257,7 @@ class WGS84Track(WGS84WebMercator):
             self._XMLUpdateNodeText(nwp, 'time', urllib.parse.unquote(v[4]), ('ele',))
             self._XMLUpdateNodeText(nwp, 'name', urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
           else:
-            nwp = wpts[int(wp)].parentNode.removeChild(wpts[int(wp)])
+            nwp = r.removeChild(wpts[int(wp)])
           wpn.append(nwp)
         self._XMLUpdateChildNodes(r, 'wpt', wpn, ('metadata',))
         sn = []
@@ -3348,7 +3269,7 @@ class WGS84Track(WGS84WebMercator):
             if '&' in p:
               v = p.split('&')
               if int(v[0]) < len(pts):
-                np = pts[int(v[0])].parentNode.removeChild(pts[int(v[0])])
+                np = pts[int(v[0])][0].removeChild(pts[int(v[0])][1])
               else:
                 np = self._XMLNewNode('trkpt', trk)
               self._XMLUpdateAttribute(np, 'lat', v[1])
@@ -3377,7 +3298,7 @@ class WGS84Track(WGS84WebMercator):
                   self._XMLUpdateChildNodes(ex, 'ele_alt', [], '*', self.MT_NAMESPACE)
               self._XMLUpdateNodeText(np, 'time', urllib.parse.unquote(v[5]), ('ele',))
             else:
-              np = pts[int(p)].parentNode.removeChild(pts[int(p)])
+              np = pts[int(p)][0].removeChild(pts[int(p)][1])
             pn.append(np)
           self._XMLUpdateChildNodes(ns, 'trkpt', pn)
           sn.append(ns)
