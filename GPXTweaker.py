@@ -2773,8 +2773,6 @@ class ExpatGPXBuilder:
       r = self.Document.documentElement
       if r.localName != 'gpx' or (r.namespaceURI != XMLNode.EMPTY_NAMESPACE and r.namespaceURI != self.GPX_NAMESPACE):
         raise
-      print(r.hasAttribute(self.XMLNS, self.XMLNS_NAMESPACE))
-      print(r.hasAttribute('xmlns'))
       if not r.hasAttribute(self.XMLNS, self.XMLNS_NAMESPACE):
         r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
       r.setAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI)
