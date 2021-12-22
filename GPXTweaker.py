@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -28,6 +28,7 @@ import webbrowser
 import msvcrt
 import locale
 import argparse
+import gc
 
 FR_STRINGS = {
   'tilescache': {
@@ -2525,27 +2526,19 @@ class XMLElement(XMLNode):
           nodes.append(node)
     return nodes
 
-  def insertBefore(self, newChildren, refChild):
+  def insertBefore(self, newChildren, refChild=None):
     if not isinstance(newChildren, (tuple, list)):
       newChildren = (newChildren,)
-    elif not newChildren:
-      return
     index = self.childNodes.index(refChild) if refChild is not None else len(self.childNodes)
-    for newChild in newChildren:
-      self.childNodes.insert(index, newChild)
-      index += 1
-    return newChild
+    self.childNodes[index:index] = newChildren
+    return newChildren
 
-  def insertAfter(self, newChildren, refChild):
+  def insertAfter(self, newChildren, refChild=None):
     if not isinstance(newChildren, (tuple, list)):
       newChildren = (newChildren,)
-    elif not newChildren:
-      return
     index = self.childNodes.index(refChild) + 1 if refChild is not None else 0
-    for newChild in newChildren:
-      self.childNodes.insert(index, newChild)
-      index += 1
-    return newChild
+    self.childNodes[index:index] = newChildren
+    return newChildren
 
   def appendChild(self, newChild):
     self.childNodes.append(newChild)
@@ -2560,6 +2553,20 @@ class XMLElement(XMLNode):
   def removeChild(self, oldChild):
     self.childNodes.remove(oldChild)
     return oldChild
+
+  def removeChildren(self, localname, namespaceuri=' '):
+    if namespaceuri == ' ':
+      namespaceuri = self.namespaceURI
+    nodes = []
+    index = 0
+    while index < len(self.childNodes):
+      node = self.childNodes[index]
+      if node.nodeType == XMLNode.ELEMENT_NODE:
+        if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname):
+          nodes.append(self.childNodes.pop(index))
+          continue
+      index += 1
+    return nodes
 
   def getText(self):
     return ''.join(childnode.data for childnode in self.childNodes if childnode.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE))
@@ -3016,6 +3023,8 @@ class WGS84Track(WGS84WebMercator):
     if self.Track:
       return False
     self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
+    gcie = gc.isenabled()
+    gc.disable()
     try:
       if source:
         self._tracks = source._tracks
@@ -3055,6 +3064,8 @@ class WGS84Track(WGS84WebMercator):
     except:
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
+      if gcie:
+        gc.enable()
       return False
     self.TrkId = trkid or 0
     try:
@@ -3065,6 +3076,8 @@ class WGS84Track(WGS84WebMercator):
         del self.Track
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
+      if gcie:
+        gc.enable()
       return False
     if not source:
       self.OTrack = self.Track
@@ -3072,6 +3085,8 @@ class WGS84Track(WGS84WebMercator):
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
+    if gcie:
+      gc.enable()
     return True
 
   def BuildWebMercator(self):
@@ -3126,22 +3141,19 @@ class WGS84Track(WGS84WebMercator):
   def _XMLUpdateAttribute(self, node, name, value):
     node.setAttribute(self.intern(name, name), value)
 
-  def _XMLUpdateNodeText(self, node, localname, text, predecessors='*', cdata=False):
+  def _XMLUpdateChildNode(self, node, localname, child, predecessors='*', uri=None):
     no = None
-    cn = node.getChildren(localname)
+    cn = node.getChildren(localname, uri if uri is not None else node.namespaceURI)
     if cn:
       no = cn[0]
       for n in cn[1:]:
         node.removeChild(n).unlink()
-    if text:
-      if cdata:
-        t = XMLCDATASection(text)
-      else:
-        t = XMLText(text)
-      n = self._XMLNewNode(localname, node)
-      n.appendChild(t)
+    if child is not None:
       if no is not None:
-        node.replaceChild(n, no).unlink()
+        node.replaceChild(child, no).unlink()
+        return
+      elif predecessors == '*':
+        node.appendChild(child)
         return
       elif isinstance(predecessors, (list, tuple)):
         for e in predecessors:
@@ -3149,35 +3161,30 @@ class WGS84Track(WGS84WebMercator):
           if cn:
             no = cn[-1]
             break
-      node.insertAfter(n, no)
-    elif no:
+      node.insertAfter(child, no)
+    elif no is not None:
       node.removeChild(no).unlink()
 
-  def _XMLUpdateChildNodes(self, node, localname, children, predecessors='*', uri=None):
-    no = None
-    cn = node.getChildren(localname, uri if uri is not None else node.namespaceURI)
-    if cn:
-      no = cn[0]
-      for n in cn[1:]:
-        node.removeChild(n).unlink()
-    if no is not None:
-      node.insertBefore(children, no)
-      node.removeChild(no).unlink()
-      return
-    elif isinstance(predecessors, (list, tuple)):
-      for e in predecessors:
-        cn = node.getChildren(e)
-        if cn:
-          no = cn[-1]
-          break
-    node.insertAfter(children, no)
+  def _XMLUpdateChildNodeText(self, node, localname, text, predecessors='*', cdata=False):
+    if text:
+      if cdata:
+        t = XMLCDATASection(text)
+      else:
+        t = XMLText(text)
+      child = self._XMLNewNode(localname, node)
+      child.appendChild(t)
+    else:
+      child = None
+    self._XMLUpdateChildNode(node, localname, child, predecessors)
 
   def UpdateGPX(self, msg, uri=None, backup=True):
+    gcie = gc.isenabled()
+    gc.disable()
     del self.Track
     self.Track = self.OTrack.cloneNode()
     r = self.Track.documentElement
     trk = r.getChildren('trk')[self.TrkId]
-    mt = r.hasAttribute(self.XMLNS_MT)
+    mt = r.hasAttribute(self.MT, self.XMLNS_NAMESPACE)
     try:
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
@@ -3210,7 +3217,7 @@ class WGS84Track(WGS84WebMercator):
           a = self._XMLNewNode('color', None, self.MT_NAMESPACE, self.MT)
           t = XMLText(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
-          self._XMLUpdateChildNodes(e, 'color', [a], '*', self.MT_NAMESPACE)
+          self._XMLUpdateChildNode(e, 'color', a, '*', self.MT_NAMESPACE)
           if l:
             a = l[0]
             if not a.namespaceURI or a.namespaceURI == self.GPX_NAMESPACE:
@@ -3230,7 +3237,7 @@ class WGS84Track(WGS84WebMercator):
             b.removeChild(b.firstChild).unlink()
           b.appendChild(t)
         elif msgp[0][-4:] == 'name':
-          self._XMLUpdateNodeText(trk, 'name', msgp[1], None, True)
+          self._XMLUpdateChildNodeText(trk, 'name', msgp[1], None, True)
         else:
           raise
         if not self.ProcessGPX('e'):
@@ -3240,41 +3247,48 @@ class WGS84Track(WGS84WebMercator):
         nmsg = msgp[0].splitlines()
         wpmsg = msgp[1].splitlines()
         smsg = msgp[2].split('-\r\n')[1:]
-        wpts = r.getChildren('wpt')
-        pts = list((seg, pt) for seg in trk.getChildren('trkseg') for pt in seg.getChildren('trkpt'))
-        self._XMLUpdateNodeText(trk, 'name', (nmsg or [''])[0], None, True)
+        wpts = r.removeChildren('wpt')
+        segs = trk.removeChildren('trkseg')
+        pts = list(pt for seg in segs for pt in seg.removeChildren('trkpt'))
+        self._XMLUpdateChildNodeText(trk, 'name', (nmsg or [''])[0], None, True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
             v = wp.split('&')
             if int(v[0]) < len(wpts):
-              nwp = r.removeChild(wpts[int(v[0])])
+              nwp = wpts[int(v[0])]
+              wpts[int(v[0])] = None
             else:
               nwp = self._XMLNewNode('wpt', trk)
             self._XMLUpdateAttribute(nwp, 'lat', v[1])
             self._XMLUpdateAttribute(nwp, 'lon', v[2])
-            self._XMLUpdateNodeText(nwp, 'ele', v[3], None)
-            self._XMLUpdateNodeText(nwp, 'time', urllib.parse.unquote(v[4]), ('ele',))
-            self._XMLUpdateNodeText(nwp, 'name', urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
+            self._XMLUpdateChildNodeText(nwp, 'ele', v[3], None)
+            self._XMLUpdateChildNodeText(nwp, 'time', urllib.parse.unquote(v[4]), ('ele',))
+            self._XMLUpdateChildNodeText(nwp, 'name', urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
           else:
-            nwp = r.removeChild(wpts[int(wp)])
+            nwp = wpts[int(wp)]
+            wpts[int(wp)] = None
           wpn.append(nwp)
-        self._XMLUpdateChildNodes(r, 'wpt', wpn, ('metadata',))
-        sn = []
+        r.insertAfter(wpn, (r.getChildren('metadata') or [None])[-1])
+        for wp in wpts:
+          if wp is not None:
+            wp.unlink()
+        for s in segs:
+          s.unlink()
         for s in smsg:
           ns = self._XMLNewNode('trkseg', trk)
-          pn = []
           pmsg = s.splitlines()
           for p in pmsg:
             if '&' in p:
               v = p.split('&')
               if int(v[0]) < len(pts):
-                np = pts[int(v[0])][0].removeChild(pts[int(v[0])][1])
+                np = pts[int(v[0])]
+                pts[int(v[0])] = None
               else:
                 np = self._XMLNewNode('trkpt', trk)
               self._XMLUpdateAttribute(np, 'lat', v[1])
               self._XMLUpdateAttribute(np, 'lon', v[2])
-              self._XMLUpdateNodeText(np, 'ele', v[3], None)
+              self._XMLUpdateChildNodeText(np, 'ele', v[3], None)
               if v[4]:
                 if not mt:
                   r.setAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT)
@@ -3292,17 +3306,19 @@ class WGS84Track(WGS84WebMercator):
                 a = self._XMLNewNode('ele_alt', None, self.MT_NAMESPACE, self.MT)
                 t = XMLText(v[4])
                 a.appendChild(t)
-                self._XMLUpdateChildNodes(e, 'ele_alt', [a], '*', self.MT_NAMESPACE)
+                self._XMLUpdateChildNode(e, 'ele_alt', a, '*', self.MT_NAMESPACE)
               elif mt:
                 for ex in np.getChildren('extensions'):
-                  self._XMLUpdateChildNodes(ex, 'ele_alt', [], '*', self.MT_NAMESPACE)
-              self._XMLUpdateNodeText(np, 'time', urllib.parse.unquote(v[5]), ('ele',))
+                  self._XMLUpdateChildNode(ex, 'ele_alt', None, '*', self.MT_NAMESPACE)
+              self._XMLUpdateChildNodeText(np, 'time', urllib.parse.unquote(v[5]), ('ele',))
             else:
-              np = pts[int(p)][0].removeChild(pts[int(p)][1])
-            pn.append(np)
-          self._XMLUpdateChildNodes(ns, 'trkpt', pn)
-          sn.append(ns)
-        self._XMLUpdateChildNodes(trk, 'trkseg', sn)
+              np = pts[int(p)]
+              pts[int(p)] = None
+            ns.appendChild(np)
+          trk.appendChild(ns)
+        for p in pts:
+          if p is not None:
+            p.unlink()
         if not self.ProcessGPX('a'):
           raise
       if uri:
@@ -3313,11 +3329,16 @@ class WGS84Track(WGS84WebMercator):
       self.Track = self.STrack
       self.ProcessGPX('a' if '\r\n=\r\n' in msg else 'e')
       return False
+    finally:
+      if gcie:
+        gc.enable()
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     return True
 
   def DetachFromGPX(self, others, uri=None, backup=True):
+    gcie = gc.isenabled()
+    gc.disable()
     _tracks = self._tracks
     trkid = self.TrkId
     self.Track = self.OTrack.cloneNode()
@@ -3325,7 +3346,7 @@ class WGS84Track(WGS84WebMercator):
     r = self.Track.documentElement
     nuri = None
     try:
-      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.getChildren('trk')[trkid])])
+      self._XMLUpdateChildNode(r, 'trk', r.removeChild(r.getChildren('trk')[trkid]))
       _r = _tracks[2].documentElement
       _r.removeChild(_r.getChildren('trk')[trkid]).unlink()
       if uri:
@@ -3341,6 +3362,8 @@ class WGS84Track(WGS84WebMercator):
       self._tracks = _tracks
       del self.Track
       self.Track = self.OTrack
+      if gcie:
+        gc.enable()
       return False
     self.TrkId = 0
     try:
@@ -3358,9 +3381,13 @@ class WGS84Track(WGS84WebMercator):
           tr.TrkId -= 1
     except:
       pass
+    if gcie:
+      gc.enable()
     return nuri or True
 
   def AppendToGPX(self, track, others, mode='s', uri=None, backup=True):
+    gcie = gc.isenabled()
+    gc.disable()
     trkid = self.TrkId
     del self.Track
     self.Track = self.OTrack.cloneNode()
@@ -3401,6 +3428,8 @@ class WGS84Track(WGS84WebMercator):
         self.ProcessGPX('a')
       else:
         self.ProcessGPX('w')
+      if gcie:
+        gc.enable()
       return False
     if mode == 'ta' or mode == 'tb':
       track._tracks = self._tracks
@@ -3413,6 +3442,8 @@ class WGS84Track(WGS84WebMercator):
         if tr.TrkId >= trkid:
           tr.TrkId += 1
       tr.ProcessGPX('w')
+    if gcie:
+      gc.enable()
     return True
 
 
@@ -11461,6 +11492,8 @@ class GPXTweakerWebInterfaceServer():
       u = next(uris, None)
     trck = None
     ti = time.time()
+    gcie = gc.isenabled()
+    gc.disable()
     while u is not None:
       track = WGS84Track(self.SLock)
       if not track.LoadGPX(u, trk, trck, self.Builder):
@@ -11498,6 +11531,8 @@ class GPXTweakerWebInterfaceServer():
         self.Uri, self.Track = self.Tracks[0]
         self.TrackInd = 0
         break
+    if gcie:
+      gc.enable()
     self.log(0, 'bloaded', len(self.Tracks), time.time() - ti)
     minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
     maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
