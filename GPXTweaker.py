@@ -1,4 +1,4 @@
-﻿from functools import partial
+from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -2773,7 +2773,9 @@ class ExpatGPXBuilder:
       r = self.Document.documentElement
       if r.localName != 'gpx' or (r.namespaceURI != XMLNode.EMPTY_NAMESPACE and r.namespaceURI != self.GPX_NAMESPACE):
         raise
-      if not r.hasAttribute('xmlns'):
+      print(r.hasAttribute(self.XMLNS, self.XMLNS_NAMESPACE))
+      print(r.hasAttribute('xmlns'))
+      if not r.hasAttribute(self.XMLNS, self.XMLNS_NAMESPACE):
         r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
       r.setAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI)
       sl = r.getAttribute('schemaLocation', self.XSI_NAMESPACE) or ''
@@ -3020,7 +3022,7 @@ class WGS84Track(WGS84WebMercator):
     return True
 
   def LoadGPX(self, uri, trkid=None, source=None, builder=None):
-    if self.Track:
+    if self.Track is not None:
       return False
     self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
     gcie = gc.isenabled()
@@ -3050,7 +3052,7 @@ class WGS84Track(WGS84WebMercator):
         if not builder:
           builder = ExpatGPXBuilder()
         self.Track = builder.Parse(track)
-        if not self.Track:
+        if self.Track is None:
           raise
         self.intern_dict = builder.intern_dict
       self.intern = self.intern_dict.setdefault
@@ -3394,18 +3396,16 @@ class WGS84Track(WGS84WebMercator):
     r = self.Track.documentElement
     try:
       no = None
-      cn = r.getChildren('wpt')
-      if cn:
-        no = cn[-1 if mode != 'tb' else 0]
-      else:
+      if mode != 'tb':
+        cn = r.getChildren('wpt')
+        if cn:
+          no = cn[-1]
+      if mode == 'tb' or no is None:
         cn = r.getChildren('metadata')
         if cn:
           no = cn[-1]
       _r = track.Track.documentElement
-      if mode == 'tb':
-        r.insertBefore(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
-      else:
-        r.insertAfter(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
+      r.insertAfter(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
       trk = r.getChildren('trk')[trkid]
       if mode == 'tb':
         r.insertBefore(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
@@ -11502,6 +11502,8 @@ class GPXTweakerWebInterfaceServer():
           trck = None
           continue
         else:
+          if gcie:
+            gc.enable()
           return
       minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
       maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
@@ -11512,6 +11514,8 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'berror6')
         else:
           self.log(0, 'berror4')
+          if gcie: 
+            gc.enable()
           return
       else:
         self.Tracks.append([u, track])
