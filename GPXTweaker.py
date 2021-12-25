@@ -3513,7 +3513,8 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True))
+      '%s'\
+      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True),       'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
       try:
         self.request.sendall(resp_e.encode('ISO-8859-1'))
         if e != 501:
@@ -5527,6 +5528,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
   '          document.getElementById("tset").focus();\r\n' \
   '          document.getElementById("tset").blur();\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("tlock").style.fontWeight="500";\r\n' \
   '        }\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -8586,6 +8589,7 @@ class GPXTweakerWebInterfaceServer():
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
   '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
   '            r_map.disabled = false;\r\n' \
+  '            console.log(performance.now() - ti);\r\n' \
   '          }\r\n' \
   '          function terr_cb() {\r\n' \
   '            ltiles++;\r\n' \
@@ -8600,15 +8604,21 @@ class GPXTweakerWebInterfaceServer():
   '            ctx.drawImage(tile, Math.round((col - tmincol) / ncol * mwidth), Math.round((row - tminrow) / nrow * mheight), Math.round((col + 1 - tmincol) / ncol * mwidth) - Math.round((col - tmincol) / ncol * mwidth), Math.round((row + 1 - tminrow) / nrow * mheight) - Math.round((row - tminrow) / nrow * mheight));\r\n' \
   '            terr_cb();\r\n' \
   '          }\r\n' \
-  '          for (let row=tminrow; row<=tmaxrow; row++) {\r\n' \
-  '            for (let col=tmincol; col<=tmaxcol; col++) {\r\n' \
-  '              let tile = new Image();\r\n' \
-  '              tile.crossOrigin = "anonymous";\r\n' \
-  '              tile.onload = (e) => {tload_cb(e.target, row, col);}\r\n' \
-  '              tile.onerror = (e) => {terr_cb();}\r\n' \
-  '              tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
+  '          function add_row_tile(row) {\r\n' \
+  '            if ((row - tminrow) * ncol <= ltiles + ##TILEMAXPENDING##) {\r\n' \
+  '              for (let col=tmincol; col<=tmaxcol; col++) {\r\n' \
+  '                let tile = new Image();\r\n' \
+  '                tile.crossOrigin = "anonymous";\r\n' \
+  '                tile.onload = (e) => {tload_cb(e.target, row, col);}\r\n' \
+  '                tile.onerror = (e) => {terr_cb();}\r\n' \
+  '                tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
+  '              }\r\n' \
+  '            if (row < tmaxrow) {setTimeout(function () {add_row_tile(row + 1);}, 1);}\r\n' \
+  '            } else {\r\n' \
+  '              setTimeout(function () {add_row_tile(row);}, 10);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '          setTimeout(function () {add_row_tile(tminrow);}, 1);\r\n' \
   '        }\r\n'
   HTML_3D_ROT_TEMPLATE = \
   '      function canvas_rotate(number=null) {\r\n' \
@@ -11885,7 +11895,7 @@ class GPXTweakerWebInterfaceServer():
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
     declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor))
-    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath)
+    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2))
     self.log(0, '3dbuilt')
     return True
 
