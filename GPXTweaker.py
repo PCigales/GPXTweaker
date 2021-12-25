@@ -8589,7 +8589,6 @@ class GPXTweakerWebInterfaceServer():
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
   '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
   '            r_map.disabled = false;\r\n' \
-  '            console.log(performance.now() - ti);\r\n' \
   '          }\r\n' \
   '          function terr_cb() {\r\n' \
   '            ltiles++;\r\n' \
