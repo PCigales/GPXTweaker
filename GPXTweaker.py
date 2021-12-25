@@ -10321,6 +10321,10 @@ class GPXTweakerWebInterfaceServer():
   '                    ts = Math.min(t, ts==null?t:ts);\r\n' \
   '                    te = Math.max(t, te==null?t:te);\r\n' \
   '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                for (let p=0; p<segs[s].length; p++) {\r\n' \
   '                  if (noe) {\r\n' \
   '                    if (! isNaN(parseFloat(segs[s][p][2]))) {noe = false;}\r\n' \
   '                  }\r\n' \
@@ -10331,9 +10335,9 @@ class GPXTweakerWebInterfaceServer():
   '                    slat = segs[s][p][0];\r\n' \
   '                    slon = segs[s][p][1];\r\n' \
   '                  }\r\n' \
-  '                  if (! noe && ! noa && slat != null && ts != null) {break;}\r\n' \
+  '                  if (! noe && ! noa && slat != null) {break;}\r\n' \
   '                }\r\n' \
-  '                if (! noe && ! noa && slat != null && ts != null) {break;}\r\n' \
+  '                if (! noe && ! noa && slat != null) {break;}\r\n' \
   '              }\r\n' \
   '              tracks_props[t] = [ts==null?NaN:dur, dist==null?NaN:dist, noe?NaN:ele, noa?NaN:alt, ts==null?NaN:ts, slat==null?[NaN, NaN]:[slat, slon]];\r\n' \
   '              if (ts != null) {\r\n' \
