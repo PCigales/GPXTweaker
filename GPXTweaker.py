@@ -9679,7 +9679,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
   '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
-  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, (trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
   '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '          create_map();\r\n' \
