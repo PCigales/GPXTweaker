@@ -4131,6 +4131,20 @@ class GPXTweakerWebInterfaceServer():
   '        width:7em;\r\n' \
   '        height:1.7em;\r\n' \
   '      }\r\n' \
+  '      div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
+  '        display:none;\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:calc(1.6em + 10px);\r\n' \
+  '        right:2vw;\r\n' \
+  '        width:10em;\r\n' \
+  '        height:13.4em;\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        z-index:10;\r\n' \
+  '        font-size:75%;\r\n' \
+  '        text-align:center;\r\n' \
+  '        font-weight:normal;\r\n' \
+  '        user-select:none;\r\n' \
+  '      }\r\n' \
   '      label[for$=filter], label[for$=margin] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:1.5em;\r\n' \
@@ -5058,7 +5072,7 @@ class GPXTweakerWebInterfaceServer():
   '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
   '        for (let p=1; p<=3; p++) {\r\n' \
   '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
-  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
+  '            if (fp[p].style.display != "initial") {fp[p].style.display = "initial";} else {fp[p].style.display = "none";}\r\n' \
   '          } else {\r\n' \
   '            fp[p].style.display = "none";\r\n' \
   '          }\r\n' \
@@ -5261,8 +5275,8 @@ class GPXTweakerWebInterfaceServer():
   HTML_MAP_TEMPLATE = \
   '      function switch_3Dpanel() {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (document.getElementById("v3Dpanel").style.display == "none") {\r\n' \
-  '          document.getElementById("v3Dpanel").style.display = "";\r\n' \
+  '        if (document.getElementById("v3Dpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("v3Dpanel").style.display = "initial";\r\n' \
   '        } else {\r\n' \
   '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '        }\r\n' \
@@ -5440,7 +5454,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrep.send();\r\n' \
   '      }\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
-  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel1">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
   '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(1)">\r\n' \
   '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
@@ -5451,7 +5465,7 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel2">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
   '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(2)">\r\n' \
   '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
@@ -5462,7 +5476,7 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel3">\r\n' \
   '              <span>{#jfilterpanel3#}</span>\r\n' \
   '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(3)">\r\n' \
   '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
@@ -5474,7 +5488,7 @@ class GPXTweakerWebInterfaceServer():
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_3DPANEL_TEMPLATE = \
-  '            <div id="v3Dpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="v3Dpanel">\r\n' \
   '              <span>{#j3dpanel#}</span>\r\n' \
   '              <form id="v3dform" autocomplete="off" onsubmit="return(false);">\r\n' \
   '                <label for="v3dpmargin" style="left:2px;">{#j3dpanoramic#}</label>\r\n' \
@@ -5501,7 +5515,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tfoot>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
+  '            <div style="height:1.2em;overflow-y:hidden;width:100%;user-select:none;">\r\n' \
   '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
   '            </div>\r\n' \
   '          </th>\r\n' \
@@ -7916,7 +7930,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -7949,7 +7963,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' + HTML_SCALEBOX_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
@@ -8590,6 +8604,8 @@ class GPXTweakerWebInterfaceServer():
   '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
   '            r_map.disabled = false;\r\n' \
   '          }\r\n' \
+  '          let crow = tminrow;\r\n' \
+  '          let prom_res = null;\r\n' \
   '          function terr_cb() {\r\n' \
   '            ltiles++;\r\n' \
   '            let ltpn = Math.floor(100 * ltiles / ntiles).toString();\r\n' \
@@ -8598,26 +8614,36 @@ class GPXTweakerWebInterfaceServer():
   '              r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", ltp);\r\n' \
   '            }\r\n' \
   '            if (ltiles == ntiles) {map_complete();}\r\n' \
+  '            if (prom_res && (crow - tminrow) * ncol <= ltiles + ##TILEMAXPENDING##) {\r\n' \
+  '              prom_res();\r\n' \
+  '              prom_res = null;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          function tload_cb(tile, row, col) {\r\n' \
   '            ctx.drawImage(tile, Math.round((col - tmincol) / ncol * mwidth), Math.round((row - tminrow) / nrow * mheight), Math.round((col + 1 - tmincol) / ncol * mwidth) - Math.round((col - tmincol) / ncol * mwidth), Math.round((row + 1 - tminrow) / nrow * mheight) - Math.round((row - tminrow) / nrow * mheight));\r\n' \
   '            terr_cb();\r\n' \
   '          }\r\n' \
-  '          function add_row_tile(row) {\r\n' \
+  '          async function add_row_tile() {\r\n' \
+  '            let row = crow;\r\n' \
   '            if ((row - tminrow) * ncol <= ltiles + ##TILEMAXPENDING##) {\r\n' \
   '              for (let col=tmincol; col<=tmaxcol; col++) {\r\n' \
   '                let tile = new Image();\r\n' \
   '                tile.crossOrigin = "anonymous";\r\n' \
-  '                tile.onload = (e) => {tload_cb(e.target, row, col);}\r\n' \
-  '                tile.onerror = (e) => {terr_cb();}\r\n' \
+  '                tile.onload = (e) => {tload_cb(e.target, row, col);};\r\n' \
+  '                tile.onerror = (e) => {terr_cb();};\r\n' \
   '                tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
   '              }\r\n' \
-  '            if (row < tmaxrow) {setTimeout(function () {add_row_tile(row + 1);}, 1);}\r\n' \
+  '              if (crow < tmaxrow) {\r\n' \
+  '                crow++;\r\n' \
+  '                setTimeout(add_row_tile, 1);\r\n' \
+  '              }\r\n' \
   '            } else {\r\n' \
-  '              setTimeout(function () {add_row_tile(row);}, 10);\r\n' \
+  '              let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '              await prom;\r\n' \
+  '              add_row_tile();\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          setTimeout(function () {add_row_tile(tminrow);}, 1);\r\n' \
+  '          setTimeout(add_row_tile, 1);\r\n' \
   '        }\r\n'
   HTML_3D_ROT_TEMPLATE = \
   '      function canvas_rotate(number=null) {\r\n' \
@@ -8768,7 +8794,7 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker 3DViewer Panoramic</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
   '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
+  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);user-select:none;">\r\n' \
   '    <table>\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:calc(100vw - 14em);">\r\n' \
@@ -9274,7 +9300,7 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker 3DViewer Subjective</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
   '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
+  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);user-select:none;">\r\n' \
   '    <table>\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:calc(100vw - 14em);">\r\n' \
@@ -10806,7 +10832,7 @@ class GPXTweakerWebInterfaceServer():
   '      </colgroup>\r\n' \
   '      <thead>\r\n' \
   '        <tr>\r\n' \
-  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
+  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
   '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
   '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" oninput="tracks_filter()" onchange="tracks_filter_history()">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
@@ -10835,7 +10861,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SCALEBOX_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <script>\r\n' \
