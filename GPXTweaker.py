@@ -1985,6 +1985,7 @@ class WebMercatorMap(WGS84WebMercator):
     if local_pattern:
       if not '{' in local_pattern:
         local_pattern = os.path.join(local_pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
+    ti = time.time()
     if memory_store != None:
       for col in range(mincol, maxcol + 1):
         memory_store.append([None] * (maxrow + 1 - minrow))
@@ -2228,29 +2229,54 @@ class WGS84Elevation(WGS84Map):
   def MergeTiles(self, infos, tiles):
     if infos['format'] != 'image/x-bil;bits=32' and infos['format'] != 'image/hgt':
       return None
+    th = len(tiles[0])
+    tw = len(tiles)
+    _c_l = list(range(tw))
+    _r_l = list(range(th))
     if infos['format'] == 'image/x-bil;bits=32':
-      mh = infos['height'] * len(tiles[0])
-      mw = infos['width'] * len(tiles)
-      m = bytearray(struct.pack('<f', infos.get('nodata', 0))) * (mh * mw)
-      for r in range(len(tiles[0])):
-        for c in range(len(tiles)):
-          if tiles[c][r]:
-            for l in range(infos['height']):
-              pos = (r * infos['height'] + l) * mw * 4 + c * infos['width'] * 4
-              m[pos: pos + infos['width'] * 4] = tiles[c][r][l * infos['width'] * 4: (l + 1) * infos['width'] * 4]
+      mh = infos['height'] * th
+      mw = infos['width'] * tw
+      m = bytearray(4 * mh * mw)
+      _m = memoryview(m)
+      _w = infos['width'] * 4
+      _mw = mw * 4
+      _mw_r = infos['height'] * _mw
+      _nd = struct.pack('<f', infos.get('nodata', 0)) * infos['width'] * infos['height']
+      _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
+      _l = list((l * _mw, l * _w, (l + 1) * _w) for l in range(infos['height']))
+      for r in _r_l:
+        _r = r * _mw_r
+        for c in _c_l:
+          _c = c * _w
+          for _l_p, _l_0, _l_1 in _l:
+            pos = _r + _l_p + _c
+            _m[pos: pos + _w] = _tiles[c][r][_l_0: _l_1]
     elif infos['format'] == 'image/hgt':
-      mh = infos['height'] * len(tiles[0]) + 1
-      mw = infos['width'] * len(tiles) + 1
-      m = bytearray(struct.pack('>h', infos.get('nodata', 0))) * (mh * mw)
-      for r in range(len(tiles[0])):
-        for c in range(len(tiles)):
-          if tiles[c][r]:
-            for l in range(infos['height'] if r < len(tiles[0]) - 1 else (infos['height'] + 1)):
-              pos = (r * infos['height'] + l) * mw * 2 + c * infos['width'] * 2
-              if c < len(tiles) - 1:
-                m[pos: pos + infos['width'] * 2] = tiles[c][r][l * (infos['width'] + 1) * 2: ((l + 1) * (infos['width'] + 1) - 1) * 2]
-              else:
-                m[pos: pos + (infos['width'] + 1) * 2] = tiles[c][r][l * (infos['width'] + 1) * 2: (l + 1) * (infos['width'] + 1) * 2]
+      mh = infos['height'] * th + 1
+      mw = infos['width'] * tw + 1
+      m = bytearray(2 * mh * mw)
+      _m = memoryview(m)
+      _w = infos['width'] * 2
+      _mw = mw * 2
+      _mw_r = infos['height'] * _mw
+      _nd = struct.pack('>h', infos.get('nodata', 0)) * infos['width'] * infos['height']
+      _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
+      _l = list((l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height']))
+      for r in _r_l:
+        _r = r * _mw_r
+        if r == th - 1:
+          l = infos['height']
+          _l.append((l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2))
+        for c in _c_l:
+          _c = c * _w
+          if c < tw - 1:
+            for _l_p, _l_0, _l_1 in _l:
+              pos = _r + _l_p + _c
+              m[pos: pos + _w] = tiles[c][r][_l_0: _l_1]
+          else:
+            for _l_p, _l_0, _l_1 in _l:
+              pos = _r + _l_p + _c
+              m[pos: pos + _w + 2] = tiles[c][r][_l_0: _l_1 + 2]
     return m
 
   def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', threads=10):
@@ -2969,12 +2995,12 @@ class WGS84Track(WGS84WebMercator):
       return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(prefix, prefix) if prefix is not None else XMLNode.EMPTY_PREFIX, self.intern(localname, localname))
 
   def ProcessGPX(self, mode='a'):
-    flt = lambda s: float(s) if (s is not None and s.strip() != '') else None
+    flt = lambda s: float(s) if s.strip() != '' else ''
     r = self.Track.documentElement
     if mode == 'a' or mode == 'w':
       wpts = r.getChildren('wpt')
       try:
-        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time') or None, pt.getChildrenText('name') or None) for pt in wpts)))
+        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time').replace('\r','').replace('\n',''), ' '.join(pt.getChildrenText('name').splitlines())) for pt in wpts)))
       except:
         return False
     try:
@@ -2985,7 +3011,7 @@ class WGS84Track(WGS84WebMercator):
       trk = self._XMLNewNode('trk', r)
       r.appendChild(trk)
     if mode == 'a' or mode == 'e':
-      self.Name = trk.getChildrenText('name').replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+      self.Name = ' '.join(trk.getChildrenText('name').splitlines())
       self.Color = ''
       ext = trk.getChildren('extensions')
       try:
@@ -3013,7 +3039,7 @@ class WGS84Track(WGS84WebMercator):
       sn = 0
       try:
         for seg in pts:
-          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), flt(''.join(e.getChildrenText('ele_alt', self.MT_NAMESPACE) for e in pt.getChildren('extensions'))), pt.getChildrenText('time') or None) for pt in seg))))
+          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), flt(''.join(e.getChildrenText('ele_alt', self.MT_NAMESPACE) for e in pt.getChildren('extensions'))), pt.getChildrenText('time').replace('\r','').replace('\n','')) for pt in seg))))
           sn += len(seg)
       except:
         return False
@@ -3759,8 +3785,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               _send_err_nf()
               continue
             try:
-              f = lambda e: '' if e == None else urllib.parse.quote(str(e))
-              resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('&'.join(map(f, p[1])) for p in seg) for seg in track.Pts) for track in map(lambda t: t[1], self.server.Interface.Tracks)).encode('utf-8')
+              resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('%s&%s&%s&%s&%s' % p[1] for p in seg) for seg in tr[1].Pts) for tr in self.server.Interface.Tracks).encode('utf-8')
               _send_resp('application/octet-stream')
             except:
               _send_err_fail()
@@ -10934,7 +10959,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (segs[s] != "") {\r\n' \
   '              let pts = segs[s].split("\\r\\n");\r\n' \
   '              for (let p=0; p<pts.length; p++) {\r\n' \
-  '                s_p.push(pts[p].split("&").map(decodeURIComponent));\r\n' \
+  '                s_p.push(pts[p].match(/(.*?)&(.*?)&(.*?)&(.*?)&(.*)/).slice(1));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            tracks_pts[t].push(s_p);\r\n' \
@@ -11252,6 +11277,11 @@ class GPXTweakerWebInterfaceServer():
           elif field == 'subj_margin':
             if value is not None:
               self.V3DSubjMargin = round(2 * float(value)) / 2
+          elif field == 'min_valid_ele':
+            if value is None:
+              self.V3DMinValidEle = - 5000000
+            else:
+              self.V3DMinValidEle = float(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -11406,6 +11436,7 @@ class GPXTweakerWebInterfaceServer():
     self.SpeedMax = 8
     self.V3DPanoMargin = 0.5
     self.V3DSubjMargin = 2
+    self.V3DMinValidEle = -100
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -11675,12 +11706,10 @@ class GPXTweakerWebInterfaceServer():
     return pathes
 
   def _build_waypoints(self):
-    f = lambda e: '' if e is None else escape(e) if isinstance(e, str) else e
-    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), (*pt[1][0:3], escape(pt[1][3]), escape(pt[1][4]))) for a in b))) for pt in self.Track.Wpts)
 
   def _build_points(self):
-    f = lambda e: '' if e is None else escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) + '</div>' for s in range(len(self.Track.Pts)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), (*pt[1][0:4], escape(pt[1][4]))) for a in b)) for pt in self.Track.Pts[s]) + '</div>' for s in range(len(self.Track.Pts)))
 
   def _build_waydots(self):
     return ''.join(GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for pt in self.Track.WebMercatorWpts)
@@ -11749,7 +11778,7 @@ class GPXTweakerWebInterfaceServer():
       try:
         if self.EMode == 'tiles':
           infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
-          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2]):
+          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10)):
             self.log(0, '3derror1')
             return False
         elif self.EMode == 'api':
@@ -11807,10 +11836,12 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') and e > -100 else 0
-    eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
-    minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
-    maxele = max(max(eles[row][col] for row in range(nrow) for col in range(ncol)), minele + 1)
+    _e_f = e_f[0] + e_f[1] * ncol
+    _e_m = self.Elevation.Map
+    ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e > min_valid_ele else 0
+    eles = list(list(map(ef, struct.unpack(_e_f, b''.join(_e_m[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (list(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
+    minele = min(min(eles[row]) for row in range(nrow))
+    maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     xy_den = max(maxx - minx, maxy - miny) / 2
@@ -11824,7 +11855,9 @@ class GPXTweakerWebInterfaceServer():
     else:
       den = z_den
       zfactor = 1
-    self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) * cor / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
+    _cor = cor / den
+    _minele =  minele * _cor + 1
+    self.HTML3DData = b''.join((struct.pack('L', ncol), struct.pack('f' * ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('L', nrow), struct.pack('f' * nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('L', ncol * nrow), struct.pack('f' * (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol))), struct.pack('L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('L%s' % ('ff' * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, self.Elevation.MapInfos.get('source', ''))
     if self.Mode == 'map':
       minrow, mincol = 1, 1
