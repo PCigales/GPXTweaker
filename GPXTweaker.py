@@ -1985,7 +1985,6 @@ class WebMercatorMap(WGS84WebMercator):
     if local_pattern:
       if not '{' in local_pattern:
         local_pattern = os.path.join(local_pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if infos.get('format') != 'image/hgt' else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
-    ti = time.time()
     if memory_store != None:
       for col in range(mincol, maxcol + 1):
         memory_store.append([None] * (maxrow + 1 - minrow))
