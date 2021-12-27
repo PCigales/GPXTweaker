@@ -11876,8 +11876,7 @@ class GPXTweakerWebInterfaceServer():
     nrow = len(lpy)
     ncol = len(lpx)
     ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
-    ti = time.time()
-    accel = False and ctypes.sizeof(ctypes.c_float if e_f[1] == 'f' else ctypes.c_short) == e_s
+    accel = ctypes.sizeof(ctypes.c_float if e_f[1] == 'f' else ctypes.c_short) == e_s
     if accel:
       if sys.byteorder == ('little' if e_f[0] == '<' else 'big'):
         _e_m = memoryview(self.Elevation.Map).cast(e_f[1])
@@ -11942,7 +11941,6 @@ class GPXTweakerWebInterfaceServer():
     declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor))
     self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2))
     self.log(0, '3dbuilt')
-    print(time.time() - ti)
     return True
 
   def _build_folders_exp(self):
