@@ -23,6 +23,8 @@ from io import BytesIO, StringIO
 import ctypes, ctypes.wintypes
 import subprocess
 import struct
+import array
+import sys
 import uuid
 import webbrowser
 import msvcrt
@@ -4075,7 +4077,7 @@ class GPXTweakerWebInterfaceServer():
   '      svg[id^=track] {\r\n' \
   '        position:absolute;\r\n' \
   '        pointer-events:none;\r\n' \
-  '        stroke-width:1.5;\r\n' \
+  '        stroke-width:2;\r\n' \
   '        stroke-linecap:round;\r\n' \
   '        stroke-linejoin:round;\r\n' \
   '      }\r\n' \
@@ -4083,7 +4085,6 @@ class GPXTweakerWebInterfaceServer():
   '        pointer-events:none;\r\n' \
   '        font-size:calc(24px * var(--scale));\r\n' \
   '        word-spacing:var(--wsp);\r\n' \
-  '        stroke:none;\r\n' \
   '      }\r\n' \
   '      button {\r\n' \
   '        border:none;\r\n' \
@@ -11874,12 +11875,23 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    _e_f = e_f[0] + e_f[1] * ncol
-    _e_m = self.Elevation.Map
-    ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e > min_valid_ele else 0
-    eles = list(list(map(ef, struct.unpack(_e_f, b''.join(_e_m[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (list(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
-    minele = min(min(eles[row]) for row in range(nrow))
-    maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
+    ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
+    accel = ctypes.sizeof(ctypes.c_float if e_f[1] == 'f' else ctypes.c_short) == e_s
+    if accel:
+      if sys.byteorder == ('little' if e_f[0] == '<' else 'big'):
+        _e_m = memoryview(self.Elevation.Map).cast(e_f[1])
+      else:
+        _e_m = array.array(e_f[1], self.Elevation.Map)
+        _e_m.byteswap()
+      eles = tuple(ef(_e_m[py + px]) for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx)
+      minele = min(eles)
+      maxele = max(max(eles), minele + 1)
+    else:
+      _e_f = e_f[0] + str(ncol) + e_f[1]
+      _e_m_ = self.Elevation.Map
+      eles = list(list(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (list(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
+      minele = min(min(eles[row]) for row in range(nrow))
+      maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)  
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     xy_den = max(maxx - minx, maxy - miny) / 2
@@ -11895,7 +11907,10 @@ class GPXTweakerWebInterfaceServer():
       zfactor = 1
     _cor = cor / den
     _minele =  minele * _cor + 1
-    self.HTML3DData = b''.join((struct.pack('L', ncol), struct.pack('f' * ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('L', nrow), struct.pack('f' * nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('L', ncol * nrow), struct.pack('f' * (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol))), struct.pack('L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('L%s' % ('ff' * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+    if accel:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles)), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+    else:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, self.Elevation.MapInfos.get('source', ''))
     if self.Mode == 'map':
       minrow, mincol = 1, 1
