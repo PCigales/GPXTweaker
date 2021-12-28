@@ -1682,7 +1682,7 @@ class WebMercatorMap(WGS84WebMercator):
           return
         b = ctypes.create_string_buffer(0x100000)
         while True:
-          if not kernel32.ReadFile(pipe_r, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
+          if not kernel32.ReadFile(p, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
             r = false
           elif nr.value > 0:
             o = o + b.raw[:nr.value]
@@ -3767,10 +3767,13 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
-            if self.server.Interface.Build3DHTML(mode3d, margin):
-              resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
-              _send_resp('text/html; charset=utf-8')
-            else:
+            try:
+              if self.server.Interface.Build3DHTML(mode3d, margin):
+                resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
+                _send_resp('text/html; charset=utf-8')
+              else:
+                _send_err_nf()
+            except:
               _send_err_nf()
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
