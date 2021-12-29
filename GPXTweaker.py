@@ -4074,18 +4074,19 @@ class GPXTweakerWebInterfaceServer():
   '      path {\r\n' \
   '        pointer-events:stroke;\r\n' \
   '        cursor:pointer;\r\n' \
+  '        stroke-width:2;\r\n' \
   '        fill:none;\r\n' \
   '        vector-effect:non-scaling-stroke;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] {\r\n' \
   '        position:absolute;\r\n' \
   '        pointer-events:none;\r\n' \
-  '        stroke-width:2;\r\n' \
   '        stroke-linecap:round;\r\n' \
   '        stroke-linejoin:round;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] text {\r\n' \
   '        pointer-events:none;\r\n' \
+  '        stroke-width:1;\r\n' \
   '        font-size:calc(24px * var(--scale));\r\n' \
   '        word-spacing:var(--wsp);\r\n' \
   '      }\r\n' \
