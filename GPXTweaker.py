@@ -9895,7 +9895,7 @@ class GPXTweakerWebInterfaceServer():
   '        font-size:70%;\r\n' \
   '      }\r\n' \
   '      form[id^=track] {\r\n' \
-  '        overflow-x:hidden;\r\n' \
+  '        overflow:hidden;\r\n' \
   '        margin-right: 4px;\r\n' \
   '      }\r\n' \
   '      input[id$=visible] {\r\n' \
