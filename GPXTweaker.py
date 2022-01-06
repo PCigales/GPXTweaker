@@ -4078,6 +4078,9 @@ class GPXTweakerWebInterfaceServer():
   '        fill:none;\r\n' \
   '        vector-effect:non-scaling-stroke;\r\n' \
   '      }\r\n' \
+  '      textPath {\r\n' \
+  '        vector-effect:non-scaling-stroke;\r\n' \
+  '      }\r\n' \
   '      svg[id^=track] {\r\n' \
   '        position:absolute;\r\n' \
   '        pointer-events:none;\r\n' \
