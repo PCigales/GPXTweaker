@@ -1010,14 +1010,10 @@ class TilesCache():
     except:
       return partial(self.WaitTile, None)
     self.log(2, 'get', row, col)
-    def _get_diag():
-      if not self.Closed:
-        self.WaitTile(self._getitem((row + 1, col + 1)))
+    pt = self._getitem(pos)
     if self.Size >= 10:
-      t = threading.Timer(0.01, _get_diag)
-      t.daemon = True
-      t.start()
-    return partial(self.WaitTile, self._getitem(pos))
+      self._getitem((row + 1, col + 1))
+    return partial(self.WaitTile, pt)
 
   def __setitem__(self, pos, pvalue):
     try:
@@ -4775,24 +4771,28 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
+  '        let tiles = handle.getElementsByTagName("img");\r\n' \
+  '        if (cleft == null) {\r\n' \
+  '          let i = tiles.length - 1;\r\n' \
+  '          while (i >= 0) {\r\n' \
+  '            handle.removeChild(tiles[i]);\r\n' \
+  '            i--;\r\n' \
+  '          }\r\n' \
+  '          tiles = [];\r\n' \
+  '        }\r\n' \
+  '        if (twidth == 0 || theight == 0) {return;}\r\n' \
   '        let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
   '        let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
   '        let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
   '        let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
-  '        let tiles = handle.getElementsByTagName("img");\r\n' \
   '        let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
   '        let rright = parseInt(vright / twidth + 1.5);\r\n' \
   '        let rtop = parseInt(vtop / theight - 1.5);\r\n' \
   '        let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
   '        if (cleft == null) {\r\n' \
-  '          let i = tiles.length - 1;\r\n' \
-  '            while (i >= 0) {\r\n' \
-  '              handle.removeChild(tiles[i]);\r\n' \
-  '              i--;\r\n' \
-  '            } \r\n' \
-  '          cleft = rleft - 1;\r\n' \
+  '          cleft = rright + 1;\r\n' \
   '          cright = rleft - 1;\r\n' \
-  '          ctop = rtop - 1;\r\n' \
+  '          ctop = rbottom + 1;\r\n' \
   '          cbottom = rtop - 1;\r\n' \
   '        }\r\n' \
   '        let i = tiles.length - 1;\r\n' \
@@ -4805,21 +4805,14 @@ class GPXTweakerWebInterfaceServer():
   '              handle.removeChild(tiles[i]);\r\n' \
   '            }\r\n' \
   '            i--;\r\n' \
-  '          } \r\n' \
-  '          for (let col=rleft; col<cleft; col++) {\r\n' \
-  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
   '          }\r\n' \
-  '          for (let col=cright+1; col<=rright; col++) {\r\n' \
-  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
+  '          for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '            for (let col=rleft; col<=rright; col++) {\r\n' \
+  '              if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col);}\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          cleft = rleft;\r\n' \
   '          cright = rright;\r\n' \
-  '          for (let row=rtop; row<ctop; row++) {\r\n' \
-  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
-  '          for (let row=cbottom + 1; row<=rbottom; row++) {\r\n' \
-  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
   '          ctop = rtop;\r\n' \
   '          cbottom = rbottom;\r\n' \
   '        }\r\n' \
