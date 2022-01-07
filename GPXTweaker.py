@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -38,9 +38,9 @@ FR_STRINGS = {
     'init': 'initialisation (taille: %s, fils: %s)',
     'get': 'tuile (%s, %s) demandée',
     'cancel': 'abandon de la fourniture de la tuile (%s, %s)',
-    'found': 'tuile (%s, %s) trouvée dans le cache en position %s',
-    'del': 'suppression de la position %s du cache',
-    'add': 'insertion de la tuile (%s, %s) dans le cache en position %s',
+    'found': 'tuile (%s, %s) trouvée dans le cache',
+    'del': 'réduction du cache',
+    'add': 'ajout de la tuile (%s, %s) dans le cache portant sa longueur à %s',
     'error': 'échec du chargement de la tuile (%s, %s)',
     'load': 'tuile (%s, %s) chargée',
     'configure': 'configuration (jeu de tuile: %s, matrice: %s)',
@@ -297,9 +297,9 @@ EN_STRINGS = {
     'init': 'initialization (size: %s, threads: %s)',
     'get': 'tile (%s, %s) requested',
     'cancel': 'tile (%s, %s) providing cancelled',
-    'found': 'tile (%s, %s) found in cache at position %s',
-    'del': 'deletion of position %s in cache',
-    'add': 'insertion of tile (%s, %s) in cache at position %s',
+    'found': 'tile (%s, %s) found in the cache',
+    'del': 'reduction of the cache',
+    'add': 'addition of the tile (%s, %s) to the cache bringing its length to %s',
     'error': 'failure of tile (%s, %s) loading',
     'load': 'tile (%s, %s) loaded',
     'configure': 'configuration (tiles set: %s, matrix: %s)',
@@ -884,11 +884,15 @@ class WGS84WebMercator():
 
 class TilesCache():
 
-  def __init__(self, size, threads):
+  def __init__(self, size, threads, preload=None):
     self.Size = size
     self.Threads = threads
-    self.InfosBuffer = []
-    self.Buffer = []
+    if preload is None:
+      self.Preload = size >= 10
+    else:
+      self.Preload = preload
+    self.InfosBuffer = {}
+    self.Buffer = {}
     self.BLock = threading.RLock()
     self.Generators = []
     self.GCondition = threading.Condition()
@@ -903,22 +907,22 @@ class TilesCache():
       row, col = pos
     except:
       return None
-    if not self.Infos or not self.Generators or self.Closed:
+    if self.Id is None or not self.Generators or self.Closed:
       self.log(2, 'cancel', row, col)
       return None
     with self.BLock:
-      infos = {**self.Infos, 'row': row, 'col': col}
+      rid = self.Id
     def _retrieveitem():
       nonlocal ptile
       nonlocal e
       with self.GCondition:
-        if infos != {**(self.Infos or {}), 'row': row, 'col': col}:
+        if rid != self.Id:
           ptile[0] = None
           e.set()
           self.log(2, 'cancel', row, col)
           return
         tgen = None
-        while not tgen:
+        while tgen is None:
           if self.Closed:
             ptile[0] = None
             e.set()
@@ -928,18 +932,18 @@ class TilesCache():
             if g[0]:
               tgen = g
               break
-          if not tgen:
+          if tgen is None:
             self.GCondition.wait()
-        if infos == {**(self.Infos or {}), 'row': row, 'col': col}:
+        if rid == self.Id:
           tgen[0] = False
-      if infos == {**(self.Infos or {}), 'row': row, 'col': col} and not tgen[0]:
+      if rid == self.Id and not tgen[0]:
         try:
           inf, tile = tgen[1](None, None, row, col).values()
           if inf != {**(self.Infos or {}), 'row': row, 'col': col}:
             tgen[1](close_connection=True)
             tile = None
             self.log(2, 'cancel', row, col)
-          elif tile == None:
+          elif tile is None:
             self.log(1, 'error', row, col)
           else:
             self.log(2, 'load', row, col)
@@ -962,25 +966,15 @@ class TilesCache():
       if self.Closed:
         self.log(2, 'cancel', row, col)
         return None
-      i = 0
-      while i < len(self.Buffer):
-        if self.Buffer[i][0] == infos:
-          if not self.Buffer[i][1][0]:
-            del self.Buffer[i]
-            self.log(2, 'del', i)
-          else:
-            ptile = self.Buffer[i][1]
-            del self.Buffer[i]
-            self[pos] = ptile
-            self.log(2, 'found', row, col, i)
-            break
-        else:
-          i += 1
-      if not ptile:
+      ptile = self.Buffer.pop((rid, pos), None)
+      if ptile is not None:
+        self[pos] = ptile
+        self.log(2, 'found', row, col)
+      else:
         e = threading.Event()
         ptile = [e]
         self[pos] = ptile
-        self.log(2, 'add', row, col, len(self.Buffer) - 1)
+        self.log(2, 'add', row, col, len(self.Buffer))
     if e:
       t = threading.Thread(target=_retrieveitem, daemon=True)
       t.start()
@@ -1010,67 +1004,64 @@ class TilesCache():
     except:
       return partial(self.WaitTile, None)
     self.log(2, 'get', row, col)
-    pt = self._getitem(pos)
-    if self.Size >= 10:
+    ptile = self._getitem(pos)
+    if self.Preload:
       self._getitem((row + 1, col + 1))
-    return partial(self.WaitTile, pt)
+    return partial(self.WaitTile, ptile)
 
-  def __setitem__(self, pos, pvalue):
+  def __setitem__(self, pos, ptile):
     try:
       row, col = pos
-      infos = {**self.Infos, 'row': row, 'col': col}
-      with self.BLock:
-        self.Buffer.append((infos, pvalue))
-        if len(self.Buffer) > self.Size:
-          del self.Buffer[0]
     except:
       return
+    with self.BLock:
+      self.Buffer[(self.Id, pos)] = ptile
+      if len(self.Buffer) > self.Size:
+        del self.Buffer[next(iter(self.Buffer))]
+        self.log(2, 'del')
 
-  def Configure(self, id, tile_generator_builder):
-    if self.Closed or not id:
+  def Configure(self, rid, tile_generator_builder):
+    if self.Closed or not rid:
       return False
-    self.log(1, 'configure', id[0], id[1])
+    self.log(1, 'configure', *rid)
     pconnections = list([None] for i in range(self.Threads))
     with self.GCondition:
       ind = 0
       for g in self.Generators:
         try:
-          if (self.Id or (None, None))[0] == id[0] and g[0]:
+          if (self.Id or (None, None))[0] == rid[0] and g[0]:
             pconnections[ind] = g[1](close_connection=None)
           else:
             g[1](close_connection=True)
         except:
           pass
         ind += 1
-      infos = {}
-      ifound = False
+      infos = self.InfosBuffer.get(rid, {})
+      ifound = bool(infos)
+      if ifound:
+        self.log(2, 'ifound', *rid)
       try:
-        for id_inf in self.InfosBuffer:
-          if id_inf[0] == id:
-            infos = id_inf[1]
-            ifound = True
-            self.log(2, 'ifound', id[0], id[1])
-            break
         gens = tile_generator_builder(number=self.Threads, infos_completed=infos, pconnections=pconnections)
         if not gens:
           raise
         self.Generators = list([True, g] for g in gens)
         self.Infos = infos
-        self.Id = id
+        self.Id = rid
         if not ifound:
-          self.InfosBuffer.append((id, infos))
+          self.InfosBuffer[rid] = infos
         self.GCondition.notify_all()
       except:
+        self.Id = None
         self.Infos = None
         self.GCondition.notify_all()
-        self.log(0, 'fail', id[0], id[1])
+        self.log(0, 'fail', *rid)
         return False
     return True
 
   def Close(self):
     self.Closed = True
     with self.BLock:
-      for infos, ptile in self.Buffer:
+      for ptile in self.Buffer.values():
         try:
           ptile[0].set()
         except:
@@ -2074,7 +2065,7 @@ class WebMercatorMap(WGS84WebMercator):
     minx, miny, maxx, maxy = map(float, self.MapInfos['bbox'].split(','))
     return (tr(int((x - minx) / self.MapResolution), round((maxx - minx) / self.MapResolution)), tr(int((maxy - y) / self.MapResolution), round((maxy - miny) / self.MapResolution)))
 
-  def SetTilesProvider(self, id, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
+  def SetTilesProvider(self, rid, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
     try:
       tile_generator_builder = partial(self.TileGenerator, infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
       if self.TilesInfos:
@@ -2082,7 +2073,7 @@ class WebMercatorMap(WGS84WebMercator):
       else:
         infos = None
       self.TilesInfos = {**infos_base, 'matrix': matrix}
-      if not self.Tiles.Configure(id, tile_generator_builder):
+      if not self.Tiles.Configure(rid, tile_generator_builder):
         self.TilesInfos = infos
         return False
       self.TilesInfos = self.Tiles.Infos
@@ -3914,9 +3905,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             try:
               for point in lpoints:
                 if point:
-                  id, lat, lon = point.split(',')
+                  id_p, lat, lon = point.split(',')
                   points.append((float(lat), float(lon)))
-                  ids.append(id)
+                  ids.append(id_p)
               lelevations = zip(ids, self.server.Interface.ElevationProvider(points))
               for id_ele in lelevations:
                 try:
