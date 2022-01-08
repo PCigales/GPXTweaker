@@ -9890,20 +9890,20 @@ class GPXTweakerWebInterfaceServer():
   '        margin-right: 4px;\r\n' \
   '      }\r\n' \
   '      input[id$=visible] {\r\n' \
-  '        appearance:none;\r\n' \
-  '        vertical-align:middle;\r\n' \
   '        margin-left:0.3%;\r\n' \
   '        margin-right:2.2%;\r\n' \
+  '        margin-top:0;\r\n' \
+  '        margin-bottom:0.3em;\r\n' \
   '        width:5.2%;\r\n' \
-  '        height:1.25em;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
   '        display:inline-block;\r\n' \
+  '        margin-bottom:0.3em;\r\n' \
+  '        width:92.3%;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '        width:92.3%;\r\n' \
-  '        min-height:1.35em;\r\n' \
+  '        line-height:1.15em;\r\n' \
   '      }\r\n' \
   '      input[type=color] {\r\n' \
   '        position:absolute;\r\n' \
@@ -9932,9 +9932,6 @@ class GPXTweakerWebInterfaceServer():
   '        height:1.35em;\r\n' \
   '        width:80%;\r\n' \
   '        font-size:100%;\r\n' \
-  '      }\r\n' \
-  '      label[id$=desc]+br {\r\n' \
-  '        margin-bottom: 1em;\r\n' \
   '      }\r\n' \
   '      span[id$=focus] {\r\n' \
   '        display:none;\r\n' \
@@ -11061,7 +11058,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
   '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
-  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label><br>\r\n' \
+  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label>\r\n' \
   '                    <input type="color" id="track%scolor" value="%s" onchange="track_color(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '                    <span id="track%sfocus">\r\n' \
   '                      <label for="track%sname">{jname}</label>\r\n' \
