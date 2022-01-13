@@ -432,7 +432,7 @@ EN_STRINGS = {
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
     'jfoldersw': 'Folders:',
-    'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: switch between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
+    'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
     'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to  lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
@@ -4204,7 +4204,7 @@ class GPXTweakerWebInterfaceServer():
   '      var eset = -1;\r\n' \
   '      var iset = -1;\r\n' \
   '      var dots_visible = false;\r\n' \
-  '      var scrollmode = 2;\r\n' \
+  '      var scrollmode = mode=="map"?0:2;\r\n' \
   '      var focused = "";\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n'
@@ -4863,11 +4863,6 @@ class GPXTweakerWebInterfaceServer():
   '          return "calc(" + v.toFixed(1) + "px / var(--scale))";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function scroll_view(x, y) {\r\n' \
-  '        hpx = viewpane.offsetWidth / 2 + (htopx - x) * zoom / tscale;\r\n' \
-  '        hpy = viewpane.offsetHeight / 2 + (y - htopy) * zoom / tscale;\r\n' \
-  '        reframe();\r\n' \
-  '      }\r\n' \
   '      function scroll_dview(dx, dy) {\r\n' \
   '        hpx += dx;\r\n' \
   '        hpy += dy;\r\n' \
@@ -4891,42 +4886,27 @@ class GPXTweakerWebInterfaceServer():
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
   '      }\r\n'
   HTML_SCROLL_TEMPLATE = \
-  '      function track_center(track=null) {\r\n' \
+  '      function scroll_to_track(track=null, center=true) {\r\n' \
   '        let b = track_boundaries(track);\r\n' \
   '        if (b == null) {\r\n' \
-  '          return null;\r\n' \
-  '        } else {\r\n' \
-  '          return [htopx + (b[0] + b[1]) / 2, htopy - (b[2] + b[3]) / 2];\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function scroll_to_track(track, center=true) {\r\n' \
-  '        if (center) {\r\n' \
-  '          let c = track_center(track);\r\n' \
-  '          if (c == null) {return;}\r\n' \
-  '          scroll_view(c[0], c[1]);\r\n' \
-  '        } else {\r\n' \
-  '          let b = track_boundaries(track);\r\n' \
-  '          if (b == null) {return;}\r\n' \
-  '          if (b[1] - b[0] > viewpane.offsetWidth * tscale / zoom) {\r\n' \
-  '            hpx = viewpane.offsetWidth / 2 - (b[0] + b[1]) / 2 * zoom / tscale;\r\n' \
-  '          } else {\r\n' \
-  '            hpx = Math.max(Math.min(hpx, - b[1] * zoom / tscale + viewpane.offsetWidth), - b[0] * zoom / tscale);\r\n' \
+  '          if (track == null) {\r\n' \
+  '            hpx = viewpane.offsetWidth / 2 + (htopx - defx) * zoom / tscale;\r\n' \
+  '            hpy = viewpane.offsetHeight / 2 + (defy - htopy) * zoom / tscale;\r\n' \
+  '            reframe();\r\n' \
   '          }\r\n' \
-  '          if (b[3] - b[2] > viewpane.offsetHeight * tscale / zoom) {\r\n' \
-  '            hpy = viewpane.offsetHeight / 2 - (b[2] + b[3]) / 2 * zoom / tscale;\r\n' \
-  '          } else {\r\n' \
-  '            hpy = Math.max(Math.min(hpy, - b[3] * zoom / tscale + viewpane.offsetHeight), - b[2] * zoom / tscale);\r\n' \
-  '          }\r\n' \
-  '          reframe();\r\n' \
+  '         return;\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function scroll_to_all() {\r\n' \
-  '        let c = track_center();\r\n' \
-  '        if (c == null) {\r\n' \
-  '          scroll_view(defx, defy);\r\n' \
+  '        if (center || b[1] - b[0] > viewpane.offsetWidth * tscale / zoom) {\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 - (b[0] + b[1]) / 2 * zoom / tscale;\r\n' \
   '        } else {\r\n' \
-  '          scroll_view(c[0], c[1]); \r\n' \
+  '          hpx = Math.max(Math.min(hpx, - b[1] * zoom / tscale + viewpane.offsetWidth), - b[0] * zoom / tscale);\r\n' \
   '        }\r\n' \
+  '        if (center || b[3] - b[2] > viewpane.offsetHeight * tscale / zoom) {\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 - (b[2] + b[3]) / 2 * zoom / tscale;\r\n' \
+  '        } else {\r\n' \
+  '          hpy = Math.max(Math.min(hpy, - b[3] * zoom / tscale + viewpane.offsetHeight), - b[2] * zoom / tscale);\r\n' \
+  '        }\r\n' \
+  '        reframe();\r\n' \
   '      }\r\n'
   HTML_SEGCALC_1_TEMPLATE = \
   '          let stat = Array(7).fill(0);\r\n' \
@@ -5339,7 +5319,6 @@ class GPXTweakerWebInterfaceServer():
   '        let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
   '        hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
   '        hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
-  '        reframe();\r\n' \
   '        if (focused && scrollmode > 0) {\r\n' \
   '          if (focused.indexOf("segment") >= 0) {\r\n' \
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
@@ -5348,6 +5327,8 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
   '          }\r\n' \
+  '        } else {\r\n' \
+  '          reframe();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function switch_tlock(resc=true) {\r\n' \
@@ -5451,6 +5432,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function scrollcross(sw=false) {\r\n' \
+  '        if (mode == "map") {return;}\r\n' \
   '        if (sw) {\r\n' \
   '          scrollmode = (scrollmode + 1) % 3;\r\n' \
   '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n' \
@@ -5631,7 +5613,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
   '          if (tlevel == 0) {rescale();}\r\n' \
   '        }\r\n' \
-  '        scroll_to_all();\r\n' \
+  '        scroll_to_track();\r\n' \
   '        if (prev_state != null) {\r\n' \
   '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
@@ -5742,7 +5724,7 @@ class GPXTweakerWebInterfaceServer():
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          sta = twidth == 0;\r\n' \
   '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_all();};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
@@ -5752,12 +5734,13 @@ class GPXTweakerWebInterfaceServer():
   '        let dt = prop_to_wmvalue(dot.style.top);\r\n' \
   '        let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '        if (center) {\r\n' \
-  '          scroll_view(htopx + dl, htopy - dt);\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 - dl * zoom / tscale;\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 - dt * zoom / tscale;\r\n' \
   '        } else {\r\n' \
   '          hpx = Math.max(Math.min(hpx, -o - dl * zoom / tscale + viewpane.offsetWidth), o - dl * zoom / tscale);\r\n' \
   '          hpy = Math.max(Math.min(hpy, -o - dt * zoom / tscale + viewpane.offsetHeight), o - dt * zoom / tscale);\r\n' \
-  '          reframe();\r\n' \
   '        }\r\n' \
+  '        reframe();\r\n' \
   '      }\r\n' \
   '      function track_boundaries(track=null) {\r\n' \
   '        let tracks = [];\r\n' \
@@ -7036,7 +7019,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused == "") {\r\n' \
   '          if (! window.confirm("{#jrconfirm#}")) {return;}\r\n' \
   '          whole = true;\r\n' \
-  '          scroll_to_all();\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '          segs = pts.children;\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          let seg_foc = document.getElementById(focused + "cont");\r\n' \
@@ -7428,7 +7411,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
   '          }\r\n' \
   '          if (segs.length == 0) {return;}\r\n' \
-  '          scroll_to_all();\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          seg_foc = document.getElementById(focused + "cont");\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
@@ -10047,7 +10030,7 @@ class GPXTweakerWebInterfaceServer():
   '            q = "auto=" + encodeURIComponent(((b[1] - b[0]) / viewpane.offsetWidth).toString() + "|" + ((b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_all();};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
