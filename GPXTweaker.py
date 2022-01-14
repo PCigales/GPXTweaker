@@ -8672,21 +8672,19 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          async function add_row_tile() {\r\n' \
   '            let row = crow;\r\n' \
-  '            if ((row - tminrow) * ncol <= ltiles + ##TILEMAXPENDING##) {\r\n' \
-  '              for (let col=tmincol; col<=tmaxcol; col++) {\r\n' \
-  '                let tile = new Image();\r\n' \
-  '                tile.crossOrigin = "anonymous";\r\n' \
-  '                tile.onload = (e) => {tload_cb(e.target, row, col);};\r\n' \
-  '                tile.onerror = (e) => {terr_cb();};\r\n' \
-  '                tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
-  '              }\r\n' \
-  '              if (crow < tmaxrow) {\r\n' \
-  '                crow++;\r\n' \
-  '                setTimeout(add_row_tile, 1);\r\n' \
-  '              }\r\n' \
-  '            } else {\r\n' \
+  '            if ((row - tminrow) * ncol > ltiles + ##TILEMAXPENDING##) {\r\n' \
   '              let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '              await prom;\r\n' \
+  '            }\r\n' \
+  '            for (let col=tmincol; col<=tmaxcol; col++) {\r\n' \
+  '              let tile = new Image();\r\n' \
+  '              tile.crossOrigin = "anonymous";\r\n' \
+  '              tile.onload = (e) => {tload_cb(e.target, row, col);};\r\n' \
+  '              tile.onerror = (e) => {terr_cb();};\r\n' \
+  '              tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
+  '            }\r\n' \
+  '            if (crow < tmaxrow) {\r\n' \
+  '              crow++;\r\n' \
   '              add_row_tile();\r\n' \
   '            }\r\n' \
   '          }\r\n' \
