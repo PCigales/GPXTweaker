@@ -1175,7 +1175,7 @@ class WebMercatorMap(WGS84WebMercator):
       resolution = max(lenx / maxwidth, leny / maxheight)
       infos['width'] = round(lenx / resolution)
       infos['height'] = round(leny / resolution)
-      infos['dpi'] = dpi or max(1, 185 / resolution / self.CRS_MPU)
+      infos['dpi'] = dpi or 90
     except:
       self.log(0, 'maplfail', infos)
       return False
@@ -7215,7 +7215,6 @@ class GPXTweakerWebInterfaceServer():
   '            let pt = document.getElementById(spans[p].id.slice(0, -5));\r\n' \
   '            if (! pt.checked || pt.value == "error") {\r\n' \
   '              positions.push(null);\r\n' \
-  'console.log("n");\r\n' \
   '            } else {\r\n' \
   '              let c = spans[p].children;\r\n' \
   '              positions.push(WGS84toWebMercator(parseFloat(c[1].value), parseFloat(c[4].value)));\r\n' \
@@ -7237,7 +7236,7 @@ class GPXTweakerWebInterfaceServer():
   '              pp = p;\r\n' \
   '              d_f = d_f + " " + dots[p];\r\n' \
   '              continue;\r\n' \
-  '            } \r\n' \
+  '            }\r\n' \
   '            let ndir = [0, 0];\r\n' \
   '            let dist = 0;\r\n' \
   '            let pr = pp;\r\n' \
