@@ -113,6 +113,7 @@ FR_STRINGS = {
     'jeasconfirm': 'Intervertir les données d\'élévation et d\'altitude du segment ?',
     'jeaconfirm': 'Intervertir les données d\'élévation et d\'altitude de la trace ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
+    'jfconfirm': 'Filtrer la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
@@ -129,7 +130,7 @@ FR_STRINGS = {
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
-    'jswitchpoints': 'afficher / masquer les points et points de cheminement',
+    'jswitchpoints': 'afficher / masquer les points et points de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de points&#13;&#10;+shift: filtrer le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du filtre altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective&#13;&#10;+ctrl: afficher / masquer les contrôles de la marge autour de la trace',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
@@ -163,6 +164,7 @@ FR_STRINGS = {
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
+    'jdfpanel': 'Plage filtrage points',
     'jfilterpanel1': 'Seuils calcul dénivelé',
     'jfilterpanel2': 'Plages calcul pente',
     'jfilterpanel3': 'Plages calcul vitesse',
@@ -217,6 +219,8 @@ FR_STRINGS = {
     'jmsegmentabsorb': 'Segments fusionnés',
     'jmsegmentreverse1': 'Segment inversé',
     'jmsegmentreverse2': 'Trace inversée',
+    'jmsegmentfilter1': 'Segment filtré: %s point(s) modifié(s)',
+    'jmsegmentfilter2': 'Trace filtrée: %s point(s) modifié(s)',
     'jmelevationsno': 'Aucune source d\'élévations configurée',
     'jmelevations1': 'Récupération des élévations en cours...',
     'jmelevations2': 'Élévation du point / point de cheminement mise à jour',
@@ -373,6 +377,7 @@ EN_STRINGS = {
     'jeasconfirm': 'Switch the elevation and altitude data of the segment ?',
     'jeaconfirm': 'Switch the elevation and altitude data of the track ?',
     'jrconfirm': 'Reverse the whole track ?',
+    'jfconfirm': 'Filter the whole track ?',
     'junload': 'Warning, the data will be lost !',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
@@ -389,7 +394,7 @@ EN_STRINGS = {
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
-    'jswitchpoints': 'show / hide the points and waypoints',
+    'jswitchpoints': 'show / hide the points and waypoints&#13;&#10;+ctrl: show / hide the controls of the filter of points&#13;&#10;+shift: filter the segment / the track (be careful, a high value of filter distance range or a repeated application of the filter will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt: open the 3D viewer in subjective view mode&#13;&#10;+ctrl: show / hide the controls of the margin around the track',
     'jascending': 'switch the sort order of the tracks to ascending',
@@ -423,6 +428,7 @@ EN_STRINGS = {
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
+    'jdfpanel': 'Range points filtering',
     'jfilterpanel1': 'Thresholds gain calcul',
     'jfilterpanel2': 'Ranges slope calcul',
     'jfilterpanel3': 'Ranges speed calcul',
@@ -477,6 +483,8 @@ EN_STRINGS = {
     'jmsegmentabsorb': 'Segments merged',
     'jmsegmentreverse1': 'Segment reversed',
     'jmsegmentreverse2': 'Track reversed',
+    'jmsegmentfilter1': 'Segment filtered: %s point(s) modified',
+    'jmsegmentfilter2': 'Track filtered: %s point(s) modified',
     'jmelevationsno': 'No elevations source configured',
     'jmelevations1': 'Retrieval of elevations in progress...',
     'jmelevations2': 'Elevation of the point / waypoint updated',
@@ -4128,7 +4136,7 @@ class GPXTweakerWebInterfaceServer():
   '        width:7em;\r\n' \
   '        height:1.7em;\r\n' \
   '      }\r\n' \
-  '      div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
+  '      div[id=dfpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
   '        display:none;\r\n' \
   '        position:absolute;\r\n' \
   '        top:calc(1.6em + 10px);\r\n' \
@@ -4149,7 +4157,7 @@ class GPXTweakerWebInterfaceServer():
   '        font-weight:normal;\r\n' \
   '        font-size:90%;\r\n' \
   '      }\r\n' \
-  '      span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
+  '      span[id=dfdist], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
   '        width:2em;\r\n' \
@@ -5098,6 +5106,7 @@ class GPXTweakerWebInterfaceServer():
   '            fp[p].style.display = "none";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        document.getElementById("dfpanel").style.display = "none";\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
@@ -5301,6 +5310,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '        }\r\n' \
+  '        document.getElementById("dfpanel").style.display = "none";\r\n' \
   '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
   '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
@@ -5496,6 +5506,15 @@ class GPXTweakerWebInterfaceServer():
   '        xhrep.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrep.send();\r\n' \
   '      }\r\n'
+  HTML_DFPANEL_TEMPLATE = \
+  '            <div id="dfpanel">\r\n' \
+  '              <span>{#jdfpanel#}</span>\r\n' \
+  '              <form id="dfform" autocomplete="off" onsubmit="return(false);">\r\n' \
+  '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
+  '                <span id="dfdist" style="left:4.5em;">10</span>\r\n' \
+  '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="10" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
   '            <div id="filterpanel1">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
@@ -5591,6 +5610,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          document.getElementById("tlock").style.fontWeight="500";\r\n' \
   '        }\r\n' \
+  '        document.getElementById("dfpanel").style.right = "calc(2vw + " + (mode=="tiles"?"15":"12.3") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -5644,7 +5664,9 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("v3dpmargin").value = parseFloat(prev_state[16]);\r\n' \
   '          document.getElementById("v3dsdist").innerHTML = prev_state[17];\r\n' \
   '          document.getElementById("v3dsmargin").value = parseFloat(prev_state[17]);\r\n' \
-  '          scrollmode = parseInt(prev_state[18]);\r\n' \
+  '          document.getElementById("dfdist").innerHTML = prev_state[18];\r\n' \
+  '          document.getElementById("dffilter").value = parseFloat(prev_state[18]);\r\n' \
+  '          scrollmode = parseInt(prev_state[19]);\r\n' \
   '        } else {\r\n' \
   '          eset = document.getElementById("eset").selectedIndex;\r\n' \
   '          if (document.getElementById("iset").name == "iset") {iset = document.getElementById("iset").selectedIndex;}\r\n' \
@@ -5653,7 +5675,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_PAGE_UNLOAD_TEMPLATE = \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + scrollmode.toString());\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString());\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -6108,7 +6130,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (whole && focused) {element_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        let ind = null;\r\n' \
   '        let histb = 0;\r\n' \
-  '        let inds=[];\r\n' \
+  '        let inds = [];\r\n' \
   '        if (! focused) {\r\n' \
   '          ind = hist[s].length - 1;\r\n' \
   '          if (hist[s][ind].length >= 3) {histb = hist[s][ind][2];}\r\n' \
@@ -6152,7 +6174,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        let segments= null;\r\n' \
+  '        let segments = null;\r\n' \
   '        let points = null;\r\n' \
   '        for (let ind_=0; ind_<inds.length; ind_++) {\r\n' \
   '          ind = inds[ind_];\r\n' \
@@ -6171,11 +6193,21 @@ class GPXTweakerWebInterfaceServer():
   '            let coord = (inputs[0].value != c[0]) || (inputs[1].value != c[1]);\r\n' \
   '            for (let i=0; i<inputs.length;i++) {inputs[i].value = c[i];}\r\n' \
   '            save_old();\r\n' \
-  '            point_edit(false, false, histb == 0, coord);\r\n' \
+  '            point_edit(false, false, histb == 0, coord && histb == 0);\r\n' \
   '            if (err && elt_foc.value != "error") {\r\n' \
   '              focused = "";\r\n' \
   '              dot_style(hist[s][ind][0], false);\r\n' \
   '              focused = hist[s][ind][0];\r\n' \
+  '            }\r\n' \
+  '            if (coord && histb != 0) {\r\n' \
+  '              if (segments == null) {\r\n' \
+  '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
+  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
+  '              }\r\n' \
+  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.slice(7, -4))] = true;\r\n' \
+  '              points[parseInt(focused.substring(5))] = elt_foc.checked && elt_foc.value != "error";\r\n' \
+  '              let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '              [dot.style.left, dot.style.top] = point_to_position(document.getElementById(focused + "desc"));\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (histb == 0) {\r\n' \
@@ -6183,13 +6215,13 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              hist[1-s].push([focused, "", histb]);\r\n' \
   '              if (segments == null) {\r\n' \
-  '                segments= Array(document.getElementById("pointsform").children.length).fill(false);\r\n' \
-  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(false);\r\n' \
+  '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
+  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
   '              }\r\n' \
   '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.substring(7))] = true;\r\n' \
-  '              points[parseInt(focused.substring(5))] = true;\r\n' \
+  '              points[parseInt(focused.substring(5))] = redo;\r\n' \
   '            }\r\n' \
-  '            document.getElementById(focused).checked = redo;\r\n' \
+  '            elt_foc.checked = redo;\r\n' \
   '            focused = "";\r\n' \
   '            point_checkbox(document.getElementById(hist[s][ind][0]), histb != 0);\r\n' \
   '            if (histb == 0) {dot_style(hist[s][ind][0], false)};\r\n' \
@@ -6207,9 +6239,10 @@ class GPXTweakerWebInterfaceServer():
   '            let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g);\r\n' \
   '            let d_r = "M0 0";\r\n' \
   '            for (let p=1; p<dots.length; p++) {\r\n' \
-  '              if (! points[parseInt(pt.id.substring(5))]) {\r\n' \
+  '              let pt_s = points[parseInt(pt.id.slice(5, -4))];\r\n' \
+  '              if (pt_s == null) {\r\n' \
   '                d_r = d_r + " " + dots[p];\r\n' \
-  '              } else if (redo) {\r\n' \
+  '              } else if (pt_s) {\r\n' \
   '                let np = WGS84_to_viewbox(parseFloat(document.getElementById(pt.id.replace("cont", "lat")).value), parseFloat(document.getElementById(pt.id.replace("cont", "lon")).value), track);\r\n' \
   '                d_r = d_r + " L" + np;\r\n' \
   '              } else {\r\n' \
@@ -6221,7 +6254,7 @@ class GPXTweakerWebInterfaceServer():
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (hist_b !=0) {segments_calc();}\r\n' \
+  '        if (histb != 0) {segments_calc();}\r\n' \
   '        let ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
   '        if (ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
@@ -7154,6 +7187,143 @@ class GPXTweakerWebInterfaceServer():
   '        segment_renum();\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
+  '      function segment_filter() {\r\n' \
+  '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '        let seg_foc = null;\r\n' \
+  '        let segs = [];\r\n' \
+  '        if (focused == "") {\r\n' \
+  '          if (! window.confirm("{#jfconfirm#}")) {return;}\r\n' \
+  '          let segms = document.getElementById("pointsform").children;\r\n' \
+  '          for (let s=0; s<segms.length; s++) {\r\n' \
+  '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
+  '          }\r\n' \
+  '          if (segs.length == 0) {return;}\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
+  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          if (! seg_foc.firstElementChild.checked) {return;}\r\n' \
+  '          seg_foc.scrollIntoView({block:"start"});\r\n' \
+  '          segs.push(seg_foc);\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
+  '        } else {return;}\r\n' \
+  '        let batch = ++hist_b;\r\n' \
+  '        let nmod = 0;\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          let positions = [];\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            let pt = document.getElementById(spans[p].id.slice(0, -5));\r\n' \
+  '            if (! pt.checked || pt.value == "error") {\r\n' \
+  '              positions.push(null);\r\n' \
+  'console.log("n");\r\n' \
+  '            } else {\r\n' \
+  '              let c = spans[p].children;\r\n' \
+  '              positions.push(WGS84toWebMercator(parseFloat(c[1].value), parseFloat(c[4].value)));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let track = document.getElementById("track" + segs[s].id.slice(7, -4));\r\n' \
+  '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
+  '          let d = path.getAttribute("d");\r\n' \
+  '          let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g).slice(1);\r\n' \
+  '          let d_f = "M0 0";\r\n' \
+  '          let dir = null;\r\n' \
+  '          let pp = null;\r\n' \
+  '          for (let p=0; p<positions.length; p++) {\r\n' \
+  '            if (positions[p] == null) {\r\n' \
+  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              continue;\r\n' \
+  '            }\r\n' \
+  '            if (pp == null) {\r\n' \
+  '              pp = p;\r\n' \
+  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              continue;\r\n' \
+  '            } \r\n' \
+  '            let ndir = [0, 0];\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let pr = pp;\r\n' \
+  '            for (let pn=p; pn<positions.length; pn++) {\r\n' \
+  '              if (positions[pn] == null) {continue;}\r\n' \
+  '              dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
+  '              pr = pn;\r\n' \
+  '              if (dist > drange) {break;}\r\n' \
+  '              ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
+  '              ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
+  '            }\r\n' \
+  '            let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
+  '            if (ndirl > 0) {\r\n' \
+  '              ndir[0] = ndir[0] / ndirl;\r\n' \
+  '              ndir[1] = ndir[1] / ndirl;\r\n' \
+  '              if (dir == null) {dir = ndir;}\r\n' \
+  '              let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
+  '              let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
+  '              if (pdirl > 0) {\r\n' \
+  '                let pmod = false;\r\n' \
+  '                pdir[0] = pdir[0] / pdirl;\r\n' \
+  '                pdir[1] = pdir[1] / pdirl;\r\n' \
+  '                let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
+  '                let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
+  '                let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
+  '                let pcos = dir[0] * pdir[0] + dir[1] * pdir[1];\r\n' \
+  '                if (nsin * psin < 0) {\r\n' \
+  '                  if (pcos < 0) {\r\n' \
+  '                    if (ncos < 0) {\r\n' \
+  '                      pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                      dir[0] = -dir[0];\r\n' \
+  '                      dir[1] = -dir[1];\r\n' \
+  '                    } else {\r\n' \
+  '                      pdirl = 0;\r\n' \
+  '                    }\r\n' \
+  '                  }\r\n' \
+  '                  positions[p][0] = positions[pp][0] + pdirl * dir[0];\r\n' \
+  '                  positions[p][1] = positions[pp][1] + pdirl * dir[1];\r\n' \
+  '                  pmod = true;\r\n' \
+  '                } else if (ncos > pcos) {\r\n' \
+  '                  pdirl = Math.max(0, pdirl * (pdir[0] * ndir[0] + pdir[1] * ndir[1]));\r\n' \
+  '                  positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
+  '                  positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
+  '                  pmod = true;\r\n' \
+  '                  dir[0] = ndir[0];\r\n' \
+  '                  dir[1] = ndir[1];\r\n' \
+  '                } else {\r\n' \
+  '                  dir[0] = pdir[0];\r\n' \
+  '                  dir[1] = pdir[1];\r\n' \
+  '                }\r\n' \
+  '                if (pmod) {\r\n' \
+  '                  let [flat, flon] = WebMercatortoWGS84(positions[p][0], positions[p][1]);\r\n' \
+  '                  focused = spans[p].id.slice(0, -5);\r\n' \
+  '                  save_old();\r\n' \
+  '                  spans[p].children[1].value = flat.toFixed(6);\r\n' \
+  '                  spans[p].children[4].value = flon.toFixed(6);\r\n' \
+  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  save_old();\r\n' \
+  '                  for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
+  '                    if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
+  '                  }\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
+  '                  let dot = document.getElementById(spans[p].id.slice(0,-5).replace("point", "dot"));\r\n' \
+  '                  let pt = document.getElementById(spans[p].id.replace("focus", "desc"));\r\n' \
+  '                  [dot.style.left, dot.style.top] = point_to_position(pt);\r\n' \
+  '                  let np = WGS84_to_viewbox(flat, flon, track);\r\n' \
+  '                  d_f = d_f + " L" + np;\r\n' \
+  '                  nmod++;\r\n' \
+  '                } else {\r\n' \
+  '                  d_f = d_f + " " + dots[p];\r\n' \
+  '                }\r\n' \
+  '              } else {\r\n' \
+  '                d_f = d_f + " " + dots[p];\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              d_f = d_f + " " + dots[p];\r\n' \
+  '            }\r\n' \
+  '            pp = p;\r\n' \
+  '          }\r\n' \
+  '          if (d_f.substring(1).indexOf("M") < 0) {d_f = d_f.replace("L", "M");}\r\n' \
+  '          path.setAttribute("d", d_f);\r\n' \
+  '        }\r\n' \
+  '        if (seg_foc != null) {focused = seg_foc.id.slice(0, -4);} else {focused = "";}\r\n' \
+  '        segments_calc(...segs);\r\n' \
+  '        show_msg((seg_foc!=null?"{#jmsegmentfilter1#}":"{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
+  '      }\r\n' \
   '      function error_ecb() {\r\n' \
   '      } \r\n' \
   '      function load_ecb(t, pts) {\r\n' \
@@ -7501,7 +7671,7 @@ class GPXTweakerWebInterfaceServer():
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
   '                    segments_calc(segs[s]);\r\n' \
-  '                    show_msg("Horodatage du point mis à jour", 2);\r\n' \
+  '                    show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
   '                  pm_b = null;\r\n' \
@@ -7538,7 +7708,7 @@ class GPXTweakerWebInterfaceServer():
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"Horodatages du segment mis à jour":"Horodatages de la trace mis à jour");\r\n' \
+  '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"{#jmdatetime2#}":"{#jmdatetime3#}");\r\n' \
   '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
   '        segments_calc(...segs);\r\n' \
@@ -7550,6 +7720,15 @@ class GPXTweakerWebInterfaceServer():
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
   '        spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
+  '      }\r\n' \
+  '      function switch_dfpanel() {\r\n' \
+  '        if (document.getElementById("dfpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("dfpanel").style.display = "initial";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("dfpanel").style.display = "none";\r\n' \
+  '        }\r\n' \
+  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
+  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
   '        graph_ip = [];\r\n' \
   '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
@@ -7977,7 +8156,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_DFPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -10857,7 +11036,7 @@ class GPXTweakerWebInterfaceServer():
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_DFPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
