@@ -5511,8 +5511,8 @@ class GPXTweakerWebInterfaceServer():
   '              <span>{#jdfpanel#}</span>\r\n' \
   '              <form id="dfform" autocomplete="off" onsubmit="return(false);">\r\n' \
   '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
-  '                <span id="dfdist" style="left:4.5em;">10</span>\r\n' \
-  '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="10" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <span id="dfdist" style="left:4.5em;">20</span>\r\n' \
+  '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="20" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
