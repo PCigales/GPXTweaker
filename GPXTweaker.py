@@ -113,7 +113,7 @@ FR_STRINGS = {
     'jeasconfirm': 'Intervertir les données d\'élévation et d\'altitude du segment ?',
     'jeaconfirm': 'Intervertir les données d\'élévation et d\'altitude de la trace ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
-    'jfconfirm': 'Filtrer la trace dans son ensemble ?',
+    'jfconfirm': 'Lisser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
@@ -130,7 +130,7 @@ FR_STRINGS = {
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
-    'jswitchpoints': 'afficher / masquer les points et points de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de points&#13;&#10;+shift: filtrer le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du filtre altèrera probablement la trace)',
+    'jswitchpoints': 'afficher / masquer les points et points de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective&#13;&#10;+ctrl: afficher / masquer les contrôles de la marge autour de la trace',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
@@ -164,7 +164,7 @@ FR_STRINGS = {
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
-    'jdfpanel': 'Plage filtrage points',
+    'jdfpanel': 'Plage lissage points',
     'jfilterpanel1': 'Seuils calcul dénivelé',
     'jfilterpanel2': 'Plages calcul pente',
     'jfilterpanel3': 'Plages calcul vitesse',
@@ -219,8 +219,8 @@ FR_STRINGS = {
     'jmsegmentabsorb': 'Segments fusionnés',
     'jmsegmentreverse1': 'Segment inversé',
     'jmsegmentreverse2': 'Trace inversée',
-    'jmsegmentfilter1': 'Segment filtré: %s point(s) modifié(s)',
-    'jmsegmentfilter2': 'Trace filtrée: %s point(s) modifié(s)',
+    'jmsegmentfilter1': 'Segment lissé: %s point(s) déplacé(s)',
+    'jmsegmentfilter2': 'Trace lissée: %s point(s) déplacé(s)',
     'jmelevationsno': 'Aucune source d\'élévations configurée',
     'jmelevations1': 'Récupération des élévations en cours...',
     'jmelevations2': 'Élévation du point / point de cheminement mise à jour',
@@ -377,7 +377,7 @@ EN_STRINGS = {
     'jeasconfirm': 'Switch the elevation and altitude data of the segment ?',
     'jeaconfirm': 'Switch the elevation and altitude data of the track ?',
     'jrconfirm': 'Reverse the whole track ?',
-    'jfconfirm': 'Filter the whole track ?',
+    'jfconfirm': 'Smooth the whole track ?',
     'junload': 'Warning, the data will be lost !',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
@@ -394,7 +394,7 @@ EN_STRINGS = {
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
-    'jswitchpoints': 'show / hide the points and waypoints&#13;&#10;+ctrl: show / hide the controls of the filter of points&#13;&#10;+shift: filter the segment / the track (be careful, a high value of filter distance range or a repeated application of the filter will probably alter the track)',
+    'jswitchpoints': 'show / hide the points and waypoints&#13;&#10;+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt: open the 3D viewer in subjective view mode&#13;&#10;+ctrl: show / hide the controls of the margin around the track',
     'jascending': 'switch the sort order of the tracks to ascending',
@@ -428,7 +428,7 @@ EN_STRINGS = {
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
-    'jdfpanel': 'Range points filtering',
+    'jdfpanel': 'Range points smoothing',
     'jfilterpanel1': 'Thresholds gain calcul',
     'jfilterpanel2': 'Ranges slope calcul',
     'jfilterpanel3': 'Ranges speed calcul',
@@ -483,8 +483,8 @@ EN_STRINGS = {
     'jmsegmentabsorb': 'Segments merged',
     'jmsegmentreverse1': 'Segment reversed',
     'jmsegmentreverse2': 'Track reversed',
-    'jmsegmentfilter1': 'Segment filtered: %s point(s) modified',
-    'jmsegmentfilter2': 'Track filtered: %s point(s) modified',
+    'jmsegmentfilter1': 'Segment smoothed: %s point(s) moved',
+    'jmsegmentfilter2': 'Track smoothed: %s point(s) moved',
     'jmelevationsno': 'No elevations source configured',
     'jmelevations1': 'Retrieval of elevations in progress...',
     'jmelevations2': 'Elevation of the point / waypoint updated',
@@ -6000,8 +6000,12 @@ class GPXTweakerWebInterfaceServer():
   '            let points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '            if (points != null) {\r\n' \
   '              for (let point of points) {\r\n' \
-  '                let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '                d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '                if (point[0] != "m") {\r\n' \
+  '                  let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                  d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '                } else {\r\n' \
+  '                  d = d + " " + point;\r\n' \
+  '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            path.setAttribute("d", d);\r\n' \
@@ -6017,7 +6021,7 @@ class GPXTweakerWebInterfaceServer():
   '      function WGS84_to_viewbox(lat, lon, track) {\r\n' \
   '        let [x, y] = WGS84toWebMercator(lat, lon);\r\n' \
   '        rebase_track(x, y, track);\r\n' \
-  '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1)\r\n' \
+  '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
   '      }\r\n' \
   '      function point_desc(ptspan = null) {\r\n' \
   '        if (! ptspan) {\r\n' \
@@ -6218,7 +6222,7 @@ class GPXTweakerWebInterfaceServer():
   '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
   '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
   '              }\r\n' \
-  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.substring(7))] = true;\r\n' \
+  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.slice(7, -4))] = true;\r\n' \
   '              points[parseInt(focused.substring(5))] = redo;\r\n' \
   '            }\r\n' \
   '            elt_foc.checked = redo;\r\n' \
@@ -6233,6 +6237,8 @@ class GPXTweakerWebInterfaceServer():
   '          for (let s=0; s<segments.length; s++) {\r\n' \
   '            if (! segments[s]) {continue;}\r\n' \
   '            let track = document.getElementById("track" + s.toString());\r\n' \
+  '            let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '            let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
   '            let path = document.getElementById("path" + s.toString());\r\n' \
   '            let pt = document.getElementById("segment" + s.toString() + "cont").firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
   '            let d = path.getAttribute("d");\r\n' \
@@ -6243,8 +6249,8 @@ class GPXTweakerWebInterfaceServer():
   '              if (pt_s == null) {\r\n' \
   '                d_r = d_r + " " + dots[p];\r\n' \
   '              } else if (pt_s) {\r\n' \
-  '                let np = WGS84_to_viewbox(parseFloat(document.getElementById(pt.id.replace("cont", "lat")).value), parseFloat(document.getElementById(pt.id.replace("cont", "lon")).value), track);\r\n' \
-  '                d_r = d_r + " L" + np;\r\n' \
+  '                let [x, y] = WGS84toWebMercator(parseFloat(document.getElementById(pt.id.replace("cont", "lat")).value), parseFloat(document.getElementById(pt.id.replace("cont", "lon")).value));\r\n' \
+  '                d_r = d_r + " L" + (x - tl).toFixed(1) + " " + (tt - y).toFixed(1);\r\n' \
   '              } else {\r\n' \
   '                d_r = d_r + " m0 0";\r\n' \
   '              }\r\n' \
@@ -7221,6 +7227,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          let track = document.getElementById("track" + segs[s].id.slice(7, -4));\r\n' \
+  '          let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '          let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
   '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
   '          let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g).slice(1);\r\n' \
@@ -7228,6 +7236,10 @@ class GPXTweakerWebInterfaceServer():
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
   '          for (let p=0; p<positions.length; p++) {\r\n' \
+  '            let foc = spans[p].id.slice(0, -5);\r\n' \
+  '            for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
+  '              if (hist[1][i][0] == foc) {hist[1].splice(i, 1);}\r\n' \
+  '            }\r\n' \
   '            if (positions[p] == null) {\r\n' \
   '              d_f = d_f + " " + dots[p];\r\n' \
   '              continue;\r\n' \
@@ -7250,15 +7262,15 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
   '            if (ndirl > 0) {\r\n' \
-  '              ndir[0] = ndir[0] / ndirl;\r\n' \
-  '              ndir[1] = ndir[1] / ndirl;\r\n' \
+  '              ndir[0] /= ndirl;\r\n' \
+  '              ndir[1] /= ndirl;\r\n' \
   '              if (dir == null) {dir = ndir;}\r\n' \
   '              let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
   '              let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
   '              if (pdirl > 0) {\r\n' \
   '                let pmod = false;\r\n' \
-  '                pdir[0] = pdir[0] / pdirl;\r\n' \
-  '                pdir[1] = pdir[1] / pdirl;\r\n' \
+  '                pdir[0] /= pdirl;\r\n' \
+  '                pdir[1] /= pdirl;\r\n' \
   '                let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
   '                let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
   '                let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
@@ -7281,29 +7293,21 @@ class GPXTweakerWebInterfaceServer():
   '                  positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
   '                  positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
   '                  pmod = true;\r\n' \
-  '                  dir[0] = ndir[0];\r\n' \
-  '                  dir[1] = ndir[1];\r\n' \
+  '                  dir = ndir;\r\n' \
   '                } else {\r\n' \
-  '                  dir[0] = pdir[0];\r\n' \
-  '                  dir[1] = pdir[1];\r\n' \
+  '                  dir = pdir;\r\n' \
   '                }\r\n' \
   '                if (pmod) {\r\n' \
-  '                  let [flat, flon] = WebMercatortoWGS84(positions[p][0], positions[p][1]);\r\n' \
-  '                  focused = spans[p].id.slice(0, -5);\r\n' \
+  '                  focused = foc;\r\n' \
   '                  save_old();\r\n' \
-  '                  spans[p].children[1].value = flat.toFixed(6);\r\n' \
-  '                  spans[p].children[4].value = flon.toFixed(6);\r\n' \
+  '                  [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
   '                  hist[0].push([focused, foc_old, batch]);\r\n' \
   '                  save_old();\r\n' \
-  '                  for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '                    if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '                  }\r\n' \
   '                  point_edit(false, false, false, false);\r\n' \
-  '                  let dot = document.getElementById(spans[p].id.slice(0,-5).replace("point", "dot"));\r\n' \
-  '                  let pt = document.getElementById(spans[p].id.replace("focus", "desc"));\r\n' \
-  '                  [dot.style.left, dot.style.top] = point_to_position(pt);\r\n' \
-  '                  let np = WGS84_to_viewbox(flat, flon, track);\r\n' \
-  '                  d_f = d_f + " L" + np;\r\n' \
+  '                  let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '                  dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
+  '                  dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
+  '                  d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
   '                  nmod++;\r\n' \
   '                } else {\r\n' \
   '                  d_f = d_f + " " + dots[p];\r\n' \
@@ -7995,8 +7999,12 @@ class GPXTweakerWebInterfaceServer():
   '                d_ = "";\r\n' \
   '                if (points != null) {\r\n' \
   '                  for (let point of points) {\r\n' \
-  '                    let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '                    d_ = d_ + " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
+  '                    if (point[0] != "m") {\r\n' \
+  '                      let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                      d_ = d_ + " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
+  '                    } else {\r\n' \
+  '                      d_ = d_ + " " + point;\r\n' \
+  '                    }\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '                if (i == 0) {d_left = "M0 0" + d_;} else {d_right = d_;}\r\n' \
