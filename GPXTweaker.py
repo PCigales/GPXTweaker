@@ -1,4 +1,4 @@
-from functools import partial
+﻿from functools import partial
 import urllib.parse
 import socket
 import selectors
@@ -148,6 +148,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
+    'jswitchphotos': 'afficher / masquer les photos&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
@@ -165,6 +166,8 @@ FR_STRINGS = {
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
     'jdfpanel': 'Plage lissage points',
+    'jphpanel': 'Taille des miniatures',
+    'jpixels': '&nbsp;pixels',
     'jfilterpanel1': 'Seuils calcul dénivelé',
     'jfilterpanel2': 'Plages calcul pente',
     'jfilterpanel3': 'Plages calcul vitesse',
@@ -176,7 +179,7 @@ FR_STRINGS = {
     'jfoldersw': 'Répertoires:',
     'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo pour l\'afficher en grand puis clic gauche pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -242,6 +245,9 @@ FR_STRINGS = {
     'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
     'jm3dviewer2': 'Visionneuse 3D démarrée',
     'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
+    'jmphotos1': 'Récupération des données des photos en cours...',
+    'jmphotos2': 'Récupération des données des photos effectuée',
+    'jmphotos3': 'Échec de la récupération des données des photos',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -413,6 +419,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
+    'jswitchphotos': 'show / hide the photos&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
@@ -430,6 +437,8 @@ EN_STRINGS = {
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
     'jdfpanel': 'Range points smoothing',
+    'jphpanel': 'Thumbnails size',
+    'jpixels': '&nbsp;pixels',
     'jfilterpanel1': 'Thresholds gain calcul',
     'jfilterpanel2': 'Ranges slope calcul',
     'jfilterpanel3': 'Ranges speed calcul',
@@ -441,7 +450,7 @@ EN_STRINGS = {
     'jfoldersw': 'Folders:',
     'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
-    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
+    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo to display it big then left click to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
     'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to  lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -504,6 +513,9 @@ EN_STRINGS = {
     'jmsave1': 'Backup in progress...',
     'jmsave2': 'Backup completed',
     'jmsave3': 'Failure of the backup',
+    'jmphotos1': 'Retrieval of the data of the photos in progress...',
+    'jmphotos2': 'Retrieval of the data of the photos completed',
+    'jmphotos3': 'Failure of the retrieval of the data of the photos',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -3486,6 +3498,146 @@ class WebMapping():
       return None
 
 
+class GeotaggedPhotos():
+
+  def __init__(self, folders, box=None):
+    self.Folders = folders
+    self.Box = box
+    self.DLock = threading.Lock()
+    self.Data = None
+    self.Uris = None
+
+  @staticmethod
+  def _read_data(image):
+    try:
+      f = open(image, 'rb')
+    except:
+      return None
+    try:
+      if f.read(2) != b'\xff\xd8':
+        raise
+      t = f.read(2)
+      if t == b'\xff\xe0':
+        l = struct.unpack('!H', f.read(2))[0]
+        f.read(l - 2)
+        t = f.read(2)
+      if t != b'\xff\xe1':
+        raise
+      l = struct.unpack('!H', f.read(2))[0]
+      if f.read(6) != b'Exif\x00\x00':
+        raise
+      ref = f.tell()
+      ba = {b'MM': '>', b'II': '<'}.get(f.read(2))
+      if ba is None:
+        raise
+      if f.read(2) != (b'\x00\x2a' if ba == '>' else b'\x2a\x00') :
+        raise
+      f.read(struct.unpack(ba + 'I', f.read(4))[0] - 8)
+      ne = struct.unpack(ba + 'H', f.read(2))[0]
+      if ne == 0:
+        raise
+      gps = None
+      sifd = None
+      orientation = 1
+      for i in range(ne):
+        e = f.read(12)
+        t = struct.unpack(ba + 'H', e[0:2])[0]
+        if t == 0x8825:
+          if struct.unpack(ba + 'H', e[2:4])[0] != 4 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          gps = ref + struct.unpack(ba + 'I', e[8:12])[0]
+        elif t == 0x8769:
+          if struct.unpack(ba + 'H', e[2:4])[0] != 4 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          sifd = ref + struct.unpack(ba + 'I', e[8:12])[0]
+        elif t == 0x0112:
+          if struct.unpack(ba + 'H', e[2:4])[0] != 3 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          orientation = struct.unpack(ba + 'H', e[8:10])[0]
+      if gps is None or sifd is None:
+        raise
+      f.seek(gps)
+      ne = struct.unpack(ba + 'H', f.read(2))[0]
+      if ne == 0:
+        raise
+      lref = [None] * 2
+      lpos = [None] * 2
+      for i in range(ne):
+        e = f.read(12)
+        t = struct.unpack(ba + 'H', e[0:2])[0]
+        if t in (0x0001, 0x0003):
+          if struct.unpack(ba + 'H', e[2:4])[0] != 2 or struct.unpack(ba + 'I', e[4:8])[0] != 2:
+            raise
+          lref[(t - 1) // 2] = e[8:10].strip(b'\x00').upper().decode()
+        if t in (0x0002, 0x0004):
+          if struct.unpack(ba + 'H', e[2:4])[0] != 5 or struct.unpack(ba + 'I', e[4:8])[0] != 3:
+            raise
+          lpos[(t - 2) // 2] = struct.unpack(ba + 'I', e[8:12])[0] + ref
+      if None in lref or None in lpos:
+        raise
+      f.seek(lpos[0])
+      l = struct.unpack(ba + 'IIIIII', f.read(24))
+      lat = round((-1 if lref[0] == 'S' else 1) * sum(n / d * u for n, d, u in zip(l[::2], l[1::2], (3600, 60, 1))), 3) / 3600
+      if lat < -90 or lat > 90:
+        raise
+      f.seek(lpos[1])
+      l = struct.unpack(ba + 'IIIIII', f.read(24))
+      lon = 180 - (180 - (round((-1 if lref[1] == 'W' else 1) * sum(n / d * u for n, d, u in zip(l[::2], l[1::2], (3600, 60, 1))), 3)) / 3600 ) % 360
+      f.seek(sifd)
+      ne = struct.unpack(ba + 'H', f.read(2))[0]
+      if ne == 0:
+        raise
+      dimensions = [None] * 2
+      for i in range(ne):
+        e = f.read(12)
+        t = struct.unpack(ba + 'H', e[0:2])[0]
+        if t in (0xa002, 0xa003):
+          df = {3:'H', 4:'I'}.get(struct.unpack(ba + 'H', e[2:4])[0])
+          if df is None or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          dimensions[t - 0xa002] = struct.unpack(ba + df, e[8:(10 if df == 'H' else 12)])[0]
+      if None in dimensions or 0 in dimensions:
+        raise
+    except:
+      return None
+    finally:
+      f.close()
+    return *WGS84WebMercator.WGS84toWebMercator(lat, lon), (dimensions[1] / dimensions[0] if orientation in (6, 8) else dimensions[0] / dimensions[1])
+
+  def GetData(self):
+    with self.DLock:
+      if self.Data is None:
+        self.Uris = []
+        uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() in ('jpg', 'jpeg'))
+        datas = []
+        for u in uris:
+          data = self._read_data(u)
+          if data is not None:
+            if self.Box is not None:
+              if data[0] < self.Box[0] or data[0] > self.Box[2] or data[1] < self.Box[1] or data[1] > self.Box[3]:
+                continue
+            self.Uris.append(u)
+            datas.extend(data)
+        if len(datas) > 0:
+          self.Data = struct.pack('=%dd' % len(datas), *datas)
+        else:
+          self.Data = b''
+    return self.Data
+
+  def GetUris(self):
+    if self.Uris is None:
+      return b''
+    return ('|'.join(self.Uris)).encode('utf-8')
+
+  def GetPhoto(self, ind):
+    try:
+      f = open(self.Uris[ind], 'rb')
+    except:
+      return None
+    photo = f.read();
+    f.close()
+    return photo
+
 class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
 
   allow_reuse_address = True
@@ -3791,6 +3943,32 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             try:
               resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('%s&%s&%s&%s&%s' % p[1] for p in seg) for seg in tr[1].Pts) for tr in self.server.Interface.Tracks).encode('utf-8')
               _send_resp('application/octet-stream')
+            except:
+              _send_err_fail()
+          elif req.path.lower() == '/photos/data':
+            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+              _send_err_bad()
+              continue
+            try:
+              resp_body = self.server.Interface.Photos.GetData()
+              _send_resp('application/octet-stream')
+            except:
+              _send_err_fail()
+              raise
+          elif req.path.lower() == '/photos/uris':
+            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+              _send_err_bad()
+              continue
+            try:
+              resp_body = self.server.Interface.Photos.GetUris()
+              _send_resp('application/octet-stream')
+            except:
+              _send_err_fail()
+          elif req.path.lower()[:7] == '/photo?':
+            try:
+              pind = int(req.path.split('?')[1])
+              resp_body = self.server.Interface.Photos.GetPhoto(pind)
+              _send_resp('image/jpeg')
             except:
               _send_err_fail()
           elif req.path.lower()[:7] == '/detach':
@@ -4138,7 +4316,7 @@ class GPXTweakerWebInterfaceServer():
   '        width:7em;\r\n' \
   '        height:1.7em;\r\n' \
   '      }\r\n' \
-  '      div[id=dfpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
+  '      div[id=dfpanel], div[id=phpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
   '        display:none;\r\n' \
   '        position:absolute;\r\n' \
   '        top:calc(1.6em + 10px);\r\n' \
@@ -4159,7 +4337,7 @@ class GPXTweakerWebInterfaceServer():
   '        font-weight:normal;\r\n' \
   '        font-size:90%;\r\n' \
   '      }\r\n' \
-  '      span[id=dfdist], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
+  '      span[id=dfdist], span[id=phsize], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
   '        width:2em;\r\n' \
@@ -4217,7 +4395,8 @@ class GPXTweakerWebInterfaceServer():
   '      var scrollmode = mode=="map"?0:2;\r\n' \
   '      var focused = "";\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
-  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n'
+  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+  '      var xhr_ongoing = 0;\r\n'
   HTML_GPUSTATS_TEMPLATE = \
   '      class GPUStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
@@ -4673,7 +4852,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
-  '            window.stop();\r\n' \
+  '            if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '            tlevel = nlevel;\r\n' \
   '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '            cleft = null;\r\n' \
@@ -4682,7 +4861,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        window.stop();\r\n' \
+  '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        if (nset == null) {\r\n' \
   '          if (nlevel == null) {\r\n' \
@@ -4902,8 +5081,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (track == null) {\r\n' \
   '            hpx = viewpane.offsetWidth / 2 + (htopx - defx) * zoom / tscale;\r\n' \
   '            hpy = viewpane.offsetHeight / 2 + (defy - htopy) * zoom / tscale;\r\n' \
-  '            reframe();\r\n' \
   '          }\r\n' \
+  '         reframe();\r\n' \
   '         return;\r\n' \
   '        }\r\n' \
   '        if (center || b[1] - b[0] > viewpane.offsetWidth * tscale / zoom) {\r\n' \
@@ -5109,6 +5288,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.display = "none";\r\n' \
+  '        document.getElementById("phpanel").style.display = "none";\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
@@ -5313,6 +5493,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.display = "none";\r\n' \
+  '        document.getElementById("phpanel").style.display = "none";\r\n' \
   '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
   '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
@@ -5492,6 +5673,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function load_epcb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          document.getElementById("eset").selectedIndex = eset;\r\n' \
   '          return;\r\n' \
@@ -5499,6 +5681,7 @@ class GPXTweakerWebInterfaceServer():
   '        eset = document.getElementById("eset").selectedIndex;\r\n' \
   '      } \r\n' \
   '      function error_epcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("eset").selectedIndex = eset;\r\n' \
   '      } \r\n' \
   '      function switch_elevations(eset) {\r\n' \
@@ -5506,15 +5689,24 @@ class GPXTweakerWebInterfaceServer():
   '        xhrep.onload = (e) => {load_epcb(e.target)};\r\n' \
   '        xhrep.open("GET", "/elevationsproviders/switch?" + q);\r\n' \
   '        xhrep.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrep.send();\r\n' \
   '      }\r\n'
-  HTML_DFPANEL_TEMPLATE = \
+  HTML_DFPHPANEL_TEMPLATE = \
   '            <div id="dfpanel">\r\n' \
   '              <span>{#jdfpanel#}</span>\r\n' \
   '              <form id="dfform" autocomplete="off" onsubmit="return(false);">\r\n' \
   '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
   '                <span id="dfdist" style="left:4.5em;">20</span>\r\n' \
   '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="20" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="phpanel">\r\n' \
+  '              <span>{#jphpanel#}</span>\r\n' \
+  '              <form id="phform" autocomplete="off" onsubmit="return(false);" onchange="update_photos();">\r\n' \
+  '                <label for="phthumbs" style="left:1.5em;width:8em;">{#jpixels#}</label>\r\n' \
+  '                <span id="phsize" style="left:4.5em;">##THUMBSIZE##</span>\r\n' \
+  '                <input type="range" id="phthumbs" name="phthumbs" min="8" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
@@ -5613,6 +5805,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tlock").style.fontWeight="500";\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.right = "calc(2vw + " + (mode=="tiles"?"15":"12.3") + "em - 30px)";\r\n' \
+  '        document.getElementById("phpanel").style.right = "calc(2vw + " + (mode=="tiles"?"30.9":"28.2") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -7330,8 +7523,10 @@ class GPXTweakerWebInterfaceServer():
   '        show_msg((seg_foc!=null?"{#jmsegmentfilter1#}":"{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '      } \r\n' \
   '      function load_ecb(t, pts) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return 0;}\r\n' \
   '        if (t.response == "") {return 0;}\r\n' \
   '        let ele = t.response.split("\\r\\n");\r\n' \
@@ -7436,6 +7631,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhre.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhre.send(b);\r\n' \
   '      }\r\n' \
   '      function ele_alt_switch() {\r\n' \
@@ -7910,8 +8106,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function error_pcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '      } \r\n' \
   '      function load_pcb(t, foc) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return false;}\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        if (! t.response) {return false;}\r\n' \
@@ -8059,6 +8257,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrp.open("POST", "/path");\r\n' \
   '        xhrp.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrp.send(b);\r\n' \
   '      }\r\n' \
   '      function open_3D(mode="p") {\r\n' \
@@ -8066,6 +8265,7 @@ class GPXTweakerWebInterfaceServer():
   '        track_save(mode);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function load_ipcb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          document.getElementById("iset").selectedIndex = iset;\r\n' \
   '          return;\r\n' \
@@ -8073,6 +8273,7 @@ class GPXTweakerWebInterfaceServer():
   '        iset = document.getElementById("iset").selectedIndex;\r\n' \
   '      } \r\n' \
   '      function error_ipcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("iset").selectedIndex = iset;\r\n' \
   '      } \r\n' \
   '      function switch_itineraries(iset) {\r\n' \
@@ -8080,9 +8281,11 @@ class GPXTweakerWebInterfaceServer():
   '        xhrip.onload = (e) => {load_ipcb(e.target)};\r\n' \
   '        xhrip.open("GET", "/itinerariesproviders/switch?" + q);\r\n' \
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrip.send();\r\n' \
   '      }\r\n' \
   '      function load_cb(t, mode3d=null) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.status != 204) {\r\n' \
@@ -8094,6 +8297,7 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n'\
   '      }\r\n' \
   '      function error_cb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
@@ -8144,6 +8348,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
@@ -8165,7 +8370,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_DFPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_DFPHPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -10189,6 +10394,32 @@ class GPXTweakerWebInterfaceServer():
   '        r:calc(3px * var(--scale));\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
+  '      img[id^=photo] {\r\n' \
+  '        filter:none;\r\n' \
+  '      }\r\n' \
+  '      div[id=photoview] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        z-index:10;\r\n' \
+  '        width:100%;\r\n' \
+  '        height:100%;\r\n' \
+  '        bottom:0;\r\n' \
+  '        left:0;\r\n' \
+  '        background:black;\r\n' \
+  '        overflow-x:auto;\r\n' \
+  '        overflow-y:hidden;\r\n' \
+  '        white-space:nowrap;\r\n' \
+  '        line-height:0;\r\n' \
+  '        user-select:none;\r\n' \
+  '      }\r\n' \
+  '      div[id=photoview] img {\r\n' \
+  '        filter:none;\r\n' \
+  '        display:inline-block;\r\n' \
+  '        max-height:100%;\r\n' \
+  '        max-width:100%;\r\n' \
+  '      }\r\n' \
+  '      div[id=photoview] img:not(:last-child) {\r\n' \
+  '        margin-right:1em;\r\n' \
+  '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
   '      var str_comp = new Intl.Collator().compare;\r\n' \
@@ -10196,7 +10427,13 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_pts = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' + HTML_MSG_TEMPLATE + \
+  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
+  '      var photos_visible = false;\r\n' \
+  '      var photos_data = null;\r\n' \
+  '      var photos_uris = null;\r\n' \
+  '      var photos_corners = null;\r\n' \
+  '      var photos_sides = null;\r\n' \
+  '      var photos_div = null;\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
@@ -10220,7 +10457,10 @@ class GPXTweakerWebInterfaceServer():
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
-  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit(';\r\n', 1)[0] + ';\r\n' \
+  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit('update_tiles();\r\n', 1)[0] + 'let pvis = photos_visible;\r\n' \
+  '        hide_photos("m");\r\n' \
+  '        update_tiles();\r\n' \
+  '        if (pvis) {show_photos();}\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(track=null) {\r\n' \
@@ -10628,7 +10868,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
-  '      }\r\n' + HTML_MAP_TEMPLATE + \
+  '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        photos_sides = null;\r\n') + \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
@@ -10757,12 +10997,14 @@ class GPXTweakerWebInterfaceServer():
   '       folders_select();\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        return false;\r\n' \
   '      } \r\n' \
   '      function load_tdcb(t, trk) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById(trk + "file").value = t.response;\r\n' \
   '        let uri = document.getElementById(trk + "visible").value;\r\n' \
   '        document.getElementById(trk + "visible").value = uri.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + t.response);\r\n' \
@@ -10798,11 +11040,13 @@ class GPXTweakerWebInterfaceServer():
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/detach?" + foc.substring(5));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
   '      function load_ticb(t, ind1, ind2) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        let foc = focused;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
@@ -10878,11 +11122,13 @@ class GPXTweakerWebInterfaceServer():
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + ind1.toString() + "," + ind2.toString());\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
   '      function load_tncb(t) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        for (let n in msg) {\r\n' \
@@ -10931,6 +11177,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/new?" + f_ind.toString());\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
   '      function track_edit() {\r\n' \
@@ -10944,6 +11191,208 @@ class GPXTweakerWebInterfaceServer():
   '        if (isNaN(c[0]) || isNaN(c[1])) {return;}\r\n' \
   '        window.open(wmsel.options[wmsel.selectedIndex].value.replace("{lat}", c[0].toString()).replace("{lon}", c[1].toString()));\r\n' \
   '      }\r\n' \
+  '      function switch_phpanel() {\r\n' \
+  '        if (document.getElementById("phpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("phpanel").style.display = "initial";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("phpanel").style.display = "none";\r\n' \
+  '        }\r\n' \
+  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
+  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
+  '      }\r\n' \
+  '      function error_pcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '        return false;\r\n' \
+  '      }\r\n' \
+  '      function load_pcb(t) {\r\n' \
+  '        if (t.status != 200) {return error_pcb();}\r\n' \
+  '        if (t.response == "") {return error_pcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '        if (t.responseURL.indexOf("data") > 0) {\r\n' \
+  '          photos_data = new Float64Array(t.response);\r\n' \
+  '          photos_corners = new Float64Array(photos_data.length / 3 * 4);\r\n' \
+  '        } else {\r\n' \
+  '          photos_uris = t.response.split("|");\r\n' \
+  '        }\r\n' \
+  '        show_photos();\r\n' \
+  '        return true;\r\n' \
+  '      }\r\n' \
+  '      function photos_process() {\r\n' \
+  '        let nph = photos_data.length / 3;\r\n' \
+  '        photos_sides = [];\r\n' \
+  '        let zf = zoom / tscale;\r\n' \
+  '        let ps = parseFloat(document.getElementById("phsize").innerHTML) / 2;\r\n' \
+  '        for (let p=0; p<nph; p++) {\r\n' \
+  '          let px = (photos_data[3 * p] - htopx) * zf;\r\n' \
+  '          let py = (htopy - photos_data[3 * p + 1]) * zf;\r\n' \
+  '          let pr = photos_data[3 * p + 2];\r\n' \
+  '          if (pr >= 1) {\r\n' \
+  '            photos_corners.set([px - ps, py - ps / pr, px + ps, py + ps / pr], 4 * p);\r\n' \
+  '          } else {\r\n' \
+  '            photos_corners.set([px - ps * pr, py - ps, px + ps * pr, py + ps], 4 * p);\r\n' \
+  '          }\r\n' \
+  '          photos_sides.push({"o":0, "p":p}, {"o":2, "p":p});\r\n' \
+  '        }\r\n' \
+  '        photos_sides.sort((a, b) => (photos_corners[4 * a.p + a.o] - photos_corners[4 * b.p + b.o]) || (b.o - a.o) || (photos_corners[4 * a.p + 1] - photos_corners[4 * b.p + 1]) || (photos_corners[4 * a.p + 3] - photos_corners[4 * b.p + 3]));\r\n' \
+  '      }\r\n' \
+  '      function photos_gen() {\r\n' \
+  '        photos_div = document.createElement("div");\r\n' \
+  '        photos_div.id = "photos";\r\n' \
+  '        let nph = photos_corners.length / 4;\r\n' \
+  '        let pd = Array(nph);\r\n' \
+  '        pd.fill([]);\r\n' \
+  '        let cs = [];\r\n' \
+  '        let xl = -hpx;\r\n' \
+  '        let xr = xl + viewpane.offsetWidth;\r\n' \
+  '        let yt = -hpy;\r\n' \
+  '        let yb = yt + viewpane.offsetHeight;\r\n' \
+  '        for (let l of photos_sides) {\r\n' \
+  '          let p = l.p;\r\n' \
+  '          if (pd[p] == null) {continue;}\r\n' \
+  '          if (pd[p].length == 0 && (photos_corners[4 * p] >= xr || photos_corners[4 * p + 2] <= xl || photos_corners[4 * p + 1] >= yb || photos_corners[4 * p + 3] <= yt)) {\r\n' \
+  '            pd[p] = null;\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          let s1 = 0;\r\n' \
+  '          let s2 = cs.length - 1;\r\n' \
+  '          if (s2 < 0) {\r\n' \
+  '            pd[p] = [p];\r\n' \
+  '            cs.push(p);\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          let pb = photos_corners[4 * p + 3];\r\n' \
+  '          if (pb <= photos_corners[4 * cs[0] + 1]) {\r\n' \
+  '            pd[p] = [p];\r\n' \
+  '            cs.splice(0, 0, p);\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          let s0 = s2;\r\n' \
+  '          if (pb <= photos_corners[4 * cs[s2] + 1]) {\r\n' \
+  '            while (true) {\r\n' \
+  '              s0 = Math.floor((s1 + s2) / 2);\r\n' \
+  '              if (s0 == s1) {break}\r\n' \
+  '              if (pb <= photos_corners[4 * cs[s0] + 1]) {s2 = s0} else {s1 = s0}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (pd[p].length > 0) {\r\n' \
+  '            cs.splice(s0, 1);\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          if (photos_corners[4 * p + 1] >= photos_corners[4 * cs[s0] + 3]) {\r\n' \
+  '            pd[p] = [p];\r\n' \
+  '            cs.splice(s0 + 1, 0, p);\r\n' \
+  '          } else {\r\n' \
+  '            pd[p] = null;\r\n' \
+  '            pd[cs[s0]].push(p);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        for (let p=0; p<nph; p++) {\r\n' \
+  '          if (pd[p] == null) {continue;}\r\n' \
+  '          let ph = document.createElement("img");\r\n' \
+  '          ph.id = "photo-" + pd[p].toString();\r\n' \
+  '          ph.src = window.location.href.replace("/GPXExplorer.html", "/photo?" + p.toString());\r\n' \
+  '          ph.alt = "";\r\n' \
+  '          ph.title = photos_uris[p];\r\n' \
+  '          ph.style.position = "absolute";\r\n' \
+  '          ph.style.width = (photos_corners[4 * p + 2] - photos_corners[4 * p]).toString() + "px";\r\n' \
+  '          ph.style.height = (photos_corners[4 * p + 3] - photos_corners[4 * p + 1]).toString() + "px";\r\n' \
+  '          ph.style.left = photos_corners[4 * p].toString() + "px";\r\n' \
+  '          ph.style.top = photos_corners[4 * p + 1].toString() + "px";\r\n' \
+  '          if (pd[p].length > 1) {\r\n' \
+  '            ph.style.outlineOffset = "-3px";\r\n' \
+  '            ph.style.outline = "outset 3px black";\r\n' \
+  '          }\r\n' \
+  '          ph.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          ph.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          ph.setAttribute("onclick", "enlarge_photo(event.target.id.substring(6));");\r\n' \
+  '          photos_div.appendChild(ph);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function show_photos() {\r\n' \
+  '        document.getElementById("switchphotos").disabled = true;\r\n' \
+  '        if (photos_data == null) {\r\n' \
+  '          photos_data = [];\r\n' \
+  '          let xhrp = new XMLHttpRequest();\r\n' \
+  '          let msgn = show_msg("{#jmphotos1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmphotos1#}", 0.1, msgn):show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
+  '          xhrp.open("GET", "/photos/data");\r\n' \
+  '          xhrp.responseType = "arraybuffer";\r\n' \
+  '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          xhrp.send();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (photos_data.length == 0) {return;}\r\n' \
+  '        if (photos_uris == null) {\r\n' \
+  '          photos_uris = [];\r\n' \
+  '          let xhrp = new XMLHttpRequest();\r\n' \
+  '          let msgn = show_msg("{#jmphotos1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmphotos2#}", 2, msgn):show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
+  '          xhrp.open("GET", "/photos/uris");\r\n' \
+  '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          xhrp.send();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (photos_sides == null) {photos_process();}\r\n' \
+  '        if (photos_div == null) {photos_gen();}\r\n' \
+  '        let svgs = document.getElementById("handle").getElementsByTagName("svg");\r\n' \
+  '        let ref = null;\r\n' \
+  '        if (svgs.length > 0) {ref = svgs[0];}\r\n' \
+  '        document.getElementById("handle").insertBefore(photos_div, ref);\r\n' \
+  '        photos_visible = true;\r\n' \
+  '        document.getElementById("switchphotos").disabled = false;\r\n' \
+  '      }\r\n' \
+  '      function hide_photos(reset="") {\r\n' \
+  '        if (reset == "m" || reset == "s") {photos_div = null;}\r\n' \
+  '        if (reset == "s") {photos_sides = null;}\r\n' \
+  '        if (! photos_visible) {return;}\r\n' \
+  '        let pdiv = document.getElementById("photos");\r\n' \
+  '        if (pdiv != null) {document.getElementById("handle").removeChild(pdiv);}\r\n' \
+  '        photos_visible = false;\r\n' \
+  '      }\r\n' \
+  '      function update_photos() {\r\n' \
+  '        let pvis = photos_visible;\r\n' \
+  '        hide_photos("s");\r\n' \
+  '        if (pvis) {show_photos();}\r\n' \
+  '      }\r\n' \
+  '      function show_hide_photos() {\r\n' \
+  '        if (photos_visible) {\r\n' \
+  '          hide_photos();\r\n' \
+  '        } else {\r\n' \
+  '          show_photos();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function enlarge_photo(pids) {\r\n' \
+  '        let pview = document.getElementById("photoview");\r\n' \
+  '        pview.innerHTML = "";\r\n' \
+  '        pview.style.display = "block";\r\n' \
+  '        for (let p of pids.split(",")) {\r\n' \
+  '          let ph = document.createElement("img");\r\n' \
+  '          ph.src = window.location.href.replace("/GPXExplorer.html", "/photo?" + p.toString());\r\n' \
+  '          ph.alt = "";\r\n' \
+  '          ph.title = photos_uris[p];\r\n' \
+  '          ph.setAttribute("onclick", "photo_fs(this)");\r\n' \
+  '          pview.appendChild(ph);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function photo_fs(p) {\r\n' \
+  '        window.onresize = (e) => {window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
+  '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
+  '//        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
+  '      }\r\n' \
+  '      function close_photoview(e) {\r\n' \
+  '        if (document.fullscreenElement) {\r\n' \
+  '          window.onresize = (e) => {document.getElementById("photoview").innerHTML = ""; window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
+  '          document.exitFullscreen();\r\n' \
+  '        }\r\n' \
+  '//        document.getElementById("photoview").innerHTML = "";\r\n' \
+  '        document.getElementById("photoview").style.display = "none";\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '      }\r\n' \
   '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);\r\n' \
@@ -10951,6 +11400,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("edit").disabled = false;\r\n' \
   '          return false;\r\n'\
   '        }\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
   '          let uri_ex = document.getElementById(prop.id.replace("file", "visible")).value;\r\n' \
   '          let uri = uri_ex.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + prop.value);\r\n' \
@@ -10980,6 +11430,7 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n'\
   '      }\r\n' \
   '      function error_cb(t, prop) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t != null) {window.alert("{#jserror#}");}\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
   '          prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1)[0];\r\n' \
@@ -11014,6 +11465,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhr.open("POST", "/track");\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
@@ -11038,14 +11490,14 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchphotos#}" id="switchphotos" style="margin-left:1em;" onclick="event.ctrlKey?switch_phpanel():show_hide_photos()">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_DFPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_DFPHPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -11064,12 +11516,15 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
+  '      <div id="photoview" style="display:none;" oncontextmenu="close_photoview(event);" >\r\n' \
+  '      </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
+  '      var photos_ex_visible = false;\r\n' \
   '      function mouse_down(e, elt) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        document.getElementById("tracksfilter").blur();\r\n' \
@@ -11085,6 +11540,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (elt.id == "view") {\r\n' \
   '            hand = elt;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
+  '            photos_ex_visible = photos_visible;\r\n' \
+  '            hide_photos("m");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -11098,6 +11555,7 @@ class GPXTweakerWebInterfaceServer():
   '        viewpane.style.cursor = "";\r\n' \
   '        if (hand) {\r\n' \
   '          hand = null;\r\n' \
+  '          if (photos_ex_visible) {show_photos();}\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (elt && e.button == 2) {\r\n' \
@@ -11171,7 +11629,7 @@ class GPXTweakerWebInterfaceServer():
   '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
   '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString());\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("phsize").innerHTML + "|" + photos_visible.toString());\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
   '        window.alert("{#jexpfail#}");\r\n' \
@@ -11232,6 +11690,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          let wmset = parseInt(prev_state[6]);\r\n' \
   '          if (document.getElementById("iset").options.length > wmset) {document.getElementById("iset").selectedIndex = wmset;}\r\n' \
+  '          document.getElementById("phsize").innerHTML = prev_state[7];\r\n' \
+  '          document.getElementById("phthumbs").value = parseFloat(prev_state[7]);\r\n' \
+  '          document.getElementById("phthumbs").value = parseFloat(prev_state[7]);\r\n' \
+  '          if (prev_state[8] == "true") {show_photos();}\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}).map((v,k)=>k);\r\n' \
   '        }\r\n' \
@@ -11354,7 +11816,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
-          if scur != 'folders' and scur[:11] != 'webmapping ':
+          if not scur in ('folders', 'photos') and scur[:11] != 'webmapping ':
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
           if scur[:11] == 'webmapping ':
@@ -11535,6 +11997,24 @@ class GPXTweakerWebInterfaceServer():
               return False
           elif field == 'pattern':
             s[1][field] = value
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'photos':
+          if field == 'album':
+            fold = os.path.abspath(os.path.expandvars(value.lstrip().rstrip()))
+            if os.path.isdir(fold):
+              self.PhotosFolders.append(fold)
+          elif field == 'size':
+            try:
+              phs = int(value)
+              if phs >= 8 and phs <= 512:
+                self.PhotosSize = phs
+            except:
+              pass
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
@@ -11661,6 +12141,8 @@ class GPXTweakerWebInterfaceServer():
     self.DefLon = None
     self.Folders = []
     self.WebMappingServices = []
+    self.PhotosFolders = []
+    self.PhotosSize = 32
     self.GpuComp = 0
     self.EleGainThreshold = 4
     self.AltGainThreshold = 3
@@ -11700,6 +12182,7 @@ class GPXTweakerWebInterfaceServer():
     self.SLock = threading.Lock()
     self.TLock = threading.Lock()
     self.Builder = ExpatGPXBuilder()
+    self.Photos = None
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
     if not self._load_config(cfg):
@@ -11927,6 +12410,7 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
     else:
       self.ItineraryProvider = None
+    self.Photos = GeotaggedPhotos(self.PhotosFolders, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
     if uri is not None:
       self.HTML = ''
     else:
@@ -12176,7 +12660,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.PhotosSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
