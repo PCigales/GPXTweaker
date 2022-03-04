@@ -1,3 +1,7 @@
+# GPXTweaker (https://github.com/PCigales/GPXTweaker)
+# Copyright © 2022 PCigales
+# This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
+
 from functools import partial
 import urllib.parse
 import socket
@@ -73,6 +77,15 @@ FR_STRINGS = {
     'save': 'enregistrement de la trace sous %s',
     'serror': 'échec de l\'enregistrement de la trace sous %s',
     'saved': 'trace enregistrée sous %s',
+  },
+  'photos': {
+     '_id': 'Gestionnaire de photos',
+     'dlerror': 'échec de la récupération des données de la photo %s',
+     'dloaded': 'données de la photo %s récupérées',
+     'dskipped': 'photo %s sautée car débordant de la vue',
+     'dtloaded': '%d photo(s) prise(s) en compte en %.1fs',
+     'plerror': 'échec du chargement de la photo %s',
+     'ploaded': 'photo %s chargée',
   },
   'interface': {
     '_id': 'Interface',
@@ -288,6 +301,7 @@ FR_STRINGS = {
     'close': 'fermeture',
   },
   'parser': {
+    'license': 'Ce programme est sous licence copyleft GNU GPLv3 (voir https://www.gnu.org/licenses)',
     'uri': 'chemin d\'accès à la trace ou argument pas mentionné pour démarrer avec l\'explorateur de traces',
     'conf': 'chemin d\'accès au fichier de configuration [même répertoire que le script par défaut]',
     'trk': 'indice de la trace (commençant à 0) [0 par défaut]',
@@ -344,6 +358,15 @@ EN_STRINGS = {
     'save': 'saving of track as %s',
     'serror': 'failure of saving of track under %s',
     'saved': 'track saved as %s',
+  },
+  'photos': {
+     '_id': 'Photos manager',
+     'dlerror': 'failure of the retrieval of the data of the photo %s',
+     'dloaded': 'data of the photo %s retrieved',
+     'dskipped': 'photo %s skipped because overflowing with the view',
+     'dtloaded': '%d photo(s) taken into account in %.1fs',
+     'plerror': 'failure of the loading of the photo %s',
+     'ploaded': 'photo %s loaded',
   },
   'interface': {
     '_id': 'Interface',
@@ -559,6 +582,7 @@ EN_STRINGS = {
     'close': 'shutdown',
   },
   'parser': {
+    'license': 'This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)',
     'uri': 'path to the track or argument not mentioned to start with the explorer of tracks',
     'conf': 'full path to the configuration file [same folder as the script by default]',
     'trk': 'index of the track (starting at 0) [0 by default]',
@@ -3506,6 +3530,7 @@ class GeotaggedPhotos():
     self.DLock = threading.Lock()
     self.Data = None
     self.Uris = None
+    self.log = partial(log, 'photos')
 
   @staticmethod
   def _read_data(image):
@@ -3539,6 +3564,7 @@ class GeotaggedPhotos():
       gps = None
       sifd = None
       orientation = 1
+      dimensions = [None] * 2
       for i in range(ne):
         e = f.read(12)
         t = struct.unpack(ba + 'H', e[0:2])[0]
@@ -3552,8 +3578,13 @@ class GeotaggedPhotos():
           sifd = ref + struct.unpack(ba + 'I', e[8:12])[0]
         elif t == 0x0112:
           if struct.unpack(ba + 'H', e[2:4])[0] != 3 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
-            raise
+            continue
           orientation = struct.unpack(ba + 'H', e[8:10])[0]
+        elif t in (0x0100, 0x0101):
+          df = {3:'H', 4:'I'}.get(struct.unpack(ba + 'H', e[2:4])[0])
+          if df is None or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          dimensions[t - 0x0100] = struct.unpack(ba + df, e[8:(10 if df == 'H' else 12)])[0]
       if gps is None or sifd is None:
         raise
       f.seek(gps)
@@ -3569,7 +3600,7 @@ class GeotaggedPhotos():
           if struct.unpack(ba + 'H', e[2:4])[0] != 2 or struct.unpack(ba + 'I', e[4:8])[0] != 2:
             raise
           lref[(t - 1) // 2] = e[8:10].strip(b'\x00').upper().decode()
-        if t in (0x0002, 0x0004):
+        elif t in (0x0002, 0x0004):
           if struct.unpack(ba + 'H', e[2:4])[0] != 5 or struct.unpack(ba + 'I', e[4:8])[0] != 3:
             raise
           lpos[(t - 2) // 2] = struct.unpack(ba + 'I', e[8:12])[0] + ref
@@ -3587,7 +3618,7 @@ class GeotaggedPhotos():
       ne = struct.unpack(ba + 'H', f.read(2))[0]
       if ne == 0:
         raise
-      dimensions = [None] * 2
+      dtpos = None
       for i in range(ne):
         e = f.read(12)
         t = struct.unpack(ba + 'H', e[0:2])[0]
@@ -3596,47 +3627,71 @@ class GeotaggedPhotos():
           if df is None or struct.unpack(ba + 'I', e[4:8])[0] != 1:
             raise
           dimensions[t - 0xa002] = struct.unpack(ba + df, e[8:(10 if df == 'H' else 12)])[0]
+        elif t == 0x9003 or (t == 0x9004 and dtpos is None):
+          if struct.unpack(ba + 'H', e[2:4])[0] != 2 or struct.unpack(ba + 'I', e[4:8])[0] != 20:
+            continue
+          dtpos = struct.unpack(ba + 'I', e[8:12])[0] + ref
       if None in dimensions or 0 in dimensions:
         raise
+      datetime = ''
+      if dtpos is not None:
+        try:
+          f.seek(dtpos)
+          datetime = f.read(20).strip(b'\x00').upper().decode().replace(':', '/', 2)
+        except:
+          pass
     except:
       return None
     finally:
-      f.close()
-    return *WGS84WebMercator.WGS84toWebMercator(lat, lon), (dimensions[1] / dimensions[0] if orientation in (6, 8) else dimensions[0] / dimensions[1])
+      try:
+        f.close()
+      except:
+        pass
+    return *WGS84WebMercator.WGS84toWebMercator(lat, lon), (dimensions[1] / dimensions[0] if orientation in (6, 8) else dimensions[0] / dimensions[1]), datetime
 
   def GetData(self):
     with self.DLock:
       if self.Data is None:
         self.Uris = []
         uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() in ('jpg', 'jpeg'))
-        datas = []
+        ti = time.time()
+        gps_ar = []
+        dt = []
         for u in uris:
           data = self._read_data(u)
           if data is not None:
             if self.Box is not None:
               if data[0] < self.Box[0] or data[0] > self.Box[2] or data[1] < self.Box[1] or data[1] > self.Box[3]:
+                self.log(2, 'dskipped', u)
                 continue
             self.Uris.append(u)
-            datas.extend(data)
-        if len(datas) > 0:
-          self.Data = struct.pack('=%dd' % len(datas), *datas)
+            gps_ar.extend(data[0:3])
+            dt.append(data[3])
+            self.log(2, 'dloaded', u)
+          else:
+            self.log(1, 'dlerror', u)
+        if len(self.Uris) > 0:
+          self.Data = (struct.pack('=%dd' % len(gps_ar), *gps_ar), ('|'.join(map('\r\n'.join, zip(self.Uris, dt)))).encode('utf-8'))
         else:
-          self.Data = b''
+          self.Data = (b'', b'')
+        self.log(0, 'dtloaded', len(self.Uris), time.time() - ti)
     return self.Data
-
-  def GetUris(self):
-    if self.Uris is None:
-      return b''
-    return ('|'.join(self.Uris)).encode('utf-8')
 
   def GetPhoto(self, ind):
     try:
       f = open(self.Uris[ind], 'rb')
+      photo = f.read();
     except:
+      self.log(1, 'plerror', self.Uris[ind])
       return None
-    photo = f.read();
-    f.close()
+    finally:
+      try:
+        f.close()
+      except:
+        pass
+    self.log(2, 'ploaded', self.Uris[ind])
     return photo
+
 
 class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
 
@@ -3945,30 +4000,38 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               _send_resp('application/octet-stream')
             except:
               _send_err_fail()
-          elif req.path.lower() == '/photos/data':
+          elif req.path.lower() == '/photos/gps_ar':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             try:
-              resp_body = self.server.Interface.Photos.GetData()
-              _send_resp('application/octet-stream')
+              resp_body = self.server.Interface.Photos.GetData()[0]
+              if resp_body:
+                _send_resp('application/octet-stream')
+              else:
+                _send_err_nf()
             except:
               _send_err_fail()
-              raise
-          elif req.path.lower() == '/photos/uris':
+          elif req.path.lower() == '/photos/uri_dt':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             try:
-              resp_body = self.server.Interface.Photos.GetUris()
-              _send_resp('application/octet-stream')
+              resp_body = self.server.Interface.Photos.GetData()[1]
+              if resp_body:
+                _send_resp('application/octet-stream')
+              else:
+                _send_err_nf()
             except:
               _send_err_fail()
           elif req.path.lower()[:7] == '/photo?':
             try:
               pind = int(req.path.split('?')[1])
               resp_body = self.server.Interface.Photos.GetPhoto(pind)
-              _send_resp('image/jpeg')
+              if resp_body:
+                _send_resp('image/jpeg')
+              else:
+                _send_err_nf()
             except:
               _send_err_fail()
           elif req.path.lower()[:7] == '/detach':
@@ -10396,6 +10459,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      img[id^=photo] {\r\n' \
   '        filter:none;\r\n' \
+  '        image-orientation:from-image;\r\n' \
+  '        cursor:zoom-in;\r\n' \
   '      }\r\n' \
   '      div[id=photoview] {\r\n' \
   '        position:absolute;\r\n' \
@@ -10416,6 +10481,10 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        max-height:100%;\r\n' \
   '        max-width:100%;\r\n' \
+  '        vertical-align:top;\r\n' \
+  '        object-fit:scale-down;\r\n' \
+  '        image-orientation:from-image;\r\n' \
+  '        cursor:nesw-resize;\r\n' \
   '      }\r\n' \
   '      div[id=photoview] img:not(:last-child) {\r\n' \
   '        margin-right:1em;\r\n' \
@@ -10429,8 +10498,8 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
   '      var photos_visible = false;\r\n' \
-  '      var photos_data = null;\r\n' \
-  '      var photos_uris = null;\r\n' \
+  '      var photos_gps_ar = null;\r\n' \
+  '      var photos_uri_dt = null;\r\n' \
   '      var photos_corners = null;\r\n' \
   '      var photos_sides = null;\r\n' \
   '      var photos_div = null;\r\n' + HTML_MSG_TEMPLATE + \
@@ -11137,12 +11206,12 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("tracksform").appendChild(e);\r\n' \
   '            e.outerHTML = msg[n];\r\n' \
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
-  '            let e = document.createElement("svg");\r\n' \
+  '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            let w = document.getElementById("waydots0");\r\n' \
   '            document.getElementById("handle").insertBefore(e, w);\r\n' \
   '            e.outerHTML = w==null?msg[n]:(msg[n].substring(2)+"  ");\r\n' \
   '          } else {\r\n' \
-  '            let e = document.createElement("svg");\r\n' \
+  '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            document.getElementById("handle").appendChild(e);\r\n' \
   '            e.outerHTML = msg[n];\r\n' \
   '          }\r\n' \
@@ -11208,24 +11277,24 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {return error_pcb();}\r\n' \
   '        if (t.response == "") {return error_pcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
-  '        if (t.responseURL.indexOf("data") > 0) {\r\n' \
-  '          photos_data = new Float64Array(t.response);\r\n' \
-  '          photos_corners = new Float64Array(photos_data.length / 3 * 4);\r\n' \
+  '        if (t.responseURL.indexOf("gps_ar") > 0) {\r\n' \
+  '          photos_gps_ar = new Float64Array(t.response);\r\n' \
+  '          photos_corners = new Float64Array(photos_gps_ar.length / 3 * 4);\r\n' \
   '        } else {\r\n' \
-  '          photos_uris = t.response.split("|");\r\n' \
+  '          photos_uri_dt = t.response.split("|");\r\n' \
   '        }\r\n' \
   '        show_photos();\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function photos_process() {\r\n' \
-  '        let nph = photos_data.length / 3;\r\n' \
+  '        let nph = photos_gps_ar.length / 3;\r\n' \
   '        photos_sides = [];\r\n' \
   '        let zf = zoom / tscale;\r\n' \
   '        let ps = parseFloat(document.getElementById("phsize").innerHTML) / 2;\r\n' \
   '        for (let p=0; p<nph; p++) {\r\n' \
-  '          let px = (photos_data[3 * p] - htopx) * zf;\r\n' \
-  '          let py = (htopy - photos_data[3 * p + 1]) * zf;\r\n' \
-  '          let pr = photos_data[3 * p + 2];\r\n' \
+  '          let px = (photos_gps_ar[3 * p] - htopx) * zf;\r\n' \
+  '          let py = (htopy - photos_gps_ar[3 * p + 1]) * zf;\r\n' \
+  '          let pr = photos_gps_ar[3 * p + 2];\r\n' \
   '          if (pr >= 1) {\r\n' \
   '            photos_corners.set([px - ps, py - ps / pr, px + ps, py + ps / pr], 4 * p);\r\n' \
   '          } else {\r\n' \
@@ -11290,9 +11359,10 @@ class GPXTweakerWebInterfaceServer():
   '          if (pd[p] == null) {continue;}\r\n' \
   '          let ph = document.createElement("img");\r\n' \
   '          ph.id = "photo-" + pd[p].toString();\r\n' \
-  '          ph.src = window.location.href.replace("/GPXExplorer.html", "/photo?" + p.toString());\r\n' \
+  '          let port = portmin + p % (portmax + 1 - portmin);\r\n' \
+  '          ph.src = "http://" + location.hostname + ":" + port.toString() + "/photo?" + p.toString();\r\n' \
   '          ph.alt = "";\r\n' \
-  '          ph.title = photos_uris[p];\r\n' \
+  '          ph.title = photos_uri_dt[p];\r\n' \
   '          ph.style.position = "absolute";\r\n' \
   '          ph.style.width = (photos_corners[4 * p + 2] - photos_corners[4 * p]).toString() + "px";\r\n' \
   '          ph.style.height = (photos_corners[4 * p + 3] - photos_corners[4 * p + 1]).toString() + "px";\r\n' \
@@ -11300,7 +11370,7 @@ class GPXTweakerWebInterfaceServer():
   '          ph.style.top = photos_corners[4 * p + 1].toString() + "px";\r\n' \
   '          if (pd[p].length > 1) {\r\n' \
   '            ph.style.outlineOffset = "-3px";\r\n' \
-  '            ph.style.outline = "outset 3px black";\r\n' \
+  '            ph.style.outline = "outset 3px lightgray";\r\n' \
   '          }\r\n' \
   '          ph.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
   '          ph.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
@@ -11310,27 +11380,27 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function show_photos() {\r\n' \
   '        document.getElementById("switchphotos").disabled = true;\r\n' \
-  '        if (photos_data == null) {\r\n' \
-  '          photos_data = [];\r\n' \
+  '        if (photos_gps_ar == null) {\r\n' \
+  '          photos_gps_ar = [];\r\n' \
   '          let xhrp = new XMLHttpRequest();\r\n' \
   '          let msgn = show_msg("{#jmphotos1#}", 0);\r\n' \
   '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmphotos1#}", 0.1, msgn):show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
   '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
-  '          xhrp.open("GET", "/photos/data");\r\n' \
+  '          xhrp.open("GET", "/photos/gps_ar");\r\n' \
   '          xhrp.responseType = "arraybuffer";\r\n' \
   '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
   '          xhr_ongoing++;\r\n' \
   '          xhrp.send();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (photos_data.length == 0) {return;}\r\n' \
-  '        if (photos_uris == null) {\r\n' \
-  '          photos_uris = [];\r\n' \
+  '        if (photos_gps_ar.length == 0) {return;}\r\n' \
+  '        if (photos_uri_dt == null) {\r\n' \
+  '          photos_uri_dt = [];\r\n' \
   '          let xhrp = new XMLHttpRequest();\r\n' \
   '          let msgn = show_msg("{#jmphotos1#}", 0);\r\n' \
   '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmphotos2#}", 2, msgn):show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
   '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
-  '          xhrp.open("GET", "/photos/uris");\r\n' \
+  '          xhrp.open("GET", "/photos/uri_dt");\r\n' \
   '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
   '          xhr_ongoing++;\r\n' \
   '          xhrp.send();\r\n' \
@@ -11371,24 +11441,29 @@ class GPXTweakerWebInterfaceServer():
   '        pview.style.display = "block";\r\n' \
   '        for (let p of pids.split(",")) {\r\n' \
   '          let ph = document.createElement("img");\r\n' \
-  '          ph.src = window.location.href.replace("/GPXExplorer.html", "/photo?" + p.toString());\r\n' \
+  '          let port = portmin + p % (portmax + 1 - portmin);\r\n' \
+  '          ph.src = "http://" + location.hostname + ":" + port.toString() + "/photo?" + p.toString();\r\n' \
   '          ph.alt = "";\r\n' \
-  '          ph.title = photos_uris[p];\r\n' \
+  '          ph.title = photos_uri_dt[p];\r\n' \
   '          ph.setAttribute("onclick", "photo_fs(this)");\r\n' \
   '          pview.appendChild(ph);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function photo_fs(p) {\r\n' \
-  '        window.onresize = (e) => {window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
-  '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
-  '//        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
+  '        if (document.fullscreenElement) {\r\n' \
+  '          window.onresize = (e) => {document.getElementById("photoview").scrollLeft = parseInt(document.getElementById("photoview").dataset.sl); delete document.getElementById("photoview").dataset.sl; window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
+  '          document.exitFullscreen();\r\n' \
+  '        } else {\r\n' \
+  '          window.onresize = (e) => {window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
+  '          document.getElementById("photoview").dataset.sl = document.getElementById("photoview").scrollLeft.toString();\r\n' \
+  '          p.requestFullscreen();\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function close_photoview(e) {\r\n' \
   '        if (document.fullscreenElement) {\r\n' \
-  '          window.onresize = (e) => {document.getElementById("photoview").innerHTML = ""; window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
+  '          window.onresize = (e) => {delete document.getElementById("photoview").dataset.sl; document.getElementById("photoview").innerHTML = ""; window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
   '          document.exitFullscreen();\r\n' \
   '        }\r\n' \
-  '//        document.getElementById("photoview").innerHTML = "";\r\n' \
   '        document.getElementById("photoview").style.display = "none";\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
@@ -12804,6 +12879,9 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
+  print('GPXTweaker (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print(LSTRINGS['parser']['license'])
+  print();
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
   CustomArgumentParser = partial(argparse.ArgumentParser, formatter_class=formatter)
   parser = CustomArgumentParser()
