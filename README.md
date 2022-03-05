@@ -11,7 +11,7 @@ Description in english in the second part of this document.
 
 ----------Français----------
 
-GPXTweaker est une application, écrite en Python (≥ 3.8) et en Javascript, de visualisation, en 2D et en 3D, et d'édition, au travers d'une interface web, de trace GPX sur fond cartographique. Aucune dépendance n'est requise.
+GPXTweaker est une application, écrite en Python (≥ 3.8) et en Javascript, de visualisation, en 2D et en 3D, et d'édition, au travers d'une interface web, de trace GPX sur fond cartographique. Elle offre également la possibilité d'afficher des photos géolocalisées. Aucune dépendance n'est requise.
 
 Lors de la sauvegarde de la trace mise à jour, le fichier inital est renommé, par ajout du suffixe " - original" ou, les fois suivantes, " - backup", dans le même répertoire. Les données inchangées sont, autant que faire se peut, conservées en l'état, sans altération, pour assurer la préservation des champs constituant des extensions par rapport aux standards.
 
@@ -85,7 +85,7 @@ Pour associer les fichers dont l'extension est ".gpx" avec GPXTweaker:
 
 ----------English----------
 
-GPXTweaker is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, GPX tracks on a cartographic background. No dependency is required.
+GPXTweaker is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, GPX tracks on a cartographic background. It also offers the possibility of displaying geotagged photos. No dependency is required.
 
 When saving the updated track, the inital file is renamed, by adding the suffix "- original" or, the following times, "- backup", in the same folder. Unchanged datas are, as much as possible, kept as they are, without alteration, in order to ensure the conservation of fields constituting extensions relatively to standards.
 
