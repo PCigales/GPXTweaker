@@ -6126,7 +6126,15 @@ class GPXTweakerWebInterfaceServer():
   '        foc_old = c;\r\n' \
   '      }\r\n' \
   '      function element_click(e, elt, scroll=true) {\r\n' \
-  '        if (e != null) {e.preventDefault();}\r\n' \
+  '        if (e == null) {\r\n' \
+  '          if (document.activeElement) {\r\n' \
+  '            if (document.activeElement.id) {\r\n' \
+  '              if (document.activeElement.id.indexOf("point") >= 0 || document.activeElement.id == "name_track") {document.activeElement.blur();}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '        }\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        if (elt.htmlFor == ex_foc) {focused = "";} else {focused = elt.htmlFor;}\r\n' \
   '        if (ex_foc != "") {\r\n' \
@@ -6372,6 +6380,12 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (recalc && focused.substring(0, 3) != "way") {segments_calc(pt.parentNode.parentNode);}\r\n' \
+  '      }\r\n' \
+  '      function point_edit_oc(point, recalc=true, coord=true) {\r\n' \
+  '        let ex_foc = focused;\r\n' \
+  '        if (point != focused) {focused = point;}\r\n' \
+  '        point_edit(coord, true, recalc, coord);\r\n' \
+  '        focused = ex_foc;\r\n' \
   '      }\r\n' \
   '      function point_over(pt) {\r\n' \
   '        let foc = null;\r\n' \
@@ -8717,15 +8731,15 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="waypoint%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), true, false)"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit(false, true, false, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), false, false)"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_WAYPOINT_TEMPLATE = HTML_WAYPOINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -8735,15 +8749,15 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="point%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
   '                      <label for="point%salt">{jalt}</label>\r\n' \
-  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
   '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), true, false)"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -11365,7 +11379,6 @@ class GPXTweakerWebInterfaceServer():
   '          let port = portmin + p % (portmax + 1 - portmin);\r\n' \
   '          ph.src = "http://" + location.hostname + ":" + port.toString() + "/photo?" + p.toString();\r\n' \
   '          ph.alt = "";\r\n' \
-  '          ph.title = photos_uri_dt[p];\r\n' \
   '          ph.style.position = "absolute";\r\n' \
   '          ph.style.width = (photos_corners[4 * p + 2] - photos_corners[4 * p]).toString() + "px";\r\n' \
   '          ph.style.height = (photos_corners[4 * p + 3] - photos_corners[4 * p + 1]).toString() + "px";\r\n' \
@@ -11374,6 +11387,9 @@ class GPXTweakerWebInterfaceServer():
   '          if (pd[p].length > 1) {\r\n' \
   '            ph.style.outlineOffset = "-3px";\r\n' \
   '            ph.style.outline = "outset 3px lightgray";\r\n' \
+  '            ph.title = photos_uri_dt[p] + `\r\n\r\n+ ${pd[p].length - 1} …`;\r\n' \
+  '          } else {\r\n' \
+  '            ph.title = photos_uri_dt[p];\r\n' \
   '          }\r\n' \
   '          ph.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
   '          ph.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
@@ -12220,7 +12236,7 @@ class GPXTweakerWebInterfaceServer():
     self.Folders = []
     self.WebMappingServices = []
     self.PhotosFolders = []
-    self.PhotosSize = 32
+    self.PhotosSize = 64
     self.GpuComp = 0
     self.EleGainThreshold = 4
     self.AltGainThreshold = 3
