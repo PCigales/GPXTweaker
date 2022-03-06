@@ -2585,6 +2585,12 @@ class XMLElement(XMLNode):
     else:
       return False
 
+  def getNameSpaces(self):
+    if self.attributes:
+      return list((k[1], v) for k, v in self.attributes.items() if k[0] == XMLNode.XMLNS_NAMESPACE)
+    else:
+      return []
+
   def getChildren(self, localname, namespaceuri=' '):
     if namespaceuri == ' ':
       namespaceuri = self.namespaceURI
@@ -3457,7 +3463,35 @@ class WGS84Track(WGS84WebMercator):
     del self.Track
     self.Track = self.OTrack.cloneNode()
     r = self.Track.documentElement
+    trk = r.getChildren('trk')[trkid]
     try:
+      _r = track.Track.documentElement
+      if mode == 's':
+        _trk = _r.getChildren('trk')[track.TrkId]
+      else:
+        _trk = _r.getChildren('trk')[track.TrkId].cloneNode()
+      for _ln, _v in _r.getNameSpaces():
+        if _trk.getAttribute(_ln, self.XMLNS_NAMESPACE) is not None:
+          continue
+        u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+        if u is None:
+          r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+        elif u != _v[1]:
+          if mode != 's':
+            _trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+          else:
+            raise
+      if mode == 's':
+        for _ln, _v in _trk.getNameSpaces():
+          u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)          
+          if u is None:          
+            u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+            if u is None:
+              trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+            elif u != _v[1]:
+              raise          
+          elif u != _v[1]:
+            raise          
       no = None
       if mode != 'tb':
         cn = r.getChildren('wpt')
@@ -3467,15 +3501,13 @@ class WGS84Track(WGS84WebMercator):
         cn = r.getChildren('metadata')
         if cn:
           no = cn[-1]
-      _r = track.Track.documentElement
       r.insertAfter(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
-      trk = r.getChildren('trk')[trkid]
       if mode == 'tb':
-        r.insertBefore(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
+        r.insertBefore(_trk, trk)
       elif mode == 'ta':
-        r.insertAfter(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
+        r.insertAfter(_trk, trk)
       else:
-        for seg in _r.getChildren('trk')[track.TrkId].getChildren('trkseg'):
+        for seg in _trk.getChildren('trkseg'):
           trk.appendChild(seg.cloneNode())
       if mode == 's':
         self.ProcessGPX('a')
@@ -3494,14 +3526,17 @@ class WGS84Track(WGS84WebMercator):
       if gcie:
         gc.enable()
       return False
-    if mode == 'ta' or mode == 'tb':
+    for s in track.intern_dict.items():
+      self.intern(*s)
+    if mode in ('ta', 'tb'):
       track._tracks = self._tracks
       track.TrkId = trkid if mode == 'tb' else trkid + 1
+      track.intern_dict = self.intern_dict
       track.ProcessGPX('w')
       if mode == 'tb':
         self.TrkId += 1
     for tr in others:
-      if mode == 'ta' or mode == 'tb':
+      if mode in ('ta', 'tb'):
         if tr.TrkId >= trkid:
           tr.TrkId += 1
       tr.ProcessGPX('w')
