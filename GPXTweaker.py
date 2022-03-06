@@ -5028,13 +5028,9 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
-  '        let tiles = handle.getElementsByTagName("img");\r\n' \
+  '        let tiles = Array.from(handle.getElementsByTagName("img"));\r\n' \
   '        if (cleft == null) {\r\n' \
-  '          let i = tiles.length - 1;\r\n' \
-  '          while (i >= 0) {\r\n' \
-  '            handle.removeChild(tiles[i]);\r\n' \
-  '            i--;\r\n' \
-  '          }\r\n' \
+  '          tiles.forEach((t) => handle.removeChild(t));\r\n' \
   '          tiles = [];\r\n' \
   '        }\r\n' \
   '        if (twidth == 0 || theight == 0) {return;}\r\n' \
@@ -5052,16 +5048,12 @@ class GPXTweakerWebInterfaceServer():
   '          ctop = rbottom + 1;\r\n' \
   '          cbottom = rtop - 1;\r\n' \
   '        }\r\n' \
-  '        let i = tiles.length - 1;\r\n' \
   '        if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
-  '          while (i >= 0) {\r\n' \
-  '            let [r, c] = tiles[i].id.split("-").slice(1, 3);\r\n' \
-  '            let row = parseInt(r);\r\n' \
-  '            let col = parseInt(c);\r\n' \
+  '          for (let tile of tiles) {\r\n' \
+  '            let [row, col] = tile.id.split("-").slice(1, 3).map(Number);\r\n' \
   '            if (row < rtop || row > rbottom || col < rleft || col > rright) {\r\n' \
-  '              handle.removeChild(tiles[i]);\r\n' \
+  '              handle.removeChild(tile);\r\n' \
   '            }\r\n' \
-  '            i--;\r\n' \
   '          }\r\n' \
   '          for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '            for (let col=rleft; col<=rright; col++) {\r\n' \
@@ -6294,7 +6286,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function point_desc(ptspan = null) {\r\n' \
   '        if (! ptspan) {\r\n' \
-  '          let points = document.getElementById("content").getElementsByTagName("span");\r\n' \
+  '          let points = Array.from(document.getElementById("content").getElementsByTagName("span"));\r\n' \
   '          for (let p=2; p<points.length; p++) {\r\n' \
   '            points[p].parentNode.firstElementChild.nextElementSibling.innerHTML = point_desc(points[p]);\r\n' \
   '          }\r\n' \
@@ -7078,7 +7070,7 @@ class GPXTweakerWebInterfaceServer():
   '          track.id = "track" + pref.substring(7);\r\n' \
   '          path.id = "path" + pref.substring(7);\r\n' \
   '          path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' \
+  '          let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
   '          let pref_num = document.getElementById("points").getElementsByTagName("span").length;\r\n' \
   '          let dot_ref = document.getElementById(spans[spans.length - 1].id.slice(0, -5).replace("point", "dot")).nextElementSibling;\r\n' \
   '          let mintime = null;\r\n' \
@@ -7249,8 +7241,8 @@ class GPXTweakerWebInterfaceServer():
   '        let maxtime_foc = null;\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
-  '        let spans_foc = seg_foc.getElementsByTagName("span");\r\n' \
-  '        let spans = seg.getElementsByTagName("span");\r\n' \
+  '        let spans_foc = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
+  '        let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
   '        for (let p=0; p<spans_foc.length; p++) {\r\n' \
   '          if (! spans_foc[p].parentNode.firstElementChild.checked || spans_foc[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
   '          let t = Date.parse(document.getElementById(spans_foc[p].id.replace("focus", "time")).value);\r\n' \
@@ -7490,7 +7482,7 @@ class GPXTweakerWebInterfaceServer():
   '        let batch = ++hist_b;\r\n' \
   '        let nmod = 0;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
   '          let positions = [];\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
   '            let pt = document.getElementById(spans[p].id.slice(0, -5));\r\n' \
@@ -7722,7 +7714,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (ex_foc) {\r\n' \
   '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
   '            if (! window.confirm("{#jeasconfirm#}")) {return;}\r\n' \
-  '            spans = document.getElementById(ex_foc + "cont").getElementsByTagName("span");\r\n' \
+  '            spans = Array.from(document.getElementById(ex_foc + "cont").getElementsByTagName("span"));\r\n' \
   '            msg = "{#jmelealt2#}";\r\n' \
   '            seg = document.getElementById(ex_foc + "cont");\r\n' \
   '          } else if (ex_foc.substring(0, 3) == "way") {\r\n' \
@@ -7734,7 +7726,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        } else {\r\n' \
   '          if (! window.confirm("{#jeaconfirm#}")) {return;}\r\n' \
-  '          spans = document.getElementById("points").getElementsByTagName("span");\r\n' \
+  '          spans = Array.from(document.getElementById("points").getElementsByTagName("span"));\r\n' \
   '          msg = "{#jmelealt3#}";\r\n' \
   '        }\r\n' \
   '        if (spans.length == 0) {return;}\r\n' \
@@ -7769,7 +7761,7 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
-  '        let spans = seg_foc.getElementsByTagName("span");\r\n' \
+  '        let spans = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
   '        let stime = null;\r\n' \
   '        let etime = null;\r\n' \
   '        let ralt = null;\r\n' \
@@ -7880,7 +7872,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
   '          let lc = -1;\r\n' \
   '          let pm = [];\r\n' \
   '          let pm_b = [];\r\n' \
