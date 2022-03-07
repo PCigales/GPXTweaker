@@ -2569,11 +2569,22 @@ class XMLElement(XMLNode):
       return None
 
   def setAttribute(self, localname, value, namespaceuri=XMLNode.EMPTY_NAMESPACE, name=''):
-    if namespaceuri == XMLNode.EMPTY_NAMESPACE:
-      name = localname
     if self.attributes is None:
       self.attributes = {}
-    self.attributes[(namespaceuri, localname)] = [name, value]
+    if namespaceuri == XMLNode.EMPTY_NAMESPACE:
+      self.attributes[(namespaceuri, localname)] = [localname, value]
+    elif namespaceuri == XMLNode.XMLNS_NAMESPACE:
+      attr_i = list(self.attributes.items())
+      attr = self.attributes
+      self.attributes = {}
+      for k, v in attr_i:
+        if k[0] != XMLNode.XMLNS_NAMESPACE:
+          break
+        self.attributes[k] = attr.pop(k)
+      self.attributes[(namespaceuri, localname)] = [name, value]
+      self.attributes.update(attr)
+    else:
+      self.attributes[(namespaceuri, localname)] = [name, value]
 
   def removeAttribute(self, localname, namespaceuri=XMLNode.EMPTY_NAMESPACE):
     if self.attributes:
@@ -3466,21 +3477,38 @@ class WGS84Track(WGS84WebMercator):
     trk = r.getChildren('trk')[trkid]
     try:
       _r = track.Track.documentElement
+      _wpt = _r.getChildren('wpt')
+      _w = len(_wpt) > 0
       if mode == 's':
         _trk = _r.getChildren('trk')[track.TrkId]
       else:
         _trk = _r.getChildren('trk')[track.TrkId].cloneNode()
       for _ln, _v in _r.getNameSpaces():
-        if _trk.getAttribute(_ln, self.XMLNS_NAMESPACE) is not None:
-          continue
-        u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
-        if u is None:
-          r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
-        elif u != _v[1]:
-          if mode != 's':
-            _trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
-          else:
+        if _w:
+          u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
+            r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+          elif u != _v[1]:
             raise
+        if _trk.getAttribute(_ln, self.XMLNS_NAMESPACE) is not None:
+            continue
+        if mode == 's':
+          u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
+            if not _w:
+              u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+              if u is None:
+                r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+              elif u != _v[1]:
+                raise          
+          elif u != _v[1]:
+            raise
+        elif not _w:
+          u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
+            r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+          elif u != _v[1]:
+            _trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
       if mode == 's':
         for _ln, _v in _trk.getNameSpaces():
           u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)          
@@ -3491,7 +3519,7 @@ class WGS84Track(WGS84WebMercator):
             elif u != _v[1]:
               raise          
           elif u != _v[1]:
-            raise          
+            raise
       no = None
       if mode != 'tb':
         cn = r.getChildren('wpt')
@@ -3501,7 +3529,7 @@ class WGS84Track(WGS84WebMercator):
         cn = r.getChildren('metadata')
         if cn:
           no = cn[-1]
-      r.insertAfter(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
+      r.insertAfter(list(n.cloneNode() for n in _wpt), no)
       if mode == 'tb':
         r.insertBefore(_trk, trk)
       elif mode == 'ta':
