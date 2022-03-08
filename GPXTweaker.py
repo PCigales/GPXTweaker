@@ -1,4 +1,4 @@
-# GPXTweaker (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -65,7 +65,7 @@ FR_STRINGS = {
     'tilelexpired': 'tuile locale %s expirée',
     'tilefetch': 'récupération de la tuile %s',
     'tilerfail': 'échec de la fourniture de la tuile %s',
-    'tileretrieved': 'tuile %s fournie',
+    'tileretrieved': 'tuile %s fournie'
   },
   'track': {
     '_id': 'Gestionnaire de trace',
@@ -76,16 +76,16 @@ FR_STRINGS = {
     'loaded': 'trace %s chargée (nom: "%s", points de cheminement: %s, segments: %s, points: %s)',
     'save': 'enregistrement de la trace sous %s',
     'serror': 'échec de l\'enregistrement de la trace sous %s',
-    'saved': 'trace enregistrée sous %s',
+    'saved': 'trace enregistrée sous %s'
   },
-  'photos': {
-     '_id': 'Gestionnaire de photos',
-     'dlerror': 'échec de la récupération des données de la photo %s',
-     'dloaded': 'données de la photo %s récupérées',
-     'dskipped': 'photo %s sautée car débordant de la vue',
-     'dtloaded': '%d photo(s) prise(s) en compte en %.1fs',
-     'plerror': 'échec du chargement de la photo %s',
-     'ploaded': 'photo %s chargée',
+  'geomedia': {
+     '_id': 'Gestionnaire de médias géolocalisés',
+     'mdlerror': 'échec de la récupération des données du média %s',
+     'mdloaded': 'données du média %s récupérées',
+     'mskipped': 'média %s sauté car débordant de la vue',
+     'mtloaded': '%d photo(s) et %d vidéo(s) prise(s) en compte en %.1fs',
+     'moerror': 'échec de l\'ouverture du média %s',
+     'mopened': 'média %s ouvert'
   },
   'interface': {
     '_id': 'Interface',
@@ -161,7 +161,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
-    'jswitchphotos': 'afficher / masquer les photos&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
+    'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
@@ -179,7 +179,7 @@ FR_STRINGS = {
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
     'jdfpanel': 'Plage lissage points',
-    'jphpanel': 'Taille des miniatures',
+    'jmtpanel': 'Taille des miniatures',
     'jpixels': '&nbsp;pixels',
     'jfilterpanel1': 'Seuils calcul dénivelé',
     'jfilterpanel2': 'Plages calcul pente',
@@ -192,7 +192,7 @@ FR_STRINGS = {
     'jfoldersw': 'Répertoires:',
     'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo pour l\'afficher en grand puis clic gauche pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -258,9 +258,9 @@ FR_STRINGS = {
     'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
     'jm3dviewer2': 'Visionneuse 3D démarrée',
     'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
-    'jmphotos1': 'Récupération des données des photos en cours...',
-    'jmphotos2': 'Récupération des données des photos effectuée',
-    'jmphotos3': 'Échec de la récupération des données des photos',
+    'jmmedia1': 'Récupération des données des médias en cours...',
+    'jmmedia2': 'Récupération des données des médias effectuée',
+    'jmmedia3': 'Échec de la récupération des données des médias',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -298,7 +298,7 @@ FR_STRINGS = {
     'jvfov': 'Champ de vue vertical:',
     'jheight': 'Hauteur de vue:',
     'start': 'démarrage',
-    'close': 'fermeture',
+    'close': 'fermeture'
   },
   'parser': {
     'license': 'Ce programme est sous licence copyleft GNU GPLv3 (voir https://www.gnu.org/licenses)',
@@ -314,7 +314,7 @@ FR_STRINGS = {
     'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
     'gpx': 'seuls les fichiers .gpx sont pris en charge',
     'open': 'Ouvrir l\'url %s',
-    'keyboard': 'Presser "S" pour quitter',
+    'keyboard': 'Presser "S" pour quitter'
    }
 }
 EN_STRINGS = {
@@ -331,7 +331,7 @@ EN_STRINGS = {
     'configure': 'configuration (tiles set: %s, matrix: %s)',
     'ifound': 'informations found in cache (tiles set: %s, matrix: %s)',
     'fail': 'failure of configuration (tiles set: %s, matrix: %s)',
-    'close': 'shutdown',
+    'close': 'shutdown'
   },
   'map': {
     '_id': 'Map handler',
@@ -346,7 +346,7 @@ EN_STRINGS = {
     'tilelexpired': 'local tile %s expired',
     'tilefetch': 'fetching of tile %s',
     'tilerfail': 'failure of providing of tile %s',
-    'tileretrieved': 'tile %s provided',
+    'tileretrieved': 'tile %s provided'
   },
   'track': {
     '_id': 'Track manager',
@@ -357,16 +357,16 @@ EN_STRINGS = {
     'loaded': 'track %s loaded (name: "%s", waypoints: %s, segments: %s, points: %s)',
     'save': 'saving of track as %s',
     'serror': 'failure of saving of track under %s',
-    'saved': 'track saved as %s',
+    'saved': 'track saved as %s'
   },
-  'photos': {
-     '_id': 'Photos manager',
-     'dlerror': 'failure of the retrieval of the data of the photo %s',
-     'dloaded': 'data of the photo %s retrieved',
-     'dskipped': 'photo %s skipped because overflowing with the view',
-     'dtloaded': '%d photo(s) taken into account in %.1fs',
-     'plerror': 'failure of the loading of the photo %s',
-     'ploaded': 'photo %s loaded',
+  'geomedia': {
+     '_id': 'Media manager',
+     'mdlerror': 'failure of the retrieval of the data of the media %s',
+     'mdloaded': 'data of the media %s retrieved',
+     'mskipped': 'media %s skipped because overflowing with the view',
+     'mtloaded': '%d photo(s) and %d video(s) taken into account in %.1fs',
+     'moerror': 'failure of the opening of the media %s',
+     'mopened': 'media %s opened'
   },
   'interface': {
     '_id': 'Interface',
@@ -442,7 +442,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
-    'jswitchphotos': 'show / hide the photos&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
+    'jswitchmedia': 'show / hide the media&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
@@ -460,7 +460,7 @@ EN_STRINGS = {
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
     'jdfpanel': 'Range points smoothing',
-    'jphpanel': 'Thumbnails size',
+    'jmtpanel': 'Thumbnails size',
     'jpixels': '&nbsp;pixels',
     'jfilterpanel1': 'Thresholds gain calcul',
     'jfilterpanel2': 'Ranges slope calcul',
@@ -473,7 +473,7 @@ EN_STRINGS = {
     'jfoldersw': 'Folders:',
     'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
-    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo to display it big then left click to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
+    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
     'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to  lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -536,9 +536,9 @@ EN_STRINGS = {
     'jmsave1': 'Backup in progress...',
     'jmsave2': 'Backup completed',
     'jmsave3': 'Failure of the backup',
-    'jmphotos1': 'Retrieval of the data of the photos in progress...',
-    'jmphotos2': 'Retrieval of the data of the photos completed',
-    'jmphotos3': 'Failure of the retrieval of the data of the photos',
+    'jmmedia1': 'Retrieval of the data of the media in progress...',
+    'jmmedia2': 'Retrieval of the data of the media completed',
+    'jmpmedia3': 'Failure of the retrieval of the data of the media',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -579,7 +579,7 @@ EN_STRINGS = {
     'jvfov': 'Vertical field of view:',
     'jheight': 'Height of view:',
     'start': 'start-up',
-    'close': 'shutdown',
+    'close': 'shutdown'
   },
   'parser': {
     'license': 'This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)',
@@ -595,7 +595,7 @@ EN_STRINGS = {
     'verbosity': 'verbosity level from 0 to 2 [0 by default]',
     'gpx': 'only .gpx files are supported',
     'open': 'Open the url %s',
-    'keyboard': 'Press "S" to exit',
+    'keyboard': 'Press "S" to exit'
    }
 }
 LSTRINGS = EN_STRINGS
@@ -656,7 +656,7 @@ class HTTPMessage():
       if decode:
         self.body = self.body.decode(decode)
 
-  def header(self, name, default = None):
+  def header(self, name, default=None):
     return self.headers.get(name.upper(), default)
 
   def _read_headers(self, msg):
@@ -3588,20 +3588,22 @@ class WebMapping():
       return None
 
 
-class GeotaggedPhotos():
+class GeotaggedMedia():
 
-  def __init__(self, folders, box=None):
+  def __init__(self, folders, photos=True, videos=True, box=None):
     self.Folders = folders
+    self.Photos = photos
+    self.Videos = videos
     self.Box = box
     self.DLock = threading.Lock()
     self.Data = None
     self.Uris = None
-    self.log = partial(log, 'photos')
+    self.log = partial(log, 'geomedia')
 
   @staticmethod
-  def _read_data(image):
+  def _read_jpg_data(photo):
     try:
-      f = open(image, 'rb')
+      f = open(photo, 'rb')
     except:
       return None
     try:
@@ -3610,7 +3612,7 @@ class GeotaggedPhotos():
       t = f.read(2)
       if t == b'\xff\xe0':
         l = struct.unpack('!H', f.read(2))[0]
-        f.read(l - 2)
+        f.seek(l - 2, os.SEEK_CUR)
         t = f.read(2)
       if t != b'\xff\xe1':
         raise
@@ -3623,7 +3625,7 @@ class GeotaggedPhotos():
         raise
       if f.read(2) != (b'\x00\x2a' if ba == '>' else b'\x2a\x00') :
         raise
-      f.read(struct.unpack(ba + 'I', f.read(4))[0] - 8)
+      f.seek(struct.unpack(ba + 'I', f.read(4))[0] - 8, os.SEEK_CUR)
       ne = struct.unpack(ba + 'H', f.read(2))[0]
       if ne == 0:
         raise
@@ -3715,48 +3717,204 @@ class GeotaggedPhotos():
         pass
     return *WGS84WebMercator.WGS84toWebMercator(lat, lon), (dimensions[1] / dimensions[0] if orientation in (6, 8) else dimensions[0] / dimensions[1]), datetime
 
-  def GetData(self):
-    with self.DLock:
-      if self.Data is None:
-        self.Uris = []
-        uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() in ('jpg', 'jpeg'))
-        ti = time.time()
-        gps_ar = []
-        dt = []
-        for u in uris:
-          data = self._read_data(u)
-          if data is not None:
-            if self.Box is not None:
-              if data[0] < self.Box[0] or data[0] > self.Box[2] or data[1] < self.Box[1] or data[1] > self.Box[3]:
-                self.log(2, 'dskipped', u)
-                continue
-            self.Uris.append(u)
-            gps_ar.extend(data[0:3])
-            dt.append(data[3])
-            self.log(2, 'dloaded', u)
-          else:
-            self.log(1, 'dlerror', u)
-        if len(self.Uris) > 0:
-          self.Data = (struct.pack('=%dd' % len(gps_ar), *gps_ar), ('|'.join(map('\r\n'.join, zip(self.Uris, dt)))).encode('utf-8'))
-        else:
-          self.Data = (b'', b'')
-        self.log(0, 'dtloaded', len(self.Uris), time.time() - ti)
-    return self.Data
-
-  def GetPhoto(self, ind):
+  @staticmethod
+  def _read_mp4_data(video):
     try:
-      f = open(self.Uris[ind], 'rb')
-      photo = f.read();
+      f = open(video, 'rb')
     except:
-      self.log(1, 'plerror', self.Uris[ind])
+      return None
+    try:
+      l = struct.unpack('>I', f.read(4))[0]
+      if f.read(4) != b'ftyp':
+        raise
+      f.seek(l - 8, os.SEEK_CUR)
+      t = b''
+      l = 0
+      while t != b'moov':
+        f.seek(l, os.SEEK_CUR)
+        l = f.read(4)
+        if l == b'':
+          break
+        l = struct.unpack('>I', l)[0]
+        t = f.read(4)
+        if l == 1:
+          l = struct.unpack('>Q', f.read(8))[0] - 16
+        else:
+          l -= 8
+      if t != b'moov':
+        raise
+      mvhd = None
+      udtas = []
+      traks = []
+      t = b''
+      e = 0
+      s = l
+      l = 0
+      while e < s:
+        f.seek(l, os.SEEK_CUR)
+        l = struct.unpack('>I', f.read(4))[0]
+        e += l
+        t = f.read(4)
+        if l == 1:
+          l = struct.unpack('>Q', f.read(8))[0] - 16
+        else:
+          l -= 8
+        if t == b'mvhd':
+          if l < 8:
+            raise
+          mvhd = (f.tell(), l)
+        elif t == b'udta':
+          udtas.append((f.tell(), l))
+        elif t == b'trak':
+          traks.append((f.tell(), l))
+      if mvhd is None or not udtas or not traks:
+        raise
+      f.seek(mvhd[0] + 4) 
+      datetime = struct.unpack('>I', f.read(4))[0]
+      if datetime:
+        datetime = time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(struct.unpack('>I', f.read(4))[0] - 2082844800))
+      else:
+        datetime = ''
+      gps = None
+      for udta in udtas:
+        t = b''
+        e = 0
+        s = udta[1]
+        l = 0
+        f.seek(udta[0])
+        while t != b'\xa9xyz' and e < s:
+          f.seek(l, os.SEEK_CUR)
+          l = struct.unpack('>I', f.read(4))[0]
+          e += l
+          t = f.read(4)
+          if l == 1:
+            l = struct.unpack('>Q', f.read(8))[0] - 16
+          else:
+            l -= 8
+        if t == b'\xa9xyz':
+          l = struct.unpack('>H', f.read(2))[0]
+          f.seek(2, os.SEEK_CUR)
+          if l % 2 == 0 and l >= 8:
+            gps = f.read(l)
+        if gps is not None:
+          break
+      if gps is None:
+        raise
+      c = gps.find(b'+', 1)
+      if c < 0:
+        c = gps.find(b'-')
+      if c < 0:
+        raise
+      lat = gps[0:c]
+      d = lat.find(b'.')
+      if d == 3:
+        lat = float(lat)
+      elif d == 5:
+        lat = float(lat[0:1] + b'1') * (float(lat[1:3]) + float(lat[3:]) / 60)
+      elif d == 7:
+        lat = float(lat[0:1] + b'1') * (float(lat[1:3]) + float(lat[3:5]) / 60 + float(lat[5:]) / 3600)
+      else:
+        raise
+      lon = gps[c:-1]
+      d = lon.find(b'.')
+      if d == 4:
+        lon = float(lon)
+      elif d == 6:
+        lon = float(lon[0:1] + b'1') * (float(lon[1:4]) + float(lon[4:]) / 60)
+      elif d == 8:
+        lon = float(lon[0:1] + b'1') * (float(lon[1:4]) + float(lon[4:6]) / 60 + float(lon[6:]) / 3600)
+      else:
+        raise
+      matrix = None
+      width = None
+      height = None
+      for trak in traks:
+        t = b''
+        e = 0
+        s = trak[1]
+        l = 0
+        f.seek(trak[0])
+        while t != b'tkhd' and e < s:
+          f.seek(l, os.SEEK_CUR)
+          l = struct.unpack('>I', f.read(4))[0]
+          e += l
+          t = f.read(4)
+          if l == 1:
+            l = struct.unpack('>Q', f.read(8))[0] - 16
+          else:
+            l -= 8
+        if t == b'tkhd':
+          if l < 84:
+            raise
+          f.seek(40, os.SEEK_CUR) 
+          matrix = f.read(36)
+          if matrix[0:4] == b'\x00\x01\x00\x00':
+            width = struct.unpack('>I', f.read(4))[0] >> 16
+            height = struct.unpack('>I', f.read(4))[0] >> 16
+          else:
+            height = struct.unpack('>I', f.read(4))[0] >> 16
+            width = struct.unpack('>I', f.read(4))[0] >> 16
+          if width and height:
+            break
+      if not width or not height:
+        raise
+    except:
       return None
     finally:
       try:
         f.close()
       except:
         pass
-    self.log(2, 'ploaded', self.Uris[ind])
-    return photo
+    return *WGS84WebMercator.WGS84toWebMercator(lat, lon), width / height, datetime
+
+  def GetData(self):
+    with self.DLock:
+      if self.Data is None:
+        self.Uris = []
+        uris_p = []
+        uris_v = []
+        if self.Photos:
+          uris_p = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() in ('jpg', 'jpeg'))
+        if self.Videos:
+          uris_v = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() == 'mp4')
+        ti = time.time()
+        gps_ar = []
+        dt = []
+        nm = []
+        rd = self._read_jpg_data
+        for uris in (uris_p, uris_v):
+          for u in uris:
+            data = rd(u)
+            if data is not None:
+              if self.Box is not None:
+                if data[0] < self.Box[0] or data[0] > self.Box[2] or data[1] < self.Box[1] or data[1] > self.Box[3]:
+                  self.log(2, 'mskipped', u)
+                  continue
+              self.Uris.append(u)
+              gps_ar.extend(data[0:3])
+              dt.append(data[3])
+              self.log(2, 'mdloaded', u)
+            else:
+              self.log(1, 'mdlerror', u)
+          nm.append(len(self.Uris) - sum(nm))
+          rd = self._read_mp4_data
+        if len(self.Uris) > 0:
+          self.Data = (struct.pack('=%dd' % len(gps_ar), *gps_ar), ('|'.join(map('\r\n'.join, zip(self.Uris, dt)))).encode('utf-8'))
+        else:
+          self.Data = (b'', b'')
+        self.log(0, 'mtloaded', *nm, time.time() - ti)
+    return self.Data
+
+  def Open(self, ind):
+    try:
+      u = 'Media%s' % ind
+      u = self.Uris[ind]
+      f = open(u, 'rb')
+    except:
+      self.log(1, 'moerror', u)
+      return None, None
+    self.log(2, 'mopened', u)
+    return ('video/mp4' if u.rpartition('.')[2].lower() == 'mp4' else 'image/jpeg'), f
 
 
 class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
@@ -3788,11 +3946,11 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       '%s'\
-      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True),       'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
+      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True),       'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
       try:
         self.request.sendall(resp_e.encode('ISO-8859-1'))
         if e != 501:
-          self.server.Interface.log(2, {404: 'rnfound', 412: 'rbad', 422: 'rfailed'}.get(e, 'rnfound'), req.method, req.path)
+          self.server.Interface.log(2, {404: 'rnfound', 412: 'rbad', 422: 'rfailed', 416: 'rfailed'}.get(e, 'rnfound'), req.method, req.path)
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
     def _send_err_ni():
@@ -3803,7 +3961,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       _send_err(412)
     def _send_err_fail():
       _send_err(422)
-    def _send_resp(btype):
+    def _send_err_rns():
+      _send_err(416)
+    def _send_resp(btype, s=None):
       resp_200 = 'HTTP/1.1 200 OK\r\n' \
       'Content-Type: ##type##\r\n' \
       'Content-Length: ##len##\r\n' \
@@ -3814,12 +3974,14 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
       try:
         if req.method == 'GET' or req.method == 'POST':
-          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
         else:
-          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1'))
         self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
     def _send_resp_nc():
       resp_204 = 'HTTP/1.1 204 No content\r\n' \
       'Content-Length: 0\r\n' \
@@ -3830,8 +3992,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       try:
         self.request.sendall(resp_204.encode('ISO-8859-1'))
         self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
     def _send_resp_tr(loc):
       resp_307 = 'HTTP/1.1 307 Temporary Redirect\r\n' \
       'Content-Length: 0\r\n' \
@@ -3843,8 +4007,31 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       try:
         self.request.sendall(resp_307.encode('ISO-8859-1'))
         self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
+    def _send_resp_pc(btype, rs, re, s):
+      resp_206 = 'HTTP/1.1 206 Partial Content\r\n' \
+      'Content-Type: ##type##\r\n' \
+      'Content-Length: %d\r\n' \
+      'Date: %s\r\n' \
+      'Server: GPXTweaker\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      'Access-Control-Allow-Origin: %s\r\n' \
+      'Accept-Ranges: bytes\r\n' \
+      'Content-Range: bytes %d-%d/%d\r\n' \
+      '\r\n' % (re - rs, email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]), rs, re - 1, s)
+      try:
+        if req.method == 'GET' or req.method == 'POST':
+          self.request.sendall(resp_206.replace('##type##', btype).encode('ISO-8859-1') + resp_body)
+        else:
+          self.request.sendall(resp_206.replace('##type##', btype).encode('ISO-8859-1'))
+        self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
+      except:
+        self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
     with selectors.DefaultSelector() as selector:
       selector.register(self.request, selectors.EVENT_READ)
       closed = False
@@ -4066,40 +4253,85 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               _send_resp('application/octet-stream')
             except:
               _send_err_fail()
-          elif req.path.lower() == '/photos/gps_ar':
+          elif req.path.lower() == '/media/gps_ar':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             try:
-              resp_body = self.server.Interface.Photos.GetData()[0]
+              resp_body = self.server.Interface.Media.GetData()[0]
               if resp_body:
                 _send_resp('application/octet-stream')
               else:
                 _send_err_nf()
             except:
               _send_err_fail()
-          elif req.path.lower() == '/photos/uri_dt':
+          elif req.path.lower() == '/media/uri_dt':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             try:
-              resp_body = self.server.Interface.Photos.GetData()[1]
+              resp_body = self.server.Interface.Media.GetData()[1]
               if resp_body:
                 _send_resp('application/octet-stream')
               else:
                 _send_err_nf()
             except:
               _send_err_fail()
-          elif req.path.lower()[:7] == '/photo?':
+          elif req.path.lower()[:7] == '/media?':
             try:
-              pind = int(req.path.split('?')[1])
-              resp_body = self.server.Interface.Photos.GetPhoto(pind)
-              if resp_body:
-                _send_resp('image/jpeg')
-              else:
+              mind = int(req.path.split('?')[1])
+              mtype, med = self.server.Interface.Media.Open(mind)
+              if not mtype:
                 _send_err_nf()
+                continue
+              med.seek(0, os.SEEK_END)
+              msize = med.tell()
+              resp_body = b''
+              req_range = req.header('range', '')
+              if req_range:
+                try:
+                  req_range = req_range.split("=")[-1].split("-")
+                  req_start = req_range[0].strip()
+                  req_end = req_range[1].split(",")[0].strip()
+                  if not req_start:
+                    req_start = msize - int(req_end)
+                    req_end = msize
+                  else:
+                    req_start = int(req_start)
+                    if req_end:
+                      req_end = int(req_end) + 1
+                    else:
+                      req_end = msize
+                    if req_start < 0 or req_start > req_end or req_end > msize:
+                      raise
+                except:
+                  _send_err_rns()
+                  continue
+              else:
+                req_start = 0
+                req_end = msize
+              if (_send_resp(mtype, msize) if req_range == '' else _send_resp_pc(mtype, req_start, req_end, msize) and req.method == 'GET'):
+                med.seek(req_start)
+                while req_start < req_end:
+                  if self.server.__dict__['_BaseServer__shutdown_request'] or self.server.__dict__['_BaseServer__is_shut_down'].is_set():
+                    break
+                  resp_body = med.read(min(1048576, req_end - req_start))
+                  if not resp_body:
+                    closed = True
+                    break
+                  req_start += len(resp_body)
+                  try:
+                    self.request.sendall(resp_body)
+                  except:
+                    closed = True
+                    break
             except:
               _send_err_fail()
+            finally:
+              try:
+                med.close()
+              except:
+                pass
           elif req.path.lower()[:7] == '/detach':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
@@ -4445,7 +4677,7 @@ class GPXTweakerWebInterfaceServer():
   '        width:7em;\r\n' \
   '        height:1.7em;\r\n' \
   '      }\r\n' \
-  '      div[id=dfpanel], div[id=phpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
+  '      div[id=dfpanel], div[id=mtpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
   '        display:none;\r\n' \
   '        position:absolute;\r\n' \
   '        top:calc(1.6em + 10px);\r\n' \
@@ -4459,14 +4691,14 @@ class GPXTweakerWebInterfaceServer():
   '        font-weight:normal;\r\n' \
   '        user-select:none;\r\n' \
   '      }\r\n' \
-  '      label[for$=filter], label[for$=margin] {\r\n' \
+  '      label[for$=filter], label[for$=margin], label[for=mthumb] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:1.5em;\r\n' \
   '        text-align:center;\r\n' \
   '        font-weight:normal;\r\n' \
   '        font-size:90%;\r\n' \
   '      }\r\n' \
-  '      span[id=dfdist], span[id=phsize], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
+  '      span[id=dfdist], span[id=mtsize], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
   '        width:2em;\r\n' \
@@ -4499,6 +4731,7 @@ class GPXTweakerWebInterfaceServer():
   '        filter:var(--filter);\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
+  '      const host = location.hostname + ":";\r\n' \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
   '      var cleft = null;\r\n' \
   '      var cright = null;\r\n' \
@@ -5079,7 +5312,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
   '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
-  '          tile.src = "http://" + location.hostname + ":" + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '          tile.src = "http://" + host + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
@@ -5409,7 +5642,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.display = "none";\r\n' \
-  '        document.getElementById("phpanel").style.display = "none";\r\n' \
+  '        document.getElementById("mtpanel").style.display = "none";\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
@@ -5614,7 +5847,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.display = "none";\r\n' \
-  '        document.getElementById("phpanel").style.display = "none";\r\n' \
+  '        document.getElementById("mtpanel").style.display = "none";\r\n' \
   '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
   '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
@@ -5813,7 +6046,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing++;\r\n' \
   '        xhrep.send();\r\n' \
   '      }\r\n'
-  HTML_DFPHPANEL_TEMPLATE = \
+  HTML_DFMTPANEL_TEMPLATE = \
   '            <div id="dfpanel">\r\n' \
   '              <span>{#jdfpanel#}</span>\r\n' \
   '              <form id="dfform" autocomplete="off" onsubmit="return(false);">\r\n' \
@@ -5822,12 +6055,12 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="20" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="phpanel">\r\n' \
-  '              <span>{#jphpanel#}</span>\r\n' \
-  '              <form id="phform" autocomplete="off" onsubmit="return(false);" onchange="update_photos();">\r\n' \
-  '                <label for="phthumbs" style="left:1.5em;width:8em;">{#jpixels#}</label>\r\n' \
-  '                <span id="phsize" style="left:4.5em;">##THUMBSIZE##</span>\r\n' \
-  '                <input type="range" id="phthumbs" name="phthumbs" min="8" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '            <div id="mtpanel">\r\n' \
+  '              <span>{#jmtpanel#}</span>\r\n' \
+  '              <form id="mtform" autocomplete="off" onsubmit="return(false);" onchange="update_media();">\r\n' \
+  '                <label for="mthumb" style="left:1.5em;width:8em;">{#jpixels#}</label>\r\n' \
+  '                <span id="mtsize" style="left:4.5em;">##THUMBSIZE##</span>\r\n' \
+  '                <input type="range" id="mthumb" name="mthumb" min="8" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
@@ -5926,7 +6159,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tlock").style.fontWeight="500";\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.right = "calc(2vw + " + (mode=="tiles"?"15":"12.3") + "em - 30px)";\r\n' \
-  '        document.getElementById("phpanel").style.right = "calc(2vw + " + (mode=="tiles"?"30.9":"28.2") + "em - 30px)";\r\n' \
+  '        document.getElementById("mtpanel").style.right = "calc(2vw + " + (mode=="tiles"?"30.9":"28.2") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -8427,7 +8660,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
   '        } else if (mode3d) {\r\n' \
-  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
+  '          window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
@@ -8505,7 +8738,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_DFPHPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -8938,6 +9171,7 @@ class GPXTweakerWebInterfaceServer():
   '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
   '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
   HTML_3D_GLOBALVARS_TEMPLATE = \
+  '      const host = location.hostname + ":";\r\n' \
   '      var canvas = document.getElementById("canvas");\r\n' \
   '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '      canvas.addEventListener("webglcontextlost", function(event) {event.preventDefault();gl_programs=new Map();}, false);\r\n' \
@@ -9209,7 +9443,7 @@ class GPXTweakerWebInterfaceServer():
   '              tile.crossOrigin = "anonymous";\r\n' \
   '              tile.onload = (e) => {tload_cb(e.target, row, col);};\r\n' \
   '              tile.onerror = (e) => {terr_cb();};\r\n' \
-  '              tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
+  '              tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
   '            }\r\n' \
   '            if (crow < tmaxrow) {\r\n' \
   '              crow++;\r\n' \
@@ -10534,7 +10768,10 @@ class GPXTweakerWebInterfaceServer():
   '        image-orientation:from-image;\r\n' \
   '        cursor:zoom-in;\r\n' \
   '      }\r\n' \
-  '      div[id=photoview] {\r\n' \
+  '      video[id^=video] {\r\n' \
+  '        cursor:zoom-in;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] {\r\n' \
   '        position:absolute;\r\n' \
   '        z-index:10;\r\n' \
   '        width:100%;\r\n' \
@@ -10548,17 +10785,19 @@ class GPXTweakerWebInterfaceServer():
   '        line-height:0;\r\n' \
   '        user-select:none;\r\n' \
   '      }\r\n' \
-  '      div[id=photoview] img {\r\n' \
-  '        filter:none;\r\n' \
+  '      div[id=mediaview] * {\r\n' \
   '        display:inline-block;\r\n' \
   '        max-height:100%;\r\n' \
   '        max-width:100%;\r\n' \
   '        vertical-align:top;\r\n' \
   '        object-fit:scale-down;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] img {\r\n' \
+  '        filter:none;\r\n' \
   '        image-orientation:from-image;\r\n' \
   '        cursor:nesw-resize;\r\n' \
   '      }\r\n' \
-  '      div[id=photoview] img:not(:last-child) {\r\n' \
+  '      div[id=mediaview] *:not(:last-child) {\r\n' \
   '        margin-right:1em;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
@@ -10569,12 +10808,14 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
-  '      var photos_visible = false;\r\n' \
-  '      var photos_gps_ar = null;\r\n' \
-  '      var photos_uri_dt = null;\r\n' \
-  '      var photos_corners = null;\r\n' \
-  '      var photos_sides = null;\r\n' \
-  '      var photos_div = null;\r\n' + HTML_MSG_TEMPLATE + \
+  '      var media_visible = false;\r\n' \
+  '      var media_gps_ar = null;\r\n' \
+  '      var media_uri_dt = null;\r\n' \
+  '      var media_isvid = null;\r\n' \
+  '      var media_corners = null;\r\n' \
+  '      var media_sides = null;\r\n' \
+  '      var media_div = null;\r\n' \
+  '      var media_fs = false;\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
@@ -10598,10 +10839,10 @@ class GPXTweakerWebInterfaceServer():
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
-  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit('update_tiles();\r\n', 1)[0] + 'let pvis = photos_visible;\r\n' \
-  '        hide_photos("m");\r\n' \
+  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit('update_tiles();\r\n', 1)[0] + 'let mvis = media_visible;\r\n' \
+  '        hide_media("m");\r\n' \
   '        update_tiles();\r\n' \
-  '        if (pvis) {show_photos();}\r\n' \
+  '        if (mvis) {show_media();}\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(track=null) {\r\n' \
@@ -11008,8 +11249,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
-  '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        photos_sides = null;\r\n') + \
+  '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
@@ -11332,11 +11573,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (isNaN(c[0]) || isNaN(c[1])) {return;}\r\n' \
   '        window.open(wmsel.options[wmsel.selectedIndex].value.replace("{lat}", c[0].toString()).replace("{lon}", c[1].toString()));\r\n' \
   '      }\r\n' \
-  '      function switch_phpanel() {\r\n' \
-  '        if (document.getElementById("phpanel").style.display != "initial") {\r\n' \
-  '          document.getElementById("phpanel").style.display = "initial";\r\n' \
+  '      function switch_mtpanel() {\r\n' \
+  '        if (document.getElementById("mtpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("mtpanel").style.display = "initial";\r\n' \
   '        } else {\r\n' \
-  '          document.getElementById("phpanel").style.display = "none";\r\n' \
+  '          document.getElementById("mtpanel").style.display = "none";\r\n' \
   '        }\r\n' \
   '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
@@ -11350,195 +11591,203 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.response == "") {return error_pcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (t.responseURL.indexOf("gps_ar") > 0) {\r\n' \
-  '          photos_gps_ar = new Float64Array(t.response);\r\n' \
-  '          photos_corners = new Float64Array(photos_gps_ar.length / 3 * 4);\r\n' \
+  '          media_gps_ar = new Float64Array(t.response);\r\n' \
+  '          media_corners = new Float64Array(media_gps_ar.length / 3 * 4);\r\n' \
   '        } else {\r\n' \
-  '          photos_uri_dt = t.response.split("|");\r\n' \
+  '          media_uri_dt = t.response.split("|");\r\n' \
+  '          let rv = RegExp(/\\.mp4($|\\r)/, "i");\r\n' \
+  '          media_isvid = media_uri_dt.map((s) => rv.test(s));\r\n' \
   '        }\r\n' \
-  '        show_photos();\r\n' \
+  '        show_media();\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
-  '      function photos_process() {\r\n' \
-  '        let nph = photos_gps_ar.length / 3;\r\n' \
-  '        photos_sides = [];\r\n' \
+  '      function media_process() {\r\n' \
+  '        let nm = media_gps_ar.length / 3;\r\n' \
+  '        media_sides = [];\r\n' \
   '        let zf = zoom / tscale;\r\n' \
-  '        let ps = parseFloat(document.getElementById("phsize").innerHTML) / 2;\r\n' \
-  '        for (let p=0; p<nph; p++) {\r\n' \
-  '          let px = (photos_gps_ar[3 * p] - htopx) * zf;\r\n' \
-  '          let py = (htopy - photos_gps_ar[3 * p + 1]) * zf;\r\n' \
-  '          let pr = photos_gps_ar[3 * p + 2];\r\n' \
-  '          if (pr >= 1) {\r\n' \
-  '            photos_corners.set([px - ps, py - ps / pr, px + ps, py + ps / pr], 4 * p);\r\n' \
+  '        let ts = parseFloat(document.getElementById("mtsize").innerHTML) / 2;\r\n' \
+  '        for (let m=0; m<nm; m++) {\r\n' \
+  '          let mx = (media_gps_ar[3 * m] - htopx) * zf;\r\n' \
+  '          let my = (htopy - media_gps_ar[3 * m + 1]) * zf;\r\n' \
+  '          let mr = media_gps_ar[3 * m + 2];\r\n' \
+  '          if (mr >= 1) {\r\n' \
+  '            media_corners.set([mx - ts, my - ts / mr, mx + ts, my + ts / mr], 4 * m);\r\n' \
   '          } else {\r\n' \
-  '            photos_corners.set([px - ps * pr, py - ps, px + ps * pr, py + ps], 4 * p);\r\n' \
+  '            media_corners.set([mx - ts * mr, my - ts, mx + ts * mr, my + ts], 4 * m);\r\n' \
   '          }\r\n' \
-  '          photos_sides.push({"o":0, "p":p}, {"o":2, "p":p});\r\n' \
+  '          media_sides.push({"o":0, "m":m}, {"o":2, "m":m});\r\n' \
   '        }\r\n' \
-  '        photos_sides.sort((a, b) => (photos_corners[4 * a.p + a.o] - photos_corners[4 * b.p + b.o]) || (b.o - a.o) || (photos_corners[4 * a.p + 1] - photos_corners[4 * b.p + 1]) || (photos_corners[4 * a.p + 3] - photos_corners[4 * b.p + 3]));\r\n' \
+  '        media_sides.sort((a, b) => (media_corners[4 * a.m + a.o] - media_corners[4 * b.m + b.o]) || (b.o - a.o) || (media_corners[4 * a.m + 1] - media_corners[4 * b.m + 1]) || (media_corners[4 * a.m + 3] - media_corners[4 * b.m + 3]));\r\n' \
   '      }\r\n' \
-  '      function photos_gen() {\r\n' \
-  '        photos_div = document.createElement("div");\r\n' \
-  '        photos_div.id = "photos";\r\n' \
-  '        let nph = photos_corners.length / 4;\r\n' \
-  '        let pd = Array(nph);\r\n' \
-  '        pd.fill([]);\r\n' \
+  '      function media_gen() {\r\n' \
+  '        media_div = document.createElement("div");\r\n' \
+  '        media_div.id = "media";\r\n' \
+  '        let nm = media_corners.length / 4;\r\n' \
+  '        let md = Array(nm);\r\n' \
+  '        md.fill([]);\r\n' \
   '        let cs = [];\r\n' \
   '        let xl = -hpx;\r\n' \
   '        let xr = xl + viewpane.offsetWidth;\r\n' \
   '        let yt = -hpy;\r\n' \
   '        let yb = yt + viewpane.offsetHeight;\r\n' \
-  '        for (let l of photos_sides) {\r\n' \
-  '          let p = l.p;\r\n' \
-  '          if (pd[p] == null) {continue;}\r\n' \
-  '          if (pd[p].length == 0 && (photos_corners[4 * p] >= xr || photos_corners[4 * p + 2] <= xl || photos_corners[4 * p + 1] >= yb || photos_corners[4 * p + 3] <= yt)) {\r\n' \
-  '            pd[p] = null;\r\n' \
+  '        for (let l of media_sides) {\r\n' \
+  '          let m = l.m;\r\n' \
+  '          if (md[m] == null) {continue;}\r\n' \
+  '          if (md[m].length == 0 && (media_corners[4 * m] >= xr || media_corners[4 * m + 2] <= xl || media_corners[4 * m + 1] >= yb || media_corners[4 * m + 3] <= yt)) {\r\n' \
+  '            md[m] = null;\r\n' \
   '            continue;\r\n' \
   '          }\r\n' \
   '          let s1 = 0;\r\n' \
   '          let s2 = cs.length - 1;\r\n' \
   '          if (s2 < 0) {\r\n' \
-  '            pd[p] = [p];\r\n' \
-  '            cs.push(p);\r\n' \
+  '            md[m] = [m];\r\n' \
+  '            cs.push(m);\r\n' \
   '            continue;\r\n' \
   '          }\r\n' \
-  '          let pb = photos_corners[4 * p + 3];\r\n' \
-  '          if (pb <= photos_corners[4 * cs[0] + 1]) {\r\n' \
-  '            pd[p] = [p];\r\n' \
-  '            cs.splice(0, 0, p);\r\n' \
+  '          let mb = media_corners[4 * m + 3];\r\n' \
+  '          if (mb <= media_corners[4 * cs[0] + 1]) {\r\n' \
+  '            md[m] = [m];\r\n' \
+  '            cs.splice(0, 0, m);\r\n' \
   '            continue;\r\n' \
   '          }\r\n' \
   '          let s0 = s2;\r\n' \
-  '          if (pb <= photos_corners[4 * cs[s2] + 1]) {\r\n' \
+  '          if (mb <= media_corners[4 * cs[s2] + 1]) {\r\n' \
   '            while (true) {\r\n' \
   '              s0 = Math.floor((s1 + s2) / 2);\r\n' \
   '              if (s0 == s1) {break}\r\n' \
-  '              if (pb <= photos_corners[4 * cs[s0] + 1]) {s2 = s0} else {s1 = s0}\r\n' \
+  '              if (mb <= media_corners[4 * cs[s0] + 1]) {s2 = s0} else {s1 = s0}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (pd[p].length > 0) {\r\n' \
+  '          if (md[m].length > 0) {\r\n' \
   '            cs.splice(s0, 1);\r\n' \
   '            continue;\r\n' \
   '          }\r\n' \
-  '          if (photos_corners[4 * p + 1] >= photos_corners[4 * cs[s0] + 3]) {\r\n' \
-  '            pd[p] = [p];\r\n' \
-  '            cs.splice(s0 + 1, 0, p);\r\n' \
+  '          if (media_corners[4 * m + 1] >= media_corners[4 * cs[s0] + 3]) {\r\n' \
+  '            md[m] = [m];\r\n' \
+  '            cs.splice(s0 + 1, 0, m);\r\n' \
   '          } else {\r\n' \
-  '            pd[p] = null;\r\n' \
-  '            pd[cs[s0]].push(p);\r\n' \
+  '            md[m] = null;\r\n' \
+  '            md[cs[s0]].push(m);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        for (let p=0; p<nph; p++) {\r\n' \
-  '          if (pd[p] == null) {continue;}\r\n' \
-  '          let ph = document.createElement("img");\r\n' \
-  '          ph.id = "photo-" + pd[p].toString();\r\n' \
-  '          let port = portmin + p % (portmax + 1 - portmin);\r\n' \
-  '          ph.src = "http://" + location.hostname + ":" + port.toString() + "/photo?" + p.toString();\r\n' \
-  '          ph.alt = "";\r\n' \
-  '          ph.style.position = "absolute";\r\n' \
-  '          ph.style.width = (photos_corners[4 * p + 2] - photos_corners[4 * p]).toString() + "px";\r\n' \
-  '          ph.style.height = (photos_corners[4 * p + 3] - photos_corners[4 * p + 1]).toString() + "px";\r\n' \
-  '          ph.style.left = photos_corners[4 * p].toString() + "px";\r\n' \
-  '          ph.style.top = photos_corners[4 * p + 1].toString() + "px";\r\n' \
-  '          if (pd[p].length > 1) {\r\n' \
-  '            ph.style.outlineOffset = "-3px";\r\n' \
-  '            ph.style.outline = "outset 3px lightgray";\r\n' \
-  '            ph.title = photos_uri_dt[p] + `\r\n\r\n+ ${pd[p].length - 1} …`;\r\n' \
+  '        for (let m=0; m<nm; m++) {\r\n' \
+  '          if (md[m] == null) {continue;}\r\n' \
+  '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
+  '          med.id = (media_isvid[m]?"video-":"photo-") + md[m].toString();\r\n' \
+  '          let port = portmin + m % (portmax + 1 - portmin);\r\n' \
+  '          if (media_isvid[m]) {med.preload = "metadata"};\r\n' \
+  '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
+  '          med.alt = "";\r\n' \
+  '          med.style.position = "absolute";\r\n' \
+  '          med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
+  '          med.style.height = (media_corners[4 * m + 3] - media_corners[4 * m + 1]).toString() + "px";\r\n' \
+  '          med.style.left = media_corners[4 * m].toString() + "px";\r\n' \
+  '          med.style.top = media_corners[4 * m + 1].toString() + "px";\r\n' \
+  '          if (md[m].length > 1) {\r\n' \
+  '            med.style.outlineOffset = "-3px";\r\n' \
+  '            med.style.outline = "outset 3px lightgray";\r\n' \
+  '            med.title = media_uri_dt[m] + "\\r\\n\\r\\n+ " + (md[m].length - 1).toString() + " …";\r\n' \
   '          } else {\r\n' \
-  '            ph.title = photos_uri_dt[p];\r\n' \
+  '            med.title = media_uri_dt[m];\r\n' \
   '          }\r\n' \
-  '          ph.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
-  '          ph.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
-  '          ph.setAttribute("onclick", "enlarge_photo(event.target.id.substring(6));");\r\n' \
-  '          photos_div.appendChild(ph);\r\n' \
+  '          med.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          med.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          med.setAttribute("onclick", "enlarge_media(event.target.id.substring(6));");\r\n' \
+  '          med.setAttribute("oncontextmenu", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          media_div.appendChild(med);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function show_photos() {\r\n' \
-  '        document.getElementById("switchphotos").disabled = true;\r\n' \
-  '        if (photos_gps_ar == null) {\r\n' \
-  '          photos_gps_ar = [];\r\n' \
+  '      function show_media() {\r\n' \
+  '        document.getElementById("switchmedia").disabled = true;\r\n' \
+  '        if (media_gps_ar == null) {\r\n' \
+  '          media_gps_ar = [];\r\n' \
   '          let xhrp = new XMLHttpRequest();\r\n' \
-  '          let msgn = show_msg("{#jmphotos1#}", 0);\r\n' \
-  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmphotos1#}", 0.1, msgn):show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
-  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
-  '          xhrp.open("GET", "/photos/gps_ar");\r\n' \
+  '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmmedia1#}", 0.1, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.open("GET", "/media/gps_ar");\r\n' \
   '          xhrp.responseType = "arraybuffer";\r\n' \
   '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
   '          xhr_ongoing++;\r\n' \
   '          xhrp.send();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (photos_gps_ar.length == 0) {return;}\r\n' \
-  '        if (photos_uri_dt == null) {\r\n' \
-  '          photos_uri_dt = [];\r\n' \
+  '        if (media_gps_ar.length == 0) {return;}\r\n' \
+  '        if (media_uri_dt == null) {\r\n' \
+  '          media_uri_dt = [];\r\n' \
   '          let xhrp = new XMLHttpRequest();\r\n' \
-  '          let msgn = show_msg("{#jmphotos1#}", 0);\r\n' \
-  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmphotos2#}", 2, msgn):show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
-  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmphotos3#}", 10, msgn);};\r\n' \
-  '          xhrp.open("GET", "/photos/uri_dt");\r\n' \
+  '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmmedia2#}", 2, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.open("GET", "/media/uri_dt");\r\n' \
   '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
   '          xhr_ongoing++;\r\n' \
   '          xhrp.send();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (photos_sides == null) {photos_process();}\r\n' \
-  '        if (photos_div == null) {photos_gen();}\r\n' \
+  '        if (media_sides == null) {media_process();}\r\n' \
+  '        if (media_div == null) {media_gen();}\r\n' \
   '        let svgs = document.getElementById("handle").getElementsByTagName("svg");\r\n' \
   '        let ref = null;\r\n' \
   '        if (svgs.length > 0) {ref = svgs[0];}\r\n' \
-  '        document.getElementById("handle").insertBefore(photos_div, ref);\r\n' \
-  '        photos_visible = true;\r\n' \
-  '        document.getElementById("switchphotos").disabled = false;\r\n' \
+  '        svgs = null;\r\n' \
+  '        document.getElementById("handle").insertBefore(media_div, ref);\r\n' \
+  '        media_visible = true;\r\n' \
+  '        document.getElementById("switchmedia").disabled = false;\r\n' \
   '      }\r\n' \
-  '      function hide_photos(reset="") {\r\n' \
-  '        if (reset == "m" || reset == "s") {photos_div = null;}\r\n' \
-  '        if (reset == "s") {photos_sides = null;}\r\n' \
-  '        if (! photos_visible) {return;}\r\n' \
-  '        let pdiv = document.getElementById("photos");\r\n' \
-  '        if (pdiv != null) {document.getElementById("handle").removeChild(pdiv);}\r\n' \
-  '        photos_visible = false;\r\n' \
+  '      function hide_media(reset="") {\r\n' \
+  '        if (reset == "m" || reset == "s") {media_div = null;}\r\n' \
+  '        if (reset == "s") {media_sides = null;}\r\n' \
+  '        if (! media_visible) {return;}\r\n' \
+  '        let mdiv = document.getElementById("media");\r\n' \
+  '        if (mdiv != null) {document.getElementById("handle").removeChild(mdiv);}\r\n' \
+  '        media_visible = false;\r\n' \
   '      }\r\n' \
-  '      function update_photos() {\r\n' \
-  '        let pvis = photos_visible;\r\n' \
-  '        hide_photos("s");\r\n' \
-  '        if (pvis) {show_photos();}\r\n' \
+  '      function update_media() {\r\n' \
+  '        let mvis = media_visible;\r\n' \
+  '        hide_media("s");\r\n' \
+  '        if (mvis) {show_media();}\r\n' \
   '      }\r\n' \
-  '      function show_hide_photos() {\r\n' \
-  '        if (photos_visible) {\r\n' \
-  '          hide_photos();\r\n' \
+  '      function show_hide_media() {\r\n' \
+  '        if (media_visible) {\r\n' \
+  '          hide_media();\r\n' \
   '        } else {\r\n' \
-  '          show_photos();\r\n' \
+  '          show_media();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function enlarge_photo(pids) {\r\n' \
-  '        let pview = document.getElementById("photoview");\r\n' \
-  '        pview.innerHTML = "";\r\n' \
-  '        pview.style.display = "block";\r\n' \
-  '        for (let p of pids.split(",")) {\r\n' \
-  '          let ph = document.createElement("img");\r\n' \
-  '          let port = portmin + p % (portmax + 1 - portmin);\r\n' \
-  '          ph.src = "http://" + location.hostname + ":" + port.toString() + "/photo?" + p.toString();\r\n' \
-  '          ph.alt = "";\r\n' \
-  '          ph.title = photos_uri_dt[p];\r\n' \
-  '          ph.setAttribute("onclick", "photo_fs(this)");\r\n' \
-  '          pview.appendChild(ph);\r\n' \
+  '      function enlarge_media(mids) {\r\n' \
+  '        let mview = document.getElementById("mediaview");\r\n' \
+  '        mview.innerHTML = "";\r\n' \
+  '        mview.style.display = "block";\r\n' \
+  '        mview.dataset.sl = "0";\r\n' \
+  '        for (let m of mids.split(",")) {\r\n' \
+  '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
+  '          let port = portmin + m % (portmax + 1 - portmin);\r\n' \
+  '          if (media_isvid[m]) {\r\n' \
+  '            med.preload = "metadata";\r\n' \
+  '            med.controls = true;\r\n' \
+  '            med.loop = true;\r\n' \
+  '            med.playsinline = true;\r\n' \
+  '          } else {\r\n' \
+  '            med.setAttribute("onclick", "photo_fs(this)");\r\n' \
+  '          }\r\n' \
+  '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
+  '          med.alt = "";\r\n' \
+  '          med.title = media_uri_dt[m];\r\n' \
+  '          mview.appendChild(med);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function photo_fs(p) {\r\n' \
+  '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
+  '      }\r\n' \
+  '      function close_mediaview(e) {\r\n' \
   '        if (document.fullscreenElement) {\r\n' \
-  '          window.onresize = (e) => {document.getElementById("photoview").scrollLeft = parseInt(document.getElementById("photoview").dataset.sl); delete document.getElementById("photoview").dataset.sl; window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
+  '          window.onresize = (e) => {document.getElementById("mediaview").innerHTML = ""; window.onresize = window_resize; window_resize();};\r\n' \
   '          document.exitFullscreen();\r\n' \
   '        } else {\r\n' \
-  '          window.onresize = (e) => {window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
-  '          document.getElementById("photoview").dataset.sl = document.getElementById("photoview").scrollLeft.toString();\r\n' \
-  '          p.requestFullscreen();\r\n' \
+  '          document.getElementById("mediaview").innerHTML = "";\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function close_photoview(e) {\r\n' \
-  '        if (document.fullscreenElement) {\r\n' \
-  '          window.onresize = (e) => {delete document.getElementById("photoview").dataset.sl; document.getElementById("photoview").innerHTML = ""; window.onresize = (e) => {rescale();refresh_graph()};};\r\n' \
-  '          document.exitFullscreen();\r\n' \
-  '        }\r\n' \
-  '        document.getElementById("photoview").style.display = "none";\r\n' \
+  '        document.getElementById("mediaview").style.display = "none";\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '      }\r\n' \
@@ -11639,14 +11888,14 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchphotos#}" id="switchphotos" style="margin-left:1em;" onclick="event.ctrlKey?switch_phpanel():show_hide_photos()">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():show_hide_media()">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_DFPHPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -11665,7 +11914,7 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
-  '      <div id="photoview" style="display:none;" oncontextmenu="close_photoview(event);" >\r\n' \
+  '      <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
   '      </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -11673,7 +11922,7 @@ class GPXTweakerWebInterfaceServer():
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
-  '      var photos_ex_visible = false;\r\n' \
+  '      var media_ex_visible = false;\r\n' \
   '      function mouse_down(e, elt) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        document.getElementById("tracksfilter").blur();\r\n' \
@@ -11689,8 +11938,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (elt.id == "view") {\r\n' \
   '            hand = elt;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
-  '            photos_ex_visible = photos_visible;\r\n' \
-  '            hide_photos("m");\r\n' \
+  '            media_ex_visible = media_visible;\r\n' \
+  '            hide_media("m");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -11704,7 +11953,7 @@ class GPXTweakerWebInterfaceServer():
   '        viewpane.style.cursor = "";\r\n' \
   '        if (hand) {\r\n' \
   '          hand = null;\r\n' \
-  '          if (photos_ex_visible) {show_photos();}\r\n' \
+  '          if (media_ex_visible) {show_media();}\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (elt && e.button == 2) {\r\n' \
@@ -11777,8 +12026,21 @@ class GPXTweakerWebInterfaceServer():
   '        } while (! tr.firstElementChild.checked || tr.style.display == "none")\r\n' \
   '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
   '      }\r\n' \
+  '      function window_resize() {\r\n' \
+  '        if (document.fullscreen) {\r\n' \
+  '          media_fs = true;\r\n' \
+  '        } else {\r\n' \
+  '          if (media_fs) {\r\n' \
+  '            media_fs = false;\r\n' \
+  '            document.getElementById("mediaview").scrollLeft = parseFloat(document.getElementById("mediaview").dataset.sl);\r\n' \
+  '          } else {\r\n' \
+  '            rescale();\r\n' \
+  '            refresh_graph();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("phsize").innerHTML + "|" + photos_visible.toString());\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString());\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
   '        window.alert("{#jexpfail#}");\r\n' \
@@ -11839,10 +12101,9 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          let wmset = parseInt(prev_state[6]);\r\n' \
   '          if (document.getElementById("iset").options.length > wmset) {document.getElementById("iset").selectedIndex = wmset;}\r\n' \
-  '          document.getElementById("phsize").innerHTML = prev_state[7];\r\n' \
-  '          document.getElementById("phthumbs").value = parseFloat(prev_state[7]);\r\n' \
-  '          document.getElementById("phthumbs").value = parseFloat(prev_state[7]);\r\n' \
-  '          if (prev_state[8] == "true") {show_photos();}\r\n' \
+  '          document.getElementById("mtsize").innerHTML = prev_state[7];\r\n' \
+  '          document.getElementById("mthumb").value = parseFloat(prev_state[7]);\r\n' \
+  '          if (prev_state[8] == "true") {show_media();}\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}).map((v,k)=>k);\r\n' \
   '        }\r\n' \
@@ -11850,7 +12111,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
   '        folders_select();\r\n' \
-  '        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
+  '        window.onresize = window_resize;\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
   '        if (focused != "") {\r\n' \
   '          foc = focused;\r\n' \
@@ -11965,7 +12226,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
-          if not scur in ('folders', 'photos') and scur[:11] != 'webmapping ':
+          if not scur in ('folders', 'media') and scur[:11] != 'webmapping ':
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
           if scur[:11] == 'webmapping ':
@@ -12149,16 +12410,20 @@ class GPXTweakerWebInterfaceServer():
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
-        elif scur == 'photos':
+        elif scur == 'media':
           if field == 'album':
             fold = os.path.abspath(os.path.expandvars(value.lstrip().rstrip()))
             if os.path.isdir(fold):
-              self.PhotosFolders.append(fold)
+              self.MediaFolders.append(fold)
+          elif field == 'photos':
+            self.MediaPhotos = value
+          elif field == 'videos':
+            self.MediaVideos = value
           elif field == 'size':
             try:
               phs = int(value)
               if phs >= 8 and phs <= 512:
-                self.PhotosSize = phs
+                self.MediaThumbSize = phs
             except:
               pass
           else:
@@ -12290,8 +12555,10 @@ class GPXTweakerWebInterfaceServer():
     self.DefLon = None
     self.Folders = []
     self.WebMappingServices = []
-    self.PhotosFolders = []
-    self.PhotosSize = 64
+    self.MediaFolders = []
+    self.MediaPhotos = True
+    self.MediaVideos = True
+    self.MediaThumbSize = 64
     self.GpuComp = 0
     self.EleGainThreshold = 4
     self.AltGainThreshold = 3
@@ -12331,7 +12598,7 @@ class GPXTweakerWebInterfaceServer():
     self.SLock = threading.Lock()
     self.TLock = threading.Lock()
     self.Builder = ExpatGPXBuilder()
-    self.Photos = None
+    self.Media = None
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
     if not self._load_config(cfg):
@@ -12559,7 +12826,7 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
     else:
       self.ItineraryProvider = None
-    self.Photos = GeotaggedPhotos(self.PhotosFolders, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
+    self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
     if uri is not None:
       self.HTML = ''
     else:
@@ -12809,7 +13076,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.PhotosSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
