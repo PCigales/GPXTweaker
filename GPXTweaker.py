@@ -538,7 +538,7 @@ EN_STRINGS = {
     'jmsave3': 'Failure of the backup',
     'jmmedia1': 'Retrieval of the data of the media in progress...',
     'jmmedia2': 'Retrieval of the data of the media completed',
-    'jmpmedia3': 'Failure of the retrieval of the data of the media',
+    'jmmedia3': 'Failure of the retrieval of the data of the media',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
