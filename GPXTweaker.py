@@ -3590,6 +3590,20 @@ class WebMapping():
 
 class GeotaggedMedia():
 
+  MP4_EPOCH = 2082844800
+  if locale.getdefaultlocale()[0][:2].lower() == 'fr':
+    DATETIME_FORMAT = '%d/%m/%Y %H:%M:%S'
+    @staticmethod
+    def DATETIME_CONVERT(dt):
+      dtc = dt.split()
+      dtc[0] = '/'.join(dtc[0].split(':')[::-1])
+      return ' '.join(dtc)
+  else:
+    DATETIME_FORMAT = '%Y/%m/%d %H:%M:%S'
+    @staticmethod
+    def DATETIME_CONVERT(dt):
+      return dtc.replace(':', '/', 2)
+  
   def __init__(self, folders, photos=True, videos=True, box=None):
     self.Folders = folders
     self.Photos = photos
@@ -3705,7 +3719,7 @@ class GeotaggedMedia():
       if dtpos is not None:
         try:
           f.seek(dtpos)
-          datetime = f.read(20).strip(b'\x00').upper().decode().replace(':', '/', 2)
+          datetime = GeotaggedMedia.DATETIME_CONVERT(f.read(20).strip(b'\x00').decode())
         except:
           pass
     except:
@@ -3743,8 +3757,8 @@ class GeotaggedMedia():
           l -= 8
       if t != b'moov':
         raise
-      mvhd = None
       udtas = []
+      mvhd = None
       traks = []
       t = b''
       e = 0
@@ -3759,22 +3773,16 @@ class GeotaggedMedia():
           l = struct.unpack('>Q', f.read(8))[0] - 16
         else:
           l -= 8
-        if t == b'mvhd':
+        if t == b'udta':
+          udtas.append((f.tell(), l))
+        elif t == b'mvhd':
           if l < 8:
             raise
           mvhd = (f.tell(), l)
-        elif t == b'udta':
-          udtas.append((f.tell(), l))
         elif t == b'trak':
           traks.append((f.tell(), l))
-      if mvhd is None or not udtas or not traks:
+      if not udtas or mvhd is None or not traks:
         raise
-      f.seek(mvhd[0] + 4) 
-      datetime = struct.unpack('>I', f.read(4))[0]
-      if datetime:
-        datetime = time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(struct.unpack('>I', f.read(4))[0] - 2082844800))
-      else:
-        datetime = ''
       gps = None
       for udta in udtas:
         t = b''
@@ -3825,6 +3833,12 @@ class GeotaggedMedia():
         lon = float(lon[0:1] + b'1') * (float(lon[1:4]) + float(lon[4:6]) / 60 + float(lon[6:]) / 3600)
       else:
         raise
+      f.seek(mvhd[0] + 4) 
+      datetime = struct.unpack('>I', f.read(4))[0]
+      if datetime:
+        datetime = time.strftime(GeotaggedMedia.DATETIME_FORMAT, time.localtime(struct.unpack('>I', f.read(4))[0] - GeotaggedMedia.MP4_EPOCH))
+      else:
+        datetime = ''
       matrix = None
       width = None
       height = None
@@ -3945,7 +3959,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-      '%s'\
+      '%s' \
       '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True),       'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
       try:
         self.request.sendall(resp_e.encode('ISO-8859-1'))
@@ -3970,8 +3984,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      '%s' \
       'Access-Control-Allow-Origin: %s\r\n' \
-      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
       try:
         if req.method == 'GET' or req.method == 'POST':
           self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -4290,9 +4305,12 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               req_range = req.header('range', '')
               if req_range:
                 try:
-                  req_range = req_range.split("=")[-1].split("-")
+                  unit, req_range = req_range.rpartition('=')[::2]
+                  if unit and unit.lower() != 'bytes':
+                    raise
+                  req_range = req_range.split('-')
                   req_start = req_range[0].strip()
-                  req_end = req_range[1].split(",")[0].strip()
+                  req_end = req_range[1].split(',')[0].strip()
                   if not req_start:
                     req_start = msize - int(req_end)
                     req_end = msize
@@ -10783,13 +10801,20 @@ class GPXTweakerWebInterfaceServer():
   '        overflow-y:hidden;\r\n' \
   '        white-space:nowrap;\r\n' \
   '        line-height:0;\r\n' \
+  '        text-align:center;\r\n' \
   '        user-select:none;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview]::before {\r\n' \
+  '        content:"";\r\n' \
+  '        display:inline-block;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        height:100%;\r\n' \
   '      }\r\n' \
   '      div[id=mediaview] * {\r\n' \
   '        display:inline-block;\r\n' \
   '        max-height:100%;\r\n' \
   '        max-width:100%;\r\n' \
-  '        vertical-align:top;\r\n' \
+  '        vertical-align:middle;\r\n' \
   '        object-fit:scale-down;\r\n' \
   '      }\r\n' \
   '      div[id=mediaview] img {\r\n' \
@@ -10802,6 +10827,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
+  '      var mportmin = ##MPORTMIN##;\r\n' \
+  '      var mportmax = ##MPORTMAX##;\r\n' \
   '      var str_comp = new Intl.Collator().compare;\r\n' \
   '      var no_sort = null;\r\n' \
   '      var tracks_pts = [];\r\n' \
@@ -11674,7 +11701,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (md[m] == null) {continue;}\r\n' \
   '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
   '          med.id = (media_isvid[m]?"video-":"photo-") + md[m].toString();\r\n' \
-  '          let port = portmin + m % (portmax + 1 - portmin);\r\n' \
+  '          let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
   '          if (media_isvid[m]) {med.preload = "metadata"};\r\n' \
   '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
   '          med.alt = "";\r\n' \
@@ -11762,7 +11789,7 @@ class GPXTweakerWebInterfaceServer():
   '        mview.dataset.sl = "0";\r\n' \
   '        for (let m of mids.split(",")) {\r\n' \
   '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
-  '          let port = portmin + m % (portmax + 1 - portmin);\r\n' \
+  '          let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
   '          if (media_isvid[m]) {\r\n' \
   '            med.preload = "metadata";\r\n' \
   '            med.controls = true;\r\n' \
@@ -12411,7 +12438,21 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'media':
-          if field == 'album':
+          if field == 'port':
+            port = value or ''
+            if port:
+              if '-' in port:
+                self.MediaPorts = port.split('-', 1)
+              else:
+                self.MediaPorts = (port, port)
+              if not self.MediaPorts[0].isdecimal() or not self.MediaPorts[1].isdecimal():
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              self.MediaPorts = (int(self.MediaPorts[0]), int(self.MediaPorts[1]))
+              if self.MediaPorts[0] > self.MediaPorts[1]:
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+          elif field == 'album':
             fold = os.path.abspath(os.path.expandvars(value.lstrip().rstrip()))
             if os.path.isdir(fold):
               self.MediaFolders.append(fold)
@@ -12536,6 +12577,8 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.log(0, 'cerror', hcur)
         return False
+    if not self.MediaPorts:
+      self.MediaPorts = self.Ports
     self.log(1, 'cloaded')
     return True
 
@@ -12555,6 +12598,7 @@ class GPXTweakerWebInterfaceServer():
     self.DefLon = None
     self.Folders = []
     self.WebMappingServices = []
+    self.MediaPorts = ''
     self.MediaFolders = []
     self.MediaPhotos = True
     self.MediaVideos = True
@@ -12603,7 +12647,9 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'conf')
     if not self._load_config(cfg):
       return
-    self.GPXTweakerInterfaceServerInstances = [None] * (self.Ports[1] - self.Ports[0] + 1)
+    self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
+    self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
+    self.GPXTweakerInterfaceServerInstances.extend(range(max(self.Ports[1] + 1, self.MediaPorts[0]), self.MediaPorts[1] + 1))
     err = False
     if map_minlat is not None:
       if map_minlat < self.VMinLat:
@@ -13076,7 +13122,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
@@ -13189,7 +13235,7 @@ class GPXTweakerWebInterfaceServer():
       return False
 
   def _start_webserver(self, ind):
-    with ThreadedDualStackServer((self.Ip, self.Ports[0] + ind), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
+    with ThreadedDualStackServer((self.Ip, self.GPXTweakerInterfaceServerInstances[ind]), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
       self.GPXTweakerInterfaceServerInstances[ind].Interface = self
       self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
 
@@ -13200,16 +13246,16 @@ class GPXTweakerWebInterfaceServer():
     except:
       return False
     self.log(0, 'start')
-    for ind in range(self.Ports[1] - self.Ports[0] + 1):
+    for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
       webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
       webserver_thread.start()
     return True
 
   def shutdown(self):
     self.log(0, 'close')
-    for ind in range(self.Ports[1] - self.Ports[0] + 1):
+    for si in self.GPXTweakerInterfaceServerInstances:
       try:
-        self.GPXTweakerInterfaceServerInstances[ind].shutdown()
+        si.shutdown()
       except:
         pass
     try:
