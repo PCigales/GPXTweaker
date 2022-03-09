@@ -1,3 +1,7 @@
+# GPXTweaker (https://github.com/PCigales/GPXTweaker)
+# Copyright © 2022 PCigales
+# This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
+
 from functools import partial
 import urllib.parse
 import socket
@@ -23,11 +27,14 @@ from io import BytesIO, StringIO
 import ctypes, ctypes.wintypes
 import subprocess
 import struct
+import array
+import sys
 import uuid
 import webbrowser
 import msvcrt
 import locale
 import argparse
+import gc
 
 FR_STRINGS = {
   'tilescache': {
@@ -35,9 +42,9 @@ FR_STRINGS = {
     'init': 'initialisation (taille: %s, fils: %s)',
     'get': 'tuile (%s, %s) demandée',
     'cancel': 'abandon de la fourniture de la tuile (%s, %s)',
-    'found': 'tuile (%s, %s) trouvée dans le cache en position %s',
-    'del': 'suppression de la position %s du cache',
-    'add': 'insertion de la tuile (%s, %s) dans le cache en position %s',
+    'found': 'tuile (%s, %s) trouvée dans le cache',
+    'del': 'réduction du cache',
+    'add': 'ajout de la tuile (%s, %s) dans le cache portant sa longueur à %s',
     'error': 'échec du chargement de la tuile (%s, %s)',
     'load': 'tuile (%s, %s) chargée',
     'configure': 'configuration (jeu de tuile: %s, matrice: %s)',
@@ -58,7 +65,7 @@ FR_STRINGS = {
     'tilelexpired': 'tuile locale %s expirée',
     'tilefetch': 'récupération de la tuile %s',
     'tilerfail': 'échec de la fourniture de la tuile %s',
-    'tileretrieved': 'tuile %s fournie',
+    'tileretrieved': 'tuile %s fournie'
   },
   'track': {
     '_id': 'Gestionnaire de trace',
@@ -69,7 +76,16 @@ FR_STRINGS = {
     'loaded': 'trace %s chargée (nom: "%s", points de cheminement: %s, segments: %s, points: %s)',
     'save': 'enregistrement de la trace sous %s',
     'serror': 'échec de l\'enregistrement de la trace sous %s',
-    'saved': 'trace enregistrée sous %s',
+    'saved': 'trace enregistrée sous %s'
+  },
+  'geomedia': {
+     '_id': 'Gestionnaire de médias géolocalisés',
+     'mdlerror': 'échec de la récupération des données du média %s',
+     'mdloaded': 'données du média %s récupérées',
+     'mskipped': 'média %s sauté car débordant de la vue',
+     'mtloaded': '%d photo(s) et %d vidéo(s) prise(s) en compte en %.1fs',
+     'moerror': 'échec de l\'ouverture du média %s',
+     'mopened': 'média %s ouvert'
   },
   'interface': {
     '_id': 'Interface',
@@ -110,6 +126,7 @@ FR_STRINGS = {
     'jeasconfirm': 'Intervertir les données d\'élévation et d\'altitude du segment ?',
     'jeaconfirm': 'Intervertir les données d\'élévation et d\'altitude de la trace ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
+    'jfconfirm': 'Lisser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
@@ -126,7 +143,7 @@ FR_STRINGS = {
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
-    'jswitchpoints': 'afficher / masquer les points et points de cheminement',
+    'jswitchpoints': 'afficher / masquer les points et points de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective&#13;&#10;+ctrl: afficher / masquer les contrôles de la marge autour de la trace',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
@@ -144,6 +161,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
+    'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
@@ -160,6 +178,9 @@ FR_STRINGS = {
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
+    'jdfpanel': 'Plage lissage points',
+    'jmtpanel': 'Taille des miniatures',
+    'jpixels': '&nbsp;pixels',
     'jfilterpanel1': 'Seuils calcul dénivelé',
     'jfilterpanel2': 'Plages calcul pente',
     'jfilterpanel3': 'Plages calcul vitesse',
@@ -169,8 +190,9 @@ FR_STRINGS = {
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
     'jfoldersw': 'Répertoires:',
+    'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -213,6 +235,8 @@ FR_STRINGS = {
     'jmsegmentabsorb': 'Segments fusionnés',
     'jmsegmentreverse1': 'Segment inversé',
     'jmsegmentreverse2': 'Trace inversée',
+    'jmsegmentfilter1': 'Segment lissé: %s point(s) déplacé(s)',
+    'jmsegmentfilter2': 'Trace lissée: %s point(s) déplacé(s)',
     'jmelevationsno': 'Aucune source d\'élévations configurée',
     'jmelevations1': 'Récupération des élévations en cours...',
     'jmelevations2': 'Élévation du point / point de cheminement mise à jour',
@@ -234,6 +258,9 @@ FR_STRINGS = {
     'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
     'jm3dviewer2': 'Visionneuse 3D démarrée',
     'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
+    'jmmedia1': 'Récupération des données des médias en cours...',
+    'jmmedia2': 'Récupération des données des médias effectuée',
+    'jmmedia3': 'Échec de la récupération des données des médias',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -271,9 +298,10 @@ FR_STRINGS = {
     'jvfov': 'Champ de vue vertical:',
     'jheight': 'Hauteur de vue:',
     'start': 'démarrage',
-    'close': 'fermeture',
+    'close': 'fermeture'
   },
   'parser': {
+    'license': 'Ce programme est sous licence copyleft GNU GPLv3 (voir https://www.gnu.org/licenses)',
     'uri': 'chemin d\'accès à la trace ou argument pas mentionné pour démarrer avec l\'explorateur de traces',
     'conf': 'chemin d\'accès au fichier de configuration [même répertoire que le script par défaut]',
     'trk': 'indice de la trace (commençant à 0) [0 par défaut]',
@@ -281,11 +309,12 @@ FR_STRINGS = {
     'emap': 'chemin d\'accès complet à la carte d\'altitudes ou nom du fournisseur de carte d\'altitudes ou vide pour utiliser le premier fournisseur de carte d\'altitudes configuré, ou option pas mentionnée pour utiliser les fournisseurs de tuiles et données d\'altitudes configurés [par défaut]',
     'box': '"minlat, maxlat, minlon, maxlon" (latitudes minimale et maximale, longitudes minimale et maximale, avec les "" ) de la carte à charger / à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / déterminé à partir de la trace par défaut]',
     'size': '"height, width" (hauteur et largeur, avec les "") de la carte à charger / "maxheight, maxwidth" (hauteur et largeur maximales, avec les "") de la carte à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / "2000, 4000" par défaut]',
+    'dpi': 'densité de la carte à retourner en pixels par pouce (pour l\'utilisation d\'un fournisseur de carte) [90 par défaut]',
     'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
     'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
     'gpx': 'seuls les fichiers .gpx sont pris en charge',
     'open': 'Ouvrir l\'url %s',
-    'keyboard': 'Presser "S" pour quitter',
+    'keyboard': 'Presser "S" pour quitter'
    }
 }
 EN_STRINGS = {
@@ -294,15 +323,15 @@ EN_STRINGS = {
     'init': 'initialization (size: %s, threads: %s)',
     'get': 'tile (%s, %s) requested',
     'cancel': 'tile (%s, %s) providing cancelled',
-    'found': 'tile (%s, %s) found in cache at position %s',
-    'del': 'deletion of position %s in cache',
-    'add': 'insertion of tile (%s, %s) in cache at position %s',
+    'found': 'tile (%s, %s) found in the cache',
+    'del': 'reduction of the cache',
+    'add': 'addition of the tile (%s, %s) to the cache bringing its length to %s',
     'error': 'failure of tile (%s, %s) loading',
     'load': 'tile (%s, %s) loaded',
     'configure': 'configuration (tiles set: %s, matrix: %s)',
     'ifound': 'informations found in cache (tiles set: %s, matrix: %s)',
     'fail': 'failure of configuration (tiles set: %s, matrix: %s)',
-    'close': 'shutdown',
+    'close': 'shutdown'
   },
   'map': {
     '_id': 'Map handler',
@@ -317,7 +346,7 @@ EN_STRINGS = {
     'tilelexpired': 'local tile %s expired',
     'tilefetch': 'fetching of tile %s',
     'tilerfail': 'failure of providing of tile %s',
-    'tileretrieved': 'tile %s provided',
+    'tileretrieved': 'tile %s provided'
   },
   'track': {
     '_id': 'Track manager',
@@ -328,7 +357,16 @@ EN_STRINGS = {
     'loaded': 'track %s loaded (name: "%s", waypoints: %s, segments: %s, points: %s)',
     'save': 'saving of track as %s',
     'serror': 'failure of saving of track under %s',
-    'saved': 'track saved as %s',
+    'saved': 'track saved as %s'
+  },
+  'geomedia': {
+     '_id': 'Geotagged media manager',
+     'mdlerror': 'failure of the retrieval of the data of the media %s',
+     'mdloaded': 'data of the media %s retrieved',
+     'mskipped': 'media %s skipped because overflowing with the view',
+     'mtloaded': '%d photo(s) and %d video(s) taken into account in %.1fs',
+     'moerror': 'failure of the opening of the media %s',
+     'mopened': 'media %s opened'
   },
   'interface': {
     '_id': 'Interface',
@@ -369,6 +407,7 @@ EN_STRINGS = {
     'jeasconfirm': 'Switch the elevation and altitude data of the segment ?',
     'jeaconfirm': 'Switch the elevation and altitude data of the track ?',
     'jrconfirm': 'Reverse the whole track ?',
+    'jfconfirm': 'Smooth the whole track ?',
     'junload': 'Warning, the data will be lost !',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
@@ -385,7 +424,7 @@ EN_STRINGS = {
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
-    'jswitchpoints': 'show / hide the points and waypoints',
+    'jswitchpoints': 'show / hide the points and waypoints&#13;&#10;+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt: open the 3D viewer in subjective view mode&#13;&#10;+ctrl: show / hide the controls of the margin around the track',
     'jascending': 'switch the sort order of the tracks to ascending',
@@ -403,6 +442,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
+    'jswitchmedia': 'show / hide the media&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
@@ -419,6 +459,9 @@ EN_STRINGS = {
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
     'jlock': 'lock / unlock the set of tiles',
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
+    'jdfpanel': 'Range points smoothing',
+    'jmtpanel': 'Thumbnails size',
+    'jpixels': '&nbsp;pixels',
     'jfilterpanel1': 'Thresholds gain calcul',
     'jfilterpanel2': 'Ranges slope calcul',
     'jfilterpanel3': 'Ranges speed calcul',
@@ -428,8 +471,9 @@ EN_STRINGS = {
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
     'jfoldersw': 'Folders:',
+    'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
-    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;mouse over a button to display its legend',
+    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
     'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to  lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -472,6 +516,8 @@ EN_STRINGS = {
     'jmsegmentabsorb': 'Segments merged',
     'jmsegmentreverse1': 'Segment reversed',
     'jmsegmentreverse2': 'Track reversed',
+    'jmsegmentfilter1': 'Segment smoothed: %s point(s) moved',
+    'jmsegmentfilter2': 'Track smoothed: %s point(s) moved',
     'jmelevationsno': 'No elevations source configured',
     'jmelevations1': 'Retrieval of elevations in progress...',
     'jmelevations2': 'Elevation of the point / waypoint updated',
@@ -490,6 +536,9 @@ EN_STRINGS = {
     'jmsave1': 'Backup in progress...',
     'jmsave2': 'Backup completed',
     'jmsave3': 'Failure of the backup',
+    'jmmedia1': 'Retrieval of the data of the media in progress...',
+    'jmmedia2': 'Retrieval of the data of the media completed',
+    'jmmedia3': 'Failure of the retrieval of the data of the media',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -530,9 +579,10 @@ EN_STRINGS = {
     'jvfov': 'Vertical field of view:',
     'jheight': 'Height of view:',
     'start': 'start-up',
-    'close': 'shutdown',
+    'close': 'shutdown'
   },
   'parser': {
+    'license': 'This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)',
     'uri': 'path to the track or argument not mentioned to start with the explorer of tracks',
     'conf': 'full path to the configuration file [same folder as the script by default]',
     'trk': 'index of the track (starting at 0) [0 by default]',
@@ -540,11 +590,12 @@ EN_STRINGS = {
     'emap': 'path to the elevations map or name of the elevations map provider or blank to use the first elevations map configured, or option not mentioned to use the elevations tiles and data providers configured [by default]',
     'box': '"minlat, maxlat, minlon, maxlon" (minimum and maximum latitudes, minimum and maximum longitudes, with the "") of the map to be loaded / retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / determined from the track by default]',
     'size': '"height, width" (height and width, with the "") of the map to be loaded / "maxheight, maxwidth" (maximum height and width, with the "") of the map to be retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / "2000, 4000" by default]',
+    'dpi': 'density of the map to be retrieved in dots per inch (for the use of a map provider) [90 by default]',
     'noopen': 'no automatic opening in the default browser',
     'verbosity': 'verbosity level from 0 to 2 [0 by default]',
     'gpx': 'only .gpx files are supported',
     'open': 'Open the url %s',
-    'keyboard': 'Press "S" to exit',
+    'keyboard': 'Press "S" to exit'
    }
 }
 LSTRINGS = EN_STRINGS
@@ -605,7 +656,7 @@ class HTTPMessage():
       if decode:
         self.body = self.body.decode(decode)
 
-  def header(self, name, default = None):
+  def header(self, name, default=None):
     return self.headers.get(name.upper(), default)
 
   def _read_headers(self, msg):
@@ -881,11 +932,15 @@ class WGS84WebMercator():
 
 class TilesCache():
 
-  def __init__(self, size, threads):
+  def __init__(self, size, threads, preload=None):
     self.Size = size
     self.Threads = threads
-    self.InfosBuffer = []
-    self.Buffer = []
+    if preload is None:
+      self.Preload = size >= 10
+    else:
+      self.Preload = preload
+    self.InfosBuffer = {}
+    self.Buffer = {}
     self.BLock = threading.RLock()
     self.Generators = []
     self.GCondition = threading.Condition()
@@ -900,22 +955,22 @@ class TilesCache():
       row, col = pos
     except:
       return None
-    if not self.Infos or not self.Generators or self.Closed:
+    if self.Id is None or not self.Generators or self.Closed:
       self.log(2, 'cancel', row, col)
       return None
     with self.BLock:
-      infos = {**self.Infos, 'row': row, 'col': col}
+      rid = self.Id
     def _retrieveitem():
       nonlocal ptile
       nonlocal e
       with self.GCondition:
-        if infos != {**(self.Infos or {}), 'row': row, 'col': col}:
+        if rid != self.Id:
           ptile[0] = None
           e.set()
           self.log(2, 'cancel', row, col)
           return
         tgen = None
-        while not tgen:
+        while tgen is None:
           if self.Closed:
             ptile[0] = None
             e.set()
@@ -925,18 +980,18 @@ class TilesCache():
             if g[0]:
               tgen = g
               break
-          if not tgen:
+          if tgen is None:
             self.GCondition.wait()
-        if infos == {**(self.Infos or {}), 'row': row, 'col': col}:
+        if rid == self.Id:
           tgen[0] = False
-      if infos == {**(self.Infos or {}), 'row': row, 'col': col} and not tgen[0]:
+      if rid == self.Id and not tgen[0]:
         try:
           inf, tile = tgen[1](None, None, row, col).values()
           if inf != {**(self.Infos or {}), 'row': row, 'col': col}:
             tgen[1](close_connection=True)
             tile = None
             self.log(2, 'cancel', row, col)
-          elif tile == None:
+          elif tile is None:
             self.log(1, 'error', row, col)
           else:
             self.log(2, 'load', row, col)
@@ -959,25 +1014,15 @@ class TilesCache():
       if self.Closed:
         self.log(2, 'cancel', row, col)
         return None
-      i = 0
-      while i < len(self.Buffer):
-        if self.Buffer[i][0] == infos:
-          if not self.Buffer[i][1][0]:
-            del self.Buffer[i]
-            self.log(2, 'del', i)
-          else:
-            ptile = self.Buffer[i][1]
-            del self.Buffer[i]
-            self[pos] = ptile
-            self.log(2, 'found', row, col, i)
-            break
-        else:
-          i += 1
-      if not ptile:
+      ptile = self.Buffer.pop((rid, pos), None)
+      if ptile is not None:
+        self[pos] = ptile
+        self.log(2, 'found', row, col)
+      else:
         e = threading.Event()
         ptile = [e]
         self[pos] = ptile
-        self.log(2, 'add', row, col, len(self.Buffer) - 1)
+        self.log(2, 'add', row, col, len(self.Buffer))
     if e:
       t = threading.Thread(target=_retrieveitem, daemon=True)
       t.start()
@@ -1007,71 +1052,64 @@ class TilesCache():
     except:
       return partial(self.WaitTile, None)
     self.log(2, 'get', row, col)
-    def _get_diag():
-      if not self.Closed:
-        self.WaitTile(self._getitem((row + 1, col + 1)))
-    if self.Size >= 10:
-      t = threading.Timer(0.01, _get_diag)
-      t.daemon = True
-      t.start()
-    return partial(self.WaitTile, self._getitem(pos))
+    ptile = self._getitem(pos)
+    if self.Preload:
+      self._getitem((row + 1, col + 1))
+    return partial(self.WaitTile, ptile)
 
-  def __setitem__(self, pos, pvalue):
+  def __setitem__(self, pos, ptile):
     try:
       row, col = pos
-      infos = {**self.Infos, 'row': row, 'col': col}
-      with self.BLock:
-        self.Buffer.append((infos, pvalue))
-        if len(self.Buffer) > self.Size:
-          del self.Buffer[0]
     except:
       return
+    with self.BLock:
+      self.Buffer[(self.Id, pos)] = ptile
+      if len(self.Buffer) > self.Size:
+        del self.Buffer[next(iter(self.Buffer))]
+        self.log(2, 'del')
 
-  def Configure(self, id, tile_generator_builder):
-    if self.Closed or not id:
+  def Configure(self, rid, tile_generator_builder):
+    if self.Closed or not rid:
       return False
-    self.log(1, 'configure', id[0], id[1])
+    self.log(1, 'configure', *rid)
     pconnections = list([None] for i in range(self.Threads))
     with self.GCondition:
       ind = 0
       for g in self.Generators:
         try:
-          if (self.Id or (None, None))[0] == id[0] and g[0]:
+          if (self.Id or (None, None))[0] == rid[0] and g[0]:
             pconnections[ind] = g[1](close_connection=None)
           else:
             g[1](close_connection=True)
         except:
           pass
         ind += 1
-      infos = {}
-      ifound = False
+      infos = self.InfosBuffer.get(rid, {})
+      ifound = bool(infos)
+      if ifound:
+        self.log(2, 'ifound', *rid)
       try:
-        for id_inf in self.InfosBuffer:
-          if id_inf[0] == id:
-            infos = id_inf[1]
-            ifound = True
-            self.log(2, 'ifound', id[0], id[1])
-            break
         gens = tile_generator_builder(number=self.Threads, infos_completed=infos, pconnections=pconnections)
         if not gens:
           raise
         self.Generators = list([True, g] for g in gens)
         self.Infos = infos
-        self.Id = id
+        self.Id = rid
         if not ifound:
-          self.InfosBuffer.append((id, infos))
+          self.InfosBuffer[rid] = infos
         self.GCondition.notify_all()
       except:
+        self.Id = None
         self.Infos = None
         self.GCondition.notify_all()
-        self.log(0, 'fail', id[0], id[1])
+        self.log(0, 'fail', *rid)
         return False
     return True
 
   def Close(self):
     self.Closed = True
     with self.BLock:
-      for infos, ptile in self.Buffer:
+      for ptile in self.Buffer.values():
         try:
           ptile[0].set()
         except:
@@ -1092,7 +1130,7 @@ class WebMercatorMap(WGS84WebMercator):
   CRS_MPU = 1
   LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
   LOCALSTORE_HGT_DEFAULT_PATTERN = '{alias|layer}\{hgt}.{ext}'
-  WMS_PATTERN = {'GetCapabilities': '{source}?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '{source}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}'}
+  WMS_PATTERN = {'GetCapabilities': '{source}?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '{source}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
   WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
   MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
@@ -1175,7 +1213,7 @@ class WebMercatorMap(WGS84WebMercator):
       resolution = max(lenx / maxwidth, leny / maxheight)
       infos['width'] = round(lenx / resolution)
       infos['height'] = round(leny / resolution)
-      infos['dpi'] = dpi or max(1, 185 / resolution / self.CRS_MPU)
+      infos['dpi'] = dpi or 90
     except:
       self.log(0, 'maplfail', infos)
       return False
@@ -1679,7 +1717,7 @@ class WebMercatorMap(WGS84WebMercator):
           return
         b = ctypes.create_string_buffer(0x100000)
         while True:
-          if not kernel32.ReadFile(pipe_r, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
+          if not kernel32.ReadFile(p, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
             r = false
           elif nr.value > 0:
             o = o + b.raw[:nr.value]
@@ -2075,7 +2113,7 @@ class WebMercatorMap(WGS84WebMercator):
     minx, miny, maxx, maxy = map(float, self.MapInfos['bbox'].split(','))
     return (tr(int((x - minx) / self.MapResolution), round((maxx - minx) / self.MapResolution)), tr(int((maxy - y) / self.MapResolution), round((maxy - miny) / self.MapResolution)))
 
-  def SetTilesProvider(self, id, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
+  def SetTilesProvider(self, rid, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
     try:
       tile_generator_builder = partial(self.TileGenerator, infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
       if self.TilesInfos:
@@ -2083,7 +2121,7 @@ class WebMercatorMap(WGS84WebMercator):
       else:
         infos = None
       self.TilesInfos = {**infos_base, 'matrix': matrix}
-      if not self.Tiles.Configure(id, tile_generator_builder):
+      if not self.Tiles.Configure(rid, tile_generator_builder):
         self.TilesInfos = infos
         return False
       self.TilesInfos = self.Tiles.Infos
@@ -2227,29 +2265,54 @@ class WGS84Elevation(WGS84Map):
   def MergeTiles(self, infos, tiles):
     if infos['format'] != 'image/x-bil;bits=32' and infos['format'] != 'image/hgt':
       return None
+    th = len(tiles[0])
+    tw = len(tiles)
+    _c_l = list(range(tw))
+    _r_l = list(range(th))
     if infos['format'] == 'image/x-bil;bits=32':
-      mh = infos['height'] * len(tiles[0])
-      mw = infos['width'] * len(tiles)
-      m = bytearray(struct.pack('<f', infos.get('nodata', 0))) * (mh * mw)
-      for r in range(len(tiles[0])):
-        for c in range(len(tiles)):
-          if tiles[c][r]:
-            for l in range(infos['height']):
-              pos = (r * infos['height'] + l) * mw * 4 + c * infos['width'] * 4
-              m[pos: pos + infos['width'] * 4] = tiles[c][r][l * infos['width'] * 4: (l + 1) * infos['width'] * 4]
+      mh = infos['height'] * th
+      mw = infos['width'] * tw
+      m = bytearray(4 * mh * mw)
+      _m = memoryview(m)
+      _w = infos['width'] * 4
+      _mw = mw * 4
+      _mw_r = infos['height'] * _mw
+      _nd = struct.pack('<f', infos.get('nodata', 0)) * infos['width'] * infos['height']
+      _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
+      _l = list((l * _mw, l * _w, (l + 1) * _w) for l in range(infos['height']))
+      for r in _r_l:
+        _r = r * _mw_r
+        for c in _c_l:
+          _c = c * _w
+          for _l_p, _l_0, _l_1 in _l:
+            pos = _r + _l_p + _c
+            _m[pos: pos + _w] = _tiles[c][r][_l_0: _l_1]
     elif infos['format'] == 'image/hgt':
-      mh = infos['height'] * len(tiles[0]) + 1
-      mw = infos['width'] * len(tiles) + 1
-      m = bytearray(struct.pack('>h', infos.get('nodata', 0))) * (mh * mw)
-      for r in range(len(tiles[0])):
-        for c in range(len(tiles)):
-          if tiles[c][r]:
-            for l in range(infos['height'] if r < len(tiles[0]) - 1 else (infos['height'] + 1)):
-              pos = (r * infos['height'] + l) * mw * 2 + c * infos['width'] * 2
-              if c < len(tiles) - 1:
-                m[pos: pos + infos['width'] * 2] = tiles[c][r][l * (infos['width'] + 1) * 2: ((l + 1) * (infos['width'] + 1) - 1) * 2]
-              else:
-                m[pos: pos + (infos['width'] + 1) * 2] = tiles[c][r][l * (infos['width'] + 1) * 2: (l + 1) * (infos['width'] + 1) * 2]
+      mh = infos['height'] * th + 1
+      mw = infos['width'] * tw + 1
+      m = bytearray(2 * mh * mw)
+      _m = memoryview(m)
+      _w = infos['width'] * 2
+      _mw = mw * 2
+      _mw_r = infos['height'] * _mw
+      _nd = struct.pack('>h', infos.get('nodata', 0)) * infos['width'] * infos['height']
+      _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
+      _l = list((l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height']))
+      for r in _r_l:
+        _r = r * _mw_r
+        if r == th - 1:
+          l = infos['height']
+          _l.append((l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2))
+        for c in _c_l:
+          _c = c * _w
+          if c < tw - 1:
+            for _l_p, _l_0, _l_1 in _l:
+              pos = _r + _l_p + _c
+              m[pos: pos + _w] = tiles[c][r][_l_0: _l_1]
+          else:
+            for _l_p, _l_0, _l_1 in _l:
+              pos = _r + _l_p + _c
+              m[pos: pos + _w + 2] = tiles[c][r][_l_0: _l_1 + 2]
     return m
 
   def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', threads=10):
@@ -2459,17 +2522,24 @@ class XMLNode():
 
 class XMLElement(XMLNode):
 
-  __slots__ = ('name', 'namespaceURI', 'prefix', 'localName', 'childNodes', 'attributes')
+  __slots__ = ('name', 'namespaceURI', 'localName', 'childNodes', 'attributes')
 
   nodeType = XMLNode.ELEMENT_NODE
 
-  def __init__(self, name, namespaceuri=XMLNode.EMPTY_NAMESPACE, prefix=XMLNode.EMPTY_PREFIX, localname=''):
+  def __init__(self, name, namespaceuri=XMLNode.EMPTY_NAMESPACE, localname=''):
     self.name = name
     self.namespaceURI = namespaceuri
-    self.prefix = prefix
     self.localName = localname
     self.attributes = None
     self.childNodes = []
+
+  @property
+  def prefix(self):
+    return self.name.rpartition(':')[0] or XMLNode.EMPTY_PREFIX
+
+  @prefix.setter
+  def prefix(self, value):
+    raise
 
   def hasAttributes(self):
     return bool(self.attributes)
@@ -2482,7 +2552,7 @@ class XMLElement(XMLNode):
     self.attributes = None
 
   def cloneNode(self):
-    clone = XMLElement(self.name, self.namespaceURI, self.prefix, self.localName)
+    clone = XMLElement(self.name, self.namespaceURI, self.localName)
     if self.attributes:
       clone.attributes = {}
       for k, v in self.attributes.items():
@@ -2499,11 +2569,22 @@ class XMLElement(XMLNode):
       return None
 
   def setAttribute(self, localname, value, namespaceuri=XMLNode.EMPTY_NAMESPACE, name=''):
-    if namespaceuri == XMLNode.EMPTY_NAMESPACE:
-      name = localname
     if self.attributes is None:
       self.attributes = {}
-    self.attributes[(namespaceuri, localname)] = [name, value]
+    if namespaceuri == XMLNode.EMPTY_NAMESPACE:
+      self.attributes[(namespaceuri, localname)] = [localname, value]
+    elif namespaceuri == XMLNode.XMLNS_NAMESPACE:
+      attr_i = list(self.attributes.items())
+      attr = self.attributes
+      self.attributes = {}
+      for k, v in attr_i:
+        if k[0] != XMLNode.XMLNS_NAMESPACE:
+          break
+        self.attributes[k] = attr.pop(k)
+      self.attributes[(namespaceuri, localname)] = [name, value]
+      self.attributes.update(attr)
+    else:
+      self.attributes[(namespaceuri, localname)] = [name, value]
 
   def removeAttribute(self, localname, namespaceuri=XMLNode.EMPTY_NAMESPACE):
     if self.attributes:
@@ -2515,6 +2596,12 @@ class XMLElement(XMLNode):
     else:
       return False
 
+  def getNameSpaces(self):
+    if self.attributes:
+      return list((k[1], v) for k, v in self.attributes.items() if k[0] == XMLNode.XMLNS_NAMESPACE)
+    else:
+      return []
+
   def getChildren(self, localname, namespaceuri=' '):
     if namespaceuri == ' ':
       namespaceuri = self.namespaceURI
@@ -2525,27 +2612,19 @@ class XMLElement(XMLNode):
           nodes.append(node)
     return nodes
 
-  def insertBefore(self, newChildren, refChild):
+  def insertBefore(self, newChildren, refChild=None):
     if not isinstance(newChildren, (tuple, list)):
       newChildren = (newChildren,)
-    elif not newChildren:
-      return
     index = self.childNodes.index(refChild) if refChild is not None else len(self.childNodes)
-    for newChild in newChildren:
-      self.childNodes.insert(index, newChild)
-      index += 1
-    return newChild
+    self.childNodes[index:index] = newChildren
+    return newChildren
 
-  def insertAfter(self, newChildren, refChild):
+  def insertAfter(self, newChildren, refChild=None):
     if not isinstance(newChildren, (tuple, list)):
       newChildren = (newChildren,)
-    elif not newChildren:
-      return
     index = self.childNodes.index(refChild) + 1 if refChild is not None else 0
-    for newChild in newChildren:
-      self.childNodes.insert(index, newChild)
-      index += 1
-    return newChild
+    self.childNodes[index:index] = newChildren
+    return newChildren
 
   def appendChild(self, newChild):
     self.childNodes.append(newChild)
@@ -2560,6 +2639,20 @@ class XMLElement(XMLNode):
   def removeChild(self, oldChild):
     self.childNodes.remove(oldChild)
     return oldChild
+
+  def removeChildren(self, localname, namespaceuri=' '):
+    if namespaceuri == ' ':
+      namespaceuri = self.namespaceURI
+    nodes = []
+    index = 0
+    while index < len(self.childNodes):
+      node = self.childNodes[index]
+      if node.nodeType == XMLNode.ELEMENT_NODE:
+        if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname):
+          nodes.append(self.childNodes.pop(index))
+          continue
+      index += 1
+    return nodes
 
   def getText(self):
     return ''.join(childnode.data for childnode in self.childNodes if childnode.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE))
@@ -2766,7 +2859,7 @@ class ExpatGPXBuilder:
       r = self.Document.documentElement
       if r.localName != 'gpx' or (r.namespaceURI != XMLNode.EMPTY_NAMESPACE and r.namespaceURI != self.GPX_NAMESPACE):
         raise
-      if not r.hasAttribute('xmlns'):
+      if not r.hasAttribute(self.XMLNS, self.XMLNS_NAMESPACE):
         r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
       r.setAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI)
       sl = r.getAttribute('schemaLocation', self.XSI_NAMESPACE) or ''
@@ -2787,22 +2880,19 @@ class ExpatGPXBuilder:
     if l == 2:
       uri, localname = parts
       uri = self.intern(uri, uri)
-      prefix = XMLNode.EMPTY_PREFIX
       qname = localname = self.intern(localname, localname)
     elif l == 3:
       uri, localname, prefix = parts
       uri = self.intern(uri, uri)
-      prefix = self.intern(prefix, prefix)
       localname = self.intern(localname, localname)
       qname = prefix + ':' + localname
       qname = self.intern(qname, qname)
     elif l == 1:
       uri = XMLNode.EMPTY_NAMESPACE
-      prefix = XMLNode.EMPTY_PREFIX
       qname = localname = self.intern(name, name)
     else:
       raise
-    return uri, localname, prefix, qname
+    return uri, localname, qname
 
   def XmlDeclHandler(self, version, encoding, standalone):
     self.Document = XMLDocument(version, encoding)
@@ -2810,8 +2900,8 @@ class ExpatGPXBuilder:
 
   def StartElementHandler(self, name, attributes):
     self.CurText = ''
-    uri, localname, prefix, qname = self._parse_ns_name(name)
-    node = XMLElement(qname, uri, prefix, localname)
+    uri, localname, qname = self._parse_ns_name(name)
+    node = XMLElement(qname, uri, localname)
     self.CurNode.childNodes.append(node)
     self.ParNodes.append(self.CurNode)
     self.CurNode = node
@@ -2829,7 +2919,7 @@ class ExpatGPXBuilder:
       for i in range(0, len(attributes), 2):
         name = attributes[i]
         if ' ' in name:
-          uri2, localname, prefix, qname = self._parse_ns_name(name)
+          uri2, localname, qname = self._parse_ns_name(name)
           if uri2 is uri:
             node.attributes[(XMLNode.EMPTY_NAMESPACE, localname)] = [localname, attributes[i + 1]]
           else:
@@ -2955,19 +3045,16 @@ class WGS84Track(WGS84WebMercator):
       self.unlink(self._tracks[2])
     self._tracks[2] = None
 
-  def _XMLNewNode(self, localname, model=None, uri=None, prefix=None):
-    if model is not None:
-      return XMLElement(self.intern(model.prefix + ':' + localname, model.prefix + ':' + localname) if model.prefix != XMLNode.EMPTY_PREFIX else self.intern(localname, localname), model.namespaceURI, self.intern(model.prefix, model.prefix) if model.prefix != XMLNode.EMPTY_PREFIX else XMLNode.EMPTY_PREFIX, self.intern(localname, localname))
-    else:
-      return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(prefix, prefix) if prefix is not None else XMLNode.EMPTY_PREFIX, self.intern(localname, localname))
+  def _XMLNewNode(self, localname, uri, prefix=None):
+    return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(localname, localname))
 
   def ProcessGPX(self, mode='a'):
-    flt = lambda s: float(s) if (s is not None and s.strip() != '') else None
+    flt = lambda s: float(s) if s.strip() != '' else ''
     r = self.Track.documentElement
     if mode == 'a' or mode == 'w':
       wpts = r.getChildren('wpt')
       try:
-        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time') or None, pt.getChildrenText('name') or None) for pt in wpts)))
+        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time').replace('\r','').replace('\n',''), ' '.join(pt.getChildrenText('name').splitlines())) for pt in wpts)))
       except:
         return False
     try:
@@ -2975,10 +3062,10 @@ class WGS84Track(WGS84WebMercator):
     except:
       if mode != 'a' or self.TrkId > 0:
         return False
-      trk = self._XMLNewNode('trk', r)
+      trk = self._XMLNewNode('trk', r.namespaceURI, r.prefix)
       r.appendChild(trk)
     if mode == 'a' or mode == 'e':
-      self.Name = trk.getChildrenText('name').replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+      self.Name = ' '.join(trk.getChildrenText('name').splitlines())
       self.Color = ''
       ext = trk.getChildren('extensions')
       try:
@@ -3006,16 +3093,18 @@ class WGS84Track(WGS84WebMercator):
       sn = 0
       try:
         for seg in pts:
-          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), flt(''.join(e.getChildrenText('ele_alt', self.MT_NAMESPACE) for e in pt.getChildren('extensions'))), pt.getChildrenText('time') or None) for pt in seg))))
+          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), flt(''.join(e.getChildrenText('ele_alt', self.MT_NAMESPACE) for e in pt.getChildren('extensions'))), pt.getChildrenText('time').replace('\r','').replace('\n','')) for pt in seg))))
           sn += len(seg)
       except:
         return False
     return True
 
   def LoadGPX(self, uri, trkid=None, source=None, builder=None):
-    if self.Track:
+    if self.Track is not None:
       return False
     self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
+    gcie = gc.isenabled()
+    gc.disable()
     try:
       if source:
         self._tracks = source._tracks
@@ -3041,7 +3130,7 @@ class WGS84Track(WGS84WebMercator):
         if not builder:
           builder = ExpatGPXBuilder()
         self.Track = builder.Parse(track)
-        if not self.Track:
+        if self.Track is None:
           raise
         self.intern_dict = builder.intern_dict
       self.intern = self.intern_dict.setdefault
@@ -3055,6 +3144,8 @@ class WGS84Track(WGS84WebMercator):
     except:
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
+      if gcie:
+        gc.enable()
       return False
     self.TrkId = trkid or 0
     try:
@@ -3065,13 +3156,17 @@ class WGS84Track(WGS84WebMercator):
         del self.Track
       self.__init__()
       self.log(0, 'lerror', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
+      if gcie:
+        gc.enable()
       return False
     if not source:
       self.OTrack = self.Track
       self.STrack = self.Track
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
-    # self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
+    self.log(0, 'loaded', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
+    if gcie:
+      gc.enable()
     return True
 
   def BuildWebMercator(self):
@@ -3126,22 +3221,19 @@ class WGS84Track(WGS84WebMercator):
   def _XMLUpdateAttribute(self, node, name, value):
     node.setAttribute(self.intern(name, name), value)
 
-  def _XMLUpdateNodeText(self, node, localname, text, predecessors='*', cdata=False):
+  def _XMLUpdateChildNode(self, node, localname, child, predecessors='*', uri=None):
     no = None
-    cn = node.getChildren(localname)
+    cn = node.getChildren(localname, uri if uri is not None else node.namespaceURI)
     if cn:
       no = cn[0]
       for n in cn[1:]:
         node.removeChild(n).unlink()
-    if text:
-      if cdata:
-        t = XMLCDATASection(text)
-      else:
-        t = XMLText(text)
-      n = self._XMLNewNode(localname, node)
-      n.appendChild(t)
+    if child is not None:
       if no is not None:
-        node.replaceChild(n, no).unlink()
+        node.replaceChild(child, no).unlink()
+        return
+      elif predecessors == '*':
+        node.appendChild(child)
         return
       elif isinstance(predecessors, (list, tuple)):
         for e in predecessors:
@@ -3149,35 +3241,32 @@ class WGS84Track(WGS84WebMercator):
           if cn:
             no = cn[-1]
             break
-      node.insertAfter(n, no)
-    elif no:
+      node.insertAfter(child, no)
+    elif no is not None:
       node.removeChild(no).unlink()
 
-  def _XMLUpdateChildNodes(self, node, localname, children, predecessors='*', uri=None):
-    no = None
-    cn = node.getChildren(localname, uri if uri is not None else node.namespaceURI)
-    if cn:
-      no = cn[0]
-      for n in cn[1:]:
-        node.removeChild(n).unlink()
-    if no is not None:
-      node.insertBefore(children, no)
-      node.removeChild(no).unlink()
-      return
-    elif isinstance(predecessors, (list, tuple)):
-      for e in predecessors:
-        cn = node.getChildren(e)
-        if cn:
-          no = cn[-1]
-          break
-    node.insertAfter(children, no)
+  def _XMLUpdateChildNodeText(self, node, localname, uri, prefix, text, predecessors='*', cdata=False):
+    if text:
+      if cdata:
+        t = XMLCDATASection(text)
+      else:
+        t = XMLText(text)
+      child = self._XMLNewNode(localname, uri, prefix)
+      child.appendChild(t)
+    else:
+      child = None
+    self._XMLUpdateChildNode(node, localname, child, predecessors, uri)
 
   def UpdateGPX(self, msg, uri=None, backup=True):
+    gcie = gc.isenabled()
+    gc.disable()
     del self.Track
     self.Track = self.OTrack.cloneNode()
     r = self.Track.documentElement
     trk = r.getChildren('trk')[self.TrkId]
-    mt = r.hasAttribute(self.XMLNS_MT)
+    trkns = trk.namespaceURI
+    trkp = trk.prefix
+    mt = r.hasAttribute(self.MT, self.XMLNS_NAMESPACE)
     try:
       if not '\r\n=\r\n' in msg:
         msgp = msg.split('=', 1)
@@ -3187,7 +3276,7 @@ class WGS84Track(WGS84WebMercator):
           ext = trk.getChildren('extensions')
           l = []
           if not ext:
-            e = self._XMLNewNode('extensions', trk)
+            e = self._XMLNewNode('extensions', trkns, trkp)
             e_ = e
             s = trk.getChildren('trkseg')
             if s:
@@ -3207,30 +3296,30 @@ class WGS84Track(WGS84WebMercator):
                 e_ = ex
                 if l[0].getChildren('color', '*'):
                   break
-          a = self._XMLNewNode('color', None, self.MT_NAMESPACE, self.MT)
+          a = self._XMLNewNode('color', self.MT_NAMESPACE, self.MT)
           t = XMLText(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
           a.appendChild(t)
-          self._XMLUpdateChildNodes(e, 'color', [a], '*', self.MT_NAMESPACE)
+          self._XMLUpdateChildNode(e, 'color', a, '*', self.MT_NAMESPACE)
           if l:
             a = l[0]
             if not a.namespaceURI or a.namespaceURI == self.GPX_NAMESPACE:
               a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
           else:
-            a = self._XMLNewNode('line', None, self.GPXSTYLE_NAMESPACE)
+            a = self._XMLNewNode('line', self.GPXSTYLE_NAMESPACE)
             a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
             e_.appendChild(a)
           b = a.getChildren('color', '*')
           if b:
             b = b[0]
           else:
-            b = self._XMLNewNode('color', None, self.GPXSTYLE_NAMESPACE)
+            b = self._XMLNewNode('color', self.GPXSTYLE_NAMESPACE)
             a.appendChild(b)
           t = XMLText(msgp[1].lstrip('#'))
           while b.hasChildNodes():
             b.removeChild(b.firstChild).unlink()
           b.appendChild(t)
         elif msgp[0][-4:] == 'name':
-          self._XMLUpdateNodeText(trk, 'name', msgp[1], None, True)
+          self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, msgp[1], None, True)
         else:
           raise
         if not self.ProcessGPX('e'):
@@ -3240,48 +3329,55 @@ class WGS84Track(WGS84WebMercator):
         nmsg = msgp[0].splitlines()
         wpmsg = msgp[1].splitlines()
         smsg = msgp[2].split('-\r\n')[1:]
-        wpts = r.getChildren('wpt')
-        pts = list((seg, pt) for seg in trk.getChildren('trkseg') for pt in seg.getChildren('trkpt'))
-        self._XMLUpdateNodeText(trk, 'name', (nmsg or [''])[0], None, True)
+        wpts = r.removeChildren('wpt')
+        segs = trk.removeChildren('trkseg')
+        pts = list(pt for seg in segs for pt in seg.removeChildren('trkpt'))
+        self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, (nmsg or [''])[0], None, True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
             v = wp.split('&')
             if int(v[0]) < len(wpts):
-              nwp = r.removeChild(wpts[int(v[0])])
+              nwp = wpts[int(v[0])]
+              wpts[int(v[0])] = None
             else:
-              nwp = self._XMLNewNode('wpt', trk)
+              nwp = self._XMLNewNode('wpt', trkns, trkp)
             self._XMLUpdateAttribute(nwp, 'lat', v[1])
             self._XMLUpdateAttribute(nwp, 'lon', v[2])
-            self._XMLUpdateNodeText(nwp, 'ele', v[3], None)
-            self._XMLUpdateNodeText(nwp, 'time', urllib.parse.unquote(v[4]), ('ele',))
-            self._XMLUpdateNodeText(nwp, 'name', urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
+            self._XMLUpdateChildNodeText(nwp, 'ele', trkns, trkp, v[3], None)
+            self._XMLUpdateChildNodeText(nwp, 'time', trkns, trkp, urllib.parse.unquote(v[4]), ('ele',))
+            self._XMLUpdateChildNodeText(nwp, 'name', trkns, trkp, urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
           else:
-            nwp = r.removeChild(wpts[int(wp)])
+            nwp = wpts[int(wp)]
+            wpts[int(wp)] = None
           wpn.append(nwp)
-        self._XMLUpdateChildNodes(r, 'wpt', wpn, ('metadata',))
-        sn = []
+        r.insertAfter(wpn, (r.getChildren('metadata') or [None])[-1])
+        for wp in wpts:
+          if wp is not None:
+            wp.unlink()
+        for s in segs:
+          s.unlink()
         for s in smsg:
-          ns = self._XMLNewNode('trkseg', trk)
-          pn = []
+          ns = self._XMLNewNode('trkseg', trkns, trkp)
           pmsg = s.splitlines()
           for p in pmsg:
             if '&' in p:
               v = p.split('&')
               if int(v[0]) < len(pts):
-                np = pts[int(v[0])][0].removeChild(pts[int(v[0])][1])
+                np = pts[int(v[0])]
+                pts[int(v[0])] = None
               else:
-                np = self._XMLNewNode('trkpt', trk)
+                np = self._XMLNewNode('trkpt', trkns, trkp)
               self._XMLUpdateAttribute(np, 'lat', v[1])
               self._XMLUpdateAttribute(np, 'lon', v[2])
-              self._XMLUpdateNodeText(np, 'ele', v[3], None)
+              self._XMLUpdateChildNodeText(np, 'ele', trkns, trkp, v[3], None)
               if v[4]:
                 if not mt:
                   r.setAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT)
                   mt = True
                 ext = np.getChildren('extensions')
                 if not ext:
-                  e = self._XMLNewNode('extensions', trk)
+                  e = self._XMLNewNode('extensions', trkns, trkp)
                   np.appendChild(e)
                 else:
                   e = ext[0]
@@ -3289,20 +3385,22 @@ class WGS84Track(WGS84WebMercator):
                     if ex.getChildren('ele_alt', self.MT_NAMESPACE):
                       e = ex
                       break
-                a = self._XMLNewNode('ele_alt', None, self.MT_NAMESPACE, self.MT)
+                a = self._XMLNewNode('ele_alt', self.MT_NAMESPACE, self.MT)
                 t = XMLText(v[4])
                 a.appendChild(t)
-                self._XMLUpdateChildNodes(e, 'ele_alt', [a], '*', self.MT_NAMESPACE)
+                self._XMLUpdateChildNode(e, 'ele_alt', a, '*', self.MT_NAMESPACE)
               elif mt:
                 for ex in np.getChildren('extensions'):
-                  self._XMLUpdateChildNodes(ex, 'ele_alt', [], '*', self.MT_NAMESPACE)
-              self._XMLUpdateNodeText(np, 'time', urllib.parse.unquote(v[5]), ('ele',))
+                  self._XMLUpdateChildNode(ex, 'ele_alt', None, '*', self.MT_NAMESPACE)
+              self._XMLUpdateChildNodeText(np, 'time', trkns, trkp, urllib.parse.unquote(v[5]), ('ele',))
             else:
-              np = pts[int(p)][0].removeChild(pts[int(p)][1])
-            pn.append(np)
-          self._XMLUpdateChildNodes(ns, 'trkpt', pn)
-          sn.append(ns)
-        self._XMLUpdateChildNodes(trk, 'trkseg', sn)
+              np = pts[int(p)]
+              pts[int(p)] = None
+            ns.appendChild(np)
+          trk.appendChild(ns)
+        for p in pts:
+          if p is not None:
+            p.unlink()
         if not self.ProcessGPX('a'):
           raise
       if uri:
@@ -3313,11 +3411,16 @@ class WGS84Track(WGS84WebMercator):
       self.Track = self.STrack
       self.ProcessGPX('a' if '\r\n=\r\n' in msg else 'e')
       return False
+    finally:
+      if gcie:
+        gc.enable()
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     return True
 
   def DetachFromGPX(self, others, uri=None, backup=True):
+    gcie = gc.isenabled()
+    gc.disable()
     _tracks = self._tracks
     trkid = self.TrkId
     self.Track = self.OTrack.cloneNode()
@@ -3325,7 +3428,7 @@ class WGS84Track(WGS84WebMercator):
     r = self.Track.documentElement
     nuri = None
     try:
-      self._XMLUpdateChildNodes(r, 'trk', [r.removeChild(r.getChildren('trk')[trkid])])
+      self._XMLUpdateChildNode(r, 'trk', r.removeChild(r.getChildren('trk')[trkid]))
       _r = _tracks[2].documentElement
       _r.removeChild(_r.getChildren('trk')[trkid]).unlink()
       if uri:
@@ -3341,6 +3444,8 @@ class WGS84Track(WGS84WebMercator):
       self._tracks = _tracks
       del self.Track
       self.Track = self.OTrack
+      if gcie:
+        gc.enable()
       return False
     self.TrkId = 0
     try:
@@ -3358,34 +3463,79 @@ class WGS84Track(WGS84WebMercator):
           tr.TrkId -= 1
     except:
       pass
+    if gcie:
+      gc.enable()
     return nuri or True
 
   def AppendToGPX(self, track, others, mode='s', uri=None, backup=True):
+    gcie = gc.isenabled()
+    gc.disable()
     trkid = self.TrkId
     del self.Track
     self.Track = self.OTrack.cloneNode()
     r = self.Track.documentElement
+    trk = r.getChildren('trk')[trkid]
     try:
-      no = None
-      cn = r.getChildren('wpt')
-      if cn:
-        no = cn[-1 if mode != 'tb' else 0]
+      _r = track.Track.documentElement
+      _wpt = _r.getChildren('wpt')
+      _w = len(_wpt) > 0
+      if mode == 's':
+        _trk = _r.getChildren('trk')[track.TrkId]
       else:
+        _trk = _r.getChildren('trk')[track.TrkId].cloneNode()
+      for _ln, _v in _r.getNameSpaces():
+        if _w:
+          u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
+            r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+          elif u != _v[1]:
+            raise
+        if _trk.getAttribute(_ln, self.XMLNS_NAMESPACE) is not None:
+            continue
+        if mode == 's':
+          u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
+            if not _w:
+              u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+              if u is None:
+                r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+              elif u != _v[1]:
+                raise          
+          elif u != _v[1]:
+            raise
+        elif not _w:
+          u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
+            r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+          elif u != _v[1]:
+            _trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+      if mode == 's':
+        for _ln, _v in _trk.getNameSpaces():
+          u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)          
+          if u is None:          
+            u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
+            if u is None:
+              trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
+            elif u != _v[1]:
+              raise          
+          elif u != _v[1]:
+            raise
+      no = None
+      if mode != 'tb':
+        cn = r.getChildren('wpt')
+        if cn:
+          no = cn[-1]
+      if mode == 'tb' or no is None:
         cn = r.getChildren('metadata')
         if cn:
           no = cn[-1]
-      _r = track.Track.documentElement
+      r.insertAfter(list(n.cloneNode() for n in _wpt), no)
       if mode == 'tb':
-        r.insertBefore(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
-      else:
-        r.insertAfter(list(n.cloneNode() for n in _r.getChildren('wpt')), no)
-      trk = r.getChildren('trk')[trkid]
-      if mode == 'tb':
-        r.insertBefore(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
+        r.insertBefore(_trk, trk)
       elif mode == 'ta':
-        r.insertAfter(_r.getChildren('trk')[track.TrkId].cloneNode(), trk)
+        r.insertAfter(_trk, trk)
       else:
-        for seg in _r.getChildren('trk')[track.TrkId].getChildren('trkseg'):
+        for seg in _trk.getChildren('trkseg'):
           trk.appendChild(seg.cloneNode())
       if mode == 's':
         self.ProcessGPX('a')
@@ -3401,18 +3551,25 @@ class WGS84Track(WGS84WebMercator):
         self.ProcessGPX('a')
       else:
         self.ProcessGPX('w')
+      if gcie:
+        gc.enable()
       return False
-    if mode == 'ta' or mode == 'tb':
+    for s in track.intern_dict.items():
+      self.intern(*s)
+    if mode in ('ta', 'tb'):
       track._tracks = self._tracks
       track.TrkId = trkid if mode == 'tb' else trkid + 1
+      track.intern_dict = self.intern_dict
       track.ProcessGPX('w')
       if mode == 'tb':
         self.TrkId += 1
     for tr in others:
-      if mode == 'ta' or mode == 'tb':
+      if mode in ('ta', 'tb'):
         if tr.TrkId >= trkid:
           tr.TrkId += 1
       tr.ProcessGPX('w')
+    if gcie:
+      gc.enable()
     return True
 
 
@@ -3429,6 +3586,349 @@ class WebMapping():
       return dict(getattr(cls, 'WM_' + name))
     else:
       return None
+
+
+class GeotaggedMedia():
+
+  MP4_EPOCH = 2082844800
+  if locale.getdefaultlocale()[0][:2].lower() == 'fr':
+    DATETIME_FORMAT = '%d/%m/%Y %H:%M:%S'
+    @staticmethod
+    def DATETIME_CONVERT(dt):
+      dtc = dt.split()
+      dtc[0] = '/'.join(dtc[0].split(':')[::-1])
+      return ' '.join(dtc)
+  else:
+    DATETIME_FORMAT = '%Y/%m/%d %H:%M:%S'
+    @staticmethod
+    def DATETIME_CONVERT(dt):
+      return dt.replace(':', '/', 2)
+  
+  def __init__(self, folders, photos=True, videos=True, box=None):
+    self.Folders = folders
+    self.Photos = photos
+    self.Videos = videos
+    self.Box = box
+    self.DLock = threading.Lock()
+    self.Data = None
+    self.Uris = None
+    self.log = partial(log, 'geomedia')
+
+  @staticmethod
+  def _read_jpg_data(photo):
+    try:
+      f = open(photo, 'rb')
+    except:
+      return None
+    try:
+      if f.read(2) != b'\xff\xd8':
+        raise
+      t = f.read(2)
+      if t == b'\xff\xe0':
+        l = struct.unpack('!H', f.read(2))[0]
+        f.seek(l - 2, os.SEEK_CUR)
+        t = f.read(2)
+      if t != b'\xff\xe1':
+        raise
+      l = struct.unpack('!H', f.read(2))[0]
+      if f.read(6) != b'Exif\x00\x00':
+        raise
+      ref = f.tell()
+      ba = {b'MM': '>', b'II': '<'}.get(f.read(2))
+      if ba is None:
+        raise
+      if f.read(2) != (b'\x00\x2a' if ba == '>' else b'\x2a\x00') :
+        raise
+      f.seek(struct.unpack(ba + 'I', f.read(4))[0] - 8, os.SEEK_CUR)
+      ne = struct.unpack(ba + 'H', f.read(2))[0]
+      if ne == 0:
+        raise
+      gps = None
+      sifd = None
+      orientation = 1
+      dimensions = [None] * 2
+      for i in range(ne):
+        e = f.read(12)
+        t = struct.unpack(ba + 'H', e[0:2])[0]
+        if t == 0x8825:
+          if struct.unpack(ba + 'H', e[2:4])[0] != 4 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          gps = ref + struct.unpack(ba + 'I', e[8:12])[0]
+        elif t == 0x8769:
+          if struct.unpack(ba + 'H', e[2:4])[0] != 4 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          sifd = ref + struct.unpack(ba + 'I', e[8:12])[0]
+        elif t == 0x0112:
+          if struct.unpack(ba + 'H', e[2:4])[0] != 3 or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            continue
+          orientation = struct.unpack(ba + 'H', e[8:10])[0]
+        elif t in (0x0100, 0x0101):
+          df = {3:'H', 4:'I'}.get(struct.unpack(ba + 'H', e[2:4])[0])
+          if df is None or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          dimensions[t - 0x0100] = struct.unpack(ba + df, e[8:(10 if df == 'H' else 12)])[0]
+      if gps is None or sifd is None:
+        raise
+      f.seek(gps)
+      ne = struct.unpack(ba + 'H', f.read(2))[0]
+      if ne == 0:
+        raise
+      lref = [None] * 2
+      lpos = [None] * 2
+      for i in range(ne):
+        e = f.read(12)
+        t = struct.unpack(ba + 'H', e[0:2])[0]
+        if t in (0x0001, 0x0003):
+          if struct.unpack(ba + 'H', e[2:4])[0] != 2 or struct.unpack(ba + 'I', e[4:8])[0] != 2:
+            raise
+          lref[(t - 1) // 2] = e[8:10].strip(b'\x00').upper().decode()
+        elif t in (0x0002, 0x0004):
+          if struct.unpack(ba + 'H', e[2:4])[0] != 5 or struct.unpack(ba + 'I', e[4:8])[0] != 3:
+            raise
+          lpos[(t - 2) // 2] = struct.unpack(ba + 'I', e[8:12])[0] + ref
+      if None in lref or None in lpos:
+        raise
+      f.seek(lpos[0])
+      l = struct.unpack(ba + 'IIIIII', f.read(24))
+      lat = round((-1 if lref[0] == 'S' else 1) * sum(n / d * u for n, d, u in zip(l[::2], l[1::2], (3600, 60, 1))), 3) / 3600
+      if lat < -90 or lat > 90:
+        raise
+      f.seek(lpos[1])
+      l = struct.unpack(ba + 'IIIIII', f.read(24))
+      lon = 180 - (180 - (round((-1 if lref[1] == 'W' else 1) * sum(n / d * u for n, d, u in zip(l[::2], l[1::2], (3600, 60, 1))), 3)) / 3600 ) % 360
+      f.seek(sifd)
+      ne = struct.unpack(ba + 'H', f.read(2))[0]
+      if ne == 0:
+        raise
+      dtpos = None
+      for i in range(ne):
+        e = f.read(12)
+        t = struct.unpack(ba + 'H', e[0:2])[0]
+        if t in (0xa002, 0xa003):
+          df = {3:'H', 4:'I'}.get(struct.unpack(ba + 'H', e[2:4])[0])
+          if df is None or struct.unpack(ba + 'I', e[4:8])[0] != 1:
+            raise
+          dimensions[t - 0xa002] = struct.unpack(ba + df, e[8:(10 if df == 'H' else 12)])[0]
+        elif t == 0x9003 or (t == 0x9004 and dtpos is None):
+          if struct.unpack(ba + 'H', e[2:4])[0] != 2 or struct.unpack(ba + 'I', e[4:8])[0] != 20:
+            continue
+          dtpos = struct.unpack(ba + 'I', e[8:12])[0] + ref
+      if None in dimensions or 0 in dimensions:
+        raise
+      datetime = ''
+      if dtpos is not None:
+        try:
+          f.seek(dtpos)
+          datetime = GeotaggedMedia.DATETIME_CONVERT(f.read(20).strip(b'\x00').decode())
+        except:
+          pass
+    except:
+      return None
+    finally:
+      try:
+        f.close()
+      except:
+        pass
+    return *WGS84WebMercator.WGS84toWebMercator(lat, lon), (dimensions[1] / dimensions[0] if orientation in (6, 8) else dimensions[0] / dimensions[1]), datetime
+
+  @staticmethod
+  def _read_mp4_data(video):
+    try:
+      f = open(video, 'rb')
+    except:
+      return None
+    try:
+      l = struct.unpack('>I', f.read(4))[0]
+      if f.read(4) != b'ftyp':
+        raise
+      f.seek(l - 8, os.SEEK_CUR)
+      t = b''
+      l = 0
+      while t != b'moov':
+        f.seek(l, os.SEEK_CUR)
+        l = f.read(4)
+        if l == b'':
+          break
+        l = struct.unpack('>I', l)[0]
+        t = f.read(4)
+        if l == 1:
+          l = struct.unpack('>Q', f.read(8))[0] - 16
+        else:
+          l -= 8
+      if t != b'moov':
+        raise
+      udtas = []
+      mvhd = None
+      traks = []
+      t = b''
+      e = 0
+      s = l
+      l = 0
+      while e < s:
+        f.seek(l, os.SEEK_CUR)
+        l = struct.unpack('>I', f.read(4))[0]
+        e += l
+        t = f.read(4)
+        if l == 1:
+          l = struct.unpack('>Q', f.read(8))[0] - 16
+        else:
+          l -= 8
+        if t == b'udta':
+          udtas.append((f.tell(), l))
+        elif t == b'mvhd':
+          if l < 8:
+            raise
+          mvhd = (f.tell(), l)
+        elif t == b'trak':
+          traks.append((f.tell(), l))
+      if not udtas or mvhd is None or not traks:
+        raise
+      gps = None
+      for udta in udtas:
+        t = b''
+        e = 0
+        s = udta[1]
+        l = 0
+        f.seek(udta[0])
+        while t != b'\xa9xyz' and e < s:
+          f.seek(l, os.SEEK_CUR)
+          l = struct.unpack('>I', f.read(4))[0]
+          e += l
+          t = f.read(4)
+          if l == 1:
+            l = struct.unpack('>Q', f.read(8))[0] - 16
+          else:
+            l -= 8
+        if t == b'\xa9xyz':
+          l = struct.unpack('>H', f.read(2))[0]
+          f.seek(2, os.SEEK_CUR)
+          if l % 2 == 0 and l >= 8:
+            gps = f.read(l)
+        if gps is not None:
+          break
+      if gps is None:
+        raise
+      c = gps.find(b'+', 1)
+      if c < 0:
+        c = gps.find(b'-')
+      if c < 0:
+        raise
+      lat = gps[0:c]
+      d = lat.find(b'.')
+      if d == 3:
+        lat = float(lat)
+      elif d == 5:
+        lat = float(lat[0:1] + b'1') * (float(lat[1:3]) + float(lat[3:]) / 60)
+      elif d == 7:
+        lat = float(lat[0:1] + b'1') * (float(lat[1:3]) + float(lat[3:5]) / 60 + float(lat[5:]) / 3600)
+      else:
+        raise
+      lon = gps[c:-1]
+      d = lon.find(b'.')
+      if d == 4:
+        lon = float(lon)
+      elif d == 6:
+        lon = float(lon[0:1] + b'1') * (float(lon[1:4]) + float(lon[4:]) / 60)
+      elif d == 8:
+        lon = float(lon[0:1] + b'1') * (float(lon[1:4]) + float(lon[4:6]) / 60 + float(lon[6:]) / 3600)
+      else:
+        raise
+      f.seek(mvhd[0] + 4) 
+      datetime = struct.unpack('>I', f.read(4))[0]
+      if datetime:
+        datetime = time.strftime(GeotaggedMedia.DATETIME_FORMAT, time.localtime(struct.unpack('>I', f.read(4))[0] - GeotaggedMedia.MP4_EPOCH))
+      else:
+        datetime = ''
+      matrix = None
+      width = None
+      height = None
+      for trak in traks:
+        t = b''
+        e = 0
+        s = trak[1]
+        l = 0
+        f.seek(trak[0])
+        while t != b'tkhd' and e < s:
+          f.seek(l, os.SEEK_CUR)
+          l = struct.unpack('>I', f.read(4))[0]
+          e += l
+          t = f.read(4)
+          if l == 1:
+            l = struct.unpack('>Q', f.read(8))[0] - 16
+          else:
+            l -= 8
+        if t == b'tkhd':
+          if l < 84:
+            raise
+          f.seek(40, os.SEEK_CUR) 
+          matrix = f.read(36)
+          if matrix[0:4] == b'\x00\x01\x00\x00':
+            width = struct.unpack('>I', f.read(4))[0] >> 16
+            height = struct.unpack('>I', f.read(4))[0] >> 16
+          else:
+            height = struct.unpack('>I', f.read(4))[0] >> 16
+            width = struct.unpack('>I', f.read(4))[0] >> 16
+          if width and height:
+            break
+      if not width or not height:
+        raise
+    except:
+      return None
+    finally:
+      try:
+        f.close()
+      except:
+        pass
+    return *WGS84WebMercator.WGS84toWebMercator(lat, lon), width / height, datetime
+
+  def GetData(self):
+    with self.DLock:
+      if self.Data is None:
+        self.Uris = []
+        uris_p = []
+        uris_v = []
+        if self.Photos:
+          uris_p = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() in ('jpg', 'jpeg'))
+        if self.Videos:
+          uris_v = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if f.rpartition('.')[2].lower() == 'mp4')
+        ti = time.time()
+        gps_ar = []
+        dt = []
+        nm = []
+        rd = self._read_jpg_data
+        for uris in (uris_p, uris_v):
+          for u in uris:
+            data = rd(u)
+            if data is not None:
+              if self.Box is not None:
+                if data[0] < self.Box[0] or data[0] > self.Box[2] or data[1] < self.Box[1] or data[1] > self.Box[3]:
+                  self.log(2, 'mskipped', u)
+                  continue
+              self.Uris.append(u)
+              gps_ar.extend(data[0:3])
+              dt.append(data[3])
+              self.log(2, 'mdloaded', u)
+            else:
+              self.log(1, 'mdlerror', u)
+          nm.append(len(self.Uris) - sum(nm))
+          rd = self._read_mp4_data
+        if len(self.Uris) > 0:
+          self.Data = (struct.pack('=%dd' % len(gps_ar), *gps_ar), ('|'.join(map('\r\n'.join, zip(self.Uris, dt)))).encode('utf-8'))
+        else:
+          self.Data = (b'', b'')
+        self.log(0, 'mtloaded', *nm, time.time() - ti)
+    return self.Data
+
+  def Open(self, ind):
+    try:
+      u = 'Media%s' % ind
+      u = self.Uris[ind]
+      f = open(u, 'rb')
+    except:
+      self.log(1, 'moerror', u)
+      return None, None
+    self.log(2, 'mopened', u)
+    return ('video/mp4' if u.rpartition('.')[2].lower() == 'mp4' else 'image/jpeg'), f
 
 
 class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
@@ -3459,11 +3959,12 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True))
+      '%s' \
+      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True),       'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
       try:
         self.request.sendall(resp_e.encode('ISO-8859-1'))
         if e != 501:
-          self.server.Interface.log(2, {404: 'rnfound', 412: 'rbad', 422: 'rfailed'}.get(e, 'rnfound'), req.method, req.path)
+          self.server.Interface.log(2, {404: 'rnfound', 412: 'rbad', 422: 'rfailed', 416: 'rfailed'}.get(e, 'rnfound'), req.method, req.path)
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
     def _send_err_ni():
@@ -3474,23 +3975,28 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       _send_err(412)
     def _send_err_fail():
       _send_err(422)
-    def _send_resp(btype):
+    def _send_err_rns():
+      _send_err(416)
+    def _send_resp(btype, s=None):
       resp_200 = 'HTTP/1.1 200 OK\r\n' \
       'Content-Type: ##type##\r\n' \
       'Content-Length: ##len##\r\n' \
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      '%s' \
       'Access-Control-Allow-Origin: %s\r\n' \
-      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
       try:
         if req.method == 'GET' or req.method == 'POST':
-          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(len(resp_body))).encode('ISO-8859-1') + resp_body)
+          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
         else:
-          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(len(resp_body))).encode('ISO-8859-1'))
+          self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1'))
         self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
     def _send_resp_nc():
       resp_204 = 'HTTP/1.1 204 No content\r\n' \
       'Content-Length: 0\r\n' \
@@ -3501,8 +4007,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       try:
         self.request.sendall(resp_204.encode('ISO-8859-1'))
         self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
     def _send_resp_tr(loc):
       resp_307 = 'HTTP/1.1 307 Temporary Redirect\r\n' \
       'Content-Length: 0\r\n' \
@@ -3514,8 +4022,31 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       try:
         self.request.sendall(resp_307.encode('ISO-8859-1'))
         self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
       except:
         self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
+    def _send_resp_pc(btype, rs, re, s):
+      resp_206 = 'HTTP/1.1 206 Partial Content\r\n' \
+      'Content-Type: ##type##\r\n' \
+      'Content-Length: %d\r\n' \
+      'Date: %s\r\n' \
+      'Server: GPXTweaker\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      'Access-Control-Allow-Origin: %s\r\n' \
+      'Accept-Ranges: bytes\r\n' \
+      'Content-Range: bytes %d-%d/%d\r\n' \
+      '\r\n' % (re - rs, email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]), rs, re - 1, s)
+      try:
+        if req.method == 'GET' or req.method == 'POST':
+          self.request.sendall(resp_206.replace('##type##', btype).encode('ISO-8859-1') + resp_body)
+        else:
+          self.request.sendall(resp_206.replace('##type##', btype).encode('ISO-8859-1'))
+        self.server.Interface.log(2, 'response', req.method, req.path)
+        return True
+      except:
+        self.server.Interface.log(2, 'rerror', req.method, req.path)
+        return False
     with selectors.DefaultSelector() as selector:
       selector.register(self.request, selectors.EVENT_READ)
       closed = False
@@ -3527,7 +4058,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           break
         if not ready:
           continue
-        req = HTTPMessage(self.request)
+        req = HTTPMessage(self.request, max_length=1073741824)
         if req.header('Connection') == 'close':
           closed = True
         if not req.method:
@@ -3710,10 +4241,13 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if self.server.Interface.Track.WebMercatorPts == None:
                 self.server.Interface.Track.BuildWebMercator()
-            if self.server.Interface.Build3DHTML(mode3d, margin):
-              resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
-              _send_resp('text/html; charset=utf-8')
-            else:
+            try:
+              if self.server.Interface.Build3DHTML(mode3d, margin):
+                resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
+                _send_resp('text/html; charset=utf-8')
+              else:
+                _send_err_nf()
+            except:
               _send_err_nf()
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
@@ -3730,11 +4264,92 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               _send_err_nf()
               continue
             try:
-              f = lambda e: '' if e == None else urllib.parse.quote(str(e))
-              resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('&'.join(map(f, p[1])) for p in seg) for seg in track.Pts) for track in map(lambda t: t[1], self.server.Interface.Tracks)).encode('utf-8')
+              resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('%s&%s&%s&%s&%s' % p[1] for p in seg) for seg in tr[1].Pts) for tr in self.server.Interface.Tracks).encode('utf-8')
               _send_resp('application/octet-stream')
             except:
               _send_err_fail()
+          elif req.path.lower() == '/media/gps_ar':
+            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+              _send_err_bad()
+              continue
+            try:
+              resp_body = self.server.Interface.Media.GetData()[0]
+              if resp_body:
+                _send_resp('application/octet-stream')
+              else:
+                _send_err_nf()
+            except:
+              _send_err_fail()
+          elif req.path.lower() == '/media/uri_dt':
+            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+              _send_err_bad()
+              continue
+            try:
+              resp_body = self.server.Interface.Media.GetData()[1]
+              if resp_body:
+                _send_resp('application/octet-stream')
+              else:
+                _send_err_nf()
+            except:
+              _send_err_fail()
+          elif req.path.lower()[:7] == '/media?':
+            try:
+              mind = int(req.path.split('?')[1])
+              mtype, med = self.server.Interface.Media.Open(mind)
+              if not mtype:
+                _send_err_nf()
+                continue
+              med.seek(0, os.SEEK_END)
+              msize = med.tell()
+              resp_body = b''
+              req_range = req.header('range', '')
+              if req_range:
+                try:
+                  unit, req_range = req_range.rpartition('=')[::2]
+                  if unit and unit.lower() != 'bytes':
+                    raise
+                  req_range = req_range.split('-')
+                  req_start = req_range[0].strip()
+                  req_end = req_range[1].split(',')[0].strip()
+                  if not req_start:
+                    req_start = msize - int(req_end)
+                    req_end = msize
+                  else:
+                    req_start = int(req_start)
+                    if req_end:
+                      req_end = int(req_end) + 1
+                    else:
+                      req_end = msize
+                    if req_start < 0 or req_start > req_end or req_end > msize:
+                      raise
+                except:
+                  _send_err_rns()
+                  continue
+              else:
+                req_start = 0
+                req_end = msize
+              if (_send_resp(mtype, msize) if req_range == '' else _send_resp_pc(mtype, req_start, req_end, msize) and req.method == 'GET'):
+                med.seek(req_start)
+                while req_start < req_end:
+                  if self.server.__dict__['_BaseServer__shutdown_request'] or self.server.__dict__['_BaseServer__is_shut_down'].is_set():
+                    break
+                  resp_body = med.read(min(1048576, req_end - req_start))
+                  if not resp_body:
+                    closed = True
+                    break
+                  req_start += len(resp_body)
+                  try:
+                    self.request.sendall(resp_body)
+                  except:
+                    closed = True
+                    break
+            except:
+              _send_err_fail()
+            finally:
+              try:
+                med.close()
+              except:
+                pass
           elif req.path.lower()[:7] == '/detach':
             if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
               _send_err_bad()
@@ -3859,9 +4474,9 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             try:
               for point in lpoints:
                 if point:
-                  id, lat, lon = point.split(',')
+                  id_p, lat, lon = point.split(',')
                   points.append((float(lat), float(lon)))
-                  ids.append(id)
+                  ids.append(id_p)
               lelevations = zip(ids, self.server.Interface.ElevationProvider(points))
               for id_ele in lelevations:
                 try:
@@ -4015,21 +4630,24 @@ class GPXTweakerWebInterfaceServer():
   '      path {\r\n' \
   '        pointer-events:stroke;\r\n' \
   '        cursor:pointer;\r\n' \
+  '        stroke-width:2;\r\n' \
   '        fill:none;\r\n' \
+  '        vector-effect:non-scaling-stroke;\r\n' \
+  '      }\r\n' \
+  '      textPath {\r\n' \
   '        vector-effect:non-scaling-stroke;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] {\r\n' \
   '        position:absolute;\r\n' \
   '        pointer-events:none;\r\n' \
-  '        stroke-width:1.5;\r\n' \
   '        stroke-linecap:round;\r\n' \
   '        stroke-linejoin:round;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] text {\r\n' \
   '        pointer-events:none;\r\n' \
+  '        stroke-width:1;\r\n' \
   '        font-size:calc(24px * var(--scale));\r\n' \
   '        word-spacing:var(--wsp);\r\n' \
-  '        stroke:none;\r\n' \
   '      }\r\n' \
   '      button {\r\n' \
   '        border:none;\r\n' \
@@ -4077,14 +4695,28 @@ class GPXTweakerWebInterfaceServer():
   '        width:7em;\r\n' \
   '        height:1.7em;\r\n' \
   '      }\r\n' \
-  '      label[for$=filter], label[for$=margin] {\r\n' \
+  '      div[id=dfpanel], div[id=mtpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
+  '        display:none;\r\n' \
+  '        position:absolute;\r\n' \
+  '        top:calc(1.6em + 10px);\r\n' \
+  '        right:2vw;\r\n' \
+  '        width:10em;\r\n' \
+  '        height:13.4em;\r\n' \
+  '        background-color:rgb(30,30,35);\r\n' \
+  '        z-index:10;\r\n' \
+  '        font-size:75%;\r\n' \
+  '        text-align:center;\r\n' \
+  '        font-weight:normal;\r\n' \
+  '        user-select:none;\r\n' \
+  '      }\r\n' \
+  '      label[for$=filter], label[for$=margin], label[for=mthumb] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:1.5em;\r\n' \
   '        text-align:center;\r\n' \
   '        font-weight:normal;\r\n' \
   '        font-size:90%;\r\n' \
   '      }\r\n' \
-  '      span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
+  '      span[id=dfdist], span[id=mtsize], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
   '        position:absolute;\r\n' \
   '        top:2.8em;\r\n' \
   '        width:2em;\r\n' \
@@ -4100,6 +4732,14 @@ class GPXTweakerWebInterfaceServer():
   '        transform-origin:right center;\r\n' \
   '        font-size:100%;\r\n' \
   '      }\r\n' \
+  '      div[id$=box] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        bottom:3px;\r\n' \
+  '        background-color:rgba(255,255,255,0.7);\r\n' \
+  '        padding-left:2px;\r\n' \
+  '        padding-right:2px;\r\n' \
+  '        user-select:none;\r\n' \
+  '      }\r\n' \
   '      span+span[id^=message] {\r\n' \
   '        margin-left:0.4em;\r\n' \
   '        padding-left:0.4em;\r\n' \
@@ -4109,6 +4749,7 @@ class GPXTweakerWebInterfaceServer():
   '        filter:var(--filter);\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
+  '      const host = location.hostname + ":";\r\n' \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
   '      var cleft = null;\r\n' \
   '      var cright = null;\r\n' \
@@ -4131,9 +4772,11 @@ class GPXTweakerWebInterfaceServer():
   '      var eset = -1;\r\n' \
   '      var iset = -1;\r\n' \
   '      var dots_visible = false;\r\n' \
+  '      var scrollmode = mode=="map"?0:2;\r\n' \
   '      var focused = "";\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
-  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n'
+  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+  '      var xhr_ongoing = 0;\r\n'
   HTML_GPUSTATS_TEMPLATE = \
   '      class GPUStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
@@ -4589,7 +5232,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
-  '            window.stop();\r\n' \
+  '            if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '            tlevel = nlevel;\r\n' \
   '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '            cleft = null;\r\n' \
@@ -4598,7 +5241,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        window.stop();\r\n' \
+  '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        if (nset == null) {\r\n' \
   '          if (nlevel == null) {\r\n' \
@@ -4687,7 +5330,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
   '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
-  '          tile.src = "http://" + location.hostname + ":" + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '          tile.src = "http://" + host + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
@@ -4699,51 +5342,40 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
+  '        let tiles = Array.from(handle.getElementsByTagName("img"));\r\n' \
+  '        if (cleft == null) {\r\n' \
+  '          tiles.forEach((t) => handle.removeChild(t));\r\n' \
+  '          tiles = [];\r\n' \
+  '        }\r\n' \
+  '        if (twidth == 0 || theight == 0) {return;}\r\n' \
   '        let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
   '        let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
   '        let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
   '        let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
-  '        let tiles = handle.getElementsByTagName("img");\r\n' \
   '        let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
   '        let rright = parseInt(vright / twidth + 1.5);\r\n' \
   '        let rtop = parseInt(vtop / theight - 1.5);\r\n' \
   '        let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
   '        if (cleft == null) {\r\n' \
-  '          let i = tiles.length - 1;\r\n' \
-  '            while (i >= 0) {\r\n' \
-  '              handle.removeChild(tiles[i]);\r\n' \
-  '              i--;\r\n' \
-  '            } \r\n' \
-  '          cleft = rleft - 1;\r\n' \
+  '          cleft = rright + 1;\r\n' \
   '          cright = rleft - 1;\r\n' \
-  '          ctop = rtop - 1;\r\n' \
+  '          ctop = rbottom + 1;\r\n' \
   '          cbottom = rtop - 1;\r\n' \
   '        }\r\n' \
-  '        let i = tiles.length - 1;\r\n' \
   '        if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
-  '          while (i >= 0) {\r\n' \
-  '            let [r, c] = tiles[i].id.split("-").slice(1, 3);\r\n' \
-  '            let row = parseInt(r);\r\n' \
-  '            let col = parseInt(c);\r\n' \
+  '          for (let tile of tiles) {\r\n' \
+  '            let [row, col] = tile.id.split("-").slice(1, 3).map(Number);\r\n' \
   '            if (row < rtop || row > rbottom || col < rleft || col > rright) {\r\n' \
-  '              handle.removeChild(tiles[i]);\r\n' \
+  '              handle.removeChild(tile);\r\n' \
   '            }\r\n' \
-  '            i--;\r\n' \
-  '          } \r\n' \
-  '          for (let col=rleft; col<cleft; col++) {\r\n' \
-  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
   '          }\r\n' \
-  '          for (let col=cright+1; col<=rright; col++) {\r\n' \
-  '            for (let row=Math.max(ctop, rtop); row<=Math.min(cbottom, rbottom); row++) {add_tile(row, col);}\r\n' \
+  '          for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '            for (let col=rleft; col<=rright; col++) {\r\n' \
+  '              if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col);}\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          cleft = rleft;\r\n' \
   '          cright = rright;\r\n' \
-  '          for (let row=rtop; row<ctop; row++) {\r\n' \
-  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
-  '          for (let row=cbottom + 1; row<=rbottom; row++) {\r\n' \
-  '            for (let col=cleft; col<=cright; col++) {add_tile(row, col);}\r\n' \
-  '          }\r\n' \
   '          ctop = rtop;\r\n' \
   '          cbottom = rbottom;\r\n' \
   '        }\r\n' \
@@ -4792,11 +5424,6 @@ class GPXTweakerWebInterfaceServer():
   '          return "calc(" + v.toFixed(1) + "px / var(--scale))";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function scroll_view(x, y) {\r\n' \
-  '        hpx = viewpane.offsetWidth / 2 + (htopx - x) * zoom / tscale;\r\n' \
-  '        hpy = viewpane.offsetHeight / 2 + (y - htopy) * zoom / tscale;\r\n' \
-  '        reframe();\r\n' \
-  '      }\r\n' \
   '      function scroll_dview(dx, dy) {\r\n' \
   '        hpx += dx;\r\n' \
   '        hpy += dy;\r\n' \
@@ -4818,6 +5445,29 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function escape(s) {\r\n' \
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
+  '      }\r\n'
+  HTML_SCROLL_TEMPLATE = \
+  '      function scroll_to_track(track=null, center=true) {\r\n' \
+  '        let b = track_boundaries(track);\r\n' \
+  '        if (b == null) {\r\n' \
+  '          if (track == null) {\r\n' \
+  '            hpx = viewpane.offsetWidth / 2 + (htopx - defx) * zoom / tscale;\r\n' \
+  '            hpy = viewpane.offsetHeight / 2 + (defy - htopy) * zoom / tscale;\r\n' \
+  '          }\r\n' \
+  '         reframe();\r\n' \
+  '         return;\r\n' \
+  '        }\r\n' \
+  '        if (center || b[1] - b[0] > viewpane.offsetWidth * tscale / zoom) {\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 - (b[0] + b[1]) / 2 * zoom / tscale;\r\n' \
+  '        } else {\r\n' \
+  '          hpx = Math.max(Math.min(hpx, - b[1] * zoom / tscale + viewpane.offsetWidth), - b[0] * zoom / tscale);\r\n' \
+  '        }\r\n' \
+  '        if (center || b[3] - b[2] > viewpane.offsetHeight * tscale / zoom) {\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 - (b[2] + b[3]) / 2 * zoom / tscale;\r\n' \
+  '        } else {\r\n' \
+  '          hpy = Math.max(Math.min(hpy, - b[3] * zoom / tscale + viewpane.offsetHeight), - b[2] * zoom / tscale);\r\n' \
+  '        }\r\n' \
+  '        reframe();\r\n' \
   '      }\r\n'
   HTML_SEGCALC_1_TEMPLATE = \
   '          let stat = Array(7).fill(0);\r\n' \
@@ -5004,11 +5654,13 @@ class GPXTweakerWebInterfaceServer():
   '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
   '        for (let p=1; p<=3; p++) {\r\n' \
   '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
-  '            if (fp[p].style.display == "none") {fp[p].style.display="";} else {fp[p].style.display = "none";}\r\n' \
+  '            if (fp[p].style.display != "initial") {fp[p].style.display = "initial";} else {fp[p].style.display = "none";}\r\n' \
   '          } else {\r\n' \
   '            fp[p].style.display = "none";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        document.getElementById("dfpanel").style.display = "none";\r\n' \
+  '        document.getElementById("mtpanel").style.display = "none";\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
@@ -5207,11 +5859,13 @@ class GPXTweakerWebInterfaceServer():
   HTML_MAP_TEMPLATE = \
   '      function switch_3Dpanel() {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (document.getElementById("v3Dpanel").style.display == "none") {\r\n' \
-  '          document.getElementById("v3Dpanel").style.display = "";\r\n' \
+  '        if (document.getElementById("v3Dpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("v3Dpanel").style.display = "initial";\r\n' \
   '        } else {\r\n' \
   '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '        }\r\n' \
+  '        document.getElementById("dfpanel").style.display = "none";\r\n' \
+  '        document.getElementById("mtpanel").style.display = "none";\r\n' \
   '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
   '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
@@ -5227,20 +5881,20 @@ class GPXTweakerWebInterfaceServer():
   '        document.documentElement.style.setProperty("--scale", tscale / zoom);\r\n' \
   '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
   '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
-  '        if (focused) {\r\n' \
+  '        let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
+  '        hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
+  '        hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
+  '        if (focused && scrollmode > 0) {\r\n' \
   '          if (focused.indexOf("segment") >= 0) {\r\n' \
-  '            scroll_to_track(document.getElementById(focused.replace("segment", "track")));\r\n' \
+  '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
   '          } else if (focused.indexOf("track") >= 0){\r\n' \
-  '            scroll_to_track(document.getElementById(focused));\r\n' \
+  '            scroll_to_track(document.getElementById(focused), scrollmode == 2);\r\n' \
   '          } else {\r\n' \
-  '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
+  '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
-  '          hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
-  '          hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
+  '          reframe();\r\n' \
   '        }\r\n' \
-  '        reframe();\r\n' \
   '      }\r\n' \
   '      function switch_tlock(resc=true) {\r\n' \
   '        if (mode == "map" || (document.getElementById("tset").disabled && resc)) {return;}\r\n' \
@@ -5342,6 +5996,28 @@ class GPXTweakerWebInterfaceServer():
   '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function scrollcross(sw=false) {\r\n' \
+  '        if (mode == "map") {return;}\r\n' \
+  '        if (sw) {\r\n' \
+  '          scrollmode = (scrollmode + 1) % 3;\r\n' \
+  '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n' \
+  '        } else {\r\n' \
+  '          if (! focused) {return;}\r\n' \
+  '          if (focused.substring(0, 3) == "seg") {\r\n' \
+  '            document.getElementById(focused + "desc").scrollIntoView({block:"start"});\r\n' \
+  '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), true);\r\n' \
+  '          } else if (focused.substring(0, 3) == "tra") {\r\n' \
+  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '            scroll_to_track(document.getElementById(focused), true);\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
+  '            if (document.getElementById(focused).value != "error") {\r\n' \
+  '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
   '        if (e.altKey) {\r\n' \
   '          e.preventDefault();\r\n' \
@@ -5369,6 +6045,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function load_epcb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          document.getElementById("eset").selectedIndex = eset;\r\n' \
   '          return;\r\n' \
@@ -5376,6 +6053,7 @@ class GPXTweakerWebInterfaceServer():
   '        eset = document.getElementById("eset").selectedIndex;\r\n' \
   '      } \r\n' \
   '      function error_epcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("eset").selectedIndex = eset;\r\n' \
   '      } \r\n' \
   '      function switch_elevations(eset) {\r\n' \
@@ -5383,10 +6061,28 @@ class GPXTweakerWebInterfaceServer():
   '        xhrep.onload = (e) => {load_epcb(e.target)};\r\n' \
   '        xhrep.open("GET", "/elevationsproviders/switch?" + q);\r\n' \
   '        xhrep.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrep.send();\r\n' \
   '      }\r\n'
+  HTML_DFMTPANEL_TEMPLATE = \
+  '            <div id="dfpanel">\r\n' \
+  '              <span>{#jdfpanel#}</span>\r\n' \
+  '              <form id="dfform" autocomplete="off" onsubmit="return(false);">\r\n' \
+  '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
+  '                <span id="dfdist" style="left:4.5em;">20</span>\r\n' \
+  '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="20" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <div id="mtpanel">\r\n' \
+  '              <span>{#jmtpanel#}</span>\r\n' \
+  '              <form id="mtform" autocomplete="off" onsubmit="return(false);" onchange="update_media();">\r\n' \
+  '                <label for="mthumb" style="left:1.5em;width:8em;">{#jpixels#}</label>\r\n' \
+  '                <span id="mtsize" style="left:4.5em;">##THUMBSIZE##</span>\r\n' \
+  '                <input type="range" id="mthumb" name="mthumb" min="8" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
-  '            <div id="filterpanel1" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel1">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
   '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(1)">\r\n' \
   '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
@@ -5397,7 +6093,7 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="filterpanel2" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel2">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
   '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(2)">\r\n' \
   '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
@@ -5408,7 +6104,7 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
-  '            <div id="filterpanel3" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="filterpanel3">\r\n' \
   '              <span>{#jfilterpanel3#}</span>\r\n' \
   '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(3)">\r\n' \
   '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
@@ -5420,7 +6116,7 @@ class GPXTweakerWebInterfaceServer():
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_3DPANEL_TEMPLATE = \
-  '            <div id="v3Dpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);right:2vw;width:10em;height:13.4em;background-color:rgb(30,30,35);z-index:10;font-size:75%;text-align:center;font-weight:normal;">\r\n' \
+  '            <div id="v3Dpanel">\r\n' \
   '              <span>{#j3dpanel#}</span>\r\n' \
   '              <form id="v3dform" autocomplete="off" onsubmit="return(false);">\r\n' \
   '                <label for="v3dpmargin" style="left:2px;">{#j3dpanoramic#}</label>\r\n' \
@@ -5431,8 +6127,11 @@ class GPXTweakerWebInterfaceServer():
   '                <input type="range" id="v3dsmargin" name="v3dsmargin" min="0.5" max="20" step="0.5" value="##V3DSMARGIN##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n'
-  HTML_SCALEBOX_GRAPH_TEMPLATE = \
-  '              <div id="scalebox" style="position:absolute;left:4px;bottom:3px;background-color:rgba(255, 255, 255, .5);padding-left:2px;padding-right:2px;line-height:0.7em;"> \r\n' \
+  HTML_SSB_GRAPH_TEMPLATE = \
+  '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
+  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '              </div>\r\n' \
+  '              <div id="scalebox" style="left:1.5em;line-height:0.7em;"> \r\n' \
   '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
   '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
   '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
@@ -5447,7 +6146,7 @@ class GPXTweakerWebInterfaceServer():
   '      <tfoot>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div style="height:1.2em;overflow-y:hidden;width:100%;">\r\n' \
+  '            <div style="height:1.2em;overflow-y:hidden;width:100%;user-select:none;">\r\n' \
   '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
   '            </div>\r\n' \
   '          </th>\r\n' \
@@ -5474,7 +6173,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
   '          document.getElementById("tset").focus();\r\n' \
   '          document.getElementById("tset").blur();\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("tlock").style.fontWeight="500";\r\n' \
   '        }\r\n' \
+  '        document.getElementById("dfpanel").style.right = "calc(2vw + " + (mode=="tiles"?"15":"12.3") + "em - 30px)";\r\n' \
+  '        document.getElementById("mtpanel").style.right = "calc(2vw + " + (mode=="tiles"?"30.9":"28.2") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -5497,7 +6200,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
   '          if (tlevel == 0) {rescale();}\r\n' \
   '        }\r\n' \
-  '        scroll_to_all();\r\n' \
+  '        scroll_to_track();\r\n' \
   '        if (prev_state != null) {\r\n' \
   '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
@@ -5528,14 +6231,18 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("v3dpmargin").value = parseFloat(prev_state[16]);\r\n' \
   '          document.getElementById("v3dsdist").innerHTML = prev_state[17];\r\n' \
   '          document.getElementById("v3dsmargin").value = parseFloat(prev_state[17]);\r\n' \
+  '          document.getElementById("dfdist").innerHTML = prev_state[18];\r\n' \
+  '          document.getElementById("dffilter").value = parseFloat(prev_state[18]);\r\n' \
+  '          scrollmode = parseInt(prev_state[19]);\r\n' \
   '        } else {\r\n' \
   '          eset = document.getElementById("eset").selectedIndex;\r\n' \
   '          if (document.getElementById("iset").name == "iset") {iset = document.getElementById("iset").selectedIndex;}\r\n' \
-  '        }\r\n'
+  '        }\r\n' \
+  '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
   '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML);\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString());\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -5606,15 +6313,25 @@ class GPXTweakerWebInterfaceServer():
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          sta = twidth == 0;\r\n' \
   '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_all();};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
   '      }\r\n' + HTML_TILES_TEMPLATE + HTML_UTIL_TEMPLATE + \
-  '      function scroll_to_dot(dot) {\r\n' \
-  '        scroll_view(htopx + prop_to_wmvalue(dot.style.left), htopy - prop_to_wmvalue(dot.style.top));\r\n' \
+  '      function scroll_to_dot(dot, center=true) {\r\n' \
+  '        let dl = prop_to_wmvalue(dot.style.left);\r\n' \
+  '        let dt = prop_to_wmvalue(dot.style.top);\r\n' \
+  '        let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '        if (center) {\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 - dl * zoom / tscale;\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 - dt * zoom / tscale;\r\n' \
+  '        } else {\r\n' \
+  '          hpx = Math.max(Math.min(hpx, -o - dl * zoom / tscale + viewpane.offsetWidth), o - dl * zoom / tscale);\r\n' \
+  '          hpy = Math.max(Math.min(hpy, -o - dt * zoom / tscale + viewpane.offsetHeight), o - dt * zoom / tscale);\r\n' \
+  '        }\r\n' \
+  '        reframe();\r\n' \
   '      }\r\n' \
-  '      function track_center(track=null) {\r\n' \
+  '      function track_boundaries(track=null) {\r\n' \
   '        let tracks = [];\r\n' \
   '        if (track != null) {\r\n' \
   '          tracks.push(track);\r\n' \
@@ -5667,22 +6384,10 @@ class GPXTweakerWebInterfaceServer():
   '        if (gminx == null) {\r\n' \
   '          return null;\r\n' \
   '        } else {\r\n' \
-  '          return [(gminx + gmaxx) / 2, (gminy + gmaxy) / 2];\r\n' \
+  '          let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '          return [gminx - o, gmaxx + o, gminy - o, gmaxy + o];\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function scroll_to_track(track) {\r\n' \
-  '        let c = track_center(track);\r\n' \
-  '        if (c == null) {return;}\r\n' \
-  '        scroll_view(htopx + c[0], htopy - c[1]);\r\n' \
-  '      }\r\n' \
-  '      function scroll_to_all() {\r\n' \
-  '        let c = track_center();\r\n' \
-  '        if (c == null) {\r\n' \
-  '          scroll_view(defx, defy);\r\n' \
-  '        } else {\r\n' \
-  '          scroll_view(htopx + c[0], htopy - c[1]); \r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_SCROLL_TEMPLATE + \
   '      function dot_style(pt, over) {\r\n' \
   '        if (pt.indexOf("point") < 0) {return;}\r\n' \
   '        let dot = document.getElementById(pt.replace("point", "dot"))\r\n' \
@@ -5727,7 +6432,15 @@ class GPXTweakerWebInterfaceServer():
   '        foc_old = c;\r\n' \
   '      }\r\n' \
   '      function element_click(e, elt, scroll=true) {\r\n' \
-  '        if (e != null) {e.preventDefault();}\r\n' \
+  '        if (e == null) {\r\n' \
+  '          if (document.activeElement) {\r\n' \
+  '            if (document.activeElement.id) {\r\n' \
+  '              if (document.activeElement.id.indexOf("point") >= 0 || document.activeElement.id == "name_track") {document.activeElement.blur();}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '        }\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        if (elt.htmlFor == ex_foc) {focused = "";} else {focused = elt.htmlFor;}\r\n' \
   '        if (ex_foc != "") {\r\n' \
@@ -5774,14 +6487,14 @@ class GPXTweakerWebInterfaceServer():
   '            track.style.display = "";\r\n' \
   '            track.style.zIndex = "1";\r\n' \
   '            if (scroll) {elt.scrollIntoView({block:"start"});}\r\n' \
-  '            scroll_to_track(track);\r\n' \
+  '            if (scrollmode > 0) {scroll_to_track(track, scrollmode == 2);}\r\n' \
   '          } else if (scroll) {\r\n' \
   '            elt.scrollIntoView({block:"nearest"});\r\n' \
   '            elt_foc.scrollIntoView({block:"nearest"});\r\n' \
   '            let par_c = true;\r\n' \
   '            if (focused.substring(0, 3) != "way") {par_c = elt.parentNode.parentNode.firstElementChild.checked;}\r\n' \
-  '            if (((! document.getElementById(focused).checked || ! par_c)) && document.getElementById(focused).value != "error") {\r\n' \
-  '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
+  '            if ((! document.getElementById(focused).checked || ! par_c || e) && document.getElementById(focused).value != "error" && scrollmode > 0) {\r\n' \
+  '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -5862,8 +6575,12 @@ class GPXTweakerWebInterfaceServer():
   '            let points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '            if (points != null) {\r\n' \
   '              for (let point of points) {\r\n' \
-  '                let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '                d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '                if (point[0] != "m") {\r\n' \
+  '                  let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                  d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '                } else {\r\n' \
+  '                  d = d + " " + point;\r\n' \
+  '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            path.setAttribute("d", d);\r\n' \
@@ -5879,11 +6596,11 @@ class GPXTweakerWebInterfaceServer():
   '      function WGS84_to_viewbox(lat, lon, track) {\r\n' \
   '        let [x, y] = WGS84toWebMercator(lat, lon);\r\n' \
   '        rebase_track(x, y, track);\r\n' \
-  '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1)\r\n' \
+  '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
   '      }\r\n' \
   '      function point_desc(ptspan = null) {\r\n' \
   '        if (! ptspan) {\r\n' \
-  '          let points = document.getElementById("content").getElementsByTagName("span");\r\n' \
+  '          let points = Array.from(document.getElementById("content").getElementsByTagName("span"));\r\n' \
   '          for (let p=2; p<points.length; p++) {\r\n' \
   '            points[p].parentNode.firstElementChild.nextElementSibling.innerHTML = point_desc(points[p]);\r\n' \
   '          }\r\n' \
@@ -5940,8 +6657,9 @@ class GPXTweakerWebInterfaceServer():
   '              pt_cb.disabled = false;\r\n' \
   '              pt_cb.value = "edited";\r\n' \
   '              if (pt_cb.checked) {point_undelete(pt_cb);} else {dot_style(focused, true);}\r\n' \
+  '              if (scrollmode > 0) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
   '            } else {\r\n' \
-  '              if (scroll) {scroll_to_dot(dot);}\r\n' \
+  '              if (scroll && scrollmode > 0) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
   '              if (focused.substring(0, 3) != "way" && pt_cb.checked) {\r\n' \
   '                let seg = pt.parentNode.parentNode;\r\n' \
   '                let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
@@ -5969,14 +6687,20 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (recalc && focused.substring(0, 3) != "way") {segments_calc(pt.parentNode.parentNode);}\r\n' \
   '      }\r\n' \
+  '      function point_edit_oc(point, recalc=true, coord=true) {\r\n' \
+  '        let ex_foc = focused;\r\n' \
+  '        if (point != focused) {focused = point;}\r\n' \
+  '        point_edit(coord, true, recalc, coord);\r\n' \
+  '        focused = ex_foc;\r\n' \
+  '      }\r\n' \
   '      function point_over(pt) {\r\n' \
   '        let foc = null;\r\n' \
   '        if (pt.id.indexOf("desc") < 0) {foc = pt.id;} else {foc = pt.htmlFor;}\r\n' \
   '        let par_c = true;\r\n' \
   '        if (foc.substring(0, 3) != "way") {par_c = pt.parentNode.parentNode.firstElementChild.checked;}\r\n' \
   '        dot_style(foc, true);\r\n' \
-  '        if (((document.getElementById(foc).checked && par_c) || foc == focused) && document.getElementById(foc).value != "error") {\r\n' \
-  '          scroll_to_dot(document.getElementById(foc.replace("point", "dot")));\r\n' \
+  '        if (((document.getElementById(foc).checked && par_c) || foc == focused) && document.getElementById(foc).value != "error" && scrollmode == 2) {\r\n' \
+  '          scroll_to_dot(document.getElementById(foc.replace("point", "dot")), false);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function point_outside(pt) {\r\n' \
@@ -5991,7 +6715,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (whole && focused) {element_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        let ind = null;\r\n' \
   '        let histb = 0;\r\n' \
-  '        let inds=[];\r\n' \
+  '        let inds = [];\r\n' \
   '        if (! focused) {\r\n' \
   '          ind = hist[s].length - 1;\r\n' \
   '          if (hist[s][ind].length >= 3) {histb = hist[s][ind][2];}\r\n' \
@@ -6035,7 +6759,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
-  '        let segments= null;\r\n' \
+  '        let segments = null;\r\n' \
   '        let points = null;\r\n' \
   '        for (let ind_=0; ind_<inds.length; ind_++) {\r\n' \
   '          ind = inds[ind_];\r\n' \
@@ -6054,11 +6778,21 @@ class GPXTweakerWebInterfaceServer():
   '            let coord = (inputs[0].value != c[0]) || (inputs[1].value != c[1]);\r\n' \
   '            for (let i=0; i<inputs.length;i++) {inputs[i].value = c[i];}\r\n' \
   '            save_old();\r\n' \
-  '            point_edit(false, false, histb == 0, coord);\r\n' \
+  '            point_edit(false, false, histb == 0, coord && histb == 0);\r\n' \
   '            if (err && elt_foc.value != "error") {\r\n' \
   '              focused = "";\r\n' \
   '              dot_style(hist[s][ind][0], false);\r\n' \
   '              focused = hist[s][ind][0];\r\n' \
+  '            }\r\n' \
+  '            if (coord && histb != 0) {\r\n' \
+  '              if (segments == null) {\r\n' \
+  '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
+  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
+  '              }\r\n' \
+  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.slice(7, -4))] = true;\r\n' \
+  '              points[parseInt(focused.substring(5))] = elt_foc.checked && elt_foc.value != "error";\r\n' \
+  '              let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '              [dot.style.left, dot.style.top] = point_to_position(document.getElementById(focused + "desc"));\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (histb == 0) {\r\n' \
@@ -6066,13 +6800,13 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              hist[1-s].push([focused, "", histb]);\r\n' \
   '              if (segments == null) {\r\n' \
-  '                segments= Array(document.getElementById("pointsform").children.length).fill(false);\r\n' \
-  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(false);\r\n' \
+  '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
+  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
   '              }\r\n' \
-  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.substring(7))] = true;\r\n' \
-  '              points[parseInt(focused.substring(5))] = true;\r\n' \
+  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.slice(7, -4))] = true;\r\n' \
+  '              points[parseInt(focused.substring(5))] = redo;\r\n' \
   '            }\r\n' \
-  '            document.getElementById(focused).checked = redo;\r\n' \
+  '            elt_foc.checked = redo;\r\n' \
   '            focused = "";\r\n' \
   '            point_checkbox(document.getElementById(hist[s][ind][0]), histb != 0);\r\n' \
   '            if (histb == 0) {dot_style(hist[s][ind][0], false)};\r\n' \
@@ -6084,17 +6818,20 @@ class GPXTweakerWebInterfaceServer():
   '          for (let s=0; s<segments.length; s++) {\r\n' \
   '            if (! segments[s]) {continue;}\r\n' \
   '            let track = document.getElementById("track" + s.toString());\r\n' \
+  '            let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '            let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
   '            let path = document.getElementById("path" + s.toString());\r\n' \
   '            let pt = document.getElementById("segment" + s.toString() + "cont").firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
   '            let d = path.getAttribute("d");\r\n' \
   '            let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g);\r\n' \
   '            let d_r = "M0 0";\r\n' \
   '            for (let p=1; p<dots.length; p++) {\r\n' \
-  '              if (! points[parseInt(pt.id.substring(5))]) {\r\n' \
+  '              let pt_s = points[parseInt(pt.id.slice(5, -4))];\r\n' \
+  '              if (pt_s == null) {\r\n' \
   '                d_r = d_r + " " + dots[p];\r\n' \
-  '              } else if (redo) {\r\n' \
-  '                let np = WGS84_to_viewbox(parseFloat(document.getElementById(pt.id.replace("cont", "lat")).value), parseFloat(document.getElementById(pt.id.replace("cont", "lon")).value), track);\r\n' \
-  '                d_r = d_r + " L" + np;\r\n' \
+  '              } else if (pt_s) {\r\n' \
+  '                let [x, y] = WGS84toWebMercator(parseFloat(document.getElementById(pt.id.replace("cont", "lat")).value), parseFloat(document.getElementById(pt.id.replace("cont", "lon")).value));\r\n' \
+  '                d_r = d_r + " L" + (x - tl).toFixed(1) + " " + (tt - y).toFixed(1);\r\n' \
   '              } else {\r\n' \
   '                d_r = d_r + " m0 0";\r\n' \
   '              }\r\n' \
@@ -6104,15 +6841,16 @@ class GPXTweakerWebInterfaceServer():
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (hist_b !=0) {segments_calc();}\r\n' \
+  '        if (histb != 0) {segments_calc();}\r\n' \
   '        let ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
   '        if (ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        if (ex_foc.indexOf("point") < 0) {\r\n' \
-  '          scroll_to_dot(document.getElementById(ex_foc_.replace("point", "dot")));\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(ex_foc_.replace("point", "dot")), scrollmode == 2);}\r\n' \
   '          document.getElementById(ex_foc_ + "cont").scrollIntoView({block:"center"});\r\n' \
   '        } else {\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(ex_foc.replace("point", "dot")), scrollmode == 2);}\r\n' \
   '          document.getElementById(ex_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
   '        if (hist[1-s][hist[1-s].length-1][1] == "") {\r\n' \
@@ -6291,11 +7029,10 @@ class GPXTweakerWebInterfaceServer():
   '        hist[0].push([focused, ""]);\r\n' \
   '        el_span.scrollIntoView({block:"center"});\r\n' \
   '        if (! coord) {\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(el_dot, scrollmode == 2);}\r\n' \
   '          if (seg) {\r\n' \
-  '            scroll_to_dot(el_dot);\r\n' \
   '            segments_calc(seg);\r\n' \
   '          } else {\r\n' \
-  '            scroll_to_dot(el_dot);\r\n' \
   '            wpt_calc();\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -6647,7 +7384,7 @@ class GPXTweakerWebInterfaceServer():
   '          track.id = "track" + pref.substring(7);\r\n' \
   '          path.id = "path" + pref.substring(7);\r\n' \
   '          path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' \
+  '          let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
   '          let pref_num = document.getElementById("points").getElementsByTagName("span").length;\r\n' \
   '          let dot_ref = document.getElementById(spans[spans.length - 1].id.slice(0, -5).replace("point", "dot")).nextElementSibling;\r\n' \
   '          let mintime = null;\r\n' \
@@ -6740,7 +7477,7 @@ class GPXTweakerWebInterfaceServer():
   '        path_foc.setAttribute("d", "M0 0 " + d_right);\r\n' \
   '        path.setAttribute("d", d_left[0]);\r\n' \
   '        handle.insertBefore(track, track_foc);\r\n' \
-  '        scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '        if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), scrollmode == 2);}\r\n' \
   '        segments_calc(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '      }\r\n' \
@@ -6787,7 +7524,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (d_foc.substring(1).indexOf("M") >= 0) {d = d.replace("M", "L");}\r\n' \
   '        path_foc.setAttribute("d", d_foc + d);\r\n' \
   '        path.setAttribute("d", "M0 0");\r\n' \
-  '        scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
+  '        if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
   '        seg_foc.firstElementChild.scrollIntoView({block:"start"});\r\n' \
   '        document.getElementById("track" + seg.id.slice(7, -4)).style.display = "none";\r\n' \
   '        seg.style.textDecoration="line-through";\r\n' \
@@ -6818,8 +7555,8 @@ class GPXTweakerWebInterfaceServer():
   '        let maxtime_foc = null;\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
-  '        let spans_foc = seg_foc.getElementsByTagName("span");\r\n' \
-  '        let spans = seg.getElementsByTagName("span");\r\n' \
+  '        let spans_foc = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
+  '        let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
   '        for (let p=0; p<spans_foc.length; p++) {\r\n' \
   '          if (! spans_foc[p].parentNode.firstElementChild.checked || spans_foc[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
   '          let t = Date.parse(document.getElementById(spans_foc[p].id.replace("focus", "time")).value);\r\n' \
@@ -6902,13 +7639,13 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused == "") {\r\n' \
   '          if (! window.confirm("{#jrconfirm#}")) {return;}\r\n' \
   '          whole = true;\r\n' \
-  '          scroll_to_all();\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '          segs = pts.children;\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          let seg_foc = document.getElementById(focused + "cont");\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
+  '          if (scrollmode >0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
   '        } else {return;}\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
@@ -7037,9 +7774,145 @@ class GPXTweakerWebInterfaceServer():
   '        segment_renum();\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
+  '      function segment_filter() {\r\n' \
+  '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '        let seg_foc = null;\r\n' \
+  '        let segs = [];\r\n' \
+  '        if (focused == "") {\r\n' \
+  '          if (! window.confirm("{#jfconfirm#}")) {return;}\r\n' \
+  '          let segms = document.getElementById("pointsform").children;\r\n' \
+  '          for (let s=0; s<segms.length; s++) {\r\n' \
+  '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
+  '          }\r\n' \
+  '          if (segs.length == 0) {return;}\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
+  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          if (! seg_foc.firstElementChild.checked) {return;}\r\n' \
+  '          seg_foc.scrollIntoView({block:"start"});\r\n' \
+  '          segs.push(seg_foc);\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
+  '        } else {return;}\r\n' \
+  '        let batch = ++hist_b;\r\n' \
+  '        let nmod = 0;\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
+  '          let positions = [];\r\n' \
+  '          for (let p=0; p<spans.length; p++) {\r\n' \
+  '            let pt = document.getElementById(spans[p].id.slice(0, -5));\r\n' \
+  '            if (! pt.checked || pt.value == "error") {\r\n' \
+  '              positions.push(null);\r\n' \
+  '            } else {\r\n' \
+  '              let c = spans[p].children;\r\n' \
+  '              positions.push(WGS84toWebMercator(parseFloat(c[1].value), parseFloat(c[4].value)));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let track = document.getElementById("track" + segs[s].id.slice(7, -4));\r\n' \
+  '          let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '          let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
+  '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
+  '          let d = path.getAttribute("d");\r\n' \
+  '          let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g).slice(1);\r\n' \
+  '          let d_f = "M0 0";\r\n' \
+  '          let dir = null;\r\n' \
+  '          let pp = null;\r\n' \
+  '          for (let p=0; p<positions.length; p++) {\r\n' \
+  '            let foc = spans[p].id.slice(0, -5);\r\n' \
+  '            for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
+  '              if (hist[1][i][0] == foc) {hist[1].splice(i, 1);}\r\n' \
+  '            }\r\n' \
+  '            if (positions[p] == null) {\r\n' \
+  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              continue;\r\n' \
+  '            }\r\n' \
+  '            if (pp == null) {\r\n' \
+  '              pp = p;\r\n' \
+  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              continue;\r\n' \
+  '            }\r\n' \
+  '            let ndir = [0, 0];\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let pr = pp;\r\n' \
+  '            for (let pn=p; pn<positions.length; pn++) {\r\n' \
+  '              if (positions[pn] == null) {continue;}\r\n' \
+  '              dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
+  '              pr = pn;\r\n' \
+  '              if (dist > drange) {break;}\r\n' \
+  '              ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
+  '              ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
+  '            }\r\n' \
+  '            let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
+  '            if (ndirl > 0) {\r\n' \
+  '              ndir[0] /= ndirl;\r\n' \
+  '              ndir[1] /= ndirl;\r\n' \
+  '              if (dir == null) {dir = ndir;}\r\n' \
+  '              let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
+  '              let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
+  '              if (pdirl > 0) {\r\n' \
+  '                let pmod = false;\r\n' \
+  '                pdir[0] /= pdirl;\r\n' \
+  '                pdir[1] /= pdirl;\r\n' \
+  '                let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
+  '                let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
+  '                let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
+  '                let pcos = dir[0] * pdir[0] + dir[1] * pdir[1];\r\n' \
+  '                if (nsin * psin < 0) {\r\n' \
+  '                  if (pcos < 0) {\r\n' \
+  '                    if (ncos < 0) {\r\n' \
+  '                      pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                      dir[0] = -dir[0];\r\n' \
+  '                      dir[1] = -dir[1];\r\n' \
+  '                    } else {\r\n' \
+  '                      pdirl = 0;\r\n' \
+  '                    }\r\n' \
+  '                  }\r\n' \
+  '                  positions[p][0] = positions[pp][0] + pdirl * dir[0];\r\n' \
+  '                  positions[p][1] = positions[pp][1] + pdirl * dir[1];\r\n' \
+  '                  pmod = true;\r\n' \
+  '                } else if (ncos > pcos) {\r\n' \
+  '                  pdirl = Math.max(0, pdirl * (pdir[0] * ndir[0] + pdir[1] * ndir[1]));\r\n' \
+  '                  positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
+  '                  positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
+  '                  pmod = true;\r\n' \
+  '                  dir = ndir;\r\n' \
+  '                } else {\r\n' \
+  '                  dir = pdir;\r\n' \
+  '                }\r\n' \
+  '                if (pmod) {\r\n' \
+  '                  focused = foc;\r\n' \
+  '                  save_old();\r\n' \
+  '                  [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
+  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  save_old();\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
+  '                  let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '                  dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
+  '                  dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
+  '                  d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
+  '                  nmod++;\r\n' \
+  '                } else {\r\n' \
+  '                  d_f = d_f + " " + dots[p];\r\n' \
+  '                }\r\n' \
+  '              } else {\r\n' \
+  '                d_f = d_f + " " + dots[p];\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              d_f = d_f + " " + dots[p];\r\n' \
+  '            }\r\n' \
+  '            pp = p;\r\n' \
+  '          }\r\n' \
+  '          if (d_f.substring(1).indexOf("M") < 0) {d_f = d_f.replace("L", "M");}\r\n' \
+  '          path.setAttribute("d", d_f);\r\n' \
+  '        }\r\n' \
+  '        if (seg_foc != null) {focused = seg_foc.id.slice(0, -4);} else {focused = "";}\r\n' \
+  '        segments_calc(...segs);\r\n' \
+  '        show_msg((seg_foc!=null?"{#jmsegmentfilter1#}":"{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
+  '      }\r\n' \
   '      function error_ecb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '      } \r\n' \
   '      function load_ecb(t, pts) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return 0;}\r\n' \
   '        if (t.response == "") {return 0;}\r\n' \
   '        let ele = t.response.split("\\r\\n");\r\n' \
@@ -7144,6 +8017,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhre.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhre.send(b);\r\n' \
   '      }\r\n' \
   '      function ele_alt_switch() {\r\n' \
@@ -7154,7 +8028,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (ex_foc) {\r\n' \
   '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
   '            if (! window.confirm("{#jeasconfirm#}")) {return;}\r\n' \
-  '            spans = document.getElementById(ex_foc + "cont").getElementsByTagName("span");\r\n' \
+  '            spans = Array.from(document.getElementById(ex_foc + "cont").getElementsByTagName("span"));\r\n' \
   '            msg = "{#jmelealt2#}";\r\n' \
   '            seg = document.getElementById(ex_foc + "cont");\r\n' \
   '          } else if (ex_foc.substring(0, 3) == "way") {\r\n' \
@@ -7166,7 +8040,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        } else {\r\n' \
   '          if (! window.confirm("{#jeaconfirm#}")) {return;}\r\n' \
-  '          spans = document.getElementById("points").getElementsByTagName("span");\r\n' \
+  '          spans = Array.from(document.getElementById("points").getElementsByTagName("span"));\r\n' \
   '          msg = "{#jmelealt3#}";\r\n' \
   '        }\r\n' \
   '        if (spans.length == 0) {return;}\r\n' \
@@ -7201,7 +8075,7 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
-  '        let spans = seg_foc.getElementsByTagName("span");\r\n' \
+  '        let spans = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
   '        let stime = null;\r\n' \
   '        let etime = null;\r\n' \
   '        let ralt = null;\r\n' \
@@ -7294,25 +8168,25 @@ class GPXTweakerWebInterfaceServer():
   '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
   '          }\r\n' \
   '          if (segs.length == 0) {return;}\r\n' \
-  '          scroll_to_all();\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          seg_foc = document.getElementById(focused + "cont");\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)));\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
   '        } else if (focused.substring(0, 5) == "point") {\r\n' \
   '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
   '          pt_foc = focused;\r\n' \
   '          document.getElementById(pt_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
   '          seg_foc = document.getElementById(pt_foc + "cont").parentNode;\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          scroll_to_dot(document.getElementById(pt_foc.replace("point", "dot")));\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.replace("point", "dot")), scrollmode == 2);}\r\n' \
   '        } else {\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
   '          let lc = -1;\r\n' \
   '          let pm = [];\r\n' \
   '          let pm_b = [];\r\n' \
@@ -7384,7 +8258,7 @@ class GPXTweakerWebInterfaceServer():
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
   '                    segments_calc(segs[s]);\r\n' \
-  '                    show_msg("Horodatage du point mis à jour", 2);\r\n' \
+  '                    show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
   '                  pm_b = null;\r\n' \
@@ -7421,7 +8295,7 @@ class GPXTweakerWebInterfaceServer():
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"Horodatages du segment mis à jour":"Horodatages de la trace mis à jour");\r\n' \
+  '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"{#jmdatetime2#}":"{#jmdatetime3#}");\r\n' \
   '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
   '        segments_calc(...segs);\r\n' \
@@ -7433,6 +8307,15 @@ class GPXTweakerWebInterfaceServer():
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
   '        spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
+  '      }\r\n' \
+  '      function switch_dfpanel() {\r\n' \
+  '        if (document.getElementById("dfpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("dfpanel").style.display = "initial";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("dfpanel").style.display = "none";\r\n' \
+  '        }\r\n' \
+  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
+  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
   '        graph_ip = [];\r\n' \
   '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
@@ -7600,7 +8483,7 @@ class GPXTweakerWebInterfaceServer():
   '          if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
   '            let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
   '            element_click(null, pt);\r\n' \
-  '            scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()));\r\n' \
+  '            if (scrollmode > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode == 2);}\r\n' \
   '          } else {\r\n' \
   '            gbar.style.display = "";\r\n' \
   '            graphpx.innerHTML = gpx;\r\n' \
@@ -7609,8 +8492,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function error_pcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '      } \r\n' \
   '      function load_pcb(t, foc) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return false;}\r\n' \
   '        let ex_foc = focused;\r\n' \
   '        if (! t.response) {return false;}\r\n' \
@@ -7700,8 +8585,12 @@ class GPXTweakerWebInterfaceServer():
   '                d_ = "";\r\n' \
   '                if (points != null) {\r\n' \
   '                  for (let point of points) {\r\n' \
-  '                    let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '                    d_ = d_ + " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
+  '                    if (point[0] != "m") {\r\n' \
+  '                      let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                      d_ = d_ + " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
+  '                    } else {\r\n' \
+  '                      d_ = d_ + " " + point;\r\n' \
+  '                    }\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '                if (i == 0) {d_left = "M0 0" + d_;} else {d_right = d_;}\r\n' \
@@ -7754,6 +8643,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrp.open("POST", "/path");\r\n' \
   '        xhrp.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrp.send(b);\r\n' \
   '      }\r\n' \
   '      function open_3D(mode="p") {\r\n' \
@@ -7761,6 +8651,7 @@ class GPXTweakerWebInterfaceServer():
   '        track_save(mode);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE + \
   '      function load_ipcb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          document.getElementById("iset").selectedIndex = iset;\r\n' \
   '          return;\r\n' \
@@ -7768,6 +8659,7 @@ class GPXTweakerWebInterfaceServer():
   '        iset = document.getElementById("iset").selectedIndex;\r\n' \
   '      } \r\n' \
   '      function error_ipcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("iset").selectedIndex = iset;\r\n' \
   '      } \r\n' \
   '      function switch_itineraries(iset) {\r\n' \
@@ -7775,20 +8667,23 @@ class GPXTweakerWebInterfaceServer():
   '        xhrip.onload = (e) => {load_ipcb(e.target)};\r\n' \
   '        xhrip.open("GET", "/itinerariesproviders/switch?" + q);\r\n' \
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrip.send();\r\n' \
   '      }\r\n' \
   '      function load_cb(t, mode3d=null) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
   '        } else if (mode3d) {\r\n' \
-  '          window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
+  '          window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
   '      function error_cb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("save_icon").style.fontSize = "inherit";\r\n' \
   '        document.getElementById("save").disabled = false;\r\n' \
   '        if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}");}\r\n' \
@@ -7839,6 +8734,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
@@ -7860,7 +8756,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="switch_dots()">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;user-select:none;"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -7882,20 +8778,20 @@ class GPXTweakerWebInterfaceServer():
   '              </div>\r\n' \
   '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
   '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
-  '                <form id="waypointsform" autocomplete="off" onsubmit="return(false);">\r\n                  ##WAYPOINTS##\r\n' \
+  '                <form id="waypointsform" autocomplete="off" onsubmit="return(false);">\r\n                  #<#WAYPOINTS#>#\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;height:88%;font-size:80%">\r\n' \
   '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
-  '                <form id="pointsform" autocomplete="off" onsubmit="return(false);">\r\n                  ##POINTS##\r\n' \
+  '                <form id="pointsform" autocomplete="off" onsubmit="return(false);">\r\n                  #<#POINTS#>#\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
-  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">##PATHES##\r\n##WAYDOTS####DOTS##' \
-  '              </div>\r\n' + HTML_SCALEBOX_GRAPH_TEMPLATE + \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
+  '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
@@ -8062,7 +8958,7 @@ class GPXTweakerWebInterfaceServer():
   '          } while (pt.value == "error" || ! pt.checked || (focused.indexOf("way")>=0?false:!pt.parentNode.parentNode.firstElementChild.checked))\r\n' \
   '          pt = document.getElementById(dt.id.replace("dot", "point") + "desc");\r\n' \
   '          element_click(null, pt);\r\n' \
-  '          scroll_to_dot(dt);\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(dt, scrollmode == 2);}\r\n' \
   '        }\r\n' \
   '        if (focused.indexOf("segment") >= 0) {\r\n' \
   '          let seg = document.getElementById(focused + "cont")\r\n' \
@@ -8076,7 +8972,7 @@ class GPXTweakerWebInterfaceServer():
   '          } while (! seg.firstElementChild.checked)\r\n' \
   '          seg = seg.firstElementChild.nextElementSibling;\r\n' \
   '          element_click(null, seg);\r\n' \
-  '          scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")));\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
@@ -8141,15 +9037,15 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="waypoint%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), true, false)"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit(false, true, false, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), false, false)"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_WAYPOINT_TEMPLATE = HTML_WAYPOINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -8159,15 +9055,15 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit(true, true, true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
   '                      <label for="point%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
   '                      <label for="point%salt">{jalt}</label>\r\n' \
-  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
   '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit(false, true, true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), true, false)"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -8293,6 +9189,7 @@ class GPXTweakerWebInterfaceServer():
   '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
   '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
   HTML_3D_GLOBALVARS_TEMPLATE = \
+  '      const host = location.hostname + ":";\r\n' \
   '      var canvas = document.getElementById("canvas");\r\n' \
   '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '      canvas.addEventListener("webglcontextlost", function(event) {event.preventDefault();gl_programs=new Map();}, false);\r\n' \
@@ -8534,6 +9431,8 @@ class GPXTweakerWebInterfaceServer():
   '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
   '            r_map.disabled = false;\r\n' \
   '          }\r\n' \
+  '          let crow = tminrow;\r\n' \
+  '          let prom_res = null;\r\n' \
   '          function terr_cb() {\r\n' \
   '            ltiles++;\r\n' \
   '            let ltpn = Math.floor(100 * ltiles / ntiles).toString();\r\n' \
@@ -8542,20 +9441,34 @@ class GPXTweakerWebInterfaceServer():
   '              r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", ltp);\r\n' \
   '            }\r\n' \
   '            if (ltiles == ntiles) {map_complete();}\r\n' \
+  '            if (prom_res && (crow - tminrow) * ncol <= ltiles + ##TILEMAXPENDING##) {\r\n' \
+  '              prom_res();\r\n' \
+  '              prom_res = null;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          function tload_cb(tile, row, col) {\r\n' \
   '            ctx.drawImage(tile, Math.round((col - tmincol) / ncol * mwidth), Math.round((row - tminrow) / nrow * mheight), Math.round((col + 1 - tmincol) / ncol * mwidth) - Math.round((col - tmincol) / ncol * mwidth), Math.round((row + 1 - tminrow) / nrow * mheight) - Math.round((row - tminrow) / nrow * mheight));\r\n' \
   '            terr_cb();\r\n' \
   '          }\r\n' \
-  '          for (let row=tminrow; row<=tmaxrow; row++) {\r\n' \
+  '          async function add_row_tile() {\r\n' \
+  '            let row = crow;\r\n' \
+  '            if ((row - tminrow) * ncol > ltiles + ##TILEMAXPENDING##) {\r\n' \
+  '              let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '              await prom;\r\n' \
+  '            }\r\n' \
   '            for (let col=tmincol; col<=tmaxcol; col++) {\r\n' \
   '              let tile = new Image();\r\n' \
   '              tile.crossOrigin = "anonymous";\r\n' \
-  '              tile.onload = (e) => {tload_cb(e.target, row, col);}\r\n' \
-  '              tile.onerror = (e) => {terr_cb();}\r\n' \
-  '              tile.src = "http://" + location.hostname + ":" + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
+  '              tile.onload = (e) => {tload_cb(e.target, row, col);};\r\n' \
+  '              tile.onerror = (e) => {terr_cb();};\r\n' \
+  '              tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + ##TILEPATH##;\r\n' \
+  '            }\r\n' \
+  '            if (crow < tmaxrow) {\r\n' \
+  '              crow++;\r\n' \
+  '              add_row_tile();\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '          setTimeout(add_row_tile, 1);\r\n' \
   '        }\r\n'
   HTML_3D_ROT_TEMPLATE = \
   '      function canvas_rotate(number=null) {\r\n' \
@@ -8706,7 +9619,7 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker 3DViewer Panoramic</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
   '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
+  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);user-select:none;">\r\n' \
   '    <table>\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:calc(100vw - 14em);">\r\n' \
@@ -9212,7 +10125,7 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker 3DViewer Subjective</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
   '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);">\r\n' \
+  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);user-select:none;">\r\n' \
   '    <table>\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:calc(100vw - 14em);">\r\n' \
@@ -9591,7 +10504,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
   '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
-  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, (trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
   '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '          create_map();\r\n' \
@@ -9806,24 +10719,24 @@ class GPXTweakerWebInterfaceServer():
   '        font-size:70%;\r\n' \
   '      }\r\n' \
   '      form[id^=track] {\r\n' \
-  '        overflow-x:hidden;\r\n' \
+  '        overflow:hidden;\r\n' \
   '        margin-right: 4px;\r\n' \
   '      }\r\n' \
   '      input[id$=visible] {\r\n' \
-  '        appearance:none;\r\n' \
-  '        vertical-align:middle;\r\n' \
   '        margin-left:0.3%;\r\n' \
   '        margin-right:2.2%;\r\n' \
+  '        margin-top:0;\r\n' \
+  '        margin-bottom:0.3em;\r\n' \
   '        width:5.2%;\r\n' \
-  '        height:1.25em;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
   '        display:inline-block;\r\n' \
+  '        margin-bottom:0.3em;\r\n' \
+  '        width:92.3%;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '        width:92.3%;\r\n' \
-  '        min-height:1.35em;\r\n' \
+  '        line-height:1.15em;\r\n' \
   '      }\r\n' \
   '      input[type=color] {\r\n' \
   '        position:absolute;\r\n' \
@@ -9853,9 +10766,6 @@ class GPXTweakerWebInterfaceServer():
   '        width:80%;\r\n' \
   '        font-size:100%;\r\n' \
   '      }\r\n' \
-  '      label[id$=desc]+br {\r\n' \
-  '        margin-bottom: 1em;\r\n' \
-  '      }\r\n' \
   '      span[id$=focus] {\r\n' \
   '        display:none;\r\n' \
   '      }\r\n' \
@@ -9871,14 +10781,68 @@ class GPXTweakerWebInterfaceServer():
   '        r:calc(3px * var(--scale));\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
+  '      img[id^=photo] {\r\n' \
+  '        filter:none;\r\n' \
+  '        image-orientation:from-image;\r\n' \
+  '        cursor:zoom-in;\r\n' \
+  '      }\r\n' \
+  '      video[id^=video] {\r\n' \
+  '        cursor:zoom-in;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        z-index:10;\r\n' \
+  '        width:100%;\r\n' \
+  '        height:100%;\r\n' \
+  '        bottom:0;\r\n' \
+  '        left:0;\r\n' \
+  '        background:black;\r\n' \
+  '        overflow-x:auto;\r\n' \
+  '        overflow-y:hidden;\r\n' \
+  '        white-space:nowrap;\r\n' \
+  '        line-height:0;\r\n' \
+  '        text-align:center;\r\n' \
+  '        user-select:none;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview]::before {\r\n' \
+  '        content:"";\r\n' \
+  '        display:inline-block;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        height:100%;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] * {\r\n' \
+  '        display:inline-block;\r\n' \
+  '        max-height:100%;\r\n' \
+  '        max-width:100%;\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        object-fit:scale-down;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] img {\r\n' \
+  '        filter:none;\r\n' \
+  '        image-orientation:from-image;\r\n' \
+  '        cursor:nesw-resize;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] *:not(:last-child) {\r\n' \
+  '        margin-right:1em;\r\n' \
+  '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
+  '      var mportmin = ##MPORTMIN##;\r\n' \
+  '      var mportmax = ##MPORTMAX##;\r\n' \
   '      var str_comp = new Intl.Collator().compare;\r\n' \
   '      var no_sort = null;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' + HTML_MSG_TEMPLATE + \
+  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
+  '      var media_visible = false;\r\n' \
+  '      var media_gps_ar = null;\r\n' \
+  '      var media_uri_dt = null;\r\n' \
+  '      var media_isvid = null;\r\n' \
+  '      var media_corners = null;\r\n' \
+  '      var media_sides = null;\r\n' \
+  '      var media_div = null;\r\n' \
+  '      var media_fs = false;\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
@@ -9898,11 +10862,14 @@ class GPXTweakerWebInterfaceServer():
   '            q = "auto=" + encodeURIComponent(((b[1] - b[0]) / viewpane.offsetWidth).toString() + "|" + ((b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_all();};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
-  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit(';\r\n', 1)[0] + ';\r\n' \
+  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit('update_tiles();\r\n', 1)[0] + 'let mvis = media_visible;\r\n' \
+  '        hide_media("m");\r\n' \
+  '        update_tiles();\r\n' \
+  '        if (mvis) {show_media();}\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(track=null) {\r\n' \
@@ -9931,9 +10898,9 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (empt) {continue;}\r\n' \
   '          let minx = prop_to_wmvalue(tracks[t].style.left);\r\n' \
-  '          let maxy = - prop_to_wmvalue(tracks[t].style.top);\r\n' \
+  '          let miny = prop_to_wmvalue(tracks[t].style.top);\r\n' \
   '          let maxx = minx + prop_to_wmvalue(tracks[t].style.width);\r\n' \
-  '          let miny = maxy - prop_to_wmvalue(tracks[t].style.height);\r\n' \
+  '          let maxy = miny + prop_to_wmvalue(tracks[t].style.height);\r\n' \
   '          if (gminx == null) {\r\n' \
   '            gminx = minx;\r\n' \
   '            gminy = miny;\r\n' \
@@ -9951,41 +10918,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          return [gminx, gmaxx, gminy, gmaxy];\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function track_center(track=null) {\r\n' \
-  '        let b = track_boundaries(track);\r\n' \
-  '        if (b == null) {\r\n' \
-  '          return null;\r\n' \
-  '        } else {\r\n' \
-  '          return [htopx + (b[0] + b[1]) / 2, htopy + (b[2] + b[3]) / 2];\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function scroll_to_track(track, center=true) {\r\n' \
-  '        if (center) {\r\n' \
-  '          let c = track_center(track);\r\n' \
-  '          if (c == null) {return;}\r\n' \
-  '          scroll_view(c[0], c[1]);\r\n' \
-  '        } else {\r\n' \
-  '          let b = track_boundaries(track);\r\n' \
-  '          if (b == null) {return;}\r\n' \
-  '          if (b[1] - b[0] > viewpane.offsetWidth * tscale / zoom || b[3] - b[2] > viewpane.offsetHeight * tscale / zoom) {\r\n' \
-  '            hpx = viewpane.offsetWidth / 2 - (b[0] + b[1]) / 2 * zoom / tscale;\r\n' \
-  '            hpy = viewpane.offsetHeight / 2 + (b[2] + b[3]) / 2 * zoom / tscale;\r\n' \
-  '          } else {\r\n' \
-  '            hpx = Math.max(Math.min(hpx, - b[1] * zoom / tscale + viewpane.offsetWidth), - b[0] * zoom / tscale);\r\n' \
-  '            hpy = Math.max(Math.min(hpy, b[2] * zoom / tscale + viewpane.offsetHeight), b[3] * zoom / tscale);\r\n' \
-  '          }\r\n' \
-  '          reframe();\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function scroll_to_all() {\r\n' \
-  '        let c = track_center();\r\n' \
-  '        if (c == null) {\r\n' \
-  '          scroll_view(defx, defy);\r\n' \
-  '        } else {\r\n' \
-  '          scroll_view(c[0], c[1]); \r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_SCROLL_TEMPLATE + \
   '      function track_click(e, trk, scroll=true) {\r\n' \
   '        if (e != null) {e.preventDefault();}\r\n' \
   '        let ex_foc = focused;\r\n' \
@@ -10014,7 +10947,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (scroll) {\r\n' \
   '            trk.scrollIntoView({block:"nearest"});\r\n' \
   '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
-  '            scroll_to_track(document.getElementById(focused), false);\r\n' \
+  '            if (scrollmode > 0) {scroll_to_track(document.getElementById(focused), scrollmode == 2)};\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        refresh_graph();\r\n' \
@@ -10025,7 +10958,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(foc).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
   '        if ((document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8) {\r\n' \
-  '          scroll_to_track(document.getElementById(foc), false);\r\n' \
+  '          if (scrollmode == 2) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function track_outside(trk) {\r\n' \
@@ -10233,6 +11166,10 @@ class GPXTweakerWebInterfaceServer():
   '                    ts = Math.min(t, ts==null?t:ts);\r\n' \
   '                    te = Math.max(t, te==null?t:te);\r\n' \
   '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                for (let p=0; p<segs[s].length; p++) {\r\n' \
   '                  if (noe) {\r\n' \
   '                    if (! isNaN(parseFloat(segs[s][p][2]))) {noe = false;}\r\n' \
   '                  }\r\n' \
@@ -10243,9 +11180,9 @@ class GPXTweakerWebInterfaceServer():
   '                    slat = segs[s][p][0];\r\n' \
   '                    slon = segs[s][p][1];\r\n' \
   '                  }\r\n' \
-  '                  if (! noe && ! noa && slat != null && ts != null) {break;}\r\n' \
+  '                  if (! noe && ! noa && slat != null) {break;}\r\n' \
   '                }\r\n' \
-  '                if (! noe && ! noa && slat != null && ts != null) {break;}\r\n' \
+  '                if (! noe && ! noa && slat != null) {break;}\r\n' \
   '              }\r\n' \
   '              tracks_props[t] = [ts==null?NaN:dur, dist==null?NaN:dist, noe?NaN:ele, noa?NaN:alt, ts==null?NaN:ts, slat==null?[NaN, NaN]:[slat, slon]];\r\n' \
   '              if (ts != null) {\r\n' \
@@ -10339,8 +11276,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + location.hostname + ":" + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
-  '      }\r\n' + HTML_MAP_TEMPLATE + \
+  '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
@@ -10469,12 +11406,14 @@ class GPXTweakerWebInterfaceServer():
   '       folders_select();\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        return false;\r\n' \
   '      } \r\n' \
   '      function load_tdcb(t, trk) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        document.getElementById(trk + "file").value = t.response;\r\n' \
   '        let uri = document.getElementById(trk + "visible").value;\r\n' \
   '        document.getElementById(trk + "visible").value = uri.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + t.response);\r\n' \
@@ -10510,11 +11449,13 @@ class GPXTweakerWebInterfaceServer():
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/detach?" + foc.substring(5));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
   '      function load_ticb(t, ind1, ind2) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        let foc = focused;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
@@ -10590,11 +11531,13 @@ class GPXTweakerWebInterfaceServer():
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + ind1.toString() + "," + ind2.toString());\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
   '      function load_tncb(t) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        for (let n in msg) {\r\n' \
@@ -10603,12 +11546,12 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("tracksform").appendChild(e);\r\n' \
   '            e.outerHTML = msg[n];\r\n' \
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
-  '            let e = document.createElement("svg");\r\n' \
+  '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            let w = document.getElementById("waydots0");\r\n' \
   '            document.getElementById("handle").insertBefore(e, w);\r\n' \
   '            e.outerHTML = w==null?msg[n]:(msg[n].substring(2)+"  ");\r\n' \
   '          } else {\r\n' \
-  '            let e = document.createElement("svg");\r\n' \
+  '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            document.getElementById("handle").appendChild(e);\r\n' \
   '            e.outerHTML = msg[n];\r\n' \
   '          }\r\n' \
@@ -10643,6 +11586,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/new?" + f_ind.toString());\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
   '      }\r\n' \
   '      function track_edit() {\r\n' \
@@ -10656,6 +11600,224 @@ class GPXTweakerWebInterfaceServer():
   '        if (isNaN(c[0]) || isNaN(c[1])) {return;}\r\n' \
   '        window.open(wmsel.options[wmsel.selectedIndex].value.replace("{lat}", c[0].toString()).replace("{lon}", c[1].toString()));\r\n' \
   '      }\r\n' \
+  '      function switch_mtpanel() {\r\n' \
+  '        if (document.getElementById("mtpanel").style.display != "initial") {\r\n' \
+  '          document.getElementById("mtpanel").style.display = "initial";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("mtpanel").style.display = "none";\r\n' \
+  '        }\r\n' \
+  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
+  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
+  '      }\r\n' \
+  '      function error_pcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '        return false;\r\n' \
+  '      }\r\n' \
+  '      function load_pcb(t) {\r\n' \
+  '        if (t.status != 200) {return error_pcb();}\r\n' \
+  '        if (t.response == "") {return error_pcb();}\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '        if (t.responseURL.indexOf("gps_ar") > 0) {\r\n' \
+  '          media_gps_ar = new Float64Array(t.response);\r\n' \
+  '          media_corners = new Float64Array(media_gps_ar.length / 3 * 4);\r\n' \
+  '        } else {\r\n' \
+  '          media_uri_dt = t.response.split("|");\r\n' \
+  '          let rv = RegExp(/\\.mp4($|\\r)/, "i");\r\n' \
+  '          media_isvid = media_uri_dt.map((s) => rv.test(s));\r\n' \
+  '        }\r\n' \
+  '        show_media();\r\n' \
+  '        return true;\r\n' \
+  '      }\r\n' \
+  '      function media_process() {\r\n' \
+  '        let nm = media_gps_ar.length / 3;\r\n' \
+  '        media_sides = [];\r\n' \
+  '        let zf = zoom / tscale;\r\n' \
+  '        let ts = parseFloat(document.getElementById("mtsize").innerHTML) / 2;\r\n' \
+  '        for (let m=0; m<nm; m++) {\r\n' \
+  '          let mx = (media_gps_ar[3 * m] - htopx) * zf;\r\n' \
+  '          let my = (htopy - media_gps_ar[3 * m + 1]) * zf;\r\n' \
+  '          let mr = media_gps_ar[3 * m + 2];\r\n' \
+  '          if (mr >= 1) {\r\n' \
+  '            media_corners.set([mx - ts, my - ts / mr, mx + ts, my + ts / mr], 4 * m);\r\n' \
+  '          } else {\r\n' \
+  '            media_corners.set([mx - ts * mr, my - ts, mx + ts * mr, my + ts], 4 * m);\r\n' \
+  '          }\r\n' \
+  '          media_sides.push({"o":0, "m":m}, {"o":2, "m":m});\r\n' \
+  '        }\r\n' \
+  '        media_sides.sort((a, b) => (media_corners[4 * a.m + a.o] - media_corners[4 * b.m + b.o]) || (b.o - a.o) || (media_corners[4 * a.m + 1] - media_corners[4 * b.m + 1]) || (media_corners[4 * a.m + 3] - media_corners[4 * b.m + 3]));\r\n' \
+  '      }\r\n' \
+  '      function media_gen() {\r\n' \
+  '        media_div = document.createElement("div");\r\n' \
+  '        media_div.id = "media";\r\n' \
+  '        let nm = media_corners.length / 4;\r\n' \
+  '        let md = Array(nm);\r\n' \
+  '        md.fill([]);\r\n' \
+  '        let cs = [];\r\n' \
+  '        let xl = -hpx;\r\n' \
+  '        let xr = xl + viewpane.offsetWidth;\r\n' \
+  '        let yt = -hpy;\r\n' \
+  '        let yb = yt + viewpane.offsetHeight;\r\n' \
+  '        for (let l of media_sides) {\r\n' \
+  '          let m = l.m;\r\n' \
+  '          if (md[m] == null) {continue;}\r\n' \
+  '          if (md[m].length == 0 && (media_corners[4 * m] >= xr || media_corners[4 * m + 2] <= xl || media_corners[4 * m + 1] >= yb || media_corners[4 * m + 3] <= yt)) {\r\n' \
+  '            md[m] = null;\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          let s1 = 0;\r\n' \
+  '          let s2 = cs.length - 1;\r\n' \
+  '          if (s2 < 0) {\r\n' \
+  '            md[m] = [m];\r\n' \
+  '            cs.push(m);\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          let mb = media_corners[4 * m + 3];\r\n' \
+  '          if (mb <= media_corners[4 * cs[0] + 1]) {\r\n' \
+  '            md[m] = [m];\r\n' \
+  '            cs.splice(0, 0, m);\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          let s0 = s2;\r\n' \
+  '          if (mb <= media_corners[4 * cs[s2] + 1]) {\r\n' \
+  '            while (true) {\r\n' \
+  '              s0 = Math.floor((s1 + s2) / 2);\r\n' \
+  '              if (s0 == s1) {break}\r\n' \
+  '              if (mb <= media_corners[4 * cs[s0] + 1]) {s2 = s0} else {s1 = s0}\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (md[m].length > 0) {\r\n' \
+  '            cs.splice(s0, 1);\r\n' \
+  '            continue;\r\n' \
+  '          }\r\n' \
+  '          if (media_corners[4 * m + 1] >= media_corners[4 * cs[s0] + 3]) {\r\n' \
+  '            md[m] = [m];\r\n' \
+  '            cs.splice(s0 + 1, 0, m);\r\n' \
+  '          } else {\r\n' \
+  '            md[m] = null;\r\n' \
+  '            md[cs[s0]].push(m);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        for (let m=0; m<nm; m++) {\r\n' \
+  '          if (md[m] == null) {continue;}\r\n' \
+  '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
+  '          med.id = (media_isvid[m]?"video-":"photo-") + md[m].toString();\r\n' \
+  '          let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
+  '          if (media_isvid[m]) {med.preload = "metadata"};\r\n' \
+  '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
+  '          med.alt = "";\r\n' \
+  '          med.style.position = "absolute";\r\n' \
+  '          med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
+  '          med.style.height = (media_corners[4 * m + 3] - media_corners[4 * m + 1]).toString() + "px";\r\n' \
+  '          med.style.left = media_corners[4 * m].toString() + "px";\r\n' \
+  '          med.style.top = media_corners[4 * m + 1].toString() + "px";\r\n' \
+  '          if (md[m].length > 1) {\r\n' \
+  '            med.style.outlineOffset = "-3px";\r\n' \
+  '            med.style.outline = "outset 3px lightgray";\r\n' \
+  '            med.title = media_uri_dt[m] + "\\r\\n\\r\\n+ " + (md[m].length - 1).toString() + " …";\r\n' \
+  '          } else {\r\n' \
+  '            med.title = media_uri_dt[m];\r\n' \
+  '          }\r\n' \
+  '          med.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          med.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          med.setAttribute("onclick", "enlarge_media(event.target.id.substring(6));");\r\n' \
+  '          med.setAttribute("oncontextmenu", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          media_div.appendChild(med);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function show_media() {\r\n' \
+  '        document.getElementById("switchmedia").disabled = true;\r\n' \
+  '        if (media_gps_ar == null) {\r\n' \
+  '          media_gps_ar = [];\r\n' \
+  '          let xhrp = new XMLHttpRequest();\r\n' \
+  '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmmedia1#}", 0.1, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.open("GET", "/media/gps_ar");\r\n' \
+  '          xhrp.responseType = "arraybuffer";\r\n' \
+  '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          xhrp.send();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (media_gps_ar.length == 0) {return;}\r\n' \
+  '        if (media_uri_dt == null) {\r\n' \
+  '          media_uri_dt = [];\r\n' \
+  '          let xhrp = new XMLHttpRequest();\r\n' \
+  '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmmedia2#}", 2, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.open("GET", "/media/uri_dt");\r\n' \
+  '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          xhrp.send();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (media_sides == null) {media_process();}\r\n' \
+  '        if (media_div == null) {media_gen();}\r\n' \
+  '        let svgs = document.getElementById("handle").getElementsByTagName("svg");\r\n' \
+  '        let ref = null;\r\n' \
+  '        if (svgs.length > 0) {ref = svgs[0];}\r\n' \
+  '        svgs = null;\r\n' \
+  '        document.getElementById("handle").insertBefore(media_div, ref);\r\n' \
+  '        media_visible = true;\r\n' \
+  '        document.getElementById("switchmedia").disabled = false;\r\n' \
+  '      }\r\n' \
+  '      function hide_media(reset="") {\r\n' \
+  '        if (reset == "m" || reset == "s") {media_div = null;}\r\n' \
+  '        if (reset == "s") {media_sides = null;}\r\n' \
+  '        if (! media_visible) {return;}\r\n' \
+  '        let mdiv = document.getElementById("media");\r\n' \
+  '        if (mdiv != null) {document.getElementById("handle").removeChild(mdiv);}\r\n' \
+  '        media_visible = false;\r\n' \
+  '      }\r\n' \
+  '      function update_media() {\r\n' \
+  '        let mvis = media_visible;\r\n' \
+  '        hide_media("s");\r\n' \
+  '        if (mvis) {show_media();}\r\n' \
+  '      }\r\n' \
+  '      function show_hide_media() {\r\n' \
+  '        if (media_visible) {\r\n' \
+  '          hide_media();\r\n' \
+  '        } else {\r\n' \
+  '          show_media();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function enlarge_media(mids) {\r\n' \
+  '        let mview = document.getElementById("mediaview");\r\n' \
+  '        mview.innerHTML = "";\r\n' \
+  '        mview.style.display = "block";\r\n' \
+  '        mview.dataset.sl = "0";\r\n' \
+  '        for (let m of mids.split(",")) {\r\n' \
+  '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
+  '          let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
+  '          if (media_isvid[m]) {\r\n' \
+  '            med.preload = "metadata";\r\n' \
+  '            med.controls = true;\r\n' \
+  '            med.loop = true;\r\n' \
+  '            med.playsinline = true;\r\n' \
+  '          } else {\r\n' \
+  '            med.setAttribute("onclick", "photo_fs(this)");\r\n' \
+  '          }\r\n' \
+  '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
+  '          med.alt = "";\r\n' \
+  '          med.title = media_uri_dt[m];\r\n' \
+  '          mview.appendChild(med);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function photo_fs(p) {\r\n' \
+  '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
+  '      }\r\n' \
+  '      function close_mediaview(e) {\r\n' \
+  '        if (document.fullscreenElement) {\r\n' \
+  '          window.onresize = (e) => {document.getElementById("mediaview").innerHTML = ""; window.onresize = window_resize; window_resize();};\r\n' \
+  '          document.exitFullscreen();\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("mediaview").innerHTML = "";\r\n' \
+  '        }\r\n' \
+  '        document.getElementById("mediaview").style.display = "none";\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '      }\r\n' \
   '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);\r\n' \
@@ -10663,6 +11825,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("edit").disabled = false;\r\n' \
   '          return false;\r\n'\
   '        }\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
   '          let uri_ex = document.getElementById(prop.id.replace("file", "visible")).value;\r\n' \
   '          let uri = uri_ex.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + prop.value);\r\n' \
@@ -10692,6 +11855,7 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n'\
   '      }\r\n' \
   '      function error_cb(t, prop) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        if (t != null) {window.alert("{#jserror#}");}\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
   '          prop.value = document.getElementById(prop.id.replace("file", "visible")).value.split("\\\\").slice(-1)[0];\r\n' \
@@ -10726,6 +11890,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhr.open("POST", "/track");\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
@@ -10744,20 +11909,20 @@ class GPXTweakerWebInterfaceServer():
   '      </colgroup>\r\n' \
   '      <thead>\r\n' \
   '        <tr>\r\n' \
-  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
+  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
   '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
   '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" oninput="tracks_filter()" onchange="tracks_filter_history()">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:51em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():show_hide_media()">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -10767,21 +11932,24 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
   '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%">\r\n' \
   '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
-  '                <form id="tracksform" autocomplete="off" onsubmit="return(false);">\r\n                  ##TRACKS##\r\n' \
+  '                <form id="tracksform" autocomplete="off" onsubmit="return(false);">\r\n                  #<#TRACKS#>#\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
-  '              ##PATHES####WAYDOTS##</div>\r\n' + HTML_SCALEBOX_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
+  '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
+  '      <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
+  '      </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
+  '      var media_ex_visible = false;\r\n' \
   '      function mouse_down(e, elt) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        document.getElementById("tracksfilter").blur();\r\n' \
@@ -10797,6 +11965,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (elt.id == "view") {\r\n' \
   '            hand = elt;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
+  '            media_ex_visible = media_visible;\r\n' \
+  '            hide_media("m");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -10810,6 +11980,7 @@ class GPXTweakerWebInterfaceServer():
   '        viewpane.style.cursor = "";\r\n' \
   '        if (hand) {\r\n' \
   '          hand = null;\r\n' \
+  '          if (media_ex_visible) {show_media();}\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (elt && e.button == 2) {\r\n' \
@@ -10882,8 +12053,21 @@ class GPXTweakerWebInterfaceServer():
   '        } while (! tr.firstElementChild.checked || tr.style.display == "none")\r\n' \
   '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
   '      }\r\n' \
+  '      function window_resize() {\r\n' \
+  '        if (document.fullscreen) {\r\n' \
+  '          media_fs = true;\r\n' \
+  '        } else {\r\n' \
+  '          if (media_fs) {\r\n' \
+  '            media_fs = false;\r\n' \
+  '            document.getElementById("mediaview").scrollLeft = parseFloat(document.getElementById("mediaview").dataset.sl);\r\n' \
+  '          } else {\r\n' \
+  '            rescale();\r\n' \
+  '            refresh_graph();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString());\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString());\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
   '        window.alert("{#jexpfail#}");\r\n' \
@@ -10905,7 +12089,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (segs[s] != "") {\r\n' \
   '              let pts = segs[s].split("\\r\\n");\r\n' \
   '              for (let p=0; p<pts.length; p++) {\r\n' \
-  '                s_p.push(pts[p].split("&").map(decodeURIComponent));\r\n' \
+  '                s_p.push(pts[p].match(/(.*?)&(.*?)&(.*?)&(.*?)&(.*)/).slice(1));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            tracks_pts[t].push(s_p);\r\n' \
@@ -10944,6 +12128,9 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          let wmset = parseInt(prev_state[6]);\r\n' \
   '          if (document.getElementById("iset").options.length > wmset) {document.getElementById("iset").selectedIndex = wmset;}\r\n' \
+  '          document.getElementById("mtsize").innerHTML = prev_state[7];\r\n' \
+  '          document.getElementById("mthumb").value = parseFloat(prev_state[7]);\r\n' \
+  '          if (prev_state[8] == "true") {show_media();}\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}).map((v,k)=>k);\r\n' \
   '        }\r\n' \
@@ -10951,7 +12138,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
   '        folders_select();\r\n' \
-  '        window.onresize = (e) => {rescale();refresh_graph()};\r\n' \
+  '        window.onresize = window_resize;\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
   '        if (focused != "") {\r\n' \
   '          foc = focused;\r\n' \
@@ -10977,7 +12164,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
   '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
-  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label><br>\r\n' \
+  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label>\r\n' \
   '                    <input type="color" id="track%scolor" value="%s" onchange="track_color(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '                    <span id="track%sfocus">\r\n' \
   '                      <label for="track%sname">{jname}</label>\r\n' \
@@ -11066,7 +12253,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
-          if scur != 'folders' and scur[:11] != 'webmapping ':
+          if not scur in ('folders', 'media') and scur[:11] != 'webmapping ':
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
           if scur[:11] == 'webmapping ':
@@ -11223,6 +12410,11 @@ class GPXTweakerWebInterfaceServer():
           elif field == 'subj_margin':
             if value is not None:
               self.V3DSubjMargin = round(2 * float(value)) / 2
+          elif field == 'min_valid_ele':
+            if value is None:
+              self.V3DMinValidEle = - 5000000
+            else:
+              self.V3DMinValidEle = float(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -11242,6 +12434,42 @@ class GPXTweakerWebInterfaceServer():
               return False
           elif field == 'pattern':
             s[1][field] = value
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'media':
+          if field == 'port':
+            port = value or ''
+            if port:
+              if '-' in port:
+                self.MediaPorts = port.split('-', 1)
+              else:
+                self.MediaPorts = (port, port)
+              if not self.MediaPorts[0].isdecimal() or not self.MediaPorts[1].isdecimal():
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              self.MediaPorts = (int(self.MediaPorts[0]), int(self.MediaPorts[1]))
+              if self.MediaPorts[0] > self.MediaPorts[1]:
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+          elif field == 'album':
+            fold = os.path.abspath(os.path.expandvars(value.lstrip().rstrip()))
+            if os.path.isdir(fold):
+              self.MediaFolders.append(fold)
+          elif field == 'photos':
+            self.MediaPhotos = value
+          elif field == 'videos':
+            self.MediaVideos = value
+          elif field == 'size':
+            try:
+              phs = int(value)
+              if phs >= 8 and phs <= 512:
+                self.MediaThumbSize = phs
+            except:
+              pass
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
@@ -11349,6 +12577,8 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.log(0, 'cerror', hcur)
         return False
+    if not self.MediaPorts:
+      self.MediaPorts = self.Ports
     self.log(1, 'cloaded')
     return True
 
@@ -11368,6 +12598,11 @@ class GPXTweakerWebInterfaceServer():
     self.DefLon = None
     self.Folders = []
     self.WebMappingServices = []
+    self.MediaPorts = ''
+    self.MediaFolders = []
+    self.MediaPhotos = True
+    self.MediaVideos = True
+    self.MediaThumbSize = 64
     self.GpuComp = 0
     self.EleGainThreshold = 4
     self.AltGainThreshold = 3
@@ -11377,6 +12612,7 @@ class GPXTweakerWebInterfaceServer():
     self.SpeedMax = 8
     self.V3DPanoMargin = 0.5
     self.V3DSubjMargin = 2
+    self.V3DMinValidEle = -100
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -11406,11 +12642,14 @@ class GPXTweakerWebInterfaceServer():
     self.SLock = threading.Lock()
     self.TLock = threading.Lock()
     self.Builder = ExpatGPXBuilder()
+    self.Media = None
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
     if not self._load_config(cfg):
       return
-    self.GPXTweakerInterfaceServerInstances = [None] * (self.Ports[1] - self.Ports[0] + 1)
+    self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
+    self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
+    self.GPXTweakerInterfaceServerInstances.extend(range(max(self.Ports[1] + 1, self.MediaPorts[0]), self.MediaPorts[1] + 1))
     err = False
     if map_minlat is not None:
       if map_minlat < self.VMinLat:
@@ -11461,6 +12700,8 @@ class GPXTweakerWebInterfaceServer():
       u = next(uris, None)
     trck = None
     ti = time.time()
+    gcie = gc.isenabled()
+    gc.disable()
     while u is not None:
       track = WGS84Track(self.SLock)
       if not track.LoadGPX(u, trk, trck, self.Builder):
@@ -11469,6 +12710,8 @@ class GPXTweakerWebInterfaceServer():
           trck = None
           continue
         else:
+          if gcie:
+            gc.enable()
           return
       minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
       maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
@@ -11479,6 +12722,8 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'berror6')
         else:
           self.log(0, 'berror4')
+          if gcie: 
+            gc.enable()
           return
       else:
         self.Tracks.append([u, track])
@@ -11498,6 +12743,8 @@ class GPXTweakerWebInterfaceServer():
         self.Uri, self.Track = self.Tracks[0]
         self.TrackInd = 0
         break
+    if gcie:
+      gc.enable()
     self.log(0, 'bloaded', len(self.Tracks), time.time() - ti)
     minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
     maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
@@ -11625,6 +12872,7 @@ class GPXTweakerWebInterfaceServer():
       self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
     else:
       self.ItineraryProvider = None
+    self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
     if uri is not None:
       self.HTML = ''
     else:
@@ -11638,12 +12886,10 @@ class GPXTweakerWebInterfaceServer():
     return pathes
 
   def _build_waypoints(self):
-    f = lambda e: '' if e is None else escape(e) if isinstance(e, str) else e
-    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b))) for pt in self.Track.Wpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), (*pt[1][0:3], escape(pt[1][3]), escape(pt[1][4]))) for a in b))) for pt in self.Track.Wpts)
 
   def _build_points(self):
-    f = lambda e: '' if e is None else escape(e) if isinstance(e, str) else e
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), map(f, pt[1])) for a in b)) for pt in self.Track.Pts[s]) + '</div>' for s in range(len(self.Track.Pts)))
+    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), (*pt[1][0:4], escape(pt[1][4]))) for a in b)) for pt in self.Track.Pts[s]) + '</div>' for s in range(len(self.Track.Pts)))
 
   def _build_waydots(self):
     return ''.join(GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for pt in self.Track.WebMercatorWpts)
@@ -11676,7 +12922,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('##WAYPOINTS##', waypoints).replace('##POINTS##', points).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots).replace('##DOTS##', dots)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
@@ -11712,7 +12958,7 @@ class GPXTweakerWebInterfaceServer():
       try:
         if self.EMode == 'tiles':
           infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
-          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2]):
+          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10)):
             self.log(0, '3derror1')
             return False
         elif self.EMode == 'api':
@@ -11770,10 +13016,23 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    ef = lambda e: e if e != self.Elevation.MapInfos.get('nodata') and e > -100 else 0
-    eles = list(list(ef(struct.unpack(e_f, self.Elevation.Map[e_s * (min(py, height - 1) * width + min(px, width - 1)): e_s * (min(py, height - 1) * width + min(px, width - 1)) + e_s])[0]) for px in lpx) for py in lpy)
-    minele = min(eles[row][col] for row in range(nrow) for col in range(ncol))
-    maxele = max(max(eles[row][col] for row in range(nrow) for col in range(ncol)), minele + 1)
+    ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
+    accel = ctypes.sizeof(ctypes.c_float if e_f[1] == 'f' else ctypes.c_short) == e_s
+    if accel:
+      if sys.byteorder == ('little' if e_f[0] == '<' else 'big'):
+        _e_m = memoryview(self.Elevation.Map).cast(e_f[1])
+      else:
+        _e_m = array.array(e_f[1], self.Elevation.Map)
+        _e_m.byteswap()
+      eles = tuple(ef(_e_m[py + px]) for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx)
+      minele = min(eles)
+      maxele = max(max(eles), minele + 1)
+    else:
+      _e_f = e_f[0] + str(ncol) + e_f[1]
+      _e_m_ = self.Elevation.Map
+      eles = tuple(tuple(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
+      minele = min(min(eles[row]) for row in range(nrow))
+      maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)  
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     xy_den = max(maxx - minx, maxy - miny) / 2
@@ -11787,7 +13046,12 @@ class GPXTweakerWebInterfaceServer():
     else:
       den = z_den
       zfactor = 1
-    self.HTML3DData = struct.pack('L', ncol) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den) for px in lpx) + struct.pack('L', nrow) + b''.join(struct.pack('f', (WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den) for py in lpy) + struct.pack('L', ncol * nrow) + b''.join(struct.pack('f', (eles[r][c] - minele) * cor / den - 1) for r in range(nrow) for c in range(ncol)) + struct.pack('L', len(self.Track.WebMercatorPts)) + b''.join(struct.pack('L', len(self.Track.WebMercatorPts[s])) + b''.join(struct.pack('f', (pt[1][0] - moyx) / den) + struct.pack('f', (pt[1][1] - moyy) / den) for pt in self.Track.WebMercatorPts[s]) for s in range(len(self.Track.WebMercatorPts)))
+    _cor = cor / den
+    _minele =  minele * _cor + 1
+    if accel:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles)), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+    else:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, self.Elevation.MapInfos.get('source', ''))
     if self.Mode == 'map':
       minrow, mincol = 1, 1
@@ -11816,7 +13080,7 @@ class GPXTweakerWebInterfaceServer():
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
     declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor))
-    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath)
+    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2))
     self.log(0, '3dbuilt')
     return True
 
@@ -11858,7 +13122,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('##TRACKS##', tracks).replace('##PATHES##', pathes).replace('##WAYDOTS##', waydots)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
@@ -11971,9 +13235,15 @@ class GPXTweakerWebInterfaceServer():
       return False
 
   def _start_webserver(self, ind):
-    with ThreadedDualStackServer((self.Ip, self.Ports[0] + ind), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
+    with ThreadedDualStackServer((self.Ip, self.GPXTweakerInterfaceServerInstances[ind]), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
       self.GPXTweakerInterfaceServerInstances[ind].Interface = self
       self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
+
+  def _stop_webserver(self, ind):
+    try:
+      self.GPXTweakerInterfaceServerInstances[ind].shutdown()
+    except:
+      pass
 
   def run(self):
     try:
@@ -11982,18 +13252,16 @@ class GPXTweakerWebInterfaceServer():
     except:
       return False
     self.log(0, 'start')
-    for ind in range(self.Ports[1] - self.Ports[0] + 1):
+    for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
       webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
       webserver_thread.start()
     return True
 
   def shutdown(self):
     self.log(0, 'close')
-    for ind in range(self.Ports[1] - self.Ports[0] + 1):
-      try:
-        self.GPXTweakerInterfaceServerInstances[ind].shutdown()
-      except:
-        pass
+    for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
+      webserver_thread = threading.Thread(target=self._stop_webserver, args=(ind,))
+      webserver_thread.start()
     try:
       if self.Mode == 'tiles':
         self.Map.Tiles.Close()
@@ -12002,6 +13270,9 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
+  print('GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print(LSTRINGS['parser']['license'])
+  print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
   CustomArgumentParser = partial(argparse.ArgumentParser, formatter_class=formatter)
   parser = CustomArgumentParser()
@@ -12011,7 +13282,8 @@ if __name__ == '__main__':
   parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs ='?', const=' ', default='')
   parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const=' ', default='')
   parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: (list((p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 4), default='')
-  parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda b: (list((p,q) for [p,q] in (map(int, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 2), default='')
+  parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda s: (list((p,q) for [p,q] in (map(int, map(str.strip, s.split(','))),))[0]) if s != '' else (None, ) * 2), default='')
+  parser.add_argument('--dpi', '-d', metavar='DPI', help=LSTRINGS['parser']['dpi'], type=(lambda d: (int(d) if not '.' in d else float(d)) if d != '' else None), default='')
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
@@ -12020,7 +13292,7 @@ if __name__ == '__main__':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
   try:
-    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
+    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
   except:
     log('interface', 0, 'berror')
     exit()
