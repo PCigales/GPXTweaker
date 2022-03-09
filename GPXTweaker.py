@@ -3602,7 +3602,7 @@ class GeotaggedMedia():
     DATETIME_FORMAT = '%Y/%m/%d %H:%M:%S'
     @staticmethod
     def DATETIME_CONVERT(dt):
-      return dtc.replace(':', '/', 2)
+      return dt.replace(':', '/', 2)
   
   def __init__(self, folders, photos=True, videos=True, box=None):
     self.Folders = folders
