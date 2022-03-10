@@ -1,4 +1,4 @@
-﻿# GPXTweaker (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -5688,6 +5688,7 @@ class GPXTweakerWebInterfaceServer():
   '              graph_ip = null;\r\n' \
   '              graph_px = null;\r\n' \
   '            }\r\n' \
+  '            graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
   '            rescale();\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
