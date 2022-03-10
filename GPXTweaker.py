@@ -11840,8 +11840,8 @@ class GPXTweakerWebInterfaceServer():
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          mpview.dataset.sl = "0";\r\n' \
   '          mpview.style.display = "block";\r\n' \
-  '          if (! media_visible) {show_media();}\r\n' \
   '          rescale();\r\n' \
+  '          if (! media_visible) {show_media();}\r\n' \
   '        } else {\r\n' \
   '          mpview.innerHTML = "";\r\n' \
   '          mpview.style.display = "none";\r\n' \
