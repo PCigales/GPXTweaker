@@ -1,4 +1,4 @@
-# GPXTweaker (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -161,7 +161,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
-    'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
+    'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
@@ -442,7 +442,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
-    'jswitchmedia': 'show / hide the media&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
+    'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
@@ -10789,14 +10789,9 @@ class GPXTweakerWebInterfaceServer():
   '      video[id^=video] {\r\n' \
   '        cursor:zoom-in;\r\n' \
   '      }\r\n' \
-  '      div[id=mediaview] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        z-index:10;\r\n' \
+  '      div[id^=media] {\r\n' \
   '        width:100%;\r\n' \
-  '        height:100%;\r\n' \
-  '        bottom:0;\r\n' \
-  '        left:0;\r\n' \
-  '        background:black;\r\n' \
+  '        background:rgb(30,30,35);\r\n' \
   '        overflow-x:auto;\r\n' \
   '        overflow-y:hidden;\r\n' \
   '        white-space:nowrap;\r\n' \
@@ -10804,25 +10799,37 @@ class GPXTweakerWebInterfaceServer():
   '        text-align:center;\r\n' \
   '        user-select:none;\r\n' \
   '      }\r\n' \
-  '      div[id=mediaview]::before {\r\n' \
+  '      div[id=mediapreview] {\r\n' \
+  '        position:relative;\r\n' \
+  '        height:25vh;\r\n' \
+  '        border-top:1px darkgray solid;\r\n' \
+  '      }\r\n' \
+  '      div[id=mediaview] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        z-index:10;\r\n' \
+  '        height:100%;\r\n' \
+  '        bottom:0;\r\n' \
+  '        left:0;\r\n' \
+  '      }\r\n' \
+  '      div[id^=media]::before {\r\n' \
   '        content:"";\r\n' \
   '        display:inline-block;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        height:100%;\r\n' \
   '      }\r\n' \
-  '      div[id=mediaview] * {\r\n' \
+  '      div[id^=media] * {\r\n' \
   '        display:inline-block;\r\n' \
   '        max-height:100%;\r\n' \
   '        max-width:100%;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        object-fit:scale-down;\r\n' \
   '      }\r\n' \
-  '      div[id=mediaview] img {\r\n' \
+  '      div[id^=media] img {\r\n' \
   '        filter:none;\r\n' \
   '        image-orientation:from-image;\r\n' \
   '        cursor:nesw-resize;\r\n' \
   '      }\r\n' \
-  '      div[id=mediaview] *:not(:last-child) {\r\n' \
+  '      div[id^=media] *:not(:last-child) {\r\n' \
   '        margin-right:1em;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
@@ -11609,13 +11616,13 @@ class GPXTweakerWebInterfaceServer():
   '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
-  '      function error_pcb() {\r\n' \
+  '      function error_mcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        return false;\r\n' \
   '      }\r\n' \
-  '      function load_pcb(t) {\r\n' \
-  '        if (t.status != 200) {return error_pcb();}\r\n' \
-  '        if (t.response == "") {return error_pcb();}\r\n' \
+  '      function load_mcb(t) {\r\n' \
+  '        if (t.status != 200) {return error_mcb();}\r\n' \
+  '        if (t.response == "") {return error_mcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (t.responseURL.indexOf("gps_ar") > 0) {\r\n' \
   '          media_gps_ar = new Float64Array(t.response);\r\n' \
@@ -11648,7 +11655,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function media_gen() {\r\n' \
   '        media_div = document.createElement("div");\r\n' \
-  '        media_div.id = "media";\r\n' \
+  '        media_div.id = "geomedia";\r\n' \
+  '        media_div.style.position = "absolute";\r\n' \
   '        let nm = media_corners.length / 4;\r\n' \
   '        let md = Array(nm);\r\n' \
   '        md.fill([]);\r\n' \
@@ -11730,8 +11738,8 @@ class GPXTweakerWebInterfaceServer():
   '          media_gps_ar = [];\r\n' \
   '          let xhrp = new XMLHttpRequest();\r\n' \
   '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
-  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmmedia1#}", 0.1, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
-  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onload = (e) => {load_mcb(e.target)?show_msg("{#jmmedia1#}", 0.1, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_mcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
   '          xhrp.open("GET", "/media/gps_ar");\r\n' \
   '          xhrp.responseType = "arraybuffer";\r\n' \
   '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -11744,8 +11752,8 @@ class GPXTweakerWebInterfaceServer():
   '          media_uri_dt = [];\r\n' \
   '          let xhrp = new XMLHttpRequest();\r\n' \
   '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
-  '          xhrp.onload = (e) => {load_pcb(e.target)?show_msg("{#jmmedia2#}", 2, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
-  '          xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onload = (e) => {load_mcb(e.target)?show_msg("{#jmmedia2#}", 2, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          xhrp.onerror = (e) => {error_mcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
   '          xhrp.open("GET", "/media/uri_dt");\r\n' \
   '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
   '          xhr_ongoing++;\r\n' \
@@ -11766,8 +11774,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (reset == "m" || reset == "s") {media_div = null;}\r\n' \
   '        if (reset == "s") {media_sides = null;}\r\n' \
   '        if (! media_visible) {return;}\r\n' \
-  '        let mdiv = document.getElementById("media");\r\n' \
+  '        let mdiv = document.getElementById("geomedia");\r\n' \
   '        if (mdiv != null) {document.getElementById("handle").removeChild(mdiv);}\r\n' \
+  '        if (reset) {document.getElementById("mediapreview").innerHTML = "";}\r\n' \
   '        media_visible = false;\r\n' \
   '      }\r\n' \
   '      function update_media() {\r\n' \
@@ -11778,14 +11787,18 @@ class GPXTweakerWebInterfaceServer():
   '      function show_hide_media() {\r\n' \
   '        if (media_visible) {\r\n' \
   '          hide_media();\r\n' \
+  '          if (document.getElementById("mediapreview").style.display != "none") {switch_mediapreview();}\r\n' \
   '        } else {\r\n' \
   '          show_media();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function enlarge_media(mids) {\r\n' \
-  '        let mview = document.getElementById("mediaview");\r\n' \
+  '        let mview = document.getElementById("mediapreview");\r\n' \
+  '        if (mview.style.display == "none") {\r\n' \
+  '          mview = document.getElementById("mediaview");\r\n' \
+  '          mview.style.display = "block";\r\n' \
+  '        }\r\n' \
   '        mview.innerHTML = "";\r\n' \
-  '        mview.style.display = "block";\r\n' \
   '        mview.dataset.sl = "0";\r\n' \
   '        for (let m of mids.split(",")) {\r\n' \
   '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
@@ -11807,6 +11820,28 @@ class GPXTweakerWebInterfaceServer():
   '      function photo_fs(p) {\r\n' \
   '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
   '      }\r\n' \
+  '      function switch_mediapreview(graph=false) {\r\n' \
+  '        let mpview = document.getElementById("mediapreview");\r\n' \
+  '        if (mpview.style.display == "none") {\r\n' \
+  '          if (graph) {return;}\r\n' \
+  '          document.getElementById("graph").style.display = "none";\r\n' \
+  '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '          mpview.dataset.sl = "0";\r\n' \
+  '          mpview.style.display = "block";\r\n' \
+  '          if (! media_visible) {show_media();}\r\n' \
+  '          rescale();\r\n' \
+  '        } else {\r\n' \
+  '          mpview.innerHTML = "";\r\n' \
+  '          mpview.style.display = "none";\r\n' \
+  '          mpview.dataset.sl = "0";\r\n' \
+  '          if (! graph) {\r\n' \
+  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            rescale();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function close_mediaview(e) {\r\n' \
   '        if (document.fullscreenElement) {\r\n' \
   '          window.onresize = (e) => {document.getElementById("mediaview").innerHTML = ""; window.onresize = window_resize; window_resize();};\r\n' \
@@ -11815,6 +11850,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("mediaview").innerHTML = "";\r\n' \
   '        }\r\n' \
   '        document.getElementById("mediaview").style.display = "none";\r\n' \
+  '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '      }\r\n' \
@@ -11915,7 +11951,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():show_hide_media()">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -11941,8 +11977,10 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
-  '      <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
-  '      </div>\r\n' \
+  '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '    </div>\r\n' \
+  '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
+  '    </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
@@ -12059,7 +12097,10 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          if (media_fs) {\r\n' \
   '            media_fs = false;\r\n' \
-  '            document.getElementById("mediaview").scrollLeft = parseFloat(document.getElementById("mediaview").dataset.sl);\r\n' \
+  '            if (media_visible) {\r\n' \
+  '              document.getElementById("mediaview").scrollLeft = parseFloat(document.getElementById("mediaview").dataset.sl);\r\n' \
+  '              document.getElementById("mediapreview").scrollLeft = parseFloat(document.getElementById("mediapreview").dataset.sl);\r\n' \
+  '            }\r\n' \
   '          } else {\r\n' \
   '            rescale();\r\n' \
   '            refresh_graph();\r\n' \
@@ -12138,6 +12179,8 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
   '        folders_select();\r\n' \
+  '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
+  '        document.getElementById("mediapreview").dataset.sl = "0";\r\n' \
   '        window.onresize = window_resize;\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
   '        if (focused != "") {\r\n' \
