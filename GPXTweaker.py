@@ -1,4 +1,4 @@
-# GPXTweaker (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -143,7 +143,7 @@ FR_STRINGS = {
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
-    'jswitchpoints': 'afficher / masquer les points et points de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
+    'jswitchpoints': 'afficher / masquer les marques de point et point de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective&#13;&#10;+ctrl: afficher / masquer les contrôles de la marge autour de la trace',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
@@ -424,7 +424,7 @@ EN_STRINGS = {
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
-    'jswitchpoints': 'show / hide the points and waypoints&#13;&#10;+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
+    'jswitchpoints': 'show / hide the marks of point and waypoint&#13;&#10;+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt: open the 3D viewer in subjective view mode&#13;&#10;+ctrl: show / hide the controls of the margin around the track',
     'jascending': 'switch the sort order of the tracks to ascending',
