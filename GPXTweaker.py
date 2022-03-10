@@ -6285,9 +6285,13 @@ class GPXTweakerWebInterfaceServer():
   '      br+span {\r\n' \
   '        display:none;\r\n' \
   '      }\r\n' \
-  '      svg[id*=dot] {\r\n' \
+  '      svg[id^=dot] {\r\n' \
   '        stroke:gray;\r\n' \
   '        fill:none;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=waydot] {\r\n' \
+  '        stroke:red;\r\n' \
+  '        fill:red;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] {\r\n' \
   '        stroke:red;\r\n' \
@@ -6398,9 +6402,14 @@ class GPXTweakerWebInterfaceServer():
   '          dot.style.zIndex = "";\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let segcb = true;\r\n' \
-  '        if (pt.substring(0, 3) != "way") {segcb = document.getElementById(pt).parentNode.parentNode.firstElementChild.checked;}\r\n' \
   '        let cb = document.getElementById(pt).checked;\r\n' \
+  '        let segcb = true;\r\n' \
+  '        let iswpt = pt.substring(0, 3) == "way";\r\n' \
+  '        if (iswpt) {\r\n' \
+  '          if (cb) {dot.style.fill = "";} else {dot.style.fill = "none";}\r\n' \
+  '        } else {\r\n' \
+  '          segcb = document.getElementById(pt).parentNode.parentNode.firstElementChild.checked;\r\n' \
+  '        }\r\n' \
   '        if (pt == focused) {\r\n' \
   '          dot.style.stroke = "blue";\r\n' \
   '          dot.style.display = "";\r\n' \
@@ -6414,12 +6423,12 @@ class GPXTweakerWebInterfaceServer():
   '          dot.style.display = "";\r\n' \
   '          dot.style.zIndex = "2";\r\n' \
   '        } else if (dots_visible) {\r\n' \
-  '          dot.style.stroke = "";\r\n' \
+  '          dot.style.stroke = iswpt?"gray":"";\r\n' \
   '          dot.style.display = "";\r\n' \
   '          dot.style.zIndex = "";\r\n' \
   '        } else {\r\n' \
   '          dot.style.stroke = "";\r\n' \
-  '          dot.style.display = "none";\r\n' \
+  '          dot.style.display = iswpt?"":"none";\r\n' \
   '          dot.style.zIndex = "";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -8815,10 +8824,11 @@ class GPXTweakerWebInterfaceServer():
   '            hand = elt;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
   '          } else if (elt.id.indexOf("dot") >= 0) {\r\n' \
-  '            hand = elt;\r\n' \
-  '            hand_m = false;\r\n' \
   '            let pt = document.getElementById(elt.id.replace("dot", "point") + "desc");\r\n' \
   '            if (pt.htmlFor != focused) {element_click(null, pt);}\r\n' \
+  '            if (! dots_visible) {return;}\r\n' \
+  '            hand = elt;\r\n' \
+  '            hand_m = false;\r\n' \
   '            viewpane.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
@@ -9083,8 +9093,8 @@ class GPXTweakerWebInterfaceServer():
   '                </text>\r\n' \
   '              </svg>'
   HTML_WAYDOT_TEMPLATE = \
-  '              <svg id="waydot%s" width="8" height="8" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
-  '                <circle cx="4" cy="4" r="3"/>\r\n' \
+  '              <svg id="waydot%s" width="8" height="8" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '                <circle cx="4" cy="4" r="3" />\r\n' \
   '              </svg>\r\n'
   HTML_DOT_TEMPLATE = \
   '              <svg id="dot%s" width="7" height="7" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
