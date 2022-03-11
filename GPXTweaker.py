@@ -3101,7 +3101,9 @@ class WGS84Track(WGS84WebMercator):
                 elif c.localName == 'time':
                   ptime += c.getText()
                 elif c.localName == 'extensions':
-                  palt += c.getChildrenText('ele_alt', self.MT_NAMESPACE)
+                  for c_ in c.childNodes:
+                    if c_.namespaceURI == self.MT_NAMESPACE and c_.localName == 'ele_alt':
+                      palt += c_.getText()
             pts.append((pti, (float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pele), flt(palt), ptime.replace('\r','').replace('\n',''))))
             pti += 1
           self.Pts.append(pts)
