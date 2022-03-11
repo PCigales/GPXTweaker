@@ -3084,26 +3084,31 @@ class WGS84Track(WGS84WebMercator):
         except:
           pass
     if mode == 'a':
-      segpts = (seg.getChildren('trkpt') for seg in trk.getChildren('trkseg'))
       self.Pts = []
       pti = 0
       try:
-        for seg in segpts:
+        for seg in trk.getChildren('trkseg'):
           pts = []
-          for pt in seg:
+          for pt in seg.getChildren('trkpt'):
             pele = ''
             palt = ''
             ptime = ''
             for c in pt.childNodes:
               if c.namespaceURI == rns:
                 if c.localName == 'ele':
-                  pele += c.getText()
+                  for cc in c.childNodes:
+                    if cc.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
+                      pele += cc.data
                 elif c.localName == 'time':
-                  ptime += c.getText()
+                  for cc in c.childNodes:
+                    if cc.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
+                      ptime += cc.data
                 elif c.localName == 'extensions':
-                  for c_ in c.childNodes:
-                    if c_.namespaceURI == self.MT_NAMESPACE and c_.localName == 'ele_alt':
-                      palt += c_.getText()
+                  for cc in c.childNodes:
+                    if cc.namespaceURI == self.MT_NAMESPACE and cc.localName == 'ele_alt':
+                      for ccc in cc.childNodes:
+                        if ccc.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
+                          palt += ccc.data
             pts.append((pti, (float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pele), flt(palt), ptime.replace('\r','').replace('\n',''))))
             pti += 1
           self.Pts.append(pts)
