@@ -2526,7 +2526,7 @@ class XMLElement(XMLNode):
 
   nodeType = XMLNode.ELEMENT_NODE
 
-  def __init__(self, name, namespaceuri=XMLNode.EMPTY_NAMESPACE, localname=''):
+  def __init__(self, name, namespaceuri, localname):
     self.name = name
     self.namespaceURI = namespaceuri
     self.localName = localname
@@ -2605,12 +2605,7 @@ class XMLElement(XMLNode):
   def getChildren(self, localname, namespaceuri=' '):
     if namespaceuri == ' ':
       namespaceuri = self.namespaceURI
-    nodes = []
-    for node in self.childNodes:
-      if node.nodeType == XMLNode.ELEMENT_NODE:
-        if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname):
-          nodes.append(node)
-    return nodes
+    return list(node for node in self.childNodes if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname))
 
   def insertBefore(self, newChildren, refChild=None):
     if not isinstance(newChildren, (tuple, list)):
@@ -2673,7 +2668,7 @@ class XMLElement(XMLNode):
       writer.write('>')
       if len(self.childNodes) == 1 and self.childNodes[0].nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
         self.childNodes[0].writexml(writer, '', '', '')
-      elif self.namespaceURI == 'http://www.topografix.com/GPX/1/1' and (self.localName == 'wpt' or self.localName == 'trkpt'):
+      elif self.namespaceURI == 'http://www.topografix.com/GPX/1/1' and self.localName in ('trkpt', 'wpt'):
         for node in self.childNodes:
           node.writexml(writer, '', '', '')
       else:
@@ -3051,10 +3046,11 @@ class WGS84Track(WGS84WebMercator):
   def ProcessGPX(self, mode='a'):
     flt = lambda s: float(s) if s.strip() != '' else ''
     r = self.Track.documentElement
+    rns = r.namespaceURI
     if mode == 'a' or mode == 'w':
       wpts = r.getChildren('wpt')
       try:
-        self.Wpts = list(zip(range(len(wpts)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time').replace('\r','').replace('\n',''), ' '.join(pt.getChildrenText('name').splitlines())) for pt in wpts)))
+        self.Wpts = list(enumerate((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time').replace('\r','').replace('\n',''), ' '.join(pt.getChildrenText('name').splitlines())) for pt in wpts))
       except:
         return False
     try:
@@ -3062,7 +3058,7 @@ class WGS84Track(WGS84WebMercator):
     except:
       if mode != 'a' or self.TrkId > 0:
         return False
-      trk = self._XMLNewNode('trk', r.namespaceURI, r.prefix)
+      trk = self._XMLNewNode('trk', rns, r.prefix)
       r.appendChild(trk)
     if mode == 'a' or mode == 'e':
       self.Name = ' '.join(trk.getChildrenText('name').splitlines())
@@ -3088,13 +3084,28 @@ class WGS84Track(WGS84WebMercator):
         except:
           pass
     if mode == 'a':
-      pts = list(list(pt for pt in seg.getChildren('trkpt')) for seg in trk.getChildren('trkseg')) or [[]]
+      segpts = (seg.getChildren('trkpt') for seg in trk.getChildren('trkseg'))
       self.Pts = []
-      sn = 0
+      pti = 0
       try:
-        for seg in pts:
-          self.Pts.append(list(zip(range(sn, sn + len(seg)), ((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), flt(''.join(e.getChildrenText('ele_alt', self.MT_NAMESPACE) for e in pt.getChildren('extensions'))), pt.getChildrenText('time').replace('\r','').replace('\n','')) for pt in seg))))
-          sn += len(seg)
+        for seg in segpts:
+          pts = []
+          for pt in seg:
+            pele = ''
+            palt = ''
+            ptime = ''
+            for c in pt.childNodes:
+              if c.namespaceURI == rns:
+                if c.localName == 'ele':
+                  pele += c.getText()
+                elif c.localName == 'time':
+                  ptime += c.getText()
+                elif c.localName == 'extensions':
+                  palt += c.getChildrenText('ele_alt', self.MT_NAMESPACE)
+            pts.append((pti, (float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pele), flt(palt), ptime.replace('\r','').replace('\n',''))))
+            pti += 1
+          self.Pts.append(pts)
+        self.Pts = self.Pts or [[]]
       except:
         return False
     return True
