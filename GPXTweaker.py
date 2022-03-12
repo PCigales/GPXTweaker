@@ -2895,7 +2895,23 @@ class ExpatGPXBuilder:
 
   def StartElementHandler(self, name, attributes):
     self.CurText = ''
-    uri, localname, qname = self._parse_ns_name(name)
+    parts = name.split(' ')
+    l = len(parts)
+    if l == 2:
+      uri, localname = parts
+      uri = self.intern(uri, uri)
+      qname = localname = self.intern(localname, localname)
+    elif l == 3:
+      uri, localname, prefix = parts
+      uri = self.intern(uri, uri)
+      localname = self.intern(localname, localname)
+      qname = prefix + ':' + localname
+      qname = self.intern(qname, qname)
+    elif l == 1:
+      uri = XMLNode.EMPTY_NAMESPACE
+      qname = localname = name
+    else:
+      raise
     node = XMLElement(qname, uri, localname)
     self.CurNode.childNodes.append(node)
     self.ParNodes.append(self.CurNode)
@@ -2914,11 +2930,24 @@ class ExpatGPXBuilder:
       for i in range(0, len(attributes), 2):
         name = attributes[i]
         if ' ' in name:
-          uri2, localname, qname = self._parse_ns_name(name)
-          if uri2 is uri:
+          parts = name.split(' ')
+          l = len(parts)
+          if l == 3:
+            uri2, localname, prefix = parts
+            localname = self.intern(localname, localname)
+            if uri2 == uri:
+              node.attributes[(XMLNode.EMPTY_NAMESPACE, localname)] = [localname, attributes[i + 1]]
+            else:
+              uri2 = self.intern(uri2, uri2)
+              qname = prefix + ':' + localname
+              qname = self.intern(qname, qname)
+              node.attributes[(uri2, localname)] = [qname, attributes[i + 1]]          
+          elif l == 2:
+            uri2, localname = parts
+            localname = self.intern(localname, localname)
             node.attributes[(XMLNode.EMPTY_NAMESPACE, localname)] = [localname, attributes[i + 1]]
           else:
-            node.attributes[(uri2, localname)] = [qname, attributes[i + 1]]
+            raise
         else:
           node.attributes[(XMLNode.EMPTY_NAMESPACE, name)] = [name, attributes[i + 1]]
 
@@ -3084,30 +3113,30 @@ class WGS84Track(WGS84WebMercator):
         except:
           pass
     if mode == 'a':
+      txt_node = (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE)
       self.Pts = []
       pti = 0
       try:
         for seg in trk.getChildren('trkseg'):
           pts = []
           for pt in seg.getChildren('trkpt'):
-            pele = ''
-            palt = ''
-            ptime = ''
+            pele = palt = ptime = ''
             for c in pt.childNodes:
               if c.namespaceURI == rns:
-                if c.localName == 'ele':
+                cln = c.localName
+                if cln == 'ele':
                   for cc in c.childNodes:
-                    if cc.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
+                    if cc.nodeType in txt_node:
                       pele += cc.data
-                elif c.localName == 'time':
+                elif cln == 'time':
                   for cc in c.childNodes:
-                    if cc.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
+                    if cc.nodeType in txt_node:
                       ptime += cc.data
-                elif c.localName == 'extensions':
+                elif cln == 'extensions':
                   for cc in c.childNodes:
                     if cc.namespaceURI == self.MT_NAMESPACE and cc.localName == 'ele_alt':
                       for ccc in cc.childNodes:
-                        if ccc.nodeType in (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE):
+                        if ccc.nodeType in txt_node:
                           palt += ccc.data
             pts.append((pti, (float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pele), flt(palt), ptime.replace('\r','').replace('\n',''))))
             pti += 1
@@ -3121,7 +3150,7 @@ class WGS84Track(WGS84WebMercator):
     if self.Track is not None:
       return False
     self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
-    gcie = gc.isenabled()
+    gcie = gc.isenabled() 
     gc.disable()
     try:
       if source:
