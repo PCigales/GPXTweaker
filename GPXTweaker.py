@@ -2869,26 +2869,6 @@ class ExpatGPXBuilder:
     self.__init__()
     return doc
 
-  def _parse_ns_name(self, name):
-    parts = name.split(' ')
-    l = len(parts)
-    if l == 2:
-      uri, localname = parts
-      uri = self.intern(uri, uri)
-      qname = localname = self.intern(localname, localname)
-    elif l == 3:
-      uri, localname, prefix = parts
-      uri = self.intern(uri, uri)
-      localname = self.intern(localname, localname)
-      qname = prefix + ':' + localname
-      qname = self.intern(qname, qname)
-    elif l == 1:
-      uri = XMLNode.EMPTY_NAMESPACE
-      qname = localname = self.intern(name, name)
-    else:
-      raise
-    return uri, localname, qname
-
   def XmlDeclHandler(self, version, encoding, standalone):
     self.Document = XMLDocument(version, encoding)
     self.CurNode = self.Document
@@ -3150,7 +3130,7 @@ class WGS84Track(WGS84WebMercator):
     if self.Track is not None:
       return False
     self.log(1, 'load', uri + ((' <%s>' % str(trkid)) if trkid is not None else ''))
-    gcie = gc.isenabled() 
+    gcie = gc.isenabled()
     gc.disable()
     try:
       if source:
