@@ -631,7 +631,7 @@ def _XMLGetNodeText(nodes):
 
 class HTTPMessage():
 
-  def __init__(self, message, body=True, decode='utf-8', timeout=5, max_length=1048576):
+  def __init__(self, message=None, body=True, decode='utf-8', timeout=5, max_length=1048576):
     iter = 0
     while iter < 2:
       self.method = None
@@ -641,14 +641,14 @@ class HTTPMessage():
       self.message = None
       self.headers = {}
       self.body = None
-      if iter == 0:
+      if message is not None and iter == 0:
         if self._read_message(message, body, timeout, max_length):
           iter = 2
         else:
           iter = 1
       else:
         iter = 2
-    if self.body != None:
+    if self.body is not None and body:
       if self.header('Content-encoding', '').lower() == 'deflate':
         self.body = zlib.decompress(self.body)
       elif self.header('Content-encoding', '').lower() == 'gzip':
@@ -661,11 +661,11 @@ class HTTPMessage():
 
   def _read_headers(self, msg):
     if not msg:
-      return
+      return False
     a = None
     for msg_line in msg.splitlines()[:-1]:
       if not msg_line:
-        return
+        return False
       if not a:
         try:
           a, b, c = msg_line.strip().split(None, 2)
@@ -673,18 +673,18 @@ class HTTPMessage():
           try:
             a, b, c = *msg_line.strip().split(None, 2), ''
           except:
-            return
+            return False
       else:
         try:
           header_name, header_value = msg_line.split(':', 1)
         except:
-          return
+          return False
         header_name = header_name.strip().upper()
         if header_name:
           header_value = header_value.strip()
           self.headers[header_name] = header_value
         else:
-          return
+          return False
     if a[:4].upper() == 'HTTP':
       self.version = a.upper()
       self.code = b
@@ -697,69 +697,76 @@ class HTTPMessage():
       self.headers['Content-Length'.upper()] = 0
     return True
 
-  def _read_message(self, message, body, timeout=5, max_length=1048576):
+  def _read_message(self, message, body=True, timeout=5, max_length=1048576):
     rem_length = max_length
-    if not isinstance(message, socket.socket):
-      resp = message[0]
+    iss = isinstance(message, socket.socket)
+    if not iss:
+      msg = message[0]
     else:
       message.settimeout(timeout)
-      resp = b''
+      msg = b''
     while True:
-      resp = resp.lstrip(b'\r\n')
-      body_pos = resp.find(b'\r\n\r\n')
+      msg = msg.lstrip(b'\r\n')
+      body_pos = msg.find(b'\r\n\r\n')
       if body_pos >= 0:
         body_pos += 4
         break
-      body_pos = resp.find(b'\n\n')
+      body_pos = msg.find(b'\n\n')
       if body_pos >= 0:
         body_pos += 2
         break
-      if not isinstance(message, socket.socket) or rem_length <= 0:
-        return None
-      bloc = None
+      if not iss or rem_length <= 0:
+        return False
       try:
         bloc = message.recv(min(rem_length, 1048576))
+        if not bloc:
+          return False
       except:
-        return None
-      if not bloc:
-        return None
+        return False
       rem_length -= len(bloc)
-      resp = resp + bloc
-    if not self._read_headers(resp[:body_pos].decode('ISO-8859-1')):
-      return None
-    if not body or self.code in ('204', '304'):
+      msg = msg + bloc
+    if not self._read_headers(msg[:body_pos].decode('ISO-8859-1')):
+      return False
+    if self.code in ('204', '304'):
       self.body = b''
+      return True
+    if not body:
+      self.body = msg[body_pos:]
       return True
     if self.header('Transfer-Encoding', '').lower() != 'chunked':
       try:
         body_len = int(self.header('Content-Length'))
       except:
-        return None
-      if body_pos + body_len - len(resp) > rem_length:
-        return None
-    if self.header('Expect', '').lower() == '100-continue' and isinstance(message, socket.socket):
+        return False
+      if body_pos + body_len - len(msg) > rem_length:
+        return False
+    if self.header('Expect', '').lower() == '100-continue' and iss:
       try:
         message.sendall('HTTP/1.1 100 Continue\r\n\r\n'.encode('ISO-8859-1'))
       except:
-        return None
+        return False
     if self.header('Transfer-Encoding', '').lower() != 'chunked':
-      while len(resp) < body_pos + body_len:
-        if not isinstance(message, socket.socket):
-          return None
-        bloc = None
-        try:
-          bloc = message.recv(min(body_pos + body_len - len(resp), 1048576))
-        except:
-          return None
-        if not bloc:
-          return None
-        resp = resp + bloc
-      self.body = resp[body_pos:body_pos + body_len]
+      if len(msg) < body_pos + body_len:
+        if not iss:
+          return False
+        bbuf = BytesIO()
+        body_len -= bbuf.write(msg[body_pos:])
+        while body_len:
+          try:
+            bw = bbuf.write(message.recv(min(body_len, 1048576)))
+            if not bw:
+              return False
+            body_len -= bw
+          except:
+            return False
+        self.body = bbuf.getvalue()
+      else:
+        self.body = msg[body_pos:body_pos+body_len]
     else:
-      buff = resp[body_pos:]
-      self.body = b''
+      bbuf = BytesIO()
+      buff = msg[body_pos:]
       chunk_len = -1
-      while chunk_len != 0:
+      while True:
         chunk_pos = -1
         while chunk_pos < 0:
           buff = buff.lstrip(b'\r\n')
@@ -771,150 +778,171 @@ class HTTPMessage():
           if chunk_pos >= 0:
             chunk_pos += 1
             break
-          if not isinstance(message, socket.socket) or rem_length <= 0:
-            return None
-          bloc = None
+          if not iss or rem_length <= 0:
+            return False
           try:
             bloc = message.recv(min(rem_length, 1048576))
+            if not bloc:
+              return False
           except:
-            return None
-          if not bloc:
-            return None
+            return False
           rem_length -= len(bloc)
           buff = buff + bloc
         try:
           chunk_len = int(buff[:chunk_pos].rstrip(b'\r\n'), 16)
+          if not chunk_len:
+            break
         except:
-          return None
+          return False
         if chunk_pos + chunk_len - len(buff) > rem_length:
-          return None
-        while len(buff) < chunk_pos + chunk_len:
-          if not isinstance(message, socket.socket):
-            return None
-          bloc = None
-          try:
-            bloc = message.recv(min(chunk_pos + chunk_len - len(buff), 1048576))
-          except:
-            return None
-          if not bloc:
-            return None
-          rem_length -= len(bloc)
-          buff = buff + bloc
-        self.body = self.body + buff[chunk_pos:chunk_pos+chunk_len]
-        buff = buff[chunk_pos+chunk_len:]
-      buff = b'\r\n' + buff
+          return False
+        if len(buff) < chunk_pos + chunk_len:
+          if not iss:
+            return False
+          chunk_len -= bbuf.write(buff[chunk_pos:])
+          while chunk_len:
+            try:
+              bw = bbuf.write(message.recv(min(chunk_len, 1048576)))
+              if not bw:
+                return False
+              chunk_len -= bw
+            except:
+              return False
+            rem_length -= bw
+          buff = b''
+        else:
+          bbuf.write(buff[chunk_pos:chunk_pos+chunk_len])
+          buff = buff[chunk_pos+chunk_len:]
+      self.body = bbuf.getvalue()
       self.headers['Content-Length'.upper()] = len(self.body)
+      buff = b'\r\n' + buff
       while not (b'\r\n\r\n' in buff or b'\n\n' in buff):
-        if not isinstance(message, socket.socket) or rem_length <= 0:
-          return None
-        bloc = None
+        if not iss or rem_length <= 0:
+          return False
         try:
           bloc = message.recv(min(rem_length, 1048576))
+          if not bloc:
+            return False
         except:
-          return None
-        if not bloc:
-          return None
+          return False
         rem_length -= len(bloc)
         buff = buff + bloc
     return True
 
-def HTTPRequest(url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, pconnection=None):
-  if not method:
-    method = 'GET' if not data else 'POST'
-  redir = 0
-  retry = 0
-  switch_get = False
-  code = '0'
-  url_ = url
-  close = False
-  if headers == None:
-    headers = {}
-  for k in list(k for k in headers):
-    if not headers[k]:
-      del headers[k]
-  if not pconnection:
-    pconnection = [None]
-    headers['Connection'] = 'close'
-  else:
-    headers['Connection'] = 'keep-alive'
-  try:
-    if not 'accept-encoding' in (h.lower() for h in headers):
-      headers['Accept-Encoding'] = 'identity, deflate, gzip'
-  except:
-    pass
-  msg_pat = '%s %s HTTP/1.1\r\n' \
+
+class HTTPRequest():
+
+  SSLContext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+  SSLContext.check_hostname = False
+  SSLContext.verify_mode = ssl.CERT_NONE
+
+  RequestPattern = \
+    '%s %s HTTP/1.1\r\n' \
     'Host: %s\r\n%s' \
     '\r\n'
-  while True:
+
+  def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, pconnection=None):
+    if not method:
+      method = 'GET' if data is None else 'POST'
+    redir = 0
+    retry = False
+    code = '0'
+    headers = {} if headers is None else {**headers}
     try:
-      url_p = urllib.parse.urlparse(url_)
-      if not pconnection[0]:
-        if url_p.scheme.lower() == 'http':
-          pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
-        elif url_p.scheme.lower() == 'https':
-          sock = socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout)
-          pconnection[0] = ssl.SSLContext(ssl.PROTOCOL_TLS).wrap_socket(sock, server_side=False)
-        else:
-          raise
+      for k in list(headers.keys()):
+        if not headers[k] or k.lower() == 'content-length':
+          del headers[k]
+      if not 'accept-encoding' in (h.lower() for h in headers):
+        headers['Accept-Encoding'] = 'identity, deflate, gzip'
+    except:
+      return HTTPMessage()
+    if not pconnection:
+      pconnection = [None]
+      headers['Connection'] = 'close'
+    else:
+      headers['Connection'] = 'keep-alive'
+    if data is not None:
       try:
-        msg = msg_pat % ('GET' if switch_get else method, url_[len(url_p.scheme) + 3 + len(url_p.netloc):].replace(' ', '%20'), url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
-        pconnection[0].sendall(msg.encode('iso-8859-1') + ((data or b'') if not switch_get else b''))
+        if not 'chunked' in (v.lower() for k, v in headers.items() if k.lower() == 'transfer-encoding'):
+          headers['Content-Length'] = str(len(data))
+      except:
+        return HTTPMessage()
+    while True:
+      try:
+        resp = None
+        url_p = urllib.parse.urlparse(url)
+        if pconnection[0] is None:
+          if url_p.scheme.lower() == 'http':
+            pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
+          elif url_p.scheme.lower() == 'https':
+            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout), server_side=False)
+          else:
+            raise
+        try:
+          msg = cls.RequestPattern % (method, url[len(url_p.scheme) + 3 + len(url_p.netloc):].replace(' ', '%20'), url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
+          pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
+        except:
+          if retry:
+            raise
+          retry = True
+          try:
+            pconnection[0].close()
+          except:
+            pass
+          pconnection[0] = None
+          continue
+        resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length)
+        code = resp.code
+        if code is None:
+          if retry:
+            raise
+          retry = True
+          try:
+            pconnection[0].close()
+          except:
+            pass
+          pconnection[0] = None
+          continue
+        retry = False
+        if code[:2] == '30' and code != '304':
+          try:
+            pconnection[0].close()
+          except:
+            pass
+          pconnection[0] = None
+          url = resp.header('location')
+          resp = None
+          if url:
+            redir += 1
+            if code == '303':
+              if method.upper() != 'HEAD':
+                method = 'GET'
+              data = None
+              for k in list(headers.keys()):
+                if k.lower() in ('transfer-encoding', 'content-length'):
+                  del headers[k]
+          else:
+            raise
+          if redir > 5:
+            raise
+        else:
+          break
       except:
         try:
           pconnection[0].close()
         except:
           pass
         pconnection[0] = None
-        if retry:
-          raise
-        retry = 1
-        continue
-      resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length)
-      if not resp.code:
-        if retry:
-          raise
-        retry = 1
-        try:
-          pconnection[0].close()
-        except:
-          pass
-        pconnection[0] = None
-        continue
-      retry = 0
-      code = resp.code
-      if code[:2] == '30' and code != '304':
-        try:
-          pconnection[0].close()
-        except:
-          pass
-        pconnection[0] = None
-        if resp.header('location', '') != '':
-          url_ = resp.header('location')
-          redir += 1
-          if code == '303':
-            switch_get = True
-        else:
-          raise
-        if redir > 5:
-          raise
-      else:
-        break
-    except:
+        return resp or HTTPMessage()
+    if headers['Connection'] == 'close' or resp.header('Connection', '').lower() == 'close' or ((resp.version or '').upper() != 'HTTP/1.1' and resp.header('Connection', '').lower() != 'keep-alive'):
       try:
         pconnection[0].close()
       except:
         pass
       pconnection[0] = None
-      return None
-  if headers['Connection'] == 'close' or resp.header('Connection', '').lower() == 'close' or ((resp.version or '').upper() != 'HTTP/1.1' and resp.header('Connection', '').lower() != 'keep-alive'):
-    try:
-      pconnection[0].close()
-    except:
-      pass
-    pconnection[0] = None
-  if code[:2] != '20' and code != '304':
-    resp = None
-  return resp
+    if code[:2] != '20' and code != '304':
+      resp = None
+    return resp
 
 
 class WGS84WebMercator():
@@ -1220,6 +1248,8 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       uri = self.WMS_PATTERN['GetMap'].format_map(infos)
       rep = HTTPRequest(uri, 'GET', headers)
+      if rep.code != '200':
+        raise
       nmap = rep.body
     except:
       self.log(0, 'maplfail', infos)
@@ -1242,6 +1272,8 @@ class WebMercatorMap(WGS84WebMercator):
         if referer:
           headers['Referer'] = referer
         rep = HTTPRequest(uri, 'GET', headers)
+        if rep.code != '200':
+          raise
         nmap = rep.body
       else:
         try:
@@ -2349,10 +2381,7 @@ class WGS84Elevation(WGS84Map):
         uri = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:ind2])})
         try:
           rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
-          if rep != None:
-            if not rep.body:
-              rep = None
-          if rep == None:
+          if rep.code != '200' or not rep.body:
             uri1 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:(ind1+ind2)//2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:(ind1+ind2)//2])})
             uri2 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[(ind1+ind2)//2:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[(ind1+ind2)//2:ind2])})
             rep1 = HTTPRequest(uri1, 'GET', headers, pconnection=pconnection)
@@ -2457,7 +2486,7 @@ class WGS84Itinerary(WGS84Map):
     uri = infos['source'].format_map({'key': key or '', 'lats': points[0][0], 'lons': points[0][1], 'late': points[1][0], 'lone': points[1][1]})
     try:
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
-      if rep == None:
+      if rep.code != '200':
         return None
       if not rep.body:
         return None
@@ -3139,6 +3168,8 @@ class WGS84Track(WGS84WebMercator):
       else:
         if '://' in uri:
           rep = HTTPRequest(uri, 'GET')
+          if rep.code != '200':
+            raise
           track = rep.body
         else:
           try:
