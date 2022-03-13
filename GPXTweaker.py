@@ -631,6 +631,8 @@ def _XMLGetNodeText(nodes):
 
 class HTTPMessage():
 
+  __slots__ = ('method', 'path', 'version', 'code', 'message', 'headers', 'body')
+
   def __init__(self, message=None, body=True, decode='utf-8', timeout=5, max_length=1048576):
     iter = 0
     while iter < 2:
@@ -835,7 +837,6 @@ class HTTPRequest():
   SSLContext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
   SSLContext.check_hostname = False
   SSLContext.verify_mode = ssl.CERT_NONE
-
   RequestPattern = \
     '%s %s HTTP/1.1\r\n' \
     'Host: %s\r\n%s' \
