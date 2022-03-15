@@ -1,4 +1,4 @@
-﻿# GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -474,7 +474,7 @@ EN_STRINGS = {
     'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
-    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to  lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
+    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -4816,8 +4816,9 @@ class GPXTweakerWebInterfaceServer():
   '        padding-left:0.4em;\r\n' \
   '        border-left:1px rgb(225,225,225) solid;\r\n' \
   '      }\r\n' \
-  '      img {\r\n' \
+  '      div[id=handle]>img {\r\n' \
   '        filter:var(--filter);\r\n' \
+  '        pointer-events:none;\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
@@ -8896,8 +8897,10 @@ class GPXTweakerWebInterfaceServer():
   '            viewpane.style.cursor = "all-scroll";\r\n' \
   '          } else if (elt.id.indexOf("dot") >= 0) {\r\n' \
   '            let pt = document.getElementById(elt.id.replace("dot", "point") + "desc");\r\n' \
-  '            if (pt.htmlFor != focused) {element_click(null, pt);}\r\n' \
-  '            if (! dots_visible) {return;}\r\n' \
+  '            if (pt.htmlFor != focused) {\r\n' \
+  '              element_click(null, pt);\r\n' \
+  '              if (! dots_visible) {return;}\r\n' \
+  '            }\r\n' \
   '            hand = elt;\r\n' \
   '            hand_m = false;\r\n' \
   '            viewpane.style.cursor = "crosshair";\r\n' \
@@ -10863,13 +10866,21 @@ class GPXTweakerWebInterfaceServer():
   '        r:calc(3px * var(--scale));\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
-  '      img[id^=photo] {\r\n' \
-  '        filter:none;\r\n' \
-  '        image-orientation:from-image;\r\n' \
-  '        cursor:zoom-in;\r\n' \
+  '      div [id=geomedia] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        pointer-events:none;\r\n' \
   '      }\r\n' \
-  '      video[id^=video] {\r\n' \
+  '      div[id=geomedia] * {\r\n' \
+  '        background:darkgray;\r\n' \
   '        cursor:zoom-in;\r\n' \
+  '        pointer-events:initial;\r\n' \
+  '      }\r\n' \
+  '      div[id=geomedia] img {\r\n' \
+  '        image-orientation:from-image;\r\n' \
+  '      }\r\n' \
+  '      div[id=geomedia] *[id*=","] {\r\n' \
+  '        outline-offset:-3px;\r\n' \
+  '        outline:outset 3px lightgray;\r\n' \
   '      }\r\n' \
   '      div[id^=media] {\r\n' \
   '        width:100%;\r\n' \
@@ -10907,7 +10918,6 @@ class GPXTweakerWebInterfaceServer():
   '        object-fit:scale-down;\r\n' \
   '      }\r\n' \
   '      div[id^=media] img {\r\n' \
-  '        filter:none;\r\n' \
   '        image-orientation:from-image;\r\n' \
   '        cursor:nesw-resize;\r\n' \
   '      }\r\n' \
@@ -10925,12 +10935,15 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
   '      var media_visible = false;\r\n' \
+  '      var media_ex_visible = false;\r\n' \
   '      var media_gps_ar = null;\r\n' \
   '      var media_uri_dt = null;\r\n' \
   '      var media_isvid = null;\r\n' \
   '      var media_corners = null;\r\n' \
+  '      var media_corners_updated = true;\r\n' \
   '      var media_sides = null;\r\n' \
   '      var media_div = null;\r\n' \
+  '      var media_hold = null;\r\n' \
   '      var media_fs = false;\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
@@ -11734,11 +11747,15 @@ class GPXTweakerWebInterfaceServer():
   '          media_sides.push({"o":0, "m":m}, {"o":2, "m":m});\r\n' \
   '        }\r\n' \
   '        media_sides.sort((a, b) => (media_corners[4 * a.m + a.o] - media_corners[4 * b.m + b.o]) || (b.o - a.o) || (media_corners[4 * a.m + 1] - media_corners[4 * b.m + 1]) || (media_corners[4 * a.m + 3] - media_corners[4 * b.m + 3]));\r\n' \
+  '        media_corners_updated = true;\r\n' \
   '      }\r\n' \
   '      function media_gen() {\r\n' \
   '        media_div = document.createElement("div");\r\n' \
   '        media_div.id = "geomedia";\r\n' \
-  '        media_div.style.position = "absolute";\r\n' \
+  '        media_div.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '        media_div.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '        media_div.setAttribute("onclick", "event.stopPropagation();event.preventDefault();enlarge_media(event.target.id.substring(6));");\r\n' \
+  '        media_div.setAttribute("oncontextmenu", "event.stopPropagation();event.preventDefault();");\r\n' \
   '        let nm = media_corners.length / 4;\r\n' \
   '        let md = Array(nm);\r\n' \
   '        md.fill([]);\r\n' \
@@ -11787,32 +11804,45 @@ class GPXTweakerWebInterfaceServer():
   '            md[cs[s0]].push(m);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        let media_ex_hold = media_hold;\r\n' \
+  '        media_hold = new Object;\r\n' \
+  '        [xl, xr] = [2 * xl - xr, 2 * xr - xl];\r\n' \
+  '        [yt, yb] = [2 * yt - yb, 2 * yb - yt];\r\n' \
+  '        if (media_ex_hold) {\r\n' \
+  '          for (const m in media_ex_hold) {\r\n' \
+  '            if (md[m] || (media_isvid[m] && media_corners[4 * m] < xr && media_corners[4 * m + 2] > xl && media_corners[4 * m + 1] < yb && media_corners[4 * m + 3] > yt)) {\r\n' \
+  '              let med = media_ex_hold[m];\r\n' \
+  '              if (media_corners_updated) {\r\n' \
+  '                med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
+  '                med.style.height = (media_corners[4 * m + 3] - media_corners[4 * m + 1]).toString() + "px";\r\n' \
+  '                med.style.left = media_corners[4 * m].toString() + "px";\r\n' \
+  '                med.style.top = media_corners[4 * m + 1].toString() + "px";\r\n' \
+  '              }\r\n' \
+  '              media_hold[m] = med;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        for (let m=0; m<nm; m++) {\r\n' \
   '          if (md[m] == null) {continue;}\r\n' \
-  '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
-  '          med.id = (media_isvid[m]?"video-":"photo-") + md[m].toString();\r\n' \
-  '          let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
-  '          if (media_isvid[m]) {med.preload = "metadata"};\r\n' \
-  '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
-  '          med.alt = "";\r\n' \
-  '          med.style.position = "absolute";\r\n' \
-  '          med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
-  '          med.style.height = (media_corners[4 * m + 3] - media_corners[4 * m + 1]).toString() + "px";\r\n' \
-  '          med.style.left = media_corners[4 * m].toString() + "px";\r\n' \
-  '          med.style.top = media_corners[4 * m + 1].toString() + "px";\r\n' \
-  '          if (md[m].length > 1) {\r\n' \
-  '            med.style.outlineOffset = "-3px";\r\n' \
-  '            med.style.outline = "outset 3px lightgray";\r\n' \
-  '            med.title = media_uri_dt[m] + "\\r\\n\\r\\n+ " + (md[m].length - 1).toString() + " …";\r\n' \
-  '          } else {\r\n' \
-  '            med.title = media_uri_dt[m];\r\n' \
+  '          let med = media_hold[m];\r\n' \
+  '          if (! med) {\r\n' \
+  '            med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
+  '            let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
+  '            if (media_isvid[m]) {med.preload = "metadata"};\r\n' \
+  '            med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
+  '            med.alt = "";\r\n' \
+  '            med.style.position = "absolute";\r\n' \
+  '            med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
+  '            med.style.height = (media_corners[4 * m + 3] - media_corners[4 * m + 1]).toString() + "px";\r\n' \
+  '            med.style.left = media_corners[4 * m].toString() + "px";\r\n' \
+  '            med.style.top = media_corners[4 * m + 1].toString() + "px";\r\n' \
+  '            media_hold[m] = med;\r\n' \
   '          }\r\n' \
-  '          med.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
-  '          med.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
-  '          med.setAttribute("onclick", "enlarge_media(event.target.id.substring(6));");\r\n' \
-  '          med.setAttribute("oncontextmenu", "event.stopPropagation();event.preventDefault();");\r\n' \
+  '          med.id = "media-" + md[m].toString();\r\n' \
+  '          med.title = media_uri_dt[m] + ((md[m].length > 1)?("\\r\\n\\r\\n+ " + (md[m].length - 1).toString() + " …"):"");\r\n' \
   '          media_div.appendChild(med);\r\n' \
   '        }\r\n' \
+  '        media_corners_updated = false;\r\n' \
   '      }\r\n' \
   '      function show_media() {\r\n' \
   '        document.getElementById("switchmedia").disabled = true;\r\n' \
@@ -11853,9 +11883,12 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("switchmedia").disabled = false;\r\n' \
   '      }\r\n' \
   '      function hide_media(reset="") {\r\n' \
-  '        if (reset == "m" || reset == "s") {media_div = null;}\r\n' \
+  '        if (reset) {media_div = null;}\r\n' \
   '        if (reset == "s") {media_sides = null;}\r\n' \
-  '        if (! media_visible) {return;}\r\n' \
+  '        if (! media_visible) {\r\n' \
+  '          if (! media_ex_visible) {media_hold = null;}\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        let mdiv = document.getElementById("geomedia");\r\n' \
   '        if (mdiv != null) {document.getElementById("handle").removeChild(mdiv);}\r\n' \
   '        if (reset) {document.getElementById("mediapreview").innerHTML = "";}\r\n' \
@@ -12056,7 +12089,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event)" onmouseup="mouse_up(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
@@ -12069,8 +12102,7 @@ class GPXTweakerWebInterfaceServer():
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
-  '      var media_ex_visible = false;\r\n' \
-  '      function mouse_down(e, elt) {\r\n' \
+  '      function mouse_down(e) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        document.getElementById("tracksfilter").blur();\r\n' \
   '        mousex = e.pageX;\r\n' \
@@ -12078,32 +12110,37 @@ class GPXTweakerWebInterfaceServer():
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
-  '        document.onmouseup = mouse_up;\r\n' \
-  '        document.onclick = mouse_click;\r\n' \
-  '        document.oncontextmenu = mouse_click;\r\n' \
-  '        if (e.button == 0) {\r\n' \
-  '          if (elt.id == "view") {\r\n' \
-  '            hand = elt;\r\n' \
+  '        if (e.target && e.button == 0) {\r\n' \
+  '          if (e.target.id == "view") {\r\n' \
+  '            hand = e.target;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
   '            media_ex_visible = media_visible;\r\n' \
   '            hide_media("m");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function mouse_up(e, elt) {\r\n' \
+  '      function mouse_up(e) {\r\n' \
   '        mousex = null;\r\n' \
   '        mousey = null;\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = null;\r\n' \
-  '        document.onmouseup = null;\r\n' \
-  '        viewpane.style.cursor = "";\r\n' \
   '        if (hand) {\r\n' \
   '          hand = null;\r\n' \
-  '          if (media_ex_visible) {show_media();}\r\n' \
+  '          viewpane.style.cursor = "";\r\n' \
+  '          if (media_ex_visible) {\r\n' \
+  '            show_media();\r\n' \
+  '            media_ex_visible = false;\r\n' \
+  '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (elt && e.button == 2) {\r\n' \
+  '      }\r\n' \
+  '      function mouse_click(e) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        let elt = e.target;\r\n' \
+  '        if (! elt) {return;}\r\n' \
+  '        if (e.button == 2) {\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
   '            let cb = document.getElementById(elt.id.replace("path", "track") + "visible");\r\n' \
   '            cb.checked = false;\r\n' \
@@ -12112,22 +12149,15 @@ class GPXTweakerWebInterfaceServer():
   '              cb.scrollIntoView({block:"nearest"});\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function mouse_click(e, elt) {\r\n' \
-  '        e.stopPropagation();\r\n' \
-  '        e.preventDefault();\r\n' \
-  '        document.onclick = null;\r\n' \
-  '        document.oncontextmenu = null;\r\n' \
-  '        if (elt) {\r\n' \
+  '        } else {\r\n' \
   '          let trk = null;\r\n' \
   '          if (elt.id.substring(0, 4) == "path") {\r\n' \
   '            if (document.getElementById(elt.id.replace("path", "track") + "cont").style.display != "none") {\r\n' \
   '              trk = document.getElementById(elt.id.replace("path", "track") + "desc");\r\n' \
   '            }\r\n' \
-  '          } else if (elt.id.substring(0, 7) == "waydots") {\r\n' \
-  '            if (document.getElementById(elt.id.replace("waydots", "track") + "cont").style.display != "none") {\r\n' \
-  '              trk = document.getElementById(elt.id.replace("waydots", "track") + "desc");\r\n' \
+  '          } else if (elt.parentNode.id.substring(0, 7) == "waydots") {\r\n' \
+  '            if (document.getElementById(elt.parentNode.id.replace("waydots", "track") + "cont").style.display != "none") {\r\n' \
+  '              trk = document.getElementById(elt.parentNode.id.replace("waydots", "track") + "desc");\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (trk) {track_click(null, trk, false);}\r\n' \
@@ -12307,7 +12337,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
   HTMLExp_PATH_TEMPLATE = \
   '  <svg id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '                  <path id="path%s" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" d="M0 0">\r\n' \
+  '                  <path id="path%s" d="M0 0">\r\n' \
   '                   <title>%s</title>;\r\n' \
   '                  </path>\r\n' \
   '                  <text id="patharrows%s" dy="0.25em">\r\n' \
@@ -12315,7 +12345,7 @@ class GPXTweakerWebInterfaceServer():
   '                  </text>\r\n' \
   '                </svg>\r\n              '
   HTMLExp_WAYDOT_TEMPLATE = \
-  '                  <circle onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this.parentNode)" cx="%s" cy="%s"><title>%s</title></circle>\r\n'
+  '                  <circle cx="%s" cy="%s"><title>%s</title></circle>\r\n'
   HTMLExp_WAYDOTS_TEMPLATE = \
   '  <svg id="waydots%s" pointer-events="none" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
   '                </svg>\r\n              '
