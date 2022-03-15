@@ -1,4 +1,4 @@
-# GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -629,46 +629,43 @@ def _XMLGetNodeText(nodes):
   return(''.join(text))
 
 
-class HTTPMessage():
+class HTTPExplodedMessage():
 
   __slots__ = ('method', 'path', 'version', 'code', 'message', 'headers', 'body')
 
-  def __init__(self, message=None, body=True, decode='utf-8', timeout=5, max_length=1048576):
-    iter = 0
-    while iter < 2:
-      self.method = None
-      self.path = None
-      self.version = None
-      self.code = None
-      self.message = None
-      self.headers = {}
-      self.body = None
-      if message is not None and iter == 0:
-        if self._read_message(message, body, timeout, max_length):
-          iter = 2
-        else:
-          iter = 1
-      else:
-        iter = 2
-    if self.body is not None and body:
-      if self.header('Content-encoding', '').lower() == 'deflate':
-        self.body = zlib.decompress(self.body)
-      elif self.header('Content-encoding', '').lower() == 'gzip':
-        self.body = gzip.decompress(self.body)
-      if decode:
-        self.body = self.body.decode(decode)
+  def __init__(self):
+    self.method = self.path = self.version = self.code = self.message = self.body = None
+    self.headers = {}
+
+  def __bool__(self):
+    return self.method is not None or self.code is not None
+
+  def clear(self):
+    self.__init__()
+    return self
 
   def header(self, name, default=None):
-    return self.headers.get(name.upper(), default)
+    return self.headers.get(name.title(), default)
 
-  def _read_headers(self, msg):
+  def __repr__(self):
+    if self:
+      try:
+        return '\r\n'.join(('<HTTPExplodedMessage at %#x>\r\n----------' % id(self), (' '.join(filter(None, (self.method, self.path, self.version, self.code, self.message)))), *map(': '.join, self.headers.items()), '----------\r\nLength of body: %s byte(s)' % len(self.body or '')))
+      except:
+        return '<HTTPExplodedMessage at %#x>\r\n<corrupted object>' % id(self)
+    else:
+      return '<HTTPExplodedMessage at %#x>\r\n<no message>' % id(self)
+
+
+class HTTPMessage():
+
+  @staticmethod
+  def _read_headers(msg, http_message):
     if not msg:
       return False
     a = None
     for msg_line in msg.splitlines()[:-1]:
-      if not msg_line:
-        return False
-      if not a:
+      if a is None:
         try:
           a, b, c = msg_line.strip().split(None, 2)
         except:
@@ -681,25 +678,30 @@ class HTTPMessage():
           header_name, header_value = msg_line.split(':', 1)
         except:
           return False
-        header_name = header_name.strip().upper()
+        header_name = header_name.strip().title()
         if header_name:
           header_value = header_value.strip()
-          self.headers[header_name] = header_value
+          if http_message.headers.get(header_name):
+            if header_value:
+              http_message.headers[header_name] += ', ' + header_value
+          else:
+            http_message.headers[header_name] = header_value
         else:
           return False
     if a[:4].upper() == 'HTTP':
-      self.version = a.upper()
-      self.code = b
-      self.message = c
+      http_message.version = a.upper()
+      http_message.code = b
+      http_message.message = c
     else:
-      self.method = a.upper()
-      self.path = b
-      self.version = c.upper()
-    if not 'Content-Length'.upper() in self.headers and self.header('Transfer-Encoding', '').lower() != 'chunked':
-      self.headers['Content-Length'.upper()] = 0
+      http_message.method = a.upper()
+      http_message.path = b
+      http_message.version = c.upper()
     return True
 
-  def _read_message(self, message, body=True, timeout=5, max_length=1048576):
+  def __new__(cls, message=None, body=True, decode='utf-8', timeout=5, max_length=1048576):
+    http_message = HTTPExplodedMessage()
+    if message is None:
+      return http_message
     rem_length = max_length
     iss = isinstance(message, socket.socket)
     if not iss:
@@ -718,56 +720,63 @@ class HTTPMessage():
         body_pos += 2
         break
       if not iss or rem_length <= 0:
-        return False
+        return http_message
       try:
         bloc = message.recv(min(rem_length, 1048576))
         if not bloc:
-          return False
+          return http_message
       except:
-        return False
+        return http_message
       rem_length -= len(bloc)
       msg = msg + bloc
-    if not self._read_headers(msg[:body_pos].decode('ISO-8859-1')):
-      return False
-    if self.code in ('204', '304'):
-      self.body = b''
-      return True
+    if not cls._read_headers(msg[:body_pos].decode('ISO-8859-1'), http_message):
+      return http_message.clear()
+    if http_message.code in ('100', '101', '204', '304'):
+      http_message.body = b''
+      return http_message
     if not body:
-      self.body = msg[body_pos:]
-      return True
-    if self.header('Transfer-Encoding', '').lower() != 'chunked':
+      http_message.body = msg[body_pos:]
+      return http_message
+    body_len = 0
+    if http_message.header('Transfer-Encoding', '').lower() != 'chunked':
       try:
-        body_len = int(self.header('Content-Length'))
+        body_len = int(http_message.header('Content-Length', '0'))
       except:
-        return False
+        return http_message.clear()
+    if http_message.header('Expect', '').lower() == '100-continue' and iss:
+      if body_pos + body_len - len(msg) <= rem_length:
+        try:
+          message.sendall('HTTP/1.1 100 Continue\r\n\r\n'.encode('ISO-8859-1'))
+        except:
+          return http_message.clear()
+      else:
+        try:
+          message.sendall(('HTTP/1.1 413 Payload too large\r\nContent-Length: 0\r\nDate: %s\r\nCache-Control: no-cache, no-store, must-revalidate\r\n\r\n' % email.utils.formatdate(time.time(), usegmt=True)).encode('ISO-8859-1'))
+        except:
+          pass
+        return http_message.clear()
+    if http_message.header('Transfer-Encoding', '').lower() != 'chunked':
       if body_pos + body_len - len(msg) > rem_length:
-        return False
-    if self.header('Expect', '').lower() == '100-continue' and iss:
-      try:
-        message.sendall('HTTP/1.1 100 Continue\r\n\r\n'.encode('ISO-8859-1'))
-      except:
-        return False
-    if self.header('Transfer-Encoding', '').lower() != 'chunked':
+        return http_message.clear()
       if len(msg) < body_pos + body_len:
         if not iss:
-          return False
+          return http_message.clear()
         bbuf = BytesIO()
         body_len -= bbuf.write(msg[body_pos:])
         while body_len:
           try:
             bw = bbuf.write(message.recv(min(body_len, 1048576)))
             if not bw:
-              return False
+              return http_message.clear()
             body_len -= bw
           except:
-            return False
-        self.body = bbuf.getvalue()
+            return http_message.clear()
+        http_message.body = bbuf.getvalue()
       else:
-        self.body = msg[body_pos:body_pos+body_len]
+        http_message.body = msg[body_pos:body_pos+body_len]
     else:
       bbuf = BytesIO()
       buff = msg[body_pos:]
-      chunk_len = -1
       while True:
         chunk_pos = -1
         while chunk_pos < 0:
@@ -781,13 +790,13 @@ class HTTPMessage():
             chunk_pos += 1
             break
           if not iss or rem_length <= 0:
-            return False
+            return http_message.clear()
           try:
             bloc = message.recv(min(rem_length, 1048576))
             if not bloc:
-              return False
+              return http_message.clear()
           except:
-            return False
+            return http_message.clear()
           rem_length -= len(bloc)
           buff = buff + bloc
         try:
@@ -795,41 +804,62 @@ class HTTPMessage():
           if not chunk_len:
             break
         except:
-          return False
+          return http_message.clear()
         if chunk_pos + chunk_len - len(buff) > rem_length:
-          return False
+          return http_message.clear()
         if len(buff) < chunk_pos + chunk_len:
           if not iss:
-            return False
+            return http_message.clear()
           chunk_len -= bbuf.write(buff[chunk_pos:])
           while chunk_len:
             try:
               bw = bbuf.write(message.recv(min(chunk_len, 1048576)))
               if not bw:
-                return False
+                return http_message.clear()
               chunk_len -= bw
             except:
-              return False
+              return http_message.clear()
             rem_length -= bw
           buff = b''
         else:
           bbuf.write(buff[chunk_pos:chunk_pos+chunk_len])
           buff = buff[chunk_pos+chunk_len:]
-      self.body = bbuf.getvalue()
-      self.headers['Content-Length'.upper()] = len(self.body)
+      http_message.body = bbuf.getvalue()
       buff = b'\r\n' + buff
       while not (b'\r\n\r\n' in buff or b'\n\n' in buff):
         if not iss or rem_length <= 0:
-          return False
+          return http_message.clear()
         try:
           bloc = message.recv(min(rem_length, 1048576))
           if not bloc:
-            return False
+            return http_message.clear()
         except:
-          return False
+          return http_message.clear()
         rem_length -= len(bloc)
         buff = buff + bloc
-    return True
+    if body:
+      try:
+        hce = http_message.header('Content-encoding', '')
+        if http_message.body and hce:
+          for ce in hce.replace(' ', '').lower().split(',')[::-1]:
+            if not ce or ce == 'identity':
+              pass
+            elif ce == 'deflate':
+              http_message.body = zlib.decompress(http_message.body)
+            elif ce == 'gzip':
+              http_message.body = gzip.decompress(http_message.body)
+            else:
+              raise
+        if decode:
+          http_message.body = http_message.body.decode(decode)
+      except:
+        if http_message.method is not None and iss:
+          try:
+            message.sendall(('HTTP/1.1 415 Unsupported media type\r\nContent-Length: 0\r\nDate: %s\r\nCache-Control: no-cache, no-store, must-revalidate\r\n\r\n' % email.utils.formatdate(time.time(), usegmt=True)).encode('ISO-8859-1'))
+          except:
+            pass
+        return http_message.clear()
+    return http_message
 
 
 class HTTPRequest():
@@ -843,34 +873,26 @@ class HTTPRequest():
     '\r\n'
 
   def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, pconnection=None):
-    if not method:
+    if method is None:
       method = 'GET' if data is None else 'POST'
     redir = 0
     retry = False
-    code = '0'
-    headers = {} if headers is None else {**headers}
     try:
-      for k in list(headers.keys()):
-        if not headers[k] or k.lower() == 'content-length':
-          del headers[k]
-      if not 'accept-encoding' in (h.lower() for h in headers):
+      headers = {} if headers is None else {k: v for k, v in headers.items() if v and not k.lower() in ('content-length', 'connection')}
+      if not 'accept-encoding' in (k.lower() for k in headers):
         headers['Accept-Encoding'] = 'identity, deflate, gzip'
+      if data is not None:
+        if not 'chunked' in (v.lower() for k, v in headers.items() if k.lower() == 'transfer-encoding'):
+          headers['Content-Length'] = str(len(data))
     except:
       return HTTPMessage()
-    if not pconnection:
+    if pconnection is None:
       pconnection = [None]
       headers['Connection'] = 'close'
     else:
       headers['Connection'] = 'keep-alive'
-    if data is not None:
-      try:
-        if not 'chunked' in (v.lower() for k, v in headers.items() if k.lower() == 'transfer-encoding'):
-          headers['Content-Length'] = str(len(data))
-      except:
-        return HTTPMessage()
     while True:
       try:
-        resp = None
         url_p = urllib.parse.urlparse(url)
         if pconnection[0] is None:
           if url_p.scheme.lower() == 'http':
@@ -912,9 +934,10 @@ class HTTPRequest():
             pass
           pconnection[0] = None
           url = resp.header('location')
-          resp = None
           if url:
             redir += 1
+            if redir > 5:
+              raise
             if code == '303':
               if method.upper() != 'HEAD':
                 method = 'GET'
@@ -924,8 +947,6 @@ class HTTPRequest():
                   del headers[k]
           else:
             raise
-          if redir > 5:
-            raise
         else:
           break
       except:
@@ -934,15 +955,13 @@ class HTTPRequest():
         except:
           pass
         pconnection[0] = None
-        return resp or HTTPMessage()
+        return HTTPMessage()
     if headers['Connection'] == 'close' or resp.header('Connection', '').lower() == 'close' or ((resp.version or '').upper() != 'HTTP/1.1' and resp.header('Connection', '').lower() != 'keep-alive'):
       try:
         pconnection[0].close()
       except:
         pass
       pconnection[0] = None
-    if code[:2] != '20' and code != '304':
-      resp = None
     return resp
 
 
@@ -4009,7 +4028,7 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
     pass
 
 
-class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
+class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
 
   def handle(self):
     def _send_err(e):
@@ -4019,7 +4038,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       '%s' \
-      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True),       'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
+      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True), 'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
       try:
         self.request.sendall(resp_e.encode('ISO-8859-1'))
         if e != 501:
@@ -4138,13 +4157,6 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
           except:
             self.server.Interface.log(2, 'rerror', req.method, req.path)
         elif req.method in ('GET', 'HEAD'):
-          resp_307 = 'HTTP/1.1 307 Temporary Redirect\r\n' \
-          'Content-Length: 0\r\n' \
-          'Location: GPXTweaker.html\r\n' \
-          'Date: ' + email.utils.formatdate(time.time(), usegmt=True) + '\r\n' \
-          'Server: GPXTweaker\r\n' \
-          'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
-          '\r\n'
           if req.path.lower() == '/GPXTweaker.html'.lower():
             self.server.Interface.SLock.acquire()
             if not self.server.Interface.HTML:
@@ -4179,7 +4191,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             _send_resp('text/html; charset=utf-8')
           elif req.path.lower()[:13] == '/tiles/switch':
-            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+            if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
             self.server.Interface.TLock.acquire()
@@ -4254,7 +4266,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             else:
               _send_err_nf()
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
-            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+            if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
@@ -4273,7 +4285,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               continue
             _send_resp_nc()
           elif req.path.lower()[:28] == '/itinerariesproviders/switch' :
-            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+            if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
@@ -4328,7 +4340,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             except:
               _send_err_fail()
           elif req.path.lower() == '/media/gps_ar':
-            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+            if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             try:
@@ -4340,7 +4352,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             except:
               _send_err_fail()
           elif req.path.lower() == '/media/uri_dt':
-            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+            if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             try:
@@ -4410,7 +4422,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
               except:
                 pass
           elif req.path.lower()[:7] == '/detach':
-            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+            if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             self.server.Interface.SLock.acquire()
@@ -4436,7 +4448,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             _send_resp('text/plain; charset=utf-8')
             self.server.Interface.SLock.release()
           elif req.path.lower()[:12] == '/incorporate' or req.path.lower()[:10] == '/integrate':
-            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+            if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             mode = 's' if req.path.lower()[:12] == '/incorporate' else ('ta' if req.path.lower()[:15] == '/integrateafter' else 'tb')
@@ -4474,7 +4486,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             _send_resp('application/json; charset=utf-8')
             self.server.Interface.SLock.release()
           elif req.path.lower()[:4] == '/new':
-            if req.method != 'GET' or req.header('If-Match') != self.server.Interface.SessionId:
+            if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
             self.server.Interface.SLock.acquire()
@@ -4524,7 +4536,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             _send_err_nf()
         elif req.method == 'POST':
           if req.path.lower()[:4] == '/ele':
-            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+            if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
             lpoints = req.body.splitlines()
@@ -4546,7 +4558,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             except:
               _send_err_fail()
           elif req.path.lower()[:5] == '/path':
-            if not req.header('If-Match') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+            if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
             lpoints = req.body.splitlines()
@@ -4591,7 +4603,7 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
             nosave = False
             if self.server.Interface.HTML and '?' in req.path:
               nosave = req.path.split('?')[1].lower() == 'save=no'
-            if self.server.Interface.HTML and req.header('If-Match') == self.server.Interface.SessionId:
+            if self.server.Interface.HTML and req.header('If-Match', '') == self.server.Interface.SessionId:
               self.server.Interface.PSessionId = self.server.Interface.SessionId
               del self.server.Interface.Track.OTrack
               self.server.Interface.Track.OTrack = self.server.Interface.Track.STrack
@@ -4600,10 +4612,10 @@ class GPXTweakerRequestHandler(socketserver.StreamRequestHandler):
                 self.server.Interface.TrackInd = int(req.body.split('=')[0][5:-4].rstrip('c'))
                 self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               if not nosave:
-                if req.header('If-Match') in (self.server.Interface.PSessionId, self.server.Interface.SessionId):
+                if req.header('If-Match', '') in (self.server.Interface.PSessionId, self.server.Interface.SessionId):
                   uri_suf = '.gpx'
                 else:
-                  uri_suf = ' - ' + req.header('If-Match') + '.gpx'
+                  uri_suf = ' - ' + req.header('If-Match', '') + '.gpx'
                 uri = self.server.Interface.Uri.rsplit('.', 1)[0] + uri_suf
               else:
                 uri_suf = None
