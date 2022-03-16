@@ -4845,6 +4845,7 @@ class GPXTweakerWebInterfaceServer():
   '      var iset = -1;\r\n' \
   '      var dots_visible = false;\r\n' \
   '      var scrollmode = mode=="map"?0:2;\r\n' \
+  '      var scrollmode_ex = scrollmode;\r\n' \
   '      var focused = "";\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
@@ -6226,16 +6227,16 @@ class GPXTweakerWebInterfaceServer():
   '        </tr>\r\n' \
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
-  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
+  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;"  oncontextmenu="if (event.target.id == \'gbarc\') {event.stopPropagation();event.preventDefault();}">\r\n' \
   '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
   '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
   '      </div>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event, this)">\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '      </canvas>\r\n' \
-  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event)">\r\n' \
   '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '      </svg> \r\n' \
   '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;" pointer-events="none">\r\n' \
@@ -6364,6 +6365,9 @@ class GPXTweakerWebInterfaceServer():
   '      svg[id^=waydot] {\r\n' \
   '        stroke:red;\r\n' \
   '        fill:red;\r\n' \
+  '      }\r\n' \
+  '      svg[id^=dot] rect, svg[id^=waydot] circle {\r\n' \
+  '        pointer-events:none;\r\n' \
   '      }\r\n' \
   '      svg[id^=track] {\r\n' \
   '        stroke:red;\r\n' \
@@ -6589,20 +6593,6 @@ class GPXTweakerWebInterfaceServer():
   '        let o = "3.5";\r\n' \
   '        if (pt.id.substring(0, 3) == "way") {o = "4";}\r\n' \
   '        return [wmvalue_to_prop(wm[0] - htopx, o), wmvalue_to_prop(htopy - wm[1], o)];\r\n' \
-  '      }\r\n' \
-  '      function dpixels_to_point(dx, dy) {\r\n' \
-  '        if (focused.indexOf("point") < 0) {return;}\r\n' \
-  '        let lat = parseFloat(document.getElementById(focused + "lat").value);\r\n' \
-  '        let lon = parseFloat(document.getElementById(focused + "lon").value);\r\n' \
-  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '        wm[0] += dx * tscale / zoom;\r\n' \
-  '        wm[0] = Math.max(Math.min(wm[0], vmaxx - 1), vminx + 1);\r\n' \
-  '        wm[1] -= dy * tscale / zoom;\r\n' \
-  '        wm[1] = Math.max(Math.min(wm[1], vmaxy - 1), vminy + 1);\r\n' \
-  '        [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
-  '        document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
-  '        document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
-  '        point_edit(false, false, false, true);\r\n' \
   '      }\r\n' \
   '      function rebase_track(x, y, track, exact=false, batch=false) {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
@@ -8439,7 +8429,7 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.stroke();\r\n' \
   '        graph_point();\r\n' \
   '      }\r\n' \
-  '      function graph_point(dx) {\r\n' \
+  '      function graph_point(bx) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
   '        if (graph.style.display == "none") {return;}\r\n' \
   '        let graphc = document.getElementById("graphc");\r\n' \
@@ -8456,7 +8446,7 @@ class GPXTweakerWebInterfaceServer():
   '        graphpx.innerHTML = "";\r\n' \
   '        graphpy.innerHTML = "";\r\n' \
   '        if (graph_ip.length < 2) {return;}\r\n' \
-  '        if (dx == null) {\r\n' \
+  '        if (bx == null) {\r\n' \
   '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
   '          let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
   '          if (! segf.firstElementChild.checked) {return;}\r\n' \
@@ -8548,7 +8538,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          let x = Math.max(Math.min(parseFloat(gbarc.style.left) + 1 + dx, xr), xl);\r\n' \
+  '          let x = Math.max(Math.min(bx + 1, xr), xl);\r\n' \
   '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
   '          gbarc.style.display = "";\r\n' \
   '          let ind1 = 0;\r\n' \
@@ -8565,12 +8555,12 @@ class GPXTweakerWebInterfaceServer():
   '          if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
   '            let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
   '            element_click(null, pt);\r\n' \
-  '            if (scrollmode > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode == 2);}\r\n' \
   '          } else {\r\n' \
   '            gbar.style.display = "";\r\n' \
   '            graphpx.innerHTML = gpx;\r\n' \
   '            graphpy.innerHTML = gpy;\r\n' \
   '          }\r\n' \
+  '          if (scrollmode_ex > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode_ex == 2);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function error_pcb() {\r\n' \
@@ -8819,6 +8809,30 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
+  '      function track_change(e) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        let elt = e.target;\r\n' \
+  '        if (! elt) {return;}\r\n' \
+  '        let eid = elt.id.match(/(^.*[0-9]+)(.*)$/);\r\n' \
+  '        if (! eid) {return;}\r\n' \
+  '        switch (eid[2]) {\r\n' \
+  '          case "":\r\n' \
+  '            if (eid[1].substring(0, 7) == "segment") {segment_checkbox(elt);} else {point_checkbox(elt);}\r\n' \
+  '            break\r\n' \
+  '          case "lat":\r\n' \
+  '          case "lon":\r\n' \
+  '            point_edit_oc(eid[1], true, true);\r\n' \
+  '            break\r\n' \
+  '          case "ele":\r\n' \
+  '          case "alt":\r\n' \
+  '          case "time":\r\n' \
+  '            point_edit_oc(eid[1], true, false);\r\n' \
+  '            break\r\n' \
+  '          case "name":\r\n' \
+  '            point_edit_oc(eid[1], false, false);\r\n' \
+  '            break\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
   '      var xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
@@ -8860,18 +8874,18 @@ class GPXTweakerWebInterfaceServer():
   '              </div>\r\n' \
   '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
   '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
-  '                <form id="waypointsform" autocomplete="off" onsubmit="return(false);">\r\n                  #<#WAYPOINTS#>#\r\n' \
+  '                <form id="waypointsform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);">\r\n                  #<#WAYPOINTS#>#\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;height:88%;font-size:80%">\r\n' \
   '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
-  '                <form id="pointsform" autocomplete="off" onsubmit="return(false);">\r\n                  #<#POINTS#>#\r\n' \
+  '                <form id="pointsform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);">\r\n                  #<#POINTS#>#\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event, this)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
@@ -8881,7 +8895,7 @@ class GPXTweakerWebInterfaceServer():
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
   '      var hand_m = false;\r\n' \
-  '      function mouse_down(e, elt) {\r\n' \
+  '      function mouse_down(e) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        mousex = e.pageX;\r\n' \
   '        mousey = e.pageY;\r\n' \
@@ -8889,8 +8903,10 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
-  '        document.onclick = mouse_click;\r\n' \
-  '        document.oncontextmenu = mouse_click;\r\n' \
+  '        scrollmode_ex = scrollmode;\r\n' \
+  '        scrollmode = 0;\r\n' \
+  '        let elt = e.target;\r\n' \
+  '        if (! elt) {return;}\r\n' \
   '        if (e.button == 0) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
   '            hand = elt;\r\n' \
@@ -8907,12 +8923,12 @@ class GPXTweakerWebInterfaceServer():
   '            hand.style.cursor = "crosshair";\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
   '            hand = elt;\r\n' \
-  '            graph_point(0);\r\n' \
+  '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '          } else if (elt.id == "graphc") {\r\n' \
   '            hand = document.getElementById("gbarc");\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
-  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX - parseFloat(hand.style.left));\r\n' \
+  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
@@ -8932,13 +8948,14 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function mouse_up(e, elt) {\r\n' \
+  '      function mouse_up(e) {\r\n' \
   '        mousex = null;\r\n' \
   '        mousey = null;\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = null;\r\n' \
   '        document.onmouseup = null;\r\n' \
+  '        scrollmode = scrollmode_ex;\r\n' \
   '        viewpane.style.cursor = "";\r\n' \
   '        if (hand) {\r\n' \
   '          if (hand.id.indexOf("dot") >= 0) {\r\n' \
@@ -8972,7 +8989,9 @@ class GPXTweakerWebInterfaceServer():
   '          hand = null;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (elt && e.button == 2) {\r\n' \
+  '        let elt = e.target;\r\n' \
+  '        if (! elt) {return;}\r\n' \
+  '        if (e.button == 2) {\r\n' \
   '          if (elt.id.indexOf("dot") >= 0) {\r\n' \
   '            let cb = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
   '            cb.checked = ! cb.checked;\r\n' \
@@ -8986,16 +9005,14 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function mouse_click(e, elt) {\r\n' \
+  '      function mouse_click(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
-  '        document.onclick = null;\r\n' \
-  '        document.oncontextmenu = null;\r\n' \
-  '        if (elt) {\r\n' \
-  '          if (elt.id.substring(0, 4) == "path") {\r\n' \
-  '            let seg = document.getElementById(elt.id.replace("path", "segment") + "desc");\r\n' \
-  '            element_click(null, seg);\r\n' \
-  '          }\r\n' \
+  '        let elt = e.target;\r\n' \
+  '        if (! elt) {return;}\r\n' \
+  '        if (elt.id.substring(0, 4) == "path") {\r\n' \
+  '          let seg = document.getElementById(elt.id.replace("path", "segment") + "desc");\r\n' \
+  '          element_click(null, seg);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
@@ -9006,13 +9023,21 @@ class GPXTweakerWebInterfaceServer():
   '          mousey = e.pageY;\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            graph_point(dx);\r\n' \
+  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '          } else if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
   '            if (hand.id == "view") {\r\n' \
   '              scroll_dview(dx, dy);\r\n' \
   '            } else if (hand.id.indexOf("dot") >= 0) {\r\n' \
   '              hand_m = true;\r\n' \
-  '              dpixels_to_point(dx, dy);\r\n' \
+  '              let x = e.pageX - p.offsetLeft;\r\n' \
+  '              let y = e.pageY - p.offsetTop;\r\n' \
+  '              let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
+  '              wm[0] = Math.max(Math.min(wm[0], vmaxx - 1), vminx + 1);\r\n' \
+  '              wm[1] = Math.max(Math.min(wm[1], vmaxy - 1), vminy + 1);\r\n' \
+  '              let [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
+  '              document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
+  '              document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
+  '              point_edit(false, false, false, true);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -9118,60 +9143,60 @@ class GPXTweakerWebInterfaceServer():
   '      var htopy = ##HTOPY##;'
   HTML_WAYPOINT_TEMPLATE = \
   '<div id="waypoint%scont">\r\n' \
-  '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onchange="point_checkbox(this)">\r\n' \
+  '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
   '                      <label for="waypoint%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), true, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), false, false)"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_WAYPOINT_TEMPLATE = HTML_WAYPOINT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_POINT_TEMPLATE = \
   '<div id="point%scont">\r\n' \
-  '                    <input type="checkbox" id="point%s" checked name="point%s" value="initial" onchange="point_checkbox(this)" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
+  '                    <input type="checkbox" id="point%s" checked name="point%s" value="initial" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
   '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" ><br>\r\n' \
   '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f" onchange="point_edit_oc(this.id.slice(0, -3), true, true)"><br>\r\n' \
+  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
   '                      <label for="point%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="point%salt">{jalt}</label>\r\n' \
-  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s" onchange="point_edit_oc(this.id.slice(0, -3), true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" value="%s" onchange="point_edit_oc(this.id.slice(0, -4), true, false)"><br>\r\n' \
+  '                      <input type="text" id="point%stime" name="point%stime" value="%s"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_SEGMENT_TEMPLATE = \
   '<div id="segment%scont">\r\n' \
-  '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment" onchange="segment_checkbox(this)">\r\n' \
+  '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment">\r\n' \
   '                    <label for="segment%s" id="segment%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
   '                    <br>'
   HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_PATH_TEMPLATE = \
   '\r\n' \
   '              <svg id="track%s" viewbox="##VIEWBOX##" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '                <path id="path%s" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)" onclick="mouse_click(event, this)" d="%s"/>\r\n' \
+  '                <path id="path%s" d="%s"/>\r\n' \
   '                <text dy="0.25em">\r\n' \
   '                  <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
   '                </text>\r\n' \
   '              </svg>'
   HTML_WAYDOT_TEMPLATE = \
-  '              <svg id="waydot%s" width="8" height="8" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '              <svg id="waydot%s" width="8" height="8" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);">\r\n' \
   '                <circle cx="4" cy="4" r="3" />\r\n' \
   '              </svg>\r\n'
   HTML_DOT_TEMPLATE = \
-  '              <svg id="dot%s" width="7" height="7" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;" onmousedown="mouse_down(event, this)" onmouseup="mouse_up(event, this)">\r\n' \
+  '              <svg id="dot%s" width="7" height="7" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;">\r\n' \
   '                <rect x="1" y="1" width="5" height="5"/>\r\n' \
   '              </svg>\r\n'
   HTML_3D_STYLES_TEMPLATE = \
@@ -11753,7 +11778,6 @@ class GPXTweakerWebInterfaceServer():
   '        media_div = document.createElement("div");\r\n' \
   '        media_div.id = "geomedia";\r\n' \
   '        media_div.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
-  '        media_div.setAttribute("onmouseup", "event.stopPropagation();event.preventDefault();");\r\n' \
   '        media_div.setAttribute("onclick", "event.stopPropagation();event.preventDefault();enlarge_media(event.target.id.substring(6));");\r\n' \
   '        media_div.setAttribute("oncontextmenu", "event.stopPropagation();event.preventDefault();");\r\n' \
   '        let nm = media_corners.length / 4;\r\n' \
@@ -12044,6 +12068,25 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
+  '      function track_change(e) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        let elt = e.target;\r\n' \
+  '        if (! elt) {return;}\r\n' \
+  '        let fld = elt.id.match(/[0-9]+(.*)$/);\r\n' \
+  '        if (! fld) {return;}\r\n' \
+  '        switch (fld[1]) {\r\n' \
+  '          case "visible":\r\n' \
+  '            track_checkbox(elt);\r\n' \
+  '            break\r\n' \
+  '          case "color":\r\n' \
+  '            track_color(elt);\r\n' \
+  '            break\r\n' \
+  '          case "name":\r\n' \
+  '          case "file":\r\n' \
+  '            track_save(elt);\r\n' \
+  '            break\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      var xhr = new XMLHttpRequest();\r\n' \
   '      var xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
@@ -12083,13 +12126,13 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
   '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%">\r\n' \
   '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
-  '                <form id="tracksform" autocomplete="off" onsubmit="return(false);">\r\n                  #<#TRACKS#>#\r\n' \
+  '                <form id="tracksform" autocomplete="off" onchange="track_change(event)" onsubmit="return(false);">\r\n                  #<#TRACKS#>#\r\n' \
   '                </form>\r\n' \
   '              </div>\r\n' \
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event)" onmouseup="mouse_up(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
@@ -12110,6 +12153,9 @@ class GPXTweakerWebInterfaceServer():
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
+  '        document.onmouseup = mouse_up;\r\n' \
+  '        scrollmode_ex = scrollmode;\r\n' \
+  '        scrollmode = 0;\r\n' \
   '        if (e.target && e.button == 0) {\r\n' \
   '          if (e.target.id == "view") {\r\n' \
   '            hand = e.target;\r\n' \
@@ -12125,6 +12171,8 @@ class GPXTweakerWebInterfaceServer():
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = null;\r\n' \
+  '        document.onmouseup = null;\r\n' \
+  '        scrollmode = scrollmode_ex;\r\n' \
   '        if (hand) {\r\n' \
   '          hand = null;\r\n' \
   '          viewpane.style.cursor = "";\r\n' \
@@ -12318,14 +12366,14 @@ class GPXTweakerWebInterfaceServer():
   '                <label for="folder%s">%s</label><br>\r\n'
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
-  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onchange="track_checkbox(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
+  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
   '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label>\r\n' \
-  '                    <input type="color" id="track%scolor" value="%s" onchange="track_color(this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
+  '                    <input type="color" id="track%scolor" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '                    <span id="track%sfocus">\r\n' \
   '                      <label for="track%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="track%sname" name="track%sname" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <input type="text" id="track%sname" name="track%sname" value="%s"><br>\r\n' \
   '                      <label for="track%sfile">{jfile}</label>\r\n' \
-  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s" onchange="track_save(this)"><br>\r\n' \
+  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s"><br>\r\n' \
   '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
   '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
   '                      <label for="track%speriod">{jperiod}</label>\r\n' \
