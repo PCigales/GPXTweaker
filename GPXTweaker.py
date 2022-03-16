@@ -6236,8 +6236,8 @@ class GPXTweakerWebInterfaceServer():
   '      </div>\r\n' \
   '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '      </canvas>\r\n' \
-  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize" onmousedown="mouse_down(event)">\r\n' \
-  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize;" onmousedown="mouse_down(event)">\r\n' \
+  '        <line vector-effect="non-scaling-stroke" pointer-events="none" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '      </svg> \r\n' \
   '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;" pointer-events="none">\r\n' \
   '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
