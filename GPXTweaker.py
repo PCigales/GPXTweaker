@@ -4518,6 +4518,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
           elif req.path.lower()[:5] == '/edit':
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTML:
+                _send_err_bad()
+                continue
               self.server.Interface.TrackInd = int(req.path.split('?')[1])
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               self.server.Interface.HTML = ''
@@ -4819,6 +4822,17 @@ class GPXTweakerWebInterfaceServer():
   '      div[id=handle]>img {\r\n' \
   '        filter:var(--filter);\r\n' \
   '        pointer-events:none;\r\n' \
+  '      }\r\n' \
+  '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
+  '        img::before{\r\n' \
+  '          content:"";\r\n' \
+  '          position:absolute;\r\n' \
+  '          left:1px;\r\n' \
+  '          top:1px;\r\n' \
+  '          background:rgb(40,45,50);\r\n' \
+  '          width:calc(100% - 2px);\r\n' \
+  '          height:calc(100% - 2px);\r\n' \
+  '        }\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
@@ -5410,7 +5424,7 @@ class GPXTweakerWebInterfaceServer():
   '        tile.style.width = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
   '        tile.style.height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
   '        tile.style.left = "calc(var(--zoom) * " + ((ttopx - htopx) / tscale + col * twidth).toString() + "px)";\r\n' \
-  '        tile.style.top = "calc(var(--zoom) * " + ((htopy - ttopy) / tscale + row * theight).toString() + "px";\r\n' \
+  '        tile.style.top = "calc(var(--zoom) * " + ((htopy - ttopy) / tscale + row * theight).toString() + "px)";\r\n' \
   '        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
@@ -8885,7 +8899,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
@@ -11834,7 +11848,7 @@ class GPXTweakerWebInterfaceServer():
   '        [yt, yb] = [2 * yt - yb, 2 * yb - yt];\r\n' \
   '        if (media_ex_hold) {\r\n' \
   '          for (const m in media_ex_hold) {\r\n' \
-  '            if (md[m] || (media_isvid[m] && media_corners[4 * m] < xr && media_corners[4 * m + 2] > xl && media_corners[4 * m + 1] < yb && media_corners[4 * m + 3] > yt)) {\r\n' \
+  '            if (md[m] || (media_corners[4 * m] < xr && media_corners[4 * m + 2] > xl && media_corners[4 * m + 1] < yb && media_corners[4 * m + 3] > yt)) {\r\n' \
   '              let med = media_ex_hold[m];\r\n' \
   '              if (media_corners_updated) {\r\n' \
   '                med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
@@ -12132,7 +12146,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
