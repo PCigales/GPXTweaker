@@ -4110,7 +4110,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Content-Length: %d\r\n' \
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
-      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      'Cache-Control: no-cache, must-revalidate\r\n' \
       'Access-Control-Allow-Origin: %s\r\n' \
       'Accept-Ranges: bytes\r\n' \
       'Content-Range: bytes %d-%d/%d\r\n' \
