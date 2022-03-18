@@ -4061,10 +4061,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Content-Length: ##len##\r\n' \
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
-      'Cache-Control: no-cache%s, must-revalidate\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       '%s' \
       'Access-Control-Allow-Origin: %s\r\n' \
-      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), '' if s else ', no-store', 'Accept-Ranges: bytes\r\n' if s else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s != None else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
       try:
         if req.method == 'GET' or req.method == 'POST':
           self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -4110,7 +4110,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Content-Length: %d\r\n' \
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
-      'Cache-Control: no-cache, must-revalidate\r\n' \
+      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       'Access-Control-Allow-Origin: %s\r\n' \
       'Accept-Ranges: bytes\r\n' \
       'Content-Range: bytes %d-%d/%d\r\n' \
@@ -4256,7 +4256,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             except:
               pass
             if resp_body:
-              _send_resp(self.server.Interface.Map.TilesInfos.get('format'), len(resp_body))
+              _send_resp(self.server.Interface.Map.TilesInfos.get('format'))
             else:
               _send_err_nf()
           elif req.path.lower()[:8] == '/map/map':
@@ -10970,9 +10970,10 @@ class GPXTweakerWebInterfaceServer():
   '      div[id^=media] img {\r\n' \
   '        image-orientation:from-image;\r\n' \
   '        cursor:nesw-resize;\r\n' \
+  '        font-size:0;\r\n' \
   '      }\r\n' \
   '      div[id^=media] *:not(:last-child) {\r\n' \
-  '        margin-right:1em;\r\n' \
+  '        margin-right:14px;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
@@ -11763,6 +11764,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function error_mcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
+  '        if (document.getElementById("mediapreview").style.display != "none") {switch_mediapreview();}\r\n' \
   '        return false;\r\n' \
   '      }\r\n' \
   '      function load_mcb(t) {\r\n' \
@@ -11976,7 +11978,6 @@ class GPXTweakerWebInterfaceServer():
   '            med.setAttribute("onclick", "photo_fs(this)");\r\n' \
   '          }\r\n' \
   '          med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
-  '          med.alt = "";\r\n' \
   '          med.title = media_uri_dt[m];\r\n' \
   '          mview.appendChild(med);\r\n' \
   '        }\r\n' \
