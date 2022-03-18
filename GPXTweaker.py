@@ -4061,10 +4061,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Content-Length: ##len##\r\n' \
       'Date: %s\r\n' \
       'Server: GPXTweaker\r\n' \
-      'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
+      'Cache-Control: no-cache%s, must-revalidate\r\n' \
       '%s' \
       'Access-Control-Allow-Origin: %s\r\n' \
-      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), '' if s else ', no-store', 'Accept-Ranges: bytes\r\n' if s else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
       try:
         if req.method == 'GET' or req.method == 'POST':
           self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -4256,7 +4256,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             except:
               pass
             if resp_body:
-              _send_resp(self.server.Interface.Map.TilesInfos.get('format'))
+              _send_resp(self.server.Interface.Map.TilesInfos.get('format'), len(resp_body))
             else:
               _send_err_nf()
           elif req.path.lower()[:8] == '/map/map':
@@ -4824,7 +4824,7 @@ class GPXTweakerWebInterfaceServer():
   '        pointer-events:none;\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
-  '        img::before{\r\n' \
+  '        div[id=handle]>img::before{\r\n' \
   '          content:"";\r\n' \
   '          position:absolute;\r\n' \
   '          left:1px;\r\n' \
@@ -6166,7 +6166,7 @@ class GPXTweakerWebInterfaceServer():
   '              <form id="mtform" autocomplete="off" onsubmit="return(false);" onchange="update_media();">\r\n' \
   '                <label for="mthumb" style="left:1.5em;width:8em;">{#jpixels#}</label>\r\n' \
   '                <span id="mtsize" style="left:4.5em;">##THUMBSIZE##</span>\r\n' \
-  '                <input type="range" id="mthumb" name="mthumb" min="8" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <input type="range" id="mthumb" name="mthumb" min="16" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_FILTERPANEL_TEMPLATE = \
@@ -10921,6 +10921,17 @@ class GPXTweakerWebInterfaceServer():
   '        outline-offset:-3px;\r\n' \
   '        outline:outset 3px lightgray;\r\n' \
   '      }\r\n' \
+  '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
+  '        div[id=geomedia]>img::before{\r\n' \
+  '          content:"";\r\n' \
+  '          position:absolute;\r\n' \
+  '          left:3px;\r\n' \
+  '          top:3px;\r\n' \
+  '          background:darkgray;\r\n' \
+  '          width:calc(100% - 6px);\r\n' \
+  '          height:calc(100% - 6px);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      div[id^=media] {\r\n' \
   '        width:100%;\r\n' \
   '        background:rgb(30,30,35);\r\n' \
@@ -12679,9 +12690,7 @@ class GPXTweakerWebInterfaceServer():
             self.MediaVideos = value
           elif field == 'size':
             try:
-              phs = int(value)
-              if phs >= 8 and phs <= 512:
-                self.MediaThumbSize = phs
+              self.MediaThumbSize = max(min(int(value), 512), 16)
             except:
               pass
           else:
