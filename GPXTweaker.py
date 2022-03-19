@@ -1029,7 +1029,6 @@ class TilesCache():
             self.GCondition.wait()
         tgen[0] = False
       try:
-        time.sleep(0.5)
         inf, tile = tgen[1](None, None, row, col).values()
         if tile is None:
           self.log(1, 'error', row, col)
