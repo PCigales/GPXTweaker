@@ -1085,23 +1085,19 @@ class TilesCache():
   def __getitem__(self, id_pos):
     try:
       rid, pos = id_pos
-      if len(pos) < 2:
-        pos = id_pos
-        rid = self.Id
+      row, col = pos
     except:
       return partial(self.WaitTile, None)
-    self.log(2, 'get', *pos)
+    self.log(2, 'get', row, col)
     ptile = self._getitem(rid, pos)
     if self.Preload:
-      self._getitem(rid, (pos[0] + 1, pos[1] + 1))
+      self._getitem(rid, (row + 1, col + 1))
     return partial(self.WaitTile, ptile)
 
   def __setitem__(self, id_pos, ptile):
     try:
       rid, pos = id_pos
-      if len(pos) < 2:
-        pos = id_pos
-        rid = self.Id
+      row, col = pos
     except:
       return
     with self.BLock:
