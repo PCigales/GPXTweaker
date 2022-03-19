@@ -998,7 +998,7 @@ class TilesCache():
     self.log = partial(log, 'tilescache')
     self.log(2, 'init', size, threads)
 
-  def _getitem(self, pos):
+  def _getitem(self, rid, pos):
     try:
       row, col = pos
     except:
@@ -1014,13 +1014,13 @@ class TilesCache():
       with self.GCondition:
         tgen = None
         while tgen is None:
-          with self.BLock:
-            if rid != self.Id or self.Closed:
-              ptile[0] = None
-              e.set()
+          if rid != self.Id or self.Closed:
+            ptile[0] = None
+            e.set()
+            with self.BLock:
               self.Buffer.pop((rid, pos), None)
-              self.log(2, 'cancel', row, col)
-              return
+            self.log(2, 'cancel', row, col)
+            return
           for g in self.Generators:
             if g[0]:
               tgen = g
@@ -1046,19 +1046,18 @@ class TilesCache():
             self.GCondition.notify()
         ptile[0] = tile
         e.set()
+    if self.Closed:
+      self.log(2, 'cancel', row, col)
+      return None
     with self.BLock:
-      rid = self.Id
-      if self.Closed:
-        self.log(2, 'cancel', row, col)
-        return None
       ptile = self.Buffer.pop((rid, pos), None)
       if ptile is not None:
-        self[pos] = ptile
+        self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
         e = threading.Event()
         ptile = [e]
-        self[pos] = ptile
+        self[(rid, pos)] = ptile
         self.log(2, 'add', row, col, len(self.Buffer))
     if e:
       t = threading.Thread(target=_retrieveitem, daemon=True)
@@ -1083,24 +1082,30 @@ class TilesCache():
     else:
       return tile
 
-  def __getitem__(self, pos):
+  def __getitem__(self, id_pos):
     try:
-      row, col = pos
+      rid, pos = id_pos
+      if len(pos) < 2:
+        pos = id_pos
+        rid = self.Id
     except:
       return partial(self.WaitTile, None)
-    self.log(2, 'get', row, col)
-    ptile = self._getitem(pos)
+    self.log(2, 'get', *pos)
+    ptile = self._getitem(rid, pos)
     if self.Preload:
-      self._getitem((row + 1, col + 1))
+      self._getitem(rid, (pos[0] + 1, pos[1] + 1))
     return partial(self.WaitTile, ptile)
 
-  def __setitem__(self, pos, ptile):
+  def __setitem__(self, id_pos, ptile):
     try:
-      row, col = pos
+      rid, pos = id_pos
+      if len(pos) < 2:
+        pos = id_pos
+        rid = self.Id
     except:
       return
     with self.BLock:
-      self.Buffer[(self.Id, pos)] = ptile
+      self.Buffer[(rid, pos)] = ptile
       if len(self.Buffer) > self.Size:
         del self.Buffer[next(iter(self.Buffer))]
         self.log(2, 'del')
@@ -4237,13 +4242,14 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
             try:
-              if req.path.lower()[12:].split('?')[-1].split(',') != [str(self.server.Interface.TilesSet), str(self.server.Interface.Map.TilesInfos['matrix'])]:
-                _send_err_fail()
-                continue
+              rid = self.server.Interface.Map.Tiles.Id
+              if self.server.Interface.TilesSet != self.server.Interface.Map.Tiles.Id[0] or req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
+                raise
               row, col = req.path.lower()[12:].split('.')[0].split('-')
-              resp_body = self.server.Interface.Map.Tiles[(int(row), int(col))](10)
+              resp_body = self.server.Interface.Map.Tiles[(rid, (int(row), int(col)))](10)
             except:
-              pass
+              _send_err_fail()
+              continue
             if resp_body:
               _send_resp(self.server.Interface.Map.TilesInfos.get('format'))
             else:
