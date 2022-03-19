@@ -1,5 +1,6 @@
 ﻿from GPXTweaker import *
 import random
+import time
 random.seed()
 
 p = os.path.expandvars(r'%TEMP%\test')
@@ -17,13 +18,13 @@ m.GetTileInfos(infos, matrix, lat, lon)
 print(infos)
 # exit()
 
-key = "e6rinywtnvhh4d549s69aw42"
-referer = 'https://mavisionneuse.ign.fr/carto.html'
-infos = WebMercatorMap.TSAlias('IGN_CARTES')
+key = "cartes"
+infos = WebMercatorMap.TSAlias('IGN_PLANV2')
 pconnection = [None]
-m.GetTileInfos(infos, matrix, None, None, key, referer, pconnection=pconnection)
+m.GetTileInfos(infos, matrix, None, None, key, pconnection=pconnection)
 print(infos)
-m.GetTileInfos(infos, matrix, lat, lon, key, referer, pconnection=pconnection)
+infos = WebMercatorMap.TSAlias('IGN_PLANV2')
+m.GetTileInfos(infos, matrix, lat, lon, key, pconnection=pconnection)
 print(infos)
 pconnection[0].close()
 # exit()
@@ -42,18 +43,19 @@ print(infos)
 print(len(tile))
 print(m.SaveTile(p, infos , tile))
 print(m.SaveTile(p, infos , tile, just_refresh=True))
+infos = WebMercatorMap.TSAlias('OSM')
 m.ReadTileInfos(p, infos, matrix, None, None)
 print(infos)
 m.ReadTileInfos(p, infos, matrix, lat, lon)
 print(infos)
-print(m.ReadKnownTile(p, infos, just_lookup=True))
+print(time.ctime(m.ReadKnownTile(p, infos, just_lookup=True)))
 tile = m.ReadTile(p, infos, matrix, lat, lon)
 print(infos)
 print(len(tile))
 # exit()
 
 infos = WebMercatorMap.TSAlias('OSM')
-g = m.TileGenerator(infos, matrix, local_pattern=p,  local_store=True)
+g = m.TileGenerator(infos, matrix, local_pattern=p, local_store=True)
 print(infos)
 print(g(lat, lon, just_box=True))
 Tile = g(lat, lon)
@@ -79,7 +81,6 @@ print(list(((len(t)) for c in tiles for t in c)))
 print(pr)
 # exit()
 
-import time
 t = time.time()
 infos = WebMercatorMap.TSAlias('OSM')
 progress = m.DownloadTiles(p, infos, matrix, lat - 0.01, lat +0.02, lon - 0.01, lon + 0.01, threads=50)
@@ -113,9 +114,9 @@ print(tiles)
 # exit()
 
 tiles=[]
-key = "e6rinywtnvhh4d549s69aw42"
-referer = 'https://mavisionneuse.ign.fr/carto.html'
-infos = WebMercatorMap.TSAlias('IGN_CARTES')
+key = "ortho"
+referer = ""
+infos = WebMercatorMap.TSAlias('IGN_PHOTOS')
 pr=m.RetrieveTiles(infos, matrix, lat, lat+0.16, lon, lon+0.22, key=key, referer=referer, memory_store=tiles, local_pattern=p, local_store=True, threads=4)
 print(infos)
 pr['finish_event'].wait()
@@ -129,9 +130,9 @@ f.close()
 print(time.time()-t)
 # exit()
 
-key = "e6rinywtnvhh4d549s69aw42"
-referer = 'https://mavisionneuse.ign.fr/carto.html'
-infos = WebMercatorMap.TSAlias('IGN_CARTES')
+key = "ortho"
+referer = ""
+infos = WebMercatorMap.TSAlias('IGN_PHOTOS')
 m.AssembleMap(infos, 16, lat - 0.01, lat +0.01, lon - 0.01, lon + 0.01, key=key, referer=referer, threads=4)
 print(m.MapInfos, m.MapResolution, len(m.Map))
 print(m.SaveMap(p + r'\map.jpg'))
@@ -139,9 +140,9 @@ print(m.LoadMap(p + r'\map.jpg'))
 print(m.MapInfos, m.MapResolution)
 # exit()
 
-key='choisirgeoportail'
+key='ortho'
 referer=''
-infos = WebMercatorMap.MSAlias('IGN_CARTES')
+infos = WebMercatorMap.MSAlias('IGN_PHOTOS')
 m.FetchMap(infos, 43.20403, 43.21191, 5.49404, 5.5217, 200, 400, dpi=90, key=key, referer=referer)
 print(m.MapInfos, m.MapResolution)
 print(m.SaveMap(p + r'\map.png'))
@@ -149,8 +150,8 @@ print(m.LoadMap(p + r'\map.png'))
 print(m.MapInfos, m.MapResolution)
 # exit()
 
-key='XXXX'
-referer='XXXX'
+key='altimetrie'
+referer=''
 e=WGS84Elevation()
 infos = WGS84Elevation.MSAlias('IGN_RGEALTI')
 e.FetchMap(infos, 43.20403, 43.21191, 5.49404, 5.5217, 1024, 1536, key=key, referer=referer)
@@ -173,8 +174,8 @@ print(e.RequestElevation(infos, points, key=key))
 print(infos)
 # exit()
 
-key='XXXX'
-referer='XXXX'
+key='altimetrie'
+referer=''
 e=WGS84Elevation()
 infos = WGS84Elevation.TSAlias('IGN_RGEALTI')
 e.AssembleMap(infos, 14, 43.20403, 43.21191, 5.49404, 5.5217, key=key, referer=referer, local_pattern=p)
@@ -189,30 +190,34 @@ e.LoadMap(p + r'\map_f.bil')
 e4 = e.WGS84toElevation(points)
 print('map', e4)
 infos = WGS84Elevation.ASAlias('IGN_ALTI')
+key='choisirgeoportail'
 e1 = e.RequestElevation(infos, points, key=key, referer=referer)
 print('as', e1)
 infos = WGS84Elevation.TSAlias('IGN_RGEALTI')
+key='altimetrie'
 e2=e.WGS84toElevation(points, infos, 14, key=key, referer=referer)
 print('tiles', e2)
-print(list(int(100000*(e1[i]-e2[i])/math.sqrt(e1[i]**2+e2[i]**2)) for i in range(5)))
-print(list(int(100000*(e1[i]-e3[i])/math.sqrt(e1[i]**2+e3[i]**2)) for i in range(5)))
-print(list(int(100000*(e1[i]-e4[i])/math.sqrt(e1[i]**2+e4[i]**2)) for i in range(5)))
+print(list(int(1000*(e1[i]-e2[i])/math.sqrt(e1[i]**2+e2[i]**2)) for i in range(5)))
+print(list(int(1000*(e1[i]-e3[i])/math.sqrt(e1[i]**2+e3[i]**2)) for i in range(5)))
+print(list(int(1000*(e1[i]-e4[i])/math.sqrt(e1[i]**2+e4[i]**2)) for i in range(5)))
 # exit()
 
 m = WebMercatorMap(30, 5)
 infos = WebMercatorMap.TSAlias('OSM')
-print(m.SetTilesProvider((0, matrix),infos, matrix, local_pattern=p, local_store=True))
+id = (0, matrix)
+print(m.SetTilesProvider(id, infos, matrix, local_pattern=p, local_store=True))
 ti=time.time()
 def t(r,c):
-  print(r, c, len(m.Tiles[(r, c)](8)), time.time() - ti)
+  time.sleep(0.5)
+  print(r, c, len(m.Tiles[id, (r, c)](8)), time.time() - ti)
 thr=[None] * 10
 for th in thr:
-  row, col = 24026 + random.randrange(3),33768 + random.randrange(3)
+  row, col = 24026 + random.randrange(3), 33768 + random.randrange(3)
   print(row, col)
   th=threading.Thread(target=t, args=(row, col))
   th.start()
 while threading.active_count() > 1:
-  print(list((e[0]['row'], e[0]['col']) for e in m.Tiles.Buffer))
+  print(list(e[1] for e in m.Tiles.Buffer.keys()))
   time.sleep(0.2)
   print(len(m.Tiles.Buffer))
 # exit()
