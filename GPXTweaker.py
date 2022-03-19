@@ -1,4 +1,4 @@
-# GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.9.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -1006,59 +1006,49 @@ class TilesCache():
     if self.Id is None or not self.Generators or self.Closed:
       self.log(2, 'cancel', row, col)
       return None
-    with self.BLock:
-      rid = self.Id
+    ptile = None
+    e = None
     def _retrieveitem():
       nonlocal ptile
       nonlocal e
       with self.GCondition:
-        if rid != self.Id:
-          ptile[0] = None
-          e.set()
-          self.log(2, 'cancel', row, col)
-          return
         tgen = None
         while tgen is None:
-          if self.Closed:
-            ptile[0] = None
-            e.set()
-            self.log(2, 'cancel', row, col)
-            return
+          with self.BLock:
+            if rid != self.Id or self.Closed:
+              ptile[0] = None
+              e.set()
+              self.Buffer.pop((rid, pos), None)
+              self.log(2, 'cancel', row, col)
+              return
           for g in self.Generators:
             if g[0]:
               tgen = g
               break
           if tgen is None:
             self.GCondition.wait()
-        if rid == self.Id:
-          tgen[0] = False
-      if rid == self.Id and not tgen[0]:
-        try:
-          inf, tile = tgen[1](None, None, row, col).values()
-          if inf != {**(self.Infos or {}), 'row': row, 'col': col}:
-            tgen[1](close_connection=True)
-            tile = None
-            self.log(2, 'cancel', row, col)
-          elif tile is None:
-            self.log(1, 'error', row, col)
-          else:
-            self.log(2, 'load', row, col)
-        except:
-          tile = None
+        tgen[0] = False
+      try:
+        time.sleep(0.5)
+        inf, tile = tgen[1](None, None, row, col).values()
+        if tile is None:
           self.log(1, 'error', row, col)
-        finally:
-          with self.GCondition:
+        else:
+          self.log(2, 'load', row, col)
+      except:
+        tile = None
+        self.log(1, 'error', row, col)
+      finally:
+        with self.GCondition:
+          if tgen[0]:
+            tgen[1](close_connection=True)
+          else:
             tgen[0] = True
             self.GCondition.notify()
-          ptile[0] = tile
-          e.set()
-      else:
-        ptile[0] = None
+        ptile[0] = tile
         e.set()
-        self.log(2, 'cancel', row, col)
-    ptile = None
-    e = None
     with self.BLock:
+      rid = self.Id
       if self.Closed:
         self.log(2, 'cancel', row, col)
         return None
@@ -1122,16 +1112,16 @@ class TilesCache():
     self.log(1, 'configure', *rid)
     pconnections = list([None] for i in range(self.Threads))
     with self.GCondition:
-      ind = 0
-      for g in self.Generators:
+      for ind, g in enumerate(self.Generators):
         try:
           if (self.Id or (None, None))[0] == rid[0] and g[0]:
             pconnections[ind] = g[1](close_connection=None)
-          else:
+          elif g[0]:
             g[1](close_connection=True)
+          else:
+            g[0] = True
         except:
           pass
-        ind += 1
       infos = self.InfosBuffer.get(rid, {})
       ifound = bool(infos)
       if ifound:
@@ -13497,7 +13487,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.8.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.9.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
