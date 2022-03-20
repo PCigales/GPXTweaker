@@ -10986,7 +10986,23 @@ class GPXTweakerWebInterfaceServer():
   '      var media_hold = null;\r\n' \
   '      var media_fs = false;\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
-  '        if (mode == "map") {return;}\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          if (nset == null && nlevel == null) {\r\n' \
+  '            let b = track_boundaries();\r\n' \
+  '            if (b == null) {return;}\r\n' \
+  '            let r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '            let z = eval(zooms.slice(-1)[0]);\r\n' \
+  '            if (r > 0) {z = 1 / r / Math.min((viewpane.offsetWidth - 2) / (vmaxx - vminx), (viewpane.offsetHeight - 4) / (vmaxy - vminy));}\r\n' \
+  '            let zoom_s_ex = zoom_s;\r\n' \
+  '            zoom_s = "1";\r\n' \
+  '            for (let i=1; i<zooms.length; i++) {\r\n' \
+  '              if (eval(zooms[i]) <= z) {zoom_s = zooms[i];} else {break;}\r\n' \
+  '            }\r\n' \
+  '            if (zoom_s != zoom_s_ex) {rescale();}\r\n' \
+  '            scroll_to_track();\r\n' \
+  '          }\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
