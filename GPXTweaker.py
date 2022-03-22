@@ -5421,7 +5421,6 @@ class GPXTweakerWebInterfaceServer():
   '        return tile;\r\n' \
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
-  '        t=performance.now();\r\n' \
   '        if (mode == "map") {return;}\r\n' \
   '        let tiles = Array.from(handle.getElementsByTagName("img"));\r\n' \
   '        if (cleft == null) {\r\n' \
@@ -5454,7 +5453,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (tiles_hold == null) {\r\n' \
   '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '              for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col);}\r\n' \
+  '                if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf);}\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
