@@ -167,7 +167,7 @@ FR_STRINGS = {
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
     'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
     'jtrackedit': 'éditer la trace',
-    'jzoomall': 'recadrer sur toutes les traces',
+    'jzoomall': 'recadrer sur toutes les traces cochées&#13;&#10;+alt: recadrer sur toutes les traces cochées et listées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
@@ -190,8 +190,9 @@ FR_STRINGS = {
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
     'jfoldersw': 'Répertoires:',
-    'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
+    'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+shift: recadrer sur la trace&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jexpscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
@@ -448,7 +449,7 @@ EN_STRINGS = {
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
     'jtracknew': 'create a new empty track in the first ticked folder',
     'jtrackedit': 'edit the track',
-    'jzoomall': 'reframe on all tracks',
+    'jzoomall': 'reframe on all ticked tracks&#13;&#10;+alt: reframe on all ticked and listed tracks&#13;&#10;+shift: reframe on the focused track',
     'jwebmapping': 'display the starting point in the online mapping service',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
@@ -471,8 +472,9 @@ EN_STRINGS = {
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
     'jfoldersw': 'Folders:',
-    'jscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
+    'jscrollcross': 'center on the focused element&#13;&#10;+shift: reframe on the track&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
+    'jexpscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
     'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
@@ -4202,7 +4204,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 l1 = tl[0]
                 q['matrix'] = [str(tl[l1][0])]
                 try:
-                  sw, sh = map(float, q['auto'][0].split('|'))
+                  sm = float(q['auto'][0])
                   l1 = 1
                   l2 = 1
                   l3 = len(tl)
@@ -4219,7 +4221,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                         continue
                       m = tl[l2][0]
                     s = self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
-                    if sw < s and sh < s:
+                    if sm < s:
                       l1 = l2
                     else:
                       l3 = l2
@@ -4849,6 +4851,8 @@ class GPXTweakerWebInterfaceServer():
   '      var scrollmode = 2;\r\n' \
   '      var scrollmode_ex = scrollmode;\r\n' \
   '      var focused = "";\r\n' \
+  '      var tiles_hold = null;\r\n' \
+  '      if (tholdsize > 0 && navigator.userAgent.toLowerCase().indexOf("firefox") < 0) {var tiles_hold = new Map();}\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
   '      var xhr_ongoing = 0;\r\n'
@@ -5307,16 +5311,14 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
-  '            if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '            tlevel = nlevel;\r\n' \
   '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
-  '            cleft = null;\r\n' \
-  '            rescale();\r\n' \
   '          }\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
+  '          cleft = null;\r\n' \
+  '          rescale();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '        let msg = JSON.parse(t.response);\r\n' \
   '        if (nset == null) {\r\n' \
   '          if (nlevel == null) {\r\n' \
@@ -5340,7 +5342,9 @@ class GPXTweakerWebInterfaceServer():
   '          tset = document.getElementById("tset").selectedIndex;\r\n' \
   '          let matrix = null;\r\n' \
   '          let lf = false;\r\n' \
-  '          if (nlevel >= 0) {\r\n' \
+  '          if (nlevel == null) {\r\n' \
+  '            tlevels = msg.tlevels;\r\n' \
+  '          } else if (nlevel >= 0) {\r\n' \
   '            tlevels = msg.tlevels;\r\n' \
   '            if (nlevel == 0) {\r\n' \
   '              nlevel = tlevels[0];\r\n' \
@@ -5397,7 +5401,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
   '      } \r\n' \
-  '      function add_tile(row=0, col=0) {\r\n' \
+  '      function add_tile(row=0, col=0, suf="") {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
   '          tile.id = "map";\r\n' \
@@ -5405,7 +5409,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
   '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
-  '          tile.src = "http://" + host + port.toString() + "/tiles/" + tile.id + text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '          tile.src = "http://" + host + port.toString() + "/tiles/" + tile.id + (suf || (text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML));\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
@@ -5414,8 +5418,10 @@ class GPXTweakerWebInterfaceServer():
   '        tile.style.left = "calc(var(--zoom) * " + ((ttopx - htopx) / tscale + col * twidth).toString() + "px)";\r\n' \
   '        tile.style.top = "calc(var(--zoom) * " + ((htopy - ttopy) / tscale + row * theight).toString() + "px)";\r\n' \
   '        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '        return tile;\r\n' \
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
+  '        t=performance.now();\r\n' \
   '        if (mode == "map") {return;}\r\n' \
   '        let tiles = Array.from(handle.getElementsByTagName("img"));\r\n' \
   '        if (cleft == null) {\r\n' \
@@ -5444,9 +5450,40 @@ class GPXTweakerWebInterfaceServer():
   '              handle.removeChild(tile);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '            for (let col=rleft; col<=rright; col++) {\r\n' \
-  '              if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col);}\r\n' \
+  '          let suf = text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '          if (tiles_hold == null) {\r\n' \
+  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '              for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col);}\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '              for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                if (col < cleft || col > cright || row < ctop || row > cbottom) {\r\n' \
+  '                  let tk = "tile-" + row.toString() + "-" + col.toString() + suf;\r\n' \
+  '                  let tile = tiles_hold.get(tk);\r\n' \
+  '                  if (tile) {\r\n' \
+  '                    tiles_hold.delete(tk);\r\n' \
+  '                    if (tile.naturalWidth) {\r\n' \
+  '                      handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '                    } else {\r\n' \
+  '                      tile = add_tile(row, col, suf);\r\n' \
+  '                    }\r\n' \
+  '                  } else {\r\n' \
+  '                    tile = add_tile(row, col, suf);\r\n' \
+  '                  }\r\n' \
+  '                  tiles_hold.set(tk, tile);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            let thr = tiles_hold.size - tholdsize - (rright - rleft + 1) * (rbottom - rtop + 1) ;\r\n' \
+  '            if (thr > 0) {\r\n' \
+  '              for (const tk of tiles_hold.keys()) {\r\n' \
+  '                tiles_hold.delete(tk);\r\n' \
+  '                thr--;\r\n' \
+  '                if (! thr) {break;}\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          cleft = rleft;\r\n' \
@@ -5522,15 +5559,15 @@ class GPXTweakerWebInterfaceServer():
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
   '      }\r\n'
   HTML_SCROLL_TEMPLATE = \
-  '      function scroll_to_track(track=null, center=true) {\r\n' \
-  '        let b = track_boundaries(track);\r\n' \
+  '      function scroll_to_track(track=null, center=true, b=0) {\r\n' \
+  '        if (b == 0) {b = track_boundaries(track);}\r\n' \
   '        if (b == null) {\r\n' \
   '          if (track == null) {\r\n' \
   '            hpx = viewpane.offsetWidth / 2 + (htopx - defx) * zoom / tscale;\r\n' \
   '            hpy = viewpane.offsetHeight / 2 + (defy - htopy) * zoom / tscale;\r\n' \
   '          }\r\n' \
-  '         reframe();\r\n' \
-  '         return;\r\n' \
+  '          reframe();\r\n' \
+  '          return;\r\n' \
   '        }\r\n' \
   '        if (center || b[1] - b[0] > viewpane.offsetWidth * tscale / zoom) {\r\n' \
   '          hpx = viewpane.offsetWidth / 2 - (b[0] + b[1]) / 2 * zoom / tscale;\r\n' \
@@ -6203,9 +6240,6 @@ class GPXTweakerWebInterfaceServer():
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_SSB_GRAPH_TEMPLATE = \
-  '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
-  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
-  '              </div>\r\n' \
   '              <div id="scalebox" style="left:1.5em;line-height:0.7em;"> \r\n' \
   '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
   '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
@@ -6394,10 +6428,20 @@ class GPXTweakerWebInterfaceServer():
   '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
   '          q = "set=" + encodeURIComponent(nset);\r\n' \
-  '        } else {\r\n' \
+  '        } else if (nlevel != null) {\r\n' \
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          sta = twidth == 0;\r\n' \
+  '        } else {\r\n' \
+  '          sta = true;\r\n' \
+  '          let b = track_boundaries();\r\n' \
+  '          if (b == null) {\r\n' \
+  '            document.getElementById("tset").disabled = false;\r\n' \
+  '            return;\r\n' \
+  '          } else {\r\n' \
+  '            q = "auto=" + encodeURIComponent(Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
+  '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -6463,6 +6507,26 @@ class GPXTweakerWebInterfaceServer():
   '              gminy = Math.min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
   '              gmaxx = Math.max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
   '              gmaxy = Math.max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (track == null) {\r\n' \
+  '          let wpts = document.getElementById("waypointsform").children;\r\n' \
+  '          for (let w=0; w<wpts.length; w++) {\r\n' \
+  '            let wpt = wpts[w].firstElementChild;\r\n' \
+  '            if (wpt.checked && wpt.value != "error") {\r\n' \
+  '              let wdot = document.getElementById(wpt.id.replace("point", "dot"));\r\n' \
+  '              if (gminx == null) {\r\n' \
+  '                gminx = prop_to_wmvalue(wdot.style.left);\r\n' \
+  '                gminy = prop_to_wmvalue(wdot.style.top);\r\n' \
+  '                gmaxx = gminx;\r\n' \
+  '                gmaxy = gminy;\r\n' \
+  '              } else {\r\n' \
+  '                gminx = Math.min(gminx, prop_to_wmvalue(wdot.style.left));\r\n' \
+  '                gminy = Math.min(gminy, prop_to_wmvalue(wdot.style.top));\r\n' \
+  '                gmaxx = Math.max(gmaxx, prop_to_wmvalue(wdot.style.left));\r\n' \
+  '                gmaxy = Math.max(gmaxy, prop_to_wmvalue(wdot.style.top));\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -8724,7 +8788,7 @@ class GPXTweakerWebInterfaceServer():
   '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        track_save(mode);\r\n' \
-  '      }\r\n' + HTML_MAP_TEMPLATE + \
+  '      }\r\n' + HTML_MAP_TEMPLATE.replace('if (! focused) {return;}', 'if (! focused) {scroll_to_track();return;}') + \
   '      function load_ipcb(t) {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (t.status != 204) {\r\n' \
@@ -8890,6 +8954,9 @@ class GPXTweakerWebInterfaceServer():
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
+  '              </div>\r\n' \
+  '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
+  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -9143,7 +9210,8 @@ class GPXTweakerWebInterfaceServer():
   '      var text = "##TEXT##";\r\n' \
   '      var tscale = ##TSCALE##;\r\n' \
   '      var htopx = ##HTOPX##;\r\n' \
-  '      var htopy = ##HTOPY##;'
+  '      var htopy = ##HTOPY##;\r\n' \
+  '      var tholdsize = ##THOLDSIZE##;'
   HTML_WAYPOINT_TEMPLATE = \
   '<div id="waypoint%scont">\r\n' \
   '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
@@ -11006,6 +11074,8 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
+  '        let tracks = null;\r\n' \
+  '        let b = 0;\r\n' \
   '        if (nset != null) {\r\n' \
   '          q = "set=" + encodeURIComponent(nset);\r\n' \
   '        } else if (nlevel != null) {\r\n' \
@@ -11013,15 +11083,43 @@ class GPXTweakerWebInterfaceServer():
   '          sta = twidth == 0 && focused == "";\r\n' \
   '        } else {\r\n' \
   '          sta = true;\r\n' \
-  '          let b = track_boundaries();\r\n' \
+  '          switch (kzoom) {\r\n' \
+  '            case 1:\r\n' \
+  '              if (focused) {\r\n' \
+  '                tracks = [document.getElementById(focused)];\r\n' \
+  '                b = track_boundaries(tracks);\r\n' \
+  '              } else {\r\n' \
+  '                b = null;\r\n' \
+  '              }\r\n' \
+  '              if (b == null) {\r\n' \
+  '                document.getElementById("tset").disabled = false;\r\n' \
+  '                return;\r\n' \
+  '              }\r\n' \
+  '              break\r\n' \
+  '            case 2:\r\n' \
+  '              tracks = [];\r\n' \
+  '              let trks = document.getElementById("tracksform").children;\r\n' \
+  '              for (let t=0; t<trks.length; t++) {\r\n' \
+  '                if (trks[t].firstElementChild.checked && trks[t].style.display != "none") {\r\n' \
+  '                  tracks.push(document.getElementById(trks[t].id.slice(0, -4)));\r\n' \
+  '                 }\r\n' \
+  '              }\r\n' \
+  '              b = track_boundaries(tracks);\r\n' \
+  '              tracks = null;\r\n' \
+  '              break;\r\n' \
+  '            default:\r\n' \
+  '              b = track_boundaries();\r\n' \
+  '          }\r\n' \
+  '          kzoom = false;\r\n' \
   '          if (b == null) {\r\n' \
   '            nlevel = tlevels[0];\r\n' \
   '            q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          } else {\r\n' \
-  '            q = "auto=" + encodeURIComponent(((b[1] - b[0]) / viewpane.offsetWidth).toString() + "|" + ((b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
+  '            q = "auto=" + encodeURIComponent(Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
+  '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track(tracks, true, b);};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
@@ -11031,17 +11129,17 @@ class GPXTweakerWebInterfaceServer():
   '        if (mvis) {show_media();}\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
-  '      function track_boundaries(track=null) {\r\n' \
-  '        let tracks = [];\r\n' \
-  '        if (track != null) {\r\n' \
-  '          tracks.push(track);\r\n' \
-  '        } else {\r\n' \
+  '      function track_boundaries(tracks=null) {\r\n' \
+  '        if (tracks == null) {\r\n' \
+  '          tracks = [];\r\n' \
   '          let trks = document.getElementById("tracksform").children;\r\n' \
   '          for (let t=0; t<trks.length; t++) {\r\n' \
   '            if (trks[t].firstElementChild.checked) {\r\n' \
   '              tracks.push(document.getElementById(trks[t].id.slice(0, -4)));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '        } else if (! Array.isArray(tracks)) {\r\n' \
+  '          tracks = [tracks];\r\n' \
   '        }\r\n' \
   '        let gminx = null;\r\n' \
   '        let gminy = null;\r\n' \
@@ -11869,6 +11967,7 @@ class GPXTweakerWebInterfaceServer():
   '          for (const m in media_ex_hold) {\r\n' \
   '            if (md[m] || (media_corners[4 * m] < xr && media_corners[4 * m + 2] > xl && media_corners[4 * m + 1] < yb && media_corners[4 * m + 3] > yt)) {\r\n' \
   '              let med = media_ex_hold[m];\r\n' \
+  '              if (! (media_isvid[m]?med.videoWidth:med.naturalWidth)) {continue;}\r\n' \
   '              if (media_corners_updated) {\r\n' \
   '                med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
   '                med.style.height = (media_corners[4 * m + 3] - media_corners[4 * m + 1]).toString() + "px";\r\n' \
@@ -12141,7 +12240,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:53.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.25em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -12166,7 +12265,10 @@ class GPXTweakerWebInterfaceServer():
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
-  '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
+  '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
+  '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
+  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    </div>\r\n' \
   '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
@@ -12547,6 +12649,8 @@ class GPXTweakerWebInterfaceServer():
             self.TilesBufferSize = None if value is None else int(value)
           elif field == 'threads':
             self.TilesBufferThreads = None if value is None else int(value)
+          elif field == 'chromium_hold':
+            self.TilesHoldSize = 0 if value is None else int(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -12846,6 +12950,7 @@ class GPXTweakerWebInterfaceServer():
     self.V3DPanoMargin = 0.5
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
+    self.TilesHoldSize = 0
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -13149,7 +13254,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTML is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -13353,7 +13458,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy))
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
