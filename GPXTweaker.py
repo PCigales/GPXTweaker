@@ -11130,7 +11130,7 @@ class GPXTweakerWebInterfaceServer():
   '          kzoom = false;\r\n' \
   '        }\r\n' \
   '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track(tracks, true, b);};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track(null, true, b);};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
