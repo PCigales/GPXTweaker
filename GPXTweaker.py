@@ -1,4 +1,4 @@
-# GPXTweaker v1.9.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.9.1 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -6421,7 +6421,23 @@ class GPXTweakerWebInterfaceServer():
   '      var graph_px = null;\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("tweaker");}\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
-  '        if (mode == "map") {return;}\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          if (nset == null && nlevel == null) {\r\n' \
+  '            let b = track_boundaries();\r\n' \
+  '            if (b == null) {return;}\r\n' \
+  '            let r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '            let z = eval(zooms.slice(-1)[0]);\r\n' \
+  '            if (r > 0) {z = 1 / r / Math.min((viewpane.offsetWidth - 2) / (vmaxx - vminx), (viewpane.offsetHeight - 4) / (vmaxy - vminy));}\r\n' \
+  '            let zoom_s_ex = zoom_s;\r\n' \
+  '            zoom_s = "1";\r\n' \
+  '            for (let i=1; i<zooms.length; i++) {\r\n' \
+  '              if (eval(zooms[i]) <= z) {zoom_s = zooms[i];} else {break;}\r\n' \
+  '            }\r\n' \
+  '            if (zoom_s != zoom_s_ex) {rescale();}\r\n' \
+  '            scroll_to_track(null, true, b);\r\n' \
+  '          }\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
@@ -11053,9 +11069,30 @@ class GPXTweakerWebInterfaceServer():
   '      var media_hold = null;\r\n' \
   '      var media_fs = false;\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          if (nset == null && nlevel == null) {\r\n' \
-  '            let b = track_boundaries();\r\n' \
+  '        let b = 0;\r\n' \
+  '        if (nset == null && nlevel == null) {\r\n' \
+  '          switch (kzoom) {\r\n' \
+  '            case 1:\r\n' \
+  '              if (focused) {\r\n' \
+  '                b = track_boundaries(document.getElementById(focused));\r\n' \
+  '              } else {\r\n' \
+  '                b = null;\r\n' \
+  '              }\r\n' \
+  '              break\r\n' \
+  '            case 2:\r\n' \
+  '              let tracks = [];\r\n' \
+  '              let trks = document.getElementById("tracksform").children;\r\n' \
+  '              for (let t=0; t<trks.length; t++) {\r\n' \
+  '                if (trks[t].firstElementChild.checked && trks[t].style.display != "none") {\r\n' \
+  '                  tracks.push(document.getElementById(trks[t].id.slice(0, -4)));\r\n' \
+  '                 }\r\n' \
+  '              }\r\n' \
+  '              b = track_boundaries(tracks);\r\n' \
+  '              break;\r\n' \
+  '            default:\r\n' \
+  '              b = track_boundaries();\r\n' \
+  '          }\r\n' \
+  '          if (mode == "map") {\r\n' \
   '            if (b == null) {return;}\r\n' \
   '            let r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
   '            let z = eval(zooms.slice(-1)[0]);\r\n' \
@@ -11066,15 +11103,13 @@ class GPXTweakerWebInterfaceServer():
   '              if (eval(zooms[i]) <= z) {zoom_s = zooms[i];} else {break;}\r\n' \
   '            }\r\n' \
   '            if (zoom_s != zoom_s_ex) {rescale();}\r\n' \
-  '            scroll_to_track();\r\n' \
+  '            scroll_to_track(null, true, b);\r\n' \
   '          }\r\n' \
-  '          return;\r\n' \
   '        }\r\n' \
+  '        if (mode == "map") {return;}\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
-  '        let tracks = null;\r\n' \
-  '        let b = 0;\r\n' \
   '        if (nset != null) {\r\n' \
   '          q = "set=" + encodeURIComponent(nset);\r\n' \
   '        } else if (nlevel != null) {\r\n' \
@@ -11082,40 +11117,17 @@ class GPXTweakerWebInterfaceServer():
   '          sta = twidth == 0 && focused == "";\r\n' \
   '        } else {\r\n' \
   '          sta = true;\r\n' \
-  '          switch (kzoom) {\r\n' \
-  '            case 1:\r\n' \
-  '              if (focused) {\r\n' \
-  '                tracks = [document.getElementById(focused)];\r\n' \
-  '                b = track_boundaries(tracks);\r\n' \
-  '              } else {\r\n' \
-  '                b = null;\r\n' \
-  '              }\r\n' \
-  '              if (b == null) {\r\n' \
-  '                document.getElementById("tset").disabled = false;\r\n' \
-  '                return;\r\n' \
-  '              }\r\n' \
-  '              break\r\n' \
-  '            case 2:\r\n' \
-  '              tracks = [];\r\n' \
-  '              let trks = document.getElementById("tracksform").children;\r\n' \
-  '              for (let t=0; t<trks.length; t++) {\r\n' \
-  '                if (trks[t].firstElementChild.checked && trks[t].style.display != "none") {\r\n' \
-  '                  tracks.push(document.getElementById(trks[t].id.slice(0, -4)));\r\n' \
-  '                 }\r\n' \
-  '              }\r\n' \
-  '              b = track_boundaries(tracks);\r\n' \
-  '              tracks = null;\r\n' \
-  '              break;\r\n' \
-  '            default:\r\n' \
-  '              b = track_boundaries();\r\n' \
-  '          }\r\n' \
-  '          kzoom = false;\r\n' \
   '          if (b == null) {\r\n' \
+  '            if (twidth || kzoom != 0) {\r\n' \
+  '              document.getElementById("tset").disabled = false;\r\n' \
+  '              return;\r\n' \
+  '            }\r\n' \
   '            nlevel = tlevels[0];\r\n' \
   '            q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          } else {\r\n' \
   '            q = "auto=" + encodeURIComponent(Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight).toString());\r\n' \
   '          }\r\n' \
+  '          kzoom = false;\r\n' \
   '        }\r\n' \
   '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
   '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track(tracks, true, b);};};\r\n' \
@@ -13613,7 +13625,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.9.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.9.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
