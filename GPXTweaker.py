@@ -6268,9 +6268,9 @@ class GPXTweakerWebInterfaceServer():
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
   '      </div>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" oncontextmenu="event.stopPropagation();event.preventDefault();" onpointerdown="pointer_down(event)">\r\n' \
   '      </canvas>\r\n' \
-  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize;" onmousedown="mouse_down(event)">\r\n' \
+  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
   '        <line vector-effect="non-scaling-stroke" pointer-events="none" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '      </svg> \r\n' \
   '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;" pointer-events="none">\r\n' \
@@ -6376,7 +6376,7 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
-  '        max-width:calc(24em - 22px);\r\n' \
+  '        width:calc(24em - 21px);\r\n' \
   '        min-height:1.35em;\r\n' \
   '      }\r\n' \
   '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name] {\r\n' \
@@ -6474,6 +6474,15 @@ class GPXTweakerWebInterfaceServer():
   '          hpy = Math.max(Math.min(hpy, -o - dt * zoom / tscale + viewpane.offsetHeight), o - dt * zoom / tscale);\r\n' \
   '        }\r\n' \
   '        reframe();\r\n' \
+  '      }\r\n' \
+  '      function drag_dot(x, y) {\r\n' \
+  '       let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
+  '       wm[0] = Math.max(Math.min(wm[0], vmaxx - 1), vminx + 1);\r\n' \
+  '       wm[1] = Math.max(Math.min(wm[1], vmaxy - 1), vminy + 1);\r\n' \
+  '       let [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
+  '       document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
+  '       document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
+  '       point_edit(false, false, false, true);\r\n' \
   '      }\r\n' \
   '      function track_boundaries(track=null) {\r\n' \
   '        let tracks = [];\r\n' \
@@ -8967,11 +8976,11 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
-  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -8980,6 +8989,11 @@ class GPXTweakerWebInterfaceServer():
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
   '      var hand_m = false;\r\n' \
+  '      var mouse_out = null;\r\n' \
+  '      var pointer_e = null;\r\n' \
+  '      function pointer_down(e) {\r\n' \
+  '        pointer_e = e.pointerId;\r\n' \
+  '      }\r\n' \
   '      function mouse_down(e) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        mousex = e.pageX;\r\n' \
@@ -8996,6 +9010,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (elt.id == "view") {\r\n' \
   '            hand = elt;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
+  '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id.indexOf("dot") >= 0) {\r\n' \
   '            let pt = document.getElementById(elt.id.replace("dot", "point") + "desc");\r\n' \
   '            if (pt.htmlFor != focused) {\r\n' \
@@ -9006,14 +9021,17 @@ class GPXTweakerWebInterfaceServer():
   '            hand_m = false;\r\n' \
   '            viewpane.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
+  '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
   '            hand = elt;\r\n' \
   '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
+  '            hand.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "graphc") {\r\n' \
   '            hand = document.getElementById("gbarc");\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
+  '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
@@ -9030,6 +9048,7 @@ class GPXTweakerWebInterfaceServer():
   '            hand_m = false;\r\n' \
   '            viewpane.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
+  '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -9042,8 +9061,13 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
   '        viewpane.style.cursor = "";\r\n' \
+  '        if (mouse_out != null) {\r\n' \
+  '          window.clearInterval(mouse_out);\r\n' \
+  '          mouse_out = null;\r\n' \
+  '        }\r\n' \
   '        if (hand) {\r\n' \
   '          if (hand.id.indexOf("dot") >= 0) {\r\n' \
+  '            viewpane.releasePointerCapture(pointer_e);\r\n' \
   '            hand.style.cursor = "";\r\n' \
   '            let d = 0;\r\n' \
   '            if (hand_m || (e.shiftKey && ! e.altKey)) {\r\n' \
@@ -9068,10 +9092,14 @@ class GPXTweakerWebInterfaceServer():
   '              wpt_calc();\r\n' \
   '            }\r\n' \
   '          } else if (hand.id == "gbarc") {\r\n' \
+  '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
   '            graph_point();\r\n' \
+  '          } else {\r\n' \
+  '            viewpane.releasePointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
+  '          pointer_e = null;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let elt = e.target;\r\n' \
@@ -9100,31 +9128,63 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, seg);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function mouse_outside() {\r\n' \
+  '        if (mouse_out == null) {return;}\r\n' \
+  '        let dx = 0;\r\n' \
+  '        let dy = 0;\r\n' \
+  '        let p = viewpane.parentNode;\r\n' \
+  '        let pl = p.offsetLeft;\r\n' \
+  '        let pr = pl + p.offsetWidth;\r\n' \
+  '        let pt = p.offsetTop;\r\n' \
+  '        let pb = pt + p.offsetHeight;\r\n' \
+  '        if (mousex < pl) {\r\n' \
+  '          dx = -Math.max(1, p.offsetWidth / 20);\r\n' \
+  '        } else if (mousex > pr) {\r\n' \
+  '          dx = Math.max(1, p.offsetWidth / 20);\r\n' \
+  '        }\r\n' \
+  '        if (mousey < pt) {\r\n' \
+  '          dy = -Math.max(1, p.offsetHeight / 20);\r\n' \
+  '        } else if (mousey > pb) {\r\n' \
+  '          dy = Math.max(1, p.offsetHeight / 20);\r\n' \
+  '        }\r\n' \
+  '        if (dx || dy) {\r\n' \
+  '          if (hand.id == "view") {\r\n' \
+  '            scroll_dview(dx, dy);\r\n' \
+  '          } else {\r\n' \
+  '            scroll_dview(-dx, -dy);\r\n' \
+  '            drag_dot(Math.min(Math.max(mousex, pl), pr) - pl, Math.min(Math.max(mousey, pt), pb) - pt);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
-  '          let dx = e.pageX - mousex;\r\n' \
-  '          let dy = e.pageY - mousey;\r\n' \
-  '          mousex = e.pageX;\r\n' \
-  '          mousey = e.pageY;\r\n' \
-  '          let p = viewpane.parentNode;\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
   '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
-  '          } else if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
-  '            if (hand.id == "view") {\r\n' \
-  '              scroll_dview(dx, dy);\r\n' \
-  '            } else if (hand.id.indexOf("dot") >= 0) {\r\n' \
-  '              hand_m = true;\r\n' \
-  '              let x = e.pageX - p.offsetLeft;\r\n' \
-  '              let y = e.pageY - p.offsetTop;\r\n' \
-  '              let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
-  '              wm[0] = Math.max(Math.min(wm[0], vmaxx - 1), vminx + 1);\r\n' \
-  '              wm[1] = Math.max(Math.min(wm[1], vmaxy - 1), vminy + 1);\r\n' \
-  '              let [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
-  '              document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
-  '              document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
-  '              point_edit(false, false, false, true);\r\n' \
-  '            }\r\n' \
+  '            return;\r\n' \
   '          }\r\n' \
+  '          let p = viewpane.parentNode;\r\n' \
+  '          let pl = p.offsetLeft;\r\n' \
+  '          let pr = pl + p.offsetWidth;\r\n' \
+  '          let pt = p.offsetTop;\r\n' \
+  '          let pb = pt + p.offsetHeight;\r\n' \
+  '          let mx = e.pageX;\r\n' \
+  '          let my = e.pageY;\r\n' \
+  '          if (hand.id == "view") {\r\n' \
+  '            scroll_dview(Math.min(Math.max(mx, pl), pr) - Math.min(Math.max(mousex, pl), pr), Math.min(Math.max(my, pt), pb) - Math.min(Math.max(mousey, pt), pb));\r\n' \
+  '          } else if (hand.id.indexOf("dot") >= 0) {\r\n' \
+  '            hand_m = true;\r\n' \
+  '            drag_dot(Math.min(Math.max(mx, pl), pr) - pl, Math.min(Math.max(my, pt), pb) - pt);\r\n' \
+  '          } else {return;}\r\n' \
+  '          if (mx >= pl && mx <= pr && my >= pt && my <= pb) {\r\n' \
+  '            if (mouse_out != null) {\r\n' \
+  '              window.clearInterval(mouse_out);\r\n' \
+  '              mouse_out = null;\r\n' \
+  '            }\r\n' \
+  '          } else if (mouse_out == null) {\r\n' \
+  '            mouse_out = window.setInterval(mouse_outside, 100);\r\n' \
+  '          }\r\n' \
+  '          mousex = mx;\r\n' \
+  '          mousey = my;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
@@ -12938,6 +12998,7 @@ class GPXTweakerWebInterfaceServer():
     self.Ports = '8000'
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
+    self.TilesHoldSize = 0
     self.VMinLat = - math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2)
     self.VMaxLat = - self.VMinLat
     self.VMinLon = -180
@@ -12945,7 +13006,6 @@ class GPXTweakerWebInterfaceServer():
     self.DefLat = None
     self.DefLon = None
     self.Folders = []
-    self.WebMappingServices = []
     self.MediaPorts = ''
     self.MediaFolders = []
     self.MediaPhotos = True
@@ -12961,7 +13021,6 @@ class GPXTweakerWebInterfaceServer():
     self.V3DPanoMargin = 0.5
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
-    self.TilesHoldSize = 0
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -12978,6 +13037,7 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationMapSet = None
     self.ElevationProviderSel = None
     self.ItineraryProviderSel = None
+    self.WebMappingServices = []
     self.HTML = None
     self.HTML3D = None
     self.HTML3DData = None
@@ -13027,7 +13087,7 @@ class GPXTweakerWebInterfaceServer():
       if bmap:
         self.VMaxLon = map_maxlon
     if err:
-      self.log(0, 'berror4')
+      self.log(0, 'berror2')
       return
     self.DefLat = self.DefLat if self.DefLat is not None else (self.VMinLat + self.VMaxLat) / 2
     self.DefLon = self.DefLon if self.DefLon is not None else (self.VMinLon + self.VMaxLon) / 2
@@ -13165,6 +13225,9 @@ class GPXTweakerWebInterfaceServer():
       self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
       self.MTopx = self.VMinx
       self.MTopy = self.VMaxy
+    if self.VMaxx - self.VMinx <= 5 or self.VMaxy - self.VMiny <= 5:
+      self.log(0, 'berror')
+      return
     self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(clamp_lat(minlat - 0.008), clamp_lon(minlon - 0.011))
     self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
     for t in range(len(self.TracksBoundaries)):
