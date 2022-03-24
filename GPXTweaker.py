@@ -9060,13 +9060,13 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmousemove = null;\r\n' \
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
-  '        viewpane.style.cursor = "";\r\n' \
-  '        if (mouse_out != null) {\r\n' \
-  '          window.clearInterval(mouse_out);\r\n' \
-  '          mouse_out = null;\r\n' \
-  '        }\r\n' \
   '        if (hand) {\r\n' \
+  '          if (mouse_out != null) {\r\n' \
+  '            window.clearInterval(mouse_out);\r\n' \
+  '            mouse_out = null;\r\n' \
+  '          }\r\n' \
   '          if (hand.id.indexOf("dot") >= 0) {\r\n' \
+  '            viewpane.style.cursor = "";\r\n' \
   '            viewpane.releasePointerCapture(pointer_e);\r\n' \
   '            hand.style.cursor = "";\r\n' \
   '            let d = 0;\r\n' \
@@ -9096,6 +9096,7 @@ class GPXTweakerWebInterfaceServer():
   '            hand.setAttribute("stroke", "none");\r\n' \
   '            graph_point();\r\n' \
   '          } else {\r\n' \
+  '            viewpane.style.cursor = "";\r\n' \
   '            viewpane.releasePointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
@@ -12334,11 +12335,11 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
-  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    </div>\r\n' \
@@ -12350,6 +12351,11 @@ class GPXTweakerWebInterfaceServer():
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
   '      var hand = null;\r\n' \
+  '      var mouse_out = null;\r\n' \
+  '      var pointer_e = null;\r\n' \
+  '      function pointer_down(e) {\r\n' \
+  '        pointer_e = e.pointerId;\r\n' \
+  '      }\r\n' \
   '      function mouse_down(e) {\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
   '        document.getElementById("tracksfilter").blur();\r\n' \
@@ -12365,6 +12371,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (e.target.id == "view") {\r\n' \
   '            hand = e.target;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
+  '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '            media_ex_visible = media_visible;\r\n' \
   '            hide_media("m");\r\n' \
   '          }\r\n' \
@@ -12379,8 +12386,13 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
   '        if (hand) {\r\n' \
+  '          if (mouse_out != null) {\r\n' \
+  '            window.clearInterval(mouse_out);\r\n' \
+  '            mouse_out = null;\r\n' \
+  '          }\r\n' \
   '          hand = null;\r\n' \
   '          viewpane.style.cursor = "";\r\n' \
+  '          viewpane.releasePointerCapture(pointer_e);\r\n' \
   '          if (media_ex_visible) {\r\n' \
   '            show_media();\r\n' \
   '            media_ex_visible = false;\r\n' \
@@ -12420,18 +12432,51 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function mouse_outside() {\r\n' \
+  '        if (mouse_out == null) {return;}\r\n' \
+  '        let dx = 0;\r\n' \
+  '        let dy = 0;\r\n' \
+  '        let p = viewpane.parentNode;\r\n' \
+  '        let pl = p.offsetLeft;\r\n' \
+  '        let pr = pl + p.offsetWidth;\r\n' \
+  '        let pt = p.offsetTop;\r\n' \
+  '        let pb = pt + p.offsetHeight;\r\n' \
+  '        if (mousex < pl) {\r\n' \
+  '          dx = -Math.max(1, p.offsetWidth / 20);\r\n' \
+  '        } else if (mousex > pr) {\r\n' \
+  '          dx = Math.max(1, p.offsetWidth / 20);\r\n' \
+  '        }\r\n' \
+  '        if (mousey < pt) {\r\n' \
+  '          dy = -Math.max(1, p.offsetHeight / 20);\r\n' \
+  '        } else if (mousey > pb) {\r\n' \
+  '          dy = Math.max(1, p.offsetHeight / 20);\r\n' \
+  '        }\r\n' \
+  '        if (dx || dy) {\r\n' \
+  '          scroll_dview(dx, dy);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
-  '          let dx = e.pageX - mousex;\r\n' \
-  '          let dy = e.pageY - mousey;\r\n' \
-  '          mousex = e.pageX;\r\n' \
-  '          mousey = e.pageY;\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
-  '          if (e.pageX >= p.offsetLeft && e.pageX <= p.offsetLeft + p.offsetWidth && e.pageY >= p.offsetTop && e.pageY <= p.offsetTop + p.offsetHeight) {\r\n' \
-  '            if (hand.id == "view") {\r\n' \
-  '              scroll_dview(dx, dy);\r\n' \
+  '          let pl = p.offsetLeft;\r\n' \
+  '          let pr = pl + p.offsetWidth;\r\n' \
+  '          let pt = p.offsetTop;\r\n' \
+  '          let pb = pt + p.offsetHeight;\r\n' \
+  '          let mx = e.pageX;\r\n' \
+  '          let my = e.pageY;\r\n' \
+  '          if (hand.id == "view") {\r\n' \
+  '            scroll_dview(Math.min(Math.max(mx, pl), pr) - Math.min(Math.max(mousex, pl), pr), Math.min(Math.max(my, pt), pb) - Math.min(Math.max(mousey, pt), pb));\r\n' \
+  '          } else {return;}\r\n' \
+  '          if (mx >= pl && mx <= pr && my >= pt && my <= pb) {\r\n' \
+  '            if (mouse_out != null) {\r\n' \
+  '              window.clearInterval(mouse_out);\r\n' \
+  '              mouse_out = null;\r\n' \
   '            }\r\n' \
+  '          } else if (mouse_out == null) {\r\n' \
+  '            mouse_out = window.setInterval(mouse_outside, 100);\r\n' \
   '          }\r\n' \
+  '          mousex = mx;\r\n' \
+  '          mousey = my;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
