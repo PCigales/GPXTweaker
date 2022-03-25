@@ -5396,11 +5396,11 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          switch_tiles(null, nlevel, true);\r\n' \
   '        }\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function error_tcb() {\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function add_tile(row=0, col=0, suf="") {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -6162,11 +6162,11 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        eset = document.getElementById("eset").selectedIndex;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function error_epcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById("eset").selectedIndex = eset;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function switch_elevations(eset) {\r\n' \
   '        let q = "eset=" + encodeURIComponent(eset.toString());\r\n' \
   '        xhrep.onload = (e) => {load_epcb(e.target)};\r\n' \
@@ -6239,7 +6239,7 @@ class GPXTweakerWebInterfaceServer():
   '              </form>\r\n' \
   '            </div>\r\n'
   HTML_SSB_GRAPH_TEMPLATE = \
-  '              <div id="scalebox" style="left:1.5em;line-height:0.7em;"> \r\n' \
+  '              <div id="scalebox" style="left:1.5em;line-height:0.7em;">\r\n' \
   '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
   '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
   '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
@@ -6261,18 +6261,18 @@ class GPXTweakerWebInterfaceServer():
   '        </tr>\r\n' \
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
-  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;"  oncontextmenu="if (event.target.id == \'gbarc\') {event.stopPropagation();event.preventDefault();}">\r\n' \
+  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
   '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
   '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
   '      </div>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" oncontextmenu="event.stopPropagation();event.preventDefault();" onpointerdown="pointer_down(event)">\r\n' \
+  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
   '      </canvas>\r\n' \
   '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
   '        <line vector-effect="non-scaling-stroke" pointer-events="none" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
-  '      </svg> \r\n' \
+  '      </svg>\r\n' \
   '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;" pointer-events="none">\r\n' \
   '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '      </svg>\r\n' \
@@ -6799,7 +6799,7 @@ class GPXTweakerWebInterfaceServer():
   '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "time").checkValidity() && document.getElementById(focused + "name").checkValidity();\r\n' \
   '        } else {\r\n' \
   '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "alt").checkValidity() && document.getElementById(focused + "time").checkValidity();\r\n' \
-  '        } \r\n' \
+  '        }\r\n' \
   '        let wm = null;\r\n' \
   '        if (valid) {\r\n' \
   '          wm = WGS84toWebMercator(parseFloat(document.getElementById(focused + "lat").value), parseFloat(document.getElementById(focused + "lon").value));\r\n' \
@@ -7044,7 +7044,7 @@ class GPXTweakerWebInterfaceServer():
   '              ref = document.getElementById(ex_foc).parentNode.lastElementChild;\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
-  '            pos = "b"; \r\n' \
+  '            pos = "b";\r\n' \
   '          }\r\n' \
   '          par = seg;\r\n' \
   '          el_cont = document.getElementById("point%scont").cloneNode(true);\r\n' \
@@ -7058,7 +7058,7 @@ class GPXTweakerWebInterfaceServer():
   '              ref = document.getElementById("waypointsform").lastElementChild;\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
-  '            pos = "b"; \r\n' \
+  '            pos = "b";\r\n' \
   '          }\r\n' \
   '          par = document.getElementById("waypointsform");\r\n' \
   '          el_cont = document.getElementById("waypoint%scont").cloneNode(true);\r\n' \
@@ -8073,7 +8073,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function load_ecb(t, pts) {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return 0;}\r\n' \
@@ -8107,7 +8107,7 @@ class GPXTweakerWebInterfaceServer():
   '                      segs = [seg_p];\r\n' \
   '                    } else if (seg_p.id != segs[segs.length - 1].id) {\r\n' \
   '                      segs.push(seg_p);\r\n' \
-  '                    } \r\n' \
+  '                    }\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '                e++;\r\n' \
@@ -8155,7 +8155,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (document.getElementById(pid).value != "error" && (all || document.getElementById(pid + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
   '           pts.push(pid);\r\n' \
   '           b = b + pid + "," + document.getElementById(pid + "lat").value + "," + document.getElementById(pid + "lon").value + "\\r\\n";\r\n' \
-  '          } \r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        if (b.length == 0) {return;}\r\n' \
   '        let msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
@@ -8656,7 +8656,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function error_pcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function load_pcb(t, foc) {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return false;}\r\n' \
@@ -8772,7 +8772,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        return true;\r\n'\
-  '      } \r\n' \
+  '      }\r\n' \
   '      function build_path() {\r\n' \
   '        if (iset < 0) {show_msg("{#jmpathno#}", 10); return;}\r\n' \
   '        let foc = focused;\r\n' \
@@ -8820,11 +8820,11 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        iset = document.getElementById("iset").selectedIndex;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function error_ipcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById("iset").selectedIndex = iset;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function switch_itineraries(iset) {\r\n' \
   '        let q = "iset=" + encodeURIComponent(iset.toString());\r\n' \
   '        xhrip.onload = (e) => {load_ipcb(e.target)};\r\n' \
@@ -8933,7 +8933,7 @@ class GPXTweakerWebInterfaceServer():
   '      xhrip.addEventListener("error", error_ipcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
+  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;">\r\n' \
   '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:21em;">\r\n' \
@@ -8976,11 +8976,11 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
-  '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
-  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
+  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -9002,6 +9002,7 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
+  '        document.oncontextmenu = mouse_click;\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
   '        let elt = e.target;\r\n' \
@@ -9122,6 +9123,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_click(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
+  '        document.oncontextmenu = null;\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (elt.id.substring(0, 4) == "path") {\r\n' \
@@ -10303,7 +10305,7 @@ class GPXTweakerWebInterfaceServer():
   '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
   '          program_uniforms();\r\n' \
   '          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 6, 14);\r\n' \
-  '        } \r\n' \
+  '        }\r\n' \
   '        if (dmode == 3) {\r\n' \
   '          vmatrix = mat4_zscale(1);\r\n' \
   '          mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
@@ -11738,7 +11740,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        return false;\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function load_tdcb(t, trk) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
@@ -12241,7 +12243,7 @@ class GPXTweakerWebInterfaceServer():
   '          prop.value = document.getElementById(prop.id.replace("name", "desc")).title;\r\n' \
   '        } else if (prop.id.slice(-5) == "color") {\r\n' \
   '          prop.value = document.getElementById(prop.id.slice(0, -5)).getAttribute("stroke");\r\n' \
-  '        } \r\n' \
+  '        }\r\n' \
   '        if (t != null) {document.getElementById("edit").disabled = false;}\r\n' \
   '      }\r\n' \
   '      function track_save(prop) {\r\n' \
@@ -12298,7 +12300,7 @@ class GPXTweakerWebInterfaceServer():
   '      var xhrtr = new XMLHttpRequest();\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;"> \r\n' \
+  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;">\r\n' \
   '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:21em;">\r\n' \
@@ -12335,11 +12337,11 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" oncontextmenu="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
-  '              <div id="scrollbox" style="left:0.1em;line-height:1em;"> \r\n' \
-  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
+  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    </div>\r\n' \
@@ -12365,6 +12367,7 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
+  '        document.oncontextmenu = mouse_click;\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
   '        if (e.target && e.button == 0) {\r\n' \
@@ -12403,6 +12406,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_click(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
+  '        document.oncontextmenu = null;\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (e.button == 2) {\r\n' \
@@ -12526,7 +12530,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.head.innerHTML = "";\r\n' \
   '        window.close();\r\n' \
   '        throw "{#jexpfail#}";\r\n' \
-  '      } \r\n' \
+  '      }\r\n' \
   '      function load_dcb(t) {\r\n' \
   '        if (t.status != 200) {error_dcb();return;}\r\n' \
   '        let tracks = t.response.split("==\\r\\n");\r\n' \
