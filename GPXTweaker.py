@@ -17,6 +17,7 @@ import time
 import threading
 import os, os.path
 from pathlib import Path
+import re
 import json
 import base64 
 import zlib
@@ -73,6 +74,8 @@ FR_STRINGS = {
     'load': 'chargement de la trace %s',
     'new': 'création d\'une nouvelle trace sous %s',
     'lerror': 'échec du chargement de la trace %s',
+    'perrorw': 'donnée invalide: point de cheminement %s',
+    'perrorp': 'donnée invalide: segment %s - point %s',
     'loaded': 'trace %s chargée (nom: "%s", points de cheminement: %s, segments: %s, points: %s)',
     'save': 'enregistrement de la trace sous %s',
     'serror': 'échec de l\'enregistrement de la trace sous %s',
@@ -94,7 +97,8 @@ FR_STRINGS = {
     'cloaded': 'configuration chargée',
     'build': 'génération de la page d\'interface',
     'buildexp': 'génération de la page d\'interface de l\'explorateur',
-    'bloaded': '%s trace(s) chargée(s) en %.1fs',
+    'bloaded1': '%s trace(s) chargée(s) en %.1fs',
+    'bloaded2': '%s trace(s) chargée(s) en %.1fs, %s trace(s) sautée(s), %s trace(s) manquée(s)',
     'berror': 'échec de la génération de la page d\'interface',
     'berror1': 'échec de la génération de la page d\'interface (conversion en WebMercator)',
     'berror2': 'échec de la génération de la page d\'interface (carte extérieure au cadre)',
@@ -355,6 +359,8 @@ EN_STRINGS = {
     'load': 'loading of track %s',
     'new': 'creation of a new track as %s',
     'lerror': 'failure of loading of track %s',
+    'perrorw': 'invalid data: waypoint %s',
+    'perrorp': 'invalid data: segment %s - point %s',
     'loaded': 'track %s loaded (name: "%s", waypoints: %s, segments: %s, points: %s)',
     'save': 'saving of track as %s',
     'serror': 'failure of saving of track under %s',
@@ -376,7 +382,8 @@ EN_STRINGS = {
     'cloaded': 'configuration loaded',
     'build': 'generation of the interface page',
     'buildexp': 'generation of the interface page of the explorer',
-    'bloaded': '%s track(s) loaded in %.1fs',
+    'bloaded1': '%s track(s) loaded in %.1fs',
+    'bloaded2': '%s track(s) loaded in %.1fs, %s track(s) skipped, %s track(s) missed',
     'berror': 'failure of the generation of the interface page',
     'berror1': 'failure of the generation of the interface page (conversion into WebMercator)',
     'berror2': 'failure of the generation of the interface page (map outside frame)',
@@ -3033,8 +3040,9 @@ class WGS84Track(WGS84WebMercator):
     self.WebMercatorPts = None
     self.intern_dict = None
     self.intern = None
-    self.log = partial(log, 'track')
-    self.log(1, 'init')
+    if not hasattr(self, 'log'):
+      self.log = partial(log, 'track')
+      self.log(1, 'init')
 
   def _unlink(self, track):
     if self.ULock is not None:
@@ -3096,15 +3104,11 @@ class WGS84Track(WGS84WebMercator):
     return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(localname, localname))
 
   def ProcessGPX(self, mode='a'):
-    flt = lambda s: float(s) if s.strip() != '' else ''
     r = self.Track.documentElement
     rns = r.namespaceURI
-    if mode == 'a' or mode == 'w':
-      wpts = r.getChildren('wpt')
-      try:
-        self.Wpts = list(enumerate((float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pt.getChildrenText('ele')), pt.getChildrenText('time').replace('\r','').replace('\n',''), ' '.join(pt.getChildrenText('name').splitlines())) for pt in wpts))
-      except:
-        return False
+    tnode = (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE)
+    alat = (XMLNode.EMPTY_NAMESPACE, 'lat')
+    alon = (XMLNode.EMPTY_NAMESPACE, 'lon')
     try:
       trk = r.getChildren('trk')[self.TrkId]
     except:
@@ -3135,38 +3139,103 @@ class WGS84Track(WGS84WebMercator):
                 break
         except:
           pass
-    if mode == 'a':
-      txt_node = (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE)
-      self.Pts = []
+      if mode == 'e':
+        return True
+    regexp_d=  "^([0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29)([^\\r\\n])"
+    regexp_t =  "(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])?$"
+    regexp_dt = re.compile(regexp_d + regexp_t).match
+    regexp_st = re.compile("^$").match
+    if mode == 'a' or mode == 'w':
       pti = 0
       try:
-        for seg in trk.getChildren('trkseg'):
-          pts = []
-          for pt in seg.getChildren('trkpt'):
-            pele = palt = ptime = ''
-            for c in pt.childNodes:
-              if c.namespaceURI == rns:
-                cln = c.localName
-                if cln == 'ele':
-                  for cc in c.childNodes:
-                    if cc.nodeType in txt_node:
-                      pele += cc.data
-                elif cln == 'time':
-                  for cc in c.childNodes:
-                    if cc.nodeType in txt_node:
-                      ptime += cc.data
-                elif cln == 'extensions':
-                  for cc in c.childNodes:
-                    if cc.namespaceURI == self.MT_NAMESPACE and cc.localName == 'ele_alt':
-                      for ccc in cc.childNodes:
-                        if ccc.nodeType in txt_node:
-                          palt += ccc.data
-            pts.append((pti, (float(pt.getAttribute('lat')), float(pt.getAttribute('lon')), flt(pele), flt(palt), ptime.replace('\r','').replace('\n',''))))
-            pti += 1
-          self.Pts.append(pts)
-        self.Pts = self.Pts or [[]]
+        self.Wpts = []
+        for pt in r.getChildren('wpt'):
+          pele = ptime = pname = ''
+          for c in pt.childNodes:
+            if c.namespaceURI == rns:
+              cln = c.localName
+              if cln == 'ele':
+                for cc in c.childNodes:
+                  if cc.nodeType in tnode:
+                    pele += cc.data
+              elif cln == 'time':
+                for cc in c.childNodes:
+                  if cc.nodeType in tnode:
+                    ptime += cc.data
+              elif cln == 'name':
+                for cc in c.childNodes:
+                  if cc.nodeType in tnode:
+                    pname += cc.data
+          plat = float(pt.attributes[alat][1])
+          plon = float(pt.attributes[alon][1])
+          ch = plat * plon * 0
+          if pele.strip():
+            pele = float(pele)
+            ch *= pele
+          else:
+            pele = ''
+          if ch:
+              raise
+          ptime = ptime.strip()
+          if ptime:
+            if not regexp_st(ptime):
+              regexp_st = re.compile(("^%s%s%s") % (*regexp_dt(ptime).groups(), regexp_t)).match
+          self.Wpts.append((pti, (plat, plon, pele, ptime, ' '.join(pname.splitlines()))))
+          pti += 1
       except:
+        self.log(1, 'perrorw', pti + 1)
         return False
+      if mode == 'a':
+        self.Pts = []
+        pti = 0
+        try:
+          for seg in trk.getChildren('trkseg'):
+            pts = []
+            for pt in seg.getChildren('trkpt'):
+              pele = palt = ptime = ''
+              for c in pt.childNodes:
+                if c.namespaceURI == rns:
+                  cln = c.localName
+                  if cln == 'ele':
+                    for cc in c.childNodes:
+                      if cc.nodeType in tnode:
+                        pele += cc.data
+                  elif cln == 'time':
+                    for cc in c.childNodes:
+                      if cc.nodeType in tnode:
+                        ptime += cc.data
+                  elif cln == 'extensions':
+                    for cc in c.childNodes:
+                      if cc.namespaceURI == self.MT_NAMESPACE and cc.localName == 'ele_alt':
+                        for ccc in cc.childNodes:
+                          if ccc.nodeType in tnode:
+                            palt += ccc.data
+              plat = float(pt.attributes[alat][1])
+              plon = float(pt.attributes[alon][1])
+              ch = plat * plon * 0
+              if pele.strip():
+                pele = float(pele)
+                ch *= pele
+              else:
+                pele = ''
+              if palt.strip():
+                palt = float(palt)
+                ch *= palt
+              else:
+                palt = ''
+              if ch:
+                raise
+              ptime = ptime.strip()
+              if ptime:
+                if not regexp_st(ptime):
+                  regexp_st = re.compile(("^%s%s%s") % (*regexp_dt(ptime).groups(), regexp_t)).match
+              pts.append((pti, (plat, plon, pele, palt, ptime)))
+              pti += 1
+            self.Pts.append(pts)
+          self.Pts = self.Pts or [[]]
+        except:
+          self.log(1, 'perrorp', len(self.Pts) + 1, pti + 1)
+          return False
     return True
 
   def LoadGPX(self, uri, trkid=None, source=None, builder=None):
@@ -9302,7 +9371,7 @@ class GPXTweakerWebInterfaceServer():
   '                      <label for="waypoint%sele">{jele}</label>\r\n' \
   '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" value="%s"><br>\r\n' \
+  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[+-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s"><br>\r\n' \
   '                    </span>\r\n' \
@@ -9322,7 +9391,7 @@ class GPXTweakerWebInterfaceServer():
   '                      <label for="point%salt">{jalt}</label>\r\n' \
   '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" value="%s"><br>\r\n' \
+  '                      <input type="text" id="point%stime" name="point%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[+-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -13166,12 +13235,15 @@ class GPXTweakerWebInterfaceServer():
     ti = time.time()
     gcie = gc.isenabled()
     gc.disable()
+    tskipped = 0
+    taborted = 0
     while u is not None:
       track = WGS84Track(self.SLock)
       if not track.LoadGPX(u, trk, trck, self.Builder):
         if uri is None:
           u = next(uris, None)
           trck = None
+          taborted += 1
           continue
         else:
           if gcie:
@@ -13183,6 +13255,7 @@ class GPXTweakerWebInterfaceServer():
       maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
         if uri is None:
+          tskipped += 1
           self.log(0, 'berror6')
         else:
           self.log(0, 'berror4')
@@ -13209,7 +13282,10 @@ class GPXTweakerWebInterfaceServer():
         break
     if gcie:
       gc.enable()
-    self.log(0, 'bloaded', len(self.Tracks), time.time() - ti)
+    if tskipped or taborted:
+      self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted)
+    else:
+      self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti)
     minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
     maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
     minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
