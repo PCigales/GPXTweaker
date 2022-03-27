@@ -3141,10 +3141,10 @@ class WGS84Track(WGS84WebMercator):
           pass
       if mode == 'e':
         return True
-    regexp_d=  "^([0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29)([^\\r\\n])"
-    regexp_t =  "(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])?$"
-    regexp_dt = re.compile(regexp_d + regexp_t).match
-    regexp_st = re.compile("^$").match
+    regexp_d=  '^([0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29)'
+    regexp_t =  '(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])?$'
+    regexp_dt = re.compile('[^\\r\\n]'.join((regexp_d, regexp_t))).match
+    regexp_st = re.compile('^$').match
     if mode == 'a' or mode == 'w':
       pti = 0
       try:
@@ -3179,7 +3179,7 @@ class WGS84Track(WGS84WebMercator):
           ptime = ptime.strip()
           if ptime:
             if not regexp_st(ptime):
-              regexp_st = re.compile(("^%s%s%s") % (*regexp_dt(ptime).groups(), regexp_t)).match
+              regexp_st = re.compile(('^%s[^\\r\\n]%s') % (regexp_dt(ptime).group(1), regexp_t)).match
           self.Wpts.append((pti, (plat, plon, pele, ptime, ' '.join(pname.splitlines()))))
           pti += 1
       except:
@@ -3228,7 +3228,7 @@ class WGS84Track(WGS84WebMercator):
               ptime = ptime.strip()
               if ptime:
                 if not regexp_st(ptime):
-                  regexp_st = re.compile(("^%s%s%s") % (*regexp_dt(ptime).groups(), regexp_t)).match
+                  regexp_st = re.compile(('^%s[^\\r\\n]%s') % (regexp_dt(ptime).group(1), regexp_t)).match
               pts.append((pti, (plat, plon, pele, palt, ptime)))
               pti += 1
             self.Pts.append(pts)
