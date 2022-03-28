@@ -6366,6 +6366,7 @@ class GPXTweakerWebInterfaceServer():
   '        let prev_state = sessionStorage.getItem("state");\r\n' \
   '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
   '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
+  '        xhr_ongoing++;\r\n' \
   '        if (mode == "map") {\r\n' \
   '          add_tile();\r\n' \
   '          rescale();\r\n' \
@@ -6381,6 +6382,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tlock").style.display = "inline-block";\r\n' \
   '          if (tlevel == 0) {rescale();}\r\n' \
   '        }\r\n' \
+  '        xhr_ongoing--;\r\n' \
   '        scroll_to_track();\r\n' \
   '        if (prev_state != null) {\r\n' \
   '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
