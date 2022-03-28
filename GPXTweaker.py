@@ -13247,15 +13247,15 @@ class GPXTweakerWebInterfaceServer():
       trck = trck or track
       if not track.LoadGPX(u, trk, trck, self.Builder):
         if uri is None:
-          if track.Pts is None:
-            trck = None
-            if track.Track is None:
+          if trck.Pts is None:
+            if trck.Track is None:
               gaborted += 1
             else:
-              for trk in range(1, len(track.Track.documentElement.getChildren('trk'))):
-                track.log(0, 'lerror', u + (' <%s>' % trk))
+              for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
+                trck.log(0, 'lerror', u + (' <%s>' % trk))
               taborted += trk + 1
               trk = 0
+            trck = None
             u = next(uris, None)
             continue
           else:
