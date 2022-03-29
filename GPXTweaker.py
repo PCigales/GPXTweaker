@@ -3057,8 +3057,11 @@ class WGS84Track(WGS84WebMercator):
 
   def unlink(self, track):
     if track is not None:
-      tu = threading.Thread(target=self._unlink, args=(track,))
-      tu.start()
+      if self.ULock is None:
+        self._unlink(track)
+      else:
+        tu = threading.Thread(target=self._unlink, args=(track,))
+        tu.start()
 
   @property
   def OTrack(self):
@@ -4805,11 +4808,12 @@ class GPXTweakerWebInterfaceServer():
   '        border-width:0.5px;\r\n' \
   '      }\r\n' \
   '      select:focus {\r\n' \
-  '          color:rgb(200,250,240);\r\n' \
+  '        color:rgb(200,250,240);\r\n' \
   '      }\r\n' \
   '      @-moz-document url-prefix() {\r\n' \
   '        select {\r\n' \
   '          appearance:none;\r\n' \
+  '          padding-right:1.7em;\r\n' \
   '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
   '          background-repeat:no-repeat;\r\n' \
   '          background-position-x:right;\r\n' \
@@ -13114,7 +13118,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __init__(self, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
+  def __init__(self, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg', launch=None):
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
     self.PSessionId = None
@@ -13184,7 +13188,10 @@ class GPXTweakerWebInterfaceServer():
     self.Media = None
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
-    if not self._load_config(cfg):
+    try:
+      if not self._load_config(cfg):
+        return
+    except:
       return
     self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
     self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
@@ -13244,198 +13251,215 @@ class GPXTweakerWebInterfaceServer():
     tskipped = 0
     taborted = 0
     gaborted = 0
-    while u is not None:
-      track = WGS84Track(self.SLock)
-      trck = trck or track
-      if not track.LoadGPX(u, trk, trck, self.Builder):
-        if uri is None:
-          if trck.Pts is None:
-            if trck.Track is None:
-              gaborted += 1
-            else:
-              for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
-                trck.log(0, 'lerror', u + (' <%s>' % trk))
-              taborted += trk + 1
-              trk = 0
-            trck = None
-            u = next(uris, None)
-            continue
-          else:
-            taborted += 1
-        else:
-          if gcie:
-            gc.enable()
-          return
-      else:
-        minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
-        maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
-        minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
-        maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
-        if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
+    garb = []
+    try:
+      while u is not None:
+        track = WGS84Track(self.SLock)
+        trck = trck or track
+        if not track.LoadGPX(u, trk, trck, self.Builder):
           if uri is None:
-            tskipped += 1
-            self.log(0, 'berror6')
+            if trck.Pts is None:
+              if trck.Track is None:
+                gaborted += 1
+              else:
+                for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
+                  trck.log(0, 'lerror', u + (' <%s>' % trk))
+                taborted += trk + 1
+                trk = 0
+                garb.append(trck)
+              trck = None
+              u = next(uris, None)
+              continue
+            else:
+              taborted += 1
           else:
-            self.log(0, 'berror4')
-            if gcie: 
-              gc.enable()
             return
         else:
-          self.Tracks.append([u, track])
-          self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
-      if uri is None:
-        if nbtrk is None:
-          nbtrk = len(track.Track.documentElement.getChildren('trk'))
-        trk += 1
-        if trk >= nbtrk:
-          trk = 0
-          nbtrk = None
-          trck = None
-          u = next(uris, None)
-      else:
-        self.Uri, self.Track = self.Tracks[0]
-        self.TrackInd = 0
-        break
-    if gcie:
-      gc.enable()
-    if tskipped or taborted or gaborted:
-      self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted)
-    else:
-      self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti)
-    minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
-    maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
-    minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
-    maxlon = max((b[3] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
-    if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
-      self.log(0, 'berror4')
-      return
-    clamp_lat = lambda v: min(self.VMaxLat, max(self.VMinLat, v))
-    clamp_lon = lambda v: min(self.VMaxLon, max(self.VMinLon, v))
-    if bmap:
-      self.Mode = 'map'
-      self.Map = WebMercatorMap()
-      if '://' in bmap or ':\\' in bmap:
-        if not self.Map.LoadMap(bmap, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
-          self.log(0, 'berror')
-          return
-        self.TilesSets = [['Map']]
-      else:
-        for i in range(len(self.MapSets)):
-          if self.MapSets[i][0].lower() == bmap.lower() or bmap == ' ':
-            self.MapSet = i
-            break
-        if self.MapSet is None:
-          self.log(0, 'berror3', bmap)
-          return
-        if not self.Map.FetchMap(self.MapSets[self.MapSet][1], clamp_lat(minlat - 0.014 if map_minlat is None else map_minlat), clamp_lat(maxlat + 0.014 if map_maxlat is None else map_maxlat), clamp_lon(minlon - 0.019 if map_minlon is None else map_minlon), clamp_lon(maxlon + 0.019 if map_maxlon is None else map_maxlon), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
-          self.log(0, 'berror')
-          return
-        self.TilesSets = [[self.MapSets[self.MapSet][0]]]
-      if not hasattr(self.Map, 'WMS_BBOX'):
-        bbox = dict(zip(('{minx}', '{miny}', '{maxx}', '{maxy}'), self.Map.MapInfos['bbox'].split(',')))
-      else:
-        bbox = dict(zip(self.Map.WMS_BBOX.split(','), self.Map.MapInfos['bbox'].split(',')))
-      self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = list(float(bbox[k]) for k in ('{minx}', '{miny}', '{maxx}', '{maxy}'))
-      self.MTopx = self.VMinx
-      self.MTopy = self.VMaxy
-      map_minlat, map_minlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
-      map_maxlat, map_maxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
-      if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
-        if minlat < map_minlat or maxlat > map_maxlat or minlon < map_minlon or maxlon > map_maxlon:
-          self.log(0, 'berror4')
-          return
-      self.VMinLat = max(self.VMinLat, map_minlat)
-      self.VMaxLat = min(self.VMaxLat, map_maxlat)
-      self.VMinLon = max(self.VMinLon, map_minlon)
-      self.VMaxLon = min(self.VMaxLon, map_maxlon)
-      if self.VMinLat >= self.VMaxLat or self.VMinLon >= self.VMaxLon:
-        self.log(0, 'berror2')
-        return
-      self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
-      self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
-      self.DefLat = (self.VMinLat + self.VMaxLat) / 2
-      self.DefLon = (self.VMinLon + self.VMaxLon) / 2
-    else:
-      if len(self.TilesSets) == 0 or not self.TilesBufferSize or not self.TilesBufferThreads:
-        self.log(0, 'berror5')
-        return
-      self.Mode = 'tiles'
-      self.Map = WebMercatorMap(self.TilesBufferSize, self.TilesBufferThreads)
-      self.TilesSet = 0
-      self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
-      self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
-      self.MTopx = self.VMinx
-      self.MTopy = self.VMaxy
-    if self.VMaxx - self.VMinx <= 5 or self.VMaxy - self.VMiny <= 5:
-      self.log(0, 'berror')
-      return
-    self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(clamp_lat(minlat - 0.008), clamp_lon(minlon - 0.011))
-    self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
-    for t in range(len(self.TracksBoundaries)):
-      self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][0] - 0.008), clamp_lon(self.TracksBoundaries[t][2] - 0.011)), WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][1] + 0.008), clamp_lon(self.TracksBoundaries[t][3] + 0.011))))
-    self.Elevation = WGS84Elevation()
-    if emap:
-      self.ElevationsProviders = []
-      if '://' in emap or ':\\' in emap:
-        if self.Elevation.LoadMap(emap):
-          self.EMode = 'map'
-          self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
-          self.ElevationsProviders = [['Map']]
-          self.log(1, 'elevation', emap)
+          minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
+          maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
+          minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
+          maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
+          if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
+            if uri is None:
+              tskipped += 1
+              self.log(0, 'berror6')
+            else:
+              self.log(0, 'berror4')
+              return
+          else:
+            self.Tracks.append([u, track])
+            self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
+        if uri is None:
+          if nbtrk is None:
+            nbtrk = len(track.Track.documentElement.getChildren('trk'))
+          trk += 1
+          if trk >= nbtrk:
+            trk = 0
+            nbtrk = None
+            if (self.Tracks[-1][0] if self.Tracks else None) != u:
+              garb.append(trck)
+            trck = None
+            u = next(uris, None)
         else:
-          self.ElevationProvider = None
-          self.log(0, 'eerror', emap)
+          self.Uri, self.Track = self.Tracks[0]
+          self.TrackInd = 0
+          break
+      if tskipped or taborted or gaborted:
+        self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted)
       else:
-        for i in range(len(self.ElevationMapSets)):
-          if self.ElevationMapSets[i][0].lower() == emap.lower() or emap == ' ':
-            self.ElevationMapSet = i
-            break
-        if self.ElevationMapSet is None:
-          self.log(0, 'eerror', emap)
+        self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti)
+      minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
+      maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
+      minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
+      maxlon = max((b[3] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
+      if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
+        self.log(0, 'berror4')
+        return
+      clamp_lat = lambda v: min(self.VMaxLat, max(self.VMinLat, v))
+      clamp_lon = lambda v: min(self.VMaxLon, max(self.VMinLon, v))
+      if bmap:
+        self.Mode = 'map'
+        self.Map = WebMercatorMap()
+        if '://' in bmap or ':\\' in bmap:
+          if not self.Map.LoadMap(bmap, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
+            self.log(0, 'berror')
+            return
+          self.TilesSets = [['Map']]
         else:
-          if self.Elevation.FetchMap(self.ElevationMapSets[self.ElevationMapSet][1], clamp_lat(minlat - 0.014 if map_minlat is None else map_minlat), clamp_lat(maxlat + 0.014 if map_maxlat is None else map_maxlat), clamp_lon(minlon - 0.019 if map_minlon is None else map_minlon), clamp_lon(maxlon + 0.019 if map_maxlon is None else map_maxlon), map_maxheight, map_maxwidth, dpi=map_dpi, **self.ElevationMapSets[self.ElevationMapSet][2]):
+          for i in range(len(self.MapSets)):
+            if self.MapSets[i][0].lower() == bmap.lower() or bmap == ' ':
+              self.MapSet = i
+              break
+          if self.MapSet is None:
+            self.log(0, 'berror3', bmap)
+            return
+          if not self.Map.FetchMap(self.MapSets[self.MapSet][1], clamp_lat(minlat - 0.014 if map_minlat is None else map_minlat), clamp_lat(maxlat + 0.014 if map_maxlat is None else map_maxlat), clamp_lon(minlon - 0.019 if map_minlon is None else map_minlon), clamp_lon(maxlon + 0.019 if map_maxlon is None else map_maxlon), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
+            self.log(0, 'berror')
+            return
+          self.TilesSets = [[self.MapSets[self.MapSet][0]]]
+        if not hasattr(self.Map, 'WMS_BBOX'):
+          bbox = dict(zip(('{minx}', '{miny}', '{maxx}', '{maxy}'), self.Map.MapInfos['bbox'].split(',')))
+        else:
+          bbox = dict(zip(self.Map.WMS_BBOX.split(','), self.Map.MapInfos['bbox'].split(',')))
+        self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = list(float(bbox[k]) for k in ('{minx}', '{miny}', '{maxx}', '{maxy}'))
+        self.MTopx = self.VMinx
+        self.MTopy = self.VMaxy
+        map_minlat, map_minlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
+        map_maxlat, map_maxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
+        if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
+          if minlat < map_minlat or maxlat > map_maxlat or minlon < map_minlon or maxlon > map_maxlon:
+            self.log(0, 'berror4')
+            return
+        self.VMinLat = max(self.VMinLat, map_minlat)
+        self.VMaxLat = min(self.VMaxLat, map_maxlat)
+        self.VMinLon = max(self.VMinLon, map_minlon)
+        self.VMaxLon = min(self.VMaxLon, map_maxlon)
+        if self.VMinLat >= self.VMaxLat or self.VMinLon >= self.VMaxLon:
+          self.log(0, 'berror2')
+          return
+        self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
+        self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
+        self.DefLat = (self.VMinLat + self.VMaxLat) / 2
+        self.DefLon = (self.VMinLon + self.VMaxLon) / 2
+      else:
+        if len(self.TilesSets) == 0 or not self.TilesBufferSize or not self.TilesBufferThreads:
+          self.log(0, 'berror5')
+          return
+        self.Mode = 'tiles'
+        self.Map = WebMercatorMap(self.TilesBufferSize, self.TilesBufferThreads)
+        self.TilesSet = 0
+        self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
+        self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
+        self.MTopx = self.VMinx
+        self.MTopy = self.VMaxy
+      if self.VMaxx - self.VMinx <= 5 or self.VMaxy - self.VMiny <= 5:
+        self.log(0, 'berror')
+        return
+      self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(clamp_lat(minlat - 0.008), clamp_lon(minlon - 0.011))
+      self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
+      for t in range(len(self.TracksBoundaries)):
+        self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][0] - 0.008), clamp_lon(self.TracksBoundaries[t][2] - 0.011)), WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][1] + 0.008), clamp_lon(self.TracksBoundaries[t][3] + 0.011))))
+      self.Elevation = WGS84Elevation()
+      if emap:
+        self.ElevationsProviders = []
+        if '://' in emap or ':\\' in emap:
+          if self.Elevation.LoadMap(emap):
             self.EMode = 'map'
             self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
-            self.ElevationsProviders = [[self.ElevationMapSets[self.ElevationMapSet][0]]]
-            self.log(1, 'elevation', self.ElevationMapSets[self.ElevationMapSet][0])
+            self.ElevationsProviders = [['Map']]
+            self.log(1, 'elevation', emap)
           else:
             self.ElevationProvider = None
-            self.log(0, 'eerror', self.ElevationMap[0])
-    elif len(self.ElevationsProviders) > 0:
-      self.ElevationProviderSel = 0
-      if 'layer' in self.ElevationsProviders[0][1]:
-        self.EMode = 'tiles'
-        self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
-        self.log(1, 'elevation', self.ElevationsProviders[0][0])
+            self.log(0, 'eerror', emap)
+        else:
+          for i in range(len(self.ElevationMapSets)):
+            if self.ElevationMapSets[i][0].lower() == emap.lower() or emap == ' ':
+              self.ElevationMapSet = i
+              break
+          if self.ElevationMapSet is None:
+            self.log(0, 'eerror', emap)
+          else:
+            if self.Elevation.FetchMap(self.ElevationMapSets[self.ElevationMapSet][1], clamp_lat(minlat - 0.014 if map_minlat is None else map_minlat), clamp_lat(maxlat + 0.014 if map_maxlat is None else map_maxlat), clamp_lon(minlon - 0.019 if map_minlon is None else map_minlon), clamp_lon(maxlon + 0.019 if map_maxlon is None else map_maxlon), map_maxheight, map_maxwidth, dpi=map_dpi, **self.ElevationMapSets[self.ElevationMapSet][2]):
+              self.EMode = 'map'
+              self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
+              self.ElevationsProviders = [[self.ElevationMapSets[self.ElevationMapSet][0]]]
+              self.log(1, 'elevation', self.ElevationMapSets[self.ElevationMapSet][0])
+            else:
+              self.ElevationProvider = None
+              self.log(0, 'eerror', self.ElevationMap[0])
+      elif len(self.ElevationsProviders) > 0:
+        self.ElevationProviderSel = 0
+        if 'layer' in self.ElevationsProviders[0][1]:
+          self.EMode = 'tiles'
+          self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
+          self.log(1, 'elevation', self.ElevationsProviders[0][0])
+        else:
+          self.EMode = 'api'
+          self.ElevationProvider = partial(self.Elevation.RequestElevation, self.ElevationsProviders[0][1], **self.ElevationsProviders[0][2])
+          self.log(1, 'elevation', self.ElevationsProviders[0][0])
       else:
-        self.EMode = 'api'
-        self.ElevationProvider = partial(self.Elevation.RequestElevation, self.ElevationsProviders[0][1], **self.ElevationsProviders[0][2])
-        self.log(1, 'elevation', self.ElevationsProviders[0][0])
-    else:
-      self.log(0, 'eerror', '-')
-      self.ElevationProvider = None
-    self.Itinerary = WGS84Itinerary()
-    if len(self.ItinerariesProviders) > 0:
-      self.ItineraryProviderSel = 0
-      self.ItineraryProviderConnection = [[None]]
-      def ItineraryProvider(points):
-        try:
-          pcon = self.ItineraryProviderConnection.pop()
-        except:
-          pcon = None
-        iti = self.Itinerary.RequestItinerary(self.ItinerariesProviders[self.ItineraryProviderSel][1], points, **self.ItinerariesProviders[self.ItineraryProviderSel][2], pconnection=pcon)
-        if pcon:
-          self.ItineraryProviderConnection.append(pcon)
-        return iti
-      self.ItineraryProvider = ItineraryProvider
-      self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
-    else:
-      self.ItineraryProvider = None
-    self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
-    if uri is not None:
-      self.HTML = ''
-    else:
-      self.HTMLExp = ''
+        self.log(0, 'eerror', '-')
+        self.ElevationProvider = None
+      self.Itinerary = WGS84Itinerary()
+      if len(self.ItinerariesProviders) > 0:
+        self.ItineraryProviderSel = 0
+        self.ItineraryProviderConnection = [[None]]
+        def ItineraryProvider(points):
+          try:
+            pcon = self.ItineraryProviderConnection.pop()
+          except:
+            pcon = None
+          iti = self.Itinerary.RequestItinerary(self.ItinerariesProviders[self.ItineraryProviderSel][1], points, **self.ItinerariesProviders[self.ItineraryProviderSel][2], pconnection=pcon)
+          if pcon:
+            self.ItineraryProviderConnection.append(pcon)
+          return iti
+        self.ItineraryProvider = ItineraryProvider
+        self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
+      else:
+        self.ItineraryProvider = None
+      self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
+      if uri is not None:
+        self.HTML = ''
+      else:
+        self.HTMLExp = ''
+      if launch is not None:
+        if not self.run():
+          self.HTML = self.HTMLExp = None
+          self.log(0, 'berror')
+          return
+        if launch:
+          webbrowser.open('http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer')))
+        else:
+          print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))))
+      for trck in garb:
+        trck.ULock = None
+        trck.OTrack = trck.STrack = None
+        del trck.Track
+    except:
+      self.log(0, 'berror')
+    finally:
+      if gcie:
+        gc.enable()
 
   def _build_pathes(self):
     def _coord_to_vb(x, y):
@@ -13850,17 +13874,9 @@ if __name__ == '__main__':
     if args.uri.rpartition('.')[2] != 'gpx':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
-  try:
-    GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'))
-  except:
-    log('interface', 0, 'berror')
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'), launch=(not args.noopen))
+  if (GPXTweakerInterface.HTML or GPXTweakerInterface.HTMLExp) is None:
     exit()
-  if not GPXTweakerInterface.run():
-    exit()
-  if args.noopen:
-    print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri is not None else 'Explorer'))))
-  else:
-    webbrowser.open('http://%s:%s/GPX%s.html' % (GPXTweakerInterface.Ip, GPXTweakerInterface.Ports[0], ('Tweaker' if args.uri is not None else 'Explorer')))
   print(LSTRINGS['parser']['keyboard'])
   while True:
     k = msvcrt.getch()
