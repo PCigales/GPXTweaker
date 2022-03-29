@@ -2119,7 +2119,7 @@ class WebMercatorMap(WGS84WebMercator):
           with lock:
             update_progress('failed')
           pass
-    downloaders = list(threading.Thread(target=downloader) for t in range(threads))
+    downloaders = list(threading.Thread(target=downloader, daemon=True) for t in range(threads))
     for downloader in downloaders:
       downloader.start()
     return progress
@@ -2424,7 +2424,7 @@ class WGS84Elevation(WGS84Map):
             finished.set()
     lind = list((limit * i, min(limit * (i + 1), len(points))) for i in range(1 + (len(points) - 1) // limit))
     for t in range(threads):
-      th = threading.Thread(target=_request_elevation)
+      th = threading.Thread(target=_request_elevation, daemon=True)
       th.start()
     finished.wait()
     if 'nodata' in infos:
