@@ -4397,7 +4397,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             self.server.Interface.SLock.release()
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
-              resp_body = self.server.Interface.HTML3DData
+              resp_body = self.server.Interface.HTML3DData or b''
               _send_resp('application/octet-stream')
             else:
               _send_err_nf()
@@ -13118,7 +13118,8 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __init__(self, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg', launch=None):
+  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg', launch=None):
+    self = object.__new__(cls)
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
     self.PSessionId = None
@@ -13166,6 +13167,7 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationProviderSel = None
     self.ItineraryProviderSel = None
     self.WebMappingServices = []
+    self.GPXTweakerInterfaceServerInstances = []
     self.HTML = None
     self.HTML3D = None
     self.HTML3DData = None
@@ -13190,9 +13192,9 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'conf')
     try:
       if not self._load_config(cfg):
-        return
+        return None
     except:
-      return
+      return None
     self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
     self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
     self.GPXTweakerInterfaceServerInstances.extend(range(max(self.Ports[1] + 1, self.MediaPorts[0]), self.MediaPorts[1] + 1))
@@ -13219,7 +13221,7 @@ class GPXTweakerWebInterfaceServer():
         self.VMaxLon = map_maxlon
     if err:
       self.log(0, 'berror2')
-      return
+      return None
     self.DefLat = self.DefLat if self.DefLat is not None else (self.VMinLat + self.VMaxLat) / 2
     self.DefLon = self.DefLon if self.DefLon is not None else (self.VMinLon + self.VMaxLon) / 2
     if len(self.Folders) == 0:
@@ -13273,7 +13275,9 @@ class GPXTweakerWebInterfaceServer():
             else:
               taborted += 1
           else:
-            return
+            if trck.Track is not None:
+              garb.append(trck)
+            return None
         else:
           minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
           maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
@@ -13285,7 +13289,8 @@ class GPXTweakerWebInterfaceServer():
               self.log(0, 'berror6')
             else:
               self.log(0, 'berror4')
-              return
+              garb.append(track)
+              return None
           else:
             self.Tracks.append([u, track])
             self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
@@ -13314,7 +13319,7 @@ class GPXTweakerWebInterfaceServer():
       maxlon = max((b[3] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
       if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
         self.log(0, 'berror4')
-        return
+        return None
       clamp_lat = lambda v: min(self.VMaxLat, max(self.VMinLat, v))
       clamp_lon = lambda v: min(self.VMaxLon, max(self.VMinLon, v))
       if bmap:
@@ -13323,7 +13328,7 @@ class GPXTweakerWebInterfaceServer():
         if '://' in bmap or ':\\' in bmap:
           if not self.Map.LoadMap(bmap, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
             self.log(0, 'berror')
-            return
+            return None
           self.TilesSets = [['Map']]
         else:
           for i in range(len(self.MapSets)):
@@ -13332,10 +13337,10 @@ class GPXTweakerWebInterfaceServer():
               break
           if self.MapSet is None:
             self.log(0, 'berror3', bmap)
-            return
+            return None
           if not self.Map.FetchMap(self.MapSets[self.MapSet][1], clamp_lat(minlat - 0.014 if map_minlat is None else map_minlat), clamp_lat(maxlat + 0.014 if map_maxlat is None else map_maxlat), clamp_lon(minlon - 0.019 if map_minlon is None else map_minlon), clamp_lon(maxlon + 0.019 if map_maxlon is None else map_maxlon), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
             self.log(0, 'berror')
-            return
+            return None
           self.TilesSets = [[self.MapSets[self.MapSet][0]]]
         if not hasattr(self.Map, 'WMS_BBOX'):
           bbox = dict(zip(('{minx}', '{miny}', '{maxx}', '{maxy}'), self.Map.MapInfos['bbox'].split(',')))
@@ -13349,14 +13354,14 @@ class GPXTweakerWebInterfaceServer():
         if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
           if minlat < map_minlat or maxlat > map_maxlat or minlon < map_minlon or maxlon > map_maxlon:
             self.log(0, 'berror4')
-            return
+            return None
         self.VMinLat = max(self.VMinLat, map_minlat)
         self.VMaxLat = min(self.VMaxLat, map_maxlat)
         self.VMinLon = max(self.VMinLon, map_minlon)
         self.VMaxLon = min(self.VMaxLon, map_maxlon)
         if self.VMinLat >= self.VMaxLat or self.VMinLon >= self.VMaxLon:
           self.log(0, 'berror2')
-          return
+          return None
         self.VMinx, self.VMiny = WGS84WebMercator.WGS84toWebMercator(self.VMinLat, self.VMinLon)
         self.VMaxx, self.VMaxy = WGS84WebMercator.WGS84toWebMercator(self.VMaxLat, self.VMaxLon)
         self.DefLat = (self.VMinLat + self.VMaxLat) / 2
@@ -13364,7 +13369,7 @@ class GPXTweakerWebInterfaceServer():
       else:
         if len(self.TilesSets) == 0 or not self.TilesBufferSize or not self.TilesBufferThreads:
           self.log(0, 'berror5')
-          return
+          return None
         self.Mode = 'tiles'
         self.Map = WebMercatorMap(self.TilesBufferSize, self.TilesBufferThreads)
         self.TilesSet = 0
@@ -13374,7 +13379,7 @@ class GPXTweakerWebInterfaceServer():
         self.MTopy = self.VMaxy
       if self.VMaxx - self.VMinx <= 5 or self.VMaxy - self.VMiny <= 5:
         self.log(0, 'berror')
-        return
+        return None
       self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(clamp_lat(minlat - 0.008), clamp_lon(minlon - 0.011))
       self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
       for t in range(len(self.TracksBoundaries)):
@@ -13446,18 +13451,24 @@ class GPXTweakerWebInterfaceServer():
         if not self.run():
           self.HTML = self.HTMLExp = None
           self.log(0, 'berror')
-          return
+          return None
         if launch:
           webbrowser.open('http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer')))
         else:
           print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))))
-      for trck in garb:
-        trck.ULock = None
-        trck.OTrack = trck.STrack = None
-        del trck.Track
+      return self
     except:
       self.log(0, 'berror')
+      return None
     finally:
+      def _unlink():
+        for trcks in (garb, (tr[1] for tr in self.Tracks)) if (self.HTML is None and self.HTMLExp is None) else (garb, ):
+          for trck in trcks:
+            trck.ULock = None
+            trck.OTrack = trck.STrack = None
+            del trck.Track
+      u_thread = threading.Thread(target=_unlink)
+      u_thread.start()
       if gcie:
         gc.enable()
 
@@ -13850,6 +13861,15 @@ class GPXTweakerWebInterfaceServer():
         self.Map.Tiles.Close()
     except:
       pass
+    with self.SLock:
+      for tr in self.Tracks:
+        trck = tr[1]
+        trck.ULock = None
+        trck.OTrack = trck.STrack = None
+        del trck.Track
+      self.HTML = self.HTMLExp = self.HTML3D = self.HTML3DData = None
+    with self.Media.DLock:
+      self.Media.Data = None
 
 
 if __name__ == '__main__':
@@ -13875,7 +13895,7 @@ if __name__ == '__main__':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
   GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'), launch=(not args.noopen))
-  if (GPXTweakerInterface.HTML or GPXTweakerInterface.HTMLExp) is None:
+  if GPXTweakerInterface is None:
     exit()
   print(LSTRINGS['parser']['keyboard'])
   while True:
