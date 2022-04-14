@@ -9205,7 +9205,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.oncontextmenu = null;\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
-  '        if (e.button == 1 && elt.id.substring(0, 4) == "path") {\r\n' \
+  '        if (e.button == 0 && elt.id.substring(0, 4) == "path") {\r\n' \
   '          let seg = document.getElementById(elt.id.replace("path", "segment") + "desc");\r\n' \
   '          element_click(null, seg);\r\n' \
   '        }\r\n' \
