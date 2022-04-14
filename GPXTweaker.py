@@ -675,7 +675,7 @@ class HTTPMessage():
     if not msg:
       return False
     a = None
-    for msg_line in msg.splitlines()[:-1]:
+    for msg_line in msg.replace(b'\r\n', b'\n').split(b'\n')[:-1]:
       if a is None:
         try:
           a, b, c = msg_line.strip().split(None, 2)
@@ -3467,20 +3467,20 @@ class WGS84Track(WGS84WebMercator):
             b.removeChild(b.firstChild).unlink()
           b.appendChild(t)
         elif msgp[0][-4:] == 'name':
-          self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, msgp[1], None, True)
+          self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, ' '.join(msgp[1].splitlines()), None, True)
         else:
           raise
         if not self.ProcessGPX('e'):
           raise
       else:
         msgp = msg.split('=\r\n')
-        nmsg = msgp[0].splitlines()
-        wpmsg = msgp[1].splitlines()
+        nmsg = msgp[0].split('\r\n')
+        wpmsg = msgp[1].split('\r\n')
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = r.removeChildren('wpt')
         segs = trk.removeChildren('trkseg')
         pts = list(pt for seg in segs for pt in seg.removeChildren('trkpt'))
-        self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, (nmsg or [''])[0], None, True)
+        self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, ' '.join((nmsg or [''])[0].splitlines()), None, True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
@@ -3494,7 +3494,7 @@ class WGS84Track(WGS84WebMercator):
             self._XMLUpdateAttribute(nwp, 'lon', v[2])
             self._XMLUpdateChildNodeText(nwp, 'ele', trkns, trkp, v[3], None)
             self._XMLUpdateChildNodeText(nwp, 'time', trkns, trkp, urllib.parse.unquote(v[4]), ('ele',))
-            self._XMLUpdateChildNodeText(nwp, 'name', trkns, trkp, urllib.parse.unquote(v[5]), ('geoidheight', 'magvar', 'time', 'ele') , True)
+            self._XMLUpdateChildNodeText(nwp, 'name', trkns, trkp, ' '.join(urllib.parse.unquote(v[5]).splitlines()), ('geoidheight', 'magvar', 'time', 'ele') , True)
           else:
             nwp = wpts[int(wp)]
             wpts[int(wp)] = None
@@ -3507,7 +3507,7 @@ class WGS84Track(WGS84WebMercator):
           s.unlink()
         for s in smsg:
           ns = self._XMLNewNode('trkseg', trkns, trkp)
-          pmsg = s.splitlines()
+          pmsg = s.split('\r\n')
           for p in pmsg:
             if '&' in p:
               v = p.split('&')
