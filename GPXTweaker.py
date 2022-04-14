@@ -675,7 +675,7 @@ class HTTPMessage():
     if not msg:
       return False
     a = None
-    for msg_line in msg.replace(b'\r\n', b'\n').split(b'\n')[:-1]:
+    for msg_line in msg.replace('\r\n', '\n').split('\n')[:-2]:
       if a is None:
         try:
           a, b, c = msg_line.strip().split(None, 2)
@@ -3474,8 +3474,8 @@ class WGS84Track(WGS84WebMercator):
           raise
       else:
         msgp = msg.split('=\r\n')
-        nmsg = msgp[0].split('\r\n')
-        wpmsg = msgp[1].split('\r\n')
+        nmsg = msgp[0].split('\r\n')[:-1]
+        wpmsg = msgp[1].split('\r\n')[:-1]
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = r.removeChildren('wpt')
         segs = trk.removeChildren('trkseg')
@@ -3507,7 +3507,7 @@ class WGS84Track(WGS84WebMercator):
           s.unlink()
         for s in smsg:
           ns = self._XMLNewNode('trkseg', trkns, trkp)
-          pmsg = s.split('\r\n')
+          pmsg = s.split('\r\n')[:-1]
           for p in pmsg:
             if '&' in p:
               v = p.split('&')
