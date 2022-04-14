@@ -9081,7 +9081,7 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
-  '        document.oncontextmenu = mouse_click;\r\n' \
+  '        if (e.button == 2) {document.oncontextmenu = mouse_click;}\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
   '        let elt = e.target;\r\n' \
@@ -9205,7 +9205,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.oncontextmenu = null;\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
-  '        if (elt.id.substring(0, 4) == "path") {\r\n' \
+  '        if (e.button == 1 && elt.id.substring(0, 4) == "path") {\r\n' \
   '          let seg = document.getElementById(elt.id.replace("path", "segment") + "desc");\r\n' \
   '          element_click(null, seg);\r\n' \
   '        }\r\n' \
@@ -12446,7 +12446,7 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
-  '        document.oncontextmenu = mouse_click;\r\n' \
+  '        if (e.button == 2) {document.oncontextmenu = mouse_click;}\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
   '        if (e.target && e.button == 0) {\r\n' \
