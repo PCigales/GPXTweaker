@@ -1,4 +1,4 @@
-# GPXTweaker v1.9.1 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.9.2 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -308,6 +308,7 @@ FR_STRINGS = {
   },
   'parser': {
     'license': 'Ce programme est sous licence copyleft GNU GPLv3 (voir https://www.gnu.org/licenses)',
+    'help': 'affichage du message d\'aide et interruption du script',
     'uri': 'chemin d\'accès à la trace ou argument pas mentionné pour démarrer avec l\'explorateur de traces',
     'conf': 'chemin d\'accès au fichier de configuration [même répertoire que le script par défaut]',
     'trk': 'indice de la trace (commençant à 0) [0 par défaut]',
@@ -594,6 +595,7 @@ EN_STRINGS = {
   },
   'parser': {
     'license': 'This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)',
+    'help': 'display of the help message and interruption of the script',
     'uri': 'path to the track or argument not mentioned to start with the explorer of tracks',
     'conf': 'full path to the configuration file [same folder as the script by default]',
     'trk': 'index of the track (starting at 0) [0 by default]',
@@ -9070,6 +9072,7 @@ class GPXTweakerWebInterfaceServer():
   '      var hand_m = false;\r\n' \
   '      var mouse_out = null;\r\n' \
   '      var pointer_e = null;\r\n' \
+  '      var mouse_ocm = null;\r\n' \
   '      function pointer_down(e) {\r\n' \
   '        pointer_e = e.pointerId;\r\n' \
   '      }\r\n' \
@@ -9081,7 +9084,10 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
-  '        if (e.button == 2) {document.oncontextmenu = mouse_click;}\r\n' \
+  '        if (e.button == 2) {\r\n' \
+  '          if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
+  '          document.oncontextmenu = mouse_click;\r\n' \
+  '        }\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
   '        let elt = e.target;\r\n' \
@@ -9181,10 +9187,16 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          hand = null;\r\n' \
   '          pointer_e = null;\r\n' \
+  '          if (e.button == 2) {\r\n' \
+  '            mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
+  '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let elt = e.target;\r\n' \
-  '        if (! elt) {return;}\r\n' \
+  '        if (! (elt?elt.id:elt)) {\r\n' \
+  '          mouse_ocm = setTimeout(function() {console.log(mouse_ocm);if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        if (e.button == 2) {\r\n' \
   '          if (elt.id.indexOf("dot") >= 0) {\r\n' \
   '            let cb = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
@@ -9197,12 +9209,15 @@ class GPXTweakerWebInterfaceServer():
   '            segment_checkbox(cb);\r\n' \
   '            cb.scrollIntoView({block:"nearest"});\r\n' \
   '          }\r\n' \
+  '          mouse_ocm = setTimeout(function() {console.log(mouse_ocm);if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_click(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.oncontextmenu = null;\r\n' \
+  '        if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
+  '        mouse_ocm = null;\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (e.button == 0 && elt.id.substring(0, 4) == "path") {\r\n' \
@@ -12434,6 +12449,7 @@ class GPXTweakerWebInterfaceServer():
   '      var hand = null;\r\n' \
   '      var mouse_out = null;\r\n' \
   '      var pointer_e = null;\r\n' \
+  '      var mouse_ocm = null;\r\n' \
   '      function pointer_down(e) {\r\n' \
   '        pointer_e = e.pointerId;\r\n' \
   '      }\r\n' \
@@ -12446,7 +12462,10 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
-  '        if (e.button == 2) {document.oncontextmenu = mouse_click;}\r\n' \
+  '        if (e.button == 2) {\r\n' \
+  '          if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
+  '          document.oncontextmenu = mouse_click;\r\n' \
+  '        }\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
   '        if (e.target && e.button == 0) {\r\n' \
@@ -12475,17 +12494,21 @@ class GPXTweakerWebInterfaceServer():
   '          hand = null;\r\n' \
   '          viewpane.style.cursor = "";\r\n' \
   '          viewpane.releasePointerCapture(pointer_e);\r\n' \
+  '          pointer_e = null;\r\n' \
   '          if (media_ex_visible) {\r\n' \
   '            show_media();\r\n' \
   '            media_ex_visible = false;\r\n' \
   '          }\r\n' \
-  '          return;\r\n' \
+  '        }\r\n' \
+  '        if (e.button == 2) {\r\n' \
+  '          mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_click(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '        document.oncontextmenu = null;\r\n' \
+  '        if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (e.button == 2) {\r\n' \
@@ -13873,12 +13896,13 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.9.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.9.2 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
-  CustomArgumentParser = partial(argparse.ArgumentParser, formatter_class=formatter)
+  CustomArgumentParser = partial(argparse.ArgumentParser, formatter_class=formatter, add_help=False)
   parser = CustomArgumentParser()
+  parser.add_argument('--help', '-h', action='help', default=argparse.SUPPRESS, help=LSTRINGS['parser']['help'])
   parser.add_argument('uri', metavar='URI', help=LSTRINGS['parser']['uri'], nargs='?', default=None)
   parser.add_argument('--conf', '-c', metavar='CONF', help=LSTRINGS['parser']['conf'], default='')
   parser.add_argument('--trk', '-t', metavar='TRK', help=LSTRINGS['parser']['trk'], type=int, default=None)
