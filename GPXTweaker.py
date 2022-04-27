@@ -3743,7 +3743,7 @@ class GeotaggedMedia():
   MP4_EPOCH = 2082844800
   DATETIME_FORMAT = ''
   try:
-    if locale.getdefaultlocale()[0][:2].lower() == 'fr':
+    if locale.getlocale()[0][:2].lower() == 'fr':
       DATETIME_FORMAT = '%d/%m/%Y %H:%M:%S'
       @staticmethod
       def DATETIME_CONVERT(dt):
