@@ -613,7 +613,7 @@ EN_STRINGS = {
 }
 LSTRINGS = EN_STRINGS
 try:
-  if locale.getdefaultlocale()[0][:2].lower() == 'fr':
+  if locale.getlocale()[0][:2].lower() == 'fr':
     LSTRINGS = FR_STRINGS
 except:
   pass
@@ -3741,14 +3741,18 @@ class WebMapping():
 class GeotaggedMedia():
 
   MP4_EPOCH = 2082844800
-  if locale.getdefaultlocale()[0][:2].lower() == 'fr':
-    DATETIME_FORMAT = '%d/%m/%Y %H:%M:%S'
-    @staticmethod
-    def DATETIME_CONVERT(dt):
-      dtc = dt.split()
-      dtc[0] = '/'.join(dtc[0].split(':')[::-1])
-      return ' '.join(dtc)
-  else:
+  DATETIME_FORMAT = ''
+  try:
+    if locale.getdefaultlocale()[0][:2].lower() == 'fr':
+      DATETIME_FORMAT = '%d/%m/%Y %H:%M:%S'
+      @staticmethod
+      def DATETIME_CONVERT(dt):
+        dtc = dt.split()
+        dtc[0] = '/'.join(dtc[0].split(':')[::-1])
+        return ' '.join(dtc)
+  except:
+    pass
+  if not DATETIME_FORMAT:
     DATETIME_FORMAT = '%Y/%m/%d %H:%M:%S'
     @staticmethod
     def DATETIME_CONVERT(dt):
