@@ -2539,10 +2539,11 @@ class WGS84Itinerary(WGS84Map):
 
 class WGS84ReverseGeocoding():
 
-  AS_IGN_LOOK4_50 = {'alias': 'IGN_LOOK4', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
-  AS_IGN_LOOK4 = AS_IGN_LOOK4_150 = {'alias': 'IGN_LOOK4', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
-  AS_IGN_LOOK4_250 = {'alias': 'IGN_LOOK4', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_IGN_LOOK4_50 = {'alias': 'IGN_LOOK4_50', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_IGN_LOOK4 = AS_IGN_LOOK4_150 = {'alias': 'IGN_LOOK4_150', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_IGN_LOOK4_250 = {'alias': 'IGN_LOOK4_250', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
   AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2','key': ('display_name',)}
+  AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
 
   @classmethod
   def ASAlias(cls, name):
@@ -2578,14 +2579,20 @@ class WGS84ReverseGeocoding():
     uri = infos['source'].format_map({'key': key or '', 'lat': point[0], 'lon': point[1]})
     try:
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+      print(rep.code)
       if rep.code != '200':
         return None
       if not rep.body:
         return None
-      jdesc = json.loads(rep.body)
-      return WGS84ReverseGeocoding._parse_json(jdesc, infos['key'])
+      if 'key' in infos:
+        jdesc = json.loads(rep.body)
+        return WGS84ReverseGeocoding._parse_json(jdesc, infos['key'])
+      elif 'regex' in infos:
+        return re.search(infos['regex'],rep.body.decode('utf-8')).group(1)
+      else:
+        return None
     except:
-      return None    
+      return None
 
 
 class XMLNode():
@@ -13480,7 +13487,9 @@ class GPXTweakerWebInterfaceServer():
               return False
           elif field == 'json_key':
             s[1]['key'] = value if hcur[:13] == 'elevationapi ' else tuple(map(str.strip, value.split(',')))
-          elif field in ('source',) + (('separator', 'nodata') if hcur[:13] == 'elevationapi ' else ()):
+          elif field == 'html_regex' and hcur[:20] == 'reversegeocodingapi ':
+            s[1]['regex'] = value
+          elif field == 'source' or (field in ('separator', 'nodata') and hcur[:13] == 'elevationapi '):
             s[1][field] = value
             if field == 'nodata':
               try:
