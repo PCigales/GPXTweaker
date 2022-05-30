@@ -13478,8 +13478,10 @@ class GPXTweakerWebInterfaceServer():
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'json_key') + (('separator', 'nodata') if hcur[:13] == 'elevationapi ' else ()):
-            s[1][field.replace('json_', '')] = value if hcur[:13] == 'elevationapi ' else tuple(map(str.strip, value.split(',')))
+          elif field == 'json_key':
+            s[1]['key'] = value if hcur[:13] == 'elevationapi ' else tuple(map(str.strip, value.split(',')))
+          elif field in ('source',) + (('separator', 'nodata') if hcur[:13] == 'elevationapi ' else ()):
+            s[1][field] = value
             if field == 'nodata':
               try:
                 s[1][field] = float(value)
