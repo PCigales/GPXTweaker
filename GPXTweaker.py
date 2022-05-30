@@ -110,6 +110,7 @@ FR_STRINGS = {
     'elevation': 'fournisseur d\'élévations configuré (%s)',
     'eerror': 'échec de la configuration du fournisseur d\'élévations (%s)',
     'itinerary': 'fournisseur d\'itinéraires configuré (%s)',
+    'reversegeocoding': 'fournisseur de géocodages inversés configuré (%s)',
     'built': 'page d\'interface générée',
     'builtexp': 'page d\'interface de l\'explorateur générée',
     'request': 'réception de la requête %s %s',
@@ -199,7 +200,7 @@ FR_STRINGS = {
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jhelp3d': 'clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
+    'jhelp3d': 'survol souris de la mini-carte pour afficher sa légende&#13;&#10;clic sur la vue 3d puis :&#13;&#10;flèche haut / bas pour avancer / reculer&#13;&#10;flèche gauche / droite pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -303,6 +304,11 @@ FR_STRINGS = {
     'jpace': 'Progression:',
     'jvfov': 'Champ de vue vertical:',
     'jheight': 'Hauteur de vue:',
+    'jminimap': 'clic sur la mini-carte pour l\'agrandir / la réduire&#13;&#10;clic droit sur la mini-carte pour afficher / masquer le panneau d\'informations, et lorsqu\'il est visible:&#13;&#10;clic droit sur la vue 3D pour afficher la description du point&#13;&#10;alt + clic droit sur la vue 3D pour afficher la description du point et son géocodage inversé&#13;&#10;clic sur l\'oeil ou la cible pour créer ou déplacer à cet emplacement le point de cheminement dédié dans l\'onglet d\'édition de trace&#13;&#10;shift + clic sur l\'oeil ou la cible pour compléter la description du point par son géocodage inversé&#13;&#10;ctrl + clic droit sur la mini-carte pour afficher / masquer le panneau de sélection du fournisseur de géocodages inversés',
+    'jplat': 'lat:',
+    'jplon': 'lon:',
+    'jpele': 'ele:',
+    'jpdist': 'dist:',
     'start': 'démarrage',
     'close': 'fermeture'
   },
@@ -397,6 +403,7 @@ EN_STRINGS = {
     'elevation': 'elevations provider configured (%s)',
     'eerror': 'failure of the configuration of the elevations provider (%s)',
     'itinerary': 'itineraries provider configured (%s)',
+    'reversegeocoding': 'reverse geocodings provider configured (%s)',
     'built': 'interface page generated',
     'builtexp': 'interface page of the explorer generated',
     'request': 'receipt of the request %s %s',
@@ -486,7 +493,7 @@ EN_STRINGS = {
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexpscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
-    'jhelp3d': 'click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
+    'jhelp3d': 'mouse over the mini-map to display its legend&#13;&#10;click on the 3d view then :&#13;&#10;arrow up / down to move forward / backward&#13;&#10;arrow left / right to rotate left / right&#13;&#10;page up / down to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
     'jlat': 'Lat',
@@ -590,6 +597,11 @@ EN_STRINGS = {
     'jpace': 'Progression:',
     'jvfov': 'Vertical field of view:',
     'jheight': 'Height of view:',
+    'jminimap': 'click on the mini-map to enlarge / reduce it&#13;&#10;right click on the mini-map to show / hide the informations panel, and when it is visible:&#13;&#10;right click on the 3D view to display the description of the point&#13;&#10;alt + right click on the 3D view to display the description of the point and its reverse geocoding&#13;&#10;click on the eye or the target to create or move to this location the dedicated waypoint in the track edition tab&#13;&#10;shift + click on the eye or the target to complete the description of the point with its reverse geocoding&#13;&#10;ctrl + right click on the mini-map to show / hide the reverse geocodings provider panel',
+    'jplat': 'lat:',
+    'jplon': 'lon:',
+    'jpele': 'ele:',
+    'jpdist': 'dist:',
     'start': 'start-up',
     'close': 'shutdown'
   },
@@ -2523,6 +2535,57 @@ class WGS84Itinerary(WGS84Map):
       return list(map(lambda s:s[::-1], iti))
     except:
       return None
+
+
+class WGS84ReverseGeocoding():
+
+  AS_IGN_LOOK4_50 = {'alias': 'IGN_LOOK4', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_IGN_LOOK4 = AS_IGN_LOOK4_150 = {'alias': 'IGN_LOOK4', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_IGN_LOOK4_250 = {'alias': 'IGN_LOOK4', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2','key': ('display_name',)}
+
+  @classmethod
+  def ASAlias(cls, name):
+    if hasattr(cls, 'AS_' + name):
+      return dict(getattr(cls, 'AS_' + name))
+    else:
+      return None
+
+  @staticmethod
+  def _parse_json(j, k, f=0):
+    if f < len(k):
+      if isinstance(j[k[f]], (list, tuple)):
+        return ' | '.join(WGS84ReverseGeocoding._parse_json(e, k, f+1) for e in j[k[f]])
+      else:
+        return WGS84ReverseGeocoding._parse_json(j[k[f]], k, f+1)
+    else:
+      return j
+
+  def RequestDescription(self, infos, point, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+    if not isinstance(point, (list, tuple)):
+      return None
+    if len(point) != 2:
+      return
+    if not isinstance(point[0], (float, int)) or not isinstance(point[1], (float, int)):
+      return
+    headers = {}
+    if referer:
+      headers['Referer'] = referer
+    if user_agent:
+      headers['User-Agent'] = user_agent
+    if not infos.get('source'):
+      return None
+    uri = infos['source'].format_map({'key': key or '', 'lat': point[0], 'lon': point[1]})
+    try:
+      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+      if rep.code != '200':
+        return None
+      if not rep.body:
+        return None
+      jdesc = json.loads(rep.body)
+      return WGS84ReverseGeocoding._parse_json(jdesc, infos['key'])
+    except:
+      return None    
 
 
 class XMLNode():
@@ -4728,6 +4791,28 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 self.server.Interface.TrackInd = None
                 self.server.Interface.Uri, self.server.Interface.Track = None, None
               self.server.Interface.SLock.release()
+          elif req.path.lower()[:17] == '/reversegeocoding':
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
+            try:
+              if int(q['rgset'][0]) != self.server.Interface.ReverseGeocodingProviderSel:
+                self.server.Interface.ReverseGeocodingProviderConnection = [[None]]
+                self.server.Interface.ReverseGeocodingProviderSel = int(q['rgset'][0])
+                self.server.Interface.log(1, 'reversegeocoding', self.server.Interface.ReverseGeocodingsProviders[self.server.Interface.ReverseGeocodingProviderSel][0])
+            except:
+              self.server.Interface.SLock.release()
+              _send_err_fail()
+              continue
+            lpoint = req.body.split(',')
+            try:
+              if len(lpoint) != 2:
+                raise
+              desc = self.server.Interface.ReverseGeocodingProvider(list(map(float, lpoint)))
+              if not desc:
+                raise
+              resp_body = desc.encode('utf-8')
+              _send_resp('text/plain; charset=utf-8')
+            except:
+              _send_err_fail()
           else:
             _send_err_nf()
         elif req.method:
@@ -7344,6 +7429,39 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt.value == "error") {pt.checked = ! pt.checked;}\r\n' \
   '        if (pt.checked) {point_undelete(pt, batch);} else {point_delete(pt, batch);}\r\n' \
   '      }\r\n' \
+  '      function pointed_waypoint(coord) {\r\n' \
+  '        let wm = WGS84toWebMercator(...coord);\r\n' \
+  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
+  '        if (focused) {\r\n' \
+  '          ex_foc = focused;\r\n' \
+  '          element_click(null, document.getElementById(focused + "desc"), false);\r\n' \
+  '          dot_style(ex_foc, false);\r\n' \
+  '        }\r\n' \
+  '        let wpts = document.getElementById("waypointsform").children;\r\n' \
+  '        let w = 0;\r\n' \
+  '        let wpt = null;\r\n' \
+  '        while (w < wpts.length) {\r\n' \
+  '          wpt = wpts[w].firstElementChild;\r\n' \
+  '          if (! wpt.checked && document.getElementById(wpt.id + "name").value == "#### 3D ####") {break;}\r\n' \
+  '          w++;\r\n' \
+  '        }\r\n' \
+  '        if (w < wpts.length) {\r\n' \
+  '          element_click(null, document.getElementById(wpt.id + "desc"), false);\r\n' \
+  '          document.getElementById(wpt.id+ "lat").value = coord[0].toFixed(6);\r\n' \
+  '          document.getElementById(wpt.id + "lon").value = coord[1].toFixed(6);\r\n' \
+  '          point_edit(false, true, false, true);\r\n' \
+  '        } else {\r\n' \
+  '          point_insert("a", coord);\r\n' \
+  '          document.getElementById(focused + "name").value = "#### 3D ####";\r\n' \
+  '          point_edit(false, false, false, false);\r\n' \
+  '          wpt = document.getElementById(focused);\r\n' \
+  '          wpt.checked = ! wpt.checked;\r\n' \
+  '          point_checkbox(wpt);\r\n' \
+  '        }\r\n' \
+  '        save_old();\r\n' \
+  '        scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
+  '        window.alert("3D");\r\n' \
+  '      }\r\n' \
   '      function segment_calc(seg, fpan=0, ind=null, mmlhs=null, teas=null) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
@@ -9519,6 +9637,23 @@ class GPXTweakerWebInterfaceServer():
   '        font-size:90%;\r\n' \
   '        font-weight:bold;\r\n' \
   '      }\r\n' \
+  '      input[id$=_info] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        left:1.5em;\r\n' \
+  '        width:calc(100vw - 10vh - 20em);\r\n' \
+  '        margin:0;\r\n' \
+  '        opacity:inherit;\r\n' \
+  '        background-color:inherit;\r\n' \
+  '        border:none;\r\n' \
+  '        outline:none;\r\n' \
+  '        cursor:initial;\r\n' \
+  '      }\r\n' \
+  '      label[for$=_info] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        left:2px;\r\n' \
+  '        width:1em;\r\n' \
+  '        text-align:center;\r\n' \
+  '      }\r\n' \
   '    </style>\r\n'
   HTML_3D_FORM1_TEMPLATE = \
   '            <br><br>\r\n' \
@@ -10490,15 +10625,25 @@ class GPXTweakerWebInterfaceServer():
   '      </colgroup>\r\n' \
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;">\r\n' \
-  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" ></canvas>\r\n' \
-  '          <svg viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;">\r\n' \
-  '            <path id="track" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
-  '            <text dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
-  '              <textPath href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
+  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();">\r\n' \
+  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
+  '          <div id="panel_infos" style="display:none;position:absolute;top:5px;left:5px;width:calc(100vw - 10vh - 18em);height:3em;font-size:90%;color:black;background-color:rgba(210,210,210,0.85);">\r\n' \
+  '            <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:hidden;height:3em;">\r\n' \
+  '              <label for="eye_info" style="top:2px;" onclick="event.shiftKey?complete_infos(event):update_waypoint(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
+  '              <label for="target_info" style="bottom:2px;" onclick="event.shiftKey?complete_infos(event):update_waypoint(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly style="bottom:2px;">\r\n' \
+  '            </form>\r\n' \
+  '          </div>\r\n' \
+  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;" onclick="toggle_minimap_magnification()">\r\n' \
+  '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
+  '            <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
+  '              <textPath pointer-events="none" href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
   '            </text>\r\n' \
-  '            <path id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" transform="scale(1) rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 l0.15 -0.1 l0.15 0.1 l-0.15 -0.4"/>\r\n' \
+  '            <path pointer-events="none" id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" fill-opacity="1" transform="scale(1) rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 l0.15 -0.1 l0.15 0.1 l-0.15 -0.4"/>\r\n' \
+  '          <title>{#jminimap#}</title>\r\n' \
   '          </svg>\r\n' \
+  '          <div id="panel_rg" style="display:none;position:absolute;top:10vh;right:2px;width:10.2em;height:1.9em;font-size:80%;">\r\n' \
+  '            <select id="select_rg" name="select_rg" autocomplete="off" style="width:10em;height:1.7em;background-color:lightgray;" onchange="rgset =this.selectedIndex">##RGSETS##</select>\r\n' \
+  '          </div>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
   '          <div title="{#jhelp3d#}" style="position:absolute;z-index:10;right:20px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
@@ -10535,6 +10680,12 @@ class GPXTweakerWebInterfaceServer():
   '      var cv_vfov = document.getElementById("cursorv_vfov");\r\n' \
   '      var c_height = document.getElementById("cursor_height");\r\n' \
   '      var cv_height = document.getElementById("cursorv_height");\r\n' \
+  '      var p_infos = document.getElementById("panel_infos");\r\n' \
+  '      var e_info = document.getElementById("eye_info");\r\n' \
+  '      var t_info = document.getElementById("target_info");\r\n' \
+  '      var p_rg = document.getElementById("panel_rg");\r\n' \
+  '      var s_rg = document.getElementById("select_rg");\r\n' \
+  '      var minimap = document.getElementById("mini_map");\r\n' \
   '      var trpaces = null;\r\n' \
   '      var trscale = null;\r\n' \
   '      var rpositions = null;\r\n' \
@@ -10545,6 +10696,12 @@ class GPXTweakerWebInterfaceServer():
   '      const tr_size = Math.min(8192, max_size / 2);\r\n' \
   '      const d_size = max_size;\r\n' \
   '      const rnt = 36;\r\n' \
+  '      var p_texture = null;\r\n' \
+  '      var pd_texture = null;\r\n' \
+  '      var pfrbuf = null;\r\n' \
+  '      var mzoom = 1;\r\n' \
+  '      var show_infos = false;\r\n' \
+  '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
   '      function set_param(p, v=null) {\r\n' \
   '        if (p == "p") {\r\n' \
   '          if (v != null) {c_pace.value = v.toString();}\r\n' \
@@ -10555,8 +10712,9 @@ class GPXTweakerWebInterfaceServer():
   '            if (c_rangle.disabled) {toggle_rotation();}\r\n' \
   '            set_param("r", (450 - trpaces[pace][3] / Math.PI * 180) % 360);\r\n' \
   '          } else if (eposition != null) {\r\n' \
-  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale})`);\r\n' \
+  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
   '          }\r\n' \
+  '          if (show_infos) {update_infos();}\r\n' \
   '        } else if (p == "f") {\r\n' \
   '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
   '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
@@ -10572,6 +10730,7 @@ class GPXTweakerWebInterfaceServer():
   '            cv_height.innerHTML = (height >= 10 ? Math.round(height) : Math.round(height * 10) / 10).toString();\r\n' \
   '            zoff = height / scale;\r\n' \
   '          }\r\n' \
+  '          if (show_infos) {update_infos();}\r\n' \
   '        } else {\r\n' \
   '          let angle = null;\r\n' \
   '          switch (p) {\r\n' \
@@ -10582,7 +10741,7 @@ class GPXTweakerWebInterfaceServer():
   '            case "r":\r\n' \
   '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
   '              angle =  parseFloat(c_rangle.value) * Math.PI / -180;\r\n' \
-  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale})`);}\r\n' \
+  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);}\r\n' \
   '              break;\r\n' \
   '            case "lt":\r\n' \
   '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
@@ -10640,7 +10799,40 @@ class GPXTweakerWebInterfaceServer():
   '        let ra = 2 * Math.PI / rnt;\r\n' \
   '        for (let i=0; i<=rnt;i++) {rpositions.set([0.01 * rr * Math.cos(i * ra), 0.01 * Math.sin(i * ra), 0], 3 + 3 * i);}\r\n' \
   '        gl.bufferData(gl.ARRAY_BUFFER, rpositions, gl.DYNAMIC_DRAW);\r\n' \
+  '        if (pfrbuf) {\r\n' \
+  '          gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
+  '          ptexture_attach(gl.TEXTURE3);\r\n' \
+  '          gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '        }\r\n' \
   '      }\r\n' + HTML_3D_UTIL_TEMPLATE + \
+  '      function ptexture_attach(unit) {\r\n' \
+  '        gl.activeTexture(unit);\r\n' \
+  '        for (let ttype of ["p", "pd"]){\r\n' \
+  '          let gl_texture = window[ttype + "_texture"];\r\n' \
+  '          if (gl_texture == null) {\r\n' \
+  '            gl_texture = gl.createTexture();\r\n' \
+  '            window[ttype + "_texture"] = gl_texture;\r\n' \
+  '            gl.bindTexture(gl.TEXTURE_2D, gl_texture);\r\n' \
+  '            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);\r\n' \
+  '            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);\r\n' \
+  '            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);\r\n' \
+  '            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);\r\n' \
+  '          } else {\r\n' \
+  '            gl.bindTexture(gl.TEXTURE_2D, gl_texture);\r\n' \
+  '          }\r\n' \
+  '          gl.texImage2D(gl.TEXTURE_2D, 0, ttype=="p"?gl.RG16I:gl.DEPTH_COMPONENT16, gl.drawingBufferWidth / ssampling, gl.drawingBufferHeight / ssampling, 0, ttype=="p"?gl.RG_INTEGER:gl.DEPTH_COMPONENT, ttype=="p"?gl.SHORT:gl.UNSIGNED_SHORT, null);\r\n' \
+  '          gl.framebufferTexture2D(gl.FRAMEBUFFER, ttype!="p"?gl.DEPTH_ATTACHMENT:gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gl_texture, 0);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function get_pz(px, py) {\r\n' \
+  '        let ix = 0;\r\n' \
+  '        let iy = 0;\r\n' \
+  '        while (ix < lvx - 1 && vpositions[ix * 6] <= px) {ix++;}\r\n' \
+  '        while (iy < lvy - 1 && vpositions[(iy * (lvx + 1)) * 6 + 4] <= py) {iy++;}\r\n' \
+  '        let cx = (px - vpositions[(ix - 1) * 6]) / (vpositions[ix * 6] - vpositions[(ix - 1) * 6]);\r\n' \
+  '        let cy = (py - vpositions[(iy * (lvx + 1)) * 6 + 1]) / (vpositions[(iy * (lvx + 1)) * 6 + 4] - vpositions[(iy * (lvx + 1)) * 6 + 1]);\r\n' \
+  '        return cx + cy <= 1 ? (1 - cx - cy) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 2] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 2] + cy  * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] : (1 - cy) * vpositions[(ix + iy * (lvx + 1)) * 6 + 2] + (1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] + (cx + cy - 1) * vpositions[(ix + iy * (lvx + 1)) * 6 + 5];\r\n' \
+  '      }\r\n' \
   '      function canvas_init() {\r\n' \
   '        gl.enable(gl.DEPTH_TEST);\r\n' \
   '        rpositions = new Float32Array(6 + 3 * rnt);\r\n' \
@@ -10717,6 +10909,19 @@ class GPXTweakerWebInterfaceServer():
   '            gl_Position.z *= gl_Position.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
+  '        let vertex_pshader_s = `#version 300 es\r\n' \
+  '          in vec4 tvposition;\r\n' \
+  '          uniform vec2 eposition;\r\n' \
+  '          uniform float radius;\r\n' \
+  '          uniform mat4 vmatrix;\r\n' \
+  '          out vec2 pcoord;\r\n' \
+  '          void main() {\r\n' \
+  '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * (tvposition.z + radius), 0.0));\r\n' \
+  '            gl_Position.z *= gl_Position.w;\r\n' \
+  '            pcoord = tvposition.xy;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
   '        let fragment_cshader_s = `#version 300 es\r\n' \
   '          precision highp float;\r\n' \
   '          precision highp int;\r\n' \
@@ -10771,6 +10976,16 @@ class GPXTweakerWebInterfaceServer():
   '          void main() {\r\n' \
   '            pcolor = vec4(1, 1, 0, 1);\r\n' \
   '            gl_FragDepth = 1.0;\r\n' \
+  '          }\r\n' \
+  '        `;\r\n' \
+  '       let fragment_pshader_s = `#version 300 es\r\n' \
+  '          precision highp float;\r\n' \
+  '          precision highp int;\r\n' \
+  '          in vec2 pcoord;\r\n' \
+  '          out ivec2 pcolor;\r\n' \
+  '          void main() {\r\n' \
+  '            pcolor = ivec2(round(32767.0 * pcoord));\r\n' \
+  '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
   '        function create_track_map() {\r\n' \
@@ -10847,13 +11062,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              dr = true;\r\n' \
   '              if (pac) {\r\n' \
-  '                let ix = 0;\r\n' \
-  '                let iy = 0;\r\n' \
-  '                while (ix < lvx - 1 && vpositions[ix * 6] <= px) {ix++;}\r\n' \
-  '                while (iy < lvy - 1 && vpositions[(iy * (lvx + 1)) * 6 + 4] <= py) {iy++;}\r\n' \
-  '                let cx = (px - vpositions[(ix - 1) * 6]) / (vpositions[ix * 6] - vpositions[(ix - 1) * 6]);\r\n' \
-  '                let cy = (py - vpositions[(iy * (lvx + 1)) * 6 + 1]) / (vpositions[(iy * (lvx + 1)) * 6 + 4] - vpositions[(iy * (lvx + 1)) * 6 + 1]);\r\n' \
-  '                let pz = cx + cy <= 1 ? (1 - cx - cy) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 2] + cx * vpositions[(ix + iy * (lvx + 1)) * 6 + 2] + cy  * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] : (1 - cy) * vpositions[(ix + iy * (lvx + 1)) * 6 + 2] + (1 - cx) * vpositions[(ix - 1 + iy * (lvx + 1)) * 6 + 5] + (cx + cy - 1) * vpositions[(ix + iy * (lvx + 1)) * 6 + 5];\r\n' \
+  '                let pz = get_pz(px, py);\r\n' \
   '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -10870,6 +11079,7 @@ class GPXTweakerWebInterfaceServer():
   '        program_create("ttprogram", vertex_ttshader_s, fragment_tshader_s);\r\n' \
   '        program_create("sprogram", vertex_sshader_s, fragment_sshader_s);\r\n' \
   '        program_create("rprogram", vertex_rshader_s, fragment_rshader_s);\r\n' \
+  '        program_create("pprogram", vertex_pshader_s, fragment_pshader_s);\r\n' \
   '        texture_load(gl.TEXTURE0, [0, 127, 0]);\r\n' \
   '        texture_load(gl.TEXTURE1, [0], false);\r\n' \
   '        create_track_map();\r\n' \
@@ -10918,6 +11128,17 @@ class GPXTweakerWebInterfaceServer():
   '        mat4_mult(mat4_perspective(), vmatrix);\r\n' \
   '        program_uniforms();\r\n' \
   '        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
+  '        if (show_infos) {\r\n' \
+  '          gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
+  '          gl.viewport(0, 0, gl.drawingBufferWidth / ssampling, gl.drawingBufferHeight / ssampling);\r\n' \
+  '          gl.clearBufferiv(gl.COLOR, 0, new Int16Array([-32768, -32768, 0, 0]));\r\n' \
+  '          gl.clearBufferfv(gl.DEPTH, 0, new Float32Array([1.0]));\r\n' \
+  '          program_use("pprogram");\r\n' \
+  '          program_uniforms();\r\n' \
+  '          gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
+  '          gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '          gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
+  '        }\r\n' \
   '        if (dmode == 2) {\r\n' \
   '          program_use("rprogram");\r\n' \
   '          vmatrix = mat4_zscale(1);\r\n' \
@@ -11052,12 +11273,140 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (rd) {canvas_redraw();}\r\n' \
   '      }\r\n' \
+  '      function toggle_minimap_magnification() {\r\n' \
+  '        mzoom = (mzoom==1)?5:1;\r\n' \
+  '        mini_map.style.width = (mzoom * 10).toString() + "vh";\r\n' \
+  '        mini_map.style.height = (mzoom * 10).toString() + "vh";\r\n' \
+  '        eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
+  '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
+  '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
+  '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
+  '      }\r\n' \
+  '      function toggle_infos() {\r\n' \
+  '        if (show_infos) {\r\n' \
+  '          show_infos = false;\r\n' \
+  '          p_infos.style.display = "none";\r\n' \
+  '          e_info.value = "";\r\n' \
+  '          t_info.value = "";\r\n' \
+  '        } else {\r\n' \
+  '          show_infos = true;\r\n' \
+  '          p_infos.style.display = "block";\r\n' \
+  '          if (pfrbuf == null) {\r\n' \
+  '            pfrbuf = gl.createFramebuffer();\r\n' \
+  '            gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
+  '            ptexture_attach(gl.TEXTURE3);\r\n' \
+  '            gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '            canvas_redraw();\r\n' \
+  '          }\r\n' \
+  '          update_infos();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function update_infos(e=null) {\r\n' \
+  '        if (e) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
+  '          let pxy = new Int16Array(2)\r\n' \
+  '          gl.readPixels(e.offsetX, gl.drawingBufferHeight / ssampling - e.offsetY - 1, 1, 1, gl.RG_INTEGER, gl.SHORT, pxy);\r\n' \
+  '          gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
+  '          if (pxy[0] != -32768 && pxy[1] != -32768) {\r\n' \
+  '            let px = pxy[0] / 32767;\r\n' \
+  '            let py = pxy[1] / 32767;\r\n' \
+  '            let pz = get_pz(px, py);\r\n' \
+  '            let plat = (2 * Math.atan(Math.exp((py * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '            let plon = (px * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '            let pele = (pz + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '            let pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
+  '            t_info.value = "{#jplat#} " + plat.toFixed(6) + "° {#jplon#} " + plon.toFixed(6) + "° {#jpele#} " + pele.toFixed(1) + "m {#jpdist#} " + pdist.toFixed(0) + "m";\r\n' \
+  '            if (e.altKey) {complete_infos();}\r\n' \
+  '          } else {\r\n' \
+  '            t_info.value = "";\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          let plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          let plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          let pele = (trpaces[pace][2] + zoff + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          e_info.value = "{#jplat#} " + plat.toFixed(6) + "° {#jplon#} " + plon.toFixed(6) + "° {#jpele#} " + pele.toFixed(1) + "m";\r\n' \
+  '          t_info.value = "";\r\n '\
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function update_waypoint(e) {\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (! window.opener) {return;}\r\n' \
+  '        if (! window.opener.hasOwnProperty("pointed_waypoint")) {return;}\r\n' \
+  '        let c = null;\r\n' \
+  '        if (e.target.htmlFor == "eye_info") {\r\n' \
+  '          c = e_info.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '        } else if (e.target.htmlFor == "target_info") {\r\n' \
+  '          c = t_info.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '        }\r\n' \
+  '        if (c) {\r\n' \
+  '          if (c.length == 3) {\r\n' \
+  '            let plat = parseFloat(c[1]);\r\n' \
+  '            let plon = parseFloat(c[2]);\r\n' \
+  '            window.opener.pointed_waypoint([plat, plon]);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_reversegeocodingswitch() {\r\n' \
+  '        if (s_rg.options.length > 0) {\r\n' \
+  '          if (p_rg.style.display == "none") {\r\n' \
+  '            p_rg.style.display = "block";\r\n' \
+  '          } else {\r\n' \
+  '            p_rg.style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function load_rgcb(t, f, c) {\r\n' \
+  '        if (t.status != 200) {\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let c_ = f.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '        if (! c_) {return;}\r\n' \
+  '        if (c_.length != 3) {return;}\r\n' \
+  '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
+  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
+  '        f.value = f.value + " | " + t.response;\r\n' \
+  '      }\r\n' \
+  '      function error_rgcb() {\r\n' \
+  '      }\r\n' \
+  '      function complete_infos(e=null) {\r\n' \
+  '        let f = null;\r\n' \
+  '        if (e) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (e.target.htmlFor != "eye_info" && e.target.htmlFor != "target_info") {return;}\r\n' \
+  '          f = e.target.nextElementSibling;\r\n' \
+  '        } else {\r\n' \
+  '          f = t_info;\r\n' \
+  '        }\r\n' \
+  '        if (rgset < 0) {return;}\r\n' \
+  '        let c = null;\r\n' \
+  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
+  '        c = f.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '        if (c) {\r\n' \
+  '          if (c.length == 3) {\r\n' \
+  '            let plat = parseFloat(c[1]);\r\n' \
+  '            let plon = parseFloat(c[2]);\r\n' \
+  '            let xhrrg = new XMLHttpRequest();\r\n' \
+  '            xhrrg.onerror = error_rgcb;\r\n' \
+  '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
+  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + rgset.toString());\r\n' \
+  '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
   HTML_3DS_TEMPLATE = HTML_3DS_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTML_3DS_DECLARATIONS_TEMPLATE = HTML_3DP_DECLARATIONS_TEMPLATE + '\r\n' + \
-  '      var scale = ##SCALE##;'
+  '      var scale = ##SCALE##;\r\n' \
+  '      var ppos = [##PPOS##];'
   HTMLExp_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -12803,6 +13152,10 @@ class GPXTweakerWebInterfaceServer():
           hcur = hcur[:13].lower() + hcur[13:]
           self.ItinerariesProviders.append([hcur[13:].strip(), {}, {}])
           s = self.ItinerariesProviders[-1]
+        elif hcur[:20].lower() == 'reversegeocodingapi ':
+          hcur = hcur[:20].lower() + hcur[20:]
+          self.ReverseGeocodingsProviders.append([hcur[20:].strip(), {}, {}])
+          s = self.ReverseGeocodingsProviders[-1]
         elif hcur.lower() in ('global', 'explorer'):
           hcur = hcur.lower()
         else:
@@ -12826,7 +13179,7 @@ class GPXTweakerWebInterfaceServer():
           if not scur in ('infos', 'handling', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
-        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi '):
+        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
           if not scur in ('infos', 'handling'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
@@ -13114,15 +13467,20 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
-      elif hcur[:13] in ('elevationapi ', 'itineraryapi '):
+      elif hcur[:13] in ('elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
         if scur == 'infos':
           if field == 'alias':
-            s[1] = WGS84Elevation.ASAlias(value) if hcur[:13] == 'elevationapi ' else WGS84Itinerary.ASAlias(value)
+            if hcur[:13] == 'elevationapi ':
+              s[1] = WGS84Elevation.ASAlias(value)
+            elif hcur[:13] == 'itineraryapi ':
+              s[1] = WGS84Itinerary.ASAlias(value)
+            else:
+              s[1] = WGS84ReverseGeocoding.ASAlias(value)
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
           elif field in ('source', 'json_key') + (('separator', 'nodata') if hcur[:13] == 'elevationapi ' else ()):
-            s[1][field.replace('json_', '')] = value
+            s[1][field.replace('json_', '')] = value if hcur[:13] == 'elevationapi ' else tuple(map(str.strip, value.split(',')))
             if field == 'nodata':
               try:
                 s[1][field] = float(value)
@@ -13184,6 +13542,7 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationsProviders = []
     self.ElevationMapSets = []
     self.ItinerariesProviders = []
+    self.ReverseGeocodingsProviders = []
     self.Tracks = []
     self.Uri = None
     self.Track = None
@@ -13193,6 +13552,7 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationMapSet = None
     self.ElevationProviderSel = None
     self.ItineraryProviderSel = None
+    self.ReverseGeocodingProviderSel = None
     self.WebMappingServices = []
     self.GPXTweakerInterfaceServerInstances = []
     self.HTML = None
@@ -13457,18 +13817,37 @@ class GPXTweakerWebInterfaceServer():
         self.ItineraryProviderSel = 0
         self.ItineraryProviderConnection = [[None]]
         def ItineraryProvider(points):
+          psel = self.ItineraryProviderSel
           try:
             pcon = self.ItineraryProviderConnection.pop()
           except:
             pcon = None
-          iti = self.Itinerary.RequestItinerary(self.ItinerariesProviders[self.ItineraryProviderSel][1], points, **self.ItinerariesProviders[self.ItineraryProviderSel][2], pconnection=pcon)
+          iti = self.Itinerary.RequestItinerary(self.ItinerariesProviders[psel][1], points, **self.ItinerariesProviders[psel][2], pconnection=pcon)
           if pcon:
             self.ItineraryProviderConnection.append(pcon)
           return iti
         self.ItineraryProvider = ItineraryProvider
-        self.log(1, 'itinerary', self.ItinerariesProviders[self.ItineraryProviderSel][0])
+        self.log(1, 'itinerary', self.ItinerariesProviders[0][0])
       else:
         self.ItineraryProvider = None
+      self.ReverseGeocoding = WGS84ReverseGeocoding()
+      if len(self.ReverseGeocodingsProviders) > 0:
+        self.ReverseGeocodingProviderSel = 0
+        self.ReverseGeocodingProviderConnection = [[None]]
+        def ReverseGeocodingProvider(point):
+          psel = self.ReverseGeocodingProviderSel
+          try:
+            pcon = self.ReverseGeocodingProviderConnection.pop()
+          except:
+            pcon = None
+          desc = self.ReverseGeocoding.RequestDescription(self.ReverseGeocodingsProviders[psel][1], point, **self.ReverseGeocodingsProviders[psel][2], pconnection=pcon)
+          if pcon:
+            self.ReverseGeocodingProviderConnection.append(pcon)
+          return desc
+        self.ReverseGeocodingProvider = ReverseGeocodingProvider
+        self.log(1, 'reversegeocoding', self.ReverseGeocodingsProviders[0][0])
+      else:
+        self.ReverseGeocodingProvider = None
       self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
       if uri is not None:
         self.HTML = ''
@@ -13700,8 +14079,8 @@ class GPXTweakerWebInterfaceServer():
     bx = (moyx - tminx) / (tmaxx - tminx)
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
-    declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', str('%f, %f, %f, %f' % (ax, ay, bx, by))).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor))
-    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2))
+    declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
+    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
     self.log(0, '3dbuilt')
     return True
 
