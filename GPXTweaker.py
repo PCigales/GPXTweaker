@@ -4799,7 +4799,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 self.server.Interface.ReverseGeocodingProviderSel = int(q['rgset'][0])
                 self.server.Interface.log(1, 'reversegeocoding', self.server.Interface.ReverseGeocodingsProviders[self.server.Interface.ReverseGeocodingProviderSel][0])
             except:
-              self.server.Interface.SLock.release()
               _send_err_fail()
               continue
             lpoint = req.body.split(',')
@@ -7447,7 +7446,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (w < wpts.length) {\r\n' \
   '          element_click(null, document.getElementById(wpt.id + "desc"), false);\r\n' \
-  '          document.getElementById(wpt.id+ "lat").value = coord[0].toFixed(6);\r\n' \
+  '          document.getElementById(wpt.id + "lat").value = coord[0].toFixed(6);\r\n' \
   '          document.getElementById(wpt.id + "lon").value = coord[1].toFixed(6);\r\n' \
   '          point_edit(false, true, false, true);\r\n' \
   '        } else {\r\n' \
