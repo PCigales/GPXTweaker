@@ -2579,7 +2579,6 @@ class WGS84ReverseGeocoding():
     uri = infos['source'].format_map({'key': key or '', 'lat': point[0], 'lon': point[1]})
     try:
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
-      print(rep.code)
       if rep.code != '200':
         return None
       if not rep.body:
