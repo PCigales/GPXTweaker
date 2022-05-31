@@ -1,4 +1,4 @@
-# GPXTweaker v1.9.2 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.10.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -10632,7 +10632,7 @@ class GPXTweakerWebInterfaceServer():
   '      </colgroup>\r\n' \
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;overflow:hidden;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();">\r\n' \
+  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;overflow:hidden;user-select:none;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();">\r\n' \
   '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
   '          <div id="panel_infos" style="display:none;position:absolute;top:5px;left:5px;width:calc(100vw - 10vh - 18em);height:3em;font-size:90%;color:black;background-color:rgba(210,210,210,0.85);">\r\n' \
   '            <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:hidden;height:3em;">\r\n' \
@@ -14316,7 +14316,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.9.2 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.10.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
