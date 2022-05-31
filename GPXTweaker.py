@@ -304,7 +304,7 @@ FR_STRINGS = {
     'jpace': 'Progression:',
     'jvfov': 'Champ de vue vertical:',
     'jheight': 'Hauteur de vue:',
-    'jminimap': 'clic sur la mini-carte pour l\'agrandir / la réduire&#13;&#10;clic droit sur la mini-carte pour afficher / masquer le panneau d\'informations, et lorsqu\'il est visible:&#13;&#10;clic droit sur la vue 3D pour afficher la description du point&#13;&#10;alt + clic droit sur la vue 3D pour afficher la description du point et son géocodage inversé&#13;&#10;clic sur l\'oeil ou la cible pour créer ou déplacer à cet emplacement le point de cheminement dédié dans l\'onglet d\'édition de trace&#13;&#10;shift + clic sur l\'oeil ou la cible pour compléter la description du point par son géocodage inversé&#13;&#10;ctrl + clic droit sur la mini-carte pour afficher / masquer le panneau de sélection du fournisseur de géocodages inversés',
+    'jminimap': 'clic sur la mini-carte pour l\'agrandir / la réduire&#13;&#10;clic droit sur la mini-carte pour afficher / masquer le panneau d\'informations, et lorsqu\'il est visible:&#13;&#10;clic droit sur la vue 3D pour afficher la description du point&#13;&#10;alt + clic droit sur la vue 3D pour afficher la description du point et son géocodage inversé&#13;&#10;clic sur l\'oeil ou la cible pour créer ou déplacer à cet emplacement le point de cheminement dédié dans l\'onglet d\'édition de trace&#13;&#10;alt + clic sur l\'oeil ou la cible pour compléter la description du point par son géocodage inversé&#13;&#10;ctrl + clic droit sur la mini-carte pour afficher / masquer le panneau de sélection du fournisseur de géocodages inversés',
     'jplat': 'lat:',
     'jplon': 'lon:',
     'jpele': 'ele:',
@@ -597,7 +597,7 @@ EN_STRINGS = {
     'jpace': 'Progression:',
     'jvfov': 'Vertical field of view:',
     'jheight': 'Height of view:',
-    'jminimap': 'click on the mini-map to enlarge / reduce it&#13;&#10;right click on the mini-map to show / hide the informations panel, and when it is visible:&#13;&#10;right click on the 3D view to display the description of the point&#13;&#10;alt + right click on the 3D view to display the description of the point and its reverse geocoding&#13;&#10;click on the eye or the target to create or move to this location the dedicated waypoint in the track edition tab&#13;&#10;shift + click on the eye or the target to complete the description of the point with its reverse geocoding&#13;&#10;ctrl + right click on the mini-map to show / hide the reverse geocodings provider panel',
+    'jminimap': 'click on the mini-map to enlarge / reduce it&#13;&#10;right click on the mini-map to show / hide the informations panel, and when it is visible:&#13;&#10;right click on the 3D view to display the description of the point&#13;&#10;alt + right click on the 3D view to display the description of the point and its reverse geocoding&#13;&#10;click on the eye or the target to create or move to this location the dedicated waypoint in the track edition tab&#13;&#10;alt + click on the eye or the target to complete the description of the point with its reverse geocoding&#13;&#10;ctrl + right click on the mini-map to show / hide the reverse geocodings provider panel',
     'jplat': 'lat:',
     'jplon': 'lon:',
     'jpele': 'ele:',
@@ -7454,6 +7454,8 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, document.getElementById(wpt.id + "desc"), false);\r\n' \
   '          document.getElementById(wpt.id + "lat").value = coord[0].toFixed(6);\r\n' \
   '          document.getElementById(wpt.id + "lon").value = coord[1].toFixed(6);\r\n' \
+  '          document.getElementById(wpt.id + "ele").value = "";\r\n' \
+  '          document.getElementById(wpt.id + "time").value = "";\r\n' \
   '          point_edit(false, true, false, true);\r\n' \
   '        } else {\r\n' \
   '          point_insert("a", coord);\r\n' \
@@ -10630,14 +10632,22 @@ class GPXTweakerWebInterfaceServer():
   '      </colgroup>\r\n' \
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();">\r\n' \
+  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;overflow:hidden;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();">\r\n' \
   '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
   '          <div id="panel_infos" style="display:none;position:absolute;top:5px;left:5px;width:calc(100vw - 10vh - 18em);height:3em;font-size:90%;color:black;background-color:rgba(210,210,210,0.85);">\r\n' \
   '            <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:hidden;height:3em;">\r\n' \
-  '              <label for="eye_info" style="top:2px;" onclick="event.shiftKey?complete_infos(event):update_waypoint(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
-  '              <label for="target_info" style="bottom:2px;" onclick="event.shiftKey?complete_infos(event):update_waypoint(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly style="bottom:2px;">\r\n' \
+  '              <label for="eye_info" style="top:2px;" onclick="event.altKey?complete_infos(event):update_waypoint(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
+  '              <label for="target_info" style="bottom:2px;" onclick="event.altKey?complete_infos(event):update_waypoint(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly style="bottom:2px;">\r\n' \
   '            </form>\r\n' \
   '          </div>\r\n' \
+  '          <svg id="target_mark" viewbox="-1 -1 2 2" pointer-events="none" stroke-width="1" style="display:none;position:absolute;top:0%;left:0%;width:2vh;height:2vh;" fill="none">\r\n' \
+  '            <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '            <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black""/>\r\n' \
+  '            <line x1="-0.9" y1="0" x2="0.9" y2 ="0" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '            <line x1="-0.9" y1="0" x2="0.9" y2 ="0" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
+  '            <line x1="0" y1="-0.9" x2="0" y2 ="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '            <line x1="0" y1="-0.9" x2="0" y2 ="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
+  '          </svg>\r\n' \
   '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;" onclick="toggle_minimap_magnification()">\r\n' \
   '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
   '            <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
@@ -10688,6 +10698,7 @@ class GPXTweakerWebInterfaceServer():
   '      var p_infos = document.getElementById("panel_infos");\r\n' \
   '      var e_info = document.getElementById("eye_info");\r\n' \
   '      var t_info = document.getElementById("target_info");\r\n' \
+  '      var t_mark = document.getElementById("target_mark");\r\n' \
   '      var p_rg = document.getElementById("panel_rg");\r\n' \
   '      var s_rg = document.getElementById("select_rg");\r\n' \
   '      var minimap = document.getElementById("mini_map");\r\n' \
@@ -10704,6 +10715,7 @@ class GPXTweakerWebInterfaceServer():
   '      var p_texture = null;\r\n' \
   '      var pd_texture = null;\r\n' \
   '      var pfrbuf = null;\r\n' \
+  '      var predraw = false;\r\n' \
   '      var mzoom = 1;\r\n' \
   '      var show_infos = false;\r\n' \
   '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
@@ -10724,6 +10736,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
   '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
   '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
+  '          if (show_infos) {clear_tinfos(true);}\r\n' \
   '        } else if (p == "h") {\r\n' \
   '          if (v != null) {\r\n' \
   '            c_height.value = (Math.min(v, 10) * 2 + Math.min(Math.max(v - 10, 0), 40) / 2 + Math.min(Math.max(v - 50, 0), 150) / 7.5 + Math.min(Math.max(v - 200, 0), 300) / 15 + Math.max(v - 500, 0) / 25).toString();\r\n' \
@@ -10742,11 +10755,13 @@ class GPXTweakerWebInterfaceServer():
   '            case "t":\r\n' \
   '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
   '              angle = (90 + parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              if (show_infos) {clear_tinfos(true);}\r\n' \
   '              break;\r\n' \
   '            case "r":\r\n' \
   '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
   '              angle =  parseFloat(c_rangle.value) * Math.PI / -180;\r\n' \
   '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);}\r\n' \
+  '              if (show_infos) {clear_tinfos(true);}\r\n' \
   '              break;\r\n' \
   '            case "lt":\r\n' \
   '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
@@ -10799,6 +10814,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas.style.width = canvas.parentNode.offsetWidth.toString() + "px";;\r\n' \
   '        canvas.style.height = canvas.parentNode.offsetHeight.toString() + "px";\r\n' \
   '        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
+  '        if (show_infos) {clear_tinfos(true);}\r\n' \
   '        gl.bindBuffer(gl.ARRAY_BUFFER, rvposition);\r\n' \
   '        let rr = canvas.clientHeight / canvas.clientWidth;\r\n' \
   '        let ra = 2 * Math.PI / rnt;\r\n' \
@@ -11133,7 +11149,8 @@ class GPXTweakerWebInterfaceServer():
   '        mat4_mult(mat4_perspective(), vmatrix);\r\n' \
   '        program_uniforms();\r\n' \
   '        gl.drawArrays(gl.TRIANGLE_STRIP, 0, vpositions.length / 3);\r\n' \
-  '        if (show_infos) {\r\n' \
+  '        if (predraw) {\r\n' \
+  '          predraw = false;\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
   '          gl.viewport(0, 0, gl.drawingBufferWidth / ssampling, gl.drawingBufferHeight / ssampling);\r\n' \
   '          gl.clearBufferiv(gl.COLOR, 0, new Int16Array([-32768, -32768, 0, 0]));\r\n' \
@@ -11181,8 +11198,6 @@ class GPXTweakerWebInterfaceServer():
   '          c_height.disabled = false;\r\n' \
   '          canvas.focus();\r\n' \
   '          canvas.style.outline="none";\r\n' \
-  '           <!-- toggle_rotation(1); -->\r\n' \
-  '           <!-- toggle_lrotation(1); -->\r\n' \
   '        }\r\n' \
   '        let xhr = new XMLHttpRequest();\r\n' \
   '        xhr.onerror = (e) => derror_cb(e.target);\r\n' \
@@ -11267,7 +11282,7 @@ class GPXTweakerWebInterfaceServer():
   '            set_param("h");\r\n' \
   '            break;\r\n' \
   '          case "enter":\r\n' \
-  '            if (document.fullscreenElement) {document.exitFullscreen();} else { canvas.parentNode.requestFullscreen();}\r\n' \
+  '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
   '            break;\r\n' \
   '          default:\r\n' \
   '            return;\r\n' \
@@ -11292,7 +11307,8 @@ class GPXTweakerWebInterfaceServer():
   '          show_infos = false;\r\n' \
   '          p_infos.style.display = "none";\r\n' \
   '          e_info.value = "";\r\n' \
-  '          t_info.value = "";\r\n' \
+  '          clear_tinfos();\r\n' \
+  '          predraw = false;\r\n' \
   '        } else {\r\n' \
   '          show_infos = true;\r\n' \
   '          p_infos.style.display = "block";\r\n' \
@@ -11301,10 +11317,18 @@ class GPXTweakerWebInterfaceServer():
   '            gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
   '            ptexture_attach(gl.TEXTURE3);\r\n' \
   '            gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
-  '            canvas_redraw();\r\n' \
   '          }\r\n' \
+  '          predraw = true;\r\n' \
+  '          canvas_redraw();\r\n' \
   '          update_infos();\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function clear_tinfos(prd=false) {\r\n' \
+  '        t_info.value = "";\r\n' \
+  '        t_mark.style.display = "none";\r\n' \
+  '        t_mark.style.left = "0%";\r\n' \
+  '        t_mark.style.top = "0%";\r\n' \
+  '        if (prd) {predraw = true;}\r\n' \
   '      }\r\n' \
   '      function update_infos(e=null) {\r\n' \
   '        if (e) {\r\n' \
@@ -11312,7 +11336,7 @@ class GPXTweakerWebInterfaceServer():
   '          e.stopPropagation();\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, pfrbuf);\r\n' \
   '          let pxy = new Int16Array(2)\r\n' \
-  '          gl.readPixels(e.offsetX, gl.drawingBufferHeight / ssampling - e.offsetY - 1, 1, 1, gl.RG_INTEGER, gl.SHORT, pxy);\r\n' \
+  '          gl.readPixels(Math.round(e.offsetX / canvas.parentNode.offsetWidth * gl.drawingBufferWidth / ssampling), Math.round((canvas.parentNode.offsetHeight - e.offsetY - 1) / canvas.parentNode.offsetHeight * gl.drawingBufferHeight / ssampling), 1, 1, gl.RG_INTEGER, gl.SHORT, pxy);\r\n' \
   '          gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
   '          if (pxy[0] != -32768 && pxy[1] != -32768) {\r\n' \
   '            let px = pxy[0] / 32767;\r\n' \
@@ -11323,16 +11347,20 @@ class GPXTweakerWebInterfaceServer():
   '            let pele = (pz + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
   '            let pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
   '            t_info.value = "{#jplat#} " + plat.toFixed(6) + "° {#jplon#} " + plon.toFixed(6) + "° {#jpele#} " + pele.toFixed(1) + "m {#jpdist#} " + pdist.toFixed(0) + "m";\r\n' \
+  '            t_mark.style.left = `calc(${e.offsetX * 100 / canvas.parentNode.offsetWidth}% - 1vh)`;\r\n' \
+  '            t_mark.style.top = `calc(${e.offsetY * 100 / canvas.parentNode.offsetHeight}% - 1vh)`;\r\n' \
+  '            t_mark.style.display = "block";\r\n' \
   '            if (e.altKey) {complete_infos();}\r\n' \
   '          } else {\r\n' \
-  '            t_info.value = "";\r\n' \
+  '            clear_tinfos();\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          let plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
   '          let plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
   '          let pele = (trpaces[pace][2] + zoff + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
   '          e_info.value = "{#jplat#} " + plat.toFixed(6) + "° {#jplon#} " + plon.toFixed(6) + "° {#jpele#} " + pele.toFixed(1) + "m";\r\n' \
-  '          t_info.value = "";\r\n '\
+  '          clear_tinfos();\r\n '\
+  '          predraw = true;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function update_waypoint(e) {\r\n' \
