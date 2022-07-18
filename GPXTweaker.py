@@ -904,6 +904,7 @@ class HTTPRequest():
       method = 'GET' if data is None else 'POST'
     redir = 0
     retry = False
+    url_p = None
     try:
       headers = {} if headers is None else dict((('Connection', 'close') if k.lower() == 'connection' else (k, v)) for k, v in headers.items() if v and not k.lower() == 'content-length' and not (k.lower() == 'connection' and v.lower() != 'close'))
       if not 'accept-encoding' in (k.lower() for k in headers):
@@ -920,7 +921,7 @@ class HTTPRequest():
       headers['Connection'] = 'keep-alive'
     while True:
       try:
-        if url is not None:
+        if url_p is None:
           url_p = urllib.parse.urlsplit(url, allow_fragments=False)
         if pconnection[0] is None:
           if url_p.scheme.lower() == 'http':
@@ -956,8 +957,8 @@ class HTTPRequest():
           continue
         retry = False
         if code[:2] == '30' and code != '304':
-          url = urllib.parse.urljoin(url, resp.header('location'))
-          if url:
+          if resp.header('location'):
+            url = urllib.parse.urljoin(url, resp.header('location'))
             urlo_p = url_p
             url_p = urllib.parse.urlsplit(url, allow_fragments=False)
             if headers['Connection'] == 'close' or resp.header('Connection', '').lower() == 'close' or ((resp.version or '').upper() != 'HTTP/1.1' and resp.header('Connection', '').lower() != 'keep-alive') or (urlo_p.scheme != url_p.scheme or urlo_p.netloc != url_p.netloc):
