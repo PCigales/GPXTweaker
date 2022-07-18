@@ -904,8 +904,8 @@ class HTTPRequest():
       method = 'GET' if data is None else 'POST'
     redir = 0
     retry = False
-    url_p = None
     try:
+      url_p = urllib.parse.urlsplit(url, allow_fragments=False)
       headers = {} if headers is None else dict((('Connection', 'close') if k.lower() == 'connection' else (k, v)) for k, v in headers.items() if v and not k.lower() == 'content-length' and not (k.lower() == 'connection' and v.lower() != 'close'))
       if not 'accept-encoding' in (k.lower() for k in headers):
         headers['Accept-Encoding'] = 'identity, deflate, gzip'
@@ -921,8 +921,6 @@ class HTTPRequest():
       headers['Connection'] = 'keep-alive'
     while True:
       try:
-        if url_p is None:
-          url_p = urllib.parse.urlsplit(url, allow_fragments=False)
         if pconnection[0] is None:
           if url_p.scheme.lower() == 'http':
             pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
