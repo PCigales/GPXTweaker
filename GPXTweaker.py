@@ -898,12 +898,14 @@ class HTTPRequest():
     '\r\n'
 
   def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, pconnection=None):
+    if url is None:
+      return HTTPMessage()
     if method is None:
       method = 'GET' if data is None else 'POST'
     redir = 0
     retry = False
     try:
-      headers = {} if headers is None else {k: v for k, v in headers.items() if v and not k.lower() in ('content-length', 'connection')}
+      headers = {} if headers is None else dict((('Connection', 'close') if k.lower() == 'connection' else (k, v)) for k, v in headers.items() if v and not k.lower() == 'content-length' and not (k.lower() == 'connection' and v.lower() != 'close'))
       if not 'accept-encoding' in (k.lower() for k in headers):
         headers['Accept-Encoding'] = 'identity, deflate, gzip'
       if data is not None:
@@ -914,20 +916,21 @@ class HTTPRequest():
     if pconnection is None:
       pconnection = [None]
       headers['Connection'] = 'close'
-    else:
+    elif not headers.get('Connection'):
       headers['Connection'] = 'keep-alive'
     while True:
       try:
-        url_p = urllib.parse.urlparse(url)
+        if url is not None:
+          url_p = urllib.parse.urlsplit(url, allow_fragments=False)
         if pconnection[0] is None:
           if url_p.scheme.lower() == 'http':
             pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
           elif url_p.scheme.lower() == 'https':
-            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout), server_side=False)
+            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout), server_side=False, server_hostname=url_p.netloc.split(':')[0])
           else:
             raise
         try:
-          msg = cls.RequestPattern % (method, url[len(url_p.scheme) + 3 + len(url_p.netloc):].replace(' ', '%20'), url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
+          msg = cls.RequestPattern % (method, (url_p.path + ('?' + url_p.query if url_p.query else '')).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
           pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
         except:
           if retry:
@@ -953,13 +956,17 @@ class HTTPRequest():
           continue
         retry = False
         if code[:2] == '30' and code != '304':
-          try:
-            pconnection[0].close()
-          except:
-            pass
-          pconnection[0] = None
-          url = resp.header('location')
+          url = urllib.parse.urljoin(url, resp.header('location'))
           if url:
+            urlo_p = url_p
+            url_p = urllib.parse.urlsplit(url, allow_fragments=False)
+            if headers['Connection'] == 'close' or resp.header('Connection', '').lower() == 'close' or ((resp.version or '').upper() != 'HTTP/1.1' and resp.header('Connection', '').lower() != 'keep-alive') or (urlo_p.scheme != url_p.scheme or urlo_p.netloc != url_p.netloc):
+              try:
+                pconnection[0].close()
+              except:
+                pass
+              pconnection[0] = None
+              headers['Connection'] = 'close'
             redir += 1
             if redir > 5:
               raise
