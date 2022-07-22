@@ -706,7 +706,7 @@ class HTTPMessage():
         header_name = header_name.strip().title()
         if header_name:
           header_value = header_value.strip()
-          if http_message.headers.get(header_name):
+          if not header_name in ('Content-Length', 'Location') and http_message.headers.get(header_name):
             if header_value:
               http_message.headers[header_name] += ', ' + header_value
           else:
@@ -723,8 +723,12 @@ class HTTPMessage():
       http_message.version = c.upper()
     return True
 
-  def __new__(cls, message=None, body=True, decode='utf-8', timeout=5, max_length=1048576):
+  def __new__(cls, message=None, body=True, decode='utf-8', timeout=5, max_length=1048576, exceeded=None):
     http_message = HTTPExplodedMessage()
+    if isinstance(exceeded, list):
+      exceeded[:] = [False]
+    else:
+      exceeded = None
     if message is None:
       return http_message
     rem_length = max_length
@@ -745,6 +749,8 @@ class HTTPMessage():
         body_pos += 2
         break
       if not iss or rem_length <= 0:
+        if exceeded is not None:
+          exceeded[0] = True
         return http_message
       try:
         bloc = message.recv(min(rem_length, 1048576))
@@ -763,7 +769,8 @@ class HTTPMessage():
       http_message.body = msg[body_pos:]
       return http_message
     body_len = 0
-    if http_message.header('Transfer-Encoding', '').lower() != 'chunked':
+    chunked = 'chunked' in map(str.strip, http_message.header('Transfer-Encoding', '').lower().split(','))
+    if not chunked:
       try:
         body_len = int(http_message.header('Content-Length', '0'))
       except:
@@ -779,12 +786,18 @@ class HTTPMessage():
           message.sendall(('HTTP/1.1 413 Payload too large\r\nContent-Length: 0\r\nDate: %s\r\nCache-Control: no-cache, no-store, must-revalidate\r\n\r\n' % email.utils.formatdate(time.time(), usegmt=True)).encode('ISO-8859-1'))
         except:
           pass
+        if exceeded is not None:
+          exceeded[0] = True
         return http_message.clear()
-    if http_message.header('Transfer-Encoding', '').lower() != 'chunked':
+    if not chunked:
       if body_pos + body_len - len(msg) > rem_length:
+        if exceeded is not None:
+          exceeded[0] = True
         return http_message.clear()
       if len(msg) < body_pos + body_len:
         if not iss:
+          if exceeded is not None:
+            exceeded[0] = True
           return http_message.clear()
         bbuf = BytesIO()
         body_len -= bbuf.write(msg[body_pos:])
@@ -815,6 +828,8 @@ class HTTPMessage():
             chunk_pos += 1
             break
           if not iss or rem_length <= 0:
+            if exceeded is not None:
+              exceeded[0] = True
             return http_message.clear()
           try:
             bloc = message.recv(min(rem_length, 1048576))
@@ -831,9 +846,13 @@ class HTTPMessage():
         except:
           return http_message.clear()
         if chunk_pos + chunk_len - len(buff) > rem_length:
+          if exceeded is not None:
+            exceeded[0] = True
           return http_message.clear()
         if len(buff) < chunk_pos + chunk_len:
           if not iss:
+            if exceeded is not None:
+              exceeded[0] = True
             return http_message.clear()
           chunk_len -= bbuf.write(buff[chunk_pos:])
           while chunk_len:
@@ -853,6 +872,8 @@ class HTTPMessage():
       buff = b'\r\n' + buff
       while not (b'\r\n\r\n' in buff or b'\n\n' in buff):
         if not iss or rem_length <= 0:
+          if exceeded is not None:
+            exceeded[0] = True
           return http_message.clear()
         try:
           bloc = message.recv(min(rem_length, 1048576))
@@ -904,13 +925,14 @@ class HTTPRequest():
       method = 'GET' if data is None else 'POST'
     redir = 0
     retry = False
+    exceeded = [False]
     try:
       url_p = urllib.parse.urlsplit(url, allow_fragments=False)
-      headers = {} if headers is None else dict((('Connection', 'close') if k.lower() == 'connection' else (k, v)) for k, v in headers.items() if v and not k.lower() == 'content-length' and not (k.lower() == 'connection' and v.lower() != 'close'))
+      headers = {} if headers is None else dict((('Connection', 'close') if k.lower() == 'connection' else (k, v)) for k, v in headers.items() if v and not k.lower() in ('host', 'content-length') and not (k.lower() == 'connection' and v.lower() != 'close'))
       if not 'accept-encoding' in (k.lower() for k in headers):
         headers['Accept-Encoding'] = 'identity, deflate, gzip'
       if data is not None:
-        if not 'chunked' in (v.lower() for k, v in headers.items() if k.lower() == 'transfer-encoding'):
+        if not 'chunked' in map(str.strip, ','.join(v.lower() for k, v in headers.items() if k.lower() == 'transfer-encoding').split(',')):
           headers['Content-Length'] = str(len(data))
     except:
       return HTTPMessage()
@@ -941,10 +963,10 @@ class HTTPRequest():
             pass
           pconnection[0] = None
           continue
-        resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length)
+        resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length, exceeded=exceeded)
         code = resp.code
         if code is None:
-          if retry:
+          if retry or exceeded == [True]:
             raise
           retry = True
           try:
@@ -974,7 +996,7 @@ class HTTPRequest():
                 method = 'GET'
               data = None
               for k in list(headers.keys()):
-                if k.lower() in ('transfer-encoding', 'content-length'):
+                if k.lower() in ('transfer-encoding', 'content-length', 'content-type'):
                   del headers[k]
           else:
             raise
