@@ -2149,7 +2149,7 @@ class WebMercatorMap(WGS84WebMercator):
       if a == None and b == None and c == None and d == None:
         return {k: v for k, v in linfos[ind].items() if not k in ('row', 'col')}
       if not pconnections[ind]:
-        pconnections[ind][0] = None
+        pconnections[ind] = [None]
       if c == None or d == None:
         try:
           row, col = self.WGS84toTile(linfos[ind], a, b)
