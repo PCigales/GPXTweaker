@@ -1035,7 +1035,10 @@ class HTTPRequest():
           else:
             raise
         else:
-          pconnection[0].settimeout(timeout)
+          try:
+            pconnection[0].settimeout(timeout)
+          except:
+            pass
         try:
           code = '100'
           if hexp and data:
@@ -2145,8 +2148,8 @@ class WebMercatorMap(WGS84WebMercator):
         pconnections[ind][0] = None
       if a == None and b == None and c == None and d == None:
         return {k: v for k, v in linfos[ind].items() if not k in ('row', 'col')}
-      if not pconnections[ind][0]:
-        pconnections[ind][0] = [None]
+      if not pconnections[ind]:
+        pconnections[ind][0] = None
       if c == None or d == None:
         try:
           row, col = self.WGS84toTile(linfos[ind], a, b)
