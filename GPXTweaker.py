@@ -956,7 +956,8 @@ class HTTPMessage():
           return http_message.clear()
         rem_length -= len(bloc)
         buff = buff + bloc
-      cls._read_trailers(buff[chunk_pos:].decode('ISO-8859-1'), http_message)
+      if len(buff) - chunk_pos > 2:
+        cls._read_trailers(buff[chunk_pos:].decode('ISO-8859-1'), http_message)
     if http_message.body:
       try:
         if hce:
@@ -1679,6 +1680,8 @@ class WebMercatorMap(WGS84WebMercator):
             uri = infos['pattern'].format_map({**infos, 'key': key, 'quadkey': quadkey, 'hgt': hgt})
         else:
             uri = infos['pattern'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt})
+      elif not infos.get('source'):
+        return None
       else:
         uri = self.WMTS_PATTERN['GetTile'].format_map(infos)
         if key:
@@ -13222,7 +13225,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused != "") {\r\n' \
   '          foc = focused;\r\n' \
   '          focused = "";\r\n' \
-  '          track_click(null, document.getElementById(foc + "desc"));\r\n' \
+  '          track_click(null, document.getElementById(foc + "desc"), false);\r\n' \
+  '          scroll_to_track(document.getElementById(foc), true);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
