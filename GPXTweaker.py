@@ -13225,7 +13225,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused != "") {\r\n' \
   '          foc = focused;\r\n' \
   '          focused = "";\r\n' \
-  '          track_click(null, document.getElementById(foc + "desc"), false);\r\n' \
+  '          track_click(null, document.getElementById(foc + "desc"));\r\n' \
   '          scroll_to_track(document.getElementById(foc), true);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
