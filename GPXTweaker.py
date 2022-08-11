@@ -13720,6 +13720,9 @@ class GPXTweakerWebInterfaceServer():
               self.Proxy['auth'] = value[1:-1]
           elif field == 'secure':
             self.Proxy['secure'] = value is True or value.lower() == 'yes'
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
         elif scur == 'tilesbuffer':
           if field == 'size':
             self.TilesBufferSize = None if value is None else int(value)
