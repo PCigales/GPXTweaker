@@ -1124,6 +1124,314 @@ class HTTPRequest():
     return resp
 
 
+class NestedSSLContext(ssl.SSLContext):
+
+  class SSLSocket(ssl.SSLSocket):
+
+    @classmethod
+    def _create(cls, sock, *args, do_handshake_on_connect=True, **kwargs):
+      so = socket.socket(family=sock.family, type=sock.type, proto=sock.proto, fileno=sock.fileno())
+      self = ssl.SSLSocket._create.__func__(NestedSSLContext.SSLSocket, so, *args, do_handshake_on_connect=False, **kwargs)
+      self.socket = sock
+      self.do_handshake_on_connect = do_handshake_on_connect
+      if self._connected and do_handshake_on_connect:
+        try:
+          if self.gettimeout() == 0:
+            raise ValueError("do_handshake_on_connect should not be specified for non-blocking sockets")
+          self.do_handshake()
+        except (OSError, ValueError):
+          self.close()
+          raise
+      return self
+
+    def close(self):
+      super().close()
+      try:
+        self.socket.close()
+      except:
+        pass
+
+    def shutdown(self, how):
+      super().shutdown(how)
+      try:
+        self.socket.shutdown(how)
+      except:
+        pass
+
+    def settimeout(self, value):
+      super().settimeout(value)
+      try:
+        self.socket.settimeout(value)
+      except:
+        pass
+
+  class _SSLSocket():
+
+    def __init__(self, context, ssl_sock, server_side, server_hostname):
+      self.sslsocket = ssl_sock
+      self.inc = ssl.MemoryBIO()
+      self.out = ssl.MemoryBIO()
+      self.sslobj = context.wrap_bio(self.inc, self.out, server_side, server_hostname)
+
+    def __getattr__(self, name):
+      return self.sslobj._sslobj.__getattribute__(name)
+
+    def __setattr__(self, name, value):
+      if name in ('sslsocket', 'inc', 'out', 'sslobj'):
+        object.__setattr__(self, name, value)
+      else:
+        self.sslobj._sslobj.__setattr__(name, value)
+
+    def interface(self, action):
+      timeout = self.sslsocket.gettimeout()
+      if timeout:
+        t = time.monotonic()
+      while True:
+        try:
+          action()
+        except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as err:
+          while self.out.pending:
+            if timeout:
+              if time.monotonic() - t > timeout:
+                raise TimeoutError(10060, 'timed out')
+            self.sslsocket.socket.sendall(self.out.read())
+          if err.errno == ssl.SSL_ERROR_WANT_READ:
+            if timeout:
+              if time.monotonic() - t > timeout:
+                raise TimeoutError(10060, 'timed out')
+            b = self.sslsocket.socket.recv(16384)
+            if b:
+              self.inc.write(b)
+            else:
+              raise ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host')
+        else:
+          while self.out.pending:
+            if timeout:
+              if time.monotonic() - t > timeout:
+                raise TimeoutError(10060, 'timed out')
+            self.sslsocket.socket.sendall(self.out.read())
+          break
+
+    def do_handshake(self):
+      self.interface(self.sslobj._sslobj.do_handshake)
+
+    def read(self, length=16384, buffer=None):
+      timeout = self.sslsocket.gettimeout()
+      if timeout:
+        t = time.monotonic()
+      while True:
+        try:
+          if buffer is None:
+            return self.sslobj._sslobj.read(length)
+          else:
+            return self.sslobj._sslobj.read(length, buffer)
+        except ssl.SSLWantReadError:
+          if timeout:
+            if time.monotonic() - t > timeout:
+              raise TimeoutError(10060, 'timed out')
+          b = self.sslsocket.socket.recv(17408)
+          if b:
+            self.inc.write(b)
+          else:
+            raise ssl.SSLEOFError(ssl.SSL_ERROR_EOF, 'EOF occurred in violation of protocol')
+
+    def write(self, bytes):
+      timeout = self.sslsocket.gettimeout()
+      if timeout:
+        t = time.monotonic()
+      w = self.sslobj._sslobj.write(bytes)
+      while self.out.pending:
+        if timeout:
+          if time.monotonic() - t > timeout:
+            raise TimeoutError(10060, 'timed out')
+        self.sslsocket.socket.sendall(self.out.read())
+      return w
+
+    def shutdown(self):
+      self.interface(self.sslobj._sslobj.shutdown)
+
+    def verify_client_post_handshake(self):
+      self.interface(self.sslobj._sslobj.verify_client_post_handshake)
+
+  def __init__(self, *args, **kwargs):
+    self.DefaultSSLContext = ssl.SSLContext(*args, **kwargs)
+    ssl.SSLContext.__init__(*args, **kwargs)
+
+  def __setattr__(self, name, value):
+    object.__setattr__(self, name, value)
+    if name != 'DefaultSSLContext':
+      self.DefaultSSLContext.__setattr__(name, value)
+
+  def wrap_socket(self, sock, *args, **kwargs):
+    ctx = self if isinstance(sock, ssl.SSLSocket) else self.DefaultSSLContext
+    return ssl.SSLContext.wrap_socket(ctx, sock, *args, **kwargs)
+
+  def _wrap_socket(self, ssl_sock, server_side, server_hostname, *args, **kwargs):
+    _sslsocket = NestedSSLContext._SSLSocket(self, ssl_sock, server_side, server_hostname)
+    return _sslsocket
+
+NestedSSLContext.sslsocket_class = NestedSSLContext.SSLSocket
+
+
+class HTTPProxyRequest():
+
+  NSSLContext = NestedSSLContext(ssl.PROTOCOL_TLS_CLIENT)
+  NSSLContext.check_hostname = False
+  NSSLContext.verify_mode = ssl.CERT_NONE
+  RequestPattern = \
+    '%s %s HTTP/1.1\r\n' \
+    'Host: %s\r\n%s' \
+    '\r\n'
+  PROXY = ('', 8080)
+  PROXY_AUTH = ''
+  PROXY_SECURE = False
+
+  def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, max_hlength=1048576, decompress=True, pconnection=None):
+    if url is None:
+      return HTTPMessage()
+    if method is None:
+      method = 'GET' if data is None else 'POST'
+    redir = 0
+    retry = False
+    exceeded = [False]
+    try:
+      url_p = urllib.parse.urlsplit(url, allow_fragments=False)
+      if headers is None:
+        headers = {}
+      hitems = headers.items()
+      if pconnection is None:
+        pconnection = [None]
+        hccl = True
+      else:
+        hccl = 'close' in (e.strip() for k, v in hitems if k.lower() == 'connection' for e in v.lower().split(','))
+      if data:
+        hexp = '100-continue' in (e.strip() for k, v in hitems if k.lower() == 'expect' for e in v.lower().split(','))
+      else:
+        hexp = False
+      headers = {k: v for k, v in hitems if not k.lower() in ('host', 'content-length', 'connection', 'expect')}
+      if hexp:
+        headers['Expect'] = '100-continue'
+      if not 'accept-encoding' in (k.lower() for k, v in hitems):
+        headers['Accept-Encoding'] = 'identity, deflate, gzip' if decompress else 'identity'
+      if data is not None:
+        if not 'chunked' in (e.strip() for k, v in hitems if k.lower() == 'transfer-encoding' for e in v.lower().split(',')):
+          headers['Content-Length'] = str(len(data))
+      headers['Connection'] = 'close' if hccl else 'keep-alive'
+    except:
+      return HTTPMessage()
+    while True:
+      try:
+        if pconnection[0] is None:
+          if url_p.scheme.lower() == 'http':
+            if not cls.PROXY_SECURE:
+              pconnection[0] = socket.create_connection(cls.PROXY, timeout=timeout)
+            else:
+              pconnection[0] = cls.NSSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout),  server_side=False, server_hostname=cls.PROXY[0])
+          elif url_p.scheme.lower() == 'https':
+            if not cls.PROXY_SECURE:
+              psock = socket.create_connection(cls.PROXY, timeout=timeout)
+            else:
+              psock = cls.NSSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout), server_side=False, server_hostname=cls.PROXY[0])
+            psock.sendall(('CONNECT %s:%s HTTP/1.1\r\nHost: %s:%s\r\n%s\r\n' % (*(tuple((url_p.netloc + ':443').split(':', 2)[:2]) * 2), ('Proxy-Authorization: %s\r\n' % cls.PROXY_AUTH) if cls.PROXY_AUTH else '')).encode('iso-8859-1'))
+            if not HTTPMessage(psock, body=False, decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=False).code in ('200', '204'):
+              raise
+            pconnection[0] = cls.NSSLContext.wrap_socket(psock, server_side=False, server_hostname=url_p.netloc.split(':')[0])
+          else:
+            raise
+        else:
+          try:
+            pconnection[0].settimeout(timeout)
+          except:
+            pass
+        if url_p.scheme.lower() == 'http':
+          if cls.PROXY_AUTH:
+            headers['Proxy-Authorization'] = cls.PROXY_AUTH
+          else:
+            headers.pop('Proxy-Authorization', None)
+        try:
+          code = '100'
+          if hexp and data:
+            msg = cls.RequestPattern % (method, ((url_p.path + ('?' + url_p.query if url_p.query else '')) if url_p.scheme.lower() != 'http' else url).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
+            pconnection[0].sendall(msg.encode('iso-8859-1'))
+            resp = HTTPMessage(pconnection[0], body=False, decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
+            code = resp.code
+            if code is None:
+              code = '100'
+            if code == '100':
+              pconnection[0].sendall(data)
+          else:
+            msg = cls.RequestPattern % (method, ((url_p.path + ('?' + url_p.query if url_p.query else '')) if url_p.scheme.lower() != 'http' else url).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
+            pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
+        except:
+          if retry:
+            raise
+          retry = True
+          try:
+            pconnection[0].close()
+          except:
+            pass
+          pconnection[0] = None
+          continue
+        while code == '100':
+          resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=decompress, exceeded=exceeded)
+          code = resp.code
+          if code == '100':
+            redir += 1
+            if redir > 5:
+              raise
+        if code is None:
+          if retry or exceeded == [True]:
+            raise
+          retry = True
+          try:
+            pconnection[0].close()
+          except:
+            pass
+          pconnection[0] = None
+          continue
+        retry = False
+        if code[:2] == '30' and code != '304':
+          if resp.header('location'):
+            url = urllib.parse.urljoin(url, resp.header('location'))
+            urlo_p = url_p
+            url_p = urllib.parse.urlsplit(url, allow_fragments=False)
+            if headers['Connection'] == 'close' or resp.expect_close or (urlo_p.scheme != url_p.scheme or urlo_p.netloc != url_p.netloc):
+              try:
+                pconnection[0].close()
+              except:
+                pass
+              pconnection[0] = None
+              headers['Connection'] = 'close'
+            redir += 1
+            if redir > 5:
+              raise
+            if code == '303':
+              if method.upper() != 'HEAD':
+                method = 'GET'
+              data = None
+              for k in list(headers.keys()):
+                if k.lower() in ('transfer-encoding', 'content-length', 'content-type', 'expect'):
+                  del headers[k]
+          else:
+            raise
+        else:
+          break
+      except:
+        try:
+          pconnection[0].close()
+        except:
+          pass
+        pconnection[0] = None
+        return HTTPMessage()
+    if headers['Connection'] == 'close' or resp.expect_close:
+      try:
+        pconnection[0].close()
+      except:
+        pass
+      pconnection[0] = None
+    return resp
+
+
 class WGS84WebMercator():
 
   R = 6378137.0
@@ -11798,7 +12106,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          sta = true;\r\n' \
   '          if (b == null) {\r\n' \
-  '            if (twidth || kzoom != 0) {\r\n' \
+  '            if (twidth || kzoom != true) {\r\n' \
   '              document.getElementById("tset").disabled = false;\r\n' \
   '              return;\r\n' \
   '            }\r\n' \
@@ -13336,7 +13644,7 @@ class GPXTweakerWebInterfaceServer():
       if l[0] == '[' and l[-1] == ']':
         scur = l[1:-1].lower()
         if hcur == 'global':
-          if not scur in ('interfaceserver', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
+          if not scur in ('interfaceserver', 'proxy', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
@@ -13379,21 +13687,39 @@ class GPXTweakerWebInterfaceServer():
           if field == 'ip':
             self.Ip = value or self.Ip
           elif field == 'port':
-            port = value or self.Ports
-            if '-' in port:
-              self.Ports = port.split('-', 1)
-            else:
-              self.Ports = (port, port)
-            if not self.Ports[0].isdecimal() or not self.Ports[1].isdecimal():
-              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-              return False
-            self.Ports = (int(self.Ports[0]), int(self.Ports[1]))
-            if self.Ports[0] > self.Ports[1]:
-              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
-              return False
+            if value:
+              if '-' in value:
+                self.Ports = value.split('-', 1)
+              else:
+                self.Ports = (value, value)
+              if not self.Ports[0].isdecimal() or not self.Ports[1].isdecimal():
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              self.Ports = (int(self.Ports[0]), int(self.Ports[1]))
+              if self.Ports[0] > self.Ports[1]:
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
+        elif scur == 'proxy':
+          if field == 'ip':
+            if value:
+              self.Proxy['ip'] = value
+          elif field == 'port':
+            if value:
+              if not value.isdecimal():
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              self.Proxy['port'] = int(value)
+          elif field == '"user_colon_password"':
+            if value:
+              if len(value) < 2 or value[:1] != '"' or value [-1:] != '"':
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              self.Proxy['auth'] = value[1:-1]
+          elif field == 'secure':
+            self.Proxy['secure'] = value is True or value.lower() == 'yes'
         elif scur == 'tilesbuffer':
           if field == 'size':
             self.TilesBufferSize = None if value is None else int(value)
@@ -13684,7 +14010,8 @@ class GPXTweakerWebInterfaceServer():
     self.SessionId = None
     self.PSessionId = None
     self.Ip = '127.0.0.1'
-    self.Ports = '8000'
+    self.Ports = (8000, 8000)
+    self.Proxy = {'ip': '', 'port': 8080, 'auth': '', 'secure': False}
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
     self.TilesHoldSize = 0
@@ -13760,6 +14087,13 @@ class GPXTweakerWebInterfaceServer():
     self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
     self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
     self.GPXTweakerInterfaceServerInstances.extend(range(max(self.Ports[1] + 1, self.MediaPorts[0]), self.MediaPorts[1] + 1))
+    if self.Proxy['ip']:
+      HTTPProxyRequest.PROXY = (self.Proxy['ip'], self.Proxy['port'])
+      if self.Proxy['auth']:
+        HTTPProxyRequest.PROXY_AUTH = 'Basic ' + base64.b64encode(self.Proxy['auth'].encode('utf-8')).decode('utf-8')
+      if self.Proxy['secure']:
+        HTTPProxyRequest.PROXY_SECURE = True
+      globals()['HTTPRequest'] = HTTPProxyRequest
     err = False
     if map_minlat is not None:
       if map_minlat < self.VMinLat:
