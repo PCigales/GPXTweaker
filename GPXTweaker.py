@@ -1229,7 +1229,10 @@ class NestedSSLContext(ssl.SSLContext):
           if timeout:
             if time.monotonic() - t > timeout:
               raise TimeoutError(10060, 'timed out')
-          b = self.sslsocket.socket.recv(17408)
+          try:
+            b = self.sslsocket.socket.recv(17408)
+          except ConnectionResetError:
+            b = b''
           if b:
             self.inc.write(b)
           else:
