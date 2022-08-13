@@ -34,6 +34,8 @@ Le calcul des statistiques de la trace peut être partiellement (option Gpu_comp
 
 Il est possible d'assembler une carte à partir de tuiles au format jpeg au moyen du programme jpegtran.
 
+L'application peut être configurée de sorte à accéder aux ressources distantes via un proxy; l'authentification basique et le chiffrement de bout en bout (TLS-in-TLS) sont pris en charge.
+
 Mode d'emploi:
   - copier le script GPXTweaker.py dans un répertoire
   - copier et personnaliser le fichier de configuration GPXTweaker.cfg dans le même répertoire
@@ -108,6 +110,8 @@ The track can, irreversibly, be purged of unchecked elements by saving it then r
 The computation of the statistics of the track can be partially (option Gpu_comp on 1) ou totally (option Gpu_comp on 2) onto the graphics processor unit.
 
 It is possible to assemble a map from tiles in jpeg format thanks to the program jpegtran.
+
+The application can be configured to access remote resources through a proxy; basic authentication and end-to-end encryption (TLS-in-TLS) are supported.
 
 Instructions:
   - copy the script GPXTWeaker in a folder
