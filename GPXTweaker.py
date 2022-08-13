@@ -1161,6 +1161,8 @@ class NestedSSLContext(ssl.SSLContext):
       except:
         pass
 
+  sslsocket_class = SSLSocket
+
   class _SSLSocket():
 
     def __init__(self, context, ssl_sock, server_side, server_hostname):
@@ -1276,8 +1278,6 @@ class NestedSSLContext(ssl.SSLContext):
 
   def wrap_bio(self, *args, **kwargs):
     return self.DefaultSSLContext.wrap_bio(*args, **kwargs)
-
-NestedSSLContext.sslsocket_class = NestedSSLContext.SSLSocket
 
 
 def gen_HTTPRequest(proxy=None):
