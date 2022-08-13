@@ -1220,7 +1220,7 @@ class NestedSSLContext(ssl.SSLContext):
                 raise TimeoutError(10060, 'timed out')
             try:
               self._read_record()
-            except:
+            except ConnectionResetError:
               if action == self.sslobj._sslobj.do_handshake:
                 raise ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host')
               else:
