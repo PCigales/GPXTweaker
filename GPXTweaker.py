@@ -29,6 +29,7 @@ import ctypes, ctypes.wintypes
 import subprocess
 import struct
 import array
+import types
 import sys
 import uuid
 import webbrowser
@@ -1182,83 +1183,90 @@ class NestedSSLContext(ssl.SSLContext):
       else:
         self.sslobj._sslobj.__setattr__(name, value)
 
+    def _read_record(self):
+      bl = b''
+      while len(bl) < 5:
+        b_ = self.sslsocket.socket.recv(5 - len(bl))
+        if not b_:
+          raise ConnectionResetError
+        bl += b_
+      l = int.from_bytes(bl[3:5], 'big')
+      b = bytearray(l + 5)
+      b[0:5] = bl
+      m = memoryview(b)
+      while l > 0:
+        bl = self.sslsocket.socket.recv_into(m[-l:], l)
+        if not bl:
+          raise ConnectionResetError
+        l -= bl
+      self.inc.write(b)
+
     def interface(self, action):
       timeout = self.sslsocket.gettimeout()
       if timeout:
         t = time.monotonic()
       while True:
         try:
-          action()
+          res = action()
         except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as err:
-          while self.out.pending:
-            if timeout:
-              if time.monotonic() - t > timeout:
-                raise TimeoutError(10060, 'timed out')
+          if timeout:
+            if time.monotonic() - t > timeout:
+              raise TimeoutError(10060, 'timed out')
+          if self.out.pending:
             self.sslsocket.socket.sendall(self.out.read())
           if err.errno == ssl.SSL_ERROR_WANT_READ:
             if timeout:
               if time.monotonic() - t > timeout:
                 raise TimeoutError(10060, 'timed out')
-            b = self.sslsocket.socket.recv(16384)
-            if b:
-              self.inc.write(b)
-            else:
-              raise ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host')
+            try:
+              self._read_record()
+            except:
+              if action == self.sslobj._sslobj.do_handshake:
+                raise ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host')
+              else:
+                raise ssl.SSLEOFError(ssl.SSL_ERROR_EOF, 'EOF occurred in violation of protocol')
         else:
-          while self.out.pending:
+          if self.out.pending:
             if timeout:
               if time.monotonic() - t > timeout:
                 raise TimeoutError(10060, 'timed out')
             self.sslsocket.socket.sendall(self.out.read())
-          break
+          return res
 
     def do_handshake(self):
-      self.interface(self.sslobj._sslobj.do_handshake)
+      return self.interface(self.sslobj._sslobj.do_handshake)
 
     def read(self, length=16384, buffer=None):
-      timeout = self.sslsocket.gettimeout()
-      if timeout:
-        t = time.monotonic()
-      while True:
-        try:
-          if buffer is None:
-            return self.sslobj._sslobj.read(length)
-          else:
-            return self.sslobj._sslobj.read(length, buffer)
-        except ssl.SSLWantReadError:
-          if timeout:
-            if time.monotonic() - t > timeout:
-              raise TimeoutError(10060, 'timed out')
-          try:
-            b = self.sslsocket.socket.recv(17408)
-          except ConnectionResetError:
-            b = b''
-          if b:
-            self.inc.write(b)
-          else:
-            raise ssl.SSLEOFError(ssl.SSL_ERROR_EOF, 'EOF occurred in violation of protocol')
+      return self.interface(partial(self.sslobj._sslobj.read, length) if buffer is None else partial(self.sslobj._sslobj.read, length, buffer))
 
     def write(self, bytes):
-      timeout = self.sslsocket.gettimeout()
-      if timeout:
-        t = time.monotonic()
       w = self.sslobj._sslobj.write(bytes)
-      while self.out.pending:
-        if timeout:
-          if time.monotonic() - t > timeout:
-            raise TimeoutError(10060, 'timed out')
+      if self.out.pending:
         self.sslsocket.socket.sendall(self.out.read())
       return w
 
     def shutdown(self):
       self.interface(self.sslobj._sslobj.shutdown)
+      return self.sslsocket.socket
 
     def verify_client_post_handshake(self):
-      self.interface(self.sslobj._sslobj.verify_client_post_handshake)
+      return self.interface(self.sslobj._sslobj.verify_client_post_handshake)
 
   def __init__(self, *args, **kwargs):
     self.DefaultSSLContext = ssl.SSLContext(*args, **kwargs)
     ssl.SSLContext.__init__(*args, **kwargs)
+
+  def wrap_callable(self, name):
+    def new_callable(*args, **kwargs):
+      object.__getattribute__(self.DefaultSSLContext, name)(*args, **kwargs)
+      return object.__getattribute__(self, name)(*args, **kwargs)
+    return new_callable
+
+  def __getattribute__(self, name):
+    if not name in NestedSSLContext.__dict__ and type(object.__getattribute__(self, name)) in (types.BuiltinMethodType, types.MethodType):
+      return self.wrap_callable(name)
+    else:
+      return object.__getattribute__(self, name)
 
   def __setattr__(self, name, value):
     object.__setattr__(self, name, value)
@@ -1266,12 +1274,13 @@ class NestedSSLContext(ssl.SSLContext):
       self.DefaultSSLContext.__setattr__(name, value)
 
   def wrap_socket(self, sock, *args, **kwargs):
-    ctx = self if isinstance(sock, ssl.SSLSocket) else self.DefaultSSLContext
-    return ssl.SSLContext.wrap_socket(ctx, sock, *args, **kwargs)
+    return ssl.SSLContext.wrap_socket(self if isinstance(sock, ssl.SSLSocket) else self.DefaultSSLContext, sock, *args, **kwargs)
 
   def _wrap_socket(self, ssl_sock, server_side, server_hostname, *args, **kwargs):
-    _sslsocket = NestedSSLContext._SSLSocket(self, ssl_sock, server_side, server_hostname)
-    return _sslsocket
+    return NestedSSLContext._SSLSocket(self, ssl_sock, server_side, server_hostname)
+
+  def wrap_bio(self, *args, **kwargs):
+    return self.DefaultSSLContext.wrap_bio(*args, **kwargs)
 
 NestedSSLContext.sslsocket_class = NestedSSLContext.SSLSocket
 
