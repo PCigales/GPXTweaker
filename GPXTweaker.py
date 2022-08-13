@@ -984,15 +984,21 @@ class HTTPMessage():
     return http_message
 
 
-class HTTPRequest():
+class HTTPBaseRequest():
 
-  SSLContext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-  SSLContext.check_hostname = False
-  SSLContext.verify_mode = ssl.CERT_NONE
   RequestPattern = \
     '%s %s HTTP/1.1\r\n' \
     'Host: %s\r\n%s' \
     '\r\n'
+
+  def __init_subclass__(cls, context_class=ssl.SSLContext):
+    cls.SSLContext = context_class(ssl.PROTOCOL_TLS_CLIENT)
+    cls.SSLContext.check_hostname = False
+    cls.SSLContext.verify_mode = ssl.CERT_NONE
+
+  @classmethod
+  def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
+    raise
 
   def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, max_hlength=1048576, decompress=True, pconnection=None):
     if url is None:
@@ -1029,22 +1035,11 @@ class HTTPRequest():
       return HTTPMessage()
     while True:
       try:
-        if pconnection[0] is None:
-          if url_p.scheme.lower() == 'http':
-            pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
-          elif url_p.scheme.lower() == 'https':
-            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout), server_side=False, server_hostname=url_p.netloc.split(':')[0])
-          else:
-            raise
-        else:
-          try:
-            pconnection[0].settimeout(timeout)
-          except:
-            pass
+        path = cls.connect(url, url_p, headers, max_length, max_hlength, timeout, pconnection)
         try:
           code = '100'
           if hexp and data:
-            msg = cls.RequestPattern % (method, (url_p.path + ('?' + url_p.query if url_p.query else '')).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
+            msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
             pconnection[0].sendall(msg.encode('iso-8859-1'))
             resp = HTTPMessage(pconnection[0], body=False, decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
             code = resp.code
@@ -1053,7 +1048,7 @@ class HTTPRequest():
             if code == '100':
               pconnection[0].sendall(data)
           else:
-            msg = cls.RequestPattern % (method, (url_p.path + ('?' + url_p.query if url_p.query else '')).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
+            msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
             pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
         except:
           if retry:
@@ -1285,69 +1280,47 @@ class NestedSSLContext(ssl.SSLContext):
 NestedSSLContext.sslsocket_class = NestedSSLContext.SSLSocket
 
 
-class HTTPProxyRequest():
-
-  NSSLContext = NestedSSLContext(ssl.PROTOCOL_TLS_CLIENT)
-  NSSLContext.check_hostname = False
-  NSSLContext.verify_mode = ssl.CERT_NONE
-  RequestPattern = \
-    '%s %s HTTP/1.1\r\n' \
-    'Host: %s\r\n%s' \
-    '\r\n'
-  PROXY = ('', 8080)
-  PROXY_AUTH = ''
-  PROXY_SECURE = False
-
-  def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, max_hlength=1048576, decompress=True, pconnection=None):
-    if url is None:
-      return HTTPMessage()
-    if method is None:
-      method = 'GET' if data is None else 'POST'
-    redir = 0
-    retry = False
-    exceeded = [False]
-    try:
-      url_p = urllib.parse.urlsplit(url, allow_fragments=False)
-      if headers is None:
-        headers = {}
-      hitems = headers.items()
-      if pconnection is None:
-        pconnection = [None]
-        hccl = True
-      else:
-        hccl = 'close' in (e.strip() for k, v in hitems if k.lower() == 'connection' for e in v.lower().split(','))
-      if data:
-        hexp = '100-continue' in (e.strip() for k, v in hitems if k.lower() == 'expect' for e in v.lower().split(','))
-      else:
-        hexp = False
-      headers = {k: v for k, v in hitems if not k.lower() in ('host', 'content-length', 'connection', 'expect')}
-      if hexp:
-        headers['Expect'] = '100-continue'
-      if not 'accept-encoding' in (k.lower() for k, v in hitems):
-        headers['Accept-Encoding'] = 'identity, deflate, gzip' if decompress else 'identity'
-      if data is not None:
-        if not 'chunked' in (e.strip() for k, v in hitems if k.lower() == 'transfer-encoding' for e in v.lower().split(',')):
-          headers['Content-Length'] = str(len(data))
-      headers['Connection'] = 'close' if hccl else 'keep-alive'
-    except:
-      return HTTPMessage()
-    while True:
-      try:
+def gen_HTTPRequest(proxy=None):
+  global HTTPRequest
+  if not proxy or not (proxy or {}).get('ip', None):
+    class HTTPRequest(HTTPBaseRequest):
+      @classmethod
+      def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
+        if pconnection[0] is None:
+          if url_p.scheme.lower() == 'http':
+            pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
+          elif url_p.scheme.lower() == 'https':
+            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout), server_side=False, server_hostname=url_p.netloc.split(':')[0])
+          else:
+            raise
+        else:
+          try:
+            pconnection[0].settimeout(timeout)
+          except:
+            pass
+        return (url_p.path + ('?' + url_p.query if url_p.query else '')).replace(' ', '%20') or '/'
+  else:
+    class HTTPRequest(HTTPBaseRequest, context_class=NestedSSLContext):
+      PROXY = ('', 8080)
+      PROXY_AUTH = ''
+      PROXY_SECURE = False
+      @classmethod
+      def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
         if pconnection[0] is None:
           if url_p.scheme.lower() == 'http':
             if not cls.PROXY_SECURE:
               pconnection[0] = socket.create_connection(cls.PROXY, timeout=timeout)
             else:
-              pconnection[0] = cls.NSSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout),  server_side=False, server_hostname=cls.PROXY[0])
+              pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout),  server_side=False, server_hostname=cls.PROXY[0])
           elif url_p.scheme.lower() == 'https':
             if not cls.PROXY_SECURE:
               psock = socket.create_connection(cls.PROXY, timeout=timeout)
             else:
-              psock = cls.NSSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout), server_side=False, server_hostname=cls.PROXY[0])
+              psock = cls.SSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout), server_side=False, server_hostname=cls.PROXY[0])
             psock.sendall(('CONNECT %s:%s HTTP/1.1\r\nHost: %s:%s\r\n%s\r\n' % (*(tuple((url_p.netloc + ':443').split(':', 2)[:2]) * 2), ('Proxy-Authorization: %s\r\n' % cls.PROXY_AUTH) if cls.PROXY_AUTH else '')).encode('iso-8859-1'))
             if not HTTPMessage(psock, body=False, decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=False).code in ('200', '204'):
               raise
-            pconnection[0] = cls.NSSLContext.wrap_socket(psock, server_side=False, server_hostname=url_p.netloc.split(':')[0])
+            pconnection[0] = cls.SSLContext.wrap_socket(psock, server_side=False, server_hostname=url_p.netloc.split(':')[0])
           else:
             raise
         else:
@@ -1360,88 +1333,12 @@ class HTTPProxyRequest():
             headers['Proxy-Authorization'] = cls.PROXY_AUTH
           else:
             headers.pop('Proxy-Authorization', None)
-        try:
-          code = '100'
-          if hexp and data:
-            msg = cls.RequestPattern % (method, ((url_p.path + ('?' + url_p.query if url_p.query else '')) if url_p.scheme.lower() != 'http' else url).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
-            pconnection[0].sendall(msg.encode('iso-8859-1'))
-            resp = HTTPMessage(pconnection[0], body=False, decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
-            code = resp.code
-            if code is None:
-              code = '100'
-            if code == '100':
-              pconnection[0].sendall(data)
-          else:
-            msg = cls.RequestPattern % (method, ((url_p.path + ('?' + url_p.query if url_p.query else '')) if url_p.scheme.lower() != 'http' else url).replace(' ', '%20') or '/', url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
-            pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
-        except:
-          if retry:
-            raise
-          retry = True
-          try:
-            pconnection[0].close()
-          except:
-            pass
-          pconnection[0] = None
-          continue
-        while code == '100':
-          resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=decompress, exceeded=exceeded)
-          code = resp.code
-          if code == '100':
-            redir += 1
-            if redir > 5:
-              raise
-        if code is None:
-          if retry or exceeded == [True]:
-            raise
-          retry = True
-          try:
-            pconnection[0].close()
-          except:
-            pass
-          pconnection[0] = None
-          continue
-        retry = False
-        if code[:2] == '30' and code != '304':
-          if resp.header('location'):
-            url = urllib.parse.urljoin(url, resp.header('location'))
-            urlo_p = url_p
-            url_p = urllib.parse.urlsplit(url, allow_fragments=False)
-            if headers['Connection'] == 'close' or resp.expect_close or (urlo_p.scheme != url_p.scheme or urlo_p.netloc != url_p.netloc):
-              try:
-                pconnection[0].close()
-              except:
-                pass
-              pconnection[0] = None
-              headers['Connection'] = 'close'
-            redir += 1
-            if redir > 5:
-              raise
-            if code == '303':
-              if method.upper() != 'HEAD':
-                method = 'GET'
-              data = None
-              for k in list(headers.keys()):
-                if k.lower() in ('transfer-encoding', 'content-length', 'content-type', 'expect'):
-                  del headers[k]
-          else:
-            raise
-        else:
-          break
-      except:
-        try:
-          pconnection[0].close()
-        except:
-          pass
-        pconnection[0] = None
-        return HTTPMessage()
-    if headers['Connection'] == 'close' or resp.expect_close:
-      try:
-        pconnection[0].close()
-      except:
-        pass
-      pconnection[0] = None
-    return resp
+        return ((url_p.path + ('?' + url_p.query if url_p.query else '')) if url_p.scheme.lower() != 'http' else url).replace(' ', '%20') or '/'
+    HTTPRequest.PROXY = (proxy['ip'], proxy['port'])
+    if proxy['auth']:
+      HTTPRequest.PROXY_AUTH = 'Basic ' + base64.b64encode(proxy['auth'].encode('utf-8')).decode('utf-8')
+    if proxy['secure']:
+      HTTPRequest.PROXY_SECURE = True
 
 
 class WGS84WebMercator():
@@ -14103,12 +14000,9 @@ class GPXTweakerWebInterfaceServer():
     self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
     self.GPXTweakerInterfaceServerInstances.extend(range(max(self.Ports[1] + 1, self.MediaPorts[0]), self.MediaPorts[1] + 1))
     if self.Proxy['ip']:
-      HTTPProxyRequest.PROXY = (self.Proxy['ip'], self.Proxy['port'])
-      if self.Proxy['auth']:
-        HTTPProxyRequest.PROXY_AUTH = 'Basic ' + base64.b64encode(self.Proxy['auth'].encode('utf-8')).decode('utf-8')
-      if self.Proxy['secure']:
-        HTTPProxyRequest.PROXY_SECURE = True
-      globals()['HTTPRequest'] = HTTPProxyRequest
+      gen_HTTPRequest(self.Proxy)
+    else:
+      gen_HTTPRequest()
     err = False
     if map_minlat is not None:
       if map_minlat < self.VMinLat:
@@ -14837,3 +14731,5 @@ if __name__ == '__main__':
     if k.upper() == b'S':
         break
   GPXTweakerInterface.shutdown()
+else:
+  gen_HTTPRequest()
