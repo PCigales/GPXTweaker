@@ -1572,6 +1572,9 @@ class WebMercatorMap(WGS84WebMercator):
   TS_BING_MAP = {'alias': 'BING_MAP', 'pattern': TS_BING_SOURCE + '/tiles/r{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_BING_AERIAL = {'alias': 'BING_AERIAL', 'pattern': TS_BING_SOURCE + '/tiles/a{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_BING_HYBRID = {'alias': 'BING_HYBRID', 'pattern': TS_BING_SOURCE + '/tiles/h{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  WMTS_ESRI_SOURCE = 'https://services.arcgisonline.com/arcgis/rest/services/'
+  TS_ESRI_TOPOMAP = {'alias': 'TS_ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + 'World_Topo_Map/MapServer/WMTS', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_ESRI_IMAGERY = {'alias': 'TS_ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + 'World_Imagery/MapServer/WMTS', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
