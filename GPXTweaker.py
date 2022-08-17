@@ -1041,7 +1041,7 @@ class HTTPBaseRequest():
           if hexp and data:
             msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
             pconnection[0].sendall(msg.encode('iso-8859-1'))
-            resp = HTTPMessage(pconnection[0], body=False, decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
+            resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
             code = resp.code
             if code is None:
               code = '100'
@@ -1554,7 +1554,6 @@ class WebMercatorMap(WGS84WebMercator):
   MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE, 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
   MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE, 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
   MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
-  MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WMS_IGN_SOURCE, 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
   WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service'
   MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE, 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
   WMTS_PATTERN = {'GetCapabilities': '{source}?SERVICE=WMTS&REQUEST=GetCapabilities', 'GetTile': '{source}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={layer}&STYLE={style}&FORMAT={format}&TILEMATRIXSET={matrixset}&TILEMATRIX={matrix}&TILEROW={row}&TILECOL={col}'}
@@ -1915,7 +1914,11 @@ class WebMercatorMap(WGS84WebMercator):
       if 'zip' in rep.header('content-type', '').lower() or infos.get('pattern', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
         try:
           zf = zipfile.ZipFile(BytesIO(rep.body), 'r')
-          tile = zf.read(zf.namelist()[0])
+          nl = zf.namelist()
+          try:
+            tile = zf.read(nl[list(os.path.splitext(f)[1].lower() for f in nl).index('.hgt')])
+          except:
+            tile = zf.read(nl[0])
           zf.close()
         except:
           tile = rep.body
@@ -2565,10 +2568,12 @@ class WGS84Map(WebMercatorMap):
 
 class WGS84Elevation(WGS84Map):
 
-  AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': 'elevations', 'nodata': -99999, 'limit': 200}
+  AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
   TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
-  TS_SRTM_SOURCE = 'http://step.esa.int/auxdata/dem'
-  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'pattern': TS_SRTM_SOURCE + '/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
+  MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE, 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
+  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'pattern': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
+  AS_OTD_EUDEM = {'alias': 'AS_OTD_EUDEM', 'source': 'https://api.opentopodata.org/v1/eudem25m?locations={location}', 'separator': '|', 'key': ('results', '*', 'elevation'), 'nodata': -32767, 'limit': 100, 'parallel': False}
+  TS_EUDEM_1 = {'alias': 'EUDEM_1', 'pattern': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
 
   def ElevationfromMap(self, lat, lon):
     if not self.MapInfos or not self.Map:
@@ -2737,7 +2742,7 @@ class WGS84Elevation(WGS84Map):
               m[pos: pos + _w + 2] = tiles[c][r][_l_0: _l_1 + 2]
     return m
 
-  def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', threads=10):
+  def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', threads=10, *, stop=False):
     if not isinstance(points, (list, tuple)):
       return None
     headers = {}
@@ -2757,32 +2762,50 @@ class WGS84Elevation(WGS84Map):
     finished = threading.Event()
     posl = 0
     ind = 0
+    def _proc_json(j):
+      eles = json.loads(j)
+      star = False
+      for k in infos['key']:
+        if k == '*':
+          star = True
+        elif star:
+          for i, e in enumerate(eles):
+            eles[i] = e[k]
+        else:
+          eles = eles[k]
+      return eles
     def _request_elevation():
       nonlocal posl
       nonlocal ind
       pconnection=[None]
       while True:
+        if self.RequestElevation.__kwdefaults__['stop']:
+          finished.set()
+          break
         with ilock:
           if posl < len(lind):
             ind1, ind2 = lind[posl]
             posl += 1
           else:
             break
-        uri = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:ind2])})
+        uri = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[ind1:ind2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:ind2])})
         try:
           rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
-          if rep.code != '200' or not rep.body:
-            uri1 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:(ind1+ind2)//2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:(ind1+ind2)//2])})
-            uri2 = infos['source'].format_map({'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[(ind1+ind2)//2:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[(ind1+ind2)//2:ind2])})
+          try:
+            if rep.code == '200' and rep.body:
+              ele[ind1:ind2] = _proc_json(rep.body)
+            else:
+              raise
+          except:
+            uri1 = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[ind1:(ind1+ind2)//2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:(ind1+ind2)//2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:(ind1+ind2)//2])})
+            uri2 = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[(ind1+ind2)//2:ind2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[(ind1+ind2)//2:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[(ind1+ind2)//2:ind2])})
             rep1 = HTTPRequest(uri1, 'GET', headers, pconnection=pconnection)
             rep2 = HTTPRequest(uri2, 'GET', headers, pconnection=pconnection)
             try:
-              ele[ind1:(ind1+ind2)//2] = json.loads(rep1.body)[infos['key']]
+              ele[ind1:(ind1+ind2)//2] = _proc_json(rep1.body)
             except:
               pass
-            ele[(ind1+ind2)//2:ind2] = json.loads(rep2.body)[infos['key']]
-          else:
-            ele[ind1:ind2] = json.loads(rep.body)[infos['key']]
+            ele[(ind1+ind2)//2:ind2] = _proc_json(rep2.body)
         except:
           pass
         with ilock:
@@ -2790,7 +2813,7 @@ class WGS84Elevation(WGS84Map):
           if ind == len(points):
             finished.set()
     lind = list((limit * i, min(limit * (i + 1), len(points))) for i in range(1 + (len(points) - 1) // limit))
-    for t in range(threads):
+    for t in range(threads if infos.get('parallel', False) else 1):
       th = threading.Thread(target=_request_elevation, daemon=True)
       th.start()
     finished.wait()
@@ -13809,7 +13832,7 @@ class GPXTweakerWebInterfaceServer():
             s[1][field] = value
             if field == 'nodata':
               try:
-                s[1][field] = float(value)
+                s[1][field] = float(value) if '.' in value else int(value)
               except:
                 pass
           elif field in ('basescale', 'topx', 'topy'):
@@ -13889,16 +13912,22 @@ class GPXTweakerWebInterfaceServer():
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
           elif field == 'json_key':
-            s[1]['key'] = value if hcur[:13] == 'elevationapi ' else tuple(map(str.strip, value.split(',')))
+            s[1]['key'] = tuple(map(str.strip, value.split(',')))
           elif field == 'html_regex' and hcur[:20] == 'reversegeocodingapi ':
             s[1]['regex'] = value
-          elif field == 'source' or (field in ('separator', 'nodata') and hcur[:13] == 'elevationapi '):
+          elif field == 'source' or (field in ('separator', 'limit', 'parallel', 'nodata') and hcur[:13] == 'elevationapi '):
             s[1][field] = value
             if field == 'nodata':
               try:
                 s[1][field] = float(value)
               except:
                 pass
+            elif field == 'limit':
+              try:
+                s[1][field] = int(value)
+              except:
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -14685,6 +14714,7 @@ class GPXTweakerWebInterfaceServer():
         self.Map.Tiles.Close()
     except:
       pass
+    WGS84Elevation.RequestElevation.__kwdefaults__['stop'] = True
     with self.SLock:
       for tr in self.Tracks:
         trck = tr[1]
@@ -14692,6 +14722,7 @@ class GPXTweakerWebInterfaceServer():
         trck.OTrack = trck.STrack = None
         del trck.Track
       self.HTML = self.HTMLExp = self.HTML3D = self.HTML3DData = None
+    WGS84Elevation.RequestElevation.__kwdefaults__['stop'] = False
     with self.Media.DLock:
       self.Media.Data = None
 
