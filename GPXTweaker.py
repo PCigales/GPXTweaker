@@ -9700,7 +9700,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let elt = e.target;\r\n' \
   '        if (! (elt?elt.id:elt)) {\r\n' \
-  '          mouse_ocm = setTimeout(function() {console.log(mouse_ocm);if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
+  '          mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (e.button == 2) {\r\n' \
@@ -9715,7 +9715,7 @@ class GPXTweakerWebInterfaceServer():
   '            segment_checkbox(cb);\r\n' \
   '            cb.scrollIntoView({block:"nearest"});\r\n' \
   '          }\r\n' \
-  '          mouse_ocm = setTimeout(function() {console.log(mouse_ocm);if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
+  '          mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function mouse_click(e) {\r\n' \
@@ -11009,8 +11009,8 @@ class GPXTweakerWebInterfaceServer():
   '      </colgroup>\r\n' \
   '      <tbody>\r\n' \
   '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;overflow:hidden;user-select:none;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();">\r\n' \
-  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
+  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;overflow:hidden;user-select:none;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();" onwheel="mouse_wheel(event)">\r\n' \
+  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" onmousedown="mouse_down(event)" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
   '          <div id="panel_infos" style="display:none;position:absolute;top:5px;left:5px;width:calc(100vw - 10vh - 18em);height:3em;font-size:90%;color:black;background-color:rgba(210,210,210,0.85);">\r\n' \
   '            <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:hidden;height:3em;">\r\n' \
   '              <label for="eye_info" style="top:2px;" onclick="event.altKey?complete_infos(event):update_waypoint(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
@@ -11025,7 +11025,7 @@ class GPXTweakerWebInterfaceServer():
   '            <line x1="0" y1="-0.9" x2="0" y2 ="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
   '            <line x1="0" y1="-0.9" x2="0" y2 ="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
   '          </svg>\r\n' \
-  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;" onclick="toggle_minimap_magnification()">\r\n' \
+  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
   '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
   '            <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
   '              <textPath pointer-events="none" href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
@@ -11096,6 +11096,10 @@ class GPXTweakerWebInterfaceServer():
   '      var mzoom = 1;\r\n' \
   '      var show_infos = false;\r\n' \
   '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
+  '      var click_r = null;\r\n' \
+  '      var click_t = null;\r\n' \
+  '      var click_cr = null;\r\n' \
+  '      var click_ct = null;\r\n' \
   '      function set_param(p, v=null) {\r\n' \
   '        if (p == "p") {\r\n' \
   '          if (v != null) {c_pace.value = v.toString();}\r\n' \
@@ -11678,6 +11682,7 @@ class GPXTweakerWebInterfaceServer():
   '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
   '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
   '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
+  '        mini_map.style.cursor = (mzoom==1)?"zoom-in":"zoom-out";\r\n' \
   '      }\r\n' \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
@@ -11807,6 +11812,41 @@ class GPXTweakerWebInterfaceServer():
   '            xhrrg.open("POST", "/reversegeocoding?rgset=" + rgset.toString());\r\n' \
   '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '       function mouse_down(e) {\r\n' \
+  '        if (e.button == 1) {process_key({key:"delete"});return;} else if (e.button != 0) {return;}\r\n' \
+  '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
+  '        document.onmouseup = mouse_up;\r\n' \
+  '        mini_map.setAttribute("pointer-events", "none");\r\n' \
+  '        p_infos.style.pointerEvents="none";\r\n' \
+  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / canvas.parentNode.offsetHeight / vfov);\r\n' \
+  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / canvas.parentNode.offsetHeight / vfov);\r\n' \
+  '        click_cr = parseFloat(c_rangle.value);\r\n' \
+  '        click_ct = parseFloat(c_tangle.value);\r\n' \
+  '      }\r\n' \
+  '      function mouse_up(e) {\r\n' \
+  '        canvas.parentNode.onmousemove = null;\r\n' \
+  '        document.onmouseup = null;\r\n' \
+  '        mini_map.removeAttribute("pointer-events");\r\n' \
+  '        p_infos.style.pointerEvents="";\r\n' \
+  '      }\r\n' \
+  '      function mouse_move(e) {\r\n' \
+  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / canvas.parentNode.offsetHeight / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
+  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / canvas.parentNode.offsetHeight / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '      function mouse_wheel(e) {\r\n' \
+  '        if (e.deltaY > 0) {;\r\n' \
+  '          if (pace < parseInt(c_pace.max)) {\r\n' \
+  '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
+  '            canvas_redraw();\r\n' \
+  '          }\r\n' \
+  '        } else if (e.deltaY < 0) {;\r\n' \
+  '          if (pace > 0) {\r\n' \
+  '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
+  '            canvas_redraw();\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
