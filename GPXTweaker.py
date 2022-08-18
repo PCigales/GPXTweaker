@@ -1918,10 +1918,7 @@ class WebMercatorMap(WGS84WebMercator):
         try:
           zf = zipfile.ZipFile(BytesIO(rep.body), 'r')
           nl = zf.namelist()
-          try:
-            tile = zf.read(nl[list(os.path.splitext(f)[1].lower() for f in nl).index('.hgt')])
-          except:
-            tile = zf.read(nl[0])
+          tile = zf.read(next((n for n in nl if os.path.splitext(n)[1].lower() in ('.hgt', '.bil')), nl[0]))
           zf.close()
         except:
           tile = rep.body
