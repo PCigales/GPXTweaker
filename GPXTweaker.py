@@ -11820,9 +11820,9 @@ class GPXTweakerWebInterfaceServer():
   '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
   '        mini_map.setAttribute("pointer-events", "none");\r\n' \
-  '        p_infos.style.pointerEvents="none";\r\n' \
-  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / canvas.parentNode.offsetHeight / vfov);\r\n' \
-  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / canvas.parentNode.offsetHeight / vfov);\r\n' \
+  '        p_infos.style.pointerEvents = "none";\r\n' \
+  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
   '        click_cr = parseFloat(c_rangle.value);\r\n' \
   '        click_ct = parseFloat(c_tangle.value);\r\n' \
   '      }\r\n' \
@@ -11830,11 +11830,11 @@ class GPXTweakerWebInterfaceServer():
   '        canvas.parentNode.onmousemove = null;\r\n' \
   '        document.onmouseup = null;\r\n' \
   '        mini_map.removeAttribute("pointer-events");\r\n' \
-  '        p_infos.style.pointerEvents="";\r\n' \
+  '        p_infos.style.pointerEvents = "";\r\n' \
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
-  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / canvas.parentNode.offsetHeight / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
-  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / canvas.parentNode.offsetHeight / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
+  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
   '        canvas_redraw();\r\n' \
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
