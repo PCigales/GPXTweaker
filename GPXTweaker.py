@@ -4911,10 +4911,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   else:
                     req_start = int(req_start)
                     if req_end:
-                      req_end = int(req_end) + 1
+                      req_end = min(int(req_end) + 1, msize)
                     else:
                       req_end = msize
-                    if req_start < 0 or req_start > req_end or req_end > msize:
+                    if req_start < 0 or req_start >= req_end:
                       raise
                 except:
                   _send_err_rns()
