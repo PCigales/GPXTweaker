@@ -10806,7 +10806,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            ctx.stroke();\r\n' \
   '          }\r\n' \
-  '          tr_texture = texture_load(gl.TEXTURE1, cnv2d);\r\n' \
+  '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '          create_map();\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
