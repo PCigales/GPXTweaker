@@ -10293,7 +10293,7 @@ class GPXTweakerWebInterfaceServer():
   '          let ltiles = 0;\r\n' \
   '          let ltp = "0%";\r\n' \
   '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
   '          cnv2d.height = mheight;\r\n' \
   '          mheight = cnv2d.height;\r\n' \
   '          cnv2d.width = mwidth;\r\n' \
