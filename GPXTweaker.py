@@ -10303,6 +10303,7 @@ class GPXTweakerWebInterfaceServer():
   '          function map_complete() {\r\n' \
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
   '            map_texture = texture_load(gl.TEXTURE0, cnv2d);\r\n' \
+  '            gl.flush();\r\n' \
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
   '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
   '            r_map.disabled = false;\r\n' \
