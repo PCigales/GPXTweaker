@@ -11829,6 +11829,7 @@ class GPXTweakerWebInterfaceServer():
   '        click_cr = parseFloat(c_rangle.value);\r\n' \
   '        click_ct = parseFloat(c_tangle.value);\r\n' \
   '        var click_c = 0;\r\n' \
+  '        click_id += 0.5;\r\n' \
   '        var click_lid = click_id;\r\n' \
   '        function loop_redraw(c) {\r\n' \
   '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
