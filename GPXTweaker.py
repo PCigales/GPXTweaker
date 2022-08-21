@@ -11101,6 +11101,7 @@ class GPXTweakerWebInterfaceServer():
   '      var click_t = null;\r\n' \
   '      var click_cr = null;\r\n' \
   '      var click_ct = null;\r\n' \
+  '      var click_id = 0.0;\r\n' \
   '      function set_param(p, v=null) {\r\n' \
   '        if (p == "p") {\r\n' \
   '          if (v != null) {c_pace.value = v.toString();}\r\n' \
@@ -11827,8 +11828,17 @@ class GPXTweakerWebInterfaceServer():
   '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
   '        click_cr = parseFloat(c_rangle.value);\r\n' \
   '        click_ct = parseFloat(c_tangle.value);\r\n' \
+  '        var click_c = 0;\r\n' \
+  '        var click_lid = click_id;\r\n' \
+  '        function loop_redraw(c) {\r\n' \
+  '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
+  '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '          canvas_redraw();\r\n' \
+  '        }\r\n' \
+  '        window.requestAnimationFrame(loop_redraw);\r\n' \
   '      }\r\n' \
   '      function mouse_up(e) {\r\n' \
+  '        click_id += 0.5;\r\n' \
   '        canvas.parentNode.onmousemove = null;\r\n' \
   '        document.onmouseup = null;\r\n' \
   '        mini_map.removeAttribute("pointer-events");\r\n' \
@@ -11838,7 +11848,6 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
   '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
-  '        canvas_redraw();\r\n' \
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
   '        if (e.deltaY > 0) {;\r\n' \
