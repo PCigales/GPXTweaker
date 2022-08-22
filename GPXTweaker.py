@@ -10738,7 +10738,7 @@ class GPXTweakerWebInterfaceServer():
   '          const ar_f = 0.1;\r\n' \
   '          const ar_s = 0.2;\r\n' \
   '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
   '          cnv2d.height = tr_size;\r\n' \
   '          cnv2d.width = tr_size;\r\n' \
   '          ctx.strokeStyle = "red";\r\n' \
@@ -11401,7 +11401,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
   '          cnv2d.height = tr_size;\r\n' \
   '          cnv2d.width = tr_size;\r\n' \
   '          ctx.strokeStyle = "red";\r\n' \
