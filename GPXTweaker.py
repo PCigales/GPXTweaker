@@ -10727,7 +10727,7 @@ class GPXTweakerWebInterfaceServer():
   '          void main() {\r\n' \
   '          }\r\n' \
   '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
-  '        function create_track_map() {\r\n' \
+  '        function create_track() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
   '            if (d) {\r\n' \
   '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
@@ -10808,7 +10808,6 @@ class GPXTweakerWebInterfaceServer():
   '            ctx.stroke();\r\n' \
   '          }\r\n' \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
-  '          create_map();\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
   '        program_create("ttprogram", vertex_ttshader_s, fragment_tshader_s);\r\n' \
@@ -10816,7 +10815,8 @@ class GPXTweakerWebInterfaceServer():
   '        program_create("sprogram", vertex_sshader_s, fragment_sshader_s);\r\n' \
   '        texture_load(gl.TEXTURE0, [0, 127, 0]);\r\n' \
   '        texture_load(gl.TEXTURE1, [0], false);\r\n' \
-  '        create_track_map();\r\n' \
+  '        create_track();\r\n' \
+  '        create_map();\r\n' \
   '        tvposition = buffer_load(vpositions);\r\n' \
   '        tvnormal = buffer_load(vnormals);\r\n' \
   '        lvposition1 = buffer_load(new Float32Array([\r\n' \
@@ -11392,7 +11392,7 @@ class GPXTweakerWebInterfaceServer():
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
   '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
-  '        function create_track_map() {\r\n' \
+  '        function create_track() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
   '            if (d) {\r\n' \
   '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
@@ -11477,7 +11477,6 @@ class GPXTweakerWebInterfaceServer():
   '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
   '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
-  '          create_map();\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
   '        program_create("ttprogram", vertex_ttshader_s, fragment_tshader_s);\r\n' \
@@ -11486,7 +11485,8 @@ class GPXTweakerWebInterfaceServer():
   '        program_create("pprogram", vertex_pshader_s, fragment_pshader_s);\r\n' \
   '        texture_load(gl.TEXTURE0, [0, 127, 0]);\r\n' \
   '        texture_load(gl.TEXTURE1, [0], false);\r\n' \
-  '        create_track_map();\r\n' \
+  '        create_track();\r\n' \
+  '        create_map();\r\n' \
   '        tvposition = buffer_load(vpositions);\r\n' \
   '        tvnormal = buffer_load(vnormals);\r\n' \
   '        for (let n of gl_programs.keys()) {\r\n' \
