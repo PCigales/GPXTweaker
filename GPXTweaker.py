@@ -10246,10 +10246,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function buffer_load(src) {\r\n' \
-  '        let gl_buffer = this.gl.createBuffer();\r\n' \
-  '        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, gl_buffer);\r\n' \
-  '        this.gl.bufferData(this.gl.ARRAY_BUFFER, src, gl.STATIC_DRAW);\r\n' \
-  '        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);\r\n' \
+  '        let gl_buffer = gl.createBuffer();\r\n' \
+  '        gl.bindBuffer(gl.ARRAY_BUFFER, gl_buffer);\r\n' \
+  '        gl.bufferData(gl.ARRAY_BUFFER, src, gl.STATIC_DRAW);\r\n' \
+  '        gl.bindBuffer(gl.ARRAY_BUFFER, null);\r\n' \
   '        return gl_buffer;\r\n' \
   '      }\r\n' \
   '      function texture_load(unit, src, rgb=true) {\r\n' \
