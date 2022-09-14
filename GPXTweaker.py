@@ -5781,7 +5781,7 @@ class GPXTweakerWebInterfaceServer():
   '        set starts(a) {\r\n' \
   '          this._starts = a;\r\n' \
   '          this.tlength = this._starts[this._starts.length - 1];\r\n' \
-  '          this.vstart = this.buffer_load(new Int32Array(this._starts), this.mode=="explorer"?this.gl.DYNAMIC_DRAW:this.gl.STREAM_DRAW, this.vstart);\r\n' \
+  '          this.vstart = this.buffer_load(new Int32Array(this._starts), this.gl.STATIC_DRAW, this.vstart);\r\n' \
   '          this.vend = this.vstart;\r\n' \
   '        }\r\n' \
   '        get starts() {\r\n' \
@@ -5793,24 +5793,24 @@ class GPXTweakerWebInterfaceServer():
   '        set mmls(a) {\r\n' \
   '          this._mmls = a;\r\n' \
   '          this.mml_texture = this.texture_load(this.gl.TEXTURE0 + this.mmltex, 3, this._mmls, this.mml_texture);\r\n' \
-  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STATIC_READ, this.vg);\r\n' \
+  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
   '         }\r\n' \
   '        set lls(a) {\r\n' \
   '          this._lls = a;\r\n' \
   '          this.ll_texture = this.texture_load(this.gl.TEXTURE0 + this.lltex, 2, this._lls, this.ll_texture);\r\n' \
-  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.STATIC_READ, this.vxy);\r\n' \
-  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vg);\r\n' \
+  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vxy);\r\n' \
+  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
   '         }\r\n' \
   '        set xys(a) {\r\n' \
   '          this._xys = a;\r\n' \
   '          this.xy_texture = this.ll_texture = this.texture_load(this.gl.TEXTURE0 + this.xytex, 2, this._xys, this.ll_texture);\r\n' \
-  '          this.vll = this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_COPY, this.vxy);\r\n' \
+  '          this.vll = this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_COPY, this.vxy);\r\n' \
   '         }\r\n' \
   '        set teahs(a) {\r\n' \
   '          this._teahs = a;\r\n' \
   '          this.teah_texture = this.texture_load(this.gl.TEXTURE0 + this.teahtex, 4, this._teahs, this.teah_texture);\r\n' \
-  '          this.vsss = this.buffer_load(3 * 4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vsss);\r\n' \
-  '          this.vs = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.STREAM_READ, this.vs);\r\n' \
+  '          this.vsss = this.buffer_load(3 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vsss);\r\n' \
+  '          this.vs = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vs);\r\n' \
   '        }\r\n' \
   '        _calc() {\r\n' \
   '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
