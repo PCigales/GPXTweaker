@@ -1,4 +1,4 @@
-﻿# GPXTweaker v1.12.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.12.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -4860,8 +4860,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_nf()
               continue
             try:
-              resp_body = '==\r\n'.join('=\r\n'.join('\r\n'.join('%s&%s&%s&%s&%s' % p[1] for p in seg) for seg in tr[1].Pts) for tr in self.server.Interface.Tracks).encode('utf-8')
-              _send_resp('application/octet-stream')
+              resp_body = json.dumps([[[p[1] for p in seg] for seg in tr[1].Pts] for tr in self.server.Interface.Tracks], check_circular=False, separators=(',', ':')).encode('utf-8')
+              _send_resp('application/json; charset=utf-8')
             except:
               _send_err_fail()
           elif req.path.lower() == '/media/gps_ar':
@@ -12833,7 +12833,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function tracks_smooth(recalc=false) {\r\n' \
   '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '        let nbpt = tracks_pts.reduce((p,c) => p + c.reduce((p,c) => p + c.length, 0), 0);\r\n' \
   '        tracks_pts_smoothed = null;\r\n' \
   '        tracks_xys_smoothed = tracks_xys.slice();\r\n' \
   '        let ind = 0;\r\n' \
@@ -13723,23 +13722,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function load_dcb(t) {\r\n' \
   '        if (t.status != 200) {error_dcb();return;}\r\n' \
-  '        let tracks = t.response.split("==\\r\\n");\r\n' \
-  '        if (document.getElementById("tracksform").children.length == 0) {tracks = [];}\r\n' \
-  '        for (let t=0; t<tracks.length; t++) {\r\n' \
-  '          tracks_pts.push([]);\r\n' \
-  '          if (tracks[t] == "") {continue;}\r\n' \
-  '          let segs = tracks[t].split("=\\r\\n");\r\n' \
-  '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            let s_p = [];\r\n' \
-  '            if (segs[s] != "") {\r\n' \
-  '              let pts = segs[s].split("\\r\\n");\r\n' \
-  '              for (let p=0; p<pts.length; p++) {\r\n' \
-  '                s_p.push(pts[p].match(/(.*?)&(.*?)&(.*?)&(.*?)&(.*)/).slice(1));\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            tracks_pts[t].push(s_p);\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
+  '        tracks_pts = JSON.parse(t.response);\r\n' \
   '        page_load(true);\r\n' \
   '      }\r\n' \
   '      function page_load(fol=false) {\r\n' \
