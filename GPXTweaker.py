@@ -176,7 +176,7 @@ FR_STRINGS = {
     'jtrackedit': 'éditer la trace',
     'jzoomall': 'recadrer sur toutes les traces cochées&#13;&#10;+alt: recadrer sur toutes les traces cochées et listées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
-    'jswitchsmooth': 'activer / désactiver le lissage des traces (∻ désactivé | ÷ activé)&#13;&#10; &#9888; gourmand en ressources CPU&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage',
+    'jswitchsmooth': 'activer / désactiver le lissage des traces (∻ désactivé | ÷ activé)&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
@@ -470,7 +470,7 @@ EN_STRINGS = {
     'jtrackedit': 'edit the track',
     'jzoomall': 'reframe on all ticked tracks&#13;&#10;+alt: reframe on all ticked and listed tracks&#13;&#10;+shift: reframe on the focused track',
     'jwebmapping': 'display the starting point in the online mapping service',
-    'jswitchsmooth': 'toggle the smoothing of the tracks (∻ disabled | ÷ enabled)&#13;&#10; &#9888; CPU intensive&#13;&#10;+ctrl: show / hide the controls of the smoothing filter',
+    'jswitchsmooth': 'toggle the smoothing of the tracks (∻ disabled | ÷ enabled)&#13;&#10;+ctrl: show / hide the controls of the smoothing filter',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
     'jiset': 'select the itineraries provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
@@ -5419,8 +5419,8 @@ class GPXTweakerWebInterfaceServer():
   '          this.cur_prog = null;\r\n' \
   '          this.gl_attributes = new Map([["vstart", ["int", 1]], ["vend", ["int", 1, 4]]]);\r\n' \
   '          this.gl_static_uniforms = new Map([["mmltex", "sampler2D"], ["lltex", "sampler2D"], ["xytex", "sampler2D"], ["teahtex", "sampler2D"], ["gtex", "sampler2D"], ["ssstex", "sampler2D"], ["stex", "sampler2D"], ["trange", "float"], ["spmax", "float"], ["drange", "float"], ["slmax", "float"]]);\r\n' \
-  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"], ["csrlat", "vec2"]]);\r\n' \
-  '          this.gl_feedbacks = new Map([["vxy", "vec2"], ["vll", "vec2"], ["vg", "float"], ["vsss", "vec3"], ["vs", "float"]]);\r\n' \
+  '          this.gl_dynamic_uniforms = new Map([["trlat", "float"], ["rlat", "float"]]);\r\n' \
+  '          this.gl_feedbacks = new Map([["vxy", "vec2"], ["vg", "float"], ["vsss", "vec3"], ["vs", "float"]]);\r\n' \
   '          this._starts = null;\r\n' \
   '          this.tlength = null;\r\n' \
   '          this._rlats = null;\r\n' \
@@ -5451,7 +5451,6 @@ class GPXTweakerWebInterfaceServer():
   '          this.drange = 500 / 2;\r\n' \
   '          this.slmax = 50 / 100;\r\n' \
   '          this.vxy = null;\r\n' \
-  '          this.vll = null;\r\n' \
   '          this.vg = null;\r\n' \
   '          this.vsss = null;\r\n' \
   '          this.vs = null;\r\n' \
@@ -5470,18 +5469,7 @@ class GPXTweakerWebInterfaceServer():
   '              vec2 ll = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626);\r\n' \
   '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
   '              float t2 = t * (pow(trlat, 2.0) + 1.0) / (trlat - t);\r\n' \
-  '              vxy = vec2(ll.t * 12756274.0, log(t2 + 1.0) * 6378137.0);\r\n' \
-  '            }\r\n' \
-  '          `;\r\n' \
-  '          let vertex_cshader_s = `#version 300 es\r\n' \
-  '            in int vstart;\r\n' \
-  '            uniform vec2 csrlat;\r\n' \
-  '            uniform sampler2D xytex;\r\n' \
-  '            out vec2 vll;\r\n' \
-  '            void main() {\r\n' \
-  '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 xy = texelFetch(xytex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st / vec2(6378137.0, 6378137.0);\r\n' \
-  '              vll = vec2(dot(csrlat, vec2(xy.t, pow(xy.t, 2.0))), xy.s) * vec2(57.2957795, 57.2957795);\r\n' \
+  '              vxy = vec2(ll.t * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
   '          let vertex_g1shader_s = `#version 300 es\r\n' \
@@ -5508,6 +5496,20 @@ class GPXTweakerWebInterfaceServer():
   '              vec2 dll = lle - lls;\r\n' \
   '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - lls.s * 2.0) * cos(rlat - lle.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
   '              vg = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
+  '            }\r\n' \
+  '          `;\r\n' \
+  '          let vertex_gwmshader_s = `#version 300 es\r\n' \
+  '            in int vstart;\r\n' \
+  '            uniform float trlat;\r\n' \
+  '            uniform sampler2D xytex;\r\n' \
+  '            out float vg;\r\n' \
+  '            void main() {\r\n' \
+  '              int pc = vstart + gl_InstanceID;\r\n' \
+  '              vec2 xye = texelFetch(xytex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st;\r\n' \
+  '              vec2 xys = gl_InstanceID > 0 ? texelFetch(xytex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st : xye;\r\n' \
+  '              vec2 e = trlat * exp(- vec2(xys.t, xye.t) / 6378137.0);\r\n' \
+  '              vec2 c = 1.0 / (e + 1.0 / e);\r\n' \
+  '              vg = distance(xys, xye) * (c.s + c.t);\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
   '          let vertex_s1ashader_s = `#version 300 es\r\n' \
@@ -5639,8 +5641,8 @@ class GPXTweakerWebInterfaceServer():
   '            this.program_create("gprogram", vertex_g1shader_s, fragment_shader_s);\r\n' \
   '          } else if (this.mode == "explorer") {\r\n' \
   '            this.program_create("pprogram", vertex_pshader_s, fragment_shader_s);\r\n' \
-  '            this.program_create("cprogram", vertex_cshader_s, fragment_shader_s);\r\n' \
   '            this.program_create("gprogram", vertex_g2shader_s, fragment_shader_s);\r\n' \
+  '            this.program_create("gwmprogram", vertex_gwmshader_s, fragment_shader_s);\r\n' \
   '          }\r\n' \
   '          this.program_create("s1aprogram", vertex_s1ashader_s, fragment_shader_s);\r\n' \
   '          this.program_create("s2aprogram", vertex_s2ashader_s, fragment_shader_s);\r\n' \
@@ -5711,9 +5713,6 @@ class GPXTweakerWebInterfaceServer():
   '              switch (t) {\r\n' \
   '                case "float":\r\n' \
   '                  this.gl.uniform1f(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
-  '                  break;\r\n' \
-  '                case "vec2":\r\n' \
-  '                  this.gl.uniform2fv(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
   '                  break;\r\n' \
   '                case "sampler2D":\r\n' \
   '                  this.gl.uniform1i(this.gl_programs.get(this.cur_prog).get(n), this[n]);\r\n' \
@@ -5804,7 +5803,6 @@ class GPXTweakerWebInterfaceServer():
   '        set xys(a) {\r\n' \
   '          this._xys = a;\r\n' \
   '          this.xy_texture = this.ll_texture = this.texture_load(this.gl.TEXTURE0 + this.xytex, 2, this._xys, this.ll_texture);\r\n' \
-  '          this.vll = this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_COPY, this.vxy);\r\n' \
   '         }\r\n' \
   '        set teahs(a) {\r\n' \
   '          this._teahs = a;\r\n' \
@@ -5816,12 +5814,8 @@ class GPXTweakerWebInterfaceServer():
   '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
   '            let vlength = this._starts[s + 1] - this._starts[s];\r\n' \
   '            if (vlength == 0) {continue;}\r\n' \
-  '            if (this.cur_prog == "pprogram")  {\r\n' \
+  '            if (this.cur_prog == "pprogram" || this.cur_prog == "gwmprogram")  {\r\n' \
   '              this.trlat = Math.tan(this._rlats[s] / 2 + Math.PI / 4);\r\n' \
-  '              this.program_uniforms();\r\n' \
-  '            }\r\n' \
-  '            if (this.cur_prog == "cprogram")  {\r\n' \
-  '              this.csrlat = new Float32Array([Math.cos(this._rlats[s]), - Math.sin(2 * this._rlats[s]) / 4]);\r\n' \
   '              this.program_uniforms();\r\n' \
   '            }\r\n' \
   '            if (this.mode == "explorer" && this.cur_prog == "gprogram") {\r\n' \
@@ -5842,11 +5836,9 @@ class GPXTweakerWebInterfaceServer():
   '              case "pos":\r\n' \
   '                progs = ["pprogram"];\r\n' \
   '                break;\r\n' \
-  '              case "coord":\r\n' \
-  '                progs = ["cprogram"];\r\n' \
-  '                break;\r\n' \
   '              case "gdist":\r\n' \
-  '                progs = ["gprogram"];\r\n' \
+  '              case "gwmdist":\r\n' \
+  '                progs = [param.replace("dist", "program")];\r\n' \
   '              default:\r\n' \
   '                progs.push("s1aprogram", "s2aprogram", "s1bprogram", "s2bprogram");\r\n' \
   '            }\r\n' \
@@ -5865,15 +5857,8 @@ class GPXTweakerWebInterfaceServer():
   '            this.feedbacks();\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
-  '          if (this.mode == "explorer" && param == "coord") {\r\n' \
-  '            this.program_use("cprogram");\r\n' \
-  '            this._calc();\r\n' \
-  '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
-  '            this.ll_texture = this.texture_load(this.gl.TEXTURE0 + this.lltex, 2, this.vxy, this.ll_texture);\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
-  '          if (this.mode != "explorer" || param == "gdist") {\r\n' \
-  '            this.program_use("gprogram");\r\n' \
+  '          if (this.mode != "explorer" || param == "gdist" || param == "gwmdist") {\r\n' \
+  '            this.program_use(param=="gwmdist"?"gwmprogram":"gprogram");\r\n' \
   '            this._calc();\r\n' \
   '            this.gl.bindTransformFeedback(this.gl.TRANSFORM_FEEDBACK, null);\r\n' \
   '            this.g_texture = this.texture_load(this.gl.TEXTURE0 + this.gtex, 1, this.vg, this.g_texture);\r\n' \
@@ -8692,6 +8677,7 @@ class GPXTweakerWebInterfaceServer():
   '          let track = document.getElementById("track" + segs[s].id.slice(7, -4));\r\n' \
   '          let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
   '          let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
+  '          let sdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
   '          let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g).slice(1);\r\n' \
@@ -8719,7 +8705,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (positions[pn] == null) {continue;}\r\n' \
   '              dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
   '              pr = pn;\r\n' \
-  '              if (dist > drange) {break;}\r\n' \
+  '              if (dist > sdrange) {break;}\r\n' \
   '              ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
   '              ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
   '            }\r\n' \
@@ -12483,7 +12469,6 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          } else {\r\n' \
   '            gpustats.xys = tracks_xys_smoothed;\r\n' \
-  '            if (gpustats.starts[gpustats.starts.length - 1] > 0) {gpustats.calc("coord");}\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (! smoothed && tracks_pts_smoothed != null) {\r\n' \
@@ -12513,7 +12498,7 @@ class GPXTweakerWebInterfaceServer():
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '          gpustats.drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
-  '          gpustats.calc((fpan==0 || smoothed_ch)?"gdist":"");\r\n' \
+  '          gpustats.calc((fpan==0 || smoothed_ch)?(smoothed?"gwmdist":"gdist"):"");\r\n' \
   '          let gs = gpustats.gs;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let ss = gpustats.ss;\r\n' \
@@ -12836,7 +12821,10 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_pts_smoothed = null;\r\n' \
   '        tracks_xys_smoothed = tracks_xys.slice();\r\n' \
   '        let ind = 0;\r\n' \
-  '        for (const segs of tracks_pts) {\r\n' \
+  '        for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '          let segs = tracks_pts[t];\r\n' \
+  '          let tt = htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top);\r\n' \
+  '          let tdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          for (const seg of segs) {\r\n' \
   '            let nind = ind + seg.length;\r\n' \
   '            let dirx = diry = null;\r\n' \
@@ -12852,7 +12840,7 @@ class GPXTweakerWebInterfaceServer():
   '              for (let pn=p; pn<2*nind; pn+=2) {\r\n' \
   '                dist += Math.sqrt((tracks_xys_smoothed[pn] - tracks_xys_smoothed[pr]) ** 2 + (tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pr + 1]) ** 2);\r\n' \
   '                pr = pn;\r\n' \
-  '                if (dist > drange) {break;}\r\n' \
+  '                if (dist > tdrange) {break;}\r\n' \
   '                ndirx += tracks_xys_smoothed[pn] - tracks_xys_smoothed[pp];\r\n' \
   '                ndiry += tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
   '              }\r\n' \
@@ -14298,7 +14286,7 @@ class GPXTweakerWebInterfaceServer():
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
     self.SmoothTracks = False
-    self.SmoothRange = 20
+    self.SmoothRange = 15
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -14690,7 +14678,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
