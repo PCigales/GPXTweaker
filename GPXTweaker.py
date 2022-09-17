@@ -5445,10 +5445,9 @@ class GPXTweakerWebInterfaceServer():
   '          this.s_texture = null;\r\n' \
   '          this.trlat = null;\r\n' \
   '          this.rlat = null;\r\n' \
-  '          this.csrlat = null;\r\n' \
-  '          this.trange = 300 / 2;\r\n' \
+  '          this.trange = 60 / 2;\r\n' \
   '          this.spmax = 8 / 3.6;\r\n' \
-  '          this.drange = 500 / 2;\r\n' \
+  '          this.drange = 80 / 2;\r\n' \
   '          this.slmax = 50 / 100;\r\n' \
   '          this.vxy = null;\r\n' \
   '          this.vg = null;\r\n' \
@@ -5466,7 +5465,7 @@ class GPXTweakerWebInterfaceServer():
   '            out vec2 vxy;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 ll = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626);\r\n' \
+  '              vec2 ll = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
   '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
   '              float t2 = t * (pow(trlat, 2.0) + 1.0) / (trlat - t);\r\n' \
   '              vxy = vec2(ll.t * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
@@ -5491,8 +5490,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 lle = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626);\r\n' \
-  '              vec2 lls = gl_InstanceID > 0 ? texelFetch(lltex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st * vec2(0.00872664626, 0.00872664626) : lle;\r\n' \
+  '              vec2 lle = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
+  '              vec2 lls = gl_InstanceID > 0 ? texelFetch(lltex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st * vec2(0.00872664626) : lle;\r\n' \
   '              vec2 dll = lle - lls;\r\n' \
   '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - lls.s * 2.0) * cos(rlat - lle.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
   '              vg = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
