@@ -10732,7 +10732,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas.setAttribute("width", size.toString());\r\n' \
   '        canvas.setAttribute("height", size.toString());\r\n' \
   '        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);\r\n' \
-  '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) -cpn.clientHeight) / 2);\r\n' \
+  '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) - cpn.clientHeight) / 2);\r\n' \
   '      }\r\n' + HTML_3D_UTIL_TEMPLATE + \
   '      function canvas_init() {\r\n' \
   '        gl.enable(gl.DEPTH_TEST);\r\n' \
@@ -12082,7 +12082,7 @@ class GPXTweakerWebInterfaceServer():
   '      svg circle {\r\n' \
   '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        pointer-events:all;\r\n' \
-  '        stroke-width:calc(2px * var(--scale) * (1 * var(--magnify) + 1) / 2);\r\n' \
+  '        stroke-width:calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        paint-order:stroke;\r\n' \
   '      }\r\n' \
   '      div [id=geomedia] {\r\n' \
