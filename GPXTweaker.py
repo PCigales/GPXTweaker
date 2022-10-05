@@ -13436,7 +13436,6 @@ class GPXTweakerWebInterfaceServer():
   '          let col = prop.value.toUpperCase();\r\n' \
   '          document.getElementById(trk).setAttribute("stroke", col);\r\n' \
   '          document.getElementById(trk).setAttribute("fill", col);\r\n' \
-  '          document.getElementById(trk.replace("track", "waydots")).setAttribute("stroke", col);\r\n' \
   '          document.getElementById(trk.replace("track", "waydots")).setAttribute("fill", col);\r\n' \
   '        }\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
