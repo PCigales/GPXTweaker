@@ -12079,12 +12079,14 @@ class GPXTweakerWebInterfaceServer():
   '        vertical-align:middle;\r\n' \
   '        white-space:nowrap;\r\n' \
   '      }\r\n' \
-  '      svg circle {\r\n' \
-  '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
-  '        pointer-events:all;\r\n' \
+  '      svg[id*=waydots] {\r\n' \
   '        stroke:white;\r\n' \
   '        stroke-width:calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        paint-order:stroke;\r\n' \
+  '      }\r\n' \
+  '      svg circle {\r\n' \
+  '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
+  '        pointer-events:all;\r\n' \
   '      }\r\n' \
   '      div [id=geomedia] {\r\n' \
   '        position:absolute;\r\n' \
@@ -13854,7 +13856,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_WAYDOT_TEMPLATE = \
   '                  <circle cx="%s" cy="%s"><title>%s</title></circle>\r\n'
   HTMLExp_WAYDOTS_TEMPLATE = \
-  '  <svg id="waydots%s" viewbox="##VIEWBOX##" stroke="white" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
+  '  <svg id="waydots%s" viewbox="##VIEWBOX##" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
   '                </svg>\r\n              '
 
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
