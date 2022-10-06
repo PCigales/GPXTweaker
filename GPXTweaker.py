@@ -6950,7 +6950,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tlock").style.fontWeight="500";\r\n' \
   '        }\r\n' \
   '        document.getElementById("dfpanel").style.right = "calc(2vw + " + (mode=="tiles"?"15":"12.3") + "em - 30px)";\r\n' \
-  '        document.getElementById("mtpanel").style.right = "calc(2vw + " + (mode=="tiles"?"30.9":"28.2") + "em - 30px)";\r\n' \
+  '        document.getElementById("mtpanel").style.right = "calc(2vw + " + (mode=="tiles"?"32.6":"29.9") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
   '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"13.3":"10.6") + "em - 30px)";\r\n' \
@@ -12082,6 +12082,7 @@ class GPXTweakerWebInterfaceServer():
   '      svg circle {\r\n' \
   '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        pointer-events:all;\r\n' \
+  '        stroke:white;\r\n' \
   '        stroke-width:calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        paint-order:stroke;\r\n' \
   '      }\r\n' \
