@@ -4780,7 +4780,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if self.server.Interface.TilesSet != self.server.Interface.Map.Tiles.Id[0] or req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
                 raise
               row, col = req.path.lower()[12:].split('.')[0].split('-')
-              resp_body = self.server.Interface.Map.Tiles[(rid, (int(row), int(col)))](10)
+              resp_body = self.server.Interface.Map.Tiles[(rid, (int(row), int(col)))](20)
             except:
               _send_err_fail()
               continue
