@@ -12869,14 +12869,16 @@ class GPXTweakerWebInterfaceServer():
   '          let tdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          for (const seg of segs) {\r\n' \
   '            let nind = ind + seg.length;\r\n' \
-  '            let dirx = diry = null;\r\n' \
+  '            let dirx = null;\r\n' \
+  '            let diry = null;\r\n' \
   '            let pp = null;\r\n' \
   '            for (let p=2*ind; p<2*nind; p+=2) {\r\n' \
   '              if (pp == null) {\r\n' \
   '                pp = p;\r\n' \
   '                continue;\r\n' \
   '              }\r\n' \
-  '              let ndirx = ndiry = 0;\r\n' \
+  '              let ndirx = 0;\r\n' \
+  '              let ndiry = 0;\r\n' \
   '              let dist = 0;\r\n' \
   '              let pr = pp;\r\n' \
   '              for (let pn=p; pn<2*nind; pn+=2) {\r\n' \
