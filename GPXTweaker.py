@@ -1552,35 +1552,40 @@ class WebMercatorMap(WGS84WebMercator):
   CRS_MPU = 1
   LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
   LOCALSTORE_HGT_DEFAULT_PATTERN = '{alias|layer}\{hgt}.{ext}'
-  WMS_PATTERN = {'GetCapabilities': '{source}?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '{source}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
+  WMS_PATTERN = {'GetCapabilities': '?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
   WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
-  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
-  MS_IGN_SCANEXPRESS = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-EXPRESS.CLASSIQUE', 'format': 'image/png', 'styles': ''}
-  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE, 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
-  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE, 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
-  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
+  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
+  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
+  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
+  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
+  MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE + '{wms}', 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
   WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service'
-  MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE, 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
-  WMTS_PATTERN = {'GetCapabilities': '{source}?SERVICE=WMTS&REQUEST=GetCapabilities', 'GetTile': '{source}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={layer}&STYLE={style}&FORMAT={format}&TILEMATRIXSET={matrixset}&TILEMATRIX={matrix}&TILEROW={row}&TILECOL={col}'}
+  MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE + '{wms}', 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
+  WMTS_PATTERN = {'GetCapabilities': '?SERVICE=WMTS&REQUEST=GetCapabilities', 'GetTile': '?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={layer}&STYLE={style}&FORMAT={format}&TILEMATRIXSET={matrixset}&TILEMATRIX={matrix}&TILEROW={row}&TILECOL={col}'}
   WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
-  TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
-  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE, 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
+  TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
+  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
-  TS_OSM = {'alias': 'OSM', 'pattern': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
-  TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_GOOGLE_TERRAIN = {'alias': 'GOOGLE_TERRAIN', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=p&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_GOOGLE_SATELLITE = {'alias': 'GOOGLE_SATELLITE', 'pattern': TS_GOOGLE_SOURCE + '/lyrs=s&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_TERRAIN = {'alias': 'GOOGLE_TERRAIN', 'source': TS_GOOGLE_SOURCE + '/lyrs=p&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_SATELLITE = {'alias': 'GOOGLE_SATELLITE', 'source': TS_GOOGLE_SOURCE + '/lyrs=s&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_BING_SOURCE = 'https://ecn.t0.tiles.virtualearth.net'
-  TS_BING_MAP = {'alias': 'BING_MAP', 'pattern': TS_BING_SOURCE + '/tiles/r{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_BING_AERIAL = {'alias': 'BING_AERIAL', 'pattern': TS_BING_SOURCE + '/tiles/a{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_BING_HYBRID = {'alias': 'BING_HYBRID', 'pattern': TS_BING_SOURCE + '/tiles/h{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_MAP = {'alias': 'BING_MAP', 'source': TS_BING_SOURCE + '/tiles/r{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_AERIAL = {'alias': 'BING_AERIAL', 'source': TS_BING_SOURCE + '/tiles/a{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_HYBRID = {'alias': 'BING_HYBRID', 'source': TS_BING_SOURCE + '/tiles/h{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   WMTS_ESRI_SOURCE = 'https://services.arcgisonline.com/arcgis/rest/services/'
-  TS_ESRI_TOPOMAP = {'alias': 'TS_ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + 'World_Topo_Map/MapServer/WMTS', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
-  TS_ESRI_IMAGERY = {'alias': 'TS_ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + 'World_Imagery/MapServer/WMTS', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_ESRI_TOPOMAP = {'alias': 'ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + 'World_Topo_Map/MapServer/WMTS{wmts}', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + 'World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
+  TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts'
+  TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '{wmts}&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -1617,11 +1622,6 @@ class WebMercatorMap(WGS84WebMercator):
     if '' in map(lambda k: infos.get(k) or '', ('source', 'layers')):
       self.log(0, 'maplfail', infos)
       return False
-    if key:
-      try:
-        infos['source'] = infos['source'].format_map({'key': key})
-      except:
-        pass
     infos['format'] = infos.get('format') or 'image/png'
     infos['styles'] = infos.get('styles') or ''
     infos['crs'] = self.CRS
@@ -1642,7 +1642,8 @@ class WebMercatorMap(WGS84WebMercator):
       self.log(0, 'maplfail', infos)
       return False
     try:
-      uri = self.WMS_PATTERN['GetMap'].format_map(infos)
+      uri = infos['source'].format_map({'wms': self.WMS_PATTERN['GetMap'], 'key': key or ''}).format_map(infos)
+      print(uri)
       rep = HTTPRequest(uri, 'GET', headers)
       if rep.code != '200':
         raise
@@ -1813,17 +1814,19 @@ class WebMercatorMap(WGS84WebMercator):
     return ((row2, col1), (row1, col2))
 
   def GetTileInfos(self, infos, matrix=None, lat=None, lon=None, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+    if not 'source' in infos:
+      return False
     if matrix != None:
       infos['matrix'] = str(matrix)
-    if '{hgt}' in infos.get('pattern', ''):
+    if '{hgt}' in infos['source']:
       infos['matrix'] = '0'
     if not 'matrix' in infos:
       return False
-    if 'pattern' in infos:
-      infos['format'] = infos.get('format') or {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt'}.get(infos['pattern'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image')
+    if not '{wmts}' in infos['source']:
+      infos['format'] = infos.get('format') or {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt'}.get(infos['source'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image')
       try:
         infos['scale'] = infos['basescale'] / (2 ** int(infos['matrix']))
-        if lat != None and lon !=None :
+        if lat != None and lon != None :
           infos['row'], infos['col'] = self.WGS84toTile(infos, lat, lon)
       except:
         return False
@@ -1831,16 +1834,11 @@ class WebMercatorMap(WGS84WebMercator):
     headers = {'User-Agent': user_agent}
     if referer:
       headers['Referer'] = referer
-    if '' in map(lambda k: infos.get(k) or '', ('source', 'layer', 'matrixset')):
+    if '' in (infos.get('layer') or '', infos.get('matrixset') or ''):
       return False
-    if key:
-      try:
-        infos['source'] = infos['source'].format_map({'key': key})
-      except:
-        pass
     infos['style'] = infos.get('style') or ''
     infos['format'] = infos.get('format') or 'image/png'
-    uri = self.WMTS_PATTERN['GetCapabilities'].format_map(infos)
+    uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
     rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
     if rep.code != '200':
       return False
@@ -1886,41 +1884,33 @@ class WebMercatorMap(WGS84WebMercator):
     return True
 
   def GetKnownTile(self, infos, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+    if not 'source' in infos:
+      return None
     headers = {'User-Agent': user_agent}
     if referer:
       headers['Referer'] = referer
     try:
-      if 'pattern' in infos:
-        if '{quadkey}' in infos['pattern']:
+      if not '{wmts}' in infos['source']:
+        if '{quadkey}' in infos['source']:
           quadkey = ''.join(map(lambda p: str(int(p[0]+p[1], 2)), zip(bin(int(infos['row']))[2:].rjust(int(infos['matrix']), '0'), bin(int(infos['col']))[2:].rjust(int(infos['matrix']), '0'))))
         else:
           quadkey = ''
-        if '{hgt}' in infos['pattern']:
+        if '{hgt}' in infos['source']:
           lat = 89 - infos['row']
           lon = infos['col'] - 180
           hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
         else:
           hgt = ''
-        if key:
-            uri = infos['pattern'].format_map({**infos, 'key': key, 'quadkey': quadkey, 'hgt': hgt})
-        else:
-            uri = infos['pattern'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt})
-      elif not infos.get('source'):
-        return None
+        uri = infos['source'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt, 'key': key or ''})
       else:
-        uri = self.WMTS_PATTERN['GetTile'].format_map(infos)
-        if key:
-          try:
-            uri = uri.format_map({'key': key})
-          except:
-            pass
+        uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetTile'], 'key': key or ''}).format_map(infos)
     except:
       return None
     try:
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
       if rep.code != '200':
         return None
-      if 'zip' in rep.header('content-type', '').lower() or infos.get('pattern', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
+      if 'zip' in rep.header('content-type', '').lower() or infos.get('source', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
         try:
           zf = zipfile.ZipFile(BytesIO(rep.body), 'r')
           nl = zf.namelist()
@@ -1980,8 +1970,7 @@ class WebMercatorMap(WGS84WebMercator):
         except:
           pass
       if update_dict:
-        for k in inf:
-          infos[k] = inf[k]
+        infos.update(inf)
         try:
           infos['width'] = int(infos['width'])
           infos['height'] = int(infos['height'])
@@ -1990,10 +1979,9 @@ class WebMercatorMap(WGS84WebMercator):
       needs_update = False
       if update_json:
         for k in ('alias', 'source'):
-          if k in infos:
-            if infos[k] != inf.get(k, ''):
-              inf[k] = infos[k]
-              needs_update = True
+          if k in infos and infos.get(k, '') != inf.get(k, ''):
+            inf[k] = infos[k]
+            needs_update = True
     if needs_update:
       try:
         f = open(infopath, 'wt', encoding='utf-8')
@@ -2010,7 +1998,7 @@ class WebMercatorMap(WGS84WebMercator):
   def ReadTileInfos(self, pattern, infos, matrix, lat=None, lon=None):
     if matrix != None:
       infos['matrix'] = str(matrix)
-    if '{hgt}' in infos.get('pattern', ''):
+    if '{hgt}' in infos.get('source', ''):
       infos['matrix'] = '0'
     if not 'matrix' in infos:
       return False
@@ -2019,7 +2007,7 @@ class WebMercatorMap(WGS84WebMercator):
     if not self._match_infos(pattern, infos, update_dict=True):
       return False
     try:
-      if (infos.get('source') or infos.get('pattern') or '') == '':
+      if not infos.get('source'):
         return False
       if '' in map(lambda k: infos.get(k) or '', ('layer', 'scale', 'topx', 'topy', 'width', 'height')):
         return False
@@ -2335,18 +2323,14 @@ class WebMercatorMap(WGS84WebMercator):
       pconnections = list([None] for i in range(number))
     if infos_completed == None:
       infos_completed = {}
-    if False in (k in infos_completed for k in ('layer',  'format', 'matrix', 'scale', 'topx', 'topy', 'width', 'height')) or (False in (k in infos_completed for k in ('source', 'matrixset', 'style')) and False in (k in infos_completed for k in ('pattern', 'basescale'))):
+    if False in (k in infos_completed for k in ('layer',  'format', 'matrix', 'scale', 'topx', 'topy', 'width', 'height')) or not 'source' in infos_completed or (False in (k in infos_completed for k in (('matrixset', 'style') if '{wmts}' in infos_completed.get('source', '') else ('basescale', )))):
       infos_set = False
-      for k in infos_base:
-        infos_completed[k] = infos_base[k]
+      infos_completed.update(infos_base)
       try:
         if local_pattern != None:
           if self.ReadTileInfos(local_pattern, infos_completed, matrix):
             infos_set = True
-          if 'source' in infos_completed and 'source' in infos_base:
-            infos_completed['source'] = infos_base['source']
-          if 'pattern' in infos_completed and 'pattern' in infos_base:
-            infos_completed['pattern'] = infos_base['pattern']
+          infos_completed['source'] = infos_base['source']
         if not infos_set:
           if only_local:
             return None
@@ -2354,16 +2338,14 @@ class WebMercatorMap(WGS84WebMercator):
             local_pattern = None
           if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, pconnections[0]):
             return None
+          infos_completed['source'] = infos_base['source']
           if local_store:
             if not self.SaveTile(local_pattern, infos_completed):
               return None
       except:
         return None
     if only_local:
-      if 'source' in infos_completed:
-        infos_completed['source'] = ''
-      if 'pattern' in infos_completed:
-        infos_completed['pattern'] = ''
+      infos_completed['source'] = ''
     linfos = list({**infos_completed} for i in range(number))
     def retrieve_tiles(a=None, b=None, c=None, d=None, just_box=False, close_connection=False, ind=0):
       nonlocal pconnections
@@ -2423,15 +2405,12 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     try:
       infos_set = False
+      inf_source = infos.get('source')
       if local_pattern != None:
-        inf_source = infos.get('source')
-        inf_pattern = infos.get('pattern')
         if self.ReadTileInfos(local_pattern, infos, matrix):
           infos_set = True
-        if 'source' in infos and inf_source:
+        if inf_source:
           infos['source'] = inf_source
-        if 'pattern' in infos and inf_pattern:
-          infos['pattern'] = inf_pattern
       if not infos_set:
         if only_local:
           return False
@@ -2439,6 +2418,8 @@ class WebMercatorMap(WGS84WebMercator):
           local_pattern = None
         if not self.GetTileInfos(infos, matrix, None, None, key, referer, user_agent):
           return False
+        if inf_source:
+          infos['source'] = inf_source
         if local_store:
           if not self.SaveTile(local_pattern, infos):
             return False
@@ -2461,10 +2442,7 @@ class WebMercatorMap(WGS84WebMercator):
     progress = {'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow +1 - minrow), 'downloaded': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event':threading.Event(), 'process_event':threading.Event()}
     if only_local:
       infos = {**infos}
-      if 'source' in infos:
-        infos['source'] = ''
-      if 'pattern' in infos:
-        infos['pattern'] = ''
+      infos['source'] = ''
     def downloader():
       pconnection = [None]
       def update_progress(result):
@@ -2515,15 +2493,14 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     self.Map = map
     self.MapResolution = infos['scale'] / self.CRS_MPU
-    self.MapInfos = {(k + ('s' if k in ('layer', 'style') else '')): v for k, v in infos.items() if k in ('alias', 'source', 'layer', 'format', 'style', 'nodata')}
-    if 'pattern' in infos:
-      self.MapInfos['source'] = infos['pattern']
+    self.MapInfos = {(k + ('s' if k in ('layer', 'style') else '')): v for k, v in infos.items() if k in ('alias', 'layer', 'format', 'style', 'nodata')}
+    self.MapInfos['source'] = infos.get('source', '')
     self.MapInfos['crs'] = self.CRS
     minx = infos['topx'] + self.MapResolution * infos['width'] * mincol
     miny = infos['topy'] - self.MapResolution * infos['height'] * (maxrow + 1)
     maxx = infos['topx'] + self.MapResolution * infos['width'] * (maxcol + 1)
     maxy = infos['topy'] - self.MapResolution * infos['height'] * minrow
-    if '{hgt}' in infos.get('pattern', ''):
+    if '{hgt}' in infos.get('source', ''):
       minx -= self.MapResolution / 2
       maxx += self.MapResolution / 2
       miny -= self.MapResolution / 2
@@ -2534,7 +2511,7 @@ class WebMercatorMap(WGS84WebMercator):
       self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minx, 'miny': miny, 'maxx': maxx, 'maxy': maxy})
     self.MapInfos['width'] = infos['width'] * (maxcol - mincol + 1)
     self.MapInfos['height'] = infos['height'] * (maxrow - minrow + 1)
-    if '{hgt}' in infos.get('pattern', ''):
+    if '{hgt}' in infos.get('source', ''):
       self.MapInfos['width'] += 1
       self.MapInfos['height'] += 1
     return True
@@ -2575,11 +2552,11 @@ class WGS84Map(WebMercatorMap):
 class WGS84Elevation(WGS84Map):
 
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
-  TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
+  TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
   MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE, 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
-  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'pattern': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
+  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'source': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
   AS_OTD_EUDEM = {'alias': 'AS_OTD_EUDEM', 'source': 'https://api.opentopodata.org/v1/eudem25m?locations={location}', 'separator': '|', 'key': ('results', '*', 'elevation'), 'nodata': -32767, 'limit': 100, 'parallel': False}
-  TS_EUDEM_1 = {'alias': 'EUDEM_1', 'pattern': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
+  TS_EUDEM_1 = {'alias': 'EUDEM_1', 'source': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
 
   def ElevationfromMap(self, lat, lon):
     if not self.MapInfos or not self.Map:
@@ -4176,10 +4153,10 @@ class WGS84Track(WGS84WebMercator):
 
 class WebMapping():
 
-  WM_GOOGLE_MAPS = {'alias': 'GOOGLE_MAPS', 'pattern': 'https://www.google.com/maps/search/?api=1&query={lat},{lon}'}
-  WM_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'pattern': 'https://www.google.fr/maps/search/?api=1&query={lat},{lon}'}
-  WM_BING_MAPS = {'alias': 'BING_MAPS', 'pattern': 'https://www.bing.com/maps?where1={lat},{lon}'}
-  WM_MAPPY = {'alias': 'MAPPY', 'pattern': 'https://fr.mappy.com/plan#/{lat},{lon}'}
+  WM_GOOGLE_MAPS = {'alias': 'GOOGLE_MAPS', 'source': 'https://www.google.com/maps/search/?api=1&query={lat},{lon}'}
+  WM_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/search/?api=1&query={lat},{lon}'}
+  WM_BING_MAPS = {'alias': 'BING_MAPS', 'source': 'https://www.bing.com/maps?where1={lat},{lon}'}
+  WM_MAPPY = {'alias': 'MAPPY', 'source': 'https://fr.mappy.com/plan#/{lat},{lon}'}
 
   @classmethod
   def WMAlias(cls, name):
@@ -5048,10 +5025,12 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if self.server.Interface.HTML:
                 _send_err_bad()
                 continue
-              self.server.Interface.TrackInd = int(req.path.split('?')[1])
+              tind, tdef = req.path.split('?')[1].split(',', 1)
+              tdef = tdef.split('|')
+              self.server.Interface.TrackInd = int(tind)
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               self.server.Interface.HTML = ''
-              self.server.Interface.EditMode()
+              self.server.Interface.EditMode(*map(float, tdef))
               self.server.Interface.HTMLExp = ''
               self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
             except:
@@ -5390,6 +5369,8 @@ class GPXTweakerWebInterfaceServer():
   '      var cbottom = null;\r\n' \
   '      var hpx = 0;\r\n' \
   '      var hpy = 0;\r\n' \
+  '      var cpx = null;\r\n' \
+  '      var cpy = null;\r\n' \
   '      var zoom = 1;\r\n' \
   '      if (mode == "map") {\r\n' \
   '        var zooms = ["1", "1.5", "2", "3", "4", "6", "10", "15", "25"];\r\n' \
@@ -6659,8 +6640,11 @@ class GPXTweakerWebInterfaceServer():
   '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
   '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
   '        let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
-  '        hpx = viewpane.offsetWidth / 2 * (1 - r) + hpx * r;\r\n' \
-  '        hpy = viewpane.offsetHeight / 2 * (1 - r) + hpy * r;\r\n' \
+  '        let cx = cpx==null?(viewpane.offsetWidth/2):cpx;\r\n' \
+  '        let cy = cpy==null?(viewpane.offsetHeight/2):cpy;\r\n' \
+  '        cpx = cpy = null;\r\n' \
+  '        hpx = cx * (1 - r) + hpx * r;\r\n' \
+  '        hpy = cy * (1 - r) + hpy * r;\r\n' \
   '        if (focused && scrollmode > 0) {\r\n' \
   '          if (focused.indexOf("segment") >= 0) {\r\n' \
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
@@ -6701,7 +6685,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (zoom_s == zoom_s_ex || ! resc) {return;}\r\n' \
   '        rescale();\r\n' \
   '      }\r\n' \
-  '      function zoom_change(o) {\r\n' \
+  '      function zoom_change(o, cx=null, cy=null) {\r\n' \
   '        let zoom_s_ex = zoom_s;\r\n' \
   '        if (mode == "map") {\r\n' \
   '          if (o < 0) {\r\n' \
@@ -6736,6 +6720,8 @@ class GPXTweakerWebInterfaceServer():
   '              ntlevel = tlevel + 1;\r\n' \
   '            }\r\n' \
   '            if (tlevels[ntlevel][0] != tlevels[tlevel][0]) {\r\n' \
+  '              cpx = cx;\r\n' \
+  '              cpy = cy;\r\n' \
   '              switch_tiles(null, ntlevel);\r\n' \
   '              return;\r\n' \
   '            }\r\n' \
@@ -6744,13 +6730,15 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (zoom_s == zoom_s_ex) {return;}\r\n' \
+  '        cpx = cx;\r\n' \
+  '        cpy = cy;\r\n' \
   '        rescale();\r\n' \
   '      }\r\n' \
-  '      function zoom_dec() {\r\n' \
-  '        if (! document.getElementById("tset").disabled) {zoom_change(-1);}\r\n' \
+  '      function zoom_dec(cx=null, cy=null) {\r\n' \
+  '        if (! document.getElementById("tset").disabled) {zoom_change(-1, cx, cy);}\r\n' \
   '      }\r\n' \
-  '      function zoom_inc() {\r\n' \
-  '        if (! document.getElementById("tset").disabled) {zoom_change(1);}\r\n' \
+  '      function zoom_inc(cx=null, cy=null) {\r\n' \
+  '        if (! document.getElementById("tset").disabled) {zoom_change(1, cx, cy);}\r\n' \
   '      }\r\n' \
   '      function opacity_dec() {\r\n' \
   '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
@@ -9887,6 +9875,7 @@ class GPXTweakerWebInterfaceServer():
   '          let mx = e.pageX;\r\n' \
   '          let my = e.pageY;\r\n' \
   '          if (hand.id == "view") {\r\n' \
+  '            cpx = cpy = null;\r\n' \
   '            scroll_dview(Math.min(Math.max(mx, pl), pr) - Math.min(Math.max(mousex, pl), pr), Math.min(Math.max(my, pt), pb) - Math.min(Math.max(mousey, pt), pb));\r\n' \
   '          } else if (hand.id.indexOf("dot") >= 0) {\r\n' \
   '            hand_m = true;\r\n' \
@@ -9907,7 +9896,8 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_wheel(e) {\r\n' \
   '        e.preventDefault();\r\n' \
   '        if (e.ctrlKey) {\r\n' \
-  '          if (e.deltaY < 0) {zoom_inc();} else {zoom_dec();}\r\n' \
+  '          let p = viewpane.parentNode;\r\n' \
+  '          (e.deltaY<0?zoom_inc:zoom_dec)(e.pageX - p.offsetLeft, e.pageY - p.offsetTop);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (! e.altKey) {\r\n' \
@@ -13135,7 +13125,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_edit() {\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5)));\r\n' \
+  '            let wm = [(viewpane.offsetWidth / 2 - hpx) * tscale / zoom + htopx, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom];\r\n' \
+  '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5) + "," + ((viewpane.offsetWidth / 2 - hpx) * tscale / zoom + htopx).toString() + "|" + (htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom).toString()));\r\n' \
   '      }\r\n' \
   '      function open_webmapping() {\r\n' \
   '        let wmsel = document.getElementById("iset");\r\n' \
@@ -13689,6 +13680,7 @@ class GPXTweakerWebInterfaceServer():
   '          let mx = e.pageX;\r\n' \
   '          let my = e.pageY;\r\n' \
   '          if (hand.id == "view") {\r\n' \
+  '            cpx = cpy = null;\r\n' \
   '            scroll_dview(Math.min(Math.max(mx, pl), pr) - Math.min(Math.max(mousex, pl), pr), Math.min(Math.max(my, pt), pb) - Math.min(Math.max(mousey, pt), pb));\r\n' \
   '          } else {return;}\r\n' \
   '          if (mx >= pl && mx <= pr && my >= pt && my <= pb) {\r\n' \
@@ -13706,7 +13698,8 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_wheel(e) {\r\n' \
   '        e.preventDefault();\r\n' \
   '        if (e.ctrlKey) {\r\n' \
-  '          if (e.deltaY < 0) {zoom_inc();} else {zoom_dec();}\r\n' \
+  '          let p = viewpane.parentNode;\r\n' \
+  '          (e.deltaY<0?zoom_inc:zoom_dec)(e.pageX - p.offsetLeft, e.pageY - p.offsetTop);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (! e.altKey) {\r\n' \
@@ -14134,7 +14127,7 @@ class GPXTweakerWebInterfaceServer():
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field == 'pattern':
+          elif field == 'source':
             s[1][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
@@ -14180,7 +14173,7 @@ class GPXTweakerWebInterfaceServer():
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'pattern', 'layer', 'matrixset', 'style', 'format') or (hcur[:15] == 'elevationtiles ' and field in ('matrix', 'nodata')):
+          elif field in ('source', 'layer', 'matrixset', 'style', 'format') or (hcur[:15] == 'elevationtiles ' and field in ('matrix', 'nodata')):
             s[1][field] = value
             if field == 'nodata':
               try:
@@ -14707,10 +14700,11 @@ class GPXTweakerWebInterfaceServer():
   def _build_isets(self):
     return ''.join('<option value="%s">%s</option>' % (*([escape(ipro[0])] * 2),) for ipro in self.ItinerariesProviders)
 
-  def BuildHTML(self):
+  def BuildHTML(self, defx=None, defy=None):
     if self.HTML is None:
       return False
-    defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
+    if defx is None or defy is None:
+      defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
     declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
     pathes = self._build_pathes()
     waydots = self._build_waydots()
@@ -14909,7 +14903,7 @@ class GPXTweakerWebInterfaceServer():
     return ''.join(self._build_waydots_exp(t) for t in range(len(self.Tracks)))
 
   def _build_wmsets(self):
-    return ''.join('<option value="%s">%s</option>' % (escape(wmpro[1].get('pattern', '')), escape(wmpro[0])) for wmpro in self.WebMappingServices)
+    return ''.join('<option value="%s">%s</option>' % (escape(wmpro[1].get('source', '')), escape(wmpro[0])) for wmpro in self.WebMappingServices)
 
   def BuildHTMLExp(self):
     if self.HTMLExp is None:
@@ -14979,7 +14973,7 @@ class GPXTweakerWebInterfaceServer():
         retrieve['waydots%d' % t] = n
     return True
 
-  def EditMode(self):
+  def EditMode(self, defx=None, defy=None):
     if self.HTML is None:
       return False
     if self.HTML != '':
@@ -14990,7 +14984,7 @@ class GPXTweakerWebInterfaceServer():
     if not self.Track.BuildWebMercator():
       self.log(0, 'berror1')
       return False
-    if self.BuildHTML():
+    if self.BuildHTML(defx, defy):
       self.log(1, 'built')
       return True
     else:
