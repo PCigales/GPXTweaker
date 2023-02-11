@@ -6016,6 +6016,7 @@ class GPXTweakerWebInterfaceServer():
   '      function error_tcb() {\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
+  '        cpx = cpy = null;\r\n' \
   '      }\r\n' \
   '      function add_tile(row=0, col=0, suf="") {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
@@ -13126,7 +13127,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_edit() {\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '            let wm = [(viewpane.offsetWidth / 2 - hpx) * tscale / zoom + htopx, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom];\r\n' \
   '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5) + "," + ((viewpane.offsetWidth / 2 - hpx) * tscale / zoom + htopx).toString() + "|" + (htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom).toString()));\r\n' \
   '      }\r\n' \
   '      function open_webmapping() {\r\n' \
