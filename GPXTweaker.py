@@ -683,10 +683,48 @@ class HTTPExplodedMessage():
     h = self.header(name)
     return False if h is None else (value.lower() in map(str.strip, h.lower().split(',')))
 
+  def cookies(self, domain, path):
+    hck = self.header('Set-Cookie')
+    domain = domain.lower()
+    dom_ip = all(c in '.:[]0123456789' for c in domain)
+    path = path.rstrip('/') if (path != '/' and path[:1] == '/') else '/'
+    ck = {}
+    if hck is not None:
+      hck = map(str.strip, hck.split('\n'))
+      for co in hck:
+        c = map(str.strip, co.split(';'))
+        try:
+          cn, cv = next(c).split('=', 1)
+          if not cn:
+            continue
+          cd = cp = None
+          for ca in c:
+            try:
+              can, cav = ca.split('=', 1)
+            except:
+              continue
+            if cd is None and can.lower() == 'domain' and cav:
+              cav = cav.lstrip('.').lower()
+              if (domain != cav) if dom_ip else (not domain[-len(cav) - 1 :] in (cav, '.' + cav)):
+                raise
+              cd = (cav, True)
+            if cp is None and can.lower() == 'path':
+              if not path[: len(cav) + (1 if cav[-1:] != '/' else 0)] in (cav, cav + '/'):
+                raise
+              cp = cav
+          if cd is None:
+            cd = (domain, False)
+          if cp is None:
+            cp = ''
+          ck[(cd, cp, cn)] = cv
+        except:
+          pass
+    return ck
+
   def __repr__(self):
     if self:
       try:
-        return '\r\n'.join(('<HTTPExplodedMessage at %#x>\r\n----------' % id(self), (' '.join(filter(None, (self.method, self.path, self.version, self.code, self.message)))), *map(': '.join, self.headers.items()), '----------\r\nLength of body: %s byte(s)' % len(self.body or ''), '----------\r\nClose expected: %s' % self.expect_close))
+        return '\r\n'.join(('<HTTPExplodedMessage at %#x>\r\n----------' % id(self), (' '.join(filter(None, (self.method, self.path, self.version, self.code, self.message)))), *('%s: %s' % (k, l) for k, v in self.headers.items() for l in v.split('\n')), '----------\r\nLength of body: %s byte(s)' % len(self.body or ''), '----------\r\nClose expected: %s' % self.expect_close))
       except:
         return '<HTTPExplodedMessage at %#x>\r\n<corrupted object>' % id(self)
     else:
@@ -719,7 +757,7 @@ class HTTPMessage():
           header_value = header_value.strip()
           if not header_name in ('Content-Length', 'Location', 'Host') and http_message.headers.get(header_name):
             if header_value:
-              http_message.headers[header_name] += ', ' + header_value
+              http_message.headers[header_name] += ('\n' if header_name in ('Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate') else ', ') + header_value
           else:
             http_message.headers[header_name] = header_value
         else:
@@ -753,7 +791,7 @@ class HTTPMessage():
         header_value = header_value.strip()
         if http_message.headers.get(header_name):
           if header_value:
-            http_message.headers[header_name] += ', ' + header_value
+            http_message.headers[header_name] += ('\n' if header_name in ('Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate') else ', ') + header_value
         else:
           http_message.headers[header_name] = header_value
       else:
@@ -778,6 +816,8 @@ class HTTPMessage():
       msg = b''
     while True:
       msg = msg.lstrip(b'\r\n')
+      if msg and msg[0] < 0x20:
+        return http_message
       body_pos = msg.find(b'\r\n\r\n')
       if body_pos >= 0:
         body_pos += 4
@@ -1006,7 +1046,12 @@ class HTTPBaseRequest():
   def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
     raise
 
-  def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, max_hlength=1048576, decompress=True, pconnection=None):
+  @staticmethod
+  def _netloc_split(loc, def_port=''):
+    n, s, p = loc.rpartition(':')
+    return (n, p or def_port) if (s == ':' and ']' not in p) else (loc, def_port)
+
+  def __new__(cls, url, method=None, headers=None, data=None, timeout=30, max_length=1073741824, max_hlength=1048576, decompress=True, pconnection=None, basic_auth=None):
     if url is None:
       return HTTPMessage()
     if method is None:
@@ -1020,9 +1065,11 @@ class HTTPBaseRequest():
         headers = {}
       hitems = headers.items()
       if pconnection is None:
-        pconnection = [None]
+        pconnection = [None, {}, []]
         hccl = True
       else:
+        l = len(pconnection)
+        pconnection[0:3] = [pconnection[0] if l >= 1 else None, pconnection[1] if l >= 2 else {}, []]
         hccl = 'close' in (e.strip() for k, v in hitems if k.lower() == 'connection' for e in v.lower().split(','))
       if data:
         hexp = '100-continue' in (e.strip() for k, v in hitems if k.lower() == 'expect' for e in v.lower().split(','))
@@ -1037,15 +1084,29 @@ class HTTPBaseRequest():
         if not 'chunked' in (e.strip() for k, v in hitems if k.lower() == 'transfer-encoding' for e in v.lower().split(',')):
           headers['Content-Length'] = str(len(data))
       headers['Connection'] = 'close' if hccl else 'keep-alive'
+      hauth = headers.get('Authorization')
     except:
       return HTTPMessage()
+    cook = pconnection[1]
+    auth = False
     while True:
       try:
+        pconnection[2].append(url)
+        ck = {}
+        if basic_auth is not None:
+          domain = cls._netloc_split(url_p.netloc)[0].lower()
+          dom_ip = all(c in '.:[]0123456789' for c in domain)
+          path = url_p.path.split('#', 1)[0]
+          path = path.rstrip('/') if (path != '/' and path[:1] == '/') else '/'
+          for k, v in cook.items():
+            if ((domain[-len(k[0][0]) - 1 :] in (k[0][0], '.' + k[0][0])) if (k[0][1] and not dom_ip) else (domain == k[0][0])) and path[: len(k[1]) + (1 if k[1][-1:] != '/' else 0)] in (k[1], k[1] + '/'):
+              if (not k[2] in ck) or (len(k[0][0]) > len(ck[k[2]][1]) or (len(k[0][0]) == len(ck[k[2]][1]) and len(k[1]) >= len(ck[k[2]][2]))):
+                ck[k[2]] = (v, k[0][0], k[1])
         path = cls.connect(url, url_p, headers, max_length, max_hlength, timeout, pconnection)
         try:
           code = '100'
+          msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in (headers if not ck else {**headers, 'Cookie': '; '.join(k + '=' + v[0] for k, v in ck.items())}).items()))
           if hexp and data:
-            msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
             pconnection[0].sendall(msg.encode('iso-8859-1'))
             resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
             code = resp.code
@@ -1054,7 +1115,6 @@ class HTTPBaseRequest():
             if code == '100':
               pconnection[0].sendall(data)
           else:
-            msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in headers.items()))
             pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
         except:
           if retry:
@@ -1084,7 +1144,19 @@ class HTTPBaseRequest():
           pconnection[0] = None
           continue
         retry = False
-        if code[:2] == '30' and code != '304':
+        if basic_auth is not None and resp.header('Set-Cookie') is not None:
+          cook.update(resp.cookies(cls._netloc_split(url_p.netloc)[0], url_p.path.split('#', 1)[0]))
+        if code == '401':
+          if not auth and basic_auth is not None and any((l or 'basic')[:5].lower() == 'basic' for l in resp.header('WWW-Authenticate').split('\n')):
+            auth = True
+            headers['Authorization'] = 'Basic ' + base64.b64encode(basic_auth.encode('utf-8')).decode('utf-8')
+            if headers['Connection'] == 'close' or resp.expect_close:
+              pconnection[0] = None
+          else:
+            auth = False
+            break
+        elif code[:2] == '30' and code != '304':
+          auth = False
           if resp.header('location'):
             url = urllib.parse.urljoin(url, resp.header('location'))
             urlo_p = url_p
@@ -1098,7 +1170,7 @@ class HTTPBaseRequest():
               headers['Connection'] = 'close'
             redir += 1
             if redir > 5:
-              raise
+              break
             if code == '303':
               if method.upper() != 'HEAD':
                 method = 'GET'
@@ -1109,14 +1181,22 @@ class HTTPBaseRequest():
           else:
             raise
         else:
+          auth = False
           break
       except:
+        auth = False
         try:
           pconnection[0].close()
         except:
           pass
         pconnection[0] = None
         return HTTPMessage()
+      finally:
+        if not auth and 'Authorization' in headers:
+          if hauth is not None:
+            headers['Authorization'] = hauth
+          else:
+            del headers['Authorization']   
     if headers['Connection'] == 'close' or resp.expect_close:
       try:
         pconnection[0].close()
@@ -1294,9 +1374,9 @@ def gen_HTTPRequest(proxy=None):
       def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
         if pconnection[0] is None:
           if url_p.scheme.lower() == 'http':
-            pconnection[0] = socket.create_connection((url_p.netloc + ':80').split(':', 2)[:2], timeout=timeout)
+            pconnection[0] = socket.create_connection((url_p.hostname, url_p.port if url_p.port is not None else 80), timeout=timeout)
           elif url_p.scheme.lower() == 'https':
-            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.netloc + ':443').split(':', 2)[:2], timeout=timeout), server_side=False, server_hostname=url_p.netloc.split(':')[0])
+            pconnection[0] = cls.SSLContext.wrap_socket(socket.create_connection((url_p.hostname, url_p.port if url_p.port is not None else 443), timeout=timeout), server_side=False, server_hostname=cls._netloc_split(url_p.netloc)[0])
           else:
             raise
         else:
@@ -1323,10 +1403,10 @@ def gen_HTTPRequest(proxy=None):
               psock = socket.create_connection(cls.PROXY, timeout=timeout)
             else:
               psock = cls.SSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout), server_side=False, server_hostname=cls.PROXY[0])
-            psock.sendall(('CONNECT %s:%s HTTP/1.1\r\nHost: %s:%s\r\n%s\r\n' % (*(tuple((url_p.netloc + ':443').split(':', 2)[:2]) * 2), ('Proxy-Authorization: %s\r\n' % cls.PROXY_AUTH) if cls.PROXY_AUTH else '')).encode('iso-8859-1'))
+            psock.sendall(('CONNECT %s:%s HTTP/1.1\r\nHost: %s:%s\r\n%s\r\n' % (*(cls._netloc_split(url_p.netloc, '443') * 2), ('Proxy-Authorization: %s\r\n' % cls.PROXY_AUTH) if cls.PROXY_AUTH else '')).encode('iso-8859-1'))
             if not HTTPMessage(psock, body=False, decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=False).code in ('200', '204'):
               raise
-            pconnection[0] = cls.SSLContext.wrap_socket(psock, server_side=False, server_hostname=url_p.netloc.split(':')[0])
+            pconnection[0] = cls.SSLContext.wrap_socket(psock, server_side=False, server_hostname=cls._netloc_split(url_p.netloc)[0])
           else:
             raise
         else:
