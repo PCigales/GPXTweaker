@@ -2000,7 +2000,7 @@ class WebMercatorMap(WGS84WebMercator):
   def ReadTileInfos(self, pattern, infos, matrix, lat=None, lon=None):
     if matrix is not None:
       infos['matrix'] = str(matrix)
-    if '{hgt}' in infos.get('source', ''):
+    if '{hgt}' in infos.get('source', '') or infos.get('format') == 'image/hgt':
       infos['matrix'] = '0'
     if not 'matrix' in infos:
       return False
@@ -2482,13 +2482,51 @@ class WebMercatorMap(WGS84WebMercator):
   def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', threads=10):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, threads=threads)
 
-  def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False, threads=10):
+  def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False, threads=10, tiles_cache=None):
     tiles = []
-    progress = self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, memory_store=tiles, key=key, referer=referer, user_agent=user_agent, only_local=only_local, threads=threads)
-    if not progress:
-      return False
-    (minrow, mincol), (maxrow, maxcol) = progress['box']
-    progress['finish_event'].wait()
+    if tiles_cache is not None:
+      if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, only_local) is None:
+        return False
+      if any(infos[k] != tiles_cache.Infos[k] for k in infos if ((k in tiles_cache.Infos) and ((k in ('layer', 'format', 'matrix')) or (k in ('matrixset', 'style') and '{wmts}' in tiles_cache.Infos.get('source', ''))))):
+        return False
+      infos.update({k:v for k,v in tiles_cache.Infos.items() if k != 'source'})
+      try:
+        (minrow, mincol), (maxrow, maxcol) = self.WGS84BoxtoTileBox(infos, minlat, maxlat, minlon, maxlon)
+      except:
+        return False
+      if minrow > maxrow or mincol > maxcol:
+        return False      
+      box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
+      for col in range(mincol, maxcol + 1):
+        tiles.append([None] * (maxrow + 1 - minrow))
+      lock = threading.Lock()
+      tot = (maxcol + 1 - mincol) * (maxrow +1 - minrow)
+      finished = threading.Event()
+      def retriever():
+        nonlocal tot
+        while True:
+          try:
+            with lock:
+              row, col = next(box)
+            tiles[col - mincol][row - minrow] = tiles_cache[tiles_cache.Id, (row, col)](30)
+          except StopIteration:
+            break
+          except:
+            tiles[col - mincol][row - minrow] = None
+          with lock:
+            tot -= 1
+            if tot == 0:
+              finished.set()
+      retrievers = list(threading.Thread(target=retriever, daemon=True) for t in range(tiles_cache.Threads))
+      for retriever in retrievers:
+        retriever.start()
+      finished.wait()
+    else:
+      progress = self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, memory_store=tiles, key=key, referer=referer, user_agent=user_agent, only_local=only_local, threads=threads)
+      if not progress:
+        return False
+      (minrow, mincol), (maxrow, maxcol) = progress['box']
+      progress['finish_event'].wait()
     map = self.MergeTiles(infos, tiles)
     if not map:
       return False
@@ -2501,7 +2539,8 @@ class WebMercatorMap(WGS84WebMercator):
     miny = infos['topy'] - self.MapResolution * infos['height'] * (maxrow + 1)
     maxx = infos['topx'] + self.MapResolution * infos['width'] * (maxcol + 1)
     maxy = infos['topy'] - self.MapResolution * infos['height'] * minrow
-    if '{hgt}' in infos.get('source', ''):
+    hgt = '{hgt}' in infos.get('source', '') or 'hgt' in infos.get('format')
+    if hgt:
       minx -= self.MapResolution / 2
       maxx += self.MapResolution / 2
       miny -= self.MapResolution / 2
@@ -2512,7 +2551,7 @@ class WebMercatorMap(WGS84WebMercator):
       self.MapInfos['bbox'] = self.WMS_BBOX.format_map({'minx': minx, 'miny': miny, 'maxx': maxx, 'maxy': maxy})
     self.MapInfos['width'] = infos['width'] * (maxcol - mincol + 1)
     self.MapInfos['height'] = infos['height'] * (maxrow - minrow + 1)
-    if '{hgt}' in infos.get('source', ''):
+    if hgt:
       self.MapInfos['width'] += 1
       self.MapInfos['height'] += 1
     return True
@@ -2555,9 +2594,24 @@ class WGS84Elevation(WGS84Map):
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
   TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
   MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE + '{wms}', 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
-  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'source': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer':'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
+  TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'source': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer': 'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
   AS_OTD_EUDEM = {'alias': 'AS_OTD_EUDEM', 'source': 'https://api.opentopodata.org/v1/eudem25m?locations={location}', 'separator': '|', 'key': ('results', '*', 'elevation'), 'nodata': -32767, 'limit': 100, 'parallel': False}
   TS_EUDEM_1 = {'alias': 'EUDEM_1', 'source': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
+  TS_ASTER_V3 = {'alias': 'ASTER_V3', 'source': 'https{key}://e4ftl01.cr.usgs.gov/ASTT/ASTGTM.003/2000.03.01/ASTGTMV003_{hgt}.zip', 'layer': 'ASTER.V3', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/geotiff', 'nodata': -9999}
+
+  def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
+    super().__init__(tiles_buffer_size, tiles_max_threads)
+    if self.Tiles is not None:
+      self.Tiles.Preload = False
+
+  def _lazy_tilescache_configuration(self, infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, only_local):
+    with self.Tiles.BLock:
+      if self.Tiles.Infos is None:
+        if not self.SetTilesProvider(self.Tiles.Id, infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local):
+          return False
+        self.Tiles.Size = max(1, int(self.Tiles.Size // (max(self.TilesInfos['width'], self.TilesInfos['height']) / 256) ** 2))
+        self.Tiles.log(2, 'init', self.Tiles.Size, self.Tiles.Threads)
+    return True
 
   def ElevationfromMap(self, lat, lon):
     if not self.MapInfos or not self.Map:
@@ -2620,7 +2674,7 @@ class WGS84Elevation(WGS84Map):
     tgen = self.TileGenerator(infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
     if not tgen:
       return None
-    buf_tiles = []
+    buf_tiles = {}
     def retrieve_elevations(lat=None, lon=None, close_connection=False):
       nonlocal buf_tiles
       if close_connection:
@@ -2629,13 +2683,13 @@ class WGS84Elevation(WGS84Map):
         return None
       try:
         row, col = tgen(lat, lon, just_box=True)[0]
-        for infos, tile in buf_tiles:
-          if infos['row'] == row and infos['col'] == col:
-            return self.ElevationfromTile(infos, tile, lat, lon)
-        infos, tile = tgen(None, None, row, col).values()
-        if infos and tile:
-          buf_tiles.append((infos, tile))
-          return self.ElevationfromTile(infos, tile, lat, lon)
+        infos_tile = buf_tiles.get((row, col))
+        if infos_tile is not None:
+          return self.ElevationfromTile(*infos_tile, lat, lon)
+        infos_tile = tgen(None, None, row, col).values()
+        if all(infos_tile):
+          buf_tiles[(row, col)] = infos_tile
+          return self.ElevationfromTile(*infos_tile, lat, lon)
         else:
           return None
       except:
@@ -2652,19 +2706,27 @@ class WGS84Elevation(WGS84Map):
         except:
           return None
     else:
-      try:
-        egen = self.ElevationGenerator(infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
-        if egen:
-          return list(egen(lat, lon) for (lat, lon) in points)
-        else:
+      if self.Tiles is not None:
+        if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, only_local) is None:
           return None
-      except:
-        return None
-      finally:
         try:
-          egen(close_connection=True)
+          return list(self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, self.Tiles[self.Tiles.Id, (row, col)](20), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), ))
         except:
-          pass
+          return None
+      else:
+        try:
+          egen = self.ElevationGenerator(infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
+          if egen:
+            return list(egen(lat, lon) for (lat, lon) in points)
+          else:
+            return None
+        except:
+          return None
+        finally:
+          try:
+            egen(close_connection=True)
+          except:
+            pass
 
   @classmethod
   def ASAlias(cls, name):
@@ -4776,20 +4838,37 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
+            self.server.Interface.TLock.acquire()
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
             try:
-              self.server.Interface.ElevationProviderSel = int(q['eset'][0])
-              if 'layer' in self.server.Interface.ElevationsProviders[int(q['eset'][0])][1]:
+              eset = int(q['eset'][0])
+              self.server.Interface.ElevationProviderSel = eset
+              if self.server.Interface.Elevation.Tiles is not None:
+                try:
+                  self.server.Interface.Elevation.TilesInfos = None
+                  self.server.Interface.Elevation.Tiles.Configure((-1, None), None)
+                  with self.server.Interface.Elevation.Tiles.BLock:
+                    self.server.Interface.Elevation.Tiles.Buffer.clear()
+                    self.server.Interface.Elevation.Tiles.log(2, 'del')
+                    self.server.Interface.Elevation.Tiles.Size = self.server.Interface.ElevationTilesBufferSize 
+                except:
+                  pass
+              if 'layer' in self.server.Interface.ElevationsProviders[eset][1]:
                 self.server.Interface.EMode = 'tiles'
-                self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], matrix=self.server.Interface.ElevationsProviders[int(q['eset'][0])][1].get('matrix'), **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
-                self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
+                if self.server.Interface.Elevation.Tiles is not None:
+                  self.server.Interface.Elevation.Tiles.Id = (eset, self.server.Interface.ElevationsProviders[eset][1].get('matrix'))
+                self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[eset][1], matrix=self.server.Interface.ElevationsProviders[eset][1].get('matrix'), **self.server.Interface.ElevationsProviders[eset][2])
+                self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[eset][0])
               else:
                 self.server.Interface.EMode = 'api'
-                self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[int(q['eset'][0])][1], **self.server.Interface.ElevationsProviders[int(q['eset'][0])][2])
-                self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[int(q['eset'][0])][0])
+                self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[eset][1], **self.server.Interface.ElevationsProviders[eset][2])
+                self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[eset][0])
             except:
+              raise
               _send_err_fail()
               continue
+            finally:
+              self.server.Interface.TLock.release()
             _send_resp_nc()
           elif req.path.lower()[:28] == '/itinerariesproviders/switch' :
             if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
@@ -5048,6 +5127,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
           if req.path.lower()[:4] == '/ele':
             if not req.header('If-Match', '') in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
+              continue
+            if self.server.Interface.EMode == 'tiles' and self.server.Interface.Elevation.Tiles is not None and self.server.Interface.ElevationProviderSel != self.server.Interface.Elevation.Tiles.Id[0]:
+              _send_err_fail()
               continue
             lpoints = req.body.splitlines()
             points = []
@@ -6814,15 +6896,19 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing--;\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '          document.getElementById("eset").disabled = false;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        eset = document.getElementById("eset").selectedIndex;\r\n' \
+  '        document.getElementById("eset").disabled = false;\r\n' \
   '      }\r\n' \
   '      function error_epcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '        document.getElementById("eset").disabled = false;\r\n' \
   '      }\r\n' \
   '      function switch_elevations(eset) {\r\n' \
+  '        document.getElementById("eset").disabled = true;\r\n' \
   '        let q = "eset=" + encodeURIComponent(eset.toString());\r\n' \
   '        xhrep.onload = (e) => {load_epcb(e.target)};\r\n' \
   '        xhrep.open("GET", "/elevationsproviders/switch?" + q);\r\n' \
@@ -8773,9 +8859,11 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
+  '        document.getElementById("eset").disabled = false;\r\n' \
   '      }\r\n' \
   '      function load_ecb(t, pts) {\r\n' \
   '        xhr_ongoing--;\r\n' \
+  '        document.getElementById("eset").disabled = false;\r\n' \
   '        if (t.status != 200) {return 0;}\r\n' \
   '        if (t.response == "") {return 0;}\r\n' \
   '        let ele = t.response.split("\\r\\n");\r\n' \
@@ -8822,7 +8910,7 @@ class GPXTweakerWebInterfaceServer():
   '        return np;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
-  '        if (! fromalt && eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
+  '        if (! fromalt && (eset < 0 || document.getElementById("eset").disabled)) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        let pts = [];\r\n' \
   '        let b = "";\r\n' \
   '        let spans = null;\r\n' \
@@ -8874,6 +8962,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        document.getElementById("eset").disabled = true;\r\n' \
   '        let xhre = new XMLHttpRequest();\r\n' \
   '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn):show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
   '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
@@ -13999,6 +14088,8 @@ class GPXTweakerWebInterfaceServer():
             self.TilesBufferThreads = None if value is None else int(value)
           elif field == 'chromium_hold':
             self.TilesHoldSize = 0 if value is None else int(value)
+          elif field == 'elevation_size':
+            self.ElevationTilesBufferSize = None if value is None else int(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -14302,6 +14393,7 @@ class GPXTweakerWebInterfaceServer():
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
     self.TilesHoldSize = 0
+    self.ElevationTilesBufferSize = None
     self.VMinLat = - math.degrees(2 * math.atan(math.exp(math.pi)) - math.pi / 2)
     self.VMaxLat = - self.VMinLat
     self.VMinLon = -180
@@ -14566,8 +14658,8 @@ class GPXTweakerWebInterfaceServer():
       self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
       for t in range(len(self.TracksBoundaries)):
         self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][0] - 0.008), clamp_lon(self.TracksBoundaries[t][2] - 0.011)), WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][1] + 0.008), clamp_lon(self.TracksBoundaries[t][3] + 0.011))))
-      self.Elevation = WGS84Elevation()
       if emap:
+        self.Elevation = WGS84Elevation()
         self.ElevationsProviders = []
         if '://' in emap or ':\\' in emap:
           if self.Elevation.LoadMap(emap):
@@ -14596,8 +14688,11 @@ class GPXTweakerWebInterfaceServer():
               self.log(0, 'eerror', self.ElevationMap[0])
       elif len(self.ElevationsProviders) > 0:
         self.ElevationProviderSel = 0
+        self.Elevation = WGS84Elevation(self.ElevationTilesBufferSize, self.TilesBufferThreads)
         if 'layer' in self.ElevationsProviders[0][1]:
           self.EMode = 'tiles'
+          if self.Elevation.Tiles is not None:
+            self.Elevation.Tiles.Id = (0, self.ElevationsProviders[0][1].get('matrix'))
           self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
           self.log(1, 'elevation', self.ElevationsProviders[0][0])
         else:
@@ -14754,7 +14849,7 @@ class GPXTweakerWebInterfaceServer():
       try:
         if self.EMode == 'tiles':
           infos = {**self.ElevationsProviders[self.ElevationProviderSel][1]}
-          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10)):
+          if not self.Elevation.AssembleMap(infos, self.ElevationsProviders[self.ElevationProviderSel][1].get('matrix'), minlat, maxlat, minlon, maxlon, **self.ElevationsProviders[self.ElevationProviderSel][2], threads=(self.TilesBufferThreads or 10), tiles_cache=self.Elevation.Tiles):
             self.log(0, '3derror1')
             return False
         elif self.EMode == 'api':
@@ -15061,6 +15156,11 @@ class GPXTweakerWebInterfaceServer():
     try:
       if self.Mode == 'tiles':
         self.Map.Tiles.Close()
+    except:
+      pass
+    try:
+      if self.EMode in ('tiles', 'api') and self.Elevation.Tiles is not None:
+        self.Elevation.Tiles.Close()
     except:
       pass
     WGS84Elevation.RequestElevation.__kwdefaults__['stop'] = True
