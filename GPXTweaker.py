@@ -1427,6 +1427,155 @@ def gen_HTTPRequest(proxy=None):
       HTTPRequest.PROXY_SECURE = True
 
 
+class TIFFHandler:
+
+  HEADER = {b'\x49\x49\x2a\x00': '<', b'\x4d\x4d\x00\x2a': '>'}
+  TAGS_SHORT = {258: 'bits_per_sample', 259: 'compression' , 277: 'samples_per_pixel', 284: 'planar_configuration', 317: 'predictor', 339: 'sample_format'}
+  TAGS_SHORT_LONG = {256: 'image_width', 257: 'image_length', 273: 'strip_offsets', 278: 'rows_per_strip', 279: 'strip_byte_counts', 322: 'tile_width', 323: 'tile_length', 325: 'tile_byte_counts'}
+  TAGS_LONG = {324: 'tile_offsets'}
+
+  def __new__(cls, image):
+    self = object.__new__(cls)
+    try:
+      ba = TIFFHandler.HEADER.get(image[:4], None)
+      if ba is None:
+        raise
+      L = ba + 'L'
+      H = ba + 'H'
+      id0 = struct.unpack(L, image[4:8])[0]
+      ne = struct.unpack(H, image[id0:id0+2])[0]
+      p = id0 + 2
+      for e in range(ne):
+        ei = struct.unpack(H, image[p:p+2])[0]
+        if ei in TIFFHandler.TAGS_SHORT:
+          if struct.unpack(H, image[p+2:p+4])[0] != 3:
+            raise
+          if ei in (258, 339):
+            n = struct.unpack(L, image[p+4:p+8])[0]
+            if n == 1:
+              setattr(self, TIFFHandler.TAGS_SHORT[ei], struct.unpack(H, image[p+8:p+10])[0])
+            elif n == 3:
+              o = struct.unpack(L, image[p+8:p+12])[0]
+              setattr(self, TIFFHandler.TAGS_SHORT[ei], struct.unpack('%s%dH' % (ba, n), image[o:o+2*n]))
+            else:
+              raise
+          else:
+            setattr(self, TIFFHandler.TAGS_SHORT[ei], struct.unpack(H, image[p+8:p+10])[0])
+        elif ei in TIFFHandler.TAGS_SHORT_LONG:
+          t = {3: H, 4: L}.get(struct.unpack(H, image[p+2:p+4])[0], None)
+          if t is None:
+            raise
+          if ei in (273, 279, 325):
+            n, o = struct.unpack(L + 'L', image[p+4:p+12])
+            setattr(self, TIFFHandler.TAGS_SHORT_LONG[ei], struct.unpack('%s%d%s' % (ba, n, t[-1]), image[o:o+(2 if t== H else 4)*n]))
+          else:
+            setattr(self, TIFFHandler.TAGS_SHORT_LONG[ei], struct.unpack(t, image[p+8:p+(10 if t == H else 12)])[0])
+        elif ei in TIFFHandler.TAGS_LONG:
+          if struct.unpack(H, image[p+2:p+4])[0] != 4:
+            raise
+          n, o = struct.unpack(L + 'L', image[p+4:p+12])
+          setattr(self, TIFFHandler.TAGS_LONG[ei], struct.unpack('%s%dL' % (ba, n), image[o:o+4*n]))
+        p += 12
+      if hasattr(self, 'tile_offsets'):
+        self.offsets = self.tile_offsets
+        self.byte_counts = self.tile_byte_counts
+      elif hasattr(self, 'strip_offsets'):
+        self.offsets = self.strip_offsets
+        self.byte_counts = self.strip_byte_counts
+      else:
+        raise
+    except:
+      return None
+    self.image = image
+    return self
+
+  def __init__(self, image):
+    pass
+
+  def _none_decompress(self, index):
+    o = self.offsets[index]
+    a = o + self.byte_counts[index]
+    return memoryview(self.image)[o:a]
+
+  def _lzw_decompress(self, index):
+    image = self.image
+    o = self.offsets[index]
+    a = o + self.byte_counts[index]
+    d = BytesIO()
+    t = list(i.to_bytes() for i in range(256))
+    t.extend([b'', b''])
+    l = 9
+    p = 0
+    while True:
+      m = (1 << l) - 1
+      n = (l - 2) // 8 + 2
+      q = 8 * n - l
+      while True:
+        b = o + p // 8
+        e = b + n
+        if e <= a:
+          c = (int.from_bytes(image[b:e], 'big') >> (q - p % 8)) & m
+        else:
+          c = (int.from_bytes(image[b:a], 'big') >> ((a - b) * 8 - l - p % 8)) & m
+        p += l
+        if c == 257:
+          return d.getbuffer()
+        if c == 256:
+          l = 9
+          t[257:] = [b'']
+          break
+          continue
+        g = t[c][:1]
+        t.append(t.pop() + g)
+        d.write(t[c])
+        t.append(t[c])
+        if len(t) > m:
+          l += 1
+          break
+
+  def convert(self):
+    try:
+      if self.compression == 1:
+        _decompress = self._none_decompress
+      elif self.compression == 5 and self.predictor == 1:
+        _decompress = self._lzw_decompress
+      else:
+        raise
+      if self.samples_per_pixel != 1 or self.planar_configuration != 1:
+        raise
+      image = BytesIO()
+      if hasattr(self, 'tile_offsets'):
+        tacross = (self.image_width - 1) // self.tile_width + 1
+        twidth = self.tile_width
+        tlwidth = self.image_width % self.tile_width
+        tdown = (self.image_length - 1) // self.tile_length + 1
+        tlength = self.tile_length
+        tllength = self.image_length % self.tile_length
+        bps = self.bits_per_sample // 8
+        _twidth_bps = twidth * bps
+        _tlwidth_bps = tlwidth * bps
+        for row in range(tdown):
+          strip = tuple(_decompress(tacross * row + col) for col in range(tacross))
+          for trow in range(tlength if row < tdown - 1 else tllength):
+            _trow_twidth_bps = trow * _twidth_bps
+            for col in range(tacross - 1):
+              image.write(strip[col][_trow_twidth_bps: _trow_twidth_bps + _twidth_bps])
+            image.write(strip[tacross - 1][_trow_twidth_bps: _trow_twidth_bps + _tlwidth_bps])
+      elif hasattr(self, 'strip_offsets'):
+        swidth = self.image_width
+        sdown = (self.image_length - 1) // self.rows_per_strip + 1
+        bps = self.bits_per_sample // 8
+        for row in range(sdown):
+          strip = _decompress(row)
+          image.write(strip)
+      else:
+        raise
+    except:
+      return False
+    self.converted = bytes(image.getvalue())
+    return True
+
+
 class WGS84WebMercator():
 
   R = 6378137.0
