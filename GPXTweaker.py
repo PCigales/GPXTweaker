@@ -38,6 +38,8 @@ import locale
 import argparse
 import gc
 
+locale.setlocale(locale.LC_TIME, '')
+
 FR_STRINGS = {
   'tilescache': {
     '_id': 'Cache de tuiles',
@@ -327,6 +329,7 @@ FR_STRINGS = {
     'box': '"minlat, maxlat, minlon, maxlon" (latitudes minimale et maximale, longitudes minimale et maximale, avec les "" ) de la carte à charger / à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / déterminé à partir de la trace par défaut]',
     'size': '"height, width" (hauteur et largeur, avec les "") de la carte à charger / "maxheight, maxwidth" (hauteur et largeur maximales, avec les "") de la carte à retourner (pour l\'utilisation d\'une carte / d\'un fournisseur de carte) [lu dans les métadonnées gpxtweaker de la carte / "2000, 4000" par défaut]',
     'dpi': 'densité de la carte à retourner en pixels par pouce (pour l\'utilisation d\'un fournisseur de carte) [90 par défaut]',
+    'record': 'enregistre les cartes récupérées dans le répertoire indiqué',
     'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
     'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
     'gpx': 'seuls les fichiers .gpx sont pris en charge',
@@ -623,6 +626,7 @@ EN_STRINGS = {
     'box': '"minlat, maxlat, minlon, maxlon" (minimum and maximum latitudes, minimum and maximum longitudes, with the "") of the map to be loaded / retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / determined from the track by default]',
     'size': '"height, width" (height and width, with the "") of the map to be loaded / "maxheight, maxwidth" (maximum height and width, with the "") of the map to be retrieved (for the use of a map / of a map provider) [read from the gpxtweaker metadata of the map / "2000, 4000" by default]',
     'dpi': 'density of the map to be retrieved in dots per inch (for the use of a map provider) [90 by default]',
+    'record': 'saves the retrieved maps in the specified folder',
     'noopen': 'no automatic opening in the default browser',
     'verbosity': 'verbosity level from 0 to 2 [0 by default]',
     'gpx': 'only .gpx files are supported',
@@ -642,9 +646,9 @@ def log(kmod, level, kmsg, *var):
   if level <= VERBOSITY:
     now = time.localtime()
     try:
-      print('%02d/%02d/%04d %02d:%02d:%02d' % (now.tm_mday, now.tm_mon, now.tm_year, now.tm_hour, now.tm_min, now.tm_sec), ':', LSTRINGS[kmod]['_id'], '->', LSTRINGS[kmod][kmsg] % var)
+      print(time.strftime('%x %X', now), ':', LSTRINGS[kmod]['_id'], '->', LSTRINGS[kmod][kmsg] % var)
     except:
-      print('%02d/%02d/%04d %02d:%02d:%02d' % (now.tm_mday, now.tm_mon, now.tm_year, now.tm_hour, now.tm_min, now.tm_sec), ':', kmod, '->', kmsg, var)
+      print(time.strftime('%x %X', now), ':', kmod, '->', kmsg, var)
 
 
 def _XMLGetNodeText(nodes):
@@ -1842,7 +1846,7 @@ class WebMercatorMap(WGS84WebMercator):
       return None
     return (x, y)
 
-  def FetchMap(self, infos, minlat, maxlat, minlon, maxlon, maxheight, maxwidth, dpi=None, key=None, referer=None, user_agent='GPXTweaker'):
+  def FetchMap(self, infos, minlat, maxlat, minlon, maxlon, maxheight, maxwidth, dpi=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     self.log(2, 'mapfetch', infos)
     headers = {}
     if referer:
@@ -1875,7 +1879,7 @@ class WebMercatorMap(WGS84WebMercator):
         uri = infos['source'].format_map({'wms': self.WMS_PATTERN['GetMap'], 'key': key or ''}).format_map(infos)
       else:
         uri = infos['source'].format_map({**infos, 'key': key or ''})
-      rep = HTTPRequest(uri, 'GET', headers)
+      rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
       if rep.code != '200':
         raise
       nmap = rep.body
@@ -1892,14 +1896,14 @@ class WebMercatorMap(WGS84WebMercator):
     self.log(1, 'maploaded', infos)
     return True
 
-  def LoadMap(self, uri, minx=None, miny=None, maxx=None, maxy=None, resolution=None, referer=None, user_agent='GPXTweaker'):
+  def LoadMap(self, uri, minx=None, miny=None, maxx=None, maxy=None, resolution=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     self.log(2, 'mapfetch', uri)
     try:
       if '://' in uri:
         headers = {'User-Agent': user_agent}
         if referer:
           headers['Referer'] = referer
-        rep = HTTPRequest(uri, 'GET', headers)
+        rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
         if rep.code != '200':
           raise
         nmap = rep.body
@@ -2044,7 +2048,7 @@ class WebMercatorMap(WGS84WebMercator):
       return None
     return ((row2, col1), (row1, col2))
 
-  def GetTileInfos(self, infos, matrix=None, lat=None, lon=None, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+  def GetTileInfos(self, infos, matrix=None, lat=None, lon=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
     if not 'source' in infos:
       return False
     if matrix is not None:
@@ -2070,7 +2074,7 @@ class WebMercatorMap(WGS84WebMercator):
     infos['style'] = infos.get('style') or ''
     infos['format'] = infos.get('format') or 'image/png'
     uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
-    rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+    rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
     if rep.code != '200':
       return False
     try:
@@ -2114,7 +2118,7 @@ class WebMercatorMap(WGS84WebMercator):
         return False
     return True
 
-  def GetKnownTile(self, infos, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+  def GetKnownTile(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
     if not 'source' in infos:
       return None
     headers = {'User-Agent': user_agent}
@@ -2138,7 +2142,7 @@ class WebMercatorMap(WGS84WebMercator):
     except:
       return None
     try:
-      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
       if 'zip' in rep.header('content-type', '').lower() or infos.get('source', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
@@ -2155,11 +2159,11 @@ class WebMercatorMap(WGS84WebMercator):
       return None
     return tile
 
-  def GetTile(self, infos, matrix, lat, lon, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+  def GetTile(self, infos, matrix, lat, lon, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
     try:
-      if not self.GetTileInfos(infos, matrix, lat, lon, key, referer, user_agent, pconnection):
+      if not self.GetTileInfos(infos, matrix, lat, lon, key, referer, user_agent, basic_auth, pconnection):
         return None
-      tile = self.GetKnownTile(infos, key, referer, user_agent, pconnection)
+      tile = self.GetKnownTile(infos, key, referer, user_agent, basic_auth, pconnection)
     except:
       return None
     return tile
@@ -2465,7 +2469,7 @@ class WebMercatorMap(WGS84WebMercator):
           m = o
     return m
 
-  def RetrieveTile(self, infos, local_pattern, local_expiration, local_store, key, referer, user_agent, pconnection=None, action=None, only_save=False):
+  def RetrieveTile(self, infos, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, pconnection=None, action=None, only_save=False):
     self.log(2, 'tileretrieve', infos)
     tile = None
     local_tile = None
@@ -2502,7 +2506,7 @@ class WebMercatorMap(WGS84WebMercator):
               expired = False
       if expired:
         self.log(2, 'tilefetch', infos)
-        tile = self.GetKnownTile(infos, key, referer, user_agent, pconnection)
+        tile = self.GetKnownTile(infos, key, referer, user_agent, basic_auth, pconnection)
         if tile and isinstance(action, list):
           action[0] = 'read_from_server'
         if tile is not None and local_pattern is not None:
@@ -2529,7 +2533,7 @@ class WebMercatorMap(WGS84WebMercator):
       self.log(2, 'tileretrieved', infos)
     return tile
 
-  def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False, number=1, infos_completed=None, pconnections=None):
+  def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, number=1, infos_completed=None, pconnections=None):
     if isinstance(pconnections, list):
       if len(pconnections) < number:
         pconnections.extend(list([None] for i in range(number - len(pconnections))))
@@ -2559,7 +2563,7 @@ class WebMercatorMap(WGS84WebMercator):
             return None
           if not local_store:
             local_pattern = None
-          if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, pconnections[0]):
+          if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, basic_auth, pconnections[0]):
             return None
           infos_completed['source'] = infos_base['source']
           if local_store:
@@ -2591,7 +2595,7 @@ class WebMercatorMap(WGS84WebMercator):
             return ((row, col), (row, col))
           linfos[ind]['col'] = col
           linfos[ind]['row'] = row
-          return {'infos': {**linfos[ind]}, 'tile': self.RetrieveTile(linfos[ind], local_pattern, local_expiration, local_store, key, referer, user_agent, pconnections[ind])}
+          return {'infos': {**linfos[ind]}, 'tile': self.RetrieveTile(linfos[ind], local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, pconnections[ind])}
         except:
           return None
       elif a is None and b is None:
@@ -2600,7 +2604,7 @@ class WebMercatorMap(WGS84WebMercator):
         linfos[ind]['row'] = c
         linfos[ind]['col'] = d
         try:
-          return {'infos': {**linfos[ind]}, 'tile': self.RetrieveTile(linfos[ind], local_pattern, local_expiration, local_store, key, referer, user_agent, pconnections[ind])}
+          return {'infos': {**linfos[ind]}, 'tile': self.RetrieveTile(linfos[ind], local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, pconnections[ind])}
         except:
           return None
       else:
@@ -2612,7 +2616,7 @@ class WebMercatorMap(WGS84WebMercator):
             for linfos[ind]['col'] in range(mincol, maxcol + 1):
               for linfos[ind]['row'] in range(minrow, maxrow + 1):
                 try:
-                  yield {'infos': {**linfos[ind]}, 'tile': self.RetrieveTile(linfos[ind], local_pattern, local_expiration, local_store, key, referer, user_agent, pconnections[ind])}
+                  yield {'infos': {**linfos[ind]}, 'tile': self.RetrieveTile(linfos[ind], local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, pconnections[ind])}
                 except:
                   yield None
           return gen_tiles()
@@ -2623,7 +2627,7 @@ class WebMercatorMap(WGS84WebMercator):
     else:
       return list(partial(retrieve_tiles, ind=i) for i in range(number))
       
-  def RetrieveTiles(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, memory_store=None, key=None, referer=None, user_agent='GPXTweaker', only_local=False, threads=10):
+  def RetrieveTiles(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, memory_store=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10):
     if not local_store and memory_store is None:
       return False
     try:
@@ -2647,7 +2651,7 @@ class WebMercatorMap(WGS84WebMercator):
           return False
         if not local_store:
           local_pattern = None
-        if not self.GetTileInfos(infos, matrix, None, None, key, referer, user_agent):
+        if not self.GetTileInfos(infos, matrix, None, None, key, referer, user_agent, basic_auth):
           return False
         infos['source'] = inf['source']
         if local_store:
@@ -2688,7 +2692,7 @@ class WebMercatorMap(WGS84WebMercator):
         try:
           with lock:
             row, col = next(box)
-          tile = self.RetrieveTile({**infos, **{'row': row, 'col': col}}, local_pattern, local_expiration, local_store, key, referer, user_agent, pconnection, action, memory_store is None)
+          tile = self.RetrieveTile({**infos, **{'row': row, 'col': col}}, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, pconnection, action, memory_store is None)
           if memory_store is not None:
             memory_store[col - mincol][row - minrow] = tile
           with lock:
@@ -2708,13 +2712,13 @@ class WebMercatorMap(WGS84WebMercator):
       downloader.start()
     return progress
 
-  def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', threads=10):
-    return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, threads=threads)
+  def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, threads=10):
+    return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, threads=threads)
 
-  def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False, threads=10, tiles_cache=None):
+  def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10, tiles_cache=None):
     tiles = []
     if tiles_cache is not None:
-      if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, only_local) is None:
+      if hasattr(self, '_lazy_tilescache_configuration') and self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local) is None:
         return False
       if any(infos[k] != tiles_cache.Infos[k] for k in infos if ((k in tiles_cache.Infos) and ((k in ('layer', 'format', 'matrix')) or (k in ('matrixset', 'style') and '{wmts}' in tiles_cache.Infos.get('source', ''))))):
         return False
@@ -2751,7 +2755,7 @@ class WebMercatorMap(WGS84WebMercator):
         retriever.start()
       finished.wait()
     else:
-      progress = self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, memory_store=tiles, key=key, referer=referer, user_agent=user_agent, only_local=only_local, threads=threads)
+      progress = self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, memory_store=tiles, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local, threads=threads)
       if not progress:
         return False
       (minrow, mincol), (maxrow, maxcol) = progress['box']
@@ -2790,9 +2794,9 @@ class WebMercatorMap(WGS84WebMercator):
     minx, miny, maxx, maxy = map(float, self.MapInfos['bbox'].split(','))
     return (tr(int((x - minx) / self.MapResolution), round((maxx - minx) / self.MapResolution)), tr(int((maxy - y) / self.MapResolution), round((maxy - miny) / self.MapResolution)))
 
-  def SetTilesProvider(self, rid, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
+  def SetTilesProvider(self, rid, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
     try:
-      tile_generator_builder = partial(self.TileGenerator, infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
+      tile_generator_builder = partial(self.TileGenerator, infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local)
       if self.TilesInfos:
         infos = {**self.TilesInfos}
       else:
@@ -2826,17 +2830,17 @@ class WGS84Elevation(WGS84Map):
   TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'source': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer': 'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
   AS_OTD_EUDEM = {'alias': 'AS_OTD_EUDEM', 'source': 'https://api.opentopodata.org/v1/eudem25m?locations={location}', 'separator': '|', 'key': ('results', '*', 'elevation'), 'nodata': -32767, 'limit': 100, 'parallel': False}
   TS_EUDEM_1 = {'alias': 'EUDEM_1', 'source': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
-  TS_ASTER_V3 = {'alias': 'ASTER_V3', 'source': 'https{key}://e4ftl01.cr.usgs.gov/ASTT/ASTGTM.003/2000.03.01/ASTGTMV003_{hgt}.zip', 'layer': 'ASTER.V3', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/geotiff', 'nodata': -9999}
+  TS_ASTER_V3 = {'alias': 'ASTER_V3', 'source': 'https://e4ftl01.cr.usgs.gov/ASTT/ASTGTM.003/2000.03.01/ASTGTMV003_{hgt}.zip', 'layer': 'ASTER.V3', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/geotiff', 'nodata': -9999}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     super().__init__(tiles_buffer_size, tiles_max_threads)
     if self.Tiles is not None:
       self.Tiles.Preload = False
 
-  def _lazy_tilescache_configuration(self, infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, only_local):
+  def _lazy_tilescache_configuration(self, infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local):
     with self.Tiles.BLock:
       if self.Tiles.Infos is None:
-        if not self.SetTilesProvider(self.Tiles.Id, infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local):
+        if not self.SetTilesProvider(self.Tiles.Id, infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local):
           return False
         self.Tiles.Size = max(1, int(self.Tiles.Size // (max(self.TilesInfos['width'], self.TilesInfos['height']) / 256) ** 2))
         self.Tiles.log(2, 'init', self.Tiles.Size, self.Tiles.Threads)
@@ -2899,8 +2903,8 @@ class WGS84Elevation(WGS84Map):
         return None
     return ele
 
-  def ElevationGenerator(self, infos_base=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
-    tgen = self.TileGenerator(infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
+  def ElevationGenerator(self, infos_base=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
+    tgen = self.TileGenerator(infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local)
     if not tgen:
       return None
     buf_tiles = {}
@@ -2925,7 +2929,7 @@ class WGS84Elevation(WGS84Map):
         return None
     return retrieve_elevations
 
-  def WGS84toElevation(self, points, infos=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', only_local=False):
+  def WGS84toElevation(self, points, infos=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
     if not infos:
       if not self.MapInfos or not self.Map:
         return None
@@ -2936,7 +2940,7 @@ class WGS84Elevation(WGS84Map):
           return None
     else:
       if self.Tiles is not None:
-        if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, only_local) is None:
+        if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local) is None:
           return None
         try:
           return list(self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, self.Tiles[self.Tiles.Id, (row, col)](20), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), ))
@@ -2944,7 +2948,7 @@ class WGS84Elevation(WGS84Map):
           return None
       else:
         try:
-          egen = self.ElevationGenerator(infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, only_local=only_local)
+          egen = self.ElevationGenerator(infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local)
           if egen:
             return list(egen(lat, lon) for (lat, lon) in points)
           else:
@@ -3017,7 +3021,7 @@ class WGS84Elevation(WGS84Map):
               m[pos: pos + _w + 2] = tiles[c][r][_l_0: _l_1 + 2]
     return m
 
-  def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', threads=10, *, stop=False):
+  def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, threads=10, *, stop=False):
     if not isinstance(points, (list, tuple)):
       return None
     headers = {}
@@ -3065,7 +3069,7 @@ class WGS84Elevation(WGS84Map):
             break
         uri = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[ind1:ind2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:ind2])})
         try:
-          rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+          rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
           try:
             if rep.code == '200' and rep.body:
               ele[ind1:ind2] = _proc_json(rep.body)
@@ -3074,8 +3078,8 @@ class WGS84Elevation(WGS84Map):
           except:
             uri1 = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[ind1:(ind1+ind2)//2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:(ind1+ind2)//2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:(ind1+ind2)//2])})
             uri2 = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[(ind1+ind2)//2:ind2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[(ind1+ind2)//2:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[(ind1+ind2)//2:ind2])})
-            rep1 = HTTPRequest(uri1, 'GET', headers, pconnection=pconnection)
-            rep2 = HTTPRequest(uri2, 'GET', headers, pconnection=pconnection)
+            rep1 = HTTPRequest(uri1, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
+            rep2 = HTTPRequest(uri2, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
             try:
               ele[ind1:(ind1+ind2)//2] = _proc_json(rep1.body)
             except:
@@ -3103,7 +3107,7 @@ class WGS84Elevation(WGS84Map):
         return None
     return ele      
 
-  def GenerateBil32Map(self, infos, minlat, maxlat, minlon, maxlon, nbpoints, key=None, referer=None, user_agent='GPXTweaker', threads=10):
+  def GenerateBil32Map(self, infos, minlat, maxlat, minlon, maxlon, nbpoints, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, threads=10):
     if nbpoints <= 1 or minlat >= maxlat or minlon >= maxlon:
       return False
     dlat = maxlat - minlat
@@ -3126,7 +3130,7 @@ class WGS84Elevation(WGS84Map):
     lats = list(maxlat - (i + 0.5) * res for i in range(nrow))
     lons = list(minlon + (i + 0.5) * res for i in range(ncol))
     points = list ((lat, lon) for lat in lats for lon in lons)
-    eles = self.RequestElevation(infos, points, key, referer, user_agent, threads)
+    eles = self.RequestElevation(infos, points, key, referer, user_agent, basic_auth, threads)
     if not eles:
       return False
     self.Map = b''.join(struct.pack('<f', (ele if ele is not None else infos.get('nodata', 0))) for ele in eles)
@@ -3155,7 +3159,7 @@ class WGS84Itinerary(WGS84Map):
     else:
       return None
 
-  def RequestItinerary(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+  def RequestItinerary(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
     if not isinstance(points, (list, tuple)):
       return None
     if len(points) != 2:
@@ -3173,7 +3177,7 @@ class WGS84Itinerary(WGS84Map):
       return None
     uri = infos['source'].format_map({'key': key or '', 'lats': points[0][0], 'lons': points[0][1], 'late': points[1][0], 'lone': points[1][1]})
     try:
-      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
       if not rep.body:
@@ -3213,7 +3217,7 @@ class WGS84ReverseGeocoding():
     else:
       return j
 
-  def RequestDescription(self, infos, point, key=None, referer=None, user_agent='GPXTweaker', pconnection=None):
+  def RequestDescription(self, infos, point, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
     if not isinstance(point, (list, tuple)):
       return None
     if len(point) != 2:
@@ -3229,7 +3233,7 @@ class WGS84ReverseGeocoding():
       return None
     uri = infos['source'].format_map({'key': key or '', 'lat': point[0], 'lon': point[1]})
     try:
-      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection)
+      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
       if not rep.body:
@@ -4461,22 +4465,6 @@ class WebMapping():
 class GeotaggedMedia():
 
   MP4_EPOCH = 2082844800
-  DATETIME_FORMAT = ''
-  try:
-    if locale.getlocale()[0][:2].lower() == 'fr':
-      DATETIME_FORMAT = '%d/%m/%Y %H:%M:%S'
-      @staticmethod
-      def DATETIME_CONVERT(dt):
-        dtc = dt.split()
-        dtc[0] = '/'.join(dtc[0].split(':')[::-1])
-        return ' '.join(dtc)
-  except:
-    pass
-  if not DATETIME_FORMAT:
-    DATETIME_FORMAT = '%Y/%m/%d %H:%M:%S'
-    @staticmethod
-    def DATETIME_CONVERT(dt):
-      return dt.replace(':', '/', 2)
   
   def __init__(self, folders, photos=True, videos=True, box=None):
     self.Folders = folders
@@ -4593,7 +4581,7 @@ class GeotaggedMedia():
       if dtpos is not None:
         try:
           f.seek(dtpos)
-          datetime = GeotaggedMedia.DATETIME_CONVERT(f.read(20).strip(b'\x00').decode())
+          datetime = time.strftime('%x %X', time.strptime(f.read(20).strip(b'\x00').decode(), '%Y:%m:%d %H:%M:%S'))
         except:
           pass
     except:
@@ -4710,7 +4698,7 @@ class GeotaggedMedia():
       f.seek(mvhd[0] + 4) 
       datetime = struct.unpack('>I', f.read(4))[0]
       if datetime:
-        datetime = time.strftime(GeotaggedMedia.DATETIME_FORMAT, time.localtime(struct.unpack('>I', f.read(4))[0] - GeotaggedMedia.MP4_EPOCH))
+        datetime = time.strftime('%x %X', time.localtime(struct.unpack('>I', f.read(4))[0] - GeotaggedMedia.MP4_EPOCH))
       else:
         datetime = ''
       matrix = None
@@ -14517,6 +14505,12 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent', 'local_pattern', 'local_store', 'local_expiration', 'only_local'):
             s[2][field] = value
+          elif field == '"user_colon_password"':
+            if value:
+              if len(value) < 2 or value[:1] != '"' or value [-1:] != '"':
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              s[2]['basic_auth'] = value[1:-1]
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -14559,6 +14553,12 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent'):
             s[2][field] = value
+          elif field == '"user_colon_password"':
+            if value:
+              if len(value) < 2 or value[:1] != '"' or value [-1:] != '"':
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              s[2]['basic_auth'] = value[1:-1]
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -14600,6 +14600,12 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'handling':
           if field in ('key', 'referer', 'user_agent'):
             s[2][field] = value
+          elif field == '"user_colon_password"':
+            if value:
+              if len(value) < 2 or value[:1] != '"' or value [-1:] != '"':
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              s[2]['basic_auth'] = value[1:-1]
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -14611,7 +14617,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg', launch=None):
+  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, record_map=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg', launch=None):
     self = object.__new__(cls)
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
@@ -14828,6 +14834,7 @@ class GPXTweakerWebInterfaceServer():
       if bmap:
         self.Mode = 'map'
         self.Map = WebMercatorMap()
+        rec = False
         if '://' in bmap or ':\\' in bmap:
           if not self.Map.LoadMap(bmap, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
             self.log(0, 'berror')
@@ -14845,6 +14852,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'berror')
             return None
           self.TilesSets = [[self.MapSets[self.MapSet][0]]]
+          rec = record_map is not None
         if not hasattr(self.Map, 'WMS_BBOX'):
           bbox = dict(zip(('{minx}', '{miny}', '{maxx}', '{maxy}'), self.Map.MapInfos['bbox'].split(',')))
         else:
@@ -14854,6 +14862,8 @@ class GPXTweakerWebInterfaceServer():
         self.MTopy = self.VMaxy
         map_minlat, map_minlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
         map_maxlat, map_maxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
+        if rec:
+          self.Map.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'Map[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.MapSets[self.MapSet][0], map_minlat, map_minlon, map_maxlat, map_maxlon, self.Map.MapInfos['width'], self.Map.MapInfos['height'], time.time(), {'image/jpeg': 'jpg', 'image/png': 'png'}.get(self.Map.MapInfos['format'], 'img'))))
         if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
           if minlat < map_minlat or maxlat > map_maxlat or minlon < map_minlon or maxlon > map_maxlon:
             self.log(0, 'berror4')
@@ -14912,9 +14922,11 @@ class GPXTweakerWebInterfaceServer():
               self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
               self.ElevationsProviders = [[self.ElevationMapSets[self.ElevationMapSet][0]]]
               self.log(1, 'elevation', self.ElevationMapSets[self.ElevationMapSet][0])
+              if record_map:
+                self.Elevation.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'ElevationMap[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.ElevationMapSets[self.ElevationMapSet][0], *map(float, self.Elevation.MapInfos['bbox'].split(',')), self.Elevation.MapInfos['width'], self.Elevation.MapInfos['height'], time.time(), {'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz'}.get(self.Elevation.MapInfos['format'], 'img'))))
             else:
               self.ElevationProvider = None
-              self.log(0, 'eerror', self.ElevationMap[0])
+              self.log(0, 'eerror', emap)
       elif len(self.ElevationsProviders) > 0:
         self.ElevationProviderSel = 0
         self.Elevation = WGS84Elevation(self.ElevationTilesBufferSize, self.TilesBufferThreads)
@@ -15421,6 +15433,7 @@ if __name__ == '__main__':
   parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: (list((p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 4), default='')
   parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda s: (list((p,q) for [p,q] in (map(int, map(str.strip, s.split(','))),))[0]) if s != '' else (None, ) * 2), default='')
   parser.add_argument('--dpi', '-d', metavar='DPI', help=LSTRINGS['parser']['dpi'], type=(lambda d: (int(d) if not '.' in d else float(d)) if d != '' else None), default='')
+  parser.add_argument('--record', '-r', metavar='RECORD', help=LSTRINGS['parser']['record'], default=None)
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
@@ -15428,7 +15441,7 @@ if __name__ == '__main__':
     if args.uri.rpartition('.')[2] != 'gpx':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'), launch=(not args.noopen))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'), launch=(not args.noopen))
   if GPXTweakerInterface is None:
     exit()
   print(LSTRINGS['parser']['keyboard'])
