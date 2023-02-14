@@ -46,7 +46,7 @@ Le module fournit diverses classes destinées à la manipulation directe de cont
 
 Syntaxe:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record RECORD] [--noopen|-n] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record|-r RECORD] [--noopen|-n] [--v|-v VERBOSITY]  
 où:  
   -h: afficher l'aide  
   URI: le chemin d'accès à la trace (en local ou, en lecture seule, sur un serveur) ou argument pas mentionné pour démarrer avec l'explorateur de traces  
@@ -124,7 +124,7 @@ The module provides different classes designed for direct handling of cartograph
 
 Syntax:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record RECORD] [--noopen|-n] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record|-r RECORD] [--noopen|-n] [--v|-v VERBOSITY]  
 where:  
   -h: shows the help  
   URI: the path to the track (on local or, in read only mode, on a server) or argument not mentioned to start with the explorer of tracks  
