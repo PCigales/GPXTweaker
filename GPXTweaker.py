@@ -1757,7 +1757,8 @@ class TilesCache():
         self.Id = None
         self.Infos = None
         self.GCondition.notify_all()
-        self.log(0, 'fail', *rid)
+        if rid[0] != -1:
+          self.log(0, 'fail', *rid)
         return False
     return True
 
@@ -14922,7 +14923,7 @@ class GPXTweakerWebInterfaceServer():
               self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=None)
               self.ElevationsProviders = [[self.ElevationMapSets[self.ElevationMapSet][0]]]
               self.log(1, 'elevation', self.ElevationMapSets[self.ElevationMapSet][0])
-              if record_map:
+              if record_map is not None:
                 self.Elevation.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'ElevationMap[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.ElevationMapSets[self.ElevationMapSet][0], *map(float, self.Elevation.MapInfos['bbox'].split(',')), self.Elevation.MapInfos['width'], self.Elevation.MapInfos['height'], time.time(), {'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz'}.get(self.Elevation.MapInfos['format'], 'img'))))
             else:
               self.ElevationProvider = None
