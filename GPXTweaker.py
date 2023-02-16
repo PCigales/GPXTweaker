@@ -2031,7 +2031,7 @@ class WebMercatorMap(WGS84WebMercator):
     except:
       return False
     if not os.path.exists(infopath):
-      if update_json:
+      if update_json and not update_dict:
         try:
           Path(os.path.dirname(infopath)).mkdir(parents=True, exist_ok=True)
         except:
@@ -2096,8 +2096,12 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       if not infos.get('source'):
         return False
-      if '' in map(lambda k: infos.get(k) or '', ('layer', 'scale', 'topx', 'topy', 'width', 'height')):
+      if '' in map(lambda k: infos.get(k) or '', ('layer', 'topx', 'topy', 'width', 'height')):
         return False
+      if not infos.get('scale'):
+        if '{wmts}' in infos['source']:
+          return False
+        infos['scale'] = infos['basescale'] / (2 ** int(infos['matrix']))
     except:
       return False
     if lat is not None and lon is not None :
@@ -5340,7 +5344,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
-            if self.server.Interface.EMode == 'tiles' and self.server.Interface.Elevation.Tiles is not None and self.server.Interface.ElevationProviderSel != self.server.Interface.Elevation.Tiles.Id[0]:
+            if self.server.Interface.EMode == 'tiles' and self.server.Interface.Elevation.Tiles is not None and (self.server.Interface.Elevation.Tiles.Id is None or self.server.Interface.ElevationProviderSel != self.server.Interface.Elevation.Tiles.Id[0]):
               _send_err_fail()
               continue
             lpoints = req.body.splitlines()
