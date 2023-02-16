@@ -1791,7 +1791,7 @@ class WebMercatorMap(WGS84WebMercator):
       if nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
         nmap = dmap
       infos['crs'] = self.CRS
-      infos['format'] = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt'}.get(uri.replace('.xz', '').rsplit('.', 1)[-1][0:3], 'image')
+      infos['format'] = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff'}.get(uri.replace('.xz', '').rsplit('.', 1)[-1][0:3], 'image')
     else:
       try:
         if nmap[:4] == b'\x89PNG':
@@ -1804,6 +1804,13 @@ class WebMercatorMap(WGS84WebMercator):
           cpos = nmap.rfind(b'GPXTweaker: ')
           if cpos >= 0:
             infos = json.loads(nmap[cpos+12:cpos-2+int.from_bytes(nmap[cpos-2:cpos], 'big')])
+          else:
+            raise
+        elif nmap[:4] in (b'\x49\x49\x2a\x00', b'\x4d\x4d\x00\x2a'):
+          ba = {b'\x49\x49\x2a\x00': '<', b'\x4d\x4d\x00\x2a': '>'}[nmap[:4]]
+          cpos = nmap.find(b'GPXTweaker: ')
+          if cpos >= 0:
+            infos = json.loads(nmap[cpos+12:cpos+struct.unpack(ba + 'L', nmap[cpos-20:cpos-16])[0]])
           else:
             raise
         elif nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
@@ -1851,6 +1858,33 @@ class WebMercatorMap(WGS84WebMercator):
         comment = ('GPXTweaker: ' + json.dumps(self.MapInfos)).encode('ISO-8859-1')
         f.write(b'\xff\xfe' + (len(comment) + 2).to_bytes(2, 'big') + comment)
         f.write(self.Map[-2:])
+      elif self.Map[:4] in (b'\x49\x49\x2a\x00', b'\x4d\x4d\x00\x2a'):
+        ba = {b'\x49\x49\x2a\x00': '<', b'\x4d\x4d\x00\x2a': '>'}[self.Map[:4]]
+        L = ba + 'L'
+        H = ba + 'H'
+        ifd = struct.unpack(L, self.Map[4:8])[0]
+        f = open(uri, 'wb')
+        cpos = self.Map.find(b'GPXTweaker: ')
+        if cpos >= 0:
+          self.Map = self.Map[:cpos-26]
+        while True:
+          ne = struct.unpack(H, self.Map[ifd:ifd+2])[0]
+          nifd =  struct.unpack(L, self.Map[ifd+2+12*ne:ifd+6+12*ne])[0]
+          if cpos < 0:
+            if not nifd:
+              break
+          else:
+            if nifd == cpos - 26:
+              self.Map = struct.pack(L, 0).join((self.Map[:ifd+2+12*ne], self.Map[:ifd+6+12*ne]))
+              break
+          ifd = nifd
+        f.write(self.Map[:ifd+2+12*ne])
+        f.write(struct.pack(L, len(self.Map)))
+        f.write(self.Map[ifd+6+12*ne:])
+        comment = ('GPXTweaker: ' + json.dumps(self.MapInfos)).encode('utf-8')
+        if len(comment) % 2:
+          comment += b'\x00'
+        f.write(struct.pack(H + 'HHLLL', 1, 37510, 7, 8 + len(comment), len(self.Map) + 18, 0) + b'\x55\x4e\x49\x43\x4F\x44\x45\x00' + comment)
       elif self.MapInfos['format'] == 'image/x-bil;bits=32' or self.MapInfos['format'] == 'image/hgt':
         if uri[-3:].lower() != '.xz':
           uri = uri + '.xz'
@@ -14862,7 +14896,7 @@ class GPXTweakerWebInterfaceServer():
         map_minlat, map_minlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
         map_maxlat, map_maxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
         if rec:
-          self.Map.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'Map[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.MapSets[self.MapSet][0], map_minlat, map_minlon, map_maxlat, map_maxlon, self.Map.MapInfos['width'], self.Map.MapInfos['height'], time.time(), {'image/jpeg': 'jpg', 'image/png': 'png'}.get(self.Map.MapInfos['format'], 'img'))))
+          self.Map.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'Map[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.MapSets[self.MapSet][0], map_minlat, map_minlon, map_maxlat, map_maxlon, self.Map.MapInfos['width'], self.Map.MapInfos['height'], time.time(), {'image/jpeg': 'jpg', 'image/png': 'png', 'image/tiff': 'tif', 'image/geotiff': 'tif'}.get(self.Map.MapInfos['format'], 'img'))))
         if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
           if minlat < map_minlat or maxlat > map_maxlat or minlon < map_minlon or maxlon > map_maxlon:
             self.log(0, 'berror4')
