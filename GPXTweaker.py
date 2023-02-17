@@ -2806,7 +2806,6 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
           l = 9
           t[257:] = [b'']
           break
-          continue
         g = t[c][:1]
         t.append(t.pop() + g)
         d.write(t[c])
