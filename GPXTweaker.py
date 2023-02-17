@@ -1810,7 +1810,7 @@ class WebMercatorMap(WGS84WebMercator):
           ba = {b'\x49\x49\x2a\x00': '<', b'\x4d\x4d\x00\x2a': '>'}[nmap[:4]]
           cpos = nmap.find(b'GPXTweaker: ')
           if cpos >= 0:
-            infos = json.loads(nmap[cpos+12:cpos+struct.unpack(ba + 'L', nmap[cpos-20:cpos-16])[0]])
+            infos = json.loads(nmap[cpos+12:cpos-8+struct.unpack(ba + 'L', nmap[cpos-20:cpos-16])[0]])
           else:
             raise
         elif nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
@@ -1875,16 +1875,14 @@ class WebMercatorMap(WGS84WebMercator):
               break
           else:
             if nifd == cpos - 26:
-              self.Map = struct.pack(L, 0).join((self.Map[:ifd+2+12*ne], self.Map[:ifd+6+12*ne]))
+              self.Map = struct.pack(L, 0).join((self.Map[:ifd+2+12*ne], self.Map[ifd+6+12*ne:]))
               break
           ifd = nifd
         f.write(self.Map[:ifd+2+12*ne])
         f.write(struct.pack(L, len(self.Map)))
         f.write(self.Map[ifd+6+12*ne:])
         comment = ('GPXTweaker: ' + json.dumps(self.MapInfos)).encode('utf-8')
-        if len(comment) % 2:
-          comment += b'\x00'
-        f.write(struct.pack(H + 'HHLLL', 1, 37510, 7, 8 + len(comment), len(self.Map) + 18, 0) + b'\x55\x4e\x49\x43\x4F\x44\x45\x00' + comment)
+        f.write(struct.pack(H + 'HHLLL', 1, 37510, 7, 8 + len(comment), len(self.Map) + 18, 0) + b'\x55\x4e\x49\x43\x4F\x44\x45\x00' + comment + (b'\x00' if len(comment) % 2 else b''))
       elif self.MapInfos['format'] == 'image/x-bil;bits=32' or self.MapInfos['format'] == 'image/hgt':
         if uri[-3:].lower() != '.xz':
           uri = uri + '.xz'
@@ -2688,15 +2686,41 @@ class WGS84Map(WebMercatorMap):
     return (lon, lat)
 
 
-class TIFFHandler:
+class TIFFHandlerMeta(type):
+
+  def __del__(cls):
+    cls.__end__()
+
+class TIFFHandler(metaclass=TIFFHandlerMeta):
 
   HEADER = {b'\x49\x49\x2a\x00': '<', b'\x4d\x4d\x00\x2a': '>'}
   TAGS_SHORT = {258: 'bits_per_sample', 259: 'compression' , 277: 'samples_per_pixel', 284: 'planar_configuration', 317: 'predictor', 339: 'sample_format'}
   TAGS_SHORT_LONG = {256: 'image_width', 257: 'image_length', 273: 'strip_offsets', 278: 'rows_per_strip', 279: 'strip_byte_counts', 322: 'tile_width', 323: 'tile_length', 325: 'tile_byte_counts'}
   TAGS_LONG = {324: 'tile_offsets'}
+  
+  kernel32 = None
 
-  def __new__(cls, image):
+  @classmethod
+  def __end__(cls):
+    if cls.kernel32 is not None:
+      try:
+        cls.gdiplus.GdiplusShutdown(cls.gdiplus_token)
+      except:
+        pass
+
+  def __new__(cls, image, load=True):
     self = object.__new__(cls)
+    self.image = image
+    if load:
+      if cls.load(self):
+        return self
+      else:
+        return None
+    else:
+      return self
+
+  def load(self):
+    image = self.image
     try:
       ba = TIFFHandler.HEADER.get(image[:4], None)
       if ba is None:
@@ -2747,9 +2771,8 @@ class TIFFHandler:
       else:
         raise
     except:
-      return None
-    self.image = image
-    return self
+      return False
+    return True
 
   def _none_decompress(self, index):
     o = self.offsets[index]
@@ -2792,7 +2815,7 @@ class TIFFHandler:
           l += 1
           break
 
-  def convert(self):
+  def decode(self):
     try:
       if self.compression == 1:
         _decompress = self._none_decompress
@@ -2831,7 +2854,63 @@ class TIFFHandler:
         raise
     except:
       return False
-    self.converted = bytes(image.getvalue())
+    self.decoded = bytes(image.getvalue())
+    return True
+
+  def convert(self):
+    cls = self.__class__
+    if cls.kernel32 is None:
+      cls.kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
+      cls.GlobalAlloc = cls.kernel32.GlobalAlloc
+      cls.GlobalAlloc.argtypes = ctypes.wintypes.UINT, ctypes.c_ssize_t
+      cls.GlobalAlloc.restype = ctypes.wintypes.HANDLE
+      cls.GlobalLock = cls.kernel32.GlobalLock
+      cls.GlobalLock.argtypes = ctypes.wintypes.HGLOBAL, 
+      cls.GlobalLock.restype = ctypes.wintypes.LPVOID
+      cls.GlobalUnlock = cls.kernel32.GlobalUnlock
+      cls.GlobalUnlock.argtypes = ctypes.wintypes.HGLOBAL, 
+      cls.GlobalUnlock.restype = ctypes.wintypes.LPVOID
+      cls.GlobalSize = cls.kernel32.GlobalSize
+      cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL, 
+      cls.GlobalSize.restype = ctypes.c_ssize_t
+      cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
+      cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, "Release")
+      cls.CreateStreamOnHGlobal = cls.ole32.CreateStreamOnHGlobal
+      cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.c_bool, ctypes.c_void_p
+      cls.gdiplus = ctypes.WinDLL('gdiplus',  use_last_error=True)
+      cls.gdiplus_token = ctypes.wintypes.ULONG()
+      cls.gdiplus.GdiplusStartup(ctypes.byref(cls.gdiplus_token), ctypes.c_char_p(ctypes.string_at(ctypes.addressof(ctypes.c_uint(1)),ctypes.sizeof(ctypes.c_uint)) + b'\x00' * 24), None)
+      cls.png_clsid = struct.pack('@LHH8B', *struct.unpack('>LHH8B', int('557CF406-1A04-11D3-9A73-0000F81EF32E'.replace('-', ''), 16).to_bytes(16, 'big')))
+    try:
+      h = cls.GlobalAlloc(0x42, len(self.image))
+      hl = cls.GlobalLock(h)
+      ctypes.memmove(hl, self.image, len(self.image))
+      cls.GlobalUnlock(h)
+      ist = ctypes.c_void_p() 
+      cls.CreateStreamOnHGlobal(h, True, ctypes.byref(ist))
+      i = ctypes.c_void_p()
+      if cls.gdiplus.GdipLoadImageFromStream(ist, ctypes.byref(i)):
+        i = None
+        raise
+      h_ = cls.GlobalAlloc(0x42, 0)
+      ist_ = ctypes.c_void_p()
+      cls.CreateStreamOnHGlobal(h_, True, ctypes.byref(ist_))
+      if cls.gdiplus.GdipSaveImageToStream(i, ist_, ctypes.c_char_p(b'\x06\xf4|U\x04\x1a\xd3\x11\x9as\x00\x00\xf8\x1e\xf3.'), None):
+        raise
+      hl_ = cls.GlobalLock(h_)
+      self.converted = ctypes.string_at(hl_, cls.GlobalSize(h_))
+      cls.GlobalUnlock(h_)
+      cls.gdiplus.GdipDisposeImage(i)
+      cls.Release(ist)
+      cls.Release(ist_)
+    except:
+      return False
+    finally:
+      cls.Release(ist)
+      if i is not None:
+        cls.GlobalUnlock(h_)
+        cls.gdiplus.GdipDisposeImage(i)
+        cls.Release(ist_)
     return True
 
 
@@ -2918,22 +2997,22 @@ class WGS84Elevation(WGS84Map):
 
   def RetrieveTile(self, infos, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local, pconnection=None, action=None, only_save=False):
     tile = super().RetrieveTile(infos, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local, pconnection, action, only_save)
-    if tile is not None and infos.get('format') in ('image/tiff', 'image/geotiff'):
+    if tile is not None and not isinstance(tile, bool) and infos.get('format') in ('image/tiff', 'image/geotiff'):
       try:
         th = TIFFHandler(tile)
-        th.convert()
+        th.decode()
         if th.bits_per_sample == 16:
           if th.byte_order == '<':
-            a = array.array('h', th.converted)
+            a = array.array('h', th.decoded)
             a.byteswap()
-            th.converted = a.tobytes()
+            th.decoded = a.tobytes()
         else:
           raise
         if th.sample_format != 2:
           raise
       except:
         tile = None
-      tile = th.converted
+      tile = th.decoded
     return tile
 
   def ElevationGenerator(self, infos_base=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
@@ -5059,7 +5138,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 _send_err_fail()
               else:
                 try:
-                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': ('.jpg' if self.server.Interface.Map.TilesInfos.get('format') == 'image/jpeg' else ('.png' if self.server.Interface.Map.TilesInfos.get('format') == 'image/png' else '.img')), 'level': l1}).encode('utf-8')
+                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'level': l1}).encode('utf-8')
                   _send_resp('application/json; charset=utf-8')
                 except:
                   _send_err_fail()
@@ -5081,7 +5160,16 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
           elif req.path.lower()[:8] == '/map/map':
             resp_body = self.server.Interface.Map.Map
             if resp_body:
-              _send_resp(self.server.Interface.Map.MapInfos.get('format', 'image/*'))
+              if self.server.Interface.Map.MapInfos.get('format') in ('image/tiff', 'image/geotiff') and req.path.lower()[8:12] == '.png':
+                th = TIFFHandler(resp_body, False)
+                if th.convert():
+                  resp_body = th.converted
+                  del th
+                  _send_resp(self.server.Interface.Map.MapInfos.get('format', 'image/*'))
+                else:
+                  _send_err_nf()
+              else:
+                _send_resp(self.server.Interface.Map.MapInfos.get('format', 'image/*'))
             else:
               _send_err_nf()
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
@@ -6354,6 +6442,9 @@ class GPXTweakerWebInterfaceServer():
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
   '          tile.id = "map";\r\n' \
+  '          if (text == ".tif") {\r\n' \
+  '            tile.onerror =  function(e) {tile.onerror = null; text = ".png"; tile.src = "/map/" + tile.id + text;};\r\n' \
+  '          }\r\n' \
   '          tile.src = "/map/" + tile.id + text;\r\n' \
   '        } else {\r\n' \
   '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
@@ -15075,7 +15166,7 @@ class GPXTweakerWebInterfaceServer():
       return False
     if defx is None or defy is None:
       defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ({'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -15279,7 +15370,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ('.jpg' if self.Map.MapInfos.get('format') == 'image/jpeg' else ('.png' if self.Map.MapInfos.get('format') == 'image/png' else '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ({'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize))
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
