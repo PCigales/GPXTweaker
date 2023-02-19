@@ -219,6 +219,7 @@ FR_STRINGS = {
     'jsegment': 'Segment',
     'jtracks': 'Traces',
     'jfile': 'Fich',
+    'jexplorer': 'double-clic pour afficher dans l\'explorateur de fichier',
     'jfolder': 'Répe',
     'jperiod': 'Péri',
     'jcontent': 'Cont',
@@ -275,6 +276,11 @@ FR_STRINGS = {
     'jmmedia1': 'Récupération des données des médias en cours...',
     'jmmedia2': 'Récupération des données des médias effectuée',
     'jmmedia3': 'Échec de la récupération des données des médias',
+    'jmdownmap1': 'Préparation de la carte en cours (phase 1/3)...',
+    'jmdownmap2': 'Préparation de la carte en cours (phase 2/3)...',
+    'jmdownmap3': 'Préparation de la carte en cours (phase 3/3)...',
+    'jmdownmap4': 'Carte prête pour téléchargement (%s trace(s) - %s x %s)',
+    'jmdownmap5': 'Échec de la préparation de la carte',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -517,6 +523,7 @@ EN_STRINGS = {
     'jsegment': 'Segment',
     'jtracks': 'Tracks',
     'jfile': 'File',
+    'jexplorer': 'double-click to display in the file explorer',
     'jfolder': 'Fold',
     'jperiod': 'Peri',
     'jcontent': 'Cont',
@@ -570,6 +577,11 @@ EN_STRINGS = {
     'jmmedia1': 'Retrieval of the data of the media in progress...',
     'jmmedia2': 'Retrieval of the data of the media completed',
     'jmmedia3': 'Failure of the retrieval of the data of the media',
+    'jmdownmap1': 'Preparation of the map in progress (phase 1/3)...',
+    'jmdownmap2': 'Preparation of the map in progress (phase 2/3)...',
+    'jmdownmap3': 'Preparation of the map in progress (phase 3/3)...',
+    'jmdownmap4': 'Map ready for download (%s track(s) - %s x %s)',
+    'jmdownmap5': 'Failure of the preparation of the map',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -5460,6 +5472,24 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             finally:
               self.server.Interface.SLock.release()
             _send_resp_tr('GPXTweaker.html')
+          elif req.path.lower()[:9] == '/explorer':
+            if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
+              _send_err_bad()
+              continue
+            try:
+              t_type, t_ind = req.path.split('?')[1].split('-')
+              t_ind = int(t_ind)
+              if t_type.lower() == 'folder':
+                os.startfile(self.server.Interface.Folders[t_ind], 'explore')
+              elif t_type.lower() == 'file':
+                subprocess.run('explorer /select,' + self.server.Interface.Tracks[t_ind][0])
+              else:
+                raise
+              resp_body = b''
+              _send_resp('text/html; charset=utf-8')
+            except:
+              _send_err_fail()
+              continue
           else:
             _send_err_nf()
         elif req.method == 'POST':
@@ -13848,6 +13878,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        let msgn = show_msg("{#jmdownmap1#}", 0);\r\n' \
   '        let rleft = parseInt(vleft / twidth);\r\n' \
   '        let rright = parseInt(vright / twidth);\r\n' \
   '        let rtop = parseInt(vtop / theight);\r\n' \
@@ -13861,7 +13892,7 @@ class GPXTweakerWebInterfaceServer():
   '            let tcs = getComputedStyle(trck);\r\n' \
   '            let pcs = getComputedStyle(document.getElementById("path" + t.toString()));\r\n' \
   '            let acs = getComputedStyle(document.getElementById("patharrows" + t.toString()));\r\n' \
-  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?) (dy=.*?) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"})]);\r\n' \
+  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?) (dy=.*?) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"}))]);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        let cnv2d = document.createElement("canvas");\r\n' \
@@ -13876,33 +13907,60 @@ class GPXTweakerWebInterfaceServer():
   '        let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        for (const tdata of trdata) {\r\n' \
   '          let trck = new Image();\r\n' \
-  '          let url = URL.createObjectURL(tdata[2]);\r\n' \
-  '          tdata[2] = null;\r\n' \
-  '          trck.onload = function (e) {URL.revokeObjectURL(url); ctx.drawImage(trck, tdata[0], tdata[1]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '          trck.onerror = function (e) {URL.revokeObjectURL(url);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '          trck.src = url;\r\n' \
+  '          trck.onload = function (e) {URL.revokeObjectURL(tdata[2]); ctx.drawImage(trck, tdata[0], tdata[1]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          trck.onerror = function (e) {URL.revokeObjectURL(tdata[2]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          trck.src = tdata[2];\r\n' \
   '        }\r\n' \
   '        await prom;\r\n' \
+  '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
   '        ctx.globalCompositeOperation = "destination-over";\r\n' \
   '        ctx.filter = filter;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '        let tsuf = text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
-  '        for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '          for (let col=rleft; col<=rright; col++) {\r\n' \
-  '            let tile = new Image();\r\n' \
-  '            tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '            tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '            tile.crossOrigin = "anonymous";\r\n' \
-  '            tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          let tile = new Image();\r\n' \
+  '          tile.onload = function (e) {ctx.drawImage(tile, Math.round(- vleft * zoom), Math.round(- vtop * zoom), Math.round((twidth - vleft) * zoom) - Math.round(- vleft * zoom), Math.round((theight - vtop) * zoom) - Math.round(- vtop * zoom)); prom_res();};\r\n' \
+  '          tile.onerror = function (e) {prom_res();};\r\n' \
+  '          tile.src = "/map/map" + text;\r\n' \
+  '        } else {\r\n' \
+  '          let tsuf = text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '          for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '            for (let col=rleft; col<=rright; col++) {\r\n' \
+  '              let tile = new Image();\r\n' \
+  '              tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '              tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '              tile.crossOrigin = "anonymous";\r\n' \
+  '              tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        await prom;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
-  '        ctx.filter = "none";\r\n' \
-  '        ctx.fillStyle = "white";\r\n' \
-  '        ctx.fillRect(0, 0, cnv2d.width, cnv2d.height);\r\n' \
-  '        cnv2d.toBlob(function(blob) {let url = URL.createObjectURL(blob); let a = document.createElement("a"); a.href = url; a.download = "map"; a.click(); URL.revokeObjectURL(url);});\r\n' \
+  '        msgn = show_msg("{#jmdownmap3#}", 0, msgn);\r\n' \
+  '        let url = null;\r\n' \
+  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        cnv2d.toBlob(function (blob) {url = URL.createObjectURL(blob); prom_res();});\r\n' \
+  '        await prom;\r\n' \
+  '        if (url) {\r\n' \
+  '          let a = document.createElement("a");\r\n' \
+  '          a.href = url;\r\n' \
+  '          a.download = "map";\r\n' \
+  '          show_msg("{#jmdownmap4#}".replace("%s", trks.length.toString()).replace("%s", cnv2d.width.toString()).replace("%s", cnv2d.height.toString()), 5, msgn);\r\n' \
+  '          a.click();\r\n' \
+  '          URL.revokeObjectURL(url);\r\n' \
+  '        } else {;\r\n' \
+  '          show_msg("{#jmdownmap5#}", 10, msgn);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function open_explorer(target) {\r\n' \
+  '        if (target.slice(0, 6) == "folder") {\r\n' \
+  '          xhrex.open("GET", "/explorer?folder-" + target.substring(6));\r\n' \
+  '        } else if (target.slice(-4) == "file") {\r\n' \
+  '          if (window.getSelection) {window.getSelection().removeAllRanges();}\r\n' \
+  '          xhrex.open("GET", "/explorer?file-" + target.slice(5, -4));\r\n' \
+  '        } else {return;}\r\n' \
+  '        xhrex.setRequestHeader("If-Match", sessionid);\r\n' \
+  '        xhrex.send();\r\n' \
   '      }\r\n' \
   '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
@@ -14003,6 +14061,7 @@ class GPXTweakerWebInterfaceServer():
   '      var xhrep = new XMLHttpRequest();\r\n' \
   '      xhrep.addEventListener("error", error_epcb);\r\n' \
   '      var xhrtr = new XMLHttpRequest();\r\n' \
+  '      var xhrex = new XMLHttpRequest();\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
   '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;">\r\n' \
@@ -14321,7 +14380,8 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_TEMPLATE = HTMLExp_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTMLExp_FOLDER_TEMPLATE = \
   '                <input id="folder%s" type="checkbox" checked="" name="folder%s" value="%s">\r\n' \
-  '                <label for="folder%s">%s</label><br>\r\n'
+  '                <label for="folder%s" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">%s</label><br>\r\n'
+  HTMLExp_FOLDER_TEMPLATE = HTMLExp_FOLDER_TEMPLATE.format_map(LSTRINGS['interface'])
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
   '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
@@ -14330,7 +14390,7 @@ class GPXTweakerWebInterfaceServer():
   '                    <span id="track%sfocus">\r\n' \
   '                      <label for="track%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="track%sname" name="track%sname" value="%s"><br>\r\n' \
-  '                      <label for="track%sfile">{jfile}</label>\r\n' \
+  '                      <label for="track%sfile" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">{jfile}</label>\r\n' \
   '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s"><br>\r\n' \
   '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
   '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
