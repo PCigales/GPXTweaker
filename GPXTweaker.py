@@ -170,6 +170,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
+    'jdownloadmap': 'télécharger une carte des traces cochées', 
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
@@ -467,6 +468,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
+    'jdownloadmap': 'download a map of the ticked tracks', 
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
@@ -13832,6 +13834,76 @@ class GPXTweakerWebInterfaceServer():
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '      }\r\n' \
+  '      async function download_map() {\r\n' \
+  '        if (document.getElementById("tset").disabled  || document.getElementById("edit").disabled) {return;}\r\n' \
+  '        \r\n' \
+  '        let b = track_boundaries();\r\n' \
+  '        if (b == null) {return;}\r\n' \
+  '        document.getElementById("tset").disabled = true;\r\n' \
+  '        let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '        let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '        let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '        let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '        if ((vright - vleft) * zoom > 11000 || (vbottom - vtop) * zoom > 11000) {\r\n' \
+  '          document.getElementById("tset").disabled = false;\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let rleft = parseInt(vleft / twidth);\r\n' \
+  '        let rright = parseInt(vright / twidth);\r\n' \
+  '        let rtop = parseInt(vtop / theight);\r\n' \
+  '        let rbottom = parseInt(vbottom / theight);\r\n' \
+  '        let xs = new XMLSerializer;\r\n' \
+  '        let trks = document.getElementById("tracksform").children;\r\n' \
+  '        let trdata = [];\r\n' \
+  '        for (let t=0; t<trks.length; t++) {\r\n' \
+  '          if (trks[t].firstElementChild.checked) {\r\n' \
+  '            let trck = document.getElementById("track" + t.toString());\r\n' \
+  '            let tcs = getComputedStyle(trck);\r\n' \
+  '            let pcs = getComputedStyle(document.getElementById("path" + t.toString()));\r\n' \
+  '            let acs = getComputedStyle(document.getElementById("patharrows" + t.toString()));\r\n' \
+  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?) (dy=.*?) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"})]);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        let cnv2d = document.createElement("canvas");\r\n' \
+  '        let ctx = cnv2d.getContext("2d");\r\n' \
+  '        cnv2d.width = Math.ceil((vright - vleft) * zoom);\r\n' \
+  '        cnv2d.height = Math.ceil((vbottom - vtop) * zoom);\r\n' \
+  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
+  '        if (! filter) {filter = "none"};\r\n' \
+  '        ctx.globalCompositeOperation = "darken";\r\n' \
+  '        let prom_c = trdata.length;\r\n' \
+  '        let prom_res = null;\r\n' \
+  '        let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        for (const tdata of trdata) {\r\n' \
+  '          let trck = new Image();\r\n' \
+  '          let url = URL.createObjectURL(tdata[2]);\r\n' \
+  '          tdata[2] = null;\r\n' \
+  '          trck.onload = function (e) {URL.revokeObjectURL(url); ctx.drawImage(trck, tdata[0], tdata[1]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          trck.onerror = function (e) {URL.revokeObjectURL(url);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          trck.src = url;\r\n' \
+  '        }\r\n' \
+  '        await prom;\r\n' \
+  '        ctx.globalCompositeOperation = "destination-over";\r\n' \
+  '        ctx.filter = filter;\r\n' \
+  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
+  '        let tsuf = text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '        for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '          for (let col=rleft; col<=rright; col++) {\r\n' \
+  '            let tile = new Image();\r\n' \
+  '            tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '            tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '            tile.crossOrigin = "anonymous";\r\n' \
+  '            tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        await prom;\r\n' \
+  '        document.getElementById("tset").disabled = false;\r\n' \
+  '        ctx.filter = "none";\r\n' \
+  '        ctx.fillStyle = "white";\r\n' \
+  '        ctx.fillRect(0, 0, cnv2d.width, cnv2d.height);\r\n' \
+  '        cnv2d.toBlob(function(blob) {let url = URL.createObjectURL(blob); let a = document.createElement("a"); a.href = url; a.download = "map"; a.click(); URL.revokeObjectURL(url);});\r\n' \
+  '      }\r\n' \
   '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
   '          window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);\r\n' \
@@ -13947,7 +14019,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():(event.altKey?magnify_dec():zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?opacity_inc():(event.altKey?magnify_inc():zoom_inc())">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:57.4em;overflow:hidden;text-align:right;font-size:80%;"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="download_map()">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():(event.altKey?magnify_dec():zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?opacity_inc():(event.altKey?magnify_inc():zoom_inc())">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
