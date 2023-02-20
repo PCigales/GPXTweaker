@@ -281,6 +281,7 @@ FR_STRINGS = {
     'jmdownmap3': 'Préparation de la carte en cours (phase 3/3)...',
     'jmdownmap4': 'Carte prête pour téléchargement (%s trace(s) - %s x %s)',
     'jmdownmap5': 'Échec de la préparation de la carte',
+    'jmdownmap6': 'Carte trop grande, dézoom nécessaire',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -582,6 +583,7 @@ EN_STRINGS = {
     'jmdownmap3': 'Preparation of the map in progress (phase 3/3)...',
     'jmdownmap4': 'Map ready for download (%s track(s) - %s x %s)',
     'jmdownmap5': 'Failure of the preparation of the map',
+    'jmdownmap6': 'map too big, zoom out required',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -13876,6 +13878,7 @@ class GPXTweakerWebInterfaceServer():
   '        let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
   '        if ((vright - vleft) * zoom > 11000 || (vbottom - vtop) * zoom > 11000) {\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
+  '          show_msg("{#jmdownmap6#}", 10);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let msgn = show_msg("{#jmdownmap1#}", 0);\r\n' \
@@ -13889,10 +13892,12 @@ class GPXTweakerWebInterfaceServer():
   '        for (let t=0; t<trks.length; t++) {\r\n' \
   '          if (trks[t].firstElementChild.checked) {\r\n' \
   '            let trck = document.getElementById("track" + t.toString());\r\n' \
+  '            let wpt = document.getElementById("waydots" + t.toString());\r\n' \
   '            let tcs = getComputedStyle(trck);\r\n' \
   '            let pcs = getComputedStyle(document.getElementById("path" + t.toString()));\r\n' \
   '            let acs = getComputedStyle(document.getElementById("patharrows" + t.toString()));\r\n' \
-  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?) (dy=.*?) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"}))]);\r\n' \
+  '            let wcs = getComputedStyle(wpt);\r\n' \
+  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?<text id=.*?) (dy=.*?<textPath) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"})), Math.round((prop_to_wmvalue(wpt.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(wpt.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(wpt).replace(/^(.*?)style=".*?"/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke=\\"none\\"").replaceAll("<circle", "<circle r=\\"" + (parseFloat(wcs["stroke-width"].replace("px", "")) * 1.5).toString() + "\\"")], {type: "image/svg+xml"})), URL.createObjectURL(new Blob([xs.serializeToString(wpt).replace(/^(.*?)fill=".*?"/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" fill=\\"black\\" stroke=\\"white\\" stroke-width=\\"" + wcs["stroke-width"].replace("px", "") + "\\" paint-order=\\"stroke\\"").replaceAll("<circle", "<circle r=\\"" + (parseFloat(wcs["stroke-width"].replace("px", "")) * 1.5).toString() + "\\"")], {type: "image/svg+xml"}))]);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        let cnv2d = document.createElement("canvas");\r\n' \
@@ -13910,6 +13915,25 @@ class GPXTweakerWebInterfaceServer():
   '          trck.onload = function (e) {URL.revokeObjectURL(tdata[2]); ctx.drawImage(trck, tdata[0], tdata[1]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          trck.onerror = function (e) {URL.revokeObjectURL(tdata[2]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          trck.src = tdata[2];\r\n' \
+  '        }\r\n' \
+  '        await prom;\r\n' \
+  '        prom_c = trdata.length;\r\n' \
+  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        for (const tdata of trdata) {\r\n' \
+  '          let waypt = new Image();\r\n' \
+  '          waypt.onload = function (e) {URL.revokeObjectURL(tdata[5]); ctx.drawImage(waypt, tdata[3], tdata[4]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          waypt.onerror = function (e) {URL.revokeObjectURL(tdata[5]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          waypt.src = tdata[5];\r\n' \
+  '        }\r\n' \
+  '        await prom;\r\n' \
+  '        ctx.globalCompositeOperation = "lighten";\r\n' \
+  '        prom_c = trdata.length;\r\n' \
+  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        for (const tdata of trdata) {\r\n' \
+  '          let waypt = new Image();\r\n' \
+  '          waypt.onload = function (e) {URL.revokeObjectURL(tdata[6]); ctx.drawImage(waypt, tdata[3], tdata[4]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          waypt.onerror = function (e) {URL.revokeObjectURL(tdata[6]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '          waypt.src = tdata[6];\r\n' \
   '        }\r\n' \
   '        await prom;\r\n' \
   '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
