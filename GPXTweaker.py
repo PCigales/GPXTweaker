@@ -13969,7 +13969,7 @@ class GPXTweakerWebInterfaceServer():
   '          let a = document.createElement("a");\r\n' \
   '          a.href = url;\r\n' \
   '          a.download = "map";\r\n' \
-  '          show_msg("{#jmdownmap4#}".replace("%s", trks.length.toString()).replace("%s", cnv2d.width.toString()).replace("%s", cnv2d.height.toString()), 5, msgn);\r\n' \
+  '          show_msg("{#jmdownmap4#}".replace("%s", trdata.length.toString()).replace("%s", cnv2d.width.toString()).replace("%s", cnv2d.height.toString()), 5, msgn);\r\n' \
   '          a.click();\r\n' \
   '          URL.revokeObjectURL(url);\r\n' \
   '        } else {;\r\n' \
