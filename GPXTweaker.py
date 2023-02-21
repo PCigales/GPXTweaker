@@ -2833,31 +2833,6 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
     except:
       return None
 
-  # def _predictor_revert(self, source, byte_order=None):
-    # try:
-      # if self.predictor == 1:
-        # return source
-      # if self.predictor != 2 or not self.bits_per_sample in (8, 16, 32):
-        # return None
-      # w = self.tile_width if hasattr(self, 'tile_width') else self.image_width
-      # pix = struct.iter_unpack(self.byte_order + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source)
-      # reverted = []
-      # c = (1 << self.bits_per_sample) - 1
-      # col = 0
-      # p = 0
-      # try:
-        # while True:
-          # p = (p + next(pix)[0]) & c
-          # reverted.append(p);
-          # col += 1
-          # if col == w:
-            # col = 0
-            # p = 0
-      # except StopIteration:
-        # return memoryview(struct.pack((byte_order or self.byte_order) + str(len(reverted)) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], *reverted))
-    # except:
-      # return None
-
   def _predictor_revert(self, source, byte_order=None):
     try:
       if self.predictor == 1:
@@ -2891,7 +2866,6 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         return None
 
   def decode(self, byte_order=None):
-    ti = time.time()
     try:
       if self.compression == 1:
         _decompress = self._none_decompress
@@ -2937,7 +2911,6 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
     except:
       return False
     self.decoded = bytes(image.getvalue())
-    print(time.time()-ti)
     return True
 
   def convert(self):
