@@ -2833,6 +2833,14 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
     except:
       return None
 
+  def _adeflate_decompress(self, index):
+    o = self.offsets[index]
+    a = o + self.byte_counts[index]
+    try:
+      return memoryview(zlib.decompress(memoryview(self.image)[o:a]))
+    except:
+      return None
+
   def _predictor_revert(self, source, byte_order=None):
     try:
       if self.predictor == 1:
@@ -2871,6 +2879,8 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         _decompress = self._none_decompress
       elif self.compression == 5:
         _decompress = self._lzw_decompress
+      elif self.compression == 8:
+        _decompress = self._adeflate_decompress
       else:
         raise
       if self.predictor == 1:
