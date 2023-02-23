@@ -3148,7 +3148,7 @@ class WGS84Elevation(WGS84Map):
       _mw = mw * 4
       _mw_r = infos['height'] * _mw
       _nd = struct.pack('<f', infos.get('nodata', 0)) * infos['width'] * infos['height']
-      _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
+      _tiles = [[memoryview(tiles[c][r] or _nd) for r in _r_l] for c in _c_l]
       _l = [(l * _mw, l * _w, (l + 1) * _w) for l in range(infos['height'])]
       for r in _r_l:
         _r = r * _mw_r
@@ -3166,7 +3166,7 @@ class WGS84Elevation(WGS84Map):
       _mw = mw * 2
       _mw_r = infos['height'] * _mw
       _nd = struct.pack('>h', infos.get('nodata', 0)) * infos['width'] * infos['height']
-      _tiles = [list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l]
+      _tiles = [[memoryview(tiles[c][r] or _nd) for r in _r_l] for c in _c_l]
       _l = [(l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height'])]
       for r in _r_l:
         _r = r * _mw_r
