@@ -883,7 +883,7 @@ class HTTPMessage():
         except:
           return http_message.clear()
     if decompress and body_len != 0:
-      hce = list(e for h in (http_message.header('Content-Encoding', ''), http_message.header('Transfer-Encoding', '')) for e in map(str.strip, h.lower().split(',')) if not e in ('chunked', '', 'identity'))
+      hce = [e for h in (http_message.header('Content-Encoding', ''), http_message.header('Transfer-Encoding', '')) for e in map(str.strip, h.lower().split(',')) if not e in ('chunked', '', 'identity')]
       for ce in hce:
         if not ce in ('deflate', 'gzip'):
           if http_message.method is not None and iss:
@@ -1592,7 +1592,7 @@ class TilesCache():
     if self.Closed or not rid:
       return False
     self.log(1, 'configure', *rid)
-    pconnections = list([None] for i in range(self.Threads))
+    pconnections = [[None] for i in range(self.Threads)]
     with self.GCondition:
       for ind, g in enumerate(self.Generators):
         try:
@@ -1614,7 +1614,7 @@ class TilesCache():
           raise
         if self.Threads == 1:
           gens = (gens, )
-        self.Generators = list([True, g] for g in gens)
+        self.Generators = [[True, g] for g in gens]
         self.Infos = infos
         self.Id = rid
         if not ifound:
@@ -2360,7 +2360,7 @@ class WebMercatorMap(WGS84WebMercator):
           o = self.run_jpegtran(cols[c], tiles[c][r], '-drop +0+%s ##i2## ##i1## ##o##' % (infos['height'] * r))
           if o:
             cols[c] = o
-    t = list(threading.Thread(target=merge_col, args = (c,)) for c in range(len(tiles)))
+    t = [threading.Thread(target=merge_col, args = (c,)) for c in range(len(tiles))]
     for c in range(len(tiles)):
       t[c].start()
     for c in range(len(tiles)):
@@ -2443,9 +2443,9 @@ class WebMercatorMap(WGS84WebMercator):
   def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, number=1, infos_completed=None, pconnections=None):
     if isinstance(pconnections, list):
       if len(pconnections) < number:
-        pconnections.extend(list([None] for i in range(number - len(pconnections))))
+        pconnections.extend([[None] for i in range(number - len(pconnections))])
     else:
-      pconnections = list([None] for i in range(number))
+      pconnections = [[None] for i in range(number)]
     if infos_completed is None:
       infos_completed = {}
     if (False in (k in infos_completed for k in ('source', 'layer',  'format', 'matrix', 'scale', 'topx', 'topy', 'width', 'height'))) or (False in (k in infos_completed for k in (('matrixset', 'style') if '{wmts}' in infos_completed.get('source', '') else ('basescale', )))):
@@ -2467,7 +2467,7 @@ class WebMercatorMap(WGS84WebMercator):
             local_pattern = None
       except:
         return None
-    linfos = list({**infos_completed} for i in range(number))
+    linfos = [{**infos_completed} for i in range(number)]
     def retrieve_tiles(a=None, b=None, c=None, d=None, just_box=False, close_connection=False, ind=0):
       nonlocal pconnections
       if close_connection is None:
@@ -2519,7 +2519,7 @@ class WebMercatorMap(WGS84WebMercator):
     if number == 1:
       return retrieve_tiles
     else:
-      return list(partial(retrieve_tiles, ind=i) for i in range(number))
+      return [partial(retrieve_tiles, ind=i) for i in range(number)]
       
   def RetrieveTiles(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, memory_store=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10):
     if not local_store and memory_store is None:
@@ -2586,7 +2586,7 @@ class WebMercatorMap(WGS84WebMercator):
           with lock:
             update_progress('failed')
           pass
-    downloaders = list(threading.Thread(target=downloader, daemon=True) for t in range(threads))
+    downloaders = [threading.Thread(target=downloader, daemon=True) for t in range(threads)]
     for downloader in downloaders:
       downloader.start()
     return progress
@@ -2629,7 +2629,7 @@ class WebMercatorMap(WGS84WebMercator):
             tot -= 1
             if tot == 0:
               finished.set()
-      retrievers = list(threading.Thread(target=retriever, daemon=True) for t in range(tiles_cache.Threads))
+      retrievers = [threading.Thread(target=retriever, daemon=True) for t in range(tiles_cache.Threads)]
       for retriever in retrievers:
         retriever.start()
       finished.wait()
@@ -2801,7 +2801,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       o = self.offsets[index]
       a = o + self.byte_counts[index]
       d = BytesIO()
-      t = list(i.to_bytes() for i in range(256))
+      t = [i.to_bytes() for i in range(256)]
       t.extend([b'', b''])
       l = 9
       p = 0
@@ -2809,7 +2809,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         m = (1 << l) - 1
         n = (l - 2) // 8 + 2
         q = 8 * n - l
-        while True:
+        for i in range(m - len(t) + 1):
           b = o + p // 8
           e = b + n
           if e <= a:
@@ -2820,16 +2820,14 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
           if c == 257:
             return d.getbuffer()
           if c == 256:
-            l = 9
+            l = 8
             t[257:] = [b'']
             break
           g = t[c][:1]
           t.append(t.pop() + g)
           d.write(t[c])
           t.append(t[c])
-          if len(t) > m:
-            l += 1
-            break
+        l += 1
     except:
       return None
 
@@ -2848,17 +2846,12 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       if self.predictor != 2 or not self.bits_per_sample in (8, 16, 32):
         return None
       w = self.tile_width if hasattr(self, 'tile_width') else self.image_width
-      pix = iter(struct.unpack(self.byte_order + str(len(source) * 8 // self.bits_per_sample) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source))
-      reverted = []
+      h = len(source) * 8 // self.bits_per_sample // w
+      pix = iter(struct.unpack(self.byte_order + str(h * w) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source))
       c = (1 << self.bits_per_sample) - 1
-      try:
-        while True:
-          p = 0
-          for col in range(w):
-            p = (p + next(pix)) & c
-            reverted.append(p);
-      except StopIteration:
-        return memoryview(struct.pack((byte_order or self.byte_order) + str(len(reverted)) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], *reverted))
+      reverted = (([p := 0] and [(p := (p + next(pix)) & c) for col in range(w)]) for row in range(h))
+      spack = struct.Struct((byte_order or self.byte_order) + str(w) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]).pack
+      return memoryview(b''.join(spack(*r) for r in reverted))
     except:
       return None
 
@@ -2875,7 +2868,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
 
   def decode(self, byte_order=None):
     try:
-      if self.compression == 1:
+      if getattr(self, 'compression', 1) == 1:
         _decompress = self._none_decompress
       elif self.compression == 5:
         _decompress = self._lzw_decompress
@@ -2883,13 +2876,13 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         _decompress = self._adeflate_decompress
       else:
         raise
-      if self.predictor == 1:
+      if getattr(self, 'predictor', 1) == 1:
         _revert = partial(self._none_revert, byte_order=byte_order)
       elif self.predictor == 2:
         _revert = partial(self._predictor_revert, byte_order=byte_order)
       else:
         raise
-      if self.samples_per_pixel != 1 or self.planar_configuration != 1:
+      if self.samples_per_pixel != 1:
         raise
       image = BytesIO()
       if hasattr(self, 'tile_offsets'):
@@ -3106,7 +3099,7 @@ class WGS84Elevation(WGS84Map):
         return None
       else:
         try:
-          return list(self.ElevationfromMap(lat, lon) for (lat, lon) in points)
+          return [self.ElevationfromMap(lat, lon) for (lat, lon) in points]
         except:
           return None
     else:
@@ -3114,14 +3107,14 @@ class WGS84Elevation(WGS84Map):
         if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local) is None:
           return None
         try:
-          return list(self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, self.Tiles[self.Tiles.Id, (row, col)](20), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), ))
+          return [self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, self.Tiles[self.Tiles.Id, (row, col)](20), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), )]
         except:
           return None
       else:
         try:
           egen = self.ElevationGenerator(infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local)
           if egen:
-            return list(egen(lat, lon) for (lat, lon) in points)
+            return [egen(lat, lon) for (lat, lon) in points]
           else:
             return None
         except:
@@ -3156,7 +3149,7 @@ class WGS84Elevation(WGS84Map):
       _mw_r = infos['height'] * _mw
       _nd = struct.pack('<f', infos.get('nodata', 0)) * infos['width'] * infos['height']
       _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
-      _l = list((l * _mw, l * _w, (l + 1) * _w) for l in range(infos['height']))
+      _l = [(l * _mw, l * _w, (l + 1) * _w) for l in range(infos['height'])]
       for r in _r_l:
         _r = r * _mw_r
         for c in _c_l:
@@ -3173,8 +3166,8 @@ class WGS84Elevation(WGS84Map):
       _mw = mw * 2
       _mw_r = infos['height'] * _mw
       _nd = struct.pack('>h', infos.get('nodata', 0)) * infos['width'] * infos['height']
-      _tiles = list(list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l)
-      _l = list((l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height']))
+      _tiles = [list(memoryview(tiles[c][r] or _nd) for r in _r_l) for c in _c_l]
+      _l = [(l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height'])]
       for r in _r_l:
         _r = r * _mw_r
         if r == th - 1:
@@ -3262,7 +3255,7 @@ class WGS84Elevation(WGS84Map):
           ind += ind2 - ind1
           if ind == len(points):
             finished.set()
-    lind = list((limit * i, min(limit * (i + 1), len(points))) for i in range(1 + (len(points) - 1) // limit))
+    lind = [(limit * i, min(limit * (i + 1), len(points))) for i in range(1 + (len(points) - 1) // limit)]
     for t in range(threads if infos.get('parallel', False) else 1):
       th = threading.Thread(target=_request_elevation, daemon=True)
       th.start()
@@ -3298,13 +3291,13 @@ class WGS84Elevation(WGS84Map):
       nrow = math.ceil((maxlat - minlat) / res)
       minlat = moylat - res * nrow / 2
       maxlat = moylat + res * nrow / 2
-    lats = list(maxlat - (i + 0.5) * res for i in range(nrow))
-    lons = list(minlon + (i + 0.5) * res for i in range(ncol))
+    lats = [maxlat - (i + 0.5) * res for i in range(nrow)]
+    lons = [minlon + (i + 0.5) * res for i in range(ncol)]
     points = list ((lat, lon) for lat in lats for lon in lons)
     eles = self.RequestElevation(infos, points, key, referer, user_agent, basic_auth, threads)
     if not eles:
       return False
-    self.Map = b''.join(struct.pack('<f', (ele if ele is not None else infos.get('nodata', 0))) for ele in eles)
+    self.Map = struct.pack('<' + str(len(eles)) + 'f', *[(ele if ele is not None else infos.get('nodata', 0)) for ele in eles])
     self.MapResolution = res
     self.MapInfos = {'source': infos['source'], 'layers': '', 'styles': '', 'format': 'image/x-bil;bits=32'}
     if 'alias' in infos:
@@ -3547,14 +3540,14 @@ class XMLElement(XMLNode):
 
   def getNameSpaces(self):
     if self.attributes:
-      return list((k[1], v) for k, v in self.attributes.items() if k[0] == XMLNode.XMLNS_NAMESPACE)
+      return [(k[1], v) for k, v in self.attributes.items() if k[0] == XMLNode.XMLNS_NAMESPACE]
     else:
       return []
 
   def getChildren(self, localname, namespaceuri=' '):
     if namespaceuri == ' ':
       namespaceuri = self.namespaceURI
-    return list(node for node in self.childNodes if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname))
+    return [node for node in self.childNodes if (namespaceuri == '*' or node.namespaceURI == namespaceuri) and (localname == '*' or node.localName == localname)]
 
   def insertBefore(self, newChildren, refChild=None):
     if not isinstance(newChildren, (tuple, list)):
@@ -4216,11 +4209,11 @@ class WGS84Track(WGS84WebMercator):
 
   def BuildWebMercator(self):
     if self.Wpts:
-      self.WebMercatorWpts = list((pt[0], WGS84Track.WGS84toWebMercator(*pt[1][0:2])) for pt in self.Wpts)
+      self.WebMercatorWpts = [(pt[0], WGS84Track.WGS84toWebMercator(*pt[1][0:2])) for pt in self.Wpts]
     else:
       self.WebMercatorWpts = []
     if self.Pts:
-      self.WebMercatorPts = list(list((pt[0], WGS84Track.WGS84toWebMercator(*pt[1][0:2])) for pt in seg) for seg in self.Pts)
+      self.WebMercatorPts = [[(pt[0], WGS84Track.WGS84toWebMercator(*pt[1][0:2])) for pt in seg] for seg in self.Pts]
     else:
       self.WebMercatorPts = []
     return True
@@ -4376,7 +4369,7 @@ class WGS84Track(WGS84WebMercator):
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = r.removeChildren('wpt')
         segs = trk.removeChildren('trkseg')
-        pts = list(pt for seg in segs for pt in seg.removeChildren('trkpt'))
+        pts = [pt for seg in segs for pt in seg.removeChildren('trkpt')]
         self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, ' '.join((nmsg or [''])[0].splitlines()), None, True)
         wpn = []
         for wp in wpmsg:
@@ -4574,7 +4567,7 @@ class WGS84Track(WGS84WebMercator):
         cn = r.getChildren('metadata')
         if cn:
           no = cn[-1]
-      r.insertAfter(list(n.cloneNode() for n in _wpt), no)
+      r.insertAfter([n.cloneNode() for n in _wpt], no)
       if mode == 'tb':
         r.insertBefore(_trk, trk)
       elif mode == 'ta':
@@ -15283,7 +15276,7 @@ class GPXTweakerWebInterfaceServer():
           bbox = dict(zip(('{minx}', '{miny}', '{maxx}', '{maxy}'), self.Map.MapInfos['bbox'].split(',')))
         else:
           bbox = dict(zip(self.Map.WMS_BBOX.split(','), self.Map.MapInfos['bbox'].split(',')))
-        self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = list(float(bbox[k]) for k in ('{minx}', '{miny}', '{maxx}', '{maxy}'))
+        self.VMinx, self.VMiny, self.VMaxx, self.VMaxy = [float(bbox[k]) for k in ('{minx}', '{miny}', '{maxx}', '{maxy}')]
         self.MTopx = self.VMinx
         self.MTopy = self.VMaxy
         map_minlat, map_minlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
@@ -15856,8 +15849,8 @@ if __name__ == '__main__':
   parser.add_argument('--trk', '-t', metavar='TRK', help=LSTRINGS['parser']['trk'], type=int, default=None)
   parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs ='?', const=' ', default='')
   parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const=' ', default='')
-  parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: (list((p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),))[0]) if b != '' else (None, ) * 4), default='')
-  parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda s: (list((p,q) for [p,q] in (map(int, map(str.strip, s.split(','))),))[0]) if s != '' else (None, ) * 2), default='')
+  parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: ([(p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),)][0]) if b != '' else (None, ) * 4), default='')
+  parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda s: ([(p,q) for [p,q] in (map(int, map(str.strip, s.split(','))),)][0]) if s != '' else (None, ) * 2), default='')
   parser.add_argument('--dpi', '-d', metavar='DPI', help=LSTRINGS['parser']['dpi'], type=(lambda d: (int(d) if not '.' in d else float(d)) if d != '' else None), default='')
   parser.add_argument('--record', '-r', metavar='RECORD', help=LSTRINGS['parser']['record'], default=None)
   parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
