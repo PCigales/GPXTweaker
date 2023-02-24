@@ -2805,17 +2805,11 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       t.extend([b'', b''])
       l = 9
       p = 0
+      bi = format(int.from_bytes(image[o:a], 'big'), '0' + str(8 * (a - o)) + 'b')
       while True:
-        m = (1 << l) - 1
-        n = (l - 2) // 8 + 2
-        q = 8 * n - l
-        for i in range(m - len(t) + 1):
-          b = o + p // 8
-          e = b + n
-          if e <= a:
-            c = (int.from_bytes(image[b:e], 'big') >> (q - p % 8)) & m
-          else:
-            c = (int.from_bytes(image[b:a], 'big') >> ((a - b) * 8 - l - p % 8)) & m
+        m = 1 << l
+        for i in range(m - len(t)):
+          c = int(bi[p:p+l], 2)
           p += l
           if c == 257:
             return d.getbuffer()
@@ -2841,13 +2835,16 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
 
   def _predictor_revert(self, source, byte_order=None):
     try:
-      if self.predictor == 1:
-        return source
       if self.predictor != 2 or not self.bits_per_sample in (8, 16, 32):
         return None
       w = self.tile_width if hasattr(self, 'tile_width') else self.image_width
       h = len(source) * 8 // self.bits_per_sample // w
-      pix = iter(struct.unpack(self.byte_order + str(h * w) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source))
+      if sys.byteorder == ('little' if self.byte_order == '<' else 'big'):
+        pix = iter(source.cast({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]))
+      else:
+        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source.tobytes())
+        a.byteswap()
+        pix = iter(a)
       c = (1 << self.bits_per_sample) - 1
       reverted = (([p := 0] and [(p := (p + next(pix)) & c) for col in range(w)]) for row in range(h))
       spack = struct.Struct((byte_order or self.byte_order) + str(w) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]).pack
