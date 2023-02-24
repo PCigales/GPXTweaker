@@ -2842,7 +2842,8 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       if sys.byteorder == ('little' if self.byte_order == '<' else 'big'):
         pix = iter(source.cast({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]))
       else:
-        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source.tobytes())
+        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample])
+        a.frombytes(source)
         a.byteswap()
         pix = iter(a)
       c = (1 << self.bits_per_sample) - 1
@@ -2857,7 +2858,8 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       return source
     else:
       try:
-        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample], source.tobytes())
+        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample])
+        a.frombytes(source)
         a.byteswap()
         return memoryview(a).cast('B')
       except:
