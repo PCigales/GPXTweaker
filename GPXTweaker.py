@@ -2749,34 +2749,35 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       p = id0 + 2
       for e in range(ne):
         ei = struct.unpack(H, image[p:p+2])[0]
+        t = {3: H, 4: L}.get(struct.unpack(H, image[p+2:p+4])[0], None)
         if ei in TIFFHandler.TAGS_SHORT:
-          if struct.unpack(H, image[p+2:p+4])[0] != 3:
+          if t != H:
             raise
-          if ei in (258, 339):
-            n = struct.unpack(L, image[p+4:p+8])[0]
-            if n == 1:
-              setattr(self, TIFFHandler.TAGS_SHORT[ei], struct.unpack(H, image[p+8:p+10])[0])
-            elif n == 3:
-              o = struct.unpack(L, image[p+8:p+12])[0]
-              setattr(self, TIFFHandler.TAGS_SHORT[ei], struct.unpack('%s%dH' % (ba, n), image[o:o+2*n]))
-            else:
-              raise
-          else:
-            setattr(self, TIFFHandler.TAGS_SHORT[ei], struct.unpack(H, image[p+8:p+10])[0])
+          tag = TIFFHandler.TAGS_SHORT[ei]
         elif ei in TIFFHandler.TAGS_SHORT_LONG:
-          t = {3: H, 4: L}.get(struct.unpack(H, image[p+2:p+4])[0], None)
           if t is None:
             raise
-          if ei in (273, 279, 325):
-            n, o = struct.unpack(L + 'L', image[p+4:p+12])
-            setattr(self, TIFFHandler.TAGS_SHORT_LONG[ei], struct.unpack('%s%d%s' % (ba, n, t[-1]), image[o:o+(2 if t== H else 4)*n]))
-          else:
-            setattr(self, TIFFHandler.TAGS_SHORT_LONG[ei], struct.unpack(t, image[p+8:p+(10 if t == H else 12)])[0])
+          tag = TIFFHandler.TAGS_SHORT_LONG[ei]
         elif ei in TIFFHandler.TAGS_LONG:
-          if struct.unpack(H, image[p+2:p+4])[0] != 4:
+          if t != L:
             raise
-          n, o = struct.unpack(L + 'L', image[p+4:p+12])
-          setattr(self, TIFFHandler.TAGS_LONG[ei], struct.unpack('%s%dL' % (ba, n), image[o:o+4*n]))
+          tag = TIFFHandler.TAGS_LONG[ei]
+        else:
+          tag = None
+        if ei in (258, 339, 273, 279, 324, 325):
+          n = struct.unpack(L, image[p+4:p+8])[0]
+          if n == 1:
+            if ei in (258, 339):
+              setattr(self, tag, struct.unpack(t, image[p+8:p+(10 if t == H else 12)])[0])
+            else:
+              setattr(self, tag, struct.unpack(t, image[p+8:p+(10 if t == H else 12)]))
+          else:
+            if ei in (258, 339) and n != 3:
+              raise
+            o = struct.unpack(L, image[p+8:p+12])[0]
+            setattr(self, tag, struct.unpack('%s%d%s' % (ba, n, t[-1]), image[o:o+(2 if t == H else 4)*n]))
+        elif tag is not None:
+          setattr(self, tag, struct.unpack(t, image[p+8:p+(10 if t == H else 12)])[0])
         p += 12
       if hasattr(self, 'tile_offsets'):
         self.offsets = self.tile_offsets
@@ -2798,19 +2799,19 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
   def _lzw_decompress(self, index):
     image = self.image
     try:
-      o = self.offsets[index]
-      a = o + self.byte_counts[index]
+      b = self.offsets[index]
+      a = b + self.byte_counts[index]
       d = BytesIO()
       t = [i.to_bytes() for i in range(256)]
       t.extend([b'', b''])
-      l = 9
       p = 0
-      bi = format(int.from_bytes(image[o:a], 'big'), '0' + str(8 * (a - o)) + 'b')
+      l = 9
       while True:
         m = 1 << l
+        e = min(a, b + (m * l) // 16 + 1)
+        bi = format(int.from_bytes(image[b:e], 'big'), '0' + str(8 * (e - b)) + 'b')
         for i in range(m - len(t)):
-          c = int(bi[p:p+l], 2)
-          p += l
+          c = int(bi[p:(p:=p+l)], 2)
           if c == 257:
             return d.getbuffer()
           if c == 256:
@@ -2821,6 +2822,8 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
           t.append(t.pop() + g)
           d.write(t[c])
           t.append(t[c])
+        b += p // 8
+        p %= 8
         l += 1
     except:
       return None
@@ -2871,7 +2874,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         _decompress = self._none_decompress
       elif self.compression == 5:
         _decompress = self._lzw_decompress
-      elif self.compression == 8:
+      elif self.compression in (8, 32946):
         _decompress = self._adeflate_decompress
       else:
         raise
