@@ -2927,7 +2927,6 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       else:
         raise
     except:
-
       return False
     self.decoded = image.obj
     return True
