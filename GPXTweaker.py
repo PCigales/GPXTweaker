@@ -2838,33 +2838,35 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
 
   def _predictor_revert(self, source, byte_order=None):
     try:
-      if self.predictor != 2 or not self.bits_per_sample in (8, 16, 32):
+      if self.predictor != 2 or self.bits_per_sample not in (8, 16, 32):
         return None
       w = self.tile_width if hasattr(self, 'tile_width') else self.image_width
       h = len(source) * 8 // self.bits_per_sample // w
+      st = {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]
       if sys.byteorder == ('little' if self.byte_order == '<' else 'big'):
-        pix = iter(source.cast({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]))
+        pix = iter(source.cast(st))
       else:
-        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample])
+        a = array.array(st)
         a.frombytes(source)
         a.byteswap()
         pix = iter(a)
       c = (1 << self.bits_per_sample) - 1
       reverted = (([p := 0] and [(p := (p + next(pix)) & c) for col in range(w)]) for row in range(h))
-      spack = struct.Struct((byte_order or self.byte_order) + str(w) + {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]).pack
-      return memoryview(b''.join(spack(*r) for r in reverted))
+      spack = struct.Struct((byte_order or self.byte_order) + str(w) + st).pack
+      return memoryview(b''.join(spack(*r) for r in reverted)).cast(st)
     except:
       return None
 
   def _none_revert(self, source, byte_order=None):
+    st = {8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample]
     if byte_order in (None, self.byte_order):
-      return source
+      return source.cast(st)
     else:
       try:
-        a = array.array({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample])
+        a = array.array(st)
         a.frombytes(source)
         a.byteswap()
-        return memoryview(a).cast('B')
+        return memoryview(a)
       except:
         return None
 
@@ -2886,36 +2888,48 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         raise
       if self.samples_per_pixel != 1:
         raise
-      image = BytesIO()
+      image = memoryview(bytearray(self.image_width * self.image_length * self.bits_per_sample // 8)).cast({8: 'B', 16: 'H', 32: 'L'}[self.bits_per_sample])
+      iwidth = self.image_width
+      ilength = self.image_length
       if hasattr(self, 'tile_offsets'):
-        tacross = (self.image_width - 1) // self.tile_width + 1
         twidth = self.tile_width
-        tlwidth = self.image_width % self.tile_width
-        tdown = (self.image_length - 1) // self.tile_length + 1
         tlength = self.tile_length
-        tllength = self.image_length % self.tile_length
-        bps = self.bits_per_sample // 8
-        _twidth_bps = twidth * bps
-        _tlwidth_bps = tlwidth * bps
+        tacross = (iwidth - 1) // twidth + 1
+        tdown = (ilength - 1) // tlength + 1
+        tllength = (ilength - 1) % tlength + 1
+        tlwidth = (iwidth - 1) % twidth + 1
+        _s = iwidth * tlength
+        tiles = (_revert(_decompress(t)) for t in range(tacross * tdown))
+        _tpos = list(slice(trow * twidth, trow * twidth + twidth) for trow in range(tlength))
+        _tlpos = list(slice(trow * twidth, trow * twidth + tlwidth) for trow in range(tlength))
         for row in range(tdown):
-          strip = tuple(_revert(_decompress(tacross * row + col)) for col in range(tacross))
-          for trow in range(tlength if row < tdown - 1 else tllength):
-            _trow_twidth_bps = trow * _twidth_bps
-            for col in range(tacross - 1):
-              image.write(strip[col][_trow_twidth_bps: _trow_twidth_bps + _twidth_bps])
-            image.write(strip[tacross - 1][_trow_twidth_bps: _trow_twidth_bps + _tlwidth_bps])
+          p0 = row * _s
+          _trows = tlength if row < tdown - 1 else tllength
+          _tps = _tpos[:_trows]
+          _tw = twidth
+          for col in range(tacross):
+            tile = next(tiles)
+            p = p0 + col * twidth
+            if col == tacross - 1:
+              _tps = _tlpos[:_trows]
+              _tw = tlwidth
+            for _tp in _tps:
+              image[p: p + _tw] = tile[_tp]
+              p += iwidth
       elif hasattr(self, 'strip_offsets'):
-        swidth = self.image_width
-        sdown = (self.image_length - 1) // self.rows_per_strip + 1
-        bps = self.bits_per_sample // 8
+        sdown = (ilength - 1) // self.rows_per_strip + 1
+        _s = iwidth * self.rows_per_strip
+        _sl = iwidth * ((ilength - 1) % self.rows_per_strip + 1)
+        p = 0
         for row in range(sdown):
           strip = _revert(_decompress(row))
-          image.write(strip)
+          image[p: (p := p + (_s if row < sdown - 1 else _sl))] = strip
       else:
         raise
     except:
+
       return False
-    self.decoded = bytes(image.getvalue())
+    self.decoded = image.obj
     return True
 
   def convert(self):
@@ -3066,7 +3080,7 @@ class WGS84Elevation(WGS84Map):
         th.decode(byte_order='>')
       except:
         tile = None
-      tile = th.decoded
+      tile = bytes(th.decoded)
     return tile
 
   def ElevationGenerator(self, infos_base=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
