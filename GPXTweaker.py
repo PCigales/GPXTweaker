@@ -2597,8 +2597,6 @@ class WebMercatorMap(WGS84WebMercator):
   def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10, tiles_cache=None):
     tiles = []
     if tiles_cache is not None:
-      if hasattr(self, '_lazy_tilescache_configuration') and self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local) is None:
-        return False
       if any(infos[k] != tiles_cache.Infos[k] for k in infos if ((k in tiles_cache.Infos) and ((k in ('layer', 'format', 'matrix')) or (k in ('matrixset', 'style') and '{wmts}' in tiles_cache.Infos.get('source', ''))))):
         return False
       infos.update({k:v for k,v in tiles_cache.Infos.items() if k != 'source'})
@@ -2689,6 +2687,13 @@ class WebMercatorMap(WGS84WebMercator):
     except:
       return False
     return True
+
+  def Close(self):
+    try:
+      if self.Tiles is not None:
+        self.Tiles.close()
+    except:
+      pass
 
 
 class WGS84Map(WebMercatorMap):
@@ -2988,6 +2993,69 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
     return True
 
 
+class ElevationTilesCache(TilesCache):
+
+  class _dict(dict):
+    def pop(self, key, *default):
+      if key in self:
+        self.Owner.Length -= self.Owner.Weights[key[0]]
+      if default:
+        return super().pop(key, *default)
+      else:
+        return super().pop(key)
+    def __delitem__(self, key):
+      self.Owner.Length -= self.Owner.Weights[key[0]]
+      return super().__delitem__(key)
+    def __setitem__(self, key, value):
+      if key not in self:
+        w = self.Owner.Weights[key[0]]
+        m = max(0, self.Owner.Size - w)
+        while self.Owner.Length > m:
+          k = next(iter(self))
+          del self[k]
+          self.Owner.log(2, 'del')
+        self.Owner.Length += w
+      return super().__setitem__(key, value)
+    def __len__(self):
+      return round(self.Owner.Length)
+
+  def __init__(self, size=None, threads=None):
+    if size is not None:
+      super().__init__(size, threads, False)
+      self.Weights = {}
+      self.Length = 0
+      self.Buffer = ElevationTilesCache._dict()
+      self.Buffer.Owner = self
+
+  def LazyConfigure(self, obj):
+    with obj.LazyTiles.BLock:
+      try:
+        obj.Tiles = obj.LazyTiles
+        if not obj.SetTilesProvider(obj.LazyTiles.Id, *obj.LazyTilesArgs, lazy=False):
+          raise
+        obj.LazyTiles.Weights[obj.LazyTiles.Id] = obj.TilesInfos['width'] * obj.TilesInfos['height'] / 65536 / (1 if obj.TilesInfos['format'] == 'image/x-bil;bits=32' else 2)
+      except:
+        obj.Tiles = None
+        return False
+    return True
+
+  def __get__(self, obj, objtype=None):
+    with obj.LazyTiles.BLock:
+      if 'Tiles' not in vars(obj):
+        if not self.LazyConfigure(obj):
+          return None
+    return obj.Tiles
+
+  def __setitem__(self, id_pos, ptile):
+    try:
+      rid, pos = id_pos
+      row, col = pos
+    except:
+      return
+    with self.BLock:
+      self.Buffer[(rid, pos)] = ptile
+
+
 class WGS84Elevation(WGS84Map):
 
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
@@ -2998,19 +3066,18 @@ class WGS84Elevation(WGS84Map):
   TS_EUDEM_1 = {'alias': 'EUDEM_1', 'source': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
   TS_ASTER_V3 = {'alias': 'ASTER_V3', 'source': 'https://e4ftl01.cr.usgs.gov/ASTT/ASTGTM.003/2000.03.01/ASTGTMV003_{hgt}.zip', 'layer': 'ASTER.V3', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/tiff', 'nodata': -9999}
 
-  def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
-    super().__init__(tiles_buffer_size, tiles_max_threads)
-    if self.Tiles is not None:
-      self.Tiles.Preload = False
+  Tiles = ElevationTilesCache()
 
-  def _lazy_tilescache_configuration(self, infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local):
-    with self.Tiles.BLock:
-      if self.Tiles.Infos is None:
-        if not self.SetTilesProvider(self.Tiles.Id, infos, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local):
-          return False
-        self.Tiles.Size = max(1, int(self.Tiles.Size // (max(self.TilesInfos['width'], self.TilesInfos['height']) / 256) ** 2))
-        self.Tiles.log(2, 'init', self.Tiles.Size, self.Tiles.Threads)
-    return True
+  def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
+    super().__init__(None, None)
+    self.Closed = False
+    if not tiles_buffer_size or not tiles_max_threads:
+      self.LazyTiles = None
+    else:
+      del self.Tiles
+      self.LazyTilesSize = tiles_buffer_size
+      self.LazyTilesArgs = None
+      self.LazyTiles = ElevationTilesCache(tiles_buffer_size, tiles_max_threads)
 
   def ElevationfromMap(self, lat, lon):
     if not self.MapInfos or not self.Map:
@@ -3119,8 +3186,6 @@ class WGS84Elevation(WGS84Map):
           return None
     else:
       if self.Tiles is not None:
-        if self._lazy_tilescache_configuration(infos, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local) is None:
-          return None
         try:
           return [self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, self.Tiles[self.Tiles.Id, (row, col)](20), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), )]
         except:
@@ -3200,7 +3265,7 @@ class WGS84Elevation(WGS84Map):
               m[pos: pos + _w + 2] = tiles[c][r][_l_0: _l_1 + 2]
     return m
 
-  def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, threads=10, *, stop=False):
+  def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, threads=10):
     if not isinstance(points, (list, tuple)):
       return None
     headers = {}
@@ -3237,7 +3302,7 @@ class WGS84Elevation(WGS84Map):
       nonlocal ind
       pconnection=[None]
       while True:
-        if self.RequestElevation.__kwdefaults__['stop']:
+        if self.Closed:
           finished.set()
           break
         with ilock:
@@ -3324,6 +3389,34 @@ class WGS84Elevation(WGS84Map):
     self.MapInfos['width'] = ncol
     self.MapInfos['height'] = nrow
     return True
+
+  def SetTilesProvider(self, rid=None, infos_base=None, matrix=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, lazy=True):
+    if self.LazyTiles is None:
+      return False
+    if lazy:
+      if 'Tiles' in vars(self):
+        del self.Tiles
+        try:
+          self.LazyTiles.TilesInfos = None
+          self.LazyTiles.Configure((-1, None), None)
+        except:
+          pass
+      if rid is None:
+        self.LazyTilesArgs = None
+      else:
+        self.LazyTilesArgs = (infos_base, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local)      
+        self.LazyTiles.Id = rid
+      return False
+    else:
+      return super().SetTilesProvider(rid, infos_base, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, only_local=only_local)
+
+  def Close(self):
+    self.Closed = True
+    try:
+      if self.LazyTiles is not None:
+        self.LazyTiles.close()
+    except:
+      pass
 
 
 class WGS84Itinerary(WGS84Map):
@@ -5248,24 +5341,14 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             try:
               eset = int(q['eset'][0])
               self.server.Interface.ElevationProviderSel = eset
-              if self.server.Interface.Elevation.Tiles is not None:
-                try:
-                  self.server.Interface.Elevation.TilesInfos = None
-                  self.server.Interface.Elevation.Tiles.Configure((-1, None), None)
-                  with self.server.Interface.Elevation.Tiles.BLock:
-                    self.server.Interface.Elevation.Tiles.Buffer.clear()
-                    self.server.Interface.Elevation.Tiles.log(2, 'del')
-                    self.server.Interface.Elevation.Tiles.Size = self.server.Interface.ElevationTilesBufferSize 
-                except:
-                  pass
               if 'layer' in self.server.Interface.ElevationsProviders[eset][1]:
                 self.server.Interface.EMode = 'tiles'
-                if self.server.Interface.Elevation.Tiles is not None:
-                  self.server.Interface.Elevation.Tiles.Id = (eset, self.server.Interface.ElevationsProviders[eset][1].get('matrix'))
+                self.server.Interface.Elevation.SetTilesProvider((eset, self.server.Interface.ElevationsProviders[eset][1].get('matrix')), self.server.Interface.ElevationsProviders[eset][1], self.server.Interface.ElevationsProviders[eset][1].get('matrix'), **self.server.Interface.ElevationsProviders[eset][2])
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.WGS84toElevation, infos=self.server.Interface.ElevationsProviders[eset][1], matrix=self.server.Interface.ElevationsProviders[eset][1].get('matrix'), **self.server.Interface.ElevationsProviders[eset][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[eset][0])
               else:
                 self.server.Interface.EMode = 'api'
+                self.server.Interface.Elevation.SetTilesProvider()
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[eset][1], **self.server.Interface.ElevationsProviders[eset][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[eset][0])
             except:
@@ -15133,6 +15216,7 @@ class GPXTweakerWebInterfaceServer():
       if not self._load_config(cfg):
         return None
     except:
+      self.log(0, 'cerror', cfg)
       return None
     self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
     self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
@@ -15366,8 +15450,7 @@ class GPXTweakerWebInterfaceServer():
         self.Elevation = WGS84Elevation(self.ElevationTilesBufferSize, self.TilesBufferThreads)
         if 'layer' in self.ElevationsProviders[0][1]:
           self.EMode = 'tiles'
-          if self.Elevation.Tiles is not None:
-            self.Elevation.Tiles.Id = (0, self.ElevationsProviders[0][1].get('matrix'))
+          self.Elevation.SetTilesProvider((0, self.ElevationsProviders[0][1].get('matrix')), self.ElevationsProviders[0][1], self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
           self.ElevationProvider = partial(self.Elevation.WGS84toElevation, infos=self.ElevationsProviders[0][1], matrix=self.ElevationsProviders[0][1].get('matrix'), **self.ElevationsProviders[0][2])
           self.log(1, 'elevation', self.ElevationsProviders[0][0])
         else:
@@ -15828,17 +15911,8 @@ class GPXTweakerWebInterfaceServer():
     for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
       webserver_thread = threading.Thread(target=self._stop_webserver, args=(ind,))
       webserver_thread.start()
-    try:
-      if self.Mode == 'tiles':
-        self.Map.Tiles.Close()
-    except:
-      pass
-    try:
-      if self.EMode in ('tiles', 'api') and self.Elevation.Tiles is not None:
-        self.Elevation.Tiles.Close()
-    except:
-      pass
-    WGS84Elevation.RequestElevation.__kwdefaults__['stop'] = True
+    self.Map.Close()
+    self.Elevation.Close()
     with self.SLock:
       for tr in self.Tracks:
         trck = tr[1]
@@ -15846,7 +15920,6 @@ class GPXTweakerWebInterfaceServer():
         trck.OTrack = trck.STrack = None
         del trck.Track
       self.HTML = self.HTMLExp = self.HTML3D = self.HTML3DData = None
-    WGS84Elevation.RequestElevation.__kwdefaults__['stop'] = False
     with self.Media.DLock:
       self.Media.Data = None
 
