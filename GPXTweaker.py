@@ -3004,7 +3004,8 @@ class ElevationTilesCache(TilesCache):
       else:
         return super().pop(key)
     def __delitem__(self, key):
-      self.Owner.Length -= self.Owner.Weights[key[0]]
+      if key in self:
+        self.Owner.Length -= self.Owner.Weights[key[0]]
       return super().__delitem__(key)
     def __setitem__(self, key, value):
       if key not in self:
@@ -3027,7 +3028,8 @@ class ElevationTilesCache(TilesCache):
       self.Buffer = ElevationTilesCache._dict()
       self.Buffer.Owner = self
 
-  def LazyConfigure(self, obj):
+  @staticmethod
+  def LazyConfigure(obj):
     with obj.LazyTiles.BLock:
       try:
         obj.Tiles = obj.LazyTiles
@@ -3075,7 +3077,6 @@ class WGS84Elevation(WGS84Map):
       self.LazyTiles = None
     else:
       del self.Tiles
-      self.LazyTilesSize = tiles_buffer_size
       self.LazyTilesArgs = None
       self.LazyTiles = ElevationTilesCache(tiles_buffer_size, tiles_max_threads)
 
