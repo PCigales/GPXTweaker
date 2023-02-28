@@ -3189,7 +3189,6 @@ class WGS84Elevation(WGS84Map):
           prow = pcol = tile = None
           return [self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, (tile if (prow, pcol) == ((prow := row), (pcol := col)) else (tile := self.Tiles[self.Tiles.Id, (row, col)](20))), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), )]
         except:
-          raise
           return None
       else:
         try:
@@ -5656,7 +5655,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_resp('text/csv; charset=utf-8')
             except:
               _send_err_fail()
-              raise
           elif req.path.lower()[:5] == '/path':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
