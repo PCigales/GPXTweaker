@@ -5352,7 +5352,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 self.server.Interface.ElevationProvider = partial(self.server.Interface.Elevation.RequestElevation, self.server.Interface.ElevationsProviders[eset][1], **self.server.Interface.ElevationsProviders[eset][2])
                 self.server.Interface.log(1, 'elevation', self.server.Interface.ElevationsProviders[eset][0])
             except:
-              raise
               _send_err_fail()
               continue
             finally:
