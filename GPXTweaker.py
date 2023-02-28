@@ -1584,7 +1584,7 @@ class TilesCache():
       return
     with self.BLock:
       self.Buffer[(rid, pos)] = ptile
-      if len(self.Buffer) > self.Size:
+      while len(self.Buffer) > self.Size:
         del self.Buffer[next(iter(self.Buffer))]
         self.log(2, 'del')
 
@@ -2996,29 +2996,36 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
 class ElevationTilesCache(TilesCache):
 
   class _dict(dict):
+    def init(self, weights):
+      self.Length = 0
+      self.Weights = weights
+      self.LengthFlag = False
     def pop(self, key, *default):
-      if key in self:
-        self.Owner.Length -= self.Owner.Weights[key[0]]
+      if key in self and not self.LengthFlag:
+        self.Length -= self.Weights[key[0]]
+      self.LengthFlag = True
       if default:
-        return super().pop(key, *default)
+        r = super().pop(key, *default)
       else:
-        return super().pop(key)
+        r = super().pop(key)
+      self.LengthFlag = False
+      return r
     def __delitem__(self, key):
-      if key in self:
-        self.Owner.Length -= self.Owner.Weights[key[0]]
-      return super().__delitem__(key)
+      if key in self and not self.LengthFlag:
+        self.Length -= self.Weights[key[0]]
+      self.LengthFlag = True
+      r = super().__delitem__(key)
+      self.LengthFlag = False
+      return r
     def __setitem__(self, key, value):
-      if key not in self:
-        w = self.Owner.Weights[key[0]]
-        m = max(0, self.Owner.Size - w)
-        while self.Owner.Length > m:
-          k = next(iter(self))
-          del self[k]
-          self.Owner.log(2, 'del')
-        self.Owner.Length += w
-      return super().__setitem__(key, value)
+      if key not in self and not self.LengthFlag:
+        self.Length += self.Weights[key[0]]
+      self.LengthFlag = True
+      r = super().__setitem__(key, value)
+      self.LengthFlag = False
+      return r
     def __len__(self):
-      return round(self.Owner.Length)
+      return round(self.Length)
 
   def __init__(self, size=None, threads=None):
     if size is not None:
@@ -3026,7 +3033,7 @@ class ElevationTilesCache(TilesCache):
       self.Weights = {}
       self.Length = 0
       self.Buffer = ElevationTilesCache._dict()
-      self.Buffer.Owner = self
+      self.Buffer.init(self.Weights)
 
   @staticmethod
   def LazyConfigure(obj):
@@ -3047,15 +3054,6 @@ class ElevationTilesCache(TilesCache):
         if not self.LazyConfigure(obj):
           return None
     return obj.Tiles
-
-  def __setitem__(self, id_pos, ptile):
-    try:
-      rid, pos = id_pos
-      row, col = pos
-    except:
-      return
-    with self.BLock:
-      self.Buffer[(rid, pos)] = ptile
 
 
 class WGS84Elevation(WGS84Map):
@@ -3188,8 +3186,10 @@ class WGS84Elevation(WGS84Map):
     else:
       if self.Tiles is not None:
         try:
-          return [self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, self.Tiles[self.Tiles.Id, (row, col)](20), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), )]
+          prow = pcol = tile = None
+          return [self.ElevationfromTile({**self.Tiles.Infos, 'row': row, 'col': col}, (tile if (prow, pcol) == ((prow := row), (pcol := col)) else (tile := self.Tiles[self.Tiles.Id, (row, col)](20))), lat, lon) for (lat, lon) in points for (row, col) in (self.WGS84toTile(self.Tiles.Infos, lat, lon), )]
         except:
+          raise
           return None
       else:
         try:
@@ -5656,6 +5656,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_resp('text/csv; charset=utf-8')
             except:
               _send_err_fail()
+              raise
           elif req.path.lower()[:5] == '/path':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
