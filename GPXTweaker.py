@@ -3423,6 +3423,7 @@ class WGS84Itinerary(WGS84Map):
 
   AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
+  AS_Openroute = {'alias': 'Openroute', 'source': 'https://api.openrouteservice.org/v2/directions/foot-hiking?api_key={key}&start={lons},{lats}&end={lone},{late}', 'key': ('features', 0, 'geometry', 'coordinates')}
 
   @classmethod
   def ASAlias(cls, name):
@@ -3456,7 +3457,10 @@ class WGS84Itinerary(WGS84Map):
         return None
       iti = json.loads(rep.body)
       for k in infos['key']:
-        iti = iti[k]
+        try:
+          iti = iti[k]
+        except:
+          iti = iti[int(k)]
       if sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[0][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))) > sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[-1][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))):
         iti.reverse()
       return list(map(lambda s:s[::-1], iti))
@@ -3470,6 +3474,7 @@ class WGS84ReverseGeocoding():
   AS_IGN_LOOK4 = AS_IGN_LOOK4_150 = {'alias': 'IGN_LOOK4_150', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
   AS_IGN_LOOK4_250 = {'alias': 'IGN_LOOK4_250', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
   AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2','key': ('display_name',)}
+  AS_Openroute_150 = {'alias': 'Openroute_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
   AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
 
   @classmethod
@@ -11761,7 +11766,7 @@ class GPXTweakerWebInterfaceServer():
   '          <title>{#jminimap#}</title>\r\n' \
   '          </svg>\r\n' \
   '          <div id="panel_rg" style="display:none;position:absolute;top:10vh;right:2px;width:10.2em;height:1.9em;font-size:80%;">\r\n' \
-  '            <select id="select_rg" name="select_rg" autocomplete="off" style="width:10em;height:1.7em;background-color:lightgray;" onchange="rgset =this.selectedIndex">##RGSETS##</select>\r\n' \
+  '            <select id="select_rg" name="select_rg" autocomplete="off" style="width:10em;height:1.7em;background-color:lightgray;" onchange="rgset=this.selectedIndex">##RGSETS##</select>\r\n' \
   '          </div>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
