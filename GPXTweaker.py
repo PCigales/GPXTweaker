@@ -3443,10 +3443,12 @@ class WGS84Elevation(WGS84Map):
 
 class WGS84Itinerary(WGS84Map):
 
-  BASE64_TABLE = None
-  URLSAFEBASE64_TABLE = None
+  BASE64_TABLE = {chr(i + 63): i for i in range(64)}
+  URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
+  POLYLINE_RE =  re.compile('^{(flexible_)polyline}$|^{polyline(\d+)?}$', re.ASCII).match
 
   AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
+  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
   AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
   AS_OPENROUTE = {'alias': 'OPENROUTE', 'source': 'https://api.openrouteservice.org/v2/directions/foot-hiking?api_key={key}&start={lons},{lats}&end={lone},{late}', 'key': ('features', 0, 'geometry', 'coordinates')}
   AS_HERE_ROUTING = {'alias': 'HERE_ROUTING', 'source': 'https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin={lats},{lons}&destination={late},{lone}&return=polyline&apikey={key}', 'key': ('routes', 0, 'sections', 0, 'polyline' , '{flexible_polyline}')}
@@ -3484,11 +3486,12 @@ class WGS84Itinerary(WGS84Map):
       iti = json.loads(rep.body)
       form = 'j'
       for k in infos['key']:
-        if k == '{polyline}':
-          form = 'p'
-          break
-        elif k == '{flexible_polyline}':
-          form = 'f'
+        if (isinstance(k, str) and (g := WGS84Itinerary.POLYLINE_RE(k))):
+          if g[1] is None:
+            form = 'p'
+            h = 5 if g[2] is None else int(g[2])
+          else:
+            form = 'f'
           break
         else:
           try:
@@ -3496,13 +3499,8 @@ class WGS84Itinerary(WGS84Map):
           except:
             iti = iti[int(k)]
       if form == 'p':
-        if WGS84Itinerary.BASE64_TABLE is None:
-          WGS84Itinerary.BASE64_TABLE = {chr(i + 63): i for i in range(64)}
         g = map(WGS84Itinerary.BASE64_TABLE.get, iti)
-        h = 5
       elif form == 'f':
-        if WGS84Itinerary.URLSAFEBASE64_TABLE is None:
-          WGS84Itinerary.URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
         g = map(WGS84Itinerary.URLSAFEBASE64_TABLE.get, iti)
         h = None
         i = 0
