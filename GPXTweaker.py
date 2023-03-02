@@ -5764,7 +5764,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               resp_body = ('\r\n'.join('%.6f,%.6f' % (*p,) for p in iti)).encode('utf-8')
               _send_resp('text/csv; charset=utf-8')
             except:
-
               _send_err_fail()
           elif req.path.lower()[:6] == '/track':
             self.server.Interface.SLock.acquire()
