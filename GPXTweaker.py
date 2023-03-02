@@ -1670,6 +1670,8 @@ class WebMercatorMap(WGS84WebMercator):
   TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
+  TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
   TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -1687,6 +1689,13 @@ class WebMercatorMap(WGS84WebMercator):
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts'
   TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '{wmts}&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
+  TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
+  TS_HERE_NORMAL = {'alias': 'HERE_NORMAL', 'source': TS_HEREBASE_SOURCE + '/normal.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_PEDESTRIAN = {'alias': 'HERE_PEDESTRIAN', 'source': TS_HEREBASE_SOURCE + '/pedestrian.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HEREAERIAL_SOURCE = 'https://1.aerial.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
+  TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE + '/terrain.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE + '/satellite.day/{matrix}/{col}/{row}/256/png8?apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE + '/hybrid.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -1973,7 +1982,10 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     infos['style'] = infos.get('style') or ''
     infos['format'] = infos.get('format') or 'image/png'
-    uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
+    try:
+      uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
+    except:
+      return False
     rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
     if rep.code != '200':
       return False
@@ -3061,6 +3073,7 @@ class WGS84Elevation(WGS84Map):
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
   TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
   MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE + '{wms}', 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
+  AS_OPENROUTE_SRTM = {'alias': 'OPENROUTE_SRTM', 'source': 'https://api.openrouteservice.org/elevation/point?api_key={key}&geometry={lon},{lat}&format_out=geojson&dataset=srtm', 'separator': ',', 'key': ('geometry', 'coordinates', 2), 'nodata': 32768, 'limit': 1, 'parallel': True}
   TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'source': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer': 'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
   AS_OTD_EUDEM = {'alias': 'AS_OTD_EUDEM', 'source': 'https://api.opentopodata.org/v1/eudem25m?locations={location}', 'separator': '|', 'key': ('results', '*', 'elevation'), 'nodata': -32767, 'limit': 100, 'parallel': False}
   TS_EUDEM_1 = {'alias': 'EUDEM_1', 'source': 'http://www.muaythaiclinch.info/opendem_europe_download/eu_4326/arc1/{hgt}.zip', 'layer':'EU-DEM.1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
@@ -3293,10 +3306,16 @@ class WGS84Elevation(WGS84Map):
           star = True
         elif star:
           for i, e in enumerate(eles):
-            eles[i] = e[k]
+            try:
+              eles[i] = e[k]
+            except:
+              eles[i] = e[int(k)]
         else:
-          eles = eles[k]
-      return eles
+          try:
+            eles = eles[k]
+          except:
+            eles = eles[int(k)]
+      return eles if isinstance(eles, (list, tuple)) else [eles]
     def _request_elevation():
       nonlocal posl
       nonlocal ind
@@ -3311,7 +3330,10 @@ class WGS84Elevation(WGS84Map):
             posl += 1
           else:
             break
-        uri = infos['source'].format_map({'location': infos['separator'].join(','.join(map(str, point)) for point in points[ind1:ind2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:ind2])})
+        try:
+          uri = infos['source'].format_map({'key': key or '', 'location': infos['separator'].join(','.join(map(str, point)) for point in points[ind1:ind2])} if '{location}' in infos['source'] else {'key': key or '', 'lat': infos['separator'].join(str(point[0]) for point in points[ind1:ind2]), 'lon': infos['separator'].join(str(point[1]) for point in points[ind1:ind2])})
+        except:
+          pass
         try:
           rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
           try:
@@ -3421,9 +3443,13 @@ class WGS84Elevation(WGS84Map):
 
 class WGS84Itinerary(WGS84Map):
 
+  BASE64_TABLE = None
+  URLSAFEBASE64_TABLE = None
+
   AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
-  AS_Openroute = {'alias': 'Openroute', 'source': 'https://api.openrouteservice.org/v2/directions/foot-hiking?api_key={key}&start={lons},{lats}&end={lone},{late}', 'key': ('features', 0, 'geometry', 'coordinates')}
+  AS_OPENROUTE = {'alias': 'OPENROUTE', 'source': 'https://api.openrouteservice.org/v2/directions/foot-hiking?api_key={key}&start={lons},{lats}&end={lone},{late}', 'key': ('features', 0, 'geometry', 'coordinates')}
+  AS_HERE_ROUTING = {'alias': 'HERE_ROUTING', 'source': 'https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin={lats},{lons}&destination={late},{lone}&return=polyline&apikey={key}', 'key': ('routes', 0, 'sections', 0, 'polyline' , '{flexible_polyline}')}
 
   @classmethod
   def ASAlias(cls, name):
@@ -3448,22 +3474,79 @@ class WGS84Itinerary(WGS84Map):
       headers['User-Agent'] = user_agent
     if not infos.get('source'):
       return None
-    uri = infos['source'].format_map({'key': key or '', 'lats': points[0][0], 'lons': points[0][1], 'late': points[1][0], 'lone': points[1][1]})
     try:
+      uri = infos['source'].format_map({'key': key or '', 'lats': points[0][0], 'lons': points[0][1], 'late': points[1][0], 'lone': points[1][1]})
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
       if not rep.body:
         return None
       iti = json.loads(rep.body)
+      form = 'j'
       for k in infos['key']:
-        try:
-          iti = iti[k]
-        except:
-          iti = iti[int(k)]
-      if sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[0][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))) > sum(map(lambda t:(t[1]-t[0])**2, zip(WGS84WebMercator.WGS84toWebMercator(*iti[-1][::-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))))):
+        if k == '{polyline}':
+          form = 'p'
+          break
+        elif k == '{flexible_polyline}':
+          form = 'f'
+          break
+        else:
+          try:
+            iti = iti[k]
+          except:
+            iti = iti[int(k)]
+      if form == 'p':
+        if WGS84Itinerary.BASE64_TABLE is None:
+          WGS84Itinerary.BASE64_TABLE = {chr(i + 63): i for i in range(64)}
+        g = map(WGS84Itinerary.BASE64_TABLE.get, iti)
+        h = 5
+      elif form == 'f':
+        if WGS84Itinerary.URLSAFEBASE64_TABLE is None:
+          WGS84Itinerary.URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
+        g = map(WGS84Itinerary.URLSAFEBASE64_TABLE.get, iti)
+        h = None
+        i = 0
+        for c in g:
+          if h is None:
+            if not (c & 0x20):
+              h = 0
+            continue
+          h |= (c & 0x1f) << i
+          if (c & 0x20):
+            i += 5
+          else:
+            break
+      if form in ('p', 'f'):
+        x = 0
+        i = 0
+        l = [0, 0]
+        p = 0
+        p3 = bool((h >> 4) & 0x7)
+        for c in g:
+          if p3:
+            if p == 2:
+              if not (c & 0x20):
+                p = 0
+              continue
+            else:
+              if not (c & 0x20):
+                p += 1
+          x += (c & 0x1f) << i
+          if (c & 0x20):
+            i += 5
+          else:
+            l.append(l[-2] + ((-((x + 1) >> 1)) if (x & 0x01) else (x >> 1)))
+            x = 0
+            i = 0
+        g = iter(l)
+        next(g)
+        next(g)
+        iti = list(zip(*((map((10 ** -(h & 0xf)).__mul__, g),) * 2)))
+      else:
+        iti = [s[::-1] for s in iti]
+      if math.dist(WGS84WebMercator.WGS84toWebMercator(*iti[0]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))) > math.dist(WGS84WebMercator.WGS84toWebMercator(*iti[-1]), WGS84WebMercator.WGS84toWebMercator(*map(float, points[0]))):
         iti.reverse()
-      return list(map(lambda s:s[::-1], iti))
+      return iti
     except:
       return None
 
@@ -3474,8 +3557,9 @@ class WGS84ReverseGeocoding():
   AS_IGN_LOOK4 = AS_IGN_LOOK4_150 = {'alias': 'IGN_LOOK4_150', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
   AS_IGN_LOOK4_250 = {'alias': 'IGN_LOOK4_250', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
   AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2','key': ('display_name',)}
-  AS_Openroute_150 = {'alias': 'Openroute_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
+  AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
   AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
+  AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}','key': ('items', 'title')}
 
   @classmethod
   def ASAlias(cls, name):
@@ -3508,8 +3592,8 @@ class WGS84ReverseGeocoding():
       headers['User-Agent'] = user_agent
     if not infos.get('source'):
       return None
-    uri = infos['source'].format_map({'key': key or '', 'lat': point[0], 'lon': point[1]})
     try:
+      uri = infos['source'].format_map({'key': key or '', 'lat': point[0], 'lon': point[1]})
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
@@ -5680,6 +5764,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               resp_body = ('\r\n'.join('%.6f,%.6f' % (*p,) for p in iti)).encode('utf-8')
               _send_resp('text/csv; charset=utf-8')
             except:
+
               _send_err_fail()
           elif req.path.lower()[:6] == '/track':
             self.server.Interface.SLock.acquire()
