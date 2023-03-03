@@ -1474,6 +1474,7 @@ class TilesCache():
     self.BLock = threading.RLock()
     self.Generators = []
     self.GCondition = threading.Condition()
+    self.Seq = 0
     self.Id = None
     self.Infos = None
     self.Closed = False
@@ -1533,12 +1534,12 @@ class TilesCache():
       return None
     with self.BLock:
       ptile = self.Buffer.pop((rid, pos), None)
-      if ptile is not None:
+      if ptile is not None and (ptile[0] is not None or ptile[1] == self.Seq):
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
         e = threading.Event()
-        ptile = [e]
+        ptile = [e, self.Seq]
         self[(rid, pos)] = ptile
         self.log(2, 'add', row, col, len(self.Buffer))
     if e:
@@ -1547,7 +1548,7 @@ class TilesCache():
     return ptile
 
   def WaitTile(self, ptile, timeout=None):
-    if ptile == None:
+    if ptile is None:
       return None
     tile = ptile[0]
     if isinstance(tile, threading.Event):
@@ -1592,6 +1593,7 @@ class TilesCache():
     if self.Closed or not rid:
       return False
     self.log(1, 'configure', *rid)
+    self.Seq += 1
     pconnections = [[None] for i in range(self.Threads)]
     with self.GCondition:
       for ind, g in enumerate(self.Generators):
@@ -5208,7 +5210,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       '%s' \
       'Access-Control-Allow-Origin: %s\r\n' \
-      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s != None else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s is not None else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
       try:
         if req.method == 'GET' or req.method == 'POST':
           self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -5307,7 +5309,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_nf()
               self.server.Interface.SLock.release()
               continue
-            if self.server.Interface.SessionId == None:
+            if self.server.Interface.SessionId is None:
               self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, self.server.Interface.Uri + str(time.time())))
               resp_body = self.server.Interface.HTML.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             else:
@@ -5316,7 +5318,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             _send_resp('text/html; charset=utf-8')
           elif req.path.lower() == '/GPXExplorer.html'.lower():
             self.server.Interface.SLock.acquire()
-            if self.server.Interface.HTMLExp == None:
+            if self.server.Interface.HTMLExp is None:
               _send_err_nf()
               self.server.Interface.SLock.release()
               continue
@@ -5328,7 +5330,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_nf()
               continue
             self.server.Interface.PSessionId = None
-            if self.server.Interface.SessionId == None:
+            if self.server.Interface.SessionId is None:
               self.server.Interface.SessionId = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
               resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', 'sessionStorage.setItem("active", "%s");\r\n      ' % self.server.Interface.SessionStoreValue).replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             else:
@@ -5470,7 +5472,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = int(req.path.split(',')[1])
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
-              if self.server.Interface.Track.WebMercatorPts == None:
+              if self.server.Interface.Track.WebMercatorPts is None:
                 self.server.Interface.Track.BuildWebMercator()
             try:
               if self.server.Interface.Build3DHTML(mode3d, margin):
@@ -5629,7 +5631,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if mode == 'ta' or mode == 'tb':
               track2.BackupGPX(uri2)
               self.server.Interface.Tracks[tr_ind2][0] = uri1
-              if next((tr for tr in self.server.Interface.Tracks if tr[0] == uri2), None) == None:
+              if next((tr for tr in self.server.Interface.Tracks if tr[0] == uri2), None) is None:
                 for i in range(3):
                   try:
                     _tracks[i].unlink()
@@ -13528,7 +13530,12 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (focused) {\r\n' \
-  '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
+  '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
+  '            track_click(null, document.getElementById(focused + "desc"));\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function folders_whole(tick) {\r\n' \
