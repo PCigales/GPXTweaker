@@ -341,6 +341,7 @@ FR_STRINGS = {
     'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
     'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
     'gpx': 'seuls les fichiers .gpx sont pris en charge',
+    'openc': 'Ouvrir l\'url (copiée dans le presse-papier) %s',
     'open': 'Ouvrir l\'url %s',
     'keyboard': 'Presser "S" pour quitter'
    }
@@ -646,6 +647,7 @@ EN_STRINGS = {
     'noopen': 'no automatic opening in the default browser',
     'verbosity': 'verbosity level from 0 to 2 [0 by default]',
     'gpx': 'only .gpx files are supported',
+    'openc': 'Open the url (copied in the clipboard) %s',
     'open': 'Open the url %s',
     'keyboard': 'Press "S" to exit'
    }
@@ -1473,6 +1475,7 @@ class TilesCache():
     self.Buffer = {}
     self.BLock = threading.RLock()
     self.Generators = []
+    self.GAvailable = []
     self.GCondition = threading.Condition()
     self.Seq = 0
     self.Id = None
@@ -1504,16 +1507,13 @@ class TilesCache():
               self.Buffer.pop((rid, pos), None)
             self.log(2, 'cancel', row, col)
             return
-          for g in self.Generators:
-            if g[0]:
-              tgen = g
-              break
-          if tgen is None:
+          if (a := self.GAvailable):
+            tgen = self.Generators[(i := a.pop())]
+          else:
             self.GCondition.wait()
         tgen[0] = False
       try:
-        inf, tile = tgen[1](None, None, row, col).values()
-        if tile is None:
+        if (tile := tgen[1](None, None, row, col)['tile']) is None:
           self.log(1, 'error', row, col)
         else:
           self.log(2, 'load', row, col)
@@ -1526,6 +1526,7 @@ class TilesCache():
             tgen[1](close_connection=True)
           else:
             tgen[0] = True
+            a.append(i)
             self.GCondition.notify()
         ptile[0] = tile
         e.set()
@@ -1533,14 +1534,12 @@ class TilesCache():
       self.log(2, 'cancel', row, col)
       return None
     with self.BLock:
-      ptile = self.Buffer.pop((rid, pos), None)
-      if ptile is not None and (ptile[0] is not None or ptile[1] == self.Seq):
+      if (ptile := self.Buffer.pop((rid, pos), None)) is not None and (ptile[0] is not None or ptile[1] == self.Seq):
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
         e = threading.Event()
-        ptile = [e, self.Seq]
-        self[(rid, pos)] = ptile
+        self[(rid, pos)] = ptile = [e, self.Seq]
         self.log(2, 'add', row, col, len(self.Buffer))
     if e:
       t = threading.Thread(target=_retrieveitem, daemon=True)
@@ -1550,15 +1549,13 @@ class TilesCache():
   def WaitTile(self, ptile, timeout=None):
     if ptile is None:
       return None
-    tile = ptile[0]
-    if isinstance(tile, threading.Event):
+    if isinstance((tile := ptile[0]), threading.Event):
       if self.Closed:
         return None
       tile.wait(timeout)
       if self.Closed:
         return None
-      tile = ptile[0]
-      if isinstance(tile, threading.Event):
+      if isinstance((tile := ptile[0]), threading.Event):
         return None
       else:
         return tile
@@ -1617,14 +1614,21 @@ class TilesCache():
         if self.Threads == 1:
           gens = (gens, )
         self.Generators = [[True, g] for g in gens]
-        self.Infos = infos
         self.Id = rid
+        self.Infos = infos
+        self.GAvailable = []
+        for i in range(self.Threads):
+          if pconnections[i][0] is None:
+            self.GAvailable.insert(0, i)
+          else:
+            self.GAvailable.append(i)
         if not ifound:
           self.InfosBuffer[rid] = infos
         self.GCondition.notify_all()
       except:
         self.Id = None
         self.Infos = None
+        self.GAvailable = []
         self.GCondition.notify_all()
         if rid[0] != -1:
           self.log(0, 'fail', *rid)
@@ -1640,6 +1644,9 @@ class TilesCache():
         except:
           pass
     with self.GCondition:
+      self.Id = None
+      self.Infos = None
+      self.GAvailable = []
       self.GCondition.notify_all()
     try:
       for g in self.Generators:
@@ -15113,8 +15120,13 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'handling':
-          if field in ('key', 'referer', 'user_agent', 'local_pattern', 'local_store', 'local_expiration', 'only_local'):
+          if field in ('key', 'referer', 'user_agent', 'local_pattern', 'local_store', 'only_local'):
             s[2][field] = value
+          elif field == 'local_expiration':
+            try:
+              s[2][field] = float(value)
+            except:
+              pass
           elif field == '"user_colon_password"':
             if value:
               if len(value) < 2 or value[:1] != '"' or value [-1:] != '"':
@@ -15599,10 +15611,16 @@ class GPXTweakerWebInterfaceServer():
           self.HTML = self.HTMLExp = None
           self.log(0, 'berror')
           return None
+        add = 'http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))
         if launch:
-          webbrowser.open('http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer')))
+          webbrowser.open(add)
         else:
-          print(LSTRINGS['parser']['open'] % ('http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))))
+          try:
+            if subprocess.run('echo %s| clip' % add, shell=True).returncode != 0:
+              raise
+            print(LSTRINGS['parser']['openc'] % add)
+          except:
+            print(LSTRINGS['parser']['open'] % add)
       return self
     except:
       self.log(0, 'berror')
