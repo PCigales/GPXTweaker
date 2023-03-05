@@ -1079,7 +1079,7 @@ class HTTPBaseRequest():
     if method is None:
       method = 'GET' if data is None else 'POST'
     redir = 0
-    retry = False
+    retried = False
     exceeded = [False]
     try:
       url_p = urllib.parse.urlsplit(url, allow_fragments=False)
@@ -1139,14 +1139,15 @@ class HTTPBaseRequest():
           else:
             pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
         except:
-          if retry:
+          if retried:
             raise
-          retry = True
+          retried = True
           try:
             pconnection[0].close()
           except:
             pass
           pconnection[0] = None
+          pconnection[2].pop()
           continue
         while code == '100':
           resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=decompress, exceeded=exceeded)
@@ -1156,16 +1157,17 @@ class HTTPBaseRequest():
             if redir > 5:
               raise
         if code is None:
-          if retry or exceeded == [True]:
+          if retried or exceeded == [True]:
             raise
-          retry = True
+          retried = True
           try:
             pconnection[0].close()
           except:
             pass
           pconnection[0] = None
+          pconnection[2].pop()
           continue
-        retry = False
+        retried = False
         if basic_auth is not None and resp.header('Set-Cookie') is not None:
           cook.update(resp.cookies(cls._netloc_split(url_p.netloc)[0], url_p.path.split('#', 1)[0]))
         if code == '401':
@@ -1508,12 +1510,13 @@ class TilesCache():
             self.log(2, 'cancel', row, col)
             return
           if (a := self.GAvailable):
-            tgen = self.Generators[(i := a.pop())]
+            tgen = self.Generators[a.pop()]
+            gen = tgen[1]
           else:
             self.GCondition.wait()
         tgen[0] = False
       try:
-        if (tile := tgen[1](None, None, row, col)['tile']) is None:
+        if (tile := gen(None, None, row, col)['tile']) is None:
           self.log(1, 'error', row, col)
         else:
           self.log(2, 'load', row, col)
@@ -1523,10 +1526,13 @@ class TilesCache():
       finally:
         with self.GCondition:
           if tgen[0]:
-            tgen[1](close_connection=True)
+            gen(close_connection=True)
           else:
             tgen[0] = True
-            a.append(i)
+            if gen.pconnection[0] is None:
+              a.insert(0, gen.ind)
+            else:
+              a.append(gen.ind)
             self.GCondition.notify()
         ptile[0] = tile
         e.set()
@@ -1593,10 +1599,10 @@ class TilesCache():
     self.Seq += 1
     pconnections = [[None] for i in range(self.Threads)]
     with self.GCondition:
-      for ind, g in enumerate(self.Generators):
+      for g in self.Generators:
         try:
           if (self.Id or (None, None))[0] == rid[0] and g[0]:
-            pconnections[ind] = g[1](close_connection=None)
+            pconnections[g[1].ind] = g[1].pconnection
           elif g[0]:
             g[1](close_connection=True)
           else:
@@ -2479,7 +2485,7 @@ class WebMercatorMap(WGS84WebMercator):
         if not infos_set:
           if only_local:
             return None
-          if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, basic_auth, pconnections[0]):
+          if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, basic_auth, next((pconnection for pconnection in pconnections if pconnection[0] is not None), pconnections[0])):
             return None
           if local_store:
             if not self.SaveTile(local_pattern, infos_completed):
@@ -2537,10 +2543,13 @@ class WebMercatorMap(WGS84WebMercator):
           return gen_tiles()
         except:
           return None
-    if number == 1:
-      return retrieve_tiles
-    else:
-      return [partial(retrieve_tiles, ind=i) for i in range(number)]
+    def bind_retrieve_tiles(ind):
+      def bound_retrieve_tiles(a=None, b=None, c=None, d=None, just_box=False, close_connection=False):
+        return retrieve_tiles(a, b, c, d, just_box, close_connection, ind)
+      bound_retrieve_tiles.ind = ind
+      bound_retrieve_tiles.pconnection = pconnections[ind]
+      return bound_retrieve_tiles
+    return bind_retrieve_tiles(0) if number == 1 else [bind_retrieve_tiles(i) for i in range(number)]
       
   def RetrieveTiles(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, memory_store=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10):
     if not local_store and memory_store is None:
