@@ -1,4 +1,4 @@
-# GPXTweaker v1.13.1 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.14.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -29,6 +29,7 @@ import ctypes, ctypes.wintypes
 import subprocess
 import struct
 import array
+from collections import deque
 import types
 import sys
 import uuid
@@ -273,6 +274,7 @@ FR_STRINGS = {
     'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
     'jm3dviewer2': 'Visionneuse 3D démarrée',
     'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
+    'jm3dviewer4': 'Visionneuse 3D indisponible en mode superposition de jeux de tuiles',
     'jmmedia1': 'Récupération des données des médias en cours...',
     'jmmedia2': 'Récupération des données des médias effectuée',
     'jmmedia3': 'Échec de la récupération des données des médias',
@@ -604,6 +606,7 @@ EN_STRINGS = {
     'jm3dviewer1': 'Loading of the 3D viewer in progress...',
     'jm3dviewer2': '3D viewer started',
     'jm3dviewer3': 'Failure of the loading of the 3D viewer',
+    'jm3dviewer4': '3D viewer unavailable in superposition of tiles sets mode',
     'jtilt': 'Tilt:',
     'jrotation': 'Rotation:',
     'jzscale': 'Z scale:',
@@ -1530,16 +1533,16 @@ class TilesCache():
           else:
             tgen[0] = True
             if gen.pconnection[0] is None:
-              a.insert(0, gen.ind)
+              a.appendleft(gen.ind)
             else:
               a.append(gen.ind)
             self.GCondition.notify()
         ptile[0] = tile
         e.set()
-    if self.Closed:
-      self.log(2, 'cancel', row, col)
-      return None
     with self.BLock:
+      if self.Closed:
+        self.log(2, 'cancel', row, col)
+        return None
       if (ptile := self.Buffer.pop((rid, pos), None)) is not None and (ptile[0] is not None or ptile[1] == self.Seq):
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
@@ -1596,9 +1599,9 @@ class TilesCache():
     if self.Closed or not rid:
       return False
     self.log(1, 'configure', *rid)
-    self.Seq += 1
     pconnections = [[None] for i in range(self.Threads)]
     with self.GCondition:
+      self.Seq += 1
       for g in self.Generators:
         try:
           if (self.Id or (None, None))[0] == rid[0] and g[0]:
@@ -1618,14 +1621,14 @@ class TilesCache():
         if not gens:
           raise
         if self.Threads == 1:
-          gens = (gens, )
+          gens = [gens]
         self.Generators = [[True, g] for g in gens]
         self.Id = rid
         self.Infos = infos
-        self.GAvailable = []
+        self.GAvailable = deque()
         for i in range(self.Threads):
           if pconnections[i][0] is None:
-            self.GAvailable.insert(0, i)
+            self.GAvailable.appendleft(i)
           else:
             self.GAvailable.append(i)
         if not ifound:
@@ -1645,20 +1648,276 @@ class TilesCache():
     self.Closed = True
     with self.BLock:
       for ptile in self.Buffer.values():
-        try:
-          ptile[0].set()
-        except:
-          pass
+        e = ptile[0]
+        if isinstance(e, threading.Event):
+          ptile[0] = None
+          e.set()
+      self.Buffer.clear()
     with self.GCondition:
       self.Id = None
       self.Infos = None
       self.GAvailable = []
+      self.InfosBuffer.clear()
       self.GCondition.notify_all()
-    try:
-      for g in self.Generators:
+    for g in self.Generators:
+      g[0] = True
+      try:
         g[1](close_connection=True)
+      except:
+        pass
+    self.Generators = []
+    self.log(1, 'close')
+
+
+class TilesMixCache(TilesCache):
+
+  def __init__(self, size=None, threads=None, preload=None, wrap=None):
+    self.Wrap = wrap
+    if wrap is not None:
+      self.Size = wrap.Size
+      self.Threads = wrap.Threads
+      self.Preload = wrap.Preload
+      self.InfosBuffer = wrap.InfosBuffer
+      self.Buffer = wrap.Buffer
+      self.BLock = wrap.BLock
+      if wrap.Id is not None:
+        self.Generators = {wrap.Id: wrap.Generators}
+        self.GAvailable = {wrap.Id: wrap.GAvailable}
+        self.Id = [wrap.Id]
+        self.Infos = {wrap.Id: wrap.Infos}
+      else:
+        self.Generators = {}
+        self.GAvailable = {}
+        self.Id = []
+        self.Infos = {}
+      self.GCondition = wrap.GCondition
+      self.Seq = wrap.Seq + 1
+      wrap.Closed = True
+      with wrap.GCondition:
+        wrap.GCondition.notify_all()
+    else:
+      self.Size = size
+      self.Threads = threads
+      if preload is None:
+        self.Preload = size >= 10
+      else:
+        self.Preload = preload
+      self.InfosBuffer = {}
+      self.Buffer = {}
+      self.BLock = threading.RLock()
+      self.Generators = {}
+      self.GAvailable = {}
+      self.GCondition = threading.Condition()
+      self.Seq = 0
+      self.Id = []
+      self.Infos = {}
+    self.TRunning = [0, 0]
+    self.Queue = deque()
+    self.Closed = False
+    self.log = partial(log, 'tilescache')
+    self.log(2, 'init', size, threads)
+
+  def _retriever(self, seq):
+    while True:
+      end = time.time() + 10
+      with self.GCondition:
+        if seq != self.Seq:
+          return
+        tr = self.TRunning
+        tr[1] += 1
+        while not self.Queue and not self.Closed and seq == self.Seq:
+          if not self.GCondition.wait(end - time.time()):
+            tr[0] -= 1
+            tr[1] -= 1
+            return
+          continue
+        if self.Closed or seq != self.Seq:
+          return
+        tr[1] -= 1
+        rid, pos, ptile = self.Queue.popleft()
+        row, col = pos
+        e = ptile[0]
+        if not (a := self.GAvailable.get(rid)):
+          ptile[0] = None
+          e.set()
+          with self.BLock:
+            self.Buffer.pop((rid, pos), None)
+          self.log(2, 'cancel', row, col)
+          continue
+        tgen = self.Generators[rid][a.pop()]
+        tgen[0] = False
+      gen = tgen[1]
+      try:
+        if (tile := gen(None, None, row, col)['tile']) is None:
+          self.log(1, 'error', row, col)
+        else:
+          self.log(2, 'load', row, col)
+      except:
+        tile = None
+        self.log(1, 'error', row, col)
+      finally:
+        with self.GCondition:
+          if tgen[0]:
+            gen(close_connection=True)
+          else:
+            tgen[0] = True
+            if gen.pconnection[0] is None:
+              a.appendleft(gen.ind)
+            else:
+              a.append(gen.ind)
+        ptile[0] = tile
+        e.set()
+
+  def _getitem(self, rid, pos):
+    try:
+      row, col = pos
     except:
-      pass
+      return None
+    if not self.Id or self.Closed:
+      self.log(2, 'cancel', row, col)
+      return None
+    ptile = None
+    e = None
+    with self.BLock:
+      if (ptile := self.Buffer.pop((rid, pos), None)) is not None and (ptile[0] is not None or ptile[1] == self.Seq):
+        self[(rid, pos)] = ptile
+        self.log(2, 'found', row, col)
+      else:
+        e = threading.Event()
+        self[(rid, pos)] = ptile = [e, self.Seq]
+        self.log(2, 'add', row, col, len(self.Buffer))
+    if e:
+      with self.GCondition:
+        self.Queue.append((rid, pos, ptile))
+        if not self.TRunning[1] and self.TRunning[0] < self.Threads:
+          self.TRunning[0] += 1
+          t = threading.Thread(target=self._retriever, args=(self.Seq,), daemon=True)
+          t.start()
+        self.GCondition.notify()
+    return ptile
+
+  def Configure(self, tile_generator_builders):
+    if self.Closed or not tile_generator_builders:
+      return False
+    rids = tile_generator_builders.keys()
+    for rid in rids:
+      self.log(1, 'configure', *rid)
+    pconnections = {rid: [[None] for i in range(self.Threads)] for rid in rids}
+    _rids = {rid: True for rid in rids}
+    with self.GCondition:
+      self.Seq += 1
+      for q in self.Queue:
+        e = q[2][0]
+        q[2][0] = None
+        e.set()
+      self.Queue.clear()
+      for rid_, gens_ in self.Generators.items():
+        pcons = next(((pconnections[rid], _rids.pop(rid))[0] for rid in _rids if rid_[0] == rid[0]), None)
+        for g in gens_:
+          try:
+            if pcons and g[0]:
+              pcons[g[1].ind] = g[1].pconnection
+            elif g[0]:
+              g[1](close_connection=True)
+            else:
+              g[0] = True
+          except:
+            pass
+      self.TRunning = [0, 0]
+      self.Generators = {}
+      self.GAvailable = {}
+      self.Id = list(rids)
+      self.Infos = {}
+      def _build(rid, infos, gens, pcons):
+        try:
+          gens[:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos, pconnections=pcons)
+        except:
+          gens.clear()
+      gens = {}
+      infos = {}
+      th = []
+      for rid in rids:
+        infos[rid] = self.InfosBuffer.get(rid, {})
+        ifound = bool(infos[rid])
+        if ifound:
+          self.log(2, 'ifound', *rid)
+        pcons = pconnections[rid]
+        gens[rid] = []
+        t = threading.Thread(target=_build, args=(rid, infos[rid], gens[rid], pcons), daemon=True)
+        th.append(t)
+        t.start()
+      for t in th:
+        t.join()
+      try:
+        if [] in gens.values():
+          raise
+        smin = min(inf['scale'] for inf in infos.values())
+        smax = min(inf['scale'] for inf in infos.values())
+        if (smax - smin) / smin > 0.001:
+          raise
+        for rid in rids:
+          if self.Threads == 1:
+            gens[rid] = [gens[rid]]
+          self.Generators[rid] = [[True, g] for g in gens[rid]]
+          self.Infos[rid] = infos[rid]
+          self.GAvailable[rid] = a = deque()
+          pcons = pconnections[rid]
+          for i in range(self.Threads):
+            if pcons[i][0] is None:
+              a.appendleft(i)
+            else:
+              a.append(i)
+          if not ifound:
+            self.InfosBuffer[rid] = infos[rid]
+      except:
+        self.Id = []
+        self.Infos = {}
+        self.Generators = {}
+        self.GAvailable = {}
+        self.log(0, 'fail', *rid)
+        return False
+      finally:
+        self.GCondition.notify_all()
+    return True
+
+  def Close(self):
+    self.Closed = True
+    with self.BLock:
+      for ptile in self.Buffer.values():
+        e = ptile[0]
+        if isinstance(e, threading.Event):
+          ptile[0] = None
+          e.set()
+    with self.GCondition:
+      self.GCondition.notify_all()
+      gens = iter(self.Generators.values())
+      wrap = self.Wrap
+      if wrap is not None:
+        if self.Id:
+          wrap.Id = self.Id[0]
+          wrap.Infos = self.Infos[wrap.Id]
+          wrap.Generators = self.Generators[wrap.Id]
+          wrap.GAvailable = self.GAvailable[wrap.Id]
+        else:
+          wrap.Id = None
+          wrap.Generators = []
+          wrap.Infos = None
+          wrap.GAvailable = None
+        wrap.Seq = self.Seq + 1
+        wrap.Closed = False
+        next(gens, None)
+      for gens_ in gens:
+        for g in gens_:
+          try:
+            g[1](close_connection=True)
+          except:
+            pass
+      self.Id = []
+      self.Infos = {}
+      self.InfosBuffer = {}
+      self.Buffer = {}
+      self.Generators = {}
+      self.GAvailable = {}
     self.log(1, 'close')
 
 
@@ -1683,6 +1942,8 @@ class WebMercatorMap(WGS84WebMercator):
   TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
   TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
+  TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_SLOPESMOUNTAIN = {'alias': 'IGN_SLOPESMOUNTAIN', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
@@ -2627,9 +2888,19 @@ class WebMercatorMap(WGS84WebMercator):
   def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10, tiles_cache=None):
     tiles = []
     if tiles_cache is not None:
-      if any(infos[k] != tiles_cache.Infos[k] for k in infos if ((k in tiles_cache.Infos) and ((k in ('layer', 'format', 'matrix')) or (k in ('matrixset', 'style') and '{wmts}' in tiles_cache.Infos.get('source', ''))))):
-        return False
-      infos.update({k:v for k,v in tiles_cache.Infos.items() if k != 'source'})
+      if matrix is not None:
+        infos['matrix'] = matrix
+      rid = tiles_cache.Id
+      if isinstance(rid, list):
+        _rid = next((rid_ for rid_, inf_ in tiles_cache.Infos.items() if not any((infos[k] != inf_[k] for k in infos if ((k in inf_) and ((k in ('layer', 'format', 'matrix')) or (k in ('matrixset', 'style') and '{wmts}' in inf_.get('source', ''))))))), None)
+        if _rid is None:
+          return False
+        rid = _rid
+        infos.update({k:v for k,v in tiles_cache.Infos[rid].items() if k != 'source'})
+      else:
+        if any(infos[k] != tiles_cache.Infos[k] for k in infos if ((k in tiles_cache.Infos) and ((k in ('layer', 'format', 'matrix')) or (k in ('matrixset', 'style') and '{wmts}' in tiles_cache.Infos.get('source', ''))))):
+          return False
+        infos.update({k:v for k,v in tiles_cache.Infos.items() if k != 'source'})
       try:
         (minrow, mincol), (maxrow, maxcol) = self.WGS84BoxtoTileBox(infos, minlat, maxlat, minlon, maxlon)
       except:
@@ -2648,7 +2919,7 @@ class WebMercatorMap(WGS84WebMercator):
           try:
             with lock:
               row, col = next(box)
-            tiles[col - mincol][row - minrow] = tiles_cache[tiles_cache.Id, (row, col)](30)
+            tiles[col - mincol][row - minrow] = tiles_cache[rid, (row, col)](30)
           except StopIteration:
             break
           except:
@@ -2710,6 +2981,9 @@ class WebMercatorMap(WGS84WebMercator):
       else:
         infos = None
       self.TilesInfos = {**infos_base, 'matrix': matrix}
+      if isinstance(self.Tiles, TilesMixCache):
+        self.Tiles.Close()
+        self.Tiles = self.Tiles.Wrap
       if not self.Tiles.Configure(rid, tile_generator_builder):
         self.TilesInfos = infos
         return False
@@ -2718,10 +2992,35 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     return True
 
+  def SetTilesProviders(self, providers, matrix):
+    try:
+      provs = providers.items()
+      tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], matrix, **prov[1]) for rid, prov in provs}
+      if self.TilesInfos:
+        infos = {**self.TilesInfos}
+      else:
+        infos = None
+      self.TilesInfos = {rid: {**prov[0], 'matrix': matrix} for rid, prov in provs}
+      if isinstance(self.Tiles, TilesMixCache):
+        if not self.Tiles.Configure(tile_generator_builders):
+          self.TilesInfos = infos
+          return False
+      else:
+        self.Tiles = TilesMixCache(wrap=self.Tiles)
+        if not self.Tiles.Configure(tile_generator_builders):
+          self.Tiles.Close()
+          self.Tiles = self.Tiles.Wrap
+          self.TilesInfos = infos
+          return False
+      self.TilesInfos = self.Tiles.Infos
+    except:
+      return False
+    return True
+
   def Close(self):
     try:
       if self.Tiles is not None:
-        self.Tiles.close()
+        self.Tiles.Close()
     except:
       pass
 
@@ -3040,6 +3339,9 @@ class ElevationTilesCache(TilesCache):
         r = super().pop(key)
       self.LengthFlag = False
       return r
+    def clear(self):
+      super().clear()
+      self.Length = 0
     def __delitem__(self, key):
       if key in self and not self.LengthFlag:
         self.Length -= self.Weights[key[0]]
@@ -3454,7 +3756,7 @@ class WGS84Elevation(WGS84Map):
     self.Closed = True
     try:
       if self.LazyTiles is not None:
-        self.LazyTiles.close()
+        self.LazyTiles.Close()
     except:
       pass
 
@@ -5358,9 +5660,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.TLock.acquire()
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
+            tsl = len(self.server.Interface.TilesSets[self.server.Interface.TilesSet])
             if 'set' in q:
               try:
-                resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][3]}).encode('utf-8')
+                resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][-1]}).encode('utf-8')
                 self.server.Interface.TilesSet = int(q['set'][0])
                 _send_resp('application/json; charset=utf-8')
               except:
@@ -5368,7 +5671,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             else:
               l1 = 0
               if 'auto' in q:
-                tl = self.server.Interface.TilesSets[self.server.Interface.TilesSet][3]
+                tl = self.server.Interface.TilesSets[self.server.Interface.TilesSet][-1]
                 l1 = tl[0]
                 q['matrix'] = [str(tl[l1][0])]
                 try:
@@ -5379,7 +5682,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   m = None
                   while True:
                     if tl[l2][0] != m:
-                      if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
+                      if not (self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]) if tsl == 4 else self.server.Interface.Map.SetTilesProviders({(tso[0], str(tl[l2][0])): self.server.Interface.TilesSets[tso[0]][1:3] for tso in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}, str(tl[l2][0]))):
                         l2 += 1
                         if l2 >= l3:
                           l3 = (l1 + l3) // 2
@@ -5388,7 +5691,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                             break
                         continue
                       m = tl[l2][0]
-                    s = self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    s = (self.server.Interface.Map.TilesInfos if tsl == 4 else self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]])['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
                     if sm < s:
                       l1 = l2
                     else:
@@ -5399,27 +5702,44 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   q['matrix'] = [str(tl[l1][0])]
                 except:
                   pass
-              if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
-                _send_err_fail()
-              else:
-                try:
-                  resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'level': l1}).encode('utf-8')
-                  _send_resp('application/json; charset=utf-8')
-                except:
+              if tsl == 4:
+                if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
                   _send_err_fail()
+                else:
+                  try:
+                    resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'level': l1}).encode('utf-8')
+                    _send_resp('application/json; charset=utf-8')
+                  except:
+                    _send_err_fail()
+              else:
+                if not self.server.Interface.Map.SetTilesProviders({(tso[0], q['matrix'][0]): self.server.Interface.TilesSets[tso[0]][1:3] for tso in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}, q['matrix'][0]):
+                  _send_err_fail()
+                else:
+                  try:
+                    resp_body = json.dumps({'layers': [{**dict(zip(('set', 'opacity'), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][t])), **{k: ti[k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(ti.get('format'), 'img')} for t in range(len(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1])) for ti in (self.server.Interface.Map.TilesInfos[(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][t][0], q['matrix'][0])],)], 'scale': self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]]['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    _send_resp('application/json; charset=utf-8')
+                  except:
+                    raise
+                    _send_err_fail()
             self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
             try:
               rid = self.server.Interface.Map.Tiles.Id
-              if self.server.Interface.TilesSet != self.server.Interface.Map.Tiles.Id[0] or req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
-                raise
+              if isinstance(rid, list):
+                tid = req.path.lower()[12:].split('?')[-1].split(',')
+                rid = (int(tid[0]), tid[1])
+                ti = self.server.Interface.Map.TilesInfos[rid]
+              else:
+                if self.server.Interface.TilesSet != rid[0] or req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
+                  raise
+                ti = self.server.Interface.Map.TilesInfos
               row, col = req.path.lower()[12:].split('.')[0].split('-')
               resp_body = self.server.Interface.Map.Tiles[(rid, (int(row), int(col)))](20)
             except:
               _send_err_fail()
               continue
             if resp_body:
-              _send_resp(self.server.Interface.Map.TilesInfos.get('format'))
+              _send_resp(ti.get('format'))
             else:
               _send_err_nf()
           elif req.path.lower()[:8] == '/map/map':
@@ -6056,6 +6376,8 @@ class GPXTweakerWebInterfaceServer():
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
+  '      var layers = null;\r\n' \
+  '      var layersc = null;\r\n' \
   '      var cleft = null;\r\n' \
   '      var cright = null;\r\n' \
   '      var ctop = null;\r\n' \
@@ -6636,11 +6958,26 @@ class GPXTweakerWebInterfaceServer():
   '            tlevel = nlevel;\r\n' \
   '          }\r\n' \
   '          if (! kzoom || nlevel == null) {zoom_s = tlevels[tlevel][1];}\r\n' \
-  '          ttopx = msg.topx;\r\n' \
-  '          ttopy = msg.topy;\r\n' \
-  '          twidth = msg.width;\r\n' \
-  '          theight = msg.height\r\n' \
-  '          text = msg.ext;\r\n' \
+  '          let rules = document.styleSheets[0].cssRules;\r\n' \
+  '          let nrule = rules.length;\r\n' \
+  '          for (let irule=nrule-1; irule>=0; irule--) {\r\n' \
+  '            if ((rules[irule].selectorText || "").indexOf("tile-") > 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
+  '          }\r\n' \
+  '          if ("layers" in msg) {\r\n' \
+  '            layers = msg.layers;\r\n' \
+  '            nrule = rules.length;\r\n' \
+  '            for (let l=0; l<layers.length; l++) {\r\n' \
+  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + l.toString() + "] {opacity:" + layers[l].opacity + ";z-index:" + (l-layers.length).toString() + ";}", nrule++);\r\n' \
+  '            }\r\n' \
+  '            layersc = Array(layers.length).fill([null, null, null, null]);\r\n' \
+  '          } else {\r\n' \
+  '            layers = layersc = null;\r\n' \
+  '            ttopx = msg.topx;\r\n' \
+  '            ttopy = msg.topy;\r\n' \
+  '            twidth = msg.width;\r\n' \
+  '            theight = msg.height\r\n' \
+  '            text = msg.ext;\r\n' \
+  '          } \r\n' \
   '          let tscale_ex = tscale;\r\n' \
   '          tscale = msg.scale;\r\n' \
   '          cleft = null;\r\n' \
@@ -6659,9 +6996,9 @@ class GPXTweakerWebInterfaceServer():
   '              zoom_s = tlevels[nlevel][1];\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
-  '            nlevel = tlevels[0];\r\n' \
   '            matrix = tlevels[tlevel][0];\r\n' \
   '            tlevels = msg.tlevels;\r\n' \
+  '            nlevel = tlevels[0];\r\n' \
   '            for (let i=1; i<tlevels.length; i++) {\r\n' \
   '              if (tlevels[i][0] <= matrix) {nlevel = i;}\r\n' \
   '              if (tlevels[i][0] == matrix) {\r\n' \
@@ -6710,7 +7047,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").disabled = false;\r\n' \
   '        cpx = cpy = null;\r\n' \
   '      }\r\n' \
-  '      function add_tile(row=0, col=0, suf="") {\r\n' \
+  '      function add_tile(row=0, col=0, suf="", pref="tile-") {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
   '          tile.id = "map";\r\n' \
@@ -6719,9 +7056,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          tile.src = "/map/" + tile.id + text;\r\n' \
   '        } else {\r\n' \
-  '          tile.id = "tile-" + row.toString() + "-" + col.toString();\r\n' \
+  '          let tpos = row.toString() + "-" + col.toString();\r\n' \
+  '          tile.id = pref + tpos;\r\n' \
   '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
-  '          tile.src = "http://" + host + port.toString() + "/tiles/" + tile.id + (suf || (text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML));\r\n' \
+  '          tile.src = "http://" + host + port.toString() + "/tiles/tile-" + tpos + (suf || (text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML));\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
@@ -6739,68 +7077,86 @@ class GPXTweakerWebInterfaceServer():
   '          tiles.forEach((t) => handle.removeChild(t));\r\n' \
   '          tiles = [];\r\n' \
   '        }\r\n' \
-  '        if (twidth == 0 || theight == 0) {return;}\r\n' \
-  '        let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
-  '        let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
-  '        let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
-  '        let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
-  '        let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
-  '        let rright = parseInt(vright / twidth + 1.5);\r\n' \
-  '        let rtop = parseInt(vtop / theight - 1.5);\r\n' \
-  '        let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
-  '        if (cleft == null) {\r\n' \
-  '          cleft = rright + 1;\r\n' \
-  '          cright = rleft - 1;\r\n' \
-  '          ctop = rbottom + 1;\r\n' \
-  '          cbottom = rtop - 1;\r\n' \
-  '        }\r\n' \
-  '        if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
-  '          for (let tile of tiles) {\r\n' \
-  '            let [row, col] = tile.id.split("-").slice(1, 3).map(Number);\r\n' \
-  '            if (row < rtop || row > rbottom || col < rleft || col > rright) {\r\n' \
-  '              handle.removeChild(tile);\r\n' \
-  '            }\r\n' \
+  '        if (layers == null && (twidth == 0 || theight == 0)) {return;}\r\n' \
+  '        for (let l=0; l<(layers==null?1:layers.length); l++) {\r\n' \
+  '          let layer = null;\r\n' \
+  '          if (layers != null) {\r\n' \
+  '            layer = layers[l];\r\n' \
+  '            ttopx = layer.topx;\r\n' \
+  '            ttopy = layer.topy;\r\n' \
+  '            twidth = layer.width;\r\n' \
+  '            theight = layer.height;\r\n' \
+  '            text = layer.ext;\r\n' \
+  '            [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
   '          }\r\n' \
-  '          let suf = text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
-  '          if (tiles_hold == null) {\r\n' \
-  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '              for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf);}\r\n' \
+  '          let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
+  '          let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
+  '          let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
+  '          let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
+  '          let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
+  '          let rright = parseInt(vright / twidth + 1.5);\r\n' \
+  '          let rtop = parseInt(vtop / theight - 1.5);\r\n' \
+  '          let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
+  '          if (cleft == null) {\r\n' \
+  '            cleft = rright + 1;\r\n' \
+  '            cright = rleft - 1;\r\n' \
+  '            ctop = rbottom + 1;\r\n' \
+  '            cbottom = rtop - 1;\r\n' \
+  '          }\r\n' \
+  '          if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
+  '            for (let tile of tiles) {\r\n' \
+  '              let [tlayer, row, col] = tile.id.split("-").slice(1, 4).map(Number);\r\n' \
+  '              if (tlayer == l && (row < rtop || row > rbottom || col < rleft || col > rright)) {\r\n' \
+  '                handle.removeChild(tile);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '          } else {\r\n' \
-  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '              for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                if (col < cleft || col > cright || row < ctop || row > cbottom) {\r\n' \
-  '                  let tk = "tile-" + row.toString() + "-" + col.toString() + suf;\r\n' \
-  '                  let tile = tiles_hold.get(tk);\r\n' \
-  '                  if (tile) {\r\n' \
-  '                    tiles_hold.delete(tk);\r\n' \
-  '                    if (tile.naturalWidth) {\r\n' \
-  '                      handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '            let suf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:layer.set).toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '            let pref = "tile-" + l.toString() + "-";\r\n' \
+  '            if (tiles_hold == null) {\r\n' \
+  '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '                for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf, pref);}\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '                for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {\r\n' \
+  '                    let tpos = row.toString() + "-" + col.toString();\r\n' \
+  '                    let tk = "tile-" + tpos + suf;\r\n' \
+  '                    let tile = tiles_hold.get(tk);\r\n' \
+  '                    if (tile) {\r\n' \
+  '                      tiles_hold.delete(tk);\r\n' \
+  '                      if (tile.naturalWidth) {\r\n' \
+  '                        tile.id = pref + tpos;\r\n' \
+  '                        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '                        tile.style.opacity = "";\r\n' \
+  '                        tile.style.zIndex = "";\r\n' \
+  '                      } else {\r\n' \
+  '                        tile = add_tile(row, col, suf, pref);\r\n' \
+  '                      }\r\n' \
   '                    } else {\r\n' \
-  '                      tile = add_tile(row, col, suf);\r\n' \
+  '                      tile = add_tile(row, col, suf, pref);\r\n' \
   '                    }\r\n' \
-  '                  } else {\r\n' \
-  '                    tile = add_tile(row, col, suf);\r\n' \
+  '                    tiles_hold.set(tk, tile);\r\n' \
   '                  }\r\n' \
-  '                  tiles_hold.set(tk, tile);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              let thr = tiles_hold.size - tholdsize - (rright - rleft + 1) * (rbottom - rtop + 1) ;\r\n' \
+  '              if (thr > 0) {\r\n' \
+  '                for (const tk of tiles_hold.keys()) {\r\n' \
+  '                  tiles_hold.delete(tk);\r\n' \
+  '                  thr--;\r\n' \
+  '                  if (! thr) {break;}\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            let thr = tiles_hold.size - tholdsize - (rright - rleft + 1) * (rbottom - rtop + 1) ;\r\n' \
-  '            if (thr > 0) {\r\n' \
-  '              for (const tk of tiles_hold.keys()) {\r\n' \
-  '                tiles_hold.delete(tk);\r\n' \
-  '                thr--;\r\n' \
-  '                if (! thr) {break;}\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
+  '            cleft = rleft;\r\n' \
+  '            cright = rright;\r\n' \
+  '            ctop = rtop;\r\n' \
+  '            cbottom = rbottom;\r\n' \
+  '            if (layers != null) {layersc[l] = [cleft, cright, ctop, cbottom];}\r\n' \
   '          }\r\n' \
-  '          cleft = rleft;\r\n' \
-  '          cright = rright;\r\n' \
-  '          ctop = rtop;\r\n' \
-  '          cbottom = rbottom;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function reframe() {\r\n' \
@@ -10208,6 +10564,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
+  '        if (layers != null) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
   '        track_save(mode);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('if (! focused) {return;}', 'if (! focused) {scroll_to_track();return;}') + \
   '      function load_ipcb(t) {\r\n' \
@@ -13413,6 +13770,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
+  '        if (layers != null) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
@@ -14117,22 +14475,15 @@ class GPXTweakerWebInterfaceServer():
   '      async function download_map() {\r\n' \
   '        if (document.getElementById("tset").disabled || document.getElementById("edit").disabled) {return;}\r\n' \
   '        let b = track_boundaries();\r\n' \
-  '        if (b == null) {return;}\r\n' \
-  '        document.getElementById("tset").disabled = true;\r\n' \
-  '        let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
-  '        let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
-  '        let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
-  '        let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
-  '        if ((vright - vleft) * zoom > 11000 || (vbottom - vtop) * zoom > 11000) {\r\n' \
-  '          document.getElementById("tset").disabled = false;\r\n' \
+  '        if (b == null || (layers == null && (twidth == 0 || theight == 0))) {return;}\r\n' \
+  '        let cwidth = Math.ceil((b[1] - b[0]) / tscale * zoom);\r\n' \
+  '        let cheight = Math.ceil((b[3] - b[2]) / tscale * zoom);\r\n' \
+  '        if (cwidth > 11000 || cheight > 11000) {\r\n' \
   '          show_msg("{#jmdownmap6#}", 10);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        document.getElementById("tset").disabled = true;\r\n' \
   '        let msgn = show_msg("{#jmdownmap1#}", 0);\r\n' \
-  '        let rleft = parseInt(vleft / twidth);\r\n' \
-  '        let rright = parseInt(vright / twidth);\r\n' \
-  '        let rtop = parseInt(vtop / theight);\r\n' \
-  '        let rbottom = parseInt(vbottom / theight);\r\n' \
   '        let xs = new XMLSerializer;\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
   '        let trdata = [];\r\n' \
@@ -14150,10 +14501,8 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let cnv2d = document.createElement("canvas");\r\n' \
   '        let ctx = cnv2d.getContext("2d");\r\n' \
-  '        cnv2d.width = Math.ceil((vright - vleft) * zoom);\r\n' \
-  '        cnv2d.height = Math.ceil((vbottom - vtop) * zoom);\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (! filter) {filter = "none"};\r\n' \
+  '        cnv2d.width = cwidth;\r\n' \
+  '        cnv2d.height = cheight;\r\n' \
   '        ctx.globalCompositeOperation = "darken";\r\n' \
   '        let prom_c = trdata.length;\r\n' \
   '        let prom_res = null;\r\n' \
@@ -14186,27 +14535,51 @@ class GPXTweakerWebInterfaceServer():
   '        await prom;\r\n' \
   '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
   '        ctx.globalCompositeOperation = "destination-over";\r\n' \
-  '        ctx.filter = filter;\r\n' \
-  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
-  '        prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
+  '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
   '        if (mode == "map") {\r\n' \
+  '          prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '          prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
   '          let tile = new Image();\r\n' \
   '          tile.onload = function (e) {ctx.drawImage(tile, Math.round(- vleft * zoom), Math.round(- vtop * zoom), Math.round((twidth - vleft) * zoom) - Math.round(- vleft * zoom), Math.round((theight - vtop) * zoom) - Math.round(- vtop * zoom)); prom_res();};\r\n' \
   '          tile.onerror = function (e) {prom_res();};\r\n' \
   '          tile.src = "/map/map" + text;\r\n' \
+  '          await prom;\r\n' \
   '        } else {\r\n' \
-  '          let tsuf = text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
-  '          for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '            for (let col=rleft; col<=rright; col++) {\r\n' \
-  '              let tile = new Image();\r\n' \
-  '              tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '              tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '              tile.crossOrigin = "anonymous";\r\n' \
-  '              tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '          for (let l=(layers==null?0:layers.length-1); l>=0 ;l--) {\r\n' \
+  '            let layer = null;\r\n' \
+  '            if (layers != null) {\r\n' \
+  '              layer = layers[l];\r\n' \
+  '              ttopx = layer.topx;\r\n' \
+  '              ttopy = layer.topy;\r\n' \
+  '              twidth = layer.width;\r\n' \
+  '              theight = layer.height;\r\n' \
+  '              text = layer.ext;\r\n' \
   '            }\r\n' \
+  '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '            let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '            let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '            let rleft = parseInt(vleft / twidth);\r\n' \
+  '            let rright = parseInt(vright / twidth);\r\n' \
+  '            let rtop = parseInt(vtop / theight);\r\n' \
+  '            let rbottom = parseInt(vbottom / theight);\r\n' \
+  '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '            prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
+  '            let tsuf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:layer.set).toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '            if (layers != null) {ctx.globalAlpha = parseFloat(layer.opacity);}\r\n' \
+  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '              for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                let tile = new Image();\r\n' \
+  '                tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '                tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '                tile.crossOrigin = "anonymous";\r\n' \
+  '                tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            await prom;\r\n' \
   '          }\r\n' \
+  '          if (layers != null) {ctx.globalAlpha = 1;}\r\n' \
   '        }\r\n' \
-  '        await prom;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
   '        msgn = show_msg("{#jmdownmap3#}", 0, msgn);\r\n' \
   '        let url = null;\r\n' \
@@ -14275,7 +14648,6 @@ class GPXTweakerWebInterfaceServer():
   '        div.appendChild(legend);\r\n' \
   '        document.body.appendChild(div);\r\n' \
   '        b = txt.getBBox();\r\n' \
-  'console.log(b);\r\n' \
   '        document.body.removeChild(div);\r\n' \
   '        let w = Math.ceil(2 * b.x + b.width);\r\n' \
   '        let h = Math.ceil(2.5 * b.y + b.height);\r\n' \
@@ -14812,6 +15184,10 @@ class GPXTweakerWebInterfaceServer():
           hcur = hcur[:9].lower() + hcur[9:]
           self.TilesSets.append([hcur[9:].strip(), {}, {}, [1, ]])
           s = self.TilesSets[-1]
+        elif hcur[:18].lower() == 'maptilescomposite ':
+          hcur = hcur[:18].lower() + hcur[18:]
+          self.TilesSets.append([hcur[18:].strip(), [], [1, ]])
+          s = self.TilesSets[-1]
         elif hcur[:4].lower() == 'map ':
           hcur = hcur[:4].lower() + hcur[4:]
           self.MapSets.append([hcur[4:].strip(), {}, {}])
@@ -14859,6 +15235,12 @@ class GPXTweakerWebInterfaceServer():
           if not scur in ('infos', 'handling', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
+        elif hcur[:18] == 'maptilescomposite ':
+          if scur in ('base', 'layer'):
+            s[1].append([None, '1'])
+          elif scur != 'display':
+            self.log(0, 'cerror', hcur + ' - ' + scur)
+            return False
         elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
           if not scur in ('infos', 'handling'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
@@ -14867,7 +15249,7 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
         continue
-      if not (hcur[:9] == 'maptiles ' and scur == 'display') and not (hcur == 'explorer' and scur == 'folders'):
+      if not (hcur[:8] == 'maptiles' and scur == 'display') and not (hcur == 'explorer' and scur == 'folders'):
         if ':' in l:
           field, value = l.split(':', 1)
           field = field.lower().strip()
@@ -15164,6 +15546,44 @@ class GPXTweakerWebInterfaceServer():
             zoom = zoom[:-1].strip()
             s[3][0] = len(s[3])
           s[3].append([matrix, zoom])
+      elif hcur[:18] == 'maptilescomposite ':
+        if scur in ('base', 'layer'):
+          value = value.rstrip()
+          if field == 'name':
+            try:
+              s[1][-1][0] = next(i for i in range(len(self.TilesSets) - 1) if self.TilesSets[i][0] == value)
+              if len(self.TilesSets[s[1][-1][0]]) < 4:
+                raise
+            except:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+          elif scur == 'layer' and field == 'opacity':
+            try:
+              s[1][-1][1] = '%.2f' % max(0, min(1, (float(value[:-1]) / 100 if value[-1:] == '%' else float(value))))
+            except:
+              pass
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'display':
+          if ',' in l:
+            matrix, zoom = l.split(',')
+          elif '*' in l:
+            matrix = l.rstrip(' *')
+            zoom = '1' + l[len(matrix):]
+          else:
+            matrix = l
+            zoom = '1'
+          try:
+            matrix = int(matrix.strip())
+          except:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+          zoom = zoom.strip()
+          if zoom[-1] == '*':
+            zoom = zoom[:-1].strip()
+            s[2][0] = len(s[2])
+          s[2].append([matrix, zoom])
       elif hcur[:4] == 'map ' or hcur[:13] == 'elevationmap ':
         if scur == 'infos':
           if field == 'alias':
@@ -15666,7 +16086,7 @@ class GPXTweakerWebInterfaceServer():
     return ''.join(GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for s in range(len(self.Track.WebMercatorPts)) for pt in self.Track.WebMercatorPts[s])
 
   def _build_tsets(self):
-    return ''.join('<option value="%s">%s</option>' % (*([escape(tset[0])] * 2),) for tset in self.TilesSets)
+    return ''.join('<option %svalue="%s">%s</option>' % (('' if len(tset[-1]) > 1 else 'style="display:none;"'), *([escape(tset[0])] * 2),) for tset in self.TilesSets)
 
   def _build_esets(self):
     return ''.join('<option value="%s">%s</option>' % (*([escape(epro[0])] * 2),) for epro in self.ElevationsProviders)
