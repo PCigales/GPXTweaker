@@ -1843,14 +1843,15 @@ class TilesMixCache(TilesCache):
       self.GAvailable = {}
       self.Id = list(rids)
       self.Infos = {}
-      def _build(rid, infos, gens, pcons, infos_greedy):
-        try:
-          gens[:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos, pconnections=pcons, infos_greedy=infos_greedy)
-        except:
-          gens.clear()
       gens = {}
       infos = {}
       infos_greedy = {}
+      def _build(rid):
+        nonlocal gens
+        try:
+          gens[rid][:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos[rid], pconnections=pconnections[rid], infos_greedy=infos_greedy[rid])
+        except:
+          gens[rid].clear()
       th = []
       for rid in rids:
         infos[rid] = self.InfosBuffer.get(rid, {})
@@ -1860,7 +1861,7 @@ class TilesMixCache(TilesCache):
         else:
           infos_greedy[rid] = {}
         gens[rid] = []
-        t = threading.Thread(target=_build, args=(rid, infos[rid], gens[rid], pconnections[rid], infos_greedy[rid]), daemon=True)
+        t = threading.Thread(target=_build, args=(rid,), daemon=True)
         th.append(t)
         t.start()
       for t in th:
