@@ -203,6 +203,7 @@ FR_STRINGS = {
     'j3dpanel': 'Marges vue 3D',
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
+    'jopacityreset': 'double-clic pour rétablir la valeur d\'origine',
     'jfoldersw': 'Répertoires:',
     'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+shift: recadrer sur la trace&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
@@ -510,6 +511,7 @@ EN_STRINGS = {
     'j3dpanel': 'Margins 3D view',
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
+    'jopacityreset': 'double-click to restore the original value',
     'jfoldersw': 'Folders:',
     'jscrollcross': 'center on the focused element&#13;&#10;+shift: reframe on the track&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
@@ -7062,6 +7064,7 @@ class GPXTweakerWebInterfaceServer():
   '              let e = document.createElement("label");\r\n' \
   '              e.htmlFor = "opacityl" + ls;\r\n' \
   '              e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
+  '              e.title = "{#jopacityreset#}";\r\n' \
   '              e.ondblclick = (e) => {e.target.nextElementSibling.value=tlays[l][1];e.target.nextElementSibling.dispatchEvent(new Event("input"));};\r\n' \
   '              oform.appendChild(e);\r\n' \
   '              e = document.createElement("input");\r\n' \
