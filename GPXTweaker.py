@@ -1479,6 +1479,7 @@ class TilesCache():
     self.InfosBuffer = {}
     self.Buffer = {}
     self.BLock = threading.RLock()
+    self.Events = {}
     self.Generators = []
     self.GAvailable = []
     self.GCondition = threading.Condition()
@@ -1499,16 +1500,17 @@ class TilesCache():
       return None
     ptile = None
     e = None
-    def _retrieveitem():
+    def _retrieveitem(seq):
       nonlocal ptile
       nonlocal e
       with self.GCondition:
         tgen = None
         while tgen is None:
-          if rid != self.Id or self.Closed:
+          if seq != self.Seq or self.Closed:
             ptile[0] = None
             e.set()
             with self.BLock:
+              self.Events.pop(e, None)
               self.Buffer.pop((rid, pos), None)
             self.log(2, 'cancel', row, col)
             return
@@ -1537,8 +1539,10 @@ class TilesCache():
             else:
               a.append(gen.ind)
             self.GCondition.notify()
-        ptile[0] = tile
-        e.set()
+          ptile[0] = tile
+          e.set()
+          with self.BLock:
+            self.Events.pop(e, None)
     with self.BLock:
       if self.Closed:
         self.log(2, 'cancel', row, col)
@@ -1548,10 +1552,10 @@ class TilesCache():
         self.log(2, 'found', row, col)
       else:
         e = threading.Event()
-        self[(rid, pos)] = ptile = [e, self.Seq]
+        self.Events[e] = self[(rid, pos)] = ptile = [e, self.Seq]
         self.log(2, 'add', row, col, len(self.Buffer))
     if e:
-      t = threading.Thread(target=_retrieveitem, daemon=True)
+      t = threading.Thread(target=_retrieveitem, args=(self.Seq,), daemon=True)
       t.start()
     return ptile
 
@@ -1616,8 +1620,11 @@ class TilesCache():
       ifound = bool(infos)
       if ifound:
         self.log(2, 'ifound', *rid)
+        infos_greedy = None
+      else:
+        infos_greedy = {}
       try:
-        gens = tile_generator_builder(number=self.Threads, infos_completed=infos, pconnections=pconnections)
+        gens = tile_generator_builder(number=self.Threads, infos_completed=infos, pconnections=pconnections, infos_greedy=infos_greedy)
         if not gens:
           raise
         if self.Threads == 1:
@@ -1632,26 +1639,30 @@ class TilesCache():
           else:
             self.GAvailable.append(i)
         if not ifound:
-          self.InfosBuffer[rid] = infos
-        self.GCondition.notify_all()
+          self.InfosBuffer.update({(rid[0], m): i for m, i in infos_greedy.items()})
       except:
         self.Id = None
         self.Infos = None
         self.GAvailable = []
-        self.GCondition.notify_all()
         if rid[0] != -1:
           self.log(0, 'fail', *rid)
         return False
+      finally:
+        with self.BLock:
+          for e, ptile in self.Events.items():
+            ptile[0] = None
+            e.set()
+          self.Events.clear()
+        self.GCondition.notify_all()
     return True
 
   def Close(self):
     self.Closed = True
     with self.BLock:
-      for ptile in self.Buffer.values():
-        e = ptile[0]
-        if isinstance(e, threading.Event):
-          ptile[0] = None
-          e.set()
+      for e, ptile in self.Events.items():
+        ptile[0] = None
+        e.set()
+      self.Events.clear()
       self.Buffer.clear()
     with self.GCondition:
       self.Id = None
@@ -1693,6 +1704,11 @@ class TilesMixCache(TilesCache):
       self.GCondition = wrap.GCondition
       self.Seq = wrap.Seq + 1
       wrap.Closed = True
+      with wrap.BLock:
+        for e, ptile in wrap.Events.items():
+          ptile[0] = None
+          e.set()
+        wrap.Events.clear()
       with wrap.GCondition:
         wrap.GCondition.notify_all()
     else:
@@ -1713,6 +1729,7 @@ class TilesMixCache(TilesCache):
       self.Infos = {}
     self.TRunning = [0, 0]
     self.Queue = deque()
+    self.Events = {}
     self.Closed = False
     self.log = partial(log, 'tilescache')
     self.log(2, 'init', size, threads)
@@ -1730,7 +1747,6 @@ class TilesMixCache(TilesCache):
             tr[0] -= 1
             tr[1] -= 1
             return
-          continue
         if self.Closed or seq != self.Seq:
           return
         tr[1] -= 1
@@ -1741,6 +1757,7 @@ class TilesMixCache(TilesCache):
           ptile[0] = None
           e.set()
           with self.BLock:
+            self.Events.pop(e, None)
             self.Buffer.pop((rid, pos), None)
           self.log(2, 'cancel', row, col)
           continue
@@ -1767,6 +1784,8 @@ class TilesMixCache(TilesCache):
               a.append(gen.ind)
         ptile[0] = tile
         e.set()
+        with self.BLock:
+          self.Events.pop(e, None)
 
   def _getitem(self, rid, pos):
     try:
@@ -1784,7 +1803,7 @@ class TilesMixCache(TilesCache):
         self.log(2, 'found', row, col)
       else:
         e = threading.Event()
-        self[(rid, pos)] = ptile = [e, self.Seq]
+        self.Events[e] = self[(rid, pos)] = ptile = [e, self.Seq]
         self.log(2, 'add', row, col, len(self.Buffer))
     if e:
       with self.GCondition:
@@ -1806,10 +1825,6 @@ class TilesMixCache(TilesCache):
     _rids = {rid: True for rid in rids}
     with self.GCondition:
       self.Seq += 1
-      for q in self.Queue:
-        e = q[2][0]
-        q[2][0] = None
-        e.set()
       self.Queue.clear()
       for rid_, gens_ in self.Generators.items():
         pcons = next(((pconnections[rid], _rids.pop(rid))[0] for rid in _rids if rid_[0] == rid[0]), None)
@@ -1828,22 +1843,24 @@ class TilesMixCache(TilesCache):
       self.GAvailable = {}
       self.Id = list(rids)
       self.Infos = {}
-      def _build(rid, infos, gens, pcons):
+      def _build(rid, infos, gens, pcons, infos_greedy):
         try:
-          gens[:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos, pconnections=pcons)
+          gens[:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos, pconnections=pcons, infos_greedy=infos_greedy)
         except:
           gens.clear()
       gens = {}
       infos = {}
+      infos_greedy = {}
       th = []
       for rid in rids:
         infos[rid] = self.InfosBuffer.get(rid, {})
-        ifound = bool(infos[rid])
-        if ifound:
+        if infos[rid]:
           self.log(2, 'ifound', *rid)
-        pcons = pconnections[rid]
+          infos_greedy[rid] = None
+        else:
+          infos_greedy[rid] = {}
         gens[rid] = []
-        t = threading.Thread(target=_build, args=(rid, infos[rid], gens[rid], pcons), daemon=True)
+        t = threading.Thread(target=_build, args=(rid, infos[rid], gens[rid], pconnections[rid], infos_greedy[rid]), daemon=True)
         th.append(t)
         t.start()
       for t in th:
@@ -1867,8 +1884,8 @@ class TilesMixCache(TilesCache):
               a.appendleft(i)
             else:
               a.append(i)
-          if not ifound:
-            self.InfosBuffer[rid] = infos[rid]
+          if infos_greedy[rid] is not None:
+            self.InfosBuffer.update({(rid[0], m): i for m, i in infos_greedy[rid].items()})
       except:
         self.Id = []
         self.Infos = {}
@@ -1877,17 +1894,21 @@ class TilesMixCache(TilesCache):
         self.log(0, 'fail', *rid)
         return False
       finally:
+        with self.BLock:
+          for e, ptile in self.Events.items():
+            ptile[0] = None
+            e.set()
+          self.Events.clear()
         self.GCondition.notify_all()
     return True
 
   def Close(self):
     self.Closed = True
     with self.BLock:
-      for ptile in self.Buffer.values():
-        e = ptile[0]
-        if isinstance(e, threading.Event):
-          ptile[0] = None
-          e.set()
+      for e, ptile in self.Events.items():
+        ptile[0] = None
+        e.set()
+      self.Events.clear()
     with self.GCondition:
       self.GCondition.notify_all()
       gens = iter(self.Generators.values())
@@ -1972,6 +1993,8 @@ class WebMercatorMap(WGS84WebMercator):
   TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE + '/terrain.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE + '/satellite.day/{matrix}/{col}/{row}/256/png8?apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE + '/hybrid.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -2233,7 +2256,7 @@ class WebMercatorMap(WGS84WebMercator):
       return None
     return ((row2, col1), (row1, col2))
 
-  def GetTileInfos(self, infos, matrix=None, lat=None, lon=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
+  def GetTileInfos(self, infos, matrix=None, lat=None, lon=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None, infos_wmts=None):
     if 'source' not in infos:
       return False
     if matrix is not None:
@@ -2285,11 +2308,21 @@ class WebMercatorMap(WGS84WebMercator):
       infos['width'] = None
       infos['height'] = None
       for node in matrixset.getElementsByTagNameNS('*', 'TileMatrix'):
-        if _XMLGetNodeText(node.getElementsByTagNameNS('*', 'Identifier')) == infos['matrix']:
-          infos['scale'] = float(_XMLGetNodeText(node.getElementsByTagNameNS('*', 'ScaleDenominator'))) * 0.28 / 1000
-          infos['topx'], infos['topy'] = list(map(float, _XMLGetNodeText(node.getElementsByTagNameNS('*', 'TopLeftCorner')).split()))
-          infos['width'] = int(_XMLGetNodeText(node.getElementsByTagNameNS('*', 'TileWidth')))
-          infos['height'] = int(_XMLGetNodeText(node.getElementsByTagNameNS('*', 'TileHeight')))
+        mtrx = _XMLGetNodeText(node.getElementsByTagNameNS('*', 'Identifier'))
+        if mtrx == infos['matrix'] or infos_wmts is not None:
+          infos_ = {}
+          infos_['scale'] = float(_XMLGetNodeText(node.getElementsByTagNameNS('*', 'ScaleDenominator'))) * 0.28 / 1000
+          infos_['topx'], infos_['topy'] = list(map(float, _XMLGetNodeText(node.getElementsByTagNameNS('*', 'TopLeftCorner')).split()))
+          infos_['width'] = int(_XMLGetNodeText(node.getElementsByTagNameNS('*', 'TileWidth')))
+          infos_['height'] = int(_XMLGetNodeText(node.getElementsByTagNameNS('*', 'TileHeight')))
+        if mtrx == infos['matrix']:
+          infos.update(infos_)
+        if infos_wmts is not None:
+          infos_wmts[mtrx] = infos_wmts_ = {k: infos[k] for k in ('source', 'layer', 'matrixset', 'style', 'format')}
+          if 'alias' in infos:
+            infos_wmts_['alias'] = infos['alias']
+          infos_wmts_['matrix'] = mtrx
+          infos_wmts_.update(infos_)
     except:
       return False
     finally:
@@ -2324,7 +2357,11 @@ class WebMercatorMap(WGS84WebMercator):
           hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
         else:
           hgt = ''
-        uri = infos['source'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt, 'key': key or ''})
+        if '{invrow}' in infos['source']:
+          invrow = str(round(infos['topy'] / infos['scale'] / infos['height'] * 2 - infos['row'] - 1))
+        else:
+          invrow = ''
+        uri = infos['source'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt, 'invrow': invrow, 'key': key or ''})
       else:
         uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetTile'], 'key': key or ''}).format_map(infos)
     except:
@@ -2728,7 +2765,7 @@ class WebMercatorMap(WGS84WebMercator):
       self.log(2, 'tileretrieved', infos)
     return tile
 
-  def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, number=1, infos_completed=None, pconnections=None):
+  def TileGenerator(self, infos_base, matrix, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, number=1, infos_completed=None, pconnections=None, infos_greedy=None):
     if isinstance(pconnections, list):
       if len(pconnections) < number:
         pconnections.extend([[None] for i in range(number - len(pconnections))])
@@ -2746,7 +2783,7 @@ class WebMercatorMap(WGS84WebMercator):
         if not infos_set:
           if only_local:
             return None
-          if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, basic_auth, next((pconnection for pconnection in pconnections if pconnection[0] is not None), pconnections[0])):
+          if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, basic_auth, next((pconnection for pconnection in pconnections if pconnection[0] is not None), pconnections[0]), infos_greedy):
             return None
           if local_store:
             if not self.SaveTile(local_pattern, infos_completed):
@@ -2755,6 +2792,8 @@ class WebMercatorMap(WGS84WebMercator):
             local_pattern = None
       except:
         return None
+    if infos_greedy is not None:
+      infos_greedy[infos_completed['matrix']] = infos_completed
     linfos = [{**infos_completed} for i in range(number)]
     def retrieve_tiles(a=None, b=None, c=None, d=None, just_box=False, close_connection=False, ind=0):
       nonlocal pconnections
@@ -5663,6 +5702,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             tsl = len(self.server.Interface.TilesSets[self.server.Interface.TilesSet])
             if 'set' in q:
               try:
+                if len(self.server.Interface.TilesSets[int(q['set'][0])][-1]) <= 1:
+                  raise
                 resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][-1]}).encode('utf-8')
                 self.server.Interface.TilesSet = int(q['set'][0])
                 _send_resp('application/json; charset=utf-8')
@@ -15236,7 +15277,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:18] == 'maptilescomposite ':
-          if scur in ('base', 'layer'):
+          if scur == 'layer':
             s[1].append([None, '1'])
           elif scur != 'display':
             self.log(0, 'cerror', hcur + ' - ' + scur)
@@ -15547,7 +15588,7 @@ class GPXTweakerWebInterfaceServer():
             s[3][0] = len(s[3])
           s[3].append([matrix, zoom])
       elif hcur[:18] == 'maptilescomposite ':
-        if scur in ('base', 'layer'):
+        if scur == 'layer':
           value = value.rstrip()
           if field == 'name':
             try:
@@ -15557,7 +15598,7 @@ class GPXTweakerWebInterfaceServer():
             except:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif scur == 'layer' and field == 'opacity':
+          elif field == 'opacity':
             try:
               s[1][-1][1] = '%.2f' % max(0, min(1, (float(value[:-1]) / 100 if value[-1:] == '%' else float(value))))
             except:
