@@ -72,6 +72,16 @@ FR_STRINGS = {
     'tilerfail': 'échec de la fourniture de la tuile %s',
     'tileretrieved': 'tuile %s fournie'
   },
+  'legend': {
+    '_id': 'Gestionnaire de légende',
+    'legendretrieve': 'fourniture de la légende %s',
+    'legendretrieved1': 'légende %s fournie: %s composant(s)',
+    'legendlfound': 'légende %s trouvee localement',
+    'legendlexpired': 'légende locale %s expirée',
+    'legendfetch': 'récupération de la légende %s',
+    'legendfail': 'échec de la fourniture de la légende %s',
+    'legendretrieved2': 'légende %s fournie'
+  },
   'track': {
     '_id': 'Gestionnaire de trace',
     'init': 'initialisation',
@@ -381,6 +391,16 @@ EN_STRINGS = {
     'tilefetch': 'fetching of tile %s',
     'tilerfail': 'failure of providing of tile %s',
     'tileretrieved': 'tile %s provided'
+  },
+  'legend': {
+    '_id': 'Legend handler',
+    'legendretrieve': 'providing of legend %s',
+    'legendretrieved1': 'legend %s provided: %s component(s)',
+    'legendlfound': 'legend %s found locally',
+    'legendlexpired': 'local legend %s expired',
+    'legendfetch': 'fetching of legend %s',
+    'legendfail': 'failure of providing of legend %s',
+    'legendretrieved2': 'legend %s provided'
   },
   'track': {
     '_id': 'Track manager',
@@ -1617,6 +1637,7 @@ class TilesCache():
     self.log(1, 'configure', *rid)
     pconnections = [[None] for i in range(self.Threads)]
     with self.GCondition:
+      seq = self.Seq
       self.Seq = 0
       for g in self.Generators:
         try:
@@ -1665,7 +1686,7 @@ class TilesCache():
             ptile[0] = None
             e.set()
           self.Events.clear()
-        self.Seq += 1
+        self.Seq = seq + 1
         self.GCondition.notify_all()
     return True
 
@@ -1740,7 +1761,6 @@ class TilesMixCache(TilesCache):
       self.Seq = 0
       self.Id = []
       self.Infos = {}
-    self.CLock = threading.Lock()
     self.TRunning = [0, 0]
     self.Queue = deque()
     self.Events = {}
@@ -1816,154 +1836,159 @@ class TilesMixCache(TilesCache):
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
-        if self.CLock.acquire(False):
+        with self.GCondition:
           seq = self.Seq
-          e = threading.Event()
-          self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
-          self.log(2, 'add', row, col, len(self.Buffer))
-        else:
-          self.log(2, 'cancel', row, col)
-          return [None, 0]
-    if e:
-      with self.GCondition:
-        self.Queue.append((rid, pos, ptile))
-        if not self.TRunning[1] and self.TRunning[0] < self.Threads:
-          self.TRunning[0] += 1
-          t = threading.Thread(target=self._retriever, args=(seq,), daemon=True)
-          t.start()
-        self.GCondition.notify()
-      self.CLock.release()
+          if seq:
+            e = threading.Event()
+            self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
+            self.log(2, 'add', row, col, len(self.Buffer))
+          else:
+            self.log(2, 'cancel', row, col)
+            return [None, 0]
+          self.Queue.append((rid, pos, ptile))
+          if not self.TRunning[1] and self.TRunning[0] < self.Threads:
+            self.TRunning[0] += 1
+            t = threading.Thread(target=self._retriever, args=(seq,), daemon=True)
+            t.start()
+          self.GCondition.notify()
     return ptile
 
   def Configure(self, tile_generator_builders):
     if self.Closed or not tile_generator_builders:
       return False
+    with self.GCondition:
+      seq = self.Seq
+      self.Seq = 0
+      if not seq:
+        return False
+      self.GCondition.notify_all()
     rids = tile_generator_builders.keys()
     for rid in rids:
       self.log(1, 'configure', *rid)
     pconnections = {rid: [[None] for i in range(self.Threads)] for rid in rids}
     _rids = {rid: True for rid in rids}
-    self.CLock.acquire()
-    with self.GCondition:
-      self.Seq += 1
-      self.Queue.clear()
-      for rid_, gens_ in self.Generators.items():
-        pcons = next(((pconnections[rid], _rids.pop(rid))[0] for rid in _rids if rid_[0] == rid[0]), None)
-        for g in gens_:
-          try:
-            if pcons and g[0]:
-              pcons[g[1].ind] = g[1].pconnection
-            elif g[0]:
-              g[1](close_connection=True)
-            else:
-              g[0] = True
-          except:
-            pass
-      self.TRunning = [0, 0]
+    self.Queue.clear()
+    for rid_, gens_ in self.Generators.items():
+      pcons = next(((pconnections[rid], _rids.pop(rid))[0] for rid in _rids if rid_[0] == rid[0]), None)
+      for g in gens_:
+        try:
+          if pcons and g[0]:
+            pcons[g[1].ind] = g[1].pconnection
+          elif g[0]:
+            g[1](close_connection=True)
+          else:
+            g[0] = True
+        except:
+          pass
+    self.TRunning = [0, 0]
+    self.Generators = {}
+    self.GAvailable = {}
+    self.Id = list(rids)
+    self.Infos = {}
+    gens = {}
+    infos = {}
+    infos_greedy = {}
+    def _build(rid):
+      nonlocal gens
+      try:
+        gens[rid][:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos[rid], pconnections=pconnections[rid], infos_greedy=infos_greedy[rid])
+      except:
+        gens[rid].clear()
+    th = []
+    for rid in rids:
+      infos[rid] = self.InfosBuffer.get(rid, {})
+      if infos[rid]:
+        self.log(2, 'ifound', *rid)
+        infos_greedy[rid] = None
+      else:
+        infos_greedy[rid] = {}
+      gens[rid] = []
+      t = threading.Thread(target=_build, args=(rid,), daemon=True)
+      th.append(t)
+      t.start()
+    for t in th:
+      if self.Closed:
+        raise      
+      t.join()
+    try:
+      if [] in gens.values():
+        raise
+      smin = min(inf['scale'] for inf in infos.values())
+      smax = min(inf['scale'] for inf in infos.values())
+      if (smax - smin) / smin > 0.001:
+        raise
+      for rid in rids:
+        if self.Threads == 1:
+          gens[rid] = [gens[rid]]
+        self.Generators[rid] = [[True, g] for g in gens[rid]]
+        self.Infos[rid] = infos[rid]
+        self.GAvailable[rid] = a = deque()
+        pcons = pconnections[rid]
+        for i in range(self.Threads):
+          if pcons[i][0] is None:
+            a.appendleft(i)
+          else:
+            a.append(i)
+        if infos_greedy[rid] is not None:
+          self.InfosBuffer.update({(rid[0], m): i for m, i in infos_greedy[rid].items()})
+    except:
+      self.Id = []
+      self.Infos = {}
       self.Generators = {}
       self.GAvailable = {}
-      self.Id = list(rids)
-      self.Infos = {}
-      gens = {}
-      infos = {}
-      infos_greedy = {}
-      def _build(rid):
-        nonlocal gens
-        try:
-          gens[rid][:] = tile_generator_builders[rid](number=self.Threads, infos_completed=infos[rid], pconnections=pconnections[rid], infos_greedy=infos_greedy[rid])
-        except:
-          gens[rid].clear()
-      th = []
-      for rid in rids:
-        infos[rid] = self.InfosBuffer.get(rid, {})
-        if infos[rid]:
-          self.log(2, 'ifound', *rid)
-          infos_greedy[rid] = None
-        else:
-          infos_greedy[rid] = {}
-        gens[rid] = []
-        t = threading.Thread(target=_build, args=(rid,), daemon=True)
-        th.append(t)
-        t.start()
-      for t in th:
-        t.join()
-      try:
-        if [] in gens.values():
-          raise
-        smin = min(inf['scale'] for inf in infos.values())
-        smax = min(inf['scale'] for inf in infos.values())
-        if (smax - smin) / smin > 0.001:
-          raise
-        for rid in rids:
-          if self.Threads == 1:
-            gens[rid] = [gens[rid]]
-          self.Generators[rid] = [[True, g] for g in gens[rid]]
-          self.Infos[rid] = infos[rid]
-          self.GAvailable[rid] = a = deque()
-          pcons = pconnections[rid]
-          for i in range(self.Threads):
-            if pcons[i][0] is None:
-              a.appendleft(i)
-            else:
-              a.append(i)
-          if infos_greedy[rid] is not None:
-            self.InfosBuffer.update({(rid[0], m): i for m, i in infos_greedy[rid].items()})
-      except:
-        self.Id = []
-        self.Infos = {}
-        self.Generators = {}
-        self.GAvailable = {}
-        self.log(0, 'fail', *rid)
-        return False
-      finally:
-        with self.BLock:
-          for e, ptile in self.Events.items():
-            ptile[0] = None
-            e.set()
-          self.Events.clear()
+      self.log(0, 'fail', *rid)
+      return False
+    finally:
+      with self.BLock:
+        for e, ptile in self.Events.items():
+          ptile[0] = None
+          e.set()
+        self.Events.clear()
+      with self.GCondition:
+        self.Seq = seq + 1
         self.GCondition.notify_all()
-        self.CLock.release()
     return True
 
   def Close(self):
     self.Closed = True
-    self.CLock.acquire()
+    with self.GCondition:
+      self.GCondition.wait_for(self.Seq.__bool__)
+      seq = self.Seq
+      self.Seq = 0
+      self.GCondition.notify_all()
     with self.BLock:
       for e, ptile in self.Events.items():
         ptile[0] = None
         e.set()
       self.Events.clear()
-    with self.GCondition:
-      self.GCondition.notify_all()
-      gens = iter(self.Generators.values())
-      wrap = self.Wrap
-      if wrap is not None:
-        if self.Id:
-          wrap.Id = self.Id[0]
-          wrap.Infos = self.Infos[wrap.Id]
-          wrap.Generators = self.Generators[wrap.Id]
-          wrap.GAvailable = self.GAvailable[wrap.Id]
-        else:
-          wrap.Id = None
-          wrap.Generators = []
-          wrap.Infos = None
-          wrap.GAvailable = None
-        wrap.Seq = self.Seq + 1
-        wrap.Closed = False
-        next(gens, None)
-      for gens_ in gens:
-        for g in gens_:
-          try:
-            g[1](close_connection=True)
-          except:
-            pass
-      self.Id = []
-      self.Infos = {}
-      self.InfosBuffer = {}
-      self.Buffer = {}
-      self.Generators = {}
-      self.GAvailable = {}
-    self.CLock.release()
+    gens = iter(self.Generators.values())
+    wrap = self.Wrap
+    if wrap is not None:
+      if self.Id:
+        wrap.Id = self.Id[0]
+        wrap.Infos = self.Infos[wrap.Id]
+        wrap.Generators = self.Generators[wrap.Id]
+        wrap.GAvailable = self.GAvailable[wrap.Id]
+      else:
+        wrap.Id = None
+        wrap.Generators = []
+        wrap.Infos = None
+        wrap.GAvailable = None
+      wrap.Seq = seq + 1
+      wrap.Closed = False
+      next(gens, None)
+    for gens_ in gens:
+      for g in gens_:
+        try:
+          g[1](close_connection=True)
+        except:
+          pass
+    self.Id = []
+    self.Infos = {}
+    self.InfosBuffer = {}
+    self.Buffer = {}
+    self.Generators = {}
+    self.GAvailable = {}
     self.log(1, 'close')
 
 
@@ -1993,12 +2018,18 @@ class WebMercatorMap(WGS84WebMercator):
   TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
   TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
+  TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TC_IGN_HYBRID = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1']]
   TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TS_IGN_SLOPESMOUNTAIN = {'alias': 'IGN_SLOPESMOUNTAIN', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_SLOPESMOUNTAIN', '80%'], ['IGN_CONTOUR', '100%']]
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
   TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '80%'], ['WAYMARKED_TRAILSHIKING', '100%']]
   TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
   TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -2023,8 +2054,6 @@ class WebMercatorMap(WGS84WebMercator):
   TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE + '/terrain.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE + '/satellite.day/{matrix}/{col}/{row}/256/png8?apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE + '/hybrid.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -2035,7 +2064,7 @@ class WebMercatorMap(WGS84WebMercator):
     else:
       self.Tiles = TilesCache(tiles_buffer_size, tiles_max_threads)
     self.TilesInfos = None
-    self.log = partial(log, 'map')
+    
 
   @classmethod
   def MSAlias(cls, name):
@@ -3059,6 +3088,13 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     return True
 
+  @classmethod
+  def TCAlias(cls, name):
+    if hasattr(cls, 'TC_' + name):
+      return list(getattr(cls, 'TC_' + name))
+    else:
+      return None
+
   def SetTilesProviders(self, providers, matrix):
     try:
       provs = providers.items()
@@ -3997,13 +4033,17 @@ class WGS84ReverseGeocoding():
 
 class MapLegend():
 
+  ML_IGN_PLANV2 = {'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
   TL_IGN_PLANV2 = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_{matrix}-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
   TL_IGN_CARTES = {'9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
-  ML_IGN_PLANV2 = {'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
+  TL_IGN_NOMS = {'8': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-1M-10M.png', '9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png'}
+  TL_IGN_SLOPESMOUNTAIN = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN/legendes/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN-legend.png'}
+
   
   def __init__(self):
     self.WMSCache = {}
     self.WMTSCache = {}
+    self.log = partial(log, 'legend')
 
   @classmethod
   def MLAlias(cls, name):
@@ -4110,6 +4150,7 @@ class MapLegend():
     return f_l
 
   def RetrieveMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    self.log(2, 'legendretrieve', infos)
     try:
       if urls is not None:
         urls_ = {l: urls.get(l, urls.get('*')).format_map({**infos, 'key': key or ''}) for l in infos['layers'].split(',') if (l in urls or '*' in urls)}
@@ -4117,7 +4158,12 @@ class MapLegend():
         urls_ = None
       f_l = self.FetchMapLegend(infos, urls_, key, referer, user_agent, basic_auth)
     except:
+      self.log(2, 'legendfail', infos)
       return {}
+    if f_l:
+      self.log(2, 'legendretrieved1', infos, len(f_l))
+    else:
+      self.log(2, 'legendfail', infos)
     return f_l
 
   def GetTilesLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
@@ -4272,19 +4318,24 @@ class MapLegend():
     return True
 
   def RetrieveTilesLegend(self, infos, matrix=None, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
+    infos_ = {**infos}
+    if matrix is not None:
+      infos_['matrix'] = matrix
+    matrix = infos_.get('matrix') or None
+    self.log(2, 'legendretrieve', infos_)
     f_l = None
     local_f_l = None
     expired = True
     last_mod = False
     format = 'image'
-    infos_ = {**infos}
-    if matrix is not None:
-      infos_['matrix'] = matrix
-    matrix = infos_['matrix'] or None
     if isinstance(url, dict):
       if matrix:
-        m_u = matrix in url
-        url_ = url.get(matrix if m_u else '*', None)
+        if matrix in url:
+          m_u = True
+          url_ = url.get(matrix, None)
+        else:
+          m_u = '{matrix}' in url.get('*', '')
+          url_ = url.get('*', None)
       else:
         m_u = False
         url_ = url.get('*', None)
@@ -4297,6 +4348,7 @@ class MapLegend():
       if local_pattern is not None:
         last_mod = self.ReadTilesLegend(local_pattern, infos_, matrix, just_lookup=True, force_matrix=m_u)
         if last_mod is not None:
+          self.log(2, 'legendlfound', infos_)
           f_l = self.ReadTilesLegend(local_pattern, infos_, matrix, force_matrix=m_u)
           if f_l:
             if local_expiration is not None:
@@ -4304,12 +4356,14 @@ class MapLegend():
                 expired = False
               else:
                 local_f_l = f_l
+                self.log(2, 'legendlexpired', infos_)
             else:
               expired = False
       if expired:
         if only_local:
           f_l = None
         else:
+          self.log(2, 'legendfetch', infos_)
           f_l = self.GetTilesLegend(infos_, url_, key, referer, user_agent, basic_auth)
         if f_l is not None and local_pattern is not None:
           if f_l != local_f_l:
@@ -4321,7 +4375,12 @@ class MapLegend():
           elif local_store:
             self.SaveTilesLegend(local_pattern, infos_, *f_l, just_refresh=True)
     except:
+      self.log(2, 'legendfail', infos_)
       return None
+    if f_l is None:
+      self.log(2, 'legendfail', infos_)
+    else:
+      self.log(2, 'legendretrieved2', infos_)
     return f_l
 
 
@@ -15800,7 +15859,7 @@ class GPXTweakerWebInterfaceServer():
         elif hcur[:18] == 'maptilescomposite ':
           if scur == 'layer':
             s[1].append([None, '1'])
-          elif scur != 'display':
+          elif scur not in ('alias', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
@@ -16119,7 +16178,17 @@ class GPXTweakerWebInterfaceServer():
             s[-1][0] = len(s[-1])
           s[-1].append([matrix, zoom])
       elif hcur[:18] == 'maptilescomposite ':
-        if scur == 'layer':
+        if scur == 'alias':
+          if field == 'name':
+            try:
+              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1]['alias'] == layer[0]), '%.2f' % max(0, min(1, (float(layer[1][:-1]) / 100 if layer[1][-1:] == '%' else float(layer[1]))))] for layer in WebMercatorMap.TCAlias(value))
+            except:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'layer':
           value = value.rstrip()
           if field == 'name':
             try:
