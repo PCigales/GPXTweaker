@@ -285,8 +285,8 @@ FR_STRINGS = {
     'jmdownmap4': 'Carte prête pour téléchargement (%s trace(s) - %s x %s)',
     'jmdownmap5': 'Échec de la préparation de la carte',
     'jmdownmap6': 'Carte trop grande, dézoom nécessaire',
-    'jmopenlegend1': 'Ouverture de la (des) légende(s) en cours...',
-    'jmopenlegend2': 'Fin de l\'ouverture de la (des) légende(s): %s légende(s) ouverte(s)',
+    'jmopenlegend1': 'Récupération de la (des) légende(s) en cours...',
+    'jmopenlegend2': 'Fin de la récupération de la (des) légende(s): %s légende(s) obtenue(s)',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -591,8 +591,8 @@ EN_STRINGS = {
     'jmdownmap4': 'Map ready for download (%s track(s) - %s x %s)',
     'jmdownmap5': 'Failure of the preparation of the map',
     'jmdownmap6': 'map too big, zoom out required',
-    'jmopenlegend1': 'Opening of the legend(s) in progress...',
-    'jmopenlegend2': 'End of the opening of the legend(s): %s legend(s) opened',
+    'jmopenlegend1': 'Retrieval of the legend(s) in progress...',
+    'jmopenlegend2': 'End of the retrieval of the legend(s): %s legend(s) obtained',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -1506,7 +1506,8 @@ class TilesCache():
       return None
     ptile = None
     e = None
-    def _retrieveitem(seq):
+    seq = 0
+    def _retrieveitem():
       nonlocal ptile
       nonlocal e
       with self.GCondition:
@@ -1557,14 +1558,17 @@ class TilesCache():
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
-        with self.GCondition:
-          seq = self.Seq
-        e = threading.Event()
-        self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
-        self.log(2, 'add', row, col, len(self.Buffer))
-      if e:
-        t = threading.Thread(target=_retrieveitem, args=(seq,), daemon=True)
-        t.start()
+        seq = self.Seq
+        if seq:
+          e = threading.Event()
+          self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
+          self.log(2, 'add', row, col, len(self.Buffer))
+        else:
+          self.log(2, 'cancel', row, col)
+          return [None, 0]
+    if e:
+      t = threading.Thread(target=_retrieveitem, daemon=True)
+      t.start()
     return ptile
 
   def WaitTile(self, ptile, timeout=None):
@@ -1613,7 +1617,7 @@ class TilesCache():
     self.log(1, 'configure', *rid)
     pconnections = [[None] for i in range(self.Threads)]
     with self.GCondition:
-      self.Seq += 1
+      self.Seq = 0
       for g in self.Generators:
         try:
           if (self.Id or (None, None))[0] == rid[0] and g[0]:
@@ -1661,6 +1665,7 @@ class TilesCache():
             ptile[0] = None
             e.set()
           self.Events.clear()
+        self.Seq += 1
         self.GCondition.notify_all()
     return True
 
@@ -1735,6 +1740,7 @@ class TilesMixCache(TilesCache):
       self.Seq = 0
       self.Id = []
       self.Infos = {}
+    self.CLock = threading.Lock()
     self.TRunning = [0, 0]
     self.Queue = deque()
     self.Events = {}
@@ -1800,21 +1806,24 @@ class TilesMixCache(TilesCache):
       row, col = pos
     except:
       return None
-    if not self.Id or self.Closed:
-      self.log(2, 'cancel', row, col)
-      return None
     ptile = None
     e = None
     with self.BLock:
+      if not self.Id or self.Closed:
+        self.log(2, 'cancel', row, col)
+        return None
       if (ptile := self.Buffer.pop((rid, pos), None)) is not None and (ptile[0] is not None or ptile[1] == self.Seq):
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
-        with self.GCondition:
+        if self.CLock.acquire(False):
           seq = self.Seq
-        e = threading.Event()
-        self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
-        self.log(2, 'add', row, col, len(self.Buffer))
+          e = threading.Event()
+          self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
+          self.log(2, 'add', row, col, len(self.Buffer))
+        else:
+          self.log(2, 'cancel', row, col)
+          return [None, 0]
     if e:
       with self.GCondition:
         self.Queue.append((rid, pos, ptile))
@@ -1823,6 +1832,7 @@ class TilesMixCache(TilesCache):
           t = threading.Thread(target=self._retriever, args=(seq,), daemon=True)
           t.start()
         self.GCondition.notify()
+      self.CLock.release()
     return ptile
 
   def Configure(self, tile_generator_builders):
@@ -1833,6 +1843,7 @@ class TilesMixCache(TilesCache):
       self.log(1, 'configure', *rid)
     pconnections = {rid: [[None] for i in range(self.Threads)] for rid in rids}
     _rids = {rid: True for rid in rids}
+    self.CLock.acquire()
     with self.GCondition:
       self.Seq += 1
       self.Queue.clear()
@@ -1911,10 +1922,12 @@ class TilesMixCache(TilesCache):
             e.set()
           self.Events.clear()
         self.GCondition.notify_all()
+        self.CLock.release()
     return True
 
   def Close(self):
     self.Closed = True
+    self.CLock.acquire()
     with self.BLock:
       for e, ptile in self.Events.items():
         ptile[0] = None
@@ -1950,10 +1963,16 @@ class TilesMixCache(TilesCache):
       self.Buffer = {}
       self.Generators = {}
       self.GAvailable = {}
+    self.CLock.release()
     self.log(1, 'close')
 
 
 class WebMercatorMap(WGS84WebMercator):
+
+  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf'}
+  DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
+  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf'}
+  MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
   CRS = 'EPSG:3857'
   CRS_MPU = 1
@@ -2068,6 +2087,7 @@ class WebMercatorMap(WGS84WebMercator):
         uri = infos['source'].format_map({**infos, 'key': key or ''})
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
       if rep.code != '200':
+        print(rep, rep.body)
         raise
       nmap = rep.body
     except:
@@ -2126,7 +2146,7 @@ class WebMercatorMap(WGS84WebMercator):
       if nmap[:6] == b'\xfd\x37\x7a\x58\x5a\x00':
         nmap = dmap
       infos['crs'] = self.CRS
-      infos['format'] = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff'}.get(uri.replace('.xz', '').rsplit('.', 1)[-1][0:3], 'image')
+      infos['format'] = WebMercatorMap.EXT_MIME.get(uri.replace('.xz', '').rsplit('.', 1)[-1][0:3], 'image')
     else:
       try:
         if nmap[:4] == b'\x89PNG':
@@ -2277,7 +2297,7 @@ class WebMercatorMap(WGS84WebMercator):
     if 'matrix' not in infos:
       return False
     if '{wmts}' not in infos['source']:
-      infos['format'] = infos.get('format') or {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff'}.get(infos['source'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image')
+      infos['format'] = infos.get('format') or WebMercatorMap.EXT_MIME.get(infos['source'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image')
       try:
         infos['scale'] = infos['basescale'] / (2 ** int(infos['matrix']))
         if lat is not None and lon is not None :
@@ -2499,7 +2519,7 @@ class WebMercatorMap(WGS84WebMercator):
       if '{' not in pattern:
         pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if (infos.get('format') != 'image/hgt' and '{hgt}' not in infos.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
       hgt = ''
-      ext = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif'}.get(infos['format'], 'img')
+      ext = WebMercatorMap.MIME_EXT.get(infos['format'], 'img')
       if ext == 'hgt.xz' or '{hgt}' in pattern:
         lat = 89 - infos['row']
         lon = infos['col'] - 180
@@ -2541,7 +2561,7 @@ class WebMercatorMap(WGS84WebMercator):
   def SaveTile(self, pattern, infos, tile=None, match_json=True, just_refresh=False):
     if '{' not in pattern:
       pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if (infos.get('format') != 'image/hgt' and '{hgt}' not in infos.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
-    ext = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif'}.get(infos['format'], 'img')
+    ext = WebMercatorMap.MIME_EXT.get(infos['format'], 'img')
     if match_json:
       if not self._match_infos(pattern, infos, update_json=True):
         return False
@@ -3978,9 +3998,13 @@ class WGS84ReverseGeocoding():
 
 class MapLegend():
 
+  TL_IGN_PLANV2 = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_{matrix}-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
+  TL_IGN_CARTES = {'9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
+  ML_IGN_PLANV2 = {'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
+  
   def __init__(self):
-    self.MapLegendInfosCache = {}
-    self.TilesLegendInfosCache = {}
+    self.WMSCache = {}
+    self.WMTSCache = {}
 
   @classmethod
   def MLAlias(cls, name):
@@ -4062,14 +4086,12 @@ class MapLegend():
       f_l[l] = (rep.header('content-type', f_u[0]), rep.body)
     return f_l
 
-  def FetchMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, formats_urls=None):
-    if urls is None:
-      urls = {}
-    if isinstance(formats_urls, dict):
-      formats_urls.clear()
+  def FetchMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    urls_ = urls or {}
+    urls_.update({l: fu[1] for (s, l), fu in self.WMSCache.items() if s == infos['source'] and l not in urls_})
     layers = infos['layers'].split(',')
-    p_l = [l for l in layers if l in urls]
-    m_l = [l for l in layers if l not in urls]
+    p_l = [l for l in layers if l in urls_]
+    m_l = [l for l in layers if l not in urls_]
     if m_l:
       try:
         inf = {**infos}
@@ -4077,8 +4099,7 @@ class MapLegend():
         f_u = self.FetchMapLegendInfos(inf, key, referer, user_agent, basic_auth)
         if f_u:
           f_l = self.FetchKnownMapLegend(f_u, key, referer, user_agent, basic_auth)
-          if isinstance(formats_urls, dict):
-            formats_urls.update(f_u)
+          self.WMSCache.update({(infos['source'], l): fu for l, fu in f_u.items()})
         else:
           f_l = {}
       except:
@@ -4086,24 +4107,16 @@ class MapLegend():
     else:
       f_l = {}
     if p_l:
-      f_l.update(self.FetchKnownMapLegend({l: ('', u) for l, u in urls.items() if l in p_l}, key, referer, user_agent, basic_auth))
-      if isinstance(formats_urls, dict):
-        formats_urls.update({l: (f_l[l][0], urls[l]) for l in f_l if l in p_l})
+      f_l.update(self.FetchKnownMapLegend({l: ('', u) for l, u in urls_.items() if l in p_l}, key, referer, user_agent, basic_auth))
     return f_l
 
-  def RetrieveMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, rid=None):
-    if rid is not None and rid in self.MapLegendInfosCache:
-      try:
-        return self.FetchKnownMapLegend(self.MapLegendInfosCache[rid], key, referer, user_agent, basic_auth)
-      except:
-        return {}
+  def RetrieveMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     try:
       if urls is not None:
         urls_ = {l: urls.get(l, urls.get('*')).format_map({**infos, 'key': key or ''}) for l in infos['layers'].split(',') if (l in urls or '*' in urls)}
-      formats_urls = {}
-      f_l = self.FetchMapLegend(infos, urls_, key, referer, user_agent, basic_auth, formats_urls)
-      if f_l and rid is not None:
-        self.MapLegendInfosCache[rid] = formats_urls
+      else:
+        urls_ = None
+      f_l = self.FetchMapLegend(infos, urls_, key, referer, user_agent, basic_auth)
     except:
       return {}
     return f_l
@@ -4154,7 +4167,11 @@ class MapLegend():
         cap.unlink()
       except:
         pass
-    return None if url is None else (format, url)
+    if url is None:
+      return None
+    else:
+      self.WMTSCache[(infos['source'], infos['layer'])] = (format, url)
+      return (format, url)
 
   def GetKnownTilesLegend(self, format, url, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     headers = {'User-Agent': user_agent}
@@ -4171,8 +4188,10 @@ class MapLegend():
 
   def GetTilesLegend(self, infos, url=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     if url is None:
+      f_u = self.WMTSCache.get((infos['source'], infos['layer']))
       try:
-        f_u = self.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth)
+        if f_u is None:
+          f_u = self.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth)
         if f_u is None:
           return None
         f_l = self.GetKnownTilesLegend(*f_u, key, referer, user_agent, basic_auth)
@@ -4182,7 +4201,7 @@ class MapLegend():
       f_l = self.GetKnownTilesLegend('', url, key, referer, user_agent, basic_auth)
     return f_l
 
-  def ReadTilesLegend(self, pattern, infos, matrix=None, just_lookup=False):
+  def ReadTilesLegend(self, pattern, infos, matrix=None, just_lookup=False, force_matrix=False):
     if not infos.get('source') or not infos.get('layer') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
       return None
     if matrix is not None:
@@ -4198,23 +4217,23 @@ class MapLegend():
         legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
       else:
         legendpath = None
-      if legendpath is None:
+      if legendpath is None and not force_matrix:
         legendpattern = os.path.dirname(legendpattern)
         legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
         legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
-        if legendpath is None:
-          return None
+      if legendpath is None:
+        return None
     except:
       return None
     try:
       if just_lookup:
         return os.path.getmtime(legendpath)
-      f_l = ({'.jpg': 'image/jpeg', '.png': 'image/png', '.tif': 'image/tiff', '.webp': 'image/webp', '.pdf': 'application/pdf'}.get(legendpath.suffix.lower(), 'image'), legendpath.read_bytes())
+      f_l = (WebMercatorMap.DOTEXT_MIME.get(legendpath.suffix.lower(), 'image'), legendpath.read_bytes())
     except:
       return None
     return f_l
 
-  def SaveTilesLegend(self, pattern, infos, format, legend, just_refresh=False):
+  def SaveTilesLegend(self, pattern, infos, format, legend, just_refresh=False, force_root=False):
     if not infos.get('source') or not infos.get('layer') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
       return False
     if '{' not in pattern:
@@ -4225,7 +4244,7 @@ class MapLegend():
         legendpattern = os.path.dirname(legendpattern)
       if not infos.get('matrix'):
         legendpattern = os.path.dirname(legendpattern)
-      ext = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/webp':'.webp', 'application/pdf': '.pdf'}.get(format, '.img')
+      ext = WebMercatorMap.MIME_DOTEXT.get(format, '.img')
       legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
       if just_refresh:
         if infos.get('matrix') and not os.path.exists(legendpath):
@@ -4233,38 +4252,53 @@ class MapLegend():
           legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
         os.utime(legendpath, (time.time(),) * 2)
       else:
-        for e in Path(os.path.dirname(legendpath)).glob('legend.*'):
-          if e.is_file():
-            try:
-              e.unlink()
-            except:
-              pass
-        Path(legendpath).write_bytes(legend)
+        if force_root and infos.get('matrix'):
+          legendpattern = os.path.dirname(legendpattern)
+          legendpath2 = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
+        else:
+          legendpath2 = legendpath
+        Path(os.path.dirname(legendpath2)).mkdir(parents=True, exist_ok=True)
+        if not os.path.exists(os.path.dirname(legendpath)):
+          legendpath = legendpath2
+        for lp in {legendpath, legendpath2}:
+          for e in Path(os.path.dirname(lp)).glob('legend.*'):
+            if e.is_file():
+              try:
+                e.unlink()
+              except:
+                pass
+        Path(legendpath2).write_bytes(legend)
     except:
       return False
     return True
 
-  def RetrieveTilesLegend(self, infos, matrix=None, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, rid=None):
+  def RetrieveTilesLegend(self, infos, matrix=None, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
     f_l = None
     local_f_l = None
     expired = True
     last_mod = False
     format = 'image'
+    infos_ = {**infos}
+    if matrix is not None:
+      infos_['matrix'] = matrix
+    matrix = infos_['matrix'] or None
     if isinstance(url, dict):
-      mat = matrix if matrix is not None else infos.get('matrix')
-      if mat:
-        url = url.get(mat, url.get('*', None))
+      if matrix:
+        m_u = matrix in url
+        url_ = url.get(matrix if m_u else '*', None)
       else:
-        url = url.get('*', None)
-    if url is not None:
-      url = url.format_map({**infos, **({'matrix': matrix} if matrix else {}), 'key': key or ''})
-    if rid is not None and url is None and rid in self.TilesLegendInfosCache:
-      format, url = self.TilesLegendInfosCache[rid]
+        m_u = False
+        url_ = url.get('*', None)
+    else:
+      m_u = bool(url)
+      url_ = url
+    if url_ is not None:
+      url_ = url_.format_map({**infos_, **({'matrix': matrix} if matrix else {}), 'key': key or ''})
     try:
       if local_pattern is not None:
-        last_mod = self.ReadTilesLegend(local_pattern, infos, matrix, just_lookup=True)
+        last_mod = self.ReadTilesLegend(local_pattern, infos_, matrix, just_lookup=True, force_matrix=m_u)
         if last_mod is not None:
-          f_l = self.ReadTilesLegend(local_pattern, infos, matrix)
+          f_l = self.ReadTilesLegend(local_pattern, infos_, matrix, force_matrix=m_u)
           if f_l:
             if local_expiration is not None:
               if local_expiration > max(time.time() - last_mod, 0) / 86400:
@@ -4277,22 +4311,16 @@ class MapLegend():
         if only_local:
           f_l = None
         else:
-          if url is None:
-            f_u = self.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth)
-          else:
-            f_u = [format, url]
-          f_l = self.GetKnownTilesLegend(*f_u, key, referer, user_agent, basic_auth)
+          f_l = self.GetTilesLegend(infos_, url_, key, referer, user_agent, basic_auth)
         if f_l is not None and local_pattern is not None:
           if f_l != local_f_l:
             if local_store:
               try:
-                self.SaveTilesLegend(local_pattern, infos, *f_l)
+                self.SaveTilesLegend(local_pattern, infos_, *f_l, force_root=not m_u)
               except:
                 pass
           elif local_store:
-            self.SaveTilesLegend(local_pattern, infos, *f_l, just_refresh=True)
-        if f_l is not None and rid is not None:
-          self.TilesLegendInfosCache[rid] = f_u
+            self.SaveTilesLegend(local_pattern, infos_, *f_l, just_refresh=True)
     except:
       return None
     return f_l
@@ -6079,7 +6107,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     _send_err_fail()
@@ -6088,10 +6116,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(ti.get('format'), 'img')} for t in range(len(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1])) for ti in (self.server.Interface.Map.TilesInfos[(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][t][0], q['matrix'][0])],)], 'scale': self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]]['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img')} for t in range(len(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1])) for ti in (self.server.Interface.Map.TilesInfos[(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][t][0], q['matrix'][0])],)], 'scale': self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]]['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
-                    raise
                     _send_err_fail()
             self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
@@ -6142,7 +6169,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 tsets = [t[0] for t in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]]
               n_f_l = []
               for tset in tsets:
-                f_l = self.server.Interface.Legend.RetrieveTilesLegend(self.server.Interface.TilesSets[tset][1], mat, self.server.Interface.TilesSets[tset][3], **self.server.Interface.TilesSets[tset][2], rid=(tset, mat))
+                f_l = self.server.Interface.Legend.RetrieveTilesLegend(self.server.Interface.TilesSets[tset][1], mat, self.server.Interface.TilesSets[tset][3], **self.server.Interface.TilesSets[tset][2])
                 if f_l is not None:
                   n_f_l.append(('%s [%s]' % (self.server.Interface.TilesSets[tset][0], mat), *f_l))
             except:
@@ -6159,7 +6186,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               continue
             try:
-              n_f_l = self.server.Interface.Legend.RetrieveMapLegend(self.server.Interface.Map.MapInfos, self.server.Interface.MapSets[self.server.Interface.MapSet][3], **self.server.Interface.MapSets[self.server.Interface.MapSet][2], rid=self.server.Interface.MapSet)
+              n_f_l = self.server.Interface.Legend.RetrieveMapLegend(self.server.Interface.Map.MapInfos, self.server.Interface.MapSets[self.server.Interface.MapSet][3], **self.server.Interface.MapSets[self.server.Interface.MapSet][2])
             except:
               _send_err_fail()
               continue
@@ -16022,7 +16049,11 @@ class GPXTweakerWebInterfaceServer():
       elif hcur[:9] == 'maptiles ' or hcur[:15] == 'elevationtiles ':
         if scur == 'infos':
           if field == 'alias':
-            s[1] = WebMercatorMap.TSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.TSAlias(value)
+            if hcur[:9] == 'maptiles ':
+              s[1] = WebMercatorMap.TSAlias(value)
+              s[3] = MapLegend.TLAlias(value) or {}
+            else:
+              s[1] = WGS84Elevation.TSAlias(value)
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
@@ -16064,7 +16095,11 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif hcur[:9] == 'maptiles ' and scur == 'legend':
-          s[3][field] = value.rstrip()
+          value = value.rstrip()
+          if value:
+            s[3][field] = value
+          else:
+            s[3].pop(field, None)
         elif hcur[:9] == 'maptiles ' and scur == 'display':
           if ',' in l:
             matrix, zoom = l.split(',')
@@ -16125,7 +16160,11 @@ class GPXTweakerWebInterfaceServer():
       elif hcur[:4] == 'map ' or hcur[:13] == 'elevationmap ':
         if scur == 'infos':
           if field == 'alias':
-            s[1] = WebMercatorMap.MSAlias(value) if hcur[:9] == 'maptiles ' else WGS84Elevation.MSAlias(value)
+            if hcur[:4] == 'map ':
+              s[1] = WebMercatorMap.MSAlias(value)
+              s[3] = MapLegend.MLAlias(value) or {}
+            else:
+              s[1] = WGS84Elevation.MSAlias(value)
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
@@ -16152,7 +16191,11 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif hcur[:4] == 'map ' and scur == 'legend':
-          s[3][field] = value.rstrip()
+          value = value.rstrip()
+          if value:
+            s[3][field] = value
+          else:
+            s[3].pop(field, None)
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
@@ -16455,7 +16498,7 @@ class GPXTweakerWebInterfaceServer():
         map_minlat, map_minlon = WGS84WebMercator.WebMercatortoWGS84(self.VMinx, self.VMiny)
         map_maxlat, map_maxlon = WGS84WebMercator.WebMercatortoWGS84(self.VMaxx, self.VMaxy)
         if rec:
-          self.Map.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'Map[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.MapSets[self.MapSet][0], map_minlat, map_minlon, map_maxlat, map_maxlon, self.Map.MapInfos['width'], self.Map.MapInfos['height'], time.time(), {'image/jpeg': 'jpg', 'image/png': 'png', 'image/tiff': 'tif', 'image/geotiff': 'tif'}.get(self.Map.MapInfos['format'], 'img'))))
+          self.Map.SaveMap(os.path.join(record_map.rstrip('\\') + '\\', 'Map[%s][%.4f,%.4f,%.4f,%.4f][%dx%d](%.0f).%s' % (self.MapSets[self.MapSet][0], map_minlat, map_minlon, map_maxlat, map_maxlon, self.Map.MapInfos['width'], self.Map.MapInfos['height'], time.time(), WebMercatorMap.MIME_EXT.get(self.Map.MapInfos['format'], 'img'))))
         if next((p[1][0] for uri, track in self.Tracks for seg in (*track.Pts, track.Wpts) for p in seg), None) is not None:
           if minlat < map_minlat or maxlat > map_maxlat or minlon < map_minlon or maxlon > map_maxlon:
             self.log(0, 'berror4')
@@ -16643,7 +16686,7 @@ class GPXTweakerWebInterfaceServer():
       return False
     if defx is None or defy is None:
       defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ({'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers())
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers())
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -16847,7 +16890,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else ({'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/geotiff': '.tif'}.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers())
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers())
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
