@@ -513,7 +513,7 @@ EN_STRINGS = {
     'j3dpanel': 'Margins 3D view',
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
-    'jopacityreset': 'double-click to restore the original value\\r\\n+alt:+shift: restore ',
+    'jopacityreset': 'double-click to restore the original value\\r\\n+alt:+shift: restore all the original values',
     'jfoldersw': 'Folders:',
     'jscrollcross': 'center on the focused element&#13;&#10;+shift: reframe on the track&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
@@ -6155,7 +6155,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
-            if self.server.Interface.MapSet is None or True:
+            if self.server.Interface.MapSet is None:
               _send_err_fail()
               continue
             try:
