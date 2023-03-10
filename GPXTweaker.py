@@ -2087,7 +2087,6 @@ class WebMercatorMap(WGS84WebMercator):
         uri = infos['source'].format_map({**infos, 'key': key or ''})
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
       if rep.code != '200':
-        print(rep, rep.body)
         raise
       nmap = rep.body
     except:
