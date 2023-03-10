@@ -171,7 +171,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
-    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la légende&#13;&#10;+alt: télécharger la légende avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché', 
+    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché', 
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
@@ -181,7 +181,7 @@ FR_STRINGS = {
     'jzoomall': 'recadrer sur toutes les traces cochées&#13;&#10;+alt: recadrer sur toutes les traces cochées et listées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
     'jswitchsmooth': 'activer / désactiver le lissage des traces (∻ désactivé | ÷ activé)&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage',
-    'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires&#13;&#10;en mode superposition de jeux de tuiles, clic droit: afficher / masquer les contrôles de transparence de couche',
+    'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires&#13;&#10;en mode superposition de jeux de tuiles, clic droit: afficher / masquer les contrôles de transparence de couche&#13;&#10;alt + clic droit: afficher la légende si disponible',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
     'jiset': 'sélectionner le fournisseur d\'itinéraires&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
     'jexptset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du service de cartographie en ligne&#13;&#10;en mode superposition de jeux de tuiles, clic droit: afficher / masquer les contrôles de transparence de couche',
@@ -203,7 +203,7 @@ FR_STRINGS = {
     'j3dpanel': 'Marges vue 3D',
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
-    'jopacityreset': 'double-clic pour rétablir la valeur d\'origine',
+    'jopacityreset': 'double-clic pour rétablir la valeur d\'origine\\r\\n+shift: rétablir l\'ensemble des valeurs d\'origine',
     'jfoldersw': 'Répertoires:',
     'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+shift: recadrer sur la trace&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
@@ -285,6 +285,8 @@ FR_STRINGS = {
     'jmdownmap4': 'Carte prête pour téléchargement (%s trace(s) - %s x %s)',
     'jmdownmap5': 'Échec de la préparation de la carte',
     'jmdownmap6': 'Carte trop grande, dézoom nécessaire',
+    'jmopenlegend1': 'Ouverture de la (des) légende(s) en cours...',
+    'jmopenlegend2': 'Fin de l\'ouverture de la (des) légende(s): %s légende(s) ouverte(s)',
     'jmdetach1': 'Détachement en cours...',
     'jmdetach2': 'Détachement effectué',
     'jmdetach3': 'Échec du détachement',
@@ -479,7 +481,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
-    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the legend&#13;&#10;+alt: download the legend with the waypoints&#13;&#10;+ctrl: download the displayed graph', 
+    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the list of tracks&#13;&#10;+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph', 
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
@@ -489,7 +491,7 @@ EN_STRINGS = {
     'jzoomall': 'reframe on all ticked tracks&#13;&#10;+alt: reframe on all ticked and listed tracks&#13;&#10;+shift: reframe on the focused track',
     'jwebmapping': 'display the starting point in the online mapping service',
     'jswitchsmooth': 'toggle the smoothing of the tracks (∻ disabled | ÷ enabled)&#13;&#10;+ctrl: show / hide the controls of the smoothing filter',
-    'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency',
+    'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency&#13;&#10;alt + right click: display the legend if available',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
     'jiset': 'select the itineraries provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
     'jexptset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the online mapping service&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency',
@@ -511,7 +513,7 @@ EN_STRINGS = {
     'j3dpanel': 'Margins 3D view',
     'j3dpanoramic': 'panoram',
     'j3dsubjective': 'subject',
-    'jopacityreset': 'double-click to restore the original value',
+    'jopacityreset': 'double-click to restore the original value\\r\\n+alt:+shift: restore ',
     'jfoldersw': 'Folders:',
     'jscrollcross': 'center on the focused element&#13;&#10;+shift: reframe on the track&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
@@ -589,6 +591,8 @@ EN_STRINGS = {
     'jmdownmap4': 'Map ready for download (%s track(s) - %s x %s)',
     'jmdownmap5': 'Failure of the preparation of the map',
     'jmdownmap6': 'map too big, zoom out required',
+    'jmopenlegend1': 'Opening of the legend(s) in progress...',
+    'jmopenlegend2': 'End of the opening of the legend(s): %s legend(s) opened',
     'jmdetach1': 'Detachment in progress...',
     'jmdetach2': 'Detachment completed',
     'jmdetach3': 'Failure of the detachment',
@@ -1541,10 +1545,10 @@ class TilesCache():
             else:
               a.append(gen.ind)
             self.GCondition.notify()
-          ptile[0] = tile
-          e.set()
-          with self.BLock:
-            self.Events.pop(e, None)
+        ptile[0] = tile
+        e.set()
+        with self.BLock:
+          self.Events.pop(e, None)
     with self.BLock:
       if self.Closed:
         self.log(2, 'cancel', row, col)
@@ -1553,12 +1557,14 @@ class TilesCache():
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
+        with self.GCondition:
+          seq = self.Seq
         e = threading.Event()
-        self.Events[e] = self[(rid, pos)] = ptile = [e, self.Seq]
+        self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
         self.log(2, 'add', row, col, len(self.Buffer))
-    if e:
-      t = threading.Thread(target=_retrieveitem, args=(self.Seq,), daemon=True)
-      t.start()
+      if e:
+        t = threading.Thread(target=_retrieveitem, args=(seq,), daemon=True)
+        t.start()
     return ptile
 
   def WaitTile(self, ptile, timeout=None):
@@ -1804,15 +1810,17 @@ class TilesMixCache(TilesCache):
         self[(rid, pos)] = ptile
         self.log(2, 'found', row, col)
       else:
+        with self.GCondition:
+          seq = self.Seq
         e = threading.Event()
-        self.Events[e] = self[(rid, pos)] = ptile = [e, self.Seq]
+        self.Events[e] = self[(rid, pos)] = ptile = [e, seq]
         self.log(2, 'add', row, col, len(self.Buffer))
     if e:
       with self.GCondition:
         self.Queue.append((rid, pos, ptile))
         if not self.TRunning[1] and self.TRunning[0] < self.Threads:
           self.TRunning[0] += 1
-          t = threading.Thread(target=self._retriever, args=(self.Seq,), daemon=True)
+          t = threading.Thread(target=self._retriever, args=(seq,), daemon=True)
           t.start()
         self.GCondition.notify()
     return ptile
@@ -2294,7 +2302,6 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       cap = minidom.parseString(rep.body)
       content = cap.getElementsByTagNameNS('*', 'Contents')[0]
-      layers = content.getElementsByTagNameNS('*', 'Layer')
       matrixset = None
       for node in content.childNodes:
         if node.localName == 'TileMatrixSet':
@@ -2514,7 +2521,7 @@ class WebMercatorMap(WGS84WebMercator):
         f = open(filepath, 'rb')
       tile = f.read()
     except:
-      return None
+      return False if just_lookup else None
     finally:
       try:
         f.close()
@@ -2711,7 +2718,6 @@ class WebMercatorMap(WGS84WebMercator):
         action.append('failed')
       else:
         action[0] = 'failed'
-    last_mod = False
     try:
       if local_pattern is not None:
         last_mod = self.ReadKnownTile(local_pattern, infos, just_lookup=True)
@@ -3968,6 +3974,328 @@ class WGS84ReverseGeocoding():
         return None
     except:
       return None
+
+
+class MapLegend():
+
+  def __init__(self):
+    self.MapLegendInfosCache = {}
+    self.TilesLegendInfosCache = {}
+
+  @classmethod
+  def MLAlias(cls, name):
+    if hasattr(cls, 'ML_' + name):
+      return dict(getattr(cls, 'ML_' + name))
+    else:
+      return None
+
+  @classmethod
+  def TLAlias(cls, name):
+    if hasattr(cls, 'TL_' + name):
+      return dict(getattr(cls, 'TL_' + name))
+    else:
+      return None
+
+  def FetchMapLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    if 'source' not in infos or '{wms}' not in infos['source'] or not infos.get('layers'):
+      return None
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    try:
+      uri = infos['source'].format_map({'wms': WebMercatorMap.WMS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
+    except:
+      return None
+    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+    if rep.code != '200':
+      return None
+    try:
+      inf_layers = infos['layers'].split(',')
+      cap = minidom.parseString(rep.body)
+      capability = cap.getElementsByTagNameNS('*', 'Capability')[0]
+      f_u = {}
+      for node in capability.getElementsByTagNameNS('*', 'Layer'):
+        layer = None
+        for c_node in node.childNodes:
+          if c_node.localName == 'Name':
+            layer_name = _XMLGetNodeText(c_node)
+            if layer_name in inf_layers:
+              layer = node
+            break
+        if layer:
+          height = width = 0
+          format = ''
+          url = None
+          for l_node in layer.getElementsByTagNameNS('*', 'LegendURL'):
+            try:
+              height_ = int(l_node.getAttribute('height'))
+              width_ = int(l_node.getAttribute('width'))
+            except:
+              height_ = width_ = 0
+            if height_ * width_ >= height * width:
+              try:
+                format = _XMLGetNodeText(l_node.getElementsByTagNameNS('*', 'Format'))
+                url = l_node.getElementsByTagNameNS('*', 'OnlineResource')[0].getAttribute('xlink:href')
+                height = height_
+                width = width_            
+              except:
+                pass
+          if url is not None:
+            f_u[layer_name] = (format, url)
+    except:
+      return {}
+    return f_u
+
+  def FetchKnownMapLegend(self, formats_urls, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    f_l = {}
+    for l, f_u in formats_urls.items():
+      try:
+        uri = f_u[1].format_map({'key': key or ''})
+      except:
+        continue
+      rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+      if rep.code != '200':
+        continue
+      f_l[l] = (rep.header('content-type', f_u[0]), rep.body)
+    return f_l
+
+  def FetchMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, formats_urls=None):
+    if urls is None:
+      urls = {}
+    if isinstance(formats_urls, dict):
+      formats_urls.clear()
+    layers = infos['layers'].split(',')
+    p_l = [l for l in layers if l in urls]
+    m_l = [l for l in layers if l not in urls]
+    if m_l:
+      try:
+        inf = {**infos}
+        inf['layers'] = ','.join(m_l)
+        f_u = self.FetchMapLegendInfos(inf, key, referer, user_agent, basic_auth)
+        if f_u:
+          f_l = self.FetchKnownMapLegend(f_u, key, referer, user_agent, basic_auth)
+          if isinstance(formats_urls, dict):
+            formats_urls.update(f_u)
+        else:
+          f_l = {}
+      except:
+        f_l = {}
+    else:
+      f_l = {}
+    if p_l:
+      f_l.update(self.FetchKnownMapLegend({l: ('', u) for l, u in urls.items() if l in p_l}, key, referer, user_agent, basic_auth))
+      if isinstance(formats_urls, dict):
+        formats_urls.update({l: (f_l[l][0], urls[l]) for l in f_l if l in p_l})
+    return f_l
+
+  def RetrieveMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, rid=None):
+    if rid is not None and rid in self.MapLegendInfosCache:
+      try:
+        return self.FetchKnownMapLegend(self.MapLegendInfosCache[rid], key, referer, user_agent, basic_auth)
+      except:
+        return {}
+    try:
+      if urls is not None:
+        urls_ = {l: urls.get(l, urls.get('*')).format_map({**infos, 'key': key or ''}) for l in infos['layers'].split(',') if (l in urls or '*' in urls)}
+      formats_urls = {}
+      f_l = self.FetchMapLegend(infos, urls_, key, referer, user_agent, basic_auth, formats_urls)
+      if f_l and rid is not None:
+        self.MapLegendInfosCache[rid] = formats_urls
+    except:
+      return {}
+    return f_l
+
+  def GetTilesLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    if 'source' not in infos or '{wmts}' not in infos['source'] or not infos.get('layer'):
+      return None
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    try:
+      uri = infos['source'].format_map({'wmts': WebMercatorMap.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
+    except:
+      return None
+    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+    if rep.code != '200':
+      return None
+    try:
+      cap = minidom.parseString(rep.body)
+      content = cap.getElementsByTagNameNS('*', 'Contents')[0]
+      layer = None
+      for node in content.getElementsByTagNameNS('*', 'Layer'):
+        for c_node in node.childNodes:
+          if c_node.localName == 'Identifier':
+            if _XMLGetNodeText(c_node) == infos['layer']:
+              layer = node
+              break
+        if layer:
+          break
+      height = width = 0
+      format = ''
+      url = None
+      for node in layer.getElementsByTagNameNS('*', 'LegendURL'):
+        try:
+          height_ = int(node.getAttribute('height'))
+          width_ = int(node.getAttribute('width'))
+        except:
+          height_ = width_ = 0
+        if height_ * width_ >= height * width:
+          height = height_
+          width = width_
+          format = node.getAttribute('format')
+          url = node.getAttribute('xlink:href')
+    except:
+      return None
+    finally:
+      try:
+        cap.unlink()
+      except:
+        pass
+    return None if url is None else (format, url)
+
+  def GetKnownTilesLegend(self, format, url, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    try:
+      uri = url.format_map({'key': key or ''})
+    except:
+      return None
+    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+    if rep.code != '200':
+      return None
+    return (rep.header('content-type', format), rep.body)
+
+  def GetTilesLegend(self, infos, url=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    if url is None:
+      try:
+        f_u = self.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth)
+        if f_u is None:
+          return None
+        f_l = self.GetKnownTilesLegend(*f_u, key, referer, user_agent, basic_auth)
+      except:
+        return None
+    else:
+      f_l = self.GetKnownTilesLegend('', url, key, referer, user_agent, basic_auth)
+    return f_l
+
+  def ReadTilesLegend(self, pattern, infos, matrix=None, just_lookup=False):
+    if not infos.get('source') or not infos.get('layer') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
+      return None
+    if matrix is not None:
+      infos['matrix'] = str(matrix)
+    if '{' not in pattern:
+      pattern = os.path.join(pattern, WebMercatorMap.LOCALSTORE_DEFAULT_PATTERN)
+    try:
+      legendpattern = os.path.dirname(pattern)
+      while '{matrix}' in os.path.dirname(legendpattern):
+        legendpattern = os.path.dirname(legendpattern)
+      if infos.get('matrix'):
+        legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
+        legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
+      else:
+        legendpath = None
+      if legendpath is None:
+        legendpattern = os.path.dirname(legendpattern)
+        legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
+        legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
+        if legendpath is None:
+          return None
+    except:
+      return None
+    try:
+      if just_lookup:
+        return os.path.getmtime(legendpath)
+      f_l = ({'.jpg': 'image/jpeg', '.png': 'image/png', '.tif': 'image/tiff', '.webp': 'image/webp', '.pdf': 'application/pdf'}.get(legendpath.suffix.lower(), 'image'), legendpath.read_bytes())
+    except:
+      return None
+    return f_l
+
+  def SaveTilesLegend(self, pattern, infos, format, legend, just_refresh=False):
+    if not infos.get('source') or not infos.get('layer') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
+      return False
+    if '{' not in pattern:
+      pattern = os.path.join(pattern, WebMercatorMap.LOCALSTORE_DEFAULT_PATTERN)
+    try:
+      legendpattern = os.path.dirname(pattern)
+      while '{matrix}' in os.path.dirname(legendpattern):
+        legendpattern = os.path.dirname(legendpattern)
+      if not infos.get('matrix'):
+        legendpattern = os.path.dirname(legendpattern)
+      ext = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/tiff': '.tif', 'image/webp':'.webp', 'application/pdf': '.pdf'}.get(format, '.img')
+      legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
+      if just_refresh:
+        if infos.get('matrix') and not os.path.exists(legendpath):
+          legendpattern = os.path.dirname(legendpattern)
+          legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
+        os.utime(legendpath, (time.time(),) * 2)
+      else:
+        for e in Path(os.path.dirname(legendpath)).glob('legend.*'):
+          if e.is_file():
+            try:
+              e.unlink()
+            except:
+              pass
+        Path(legendpath).write_bytes(legend)
+    except:
+      return False
+    return True
+
+  def RetrieveTilesLegend(self, infos, matrix=None, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, rid=None):
+    f_l = None
+    local_f_l = None
+    expired = True
+    last_mod = False
+    format = 'image'
+    if isinstance(url, dict):
+      mat = matrix if matrix is not None else infos.get('matrix')
+      if mat:
+        url = url.get(mat, url.get('*', None))
+      else:
+        url = url.get('*', None)
+    if url is not None:
+      url = url.format_map({**infos, **({'matrix': matrix} if matrix else {}), 'key': key or ''})
+    if rid is not None and url is None and rid in self.TilesLegendInfosCache:
+      format, url = self.TilesLegendInfosCache[rid]
+    try:
+      if local_pattern is not None:
+        last_mod = self.ReadTilesLegend(local_pattern, infos, matrix, just_lookup=True)
+        if last_mod is not None:
+          f_l = self.ReadTilesLegend(local_pattern, infos, matrix)
+          if f_l:
+            if local_expiration is not None:
+              if local_expiration > max(time.time() - last_mod, 0) / 86400:
+                expired = False
+              else:
+                local_f_l = f_l
+            else:
+              expired = False
+      if expired:
+        if only_local:
+          f_l = None
+        else:
+          if url is None:
+            f_u = self.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth)
+          else:
+            f_u = [format, url]
+          f_l = self.GetKnownTilesLegend(*f_u, key, referer, user_agent, basic_auth)
+        if f_l is not None and local_pattern is not None:
+          if f_l != local_f_l:
+            if local_store:
+              try:
+                self.SaveTilesLegend(local_pattern, infos, *f_l)
+              except:
+                pass
+          elif local_store:
+            self.SaveTilesLegend(local_pattern, infos, *f_l, just_refresh=True)
+        if f_l is not None and rid is not None:
+          self.TilesLegendInfosCache[rid] = f_u
+    except:
+      return None
+    return f_l
 
 
 class XMLNode():
@@ -5702,7 +6030,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.TLock.acquire()
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
-            tsl = len(self.server.Interface.TilesSets[self.server.Interface.TilesSet])
+            tsmt = isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict)
             if 'set' in q:
               try:
                 if len(self.server.Interface.TilesSets[int(q['set'][0])][-1]) <= 1:
@@ -5726,7 +6054,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   m = None
                   while True:
                     if tl[l2][0] != m:
-                      if not (self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]) if tsl == 4 else self.server.Interface.Map.SetTilesProviders({(tso[0], str(tl[l2][0])): self.server.Interface.TilesSets[tso[0]][1:3] for tso in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}, str(tl[l2][0]))):
+                      if not (self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]) if tsmt else self.server.Interface.Map.SetTilesProviders({(tso[0], str(tl[l2][0])): self.server.Interface.TilesSets[tso[0]][1:3] for tso in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}, str(tl[l2][0]))):
                         l2 += 1
                         if l2 >= l3:
                           l3 = (l1 + l3) // 2
@@ -5735,7 +6063,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                             break
                         continue
                       m = tl[l2][0]
-                    s = (self.server.Interface.Map.TilesInfos if tsl == 4 else self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]])['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    s = (self.server.Interface.Map.TilesInfos if tsmt else self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]])['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
                     if sm < s:
                       l1 = l2
                     else:
@@ -5746,7 +6074,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   q['matrix'] = [str(tl[l1][0])]
                 except:
                   pass
-              if tsl == 4:
+              if tsmt:
                 if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
                   _send_err_fail()
                 else:
@@ -5801,6 +6129,43 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 _send_resp(self.server.Interface.Map.MapInfos.get('format', 'image/*'))
             else:
               _send_err_nf()
+          elif req.path.lower()[:13] == '/tiles/legend':
+            if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+              _send_err_bad()
+              continue
+            try:
+              tset, mat = req.path.lower().split('?')[1].split(',')
+              tset = int(tset)
+              if isinstance(self.server.Interface.TilesSets[tset][1], dict):
+                tsets = [tset]
+              else:
+                tsets = [t[0] for t in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]]
+              n_f_l = []
+              for tset in tsets:
+                f_l = self.server.Interface.Legend.RetrieveTilesLegend(self.server.Interface.TilesSets[tset][1], mat, self.server.Interface.TilesSets[tset][3], **self.server.Interface.TilesSets[tset][2], rid=(tset, mat))
+                if f_l is not None:
+                  n_f_l.append(('%s [%s]' % (self.server.Interface.TilesSets[tset][0], mat), *f_l))
+            except:
+              _send_err_fail()
+              continue
+            boundary = base64.urlsafe_b64encode(os.urandom(24)).lower()
+            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','').encode('utf-8'), f.encode('utf-8'), l) for n, f, l in n_f_l), (b'--%b--\r\n' % boundary, )) for e in g)
+            _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
+          elif req.path.lower()[:11] == '/map/legend':
+            if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
+              _send_err_bad()
+              continue
+            if self.server.Interface.MapSet is None or True:
+              _send_err_fail()
+              continue
+            try:
+              n_f_l = self.server.Interface.Legend.RetrieveMapLegend(self.server.Interface.Map.MapInfos, self.server.Interface.MapSets[self.server.Interface.MapSet][3], **self.server.Interface.MapSets[self.server.Interface.MapSet][2], rid=self.server.Interface.MapSet)
+            except:
+              _send_err_fail()
+              continue
+            boundary = base64.urlsafe_b64encode(os.urandom(24)).lower()
+            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','').encode('utf-8'), f_l[0].encode('utf-8'), f_l[1]) for n, f_l in n_f_l.items()), (b'--%b--\r\n' % boundary, )) for e in g)
+            _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
@@ -7065,7 +7430,7 @@ class GPXTweakerWebInterfaceServer():
   '              e.htmlFor = "opacityl" + ls;\r\n' \
   '              e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
   '              e.title = "{#jopacityreset#}";\r\n' \
-  '              e.ondblclick = (e) => {e.target.nextElementSibling.value=tlays[l][1];e.target.nextElementSibling.dispatchEvent(new Event("input"));};\r\n' \
+  '              e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1];inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1];inp.dispatchEvent(new Event("input"));};};\r\n' \
   '              oform.appendChild(e);\r\n' \
   '              e = document.createElement("input");\r\n' \
   '              e.type = "range";\r\n' \
@@ -7212,7 +7577,7 @@ class GPXTweakerWebInterfaceServer():
   '                handle.removeChild(tile);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            let suf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(tset)[l][0]).toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '            let suf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(document.getElementById("tset").selectedIndex)[l][0]).toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
   '            let pref = "tile-" + l.toString() + "-";\r\n' \
   '            if (tiles_hold == null) {\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
@@ -7941,10 +8306,21 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function open_legend() {\r\n' \
+  '        let msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
+  '        xhr_ongoing++;\r\n' \
+  '        fetch(mode=="map"?"/map/legend?":("/tiles/legend?" + tset.toString() + "," + document.getElementById("matrix").innerHTML), {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {let url=URL.createObjectURL(e);let w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
+  '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
   '        if (e.button == 2) {\r\n' \
   '          e.preventDefault();\r\n' \
   '          e.stopPropagation();\r\n' \
+  '          if (e.altKey) {\r\n' \
+  '            if (s.id == "tset") {\r\n' \
+  '              open_legend();\r\n' \
+  '            }\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          if (s.id == "tset" && layers != null) {\r\n' \
   '            document.getElementById("opanel").style.display = document.getElementById("opanel").style.display=="none"?"block":"none";\r\n' \
   '          }\r\n' \
@@ -14681,6 +15057,14 @@ class GPXTweakerWebInterfaceServer():
   '        ctx.globalCompositeOperation = "destination-over";\r\n' \
   '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
   '        if (mode == "map") {\r\n' \
+  '          let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '          let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '          let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '          let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '          let rleft = parseInt(vleft / twidth);\r\n' \
+  '          let rright = parseInt(vright / twidth);\r\n' \
+  '          let rtop = parseInt(vtop / theight);\r\n' \
+  '          let rbottom = parseInt(vbottom / theight);\r\n' \
   '          prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '          prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
   '          let tile = new Image();\r\n' \
@@ -14742,16 +15126,16 @@ class GPXTweakerWebInterfaceServer():
   '          show_msg("{#jmdownmap5#}", 10, msgn);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function download_legend(waypoints=false) {\r\n' \
+  '      function download_tracklist(waypoints=false) {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        let b = track_boundaries();\r\n' \
   '        if (b == null) {return;}\r\n' \
-  '        let legend = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
-  '        legend.setAttribute("width", "0");\r\n' \
-  '        legend.setAttribute("height", "0");\r\n' \
+  '        let tracklist = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
+  '        tracklist.setAttribute("width", "0");\r\n' \
+  '        tracklist.setAttribute("height", "0");\r\n' \
   '        let txt = document.createElementNS("http://www.w3.org/2000/svg", "text");\r\n' \
   '        txt.setAttribute("font-family", "Calibri, sans-serif");\r\n' \
-  '        legend.appendChild(txt);\r\n' \
+  '        tracklist.appendChild(txt);\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
   '        for (let t=0; t<trks.length; t++) {\r\n' \
   '          if (trks[t].firstElementChild.checked) {\r\n' \
@@ -14790,21 +15174,21 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let div = document.createElement("div");\r\n' \
   '        div.setAttribute("style", "z-index:-1;position:absolute;visibility:hidden;width:0;height:0");\r\n' \
-  '        div.appendChild(legend);\r\n' \
+  '        div.appendChild(tracklist);\r\n' \
   '        document.body.appendChild(div);\r\n' \
   '        b = txt.getBBox();\r\n' \
   '        document.body.removeChild(div);\r\n' \
   '        let w = Math.ceil(2 * b.x + b.width);\r\n' \
   '        let h = Math.ceil(2.5 * b.y + b.height);\r\n' \
-  '        legend.setAttribute("viewBox", "0 0 " + w.toString() + " " + h.toString());\r\n' \
-  '        legend.setAttribute("width", w.toString());\r\n' \
-  '        legend.setAttribute("height", h.toString());\r\n' \
+  '        tracklist.setAttribute("viewBox", "0 0 " + w.toString() + " " + h.toString());\r\n' \
+  '        tracklist.setAttribute("width", w.toString());\r\n' \
+  '        tracklist.setAttribute("height", h.toString());\r\n' \
   '        let xs = new XMLSerializer;\r\n' \
-  '        let url = URL.createObjectURL(new Blob([xs.serializeToString(legend)], {type: "image/svg+xml"}));\r\n' \
+  '        let url = URL.createObjectURL(new Blob([xs.serializeToString(tracklist)], {type: "image/svg+xml"}));\r\n' \
   '        if (url) {\r\n' \
   '          let a = document.createElement("a");\r\n' \
   '          a.href = url;\r\n' \
-  '          a.download = "legend";\r\n' \
+  '          a.download = "tracklist";\r\n' \
   '          a.click();\r\n' \
   '          URL.revokeObjectURL(url);\r\n' \
   '        }\r\n' \
@@ -14973,7 +15357,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:57.4em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_legend(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():(event.altKey?magnify_dec():zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?opacity_inc():(event.altKey?magnify_inc():zoom_inc())">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:57.4em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():(event.altKey?magnify_dec():zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><span id="tlock" title="{#jlock#}" style="display:none;width:1em;cursor:pointer" onclick="switch_tlock()">&#128275;</span><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?opacity_inc():(event.altKey?magnify_inc():zoom_inc())">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -15334,7 +15718,7 @@ class GPXTweakerWebInterfaceServer():
         hcur = l[2:-2]
         if hcur[:9].lower() == 'maptiles ':
           hcur = hcur[:9].lower() + hcur[9:]
-          self.TilesSets.append([hcur[9:].strip(), {}, {}, [1, ]])
+          self.TilesSets.append([hcur[9:].strip(), {}, {}, {}, [1, ]])
           s = self.TilesSets[-1]
         elif hcur[:18].lower() == 'maptilescomposite ':
           hcur = hcur[:18].lower() + hcur[18:]
@@ -15342,7 +15726,7 @@ class GPXTweakerWebInterfaceServer():
           s = self.TilesSets[-1]
         elif hcur[:4].lower() == 'map ':
           hcur = hcur[:4].lower() + hcur[4:]
-          self.MapSets.append([hcur[4:].strip(), {}, {}])
+          self.MapSets.append([hcur[4:].strip(), {}, {}, {}])
           s = self.MapSets[-1]
         elif hcur[:15].lower() == 'elevationtiles ':
           hcur = hcur[:15].lower() + hcur[15:]
@@ -15384,7 +15768,7 @@ class GPXTweakerWebInterfaceServer():
             self.WebMappingServices.append([l[12:-1].strip(), {}])
             s = self.WebMappingServices[-1]
         elif hcur[:9] == 'maptiles ':
-          if not scur in ('infos', 'handling', 'display'):
+          if not scur in ('infos', 'handling', 'legend', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:18] == 'maptilescomposite ':
@@ -15394,7 +15778,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
-          if not scur in ('infos', 'handling'):
+          if not scur in ('infos', 'handling') and (hcur[:4] != 'map ' or scur != 'legend'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         else:
@@ -15679,6 +16063,8 @@ class GPXTweakerWebInterfaceServer():
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
+        elif hcur[:9] == 'maptiles ' and scur == 'legend':
+          s[3][field] = value.rstrip()
         elif hcur[:9] == 'maptiles ' and scur == 'display':
           if ',' in l:
             matrix, zoom = l.split(',')
@@ -15696,15 +16082,15 @@ class GPXTweakerWebInterfaceServer():
           zoom = zoom.strip()
           if zoom[-1] == '*':
             zoom = zoom[:-1].strip()
-            s[3][0] = len(s[3])
-          s[3].append([matrix, zoom])
+            s[-1][0] = len(s[-1])
+          s[-1].append([matrix, zoom])
       elif hcur[:18] == 'maptilescomposite ':
         if scur == 'layer':
           value = value.rstrip()
           if field == 'name':
             try:
               s[1][-1][0] = next(i for i in range(len(self.TilesSets) - 1) if self.TilesSets[i][0] == value)
-              if len(self.TilesSets[s[1][-1][0]]) < 4:
+              if not isinstance(self.TilesSets[s[1][-1][0]][1], dict):
                 raise
             except:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
@@ -15734,8 +16120,8 @@ class GPXTweakerWebInterfaceServer():
           zoom = zoom.strip()
           if zoom[-1] == '*':
             zoom = zoom[:-1].strip()
-            s[2][0] = len(s[2])
-          s[2].append([matrix, zoom])
+            s[-1][0] = len(s[-1])
+          s[-1].append([matrix, zoom])
       elif hcur[:4] == 'map ' or hcur[:13] == 'elevationmap ':
         if scur == 'infos':
           if field == 'alias':
@@ -15765,6 +16151,8 @@ class GPXTweakerWebInterfaceServer():
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
+        elif hcur[:4] == 'map ' and scur == 'legend':
+          s[3][field] = value.rstrip()
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
@@ -16183,6 +16571,7 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.ReverseGeocodingProvider = None
       self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
+      self.Legend = MapLegend()
       if uri is not None:
         self.HTML = ''
       else:
@@ -16247,7 +16636,7 @@ class GPXTweakerWebInterfaceServer():
     return ''.join('<option value="%s">%s</option>' % (*([escape(ipro[0])] * 2),) for ipro in self.ItinerariesProviders)
 
   def _build_tlayers(self):
-    return ', '.join('[%s, [%s]]' % (i, ', '.join('[%s, "%s"]' % tuple(to) for to in t[1])) for i, t in enumerate(self.TilesSets) if len(t) == 3)
+    return ', '.join('[%s, [%s]]' % (i, ', '.join('[%s, "%s"]' % tuple(to) for to in t[1])) for i, t in enumerate(self.TilesSets) if len(t) >= 2 and isinstance(t[1], list))
 
   def BuildHTML(self, defx=None, defy=None):
     if self.HTML is None:
