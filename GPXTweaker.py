@@ -76,7 +76,7 @@ FR_STRINGS = {
     '_id': 'Gestionnaire de légende',
     'legendretrieve': 'fourniture de la légende %s',
     'legendretrieved1': 'légende %s fournie: %s composant(s)',
-    'legendlfound': 'légende %s trouvee localement',
+    'legendlfound': 'légende %s trouvée localement',
     'legendlexpired': 'légende locale %s expirée',
     'legendfetch': 'récupération de la légende %s',
     'legendfail': 'échec de la fourniture de la légende %s',
@@ -4033,7 +4033,7 @@ class WGS84ReverseGeocoding():
 
 class MapLegend():
 
-  ML_IGN_PLANV2 = {'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
+  ML_IGN_PLANV2 = {'*': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
   TL_IGN_PLANV2 = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_{matrix}-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
   TL_IGN_CARTES = {'9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
   TL_IGN_NOMS = {'8': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-1M-10M.png', '9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png'}
@@ -4074,39 +4074,55 @@ class MapLegend():
       return None
     try:
       inf_layers = infos['layers'].split(',')
+      inf_styles = infos['styles'].split(',')
+      inf_styles.extend([''] * max(0, len(inf_layers) - len(inf_styles)))
+      layers_styles = {layer: [style for lay, style in zip(inf_layers, inf_styles) if lay == layer] for layer in inf_layers}
       cap = minidom.parseString(rep.body)
       capability = cap.getElementsByTagNameNS('*', 'Capability')[0]
       f_u = {}
       for node in capability.getElementsByTagNameNS('*', 'Layer'):
         layer = None
+        layer_name = ''
         for c_node in node.childNodes:
           if c_node.localName == 'Name':
             layer_name = _XMLGetNodeText(c_node)
-            if layer_name in inf_layers:
+            if layer_name in layers_styles:
               layer = node
             break
         if layer:
-          height = width = 0
-          format = ''
-          url = None
-          for l_node in layer.getElementsByTagNameNS('*', 'LegendURL'):
-            try:
-              height_ = int(l_node.getAttribute('height'))
-              width_ = int(l_node.getAttribute('width'))
-            except:
-              height_ = width_ = 0
-            if height_ * width_ >= height * width:
+          styles = layers_styles[layer_name]
+          def_style = '' in styles
+          for s_node in layer.getElementsByTagNameNS('*', 'Style'):
+            style = None
+            for c_node in s_node.childNodes:
+              if c_node.localName == 'Name':
+                style_name = _XMLGetNodeText(c_node)
+                if style_name in styles or def_style:
+                  style = s_node
+                break 
+            if style:
               try:
-                format = _XMLGetNodeText(l_node.getElementsByTagNameNS('*', 'Format'))
-                url = l_node.getElementsByTagNameNS('*', 'OnlineResource')[0].getAttribute('xlink:href')
-                height = height_
-                width = width_            
+                l_node = style.getElementsByTagNameNS('*', 'LegendURL')[0]
               except:
-                pass
-          if url is not None:
-            f_u[layer_name] = (format, url)
+                l_node = None
+              if l_node:
+                try:
+                  format = _XMLGetNodeText(l_node.getElementsByTagNameNS('*', 'Format')[0])
+                except:
+                  format = ''
+                try:
+                  url = l_node.getElementsByTagNameNS('*', 'OnlineResource')[0].getAttribute('xlink:href')
+                except:
+                  url = None
+              if url is not None:
+                if style_name in styles:
+                  f_u[(layer_name, style_name)] = (format, url)
+                if def_style:
+                  f_u[(layer_name, '')] = (format, url)
+            def_style = False
     except:
       return {}
+    self.WMSCache.update({(infos['source'], *l_s): fu for l_s, fu in f_u.items()})
     return f_u
 
   def FetchKnownMapLegend(self, formats_urls, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
@@ -4114,7 +4130,7 @@ class MapLegend():
     if referer:
       headers['Referer'] = referer
     f_l = {}
-    for l, f_u in formats_urls.items():
+    for l_s, f_u in formats_urls.items():
       try:
         uri = f_u[1].format_map({'key': key or ''})
       except:
@@ -4122,23 +4138,28 @@ class MapLegend():
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
       if rep.code != '200':
         continue
-      f_l[l] = (rep.header('content-type', f_u[0]), rep.body)
+      f_l[l_s] = (rep.header('content-type', f_u[0]), rep.body)
     return f_l
 
   def FetchMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     urls_ = urls or {}
-    urls_.update({l: fu[1] for (s, l), fu in self.WMSCache.items() if s == infos['source'] and l not in urls_})
-    layers = infos['layers'].split(',')
-    p_l = [l for l in layers if l in urls_]
-    m_l = [l for l in layers if l not in urls_]
+    try:
+      urls_.update({(l, s): fu[1] for (so, l, s), fu in self.WMSCache.items() if so == infos['source'] and (l, s) not in urls_})
+      layers = infos['layers'].split(',')
+      styles = infos['styles'].split(',')
+      styles.extend([''] * max(0, len(layers) - len(styles)))
+    except:
+      return {}
+    p_l = [l_s for l_s in zip(layers, styles) if l_s in urls_]
+    m_l = [l_s for l_s in zip(layers, styles) if l_s not in urls_]
     if m_l:
       try:
         inf = {**infos}
-        inf['layers'] = ','.join(m_l)
+        inf['layers'] = ','.join(l_s[0] for l_s in m_l)
+        inf['styles'] = ','.join(l_s[1] for l_s in m_l)
         f_u = self.FetchMapLegendInfos(inf, key, referer, user_agent, basic_auth)
         if f_u:
           f_l = self.FetchKnownMapLegend(f_u, key, referer, user_agent, basic_auth)
-          self.WMSCache.update({(infos['source'], l): fu for l, fu in f_u.items()})
         else:
           f_l = {}
       except:
@@ -4146,14 +4167,17 @@ class MapLegend():
     else:
       f_l = {}
     if p_l:
-      f_l.update(self.FetchKnownMapLegend({l: ('', u) for l, u in urls_.items() if l in p_l}, key, referer, user_agent, basic_auth))
+      f_l.update(self.FetchKnownMapLegend({l_s: ('', u) for l_s, u in urls_.items() if l_s in p_l}, key, referer, user_agent, basic_auth))
     return f_l
 
   def RetrieveMapLegend(self, infos, urls=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     self.log(2, 'legendretrieve', infos)
     try:
       if urls is not None:
-        urls_ = {l: urls.get(l, urls.get('*')).format_map({**infos, 'key': key or ''}) for l in infos['layers'].split(',') if (l in urls or '*' in urls)}
+        layers = infos['layers'].split(',')
+        styles = infos['styles'].split(',')
+        styles.extend([''] * max(0, len(layers) - len(styles)))
+        urls_ = {l_s: urls.get(l_s, urls.get('*')).format_map({**infos, 'key': key or ''}) for l_s in zip(layers, styles) if (l_s in urls or '*' in urls)}
       else:
         urls_ = None
       f_l = self.FetchMapLegend(infos, urls_, key, referer, user_agent, basic_auth)
@@ -4179,6 +4203,7 @@ class MapLegend():
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
     if rep.code != '200':
       return None
+    f_u = []
     try:
       cap = minidom.parseString(rep.body)
       content = cap.getElementsByTagNameNS('*', 'Contents')[0]
@@ -4191,81 +4216,81 @@ class MapLegend():
               break
         if layer:
           break
-      height = width = 0
-      format = ''
-      url = None
+      if not layer:
+        return []
+      for node in layer.getElementsByTagNameNS('*', 'Style'):
+        style = None
+        for c_node in node.childNodes:
+          if c_node.localName == 'Identifier':
+            if _XMLGetNodeText(c_node) == infos['style']:
+              style = node
+            break 
+      if not style:
+        return []
       for node in layer.getElementsByTagNameNS('*', 'LegendURL'):
+        format = node.getAttribute('format')
+        url = node.getAttribute('xlink:href')
         try:
-          height_ = int(node.getAttribute('height'))
-          width_ = int(node.getAttribute('width'))
+          minsd = float(node.getAttribute('minScaleDenominator'))
         except:
-          height_ = width_ = 0
-        if height_ * width_ >= height * width:
-          height = height_
-          width = width_
-          format = node.getAttribute('format')
-          url = node.getAttribute('xlink:href')
+          minsd = 0
+        try:
+          maxsd = float(node.getAttribute('maxScaleDenominator'))
+        except:
+          maxsd = float('inf')
+        f_u.append(((minsd, maxsd), (format, url)))
     except:
-      return None
+      return []
     finally:
       try:
         cap.unlink()
       except:
         pass
-    if url is None:
-      return None
-    else:
-      self.WMTSCache[(infos['source'], infos['layer'])] = (format, url)
-      return (format, url)
+    f_u.sort(key=lambda k:k[0][0])
+    self.WMTSCache[(infos['source'], infos['layer'], infos['style'])] = f_u
+    return f_u
 
-  def GetKnownTilesLegend(self, format, url, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+  def GetKnownTilesLegend(self, infos, formats_urls, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     headers = {'User-Agent': user_agent}
     if referer:
       headers['Referer'] = referer
     try:
-      uri = url.format_map({'key': key or ''})
+      sd = infos['scale'] / 0.28 * 1000
+      f_h = next((f_u for f_u in formats_urls if f_u[0][0] <= sd and sd < f_u[0][1]), None)[1]
+      uri = f_h[1].format_map({'key': key or ''})
     except:
       return None
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
     if rep.code != '200':
       return None
-    return (rep.header('content-type', format), rep.body)
+    return (rep.header('content-type') or f_h[0], rep.body)
 
   def GetTilesLegend(self, infos, url=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     if url is None:
-      f_u = self.WMTSCache.get((infos['source'], infos['layer']))
+      f_u = self.WMTSCache.get((infos['source'], infos['layer'], infos['style']))
       try:
         if f_u is None:
           f_u = self.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth)
         if f_u is None:
           return None
-        f_l = self.GetKnownTilesLegend(*f_u, key, referer, user_agent, basic_auth)
+        f_l = self.GetKnownTilesLegend(infos, f_u, key, referer, user_agent, basic_auth)
       except:
         return None
     else:
-      f_l = self.GetKnownTilesLegend('', url, key, referer, user_agent, basic_auth)
+      f_l = self.GetKnownTilesLegend(infos, [((0, float('inf')), ('', url))], key, referer, user_agent, basic_auth)
     return f_l
 
-  def ReadTilesLegend(self, pattern, infos, matrix=None, just_lookup=False, force_matrix=False):
-    if not infos.get('source') or not infos.get('layer') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
+  def ReadTilesLegend(self, pattern, infos, just_lookup=False):
+    if not infos.get('source') or not infos.get('layer') or not infos.get('matrix') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
       return None
-    if matrix is not None:
-      infos['matrix'] = str(matrix)
     if '{' not in pattern:
       pattern = os.path.join(pattern, WebMercatorMap.LOCALSTORE_DEFAULT_PATTERN)
     try:
       legendpattern = os.path.dirname(pattern)
       while '{matrix}' in os.path.dirname(legendpattern):
         legendpattern = os.path.dirname(legendpattern)
-      if infos.get('matrix'):
-        legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
-        legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
-      else:
-        legendpath = None
-      if legendpath is None and not force_matrix:
-        legendpattern = os.path.dirname(legendpattern)
-        legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
-        legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
+      legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
+      legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
       if legendpath is None:
         return None
     except:
@@ -4278,8 +4303,8 @@ class MapLegend():
       return None
     return f_l
 
-  def SaveTilesLegend(self, pattern, infos, format, legend, just_refresh=False, force_root=False):
-    if not infos.get('source') or not infos.get('layer') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
+  def SaveTilesLegend(self, pattern, infos, format, legend, just_refresh=False):
+    if not infos.get('source') or not infos.get('layer') or not infos.get('matrix') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
       return False
     if '{' not in pattern:
       pattern = os.path.join(pattern, WebMercatorMap.LOCALSTORE_DEFAULT_PATTERN)
@@ -4287,100 +4312,71 @@ class MapLegend():
       legendpattern = os.path.dirname(pattern)
       while '{matrix}' in os.path.dirname(legendpattern):
         legendpattern = os.path.dirname(legendpattern)
-      if not infos.get('matrix'):
-        legendpattern = os.path.dirname(legendpattern)
       ext = WebMercatorMap.MIME_DOTEXT.get(format, '.img')
       legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
       if just_refresh:
-        if infos.get('matrix') and not os.path.exists(legendpath):
-          legendpattern = os.path.dirname(legendpattern)
-          legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
         os.utime(legendpath, (time.time(),) * 2)
       else:
-        if force_root and infos.get('matrix'):
-          legendpattern = os.path.dirname(legendpattern)
-          legendpath2 = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
-        else:
-          legendpath2 = legendpath
-        Path(os.path.dirname(legendpath2)).mkdir(parents=True, exist_ok=True)
-        if not os.path.exists(os.path.dirname(legendpath)):
-          legendpath = legendpath2
-        for lp in {legendpath, legendpath2}:
-          for e in Path(os.path.dirname(lp)).glob('legend.*'):
-            if e.is_file():
-              try:
-                e.unlink()
-              except:
-                pass
-        Path(legendpath2).write_bytes(legend)
+        Path(os.path.dirname(legendpath)).mkdir(parents=True, exist_ok=True)
+        for e in Path(os.path.dirname(legendpath)).glob('legend.*'):
+          if e.is_file():
+            try:
+              e.unlink()
+            except:
+              pass
+        Path(legendpath).write_bytes(legend)
     except:
       return False
     return True
 
-  def RetrieveTilesLegend(self, infos, matrix=None, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
-    infos_ = {**infos}
-    if matrix is not None:
-      infos_['matrix'] = matrix
-    matrix = infos_.get('matrix') or None
-    self.log(2, 'legendretrieve', infos_)
+  def RetrieveTilesLegend(self, infos, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
+    self.log(2, 'legendretrieve', infos)
     f_l = None
     local_f_l = None
     expired = True
     last_mod = False
     format = 'image'
     if isinstance(url, dict):
-      if matrix:
-        if matrix in url:
-          m_u = True
-          url_ = url.get(matrix, None)
-        else:
-          m_u = '{matrix}' in url.get('*', '')
-          url_ = url.get('*', None)
-      else:
-        m_u = False
-        url_ = url.get('*', None)
-    else:
-      m_u = bool(url)
-      url_ = url
-    if url_ is not None:
-      url_ = url_.format_map({**infos_, **({'matrix': matrix} if matrix else {}), 'key': key or ''})
+      url = url.get(infos['matrix'], url.get('*'))
+    if url is not None:
+      url = url.format_map({**infos, 'key': key or ''})
     try:
       if local_pattern is not None:
-        last_mod = self.ReadTilesLegend(local_pattern, infos_, matrix, just_lookup=True, force_matrix=m_u)
+        last_mod = self.ReadTilesLegend(local_pattern, infos, just_lookup=True)
         if last_mod is not None:
-          self.log(2, 'legendlfound', infos_)
-          f_l = self.ReadTilesLegend(local_pattern, infos_, matrix, force_matrix=m_u)
+          self.log(2, 'legendlfound', infos)
+          f_l = self.ReadTilesLegend(local_pattern, infos)
           if f_l:
             if local_expiration is not None:
               if local_expiration > max(time.time() - last_mod, 0) / 86400:
                 expired = False
               else:
                 local_f_l = f_l
-                self.log(2, 'legendlexpired', infos_)
+                self.log(2, 'legendlexpired', infos)
             else:
               expired = False
       if expired:
         if only_local:
           f_l = None
         else:
-          self.log(2, 'legendfetch', infos_)
-          f_l = self.GetTilesLegend(infos_, url_, key, referer, user_agent, basic_auth)
+          self.log(2, 'legendfetch', infos)
+          f_l = self.GetTilesLegend(infos, url, key, referer, user_agent, basic_auth)
         if f_l is not None and local_pattern is not None:
           if f_l != local_f_l:
             if local_store:
               try:
-                self.SaveTilesLegend(local_pattern, infos_, *f_l, force_root=not m_u)
+                self.SaveTilesLegend(local_pattern, infos, *f_l)
               except:
                 pass
           elif local_store:
-            self.SaveTilesLegend(local_pattern, infos_, *f_l, just_refresh=True)
+            self.SaveTilesLegend(local_pattern, infos, *f_l, just_refresh=True)
     except:
-      self.log(2, 'legendfail', infos_)
+      self.log(2, 'legendfail', infos)
       return None
     if f_l is None:
-      self.log(2, 'legendfail', infos_)
+      self.log(2, 'legendfail', infos)
     else:
-      self.log(2, 'legendretrieved2', infos_)
+      self.log(2, 'legendretrieved2', infos)
     return f_l
 
 
@@ -6219,22 +6215,20 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_bad()
               continue
             try:
-              tset, mat = req.path.lower().split('?')[1].split(',')
-              tset = int(tset)
-              if isinstance(self.server.Interface.TilesSets[tset][1], dict):
-                tsets = [tset]
+              if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
+                tinfos = {self.server.Interface.Map.Tiles.Id: self.server.Interface.Map.TilesInfos}
               else:
-                tsets = [t[0] for t in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]]
+                tinfos = self.server.Interface.Map.TilesInfos
               n_f_l = []
-              for tset in tsets:
-                f_l = self.server.Interface.Legend.RetrieveTilesLegend(self.server.Interface.TilesSets[tset][1], mat, self.server.Interface.TilesSets[tset][3], **self.server.Interface.TilesSets[tset][2])
+              for trid, tinf in tinfos.items():
+                f_l = self.server.Interface.Legend.RetrieveTilesLegend(tinf, self.server.Interface.TilesSets[trid[0]][3], **self.server.Interface.TilesSets[trid[0]][2])
                 if f_l is not None:
-                  n_f_l.append(('%s [%s]' % (self.server.Interface.TilesSets[tset][0], mat), *f_l))
+                  n_f_l.append(('%s [%s]' % (self.server.Interface.TilesSets[trid[0]][0], trid[1]), *f_l))
             except:
               _send_err_fail()
               continue
             boundary = base64.b32encode(os.urandom(20)).lower()
-            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','').encode('utf-8'), f.encode('utf-8'), l) for n, f, l in n_f_l), (b'--%b--\r\n' % boundary, )) for e in g)
+            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','\'').encode('utf-8'), f.encode('utf-8'), l) for n, f, l in n_f_l), (b'--%b--\r\n' % boundary, )) for e in g)
             _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
           elif req.path.lower()[:11] == '/map/legend':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
@@ -6249,7 +6243,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               continue
             boundary = base64.urlsafe_b64encode(os.urandom(24)).lower()
-            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','').encode('utf-8'), f_l[0].encode('utf-8'), f_l[1]) for n, f_l in n_f_l.items()), (b'--%b--\r\n' % boundary, )) for e in g)
+            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', ('%s [%s]' % (n[0].replace('"',''), n[1].replace('"',''))).encode('utf-8'), f_l[0].encode('utf-8'), f_l[1]) for n, f_l in n_f_l.items()), (b'--%b--\r\n' % boundary, )) for e in g)
             _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
@@ -15873,7 +15867,10 @@ class GPXTweakerWebInterfaceServer():
       if not (hcur[:8] == 'maptiles' and scur == 'display') and not (hcur == 'explorer' and scur == 'folders'):
         if ':' in l:
           field, value = l.split(':', 1)
-          field = field.lower().strip()
+          if scur == 'legend':
+            field = field.strip()
+          else:
+            field = field.lower().strip()
           value = value.lstrip()
           if value.lower() == 'true':
             value = True
@@ -16259,6 +16256,12 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif hcur[:4] == 'map ' and scur == 'legend':
+          try:
+            if field != '*':
+              field = tuple(field.split(','))
+          except:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
           value = value.rstrip()
           if value:
             s[3][field] = value
