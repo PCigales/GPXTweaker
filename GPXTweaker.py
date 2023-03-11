@@ -6233,7 +6233,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             except:
               _send_err_fail()
               continue
-            boundary = base64.urlsafe_b64encode(os.urandom(24)).lower()
+            boundary = base64.b32encode(os.urandom(20)).lower()
             resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','').encode('utf-8'), f.encode('utf-8'), l) for n, f, l in n_f_l), (b'--%b--\r\n' % boundary, )) for e in g)
             _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
           elif req.path.lower()[:11] == '/map/legend':
