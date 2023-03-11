@@ -8388,7 +8388,7 @@ class GPXTweakerWebInterfaceServer():
   '      function open_legend() {\r\n' \
   '        let msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        fetch(mode=="map"?"/map/legend?":("/tiles/legend?" + tset.toString() + "," + document.getElementById("matrix").innerHTML), {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {let url=URL.createObjectURL(e);let w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
+  '        fetch(mode=="map"?"/map/legend":"/tiles/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {let url=URL.createObjectURL(e);let w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
   '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
   '        if (e.button == 2) {\r\n' \
