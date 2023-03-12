@@ -6210,40 +6210,42 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 _send_resp(self.server.Interface.Map.MapInfos.get('format', 'image/*'))
             else:
               _send_err_nf()
-          elif req.path.lower()[:13] == '/tiles/legend':
+          elif req.path.lower()[:13] == '/legend':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
               continue
-            try:
-              if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
-                tinfos = {self.server.Interface.Map.Tiles.Id: self.server.Interface.Map.TilesInfos}
-              else:
-                tinfos = self.server.Interface.Map.TilesInfos
+            if self.server.Interface.Mode == 'tiles':
+              self.server.Interface.TLock.acquire()
+              try:
+                if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
+                  tinfos = {self.server.Interface.Map.Tiles.Id: self.server.Interface.Map.TilesInfos}
+                else:
+                  tinfos = self.server.Interface.Map.TilesInfos
+              except:
+                _send_err_fail()
+                continue
+              finally:
+                self.server.Interface.TLock.release()
               n_f_l = []
-              for trid, tinf in tinfos.items():
-                f_l = self.server.Interface.Legend.RetrieveTilesLegend(tinf, self.server.Interface.TilesSets[trid[0]][3], **self.server.Interface.TilesSets[trid[0]][2])
-                if f_l is not None:
-                  n_f_l.append(('%s [%s]' % (self.server.Interface.TilesSets[trid[0]][0], trid[1]), *f_l))
-            except:
+              try:
+                for trid, tinf in tinfos.items():
+                  f_l = self.server.Interface.Legend.RetrieveTilesLegend(tinf, self.server.Interface.TilesSets[trid[0]][3], **self.server.Interface.TilesSets[trid[0]][2])
+                  if f_l is not None:
+                    n_f_l.append(((self.server.Interface.TilesSets[trid[0]][0], trid[1]), f_l))
+              except:
+                _send_err_fail()
+                continue
+            elif self.server.Interface.Mode == 'map':
+              try:
+                n_f_l = self.server.Interface.Legend.RetrieveMapLegend(self.server.Interface.Map.MapInfos, self.server.Interface.MapSets[self.server.Interface.MapSet][3], **self.server.Interface.MapSets[self.server.Interface.MapSet][2]).items()
+              except:
+                _send_err_fail()
+                continue
+            else:
               _send_err_fail()
               continue
             boundary = base64.b32encode(os.urandom(20)).lower()
-            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', n.replace('"','\'').encode('utf-8'), f.encode('utf-8'), l) for n, f, l in n_f_l), (b'--%b--\r\n' % boundary, )) for e in g)
-            _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
-          elif req.path.lower()[:11] == '/map/legend':
-            if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
-              _send_err_bad()
-              continue
-            if self.server.Interface.MapSet is None:
-              _send_err_fail()
-              continue
-            try:
-              n_f_l = self.server.Interface.Legend.RetrieveMapLegend(self.server.Interface.Map.MapInfos, self.server.Interface.MapSets[self.server.Interface.MapSet][3], **self.server.Interface.MapSets[self.server.Interface.MapSet][2])
-            except:
-              _send_err_fail()
-              continue
-            boundary = base64.urlsafe_b64encode(os.urandom(24)).lower()
-            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', ('%s [%s]' % (n[0].replace('"',''), n[1].replace('"',''))).encode('utf-8'), f_l[0].encode('utf-8'), f_l[1]) for n, f_l in n_f_l.items()), (b'--%b--\r\n' % boundary, )) for e in g)
+            resp_body = b''.join(e for g in ((b'--%b\r\nContent-Disposition: form-data; name="%b"; filename="%b"\r\nContent-type: %b\r\n\r\n%b\r\n' % (boundary, b'legend', ('%s [%s]' % n).replace('"','\'').encode('utf-8'), f_l[0].encode('utf-8'), f_l[1]) for n, f_l in n_f_l), (b'--%b--\r\n' % boundary, )) for e in g)
             _send_resp('multipart/form-data; boundary=%s' % boundary.decode('utf-8'))
           elif req.path.lower()[:27] == '/elevationsproviders/switch' :
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
@@ -8388,7 +8390,7 @@ class GPXTweakerWebInterfaceServer():
   '      function open_legend() {\r\n' \
   '        let msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        fetch(mode=="map"?"/map/legend":"/tiles/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {let url=URL.createObjectURL(e);let w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
+  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {let url=URL.createObjectURL(e);let w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
   '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
   '        if (e.button == 2) {\r\n' \
