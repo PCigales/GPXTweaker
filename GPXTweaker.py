@@ -1913,10 +1913,6 @@ class TilesMixCache(TilesCache):
     try:
       if [] in gens.values():
         raise
-      smin = min(inf['scale'] for inf in infos.values())
-      smax = min(inf['scale'] for inf in infos.values())
-      if (smax - smin) / smin > 0.001:
-        raise
       for rid in rids:
         if self.Threads == 1:
           gens[rid] = [gens[rid]]
@@ -2019,12 +2015,15 @@ class WebMercatorMap(WGS84WebMercator):
   TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
   TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
   TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TC_IGN_HYBRID = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1']]
+  TC_IGN_HYBRIDE = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
   TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_SLOPESMOUNTAIN = {'alias': 'IGN_SLOPESMOUNTAIN', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_SLOPESMOUNTAIN', '80%'], ['IGN_CONTOUR', '100%']]
+  TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
+  TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
+  TC_IGN_ESTOMPÉ = [['IGN_CARTES', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '18':'15'}]]
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
   TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -2042,6 +2041,8 @@ class WebMercatorMap(WGS84WebMercator):
   WMTS_ESRI_SOURCE = 'https://services.arcgisonline.com/arcgis/rest/services'
   TS_ESRI_TOPOMAP = {'alias': 'ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + '/World_Topo_Map/MapServer/WMTS{wmts}', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + '/World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_ESRI_HILLSHADE = {'alias': 'ESRI_HILLSHADE', 'source': WMTS_ESRI_SOURCE + '/Elevation/World_Hillshade/MapServer/WMTS{wmts}', 'layer': 'Elevation_World_Hillshade', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TC_ESRI_SHADOWED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', '30%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -3095,15 +3096,15 @@ class WebMercatorMap(WGS84WebMercator):
     else:
       return None
 
-  def SetTilesProviders(self, providers, matrix):
+  def SetTilesProviders(self, providers):
     try:
       provs = providers.items()
-      tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], matrix, **prov[1]) for rid, prov in provs}
+      tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], rid[1], **prov[1]) for rid, prov in provs}
       if self.TilesInfos:
         infos = {**self.TilesInfos}
       else:
         infos = None
-      self.TilesInfos = {rid: {**prov[0], 'matrix': matrix} for rid, prov in provs}
+      self.TilesInfos = {rid: {**prov[0], 'matrix': rid[1]} for rid, prov in provs}
       if isinstance(self.Tiles, TilesMixCache):
         if not self.Tiles.Configure(tile_generator_builders):
           self.TilesInfos = infos
@@ -6136,7 +6137,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   m = None
                   while True:
                     if tl[l2][0] != m:
-                      if not (self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]) if tsmt else self.server.Interface.Map.SetTilesProviders({(tso[0], str(tl[l2][0])): self.server.Interface.TilesSets[tso[0]][1:3] for tso in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}, str(tl[l2][0]))):
+                      if not (self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]) if tsmt else self.server.Interface.Map.SetTilesProviders({(tsos[0], tsos[2].get(str(tl[l2][0]), str(tl[l2][0]))): self.server.Interface.TilesSets[tsos[0]][1:3] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]})):
                         l2 += 1
                         if l2 >= l3:
                           l3 = (l1 + l3) // 2
@@ -6145,7 +6146,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                             break
                         continue
                       m = tl[l2][0]
-                    s = (self.server.Interface.Map.TilesInfos if tsmt else self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]])['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    s = (self.server.Interface.Map.TilesInfos if tsmt else self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[next(t for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if str(tl[l2][0]) not in tsos[2])]])['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
                     if sm < s:
                       l1 = l2
                     else:
@@ -6166,13 +6167,15 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   except:
                     _send_err_fail()
               else:
-                if not self.server.Interface.Map.SetTilesProviders({(tso[0], q['matrix'][0]): self.server.Interface.TilesSets[tso[0]][1:3] for tso in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}, q['matrix'][0]):
+                if not self.server.Interface.Map.SetTilesProviders({(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0])): self.server.Interface.TilesSets[tsos[0]][1:3] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img')} for t in range(len(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1])) for ti in (self.server.Interface.Map.TilesInfos[(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][t][0], q['matrix'][0])],)], 'scale': self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[0]]['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    bscale = self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[next(t for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if q['matrix'][0] not in tsos[2])]]['scale']
+                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img'), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
+                    raise
                     _send_err_fail()
             self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
@@ -7595,7 +7598,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '        cpx = cpy = null;\r\n' \
   '      }\r\n' \
-  '      function add_tile(row=0, col=0, suf="", pref="tile-") {\r\n' \
+  '      function add_tile(row=0, col=0, suf="", pref="", width="", height="", oleft=0, otop=0) {\r\n' \
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
   '          tile.id = "map";\r\n' \
@@ -7611,10 +7614,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
   '        tile.style.position = "absolute";\r\n' \
-  '        tile.style.width = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
-  '        tile.style.height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
-  '        tile.style.left = "calc(var(--zoom) * " + ((ttopx - htopx) / tscale + col * twidth).toString() + "px)";\r\n' \
-  '        tile.style.top = "calc(var(--zoom) * " + ((htopy - ttopy) / tscale + row * theight).toString() + "px)";\r\n' \
+  '        tile.style.width = width;\r\n' \
+  '        tile.style.height = height;\r\n' \
+  '        tile.style.left = "calc(var(--zoom) * " + (oleft + col * twidth).toString() + "px)";\r\n' \
+  '        tile.style.top = "calc(var(--zoom) * " + (otop + row * theight).toString() + "px)";\r\n' \
   '        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
   '        return tile;\r\n' \
   '      }\r\n' \
@@ -7628,12 +7631,14 @@ class GPXTweakerWebInterfaceServer():
   '        if (layers == null && (twidth == 0 || theight == 0)) {return;}\r\n' \
   '        for (let l=0; l<(layers==null?1:layers.length); l++) {\r\n' \
   '          let layer = null;\r\n' \
+  '          let tmatrix = document.getElementById("matrix").innerHTML;\r\n' \
   '          if (layers != null) {\r\n' \
   '            layer = layers[l];\r\n' \
+  '            tmatrix = layer.matrix;\r\n' \
   '            ttopx = layer.topx;\r\n' \
   '            ttopy = layer.topy;\r\n' \
-  '            twidth = layer.width;\r\n' \
-  '            theight = layer.height;\r\n' \
+  '            twidth = layer.width * layer.trscale;\r\n' \
+  '            theight = layer.height * layer.trscale;\r\n' \
   '            text = layer.ext;\r\n' \
   '            [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
   '          }\r\n' \
@@ -7651,6 +7656,10 @@ class GPXTweakerWebInterfaceServer():
   '            ctop = rbottom + 1;\r\n' \
   '            cbottom = rtop - 1;\r\n' \
   '          }\r\n' \
+  '          let iwidth = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
+  '          let iheight = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
+  '          let ioleft = (ttopx - htopx) / tscale;\r\n' \
+  '          let iotop = (htopy - ttopy) / tscale;\r\n' \
   '          if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
   '            for (let tile of tiles) {\r\n' \
   '              let [tlayer, row, col] = tile.id.split("-").slice(1, 4).map(Number);\r\n' \
@@ -7658,12 +7667,12 @@ class GPXTweakerWebInterfaceServer():
   '                handle.removeChild(tile);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            let suf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(document.getElementById("tset").selectedIndex)[l][0]).toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '            let suf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(document.getElementById("tset").selectedIndex)[l][0]).toString() + "," + tmatrix;\r\n' \
   '            let pref = "tile-" + l.toString() + "-";\r\n' \
   '            if (tiles_hold == null) {\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '                for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf, pref);}\r\n' \
+  '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);}\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
@@ -7681,10 +7690,10 @@ class GPXTweakerWebInterfaceServer():
   '                        tile.style.opacity = "";\r\n' \
   '                        tile.style.zIndex = "";\r\n' \
   '                      } else {\r\n' \
-  '                        tile = add_tile(row, col, suf, pref);\r\n' \
+  '                        tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
   '                      }\r\n' \
   '                    } else {\r\n' \
-  '                      tile = add_tile(row, col, suf, pref);\r\n' \
+  '                      tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
   '                    }\r\n' \
   '                    tiles_hold.set(tk, tile);\r\n' \
   '                  }\r\n' \
@@ -15156,12 +15165,14 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          for (let l=(layers==null?0:layers.length-1); l>=0 ;l--) {\r\n' \
   '            let layer = null;\r\n' \
+  '            let tmatrix = document.getElementById("matrix").innerHTML;\r\n' \
   '            if (layers != null) {\r\n' \
   '              layer = layers[l];\r\n' \
+  '              tmatrix = layer.matrix;\r\n' \
   '              ttopx = layer.topx;\r\n' \
   '              ttopy = layer.topy;\r\n' \
-  '              twidth = layer.width;\r\n' \
-  '              theight = layer.height;\r\n' \
+  '              twidth = layer.width * layer.trscale;\r\n' \
+  '              theight = layer.height * layer.trscale;\r\n' \
   '              text = layer.ext;\r\n' \
   '            }\r\n' \
   '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
@@ -15174,7 +15185,7 @@ class GPXTweakerWebInterfaceServer():
   '            let rbottom = parseInt(vbottom / theight);\r\n' \
   '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '            prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '            let tsuf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(tset)[l][0]).toString() + "," + document.getElementById("matrix").innerHTML;\r\n' \
+  '            let tsuf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(tset)[l][0]).toString() + "," + tmatrix;\r\n' \
   '            if (layers != null) {ctx.globalAlpha = parseFloat(opacities.get(tset)[l]);}\r\n' \
   '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '              for (let col=rleft; col<=rright; col++) {\r\n' \
@@ -15854,7 +15865,7 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif hcur[:18] == 'maptilescomposite ':
           if scur == 'layer':
-            s[1].append([None, '1'])
+            s[1].append([None, '1.00', {}])
           elif scur not in ('alias', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
@@ -16180,7 +16191,7 @@ class GPXTweakerWebInterfaceServer():
         if scur == 'alias':
           if field == 'name':
             try:
-              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1]['alias'] == layer[0]), '%.2f' % max(0, min(1, (float(layer[1][:-1]) / 100 if layer[1][-1:] == '%' else float(layer[1]))))] for layer in WebMercatorMap.TCAlias(value))
+              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1].get('alias') == layer[0]), '%.2f' % max(0, min(1, (float(layer[1][:-1]) / 100 if layer[1][-1:] == '%' else float(layer[1])))), layer[2] if len(layer) >= 3 else {}] for layer in WebMercatorMap.TCAlias(value))
             except:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
@@ -16202,6 +16213,12 @@ class GPXTweakerWebInterfaceServer():
               s[1][-1][1] = '%.2f' % max(0, min(1, (float(value[:-1]) / 100 if value[-1:] == '%' else float(value))))
             except:
               pass
+          elif field == 'substitution':
+            try:
+              s[1][-1][2].update((tuple(map(str.strip, value.split('='))),))
+            except:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -16216,6 +16233,8 @@ class GPXTweakerWebInterfaceServer():
             zoom = '1'
           try:
             matrix = int(matrix.strip())
+            if all(str(matrix) in la[2] for la in s[1]):
+              raise
           except:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -16752,7 +16771,7 @@ class GPXTweakerWebInterfaceServer():
     return ''.join('<option value="%s">%s</option>' % (*([escape(ipro[0])] * 2),) for ipro in self.ItinerariesProviders)
 
   def _build_tlayers(self):
-    return ', '.join('[%s, [%s]]' % (i, ', '.join('[%s, "%s"]' % tuple(to) for to in t[1])) for i, t in enumerate(self.TilesSets) if len(t) >= 2 and isinstance(t[1], list))
+    return ', '.join('[%s, [%s]]' % (i, ', '.join('[%s, "%s"]' % (to[0], to[1]) for to in t[1])) for i, t in enumerate(self.TilesSets) if len(t) >= 2 and isinstance(t[1], list))
 
   def BuildHTML(self, defx=None, defy=None):
     if self.HTML is None:
