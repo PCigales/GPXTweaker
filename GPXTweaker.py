@@ -6175,7 +6175,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                     resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img'), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
-                    raise
                     _send_err_fail()
             self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
@@ -7602,6 +7601,10 @@ class GPXTweakerWebInterfaceServer():
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
   '          tile.id = "map";\r\n' \
+  '          width = "calc(var(--zoom) * " + twidth.toString() + "px)";;\r\n' \
+  '          height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
+  '          oleft = (ttopx - htopx) / tscale;\r\n' \
+  '          otop = (htopy - ttopy) / tscale;\r\n' \
   '          if (text == ".tif") {\r\n' \
   '            tile.onerror =  function(e) {tile.onerror = null; text = ".png"; tile.src = "/map/" + tile.id + text;};\r\n' \
   '          }\r\n' \
