@@ -7601,7 +7601,7 @@ class GPXTweakerWebInterfaceServer():
   '        let tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
   '          tile.id = "map";\r\n' \
-  '          width = "calc(var(--zoom) * " + twidth.toString() + "px)";;\r\n' \
+  '          width = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
   '          height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
   '          oleft = (ttopx - htopx) / tscale;\r\n' \
   '          otop = (htopy - ttopy) / tscale;\r\n' \
