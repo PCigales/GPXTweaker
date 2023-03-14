@@ -2431,7 +2431,6 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
-        print(uri, rep, rep.body)
         return None
       if 'zip' in rep.header('content-type', '').lower() or infos.get('source', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
         try:
