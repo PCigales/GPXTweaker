@@ -289,12 +289,13 @@ FR_STRINGS = {
     'jmmedia1': 'Récupération des données des médias en cours...',
     'jmmedia2': 'Récupération des données des médias effectuée',
     'jmmedia3': 'Échec de la récupération des données des médias',
-    'jmdownmap1': 'Préparation de la carte en cours (phase 1/3)...',
-    'jmdownmap2': 'Préparation de la carte en cours (phase 2/3)...',
-    'jmdownmap3': 'Préparation de la carte en cours (phase 3/3)...',
-    'jmdownmap4': 'Carte prête pour téléchargement (%s trace(s) - %s x %s)',
-    'jmdownmap5': 'Échec de la préparation de la carte',
-    'jmdownmap6': 'Carte trop grande, dézoom nécessaire',
+    'jmdownmap1': 'Préparation de la carte en cours (phase 1/4)...',
+    'jmdownmap2': 'Préparation de la carte en cours (phase 2/4)...',
+    'jmdownmap3': 'Préparation de la carte en cours (phase 3/4)...',
+    'jmdownmap4': 'Préparation de la carte en cours (phase 4/4)...',
+    'jmdownmap5': 'Carte prête pour téléchargement (%s trace(s) - %s x %s)',
+    'jmdownmap6': 'Échec de la préparation de la carte',
+    'jmdownmap7': 'Carte trop grande, dézoom nécessaire',
     'jmopenlegend1': 'Récupération de la (des) légende(s) en cours...',
     'jmopenlegend2': 'Fin de la récupération de la (des) légende(s): %s légende(s) obtenue(s)',
     'jmdetach1': 'Détachement en cours...',
@@ -605,12 +606,13 @@ EN_STRINGS = {
     'jmmedia1': 'Retrieval of the data of the media in progress...',
     'jmmedia2': 'Retrieval of the data of the media completed',
     'jmmedia3': 'Failure of the retrieval of the data of the media',
-    'jmdownmap1': 'Preparation of the map in progress (phase 1/3)...',
-    'jmdownmap2': 'Preparation of the map in progress (phase 2/3)...',
-    'jmdownmap3': 'Preparation of the map in progress (phase 3/3)...',
-    'jmdownmap4': 'Map ready for download (%s track(s) - %s x %s)',
-    'jmdownmap5': 'Failure of the preparation of the map',
-    'jmdownmap6': 'map too big, zoom out required',
+    'jmdownmap1': 'Preparation of the map in progress (phase 1/4)...',
+    'jmdownmap2': 'Preparation of the map in progress (phase 2/4)...',
+    'jmdownmap3': 'Preparation of the map in progress (phase 3/4)...',
+    'jmdownmap4': 'Preparation of the map in progress (phase 4/4)...',
+    'jmdownmap5': 'Map ready for download (%s track(s) - %s x %s)',
+    'jmdownmap6': 'Failure of the preparation of the map',
+    'jmdownmap7': 'Map too big, zoom out required',
     'jmopenlegend1': 'Retrieval of the legend(s) in progress...',
     'jmopenlegend2': 'End of the retrieval of the legend(s): %s legend(s) obtained',
     'jmdetach1': 'Detachment in progress...',
@@ -2024,11 +2026,12 @@ class WebMercatorMap(WGS84WebMercator):
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_OSM_SHADOWED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
   TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '80%'], ['WAYMARKED_TRAILSHIKING', '100%']]
+  TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '75%'], ['WAYMARKED_TRAILSHIKING', '100%']]
   TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
   TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -2042,7 +2045,7 @@ class WebMercatorMap(WGS84WebMercator):
   TS_ESRI_TOPOMAP = {'alias': 'ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + '/World_Topo_Map/MapServer/WMTS{wmts}', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + '/World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TS_ESRI_HILLSHADE = {'alias': 'ESRI_HILLSHADE', 'source': WMTS_ESRI_SOURCE + '/Elevation/World_Hillshade/MapServer/WMTS{wmts}', 'layer': 'Elevation_World_Hillshade', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
-  TC_ESRI_SHADOWED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', '30%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_ESRI_SHADOWED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -2428,6 +2431,7 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
+        print(uri, rep, rep.body)
         return None
       if 'zip' in rep.header('content-type', '').lower() or infos.get('source', '').lower().rsplit('.', 1)[-1][0:3] == 'zip':
         try:
@@ -7498,7 +7502,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (tlayers.has(tset)) {\r\n' \
   '            let tlays = tlayers.get(tset);\r\n' \
   '            if (! opacities.has(tset)) {\r\n' \
-  '              opacities.set(tset, tlays.map((l)=>l[1]));\r\n' \
+  '              opacities.set(tset, tlays.map((l)=>l[1].replace("x", "")));\r\n' \
   '            }\r\n' \
   '            let opcts = opacities.get(tset);\r\n' \
   '            nrule = rules.length;\r\n' \
@@ -7530,8 +7534,8 @@ class GPXTweakerWebInterfaceServer():
   '              e.id = "opacity" + ls;\r\n' \
   '              e.innerHTML = (parseFloat(opcts[l])*100).toFixed(0)+" %";\r\n' \
   '              oform.appendChild(e);\r\n' \
-  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + ";}", nrule++);\r\n' \
   '              document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
+  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          let matrix = null;\r\n' \
@@ -15091,12 +15095,83 @@ class GPXTweakerWebInterfaceServer():
   '        let cwidth = Math.ceil((b[1] - b[0]) / tscale * zoom);\r\n' \
   '        let cheight = Math.ceil((b[3] - b[2]) / tscale * zoom);\r\n' \
   '        if (cwidth > 11000 || cheight > 11000) {\r\n' \
-  '          show_msg("{#jmdownmap6#}", 10);\r\n' \
+  '          show_msg("{#jmdownmap7#}", 10);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmdownmap1#}", 0);\r\n' \
+  '        let mcnv2d = document.createElement("canvas");\r\n' \
+  '        let ctx = mcnv2d.getContext("2d");\r\n' \
+  '        mcnv2d.width = cwidth;\r\n' \
+  '        mcnv2d.height = cheight;\r\n' \
+  '        ctx.globalCompositeOperation = "source-over";\r\n' \
+  '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
+  '        let prom_res = null;\r\n' \
+  '        let prom = null;\r\n' \
+  '        let prom_c = null;\r\n' \
+  '        if (mode == "map") {\r\n' \
+  '          let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '          let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '          let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '          let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '          let rleft = parseInt(vleft / twidth);\r\n' \
+  '          let rright = parseInt(vright / twidth);\r\n' \
+  '          let rtop = parseInt(vtop / theight);\r\n' \
+  '          let rbottom = parseInt(vbottom / theight);\r\n' \
+  '          prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '          prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
+  '          let tile = new Image();\r\n' \
+  '          tile.onload = function (e) {ctx.drawImage(tile, Math.round(- vleft * zoom), Math.round(- vtop * zoom), Math.round((twidth - vleft) * zoom) - Math.round(- vleft * zoom), Math.round((theight - vtop) * zoom) - Math.round(- vtop * zoom)); prom_res();};\r\n' \
+  '          tile.onerror = function (e) {prom_res();};\r\n' \
+  '          tile.src = "/map/map" + text;\r\n' \
+  '          await prom;\r\n' \
+  '        } else {\r\n' \
+  '          for (let l=0; l<(layers==null?1:layers.length); l++) {\r\n' \
+  '            let layer = null;\r\n' \
+  '            let tmatrix = document.getElementById("matrix").innerHTML;\r\n' \
+  '            if (layers != null) {\r\n' \
+  '              layer = layers[l];\r\n' \
+  '              tmatrix = layer.matrix;\r\n' \
+  '              ttopx = layer.topx;\r\n' \
+  '              ttopy = layer.topy;\r\n' \
+  '              twidth = layer.width * layer.trscale;\r\n' \
+  '              theight = layer.height * layer.trscale;\r\n' \
+  '              text = layer.ext;\r\n' \
+  '            }\r\n' \
+  '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '            let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '            let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '            let rleft = parseInt(vleft / twidth);\r\n' \
+  '            let rright = parseInt(vright / twidth);\r\n' \
+  '            let rtop = parseInt(vtop / theight);\r\n' \
+  '            let rbottom = parseInt(vbottom / theight);\r\n' \
+  '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '            prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
+  '            let tsuf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(tset)[l][0]).toString() + "," + tmatrix;\r\n' \
+  '            if (layers != null) {\r\n' \
+  '              ctx.globalAlpha = parseFloat(opacities.get(tset)[l]);\r\n' \
+  '              if (tlayers.get(tset)[l][1].indexOf("x") >= 0) {\r\n' \
+  '                ctx.globalCompositeOperation = "multiply";\r\n' \
+  '              } else {\r\n' \
+  '                ctx.globalCompositeOperation = "source-over";\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '              for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                let tile = new Image();\r\n' \
+  '                tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '                tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '                tile.crossOrigin = "anonymous";\r\n' \
+  '                tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            await prom;\r\n' \
+  '          }\r\n' \
+  '          if (layers != null) {ctx.globalAlpha = 1;}\r\n' \
+  '        }\r\n' \
+  '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
   '        let xs = new XMLSerializer;\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
   '        let trdata = [];\r\n' \
@@ -15113,13 +15188,12 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        let cnv2d = document.createElement("canvas");\r\n' \
-  '        let ctx = cnv2d.getContext("2d");\r\n' \
+  '        ctx = cnv2d.getContext("2d");\r\n' \
   '        cnv2d.width = cwidth;\r\n' \
   '        cnv2d.height = cheight;\r\n' \
   '        ctx.globalCompositeOperation = "darken";\r\n' \
-  '        let prom_c = trdata.length;\r\n' \
-  '        let prom_res = null;\r\n' \
-  '        let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        prom_c = trdata.length;\r\n' \
+  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        for (const tdata of trdata) {\r\n' \
   '          let trck = new Image();\r\n' \
   '          trck.onload = function (e) {URL.revokeObjectURL(tdata[2]); ctx.drawImage(trck, tdata[0], tdata[1]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
@@ -15146,66 +15220,12 @@ class GPXTweakerWebInterfaceServer():
   '          waypt.src = tdata[6];\r\n' \
   '        }\r\n' \
   '        await prom;\r\n' \
-  '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
-  '        ctx.globalCompositeOperation = "destination-over";\r\n' \
-  '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
-  '        if (mode == "map") {\r\n' \
-  '          let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
-  '          let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
-  '          let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
-  '          let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
-  '          let rleft = parseInt(vleft / twidth);\r\n' \
-  '          let rright = parseInt(vright / twidth);\r\n' \
-  '          let rtop = parseInt(vtop / theight);\r\n' \
-  '          let rbottom = parseInt(vbottom / theight);\r\n' \
-  '          prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
-  '          prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '          let tile = new Image();\r\n' \
-  '          tile.onload = function (e) {ctx.drawImage(tile, Math.round(- vleft * zoom), Math.round(- vtop * zoom), Math.round((twidth - vleft) * zoom) - Math.round(- vleft * zoom), Math.round((theight - vtop) * zoom) - Math.round(- vtop * zoom)); prom_res();};\r\n' \
-  '          tile.onerror = function (e) {prom_res();};\r\n' \
-  '          tile.src = "/map/map" + text;\r\n' \
-  '          await prom;\r\n' \
-  '        } else {\r\n' \
-  '          for (let l=(layers==null?0:layers.length-1); l>=0 ;l--) {\r\n' \
-  '            let layer = null;\r\n' \
-  '            let tmatrix = document.getElementById("matrix").innerHTML;\r\n' \
-  '            if (layers != null) {\r\n' \
-  '              layer = layers[l];\r\n' \
-  '              tmatrix = layer.matrix;\r\n' \
-  '              ttopx = layer.topx;\r\n' \
-  '              ttopy = layer.topy;\r\n' \
-  '              twidth = layer.width * layer.trscale;\r\n' \
-  '              theight = layer.height * layer.trscale;\r\n' \
-  '              text = layer.ext;\r\n' \
-  '            }\r\n' \
-  '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
-  '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
-  '            let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
-  '            let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
-  '            let rleft = parseInt(vleft / twidth);\r\n' \
-  '            let rright = parseInt(vright / twidth);\r\n' \
-  '            let rtop = parseInt(vtop / theight);\r\n' \
-  '            let rbottom = parseInt(vbottom / theight);\r\n' \
-  '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
-  '            prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '            let tsuf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(tset)[l][0]).toString() + "," + tmatrix;\r\n' \
-  '            if (layers != null) {ctx.globalAlpha = parseFloat(opacities.get(tset)[l]);}\r\n' \
-  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '              for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                let tile = new Image();\r\n' \
-  '                tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '                tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '                tile.crossOrigin = "anonymous";\r\n' \
-  '                tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            await prom;\r\n' \
-  '          }\r\n' \
-  '          if (layers != null) {ctx.globalAlpha = 1;}\r\n' \
-  '        }\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '        msgn = show_msg("{#jmdownmap3#}", 0, msgn);\r\n' \
+  '        ctx.globalCompositeOperation = "destination-over";\r\n' \
+  '        ctx.drawImage(mcnv2d, 0, 0);\r\n' \
+  '        msgn = show_msg("{#jmdownmap4#}", 0, msgn);\r\n' \
   '        let url = null;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        cnv2d.toBlob(function (blob) {url = URL.createObjectURL(blob); prom_res();});\r\n' \
@@ -15214,11 +15234,11 @@ class GPXTweakerWebInterfaceServer():
   '          let a = document.createElement("a");\r\n' \
   '          a.href = url;\r\n' \
   '          a.download = "map";\r\n' \
-  '          show_msg("{#jmdownmap4#}".replace("%s", trdata.length.toString()).replace("%s", cnv2d.width.toString()).replace("%s", cnv2d.height.toString()), 5, msgn);\r\n' \
+  '          show_msg("{#jmdownmap5#}".replace("%s", trdata.length.toString()).replace("%s", cnv2d.width.toString()).replace("%s", cnv2d.height.toString()), 5, msgn);\r\n' \
   '          a.click();\r\n' \
   '          URL.revokeObjectURL(url);\r\n' \
   '        } else {;\r\n' \
-  '          show_msg("{#jmdownmap5#}", 10, msgn);\r\n' \
+  '          show_msg("{#jmdownmap6#}", 10, msgn);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function download_tracklist(waypoints=false) {\r\n' \
@@ -16194,7 +16214,7 @@ class GPXTweakerWebInterfaceServer():
         if scur == 'alias':
           if field == 'name':
             try:
-              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1].get('alias') == layer[0]), '%.2f' % max(0, min(1, (float(layer[1][:-1]) / 100 if layer[1][-1:] == '%' else float(layer[1])))), layer[2] if len(layer) >= 3 else {}] for layer in WebMercatorMap.TCAlias(value))
+              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1].get('alias') == layer[0]), ('x%.2f' if layer[1].startswith(('x', 'X')) else '%.2f') % max(0, min(1, (float(layer[1].lstrip('xX')[:-1]) / 100 if layer[1].endswith('%') else float(layer[1].lstrip('xX'))))), layer[2] if len(layer) >= 3 else {}] for layer in WebMercatorMap.TCAlias(value))
             except:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
@@ -16213,7 +16233,7 @@ class GPXTweakerWebInterfaceServer():
               return False
           elif field == 'opacity':
             try:
-              s[1][-1][1] = '%.2f' % max(0, min(1, (float(value[:-1]) / 100 if value[-1:] == '%' else float(value))))
+              s[1][-1][1] = ('x%.2f' if value.startswith(('x', 'X')) else '%.2f') % max(0, min(1, (float(value[:-1].lstrip('xX')) / 100 if value.endswith('%') else float(value.ltrip('xX')))))
             except:
               pass
           elif field == 'substitution':
