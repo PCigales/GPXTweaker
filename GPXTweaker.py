@@ -2368,13 +2368,15 @@ class WebMercatorMap(WGS84WebMercator):
           break
       if not layer:
         return False
+      style = False
       for node in layer.getElementsByTagNameNS('*', 'Style'):
-        style = None
         for c_node in node.childNodes:
           if c_node.localName == 'Identifier':
             if _XMLGetNodeText(c_node) == infos['style']:
               style = node
             break 
+          if style:
+            break
       if not style:
         return False
       matrixset = None
@@ -2384,9 +2386,11 @@ class WebMercatorMap(WGS84WebMercator):
             if c_node.localName == 'Identifier':
               if _XMLGetNodeText(c_node) == infos['matrixset']:
                 matrixset = node
-                break
+              break
         if matrixset:
           break
+      if not matrixset:
+        return False
       infos['scale'] = None
       infos['topx'] = None
       infos['topy'] = None
@@ -4245,13 +4249,15 @@ class MapLegend():
           break
       if not layer:
         return []
+      style = None
       for node in layer.getElementsByTagNameNS('*', 'Style'):
-        style = None
         for c_node in node.childNodes:
           if c_node.localName == 'Identifier':
             if _XMLGetNodeText(c_node) == infos['style']:
               style = node
             break 
+        if style:
+          break
       if not style:
         return []
       for node in layer.getElementsByTagNameNS('*', 'LegendURL'):
