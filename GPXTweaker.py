@@ -1511,7 +1511,7 @@ class TilesCache():
     self.Generators = []
     self.GAvailable = []
     self.GCondition = threading.Condition()
-    self.Seq = 0
+    self.Seq = 1
     self.Id = None
     self.Infos = None
     self.Closed = False
@@ -1760,7 +1760,7 @@ class TilesMixCache(TilesCache):
       self.Generators = {}
       self.GAvailable = {}
       self.GCondition = threading.Condition()
-      self.Seq = 0
+      self.Seq = 1
       self.Id = []
       self.Infos = {}
     self.TRunning = [0, 0]
@@ -1908,11 +1908,11 @@ class TilesMixCache(TilesCache):
       t = threading.Thread(target=_build, args=(rid,), daemon=True)
       th.append(t)
       t.start()
-    for t in th:
-      if self.Closed:
-        raise      
-      t.join()
     try:
+      for t in th:
+        if self.Closed:
+          raise      
+        t.join()
       if [] in gens.values():
         raise
       for rid in rids:
@@ -1948,9 +1948,12 @@ class TilesMixCache(TilesCache):
     return True
 
   def Close(self):
-    self.Closed = True
     with self.GCondition:
-      self.GCondition.wait_for(self.Seq.__bool__)
+      if self.Closed:
+        return
+      self.Closed = True
+      while not self.Seq:
+        self.GCondition.wait()
       seq = self.Seq
       self.Seq = 0
       self.GCondition.notify_all()
@@ -6904,7 +6907,7 @@ class GPXTweakerWebInterfaceServer():
   '        var zooms = ["1", "1.5", "2", "3", "4", "6", "10", "15", "25"];\r\n' \
   '        var zoom_s = "1";\r\n' \
   '      } else {\r\n' \
-  '        var tset = 0;\r\n' \
+  '        var tset = -1;\r\n' \
   '        var tlevels = [];\r\n' \
   '        var tlevel = 0;\r\n' \
   '        var zooms = ["1/8", "1/4", "1/2", "3/4", "1", "1.5", "2", "3", "4", "6", "8"];\r\n' \
@@ -8605,7 +8608,8 @@ class GPXTweakerWebInterfaceServer():
   '          rescale();\r\n' \
   '        } else {\r\n' \
   '          if (prev_state == null) {\r\n' \
-  '            switch_tiles(0, 0);\r\n' \
+  '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o)=>o.style.display!="none");\r\n' \
+  '            switch_tiles(-1, 0);\r\n' \
   '          } else {\r\n' \
   '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
   '            opacities = new Map(JSON.parse(prev_state[20]));\r\n' \
@@ -8755,7 +8759,12 @@ class GPXTweakerWebInterfaceServer():
   '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
   '          document.getElementById("opanel").style.display="none";\r\n' \
-  '          q = "set=" + encodeURIComponent(nset);\r\n' \
+  '          if (nset == -1) {\r\n' \
+  '            nset = 0;\r\n' \
+  '            q = "set=" + encodeURIComponent(document.getElementById("tset").selectedIndex);\r\n' \
+  '          } else {\r\n' \
+  '            q = "set=" + encodeURIComponent(nset);\r\n' \
+  '          }\r\n' \
   '        } else if (nlevel != null) {\r\n' \
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          sta = twidth == 0;\r\n' \
@@ -13887,7 +13896,12 @@ class GPXTweakerWebInterfaceServer():
   '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
   '          document.getElementById("opanel").style.display="none";\r\n' \
-  '          q = "set=" + encodeURIComponent(nset);\r\n' \
+  '          if (nset == -1) {\r\n' \
+  '            nset = 0;\r\n' \
+  '            q = "set=" + encodeURIComponent(document.getElementById("tset").selectedIndex);\r\n' \
+  '          } else {\r\n' \
+  '            q = "set=" + encodeURIComponent(nset);\r\n' \
+  '          }\r\n' \
   '        } else if (nlevel != null) {\r\n' \
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
   '          sta = twidth == 0 && focused == "";\r\n' \
@@ -15711,7 +15725,7 @@ class GPXTweakerWebInterfaceServer():
   '          xhrd.open("GET", "/GPXExplorer/data");\r\n' \
   '          xhrd.send();\r\n' \
   '          return;\r\n' \
-  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(0, 0)', 'switch_tiles(0, null)') + \
+  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
   '        if (prev_state != null) {\r\n' \
   '          dots_visible = prev_state[4] == "true";\r\n' \
   '        }\r\n' \
