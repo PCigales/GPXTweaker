@@ -2357,6 +2357,26 @@ class WebMercatorMap(WGS84WebMercator):
     try:
       cap = minidom.parseString(rep.body)
       content = cap.getElementsByTagNameNS('*', 'Contents')[0]
+      layer = None
+      for node in content.getElementsByTagNameNS('*', 'Layer'):
+        for c_node in node.childNodes:
+          if c_node.localName == 'Identifier':
+            if _XMLGetNodeText(c_node) == infos['layer']:
+              layer = node
+              break
+        if layer:
+          break
+      if not layer:
+        return False
+      for node in layer.getElementsByTagNameNS('*', 'Style'):
+        style = None
+        for c_node in node.childNodes:
+          if c_node.localName == 'Identifier':
+            if _XMLGetNodeText(c_node) == infos['style']:
+              style = node
+            break 
+      if not style:
+        return False
       matrixset = None
       for node in content.childNodes:
         if node.localName == 'TileMatrixSet':
