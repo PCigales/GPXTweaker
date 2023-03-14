@@ -2368,7 +2368,7 @@ class WebMercatorMap(WGS84WebMercator):
           break
       if not layer:
         return False
-      style = False
+      style = None
       for node in layer.getElementsByTagNameNS('*', 'Style'):
         for c_node in node.childNodes:
           if c_node.localName == 'Identifier':
