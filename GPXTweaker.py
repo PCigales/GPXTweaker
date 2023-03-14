@@ -7516,7 +7516,7 @@ class GPXTweakerWebInterfaceServer():
   '              e.htmlFor = "opacityl" + ls;\r\n' \
   '              e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
   '              e.title = "{#jopacityreset#}";\r\n' \
-  '              e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1];inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1];inp.dispatchEvent(new Event("input"));};};\r\n' \
+  '              e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1].replace("x", "");inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1].replace("x", "");inp.dispatchEvent(new Event("input"));};};\r\n' \
   '              oform.appendChild(e);\r\n' \
   '              e = document.createElement("input");\r\n' \
   '              e.type = "range";\r\n' \
