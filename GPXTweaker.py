@@ -2029,7 +2029,7 @@ class WebMercatorMap(WGS84WebMercator):
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
-  TC_OSM_SHADOWED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_OSM_SHADED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
   TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -2048,7 +2048,7 @@ class WebMercatorMap(WGS84WebMercator):
   TS_ESRI_TOPOMAP = {'alias': 'ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + '/World_Topo_Map/MapServer/WMTS{wmts}', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + '/World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TS_ESRI_HILLSHADE = {'alias': 'ESRI_HILLSHADE', 'source': WMTS_ESRI_SOURCE + '/Elevation/World_Hillshade/MapServer/WMTS{wmts}', 'layer': 'Elevation_World_Hillshade', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
-  TC_ESRI_SHADOWED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_ESRI_SHADED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -2079,6 +2079,9 @@ class WebMercatorMap(WGS84WebMercator):
       return dict(getattr(cls, 'MS_' + name))
     else:
       return None
+
+  def LinkLegend(self, legend):
+    self.Legend = legend
 
   @staticmethod
   def WGS84toCoord(lat, lon):
@@ -2380,6 +2383,17 @@ class WebMercatorMap(WGS84WebMercator):
       if not style:
         return False
       matrixset = None
+      for node in layer.getElementsByTagNameNS('*', 'TileMatrixSetLink'):
+        for c_node in node.childNodes:
+          if c_node.localName == 'TileMatrixSet':
+            if _XMLGetNodeText(c_node) == infos['matrixset']:
+              matrixset = node
+            break 
+          if matrixset:
+            break
+      if not matrixset:
+        return False
+      matrixset = None
       for node in content.childNodes:
         if node.localName == 'TileMatrixSet':
           for c_node in node.childNodes:
@@ -2391,6 +2405,11 @@ class WebMercatorMap(WGS84WebMercator):
           break
       if not matrixset:
         return False
+      if hasattr(self, 'Legend'):
+        try:
+          self.Legend.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth, cap)
+        except:
+          pass
       infos['scale'] = None
       infos['topx'] = None
       infos['topy'] = None
@@ -4221,22 +4240,23 @@ class MapLegend():
       self.log(2, 'legendfail', infos)
     return f_l
 
-  def GetTilesLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
-    if 'source' not in infos or '{wmts}' not in infos['source'] or not infos.get('layer'):
+  def GetTilesLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, capabilities = None):
+    if 'source' not in infos or '{wmts}' not in infos['source'] or not infos.get('layer') or 'style' not in infos:
       return None
-    headers = {'User-Agent': user_agent}
-    if referer:
-      headers['Referer'] = referer
-    try:
-      uri = infos['source'].format_map({'wmts': WebMercatorMap.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
-    except:
-      return None
-    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
-    if rep.code != '200':
-      return None
+    if capabilities is None:
+      headers = {'User-Agent': user_agent}
+      if referer:
+        headers['Referer'] = referer
+      try:
+        uri = infos['source'].format_map({'wmts': WebMercatorMap.WMTS_PATTERN['GetCapabilities'], 'key': key or ''}).format_map(infos)
+      except:
+        return None
+      rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+      if rep.code != '200':
+        return None
     f_u = []
     try:
-      cap = minidom.parseString(rep.body)
+      cap = minidom.parseString(rep.body) if capabilities is None else capabilities
       content = cap.getElementsByTagNameNS('*', 'Contents')[0]
       layer = None
       for node in content.getElementsByTagNameNS('*', 'Layer'):
@@ -4275,10 +4295,11 @@ class MapLegend():
     except:
       return []
     finally:
-      try:
-        cap.unlink()
-      except:
-        pass
+      if capabilities is None:
+        try:
+          cap.unlink()
+        except:
+          pass
     f_u.sort(key=lambda k:k[0][0])
     self.WMTSCache[(infos['source'], infos['layer'], infos['style'])] = f_u
     return f_u
@@ -16770,6 +16791,7 @@ class GPXTweakerWebInterfaceServer():
         self.ReverseGeocodingProvider = None
       self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
       self.Legend = MapLegend()
+      self.Map.LinkLegend(self.Legend)
       if uri is not None:
         self.HTML = ''
       else:
@@ -17207,7 +17229,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.12.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.14.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
