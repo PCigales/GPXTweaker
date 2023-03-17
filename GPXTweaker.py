@@ -2348,7 +2348,7 @@ class WebMercatorMap(WGS84WebMercator):
         infos['topx'] = -180 if hgt else WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
         infos['topy'] = 90 if hgt else WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
       try:
-        infos['scale'] = infos.setdefault('basescale', WGS84WebMercator.WGS84toWebMercator(0, 360)[0] /  infos['width'] / (360 if hgt else 1)) / (2 ** int(infos['matrix']))
+        infos['scale'] = infos.setdefault('basescale', WGS84WebMercator.WGS84toWebMercator(0, 360)[0] /  infos['width'] / (360 if hgt else (2 if self.CRS == 'EPSG:4326' else 1))) / (2 ** int(infos['matrix']))
         if lat is not None and lon is not None :
           infos['row'], infos['col'] = self.WGS84toTile(infos, lat, lon)
       except:
@@ -3677,7 +3677,7 @@ class JSONTiles():
     return rep.body
 
   def SpriteJSON(self, tid, scale='', local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
-    s = self.SpritesJSONCache.get(tid)
+    s = self.SpritesJSONCache.get((tid, scale))
     if s is not None:
       return s
     uri = self.StylesCache.get(tid, (None, None, None))[2]
@@ -3693,11 +3693,11 @@ class JSONTiles():
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
     if rep.code != '200':
       return None
-    self.SpritesJSONCache[tid] = rep.body
+    self.SpritesJSONCache[(tid, scale)] = rep.body
     return rep.body
 
   def SpritePNG(self, tid, scale='', local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
-    s = self.SpritesPNGCache.get(tid)
+    s = self.SpritesPNGCache.get((tid, scale))
     if s is not None:
       return s
     uri = self.StylesCache.get(tid, (None, None, None))[2]
@@ -3713,7 +3713,7 @@ class JSONTiles():
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
     if rep.code != '200':
       return None
-    self.SpritesPNGCache[tid] = rep.body
+    self.SpritesPNGCache[(tid, scale)] = rep.body
     return rep.body
 
 
