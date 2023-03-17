@@ -1997,9 +1997,9 @@ class TilesMixCache(TilesCache):
 
 class WebMercatorMap(WGS84WebMercator):
 
-  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf'}
+  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'json': 'application/json'}
   DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
-  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf'}
+  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/json': 'json'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
   CRS = 'EPSG:3857'
@@ -6413,7 +6413,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.Map.TilesInfos[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'trscale': 1}], 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.Map.TilesInfos[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), '.img'), 'trscale': 1}], 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     _send_err_fail()
@@ -6432,7 +6432,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 else:
                   try:
                     bscale = next(self.server.Interface.Map.TilesInfos[(tsos[0], str(int(q['matrix'][0]) - (1 if self.server.Interface.TilesSets[tsos[0]][1].get('format') == 'application/json' else 0)))]['scale'] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1] if q['matrix'][0] not in tsos[2])
-                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': ('.json' if ti['format'] == 'application/json' else WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img')), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in ((self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],) if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else ({**self.server.Interface.TilesSets[tsos[0]][1], 'matrix': tsos[2].get(q['matrix'][0], q['matrix'][0]), 'scale': self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU},))], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format', ''), '.img'), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in ((self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],) if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else ({**self.server.Interface.TilesSets[tsos[0]][1], 'matrix': str(int(tsos[2].get(q['matrix'][0], q['matrix'][0])) - 1), 'scale': self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU},))], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     raise
