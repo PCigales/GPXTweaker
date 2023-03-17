@@ -6556,7 +6556,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   if f_l is not None:
                     n_f_l.append(((self.server.Interface.TilesSets[trid[0]][0], trid[1]), f_l))
               except:
-                raise
                 _send_err_fail()
                 continue
             elif self.server.Interface.Mode == 'map':
