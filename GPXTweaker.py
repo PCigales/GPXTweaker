@@ -15490,7 +15490,8 @@ class GPXTweakerWebInterfaceServer():
   '            ttopy = layer.topy;\r\n' \
   '            twidth = layer.width * layer.trscale;\r\n' \
   '            theight = layer.height * layer.trscale;\r\n' \
-  '            if (twidth == 0 || theight == 0) {return;}\r\n' \
+  '            text = layer.ext;\r\n' \
+  '            if (text == ".json" || twidth == 0 || theight == 0) {continue;}\r\n' \
   '            text = layer.ext;\r\n' \
   '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
   '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
