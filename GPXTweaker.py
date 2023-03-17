@@ -2335,14 +2335,20 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     if matrix is not None:
       infos['matrix'] = str(matrix)
-    if '{hgt}' in infos['source']:
+    hgt = '{hgt}' in infos['source']
+    if hgt:
       infos['matrix'] = '0'
     if 'matrix' not in infos:
       return False
     if '{wmts}' not in infos['source']:
       infos['format'] = infos.get('format') or WebMercatorMap.EXT_MIME.get(infos['source'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image')
+      if 'width' not in infos and 'height' not in infos:
+        infos['width'] = infos['height'] = 3600 if hgt else 256
+      if 'topx' not in infos and 'topy' not in infos:
+        infos['topx'] = -180 if hgt else WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
+        infos['topy'] = 90 if hgt else WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
       try:
-        infos['scale'] = infos['basescale'] / (2 ** int(infos['matrix']))
+        infos['scale'] = infos.setdefault('basescale', WGS84WebMercator.WGS84toWebMercator(0, 360)[0] /  infos['width'] / (360 if hgt else 1)) / (2 ** int(infos['matrix']))
         if lat is not None and lon is not None :
           infos['row'], infos['col'] = self.WGS84toTile(infos, lat, lon)
       except:
@@ -3579,8 +3585,8 @@ class JSONTiles():
     if not tid in self.StylesCache:
       infos['width'] = infos['height'] = 512
       infos['basescale'] = WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 512
-      infos['topx'] = WGS84WebMercator.WGS84toWebMercator(0,-180)[0]
-      infos['topy'] = -WGS84WebMercator.WGS84toWebMercator(0,-180)[0]
+      infos['topx'] = WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
+      infos['topy'] = WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
       headers = {'User-Agent': user_agent}
       if referer:
         headers['Referer'] = referer
@@ -3670,7 +3676,7 @@ class JSONTiles():
     self.GlyphsCache[(tid, fontstack, fontrange)] = rep.body
     return rep.body
 
-  def SpriteJSON(self, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+  def SpriteJSON(self, tid, scale='', local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     s = self.SpritesJSONCache.get(tid)
     if s is not None:
       return s
@@ -3681,7 +3687,7 @@ class JSONTiles():
     if referer:
       headers['Referer'] = referer
     try:
-      uri = uri.format_map({'key': key or ''}) + '.json'
+      uri = uri.format_map({'key': key or ''}) + scale + '.json'
     except:
       return None
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
@@ -3690,7 +3696,7 @@ class JSONTiles():
     self.SpritesJSONCache[tid] = rep.body
     return rep.body
 
-  def SpritePNG(self, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+  def SpritePNG(self, tid, scale='', local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     s = self.SpritesPNGCache.get(tid)
     if s is not None:
       return s
@@ -3701,7 +3707,7 @@ class JSONTiles():
     if referer:
       headers['Referer'] = referer
     try:
-      uri = uri.format_map({'key': key or ''}) + '.png'
+      uri = uri.format_map({'key': key or ''}) + scale + '.png'
     except:
       return None
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
@@ -6384,12 +6390,14 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                             break
                         continue
                       m = tl[l2][0]
+                    z = tl[l2][1].partition('/')
+                    z = float(z[0] or '1') / float(z[2] or '1')
                     if tsmt and not tsj:
-                      s = self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                      s = self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU / z
                     elif tsmt:
-                      s = self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                      s = self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU / z
                     else:
-                      s = next(self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[t]]['scale'] if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if str(tl[l2][0]) not in tsos[2]) / eval(tl[l2][1])
+                      s = next(self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[t]]['scale'] if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if str(tl[l2][0]) not in tsos[2]) / z
                     if sm < s:
                       l1 = l2
                     else:
@@ -6497,12 +6505,12 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
                 raise
               s, e = req.path[18:].split('/', 1)[1].rsplit('.', 1)
-              if s != 'sprite':
+              if s[:6] != 'sprite':
                 raise
               if e == 'json':
-                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, **self.server.Interface.TilesSets[tid][2]) or ''
+                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, s[6:] , **self.server.Interface.TilesSets[tid][2]) or ''
               elif e == 'png':
-                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, **self.server.Interface.TilesSets[tid][2]) or ''
+                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, s[6:], **self.server.Interface.TilesSets[tid][2]) or ''
               else:
                 raise
               if not resp_body:
@@ -7208,19 +7216,13 @@ class GPXTweakerWebInterfaceServer():
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
-  '      var layers = [];\r\n' \
-  '      var layersc = [];\r\n' \
-  '      var opacities = new Map();\r\n' \
-  '      var cleft = null;\r\n' \
-  '      var cright = null;\r\n' \
-  '      var ctop = null;\r\n' \
-  '      var cbottom = null;\r\n' \
   '      var hpx = 0;\r\n' \
   '      var hpy = 0;\r\n' \
   '      var cpx = null;\r\n' \
   '      var cpy = null;\r\n' \
   '      var zoom = 1;\r\n' \
   '      if (mode == "map") {\r\n' \
+  '        var tset = 0;\r\n' \
   '        var zooms = ["1", "1.5", "2", "3", "4", "6", "10", "15", "25"];\r\n' \
   '        var zoom_s = "1";\r\n' \
   '      } else {\r\n' \
@@ -7230,6 +7232,10 @@ class GPXTweakerWebInterfaceServer():
   '        var zooms = ["1/8", "1/4", "1/2", "3/4", "1", "1.5", "2", "3", "4", "6", "8"];\r\n' \
   '        var tlock = false;\r\n' \
   '        var zoom_s = "1";\r\n' \
+  '        var layers = [];\r\n' \
+  '        var layersc = [];\r\n' \
+  '        var opacities = new Map();\r\n' \
+  '        var treset = 0;\r\n' \
   '        var jmaps = [];\r\n' \
   '      }\r\n' \
   '      var eset = -1;\r\n' \
@@ -7771,16 +7777,90 @@ class GPXTweakerWebInterfaceServer():
   '        return msgn;\r\n' \
   '      }\r\n'
   HTML_TILES_TEMPLATE = \
+  '      function set_opacities(){\r\n' \
+  '        let oform = document.getElementById("oform");\r\n' \
+  '        while (oform.firstElementChild) {oform.removeChild(oform.lastElementChild);}\r\n' \
+  '        let rules = document.styleSheets[0].cssRules;\r\n' \
+  '        let nrule = rules.length;\r\n' \
+  '        for (let irule=nrule-1; irule>=0; irule--) {\r\n' \
+  '          if ((rules[irule].selectorText || "").indexOf("tile-") > 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
+  '        }\r\n' \
+  '        if (tlayers.has(tset)) {\r\n' \
+  '          let tlays = tlayers.get(tset);\r\n' \
+  '          if (! opacities.has(tset)) {\r\n' \
+  '            opacities.set(tset, tlays.map((l)=>l[1].replace("x", "")));\r\n' \
+  '          }\r\n' \
+  '          let opcts = opacities.get(tset);\r\n' \
+  '          nrule = rules.length;\r\n' \
+  '          let tiset = document.getElementById("tset");\r\n' \
+  '          for (let l=0; l<tlays.length; l++) {\r\n' \
+  '            let ls = l.toString();\r\n' \
+  '            if (l > 0) {\r\n' \
+  '              let e = document.createElement("br");\r\n' \
+  '              oform.appendChild(e);\r\n' \
+  '            }\r\n' \
+  '            let e = document.createElement("label");\r\n' \
+  '            e.htmlFor = "opacityl" + ls;\r\n' \
+  '            e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
+  '            e.title = "{#jopacityreset#}";\r\n' \
+  '            e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1].replace("x", "");inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1].replace("x", "");inp.dispatchEvent(new Event("input"));};};\r\n' \
+  '            oform.appendChild(e);\r\n' \
+  '            e = document.createElement("input");\r\n' \
+  '            e.type = "range";\r\n' \
+  '            e.name = e.id = "opacityl" + ls;\r\n' \
+  '            e.min = "0";\r\n' \
+  '            e.max = "1";\r\n' \
+  '            e.step = "0.01";\r\n' \
+  '            e.value = opcts[l];\r\n' \
+  '            e.oninput = (e) => {e.target.nextElementSibling.innerHTML=(parseFloat(e.target.value)*100).toFixed(0)+" %";opacities.get(tset)[l]=e.target.value;document.documentElement.style.setProperty("--opacity" + ls, e.target.value);};\r\n' \
+  '            e.onfocus = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="rgb(200, 250,240)";};\r\n' \
+  '            e.onblur = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="";}\r\n' \
+  '            oform.appendChild(e);\r\n' \
+  '            e = document.createElement("span");\r\n' \
+  '            e.id = "opacity" + ls;\r\n' \
+  '            e.innerHTML = (parseFloat(opcts[l])*100).toFixed(0)+" %";\r\n' \
+  '            oform.appendChild(e);\r\n' \
+  '            document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
+  '            document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function set_jmaps() {\r\n' \
+  '        for (let jm=0; jm<jmaps.length; jm++) {\r\n' \
+  '          jmaps[jm].remove();\r\n' \
+  '          document.getElementById("view").removeChild(document.getElementById("jmap" + jm.toString()));\r\n' \
+  '        }\r\n' \
+  '        jmaps = [];\r\n' \
+  '        let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '        let tlays = null;\r\n' \
+  '        if (tlayers.has(tset)) {tlays = tlayers.get(tset);}\r\n' \
+  '        for (let l=0; l<layers.length; l++) {\r\n' \
+  '          if (layers[l].ext != ".json") {continue;}\r\n' \
+  '          let jdiv = document.createElement("div");\r\n' \
+  '          jdiv.id = "jmap" + jmaps.length.toString();\r\n' \
+  '          jdiv.style.zIndex = (l - layers.length).toString();\r\n' \
+  '          if (tlays != null) {\r\n' \
+  '            jdiv.style.opacity = "var(--opacity" + l.toString() + ")";\r\n' \
+  '            if (tlays[l][1].indexOf("x")>=0) {jdiv.style.mixBlendMode = "multiply";}\r\n' \
+  '          }\r\n' \
+  '          document.getElementById("view").insertBefore(jdiv, handle);\r\n' \
+  '          try {\r\n' \
+  '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1}));\r\n' \
+  '          } catch(error) {\r\n' \
+  '            document.getElementById("view").removeChild(jdiv);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
   '            tlevel = nlevel;\r\n' \
-  '            if (! kzoom) {zoom_s = tlevels[tlevel][1];}\r\n' \
+  '            if (! kzoom && tlevels.length > 0) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '          }\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          document.getElementById("tset").style.pointerEvents = "";\r\n' \
-  '          cleft = null;\r\n' \
+  '          treset = 1;\r\n' \
   '          rescale();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
@@ -7797,89 +7877,23 @@ class GPXTweakerWebInterfaceServer():
   '          layersc = Array(layers.length).fill([null, null, null, null]);\r\n' \
   '          let tscale_ex = tscale;\r\n' \
   '          tscale = msg.scale;\r\n' \
-  '          cleft = null;\r\n' \
-  '          let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
-  '          if (jmaps.length == 0) {\r\n' \
-  '            let tlays = null;\r\n' \
-  '            if (tlayers.has(tset)) {tlays = tlayers.get(tset);}\r\n' \
-  '            for (let l=0; l<layers.length; l++) {\r\n' \
-  '              if (layers[l].ext != ".json") {continue;}\r\n' \
-  '              let jdiv = document.createElement("div");\r\n' \
-  '              jdiv.id = "jmap" + jmaps.length.toString();\r\n' \
-  '              jdiv.style.zIndex = (l - layers.length).toString();\r\n' \
-  '              if (tlays != null) {\r\n' \
-  '                jdiv.style.opacity = "var(--opacity" + l.toString() + ")";\r\n' \
-  '                if (tlays[l][1].indexOf("x")>=0) {jdiv.style.mixBlendMode = "multiply";}\r\n' \
-  '              }\r\n' \
-  '              document.getElementById("view").insertBefore(jdiv, handle);\r\n' \
-  '              try {\r\n' \
-  '                jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1}));\r\n' \
-  '              } catch(error) {\r\n' \
-  '                document.getElementById("view").removeChild(jdiv);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
+  '          if (treset == 2) {\r\n' \
+  '            set_jmaps();\r\n' \
+  '            set_opacities();\r\n' \
   '          } else {\r\n' \
+  '            let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
   '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
   '              jmap.setCenter([lon, lat]);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '          treset = 1;\r\n' \
   '          rescale(tscale_ex);\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '        } else {\r\n' \
+  '          treset = 2;\r\n' \
   '          tset = document.getElementById("tset").selectedIndex;\r\n' \
-  '          let oform = document.getElementById("oform");\r\n' \
-  '          while (oform.firstElementChild) {oform.removeChild(oform.lastElementChild);}\r\n' \
-  '          let rules = document.styleSheets[0].cssRules;\r\n' \
-  '          let nrule = rules.length;\r\n' \
-  '          for (let irule=nrule-1; irule>=0; irule--) {\r\n' \
-  '            if ((rules[irule].selectorText || "").indexOf("tile-") > 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
-  '          }\r\n' \
-  '          for (let jm=0; jm<jmaps.length; jm++) {\r\n' \
-  '            jmaps[jm].remove();\r\n' \
-  '            document.getElementById("view").removeChild(document.getElementById("jmap" + jm.toString()));\r\n' \
-  '          }\r\n' \
-  '          jmaps = [];\r\n' \
-  '          if (tlayers.has(tset)) {\r\n' \
-  '            let tlays = tlayers.get(tset);\r\n' \
-  '            if (! opacities.has(tset)) {\r\n' \
-  '              opacities.set(tset, tlays.map((l)=>l[1].replace("x", "")));\r\n' \
-  '            }\r\n' \
-  '            let opcts = opacities.get(tset);\r\n' \
-  '            nrule = rules.length;\r\n' \
-  '            let tiset = document.getElementById("tset");\r\n' \
-  '            for (let l=0; l<tlays.length; l++) {\r\n' \
-  '              let ls = l.toString();\r\n' \
-  '              if (l > 0) {\r\n' \
-  '                let e = document.createElement("br");\r\n' \
-  '                oform.appendChild(e);\r\n' \
-  '              }\r\n' \
-  '              let e = document.createElement("label");\r\n' \
-  '              e.htmlFor = "opacityl" + ls;\r\n' \
-  '              e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
-  '              e.title = "{#jopacityreset#}";\r\n' \
-  '              e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1].replace("x", "");inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1].replace("x", "");inp.dispatchEvent(new Event("input"));};};\r\n' \
-  '              oform.appendChild(e);\r\n' \
-  '              e = document.createElement("input");\r\n' \
-  '              e.type = "range";\r\n' \
-  '              e.name = e.id = "opacityl" + ls;\r\n' \
-  '              e.min = "0";\r\n' \
-  '              e.max = "1";\r\n' \
-  '              e.step = "0.01";\r\n' \
-  '              e.value = opcts[l];\r\n' \
-  '              e.oninput = (e) => {e.target.nextElementSibling.innerHTML=(parseFloat(e.target.value)*100).toFixed(0)+" %";opacities.get(tset)[l]=e.target.value;document.documentElement.style.setProperty("--opacity" + ls, e.target.value);};\r\n' \
-  '              e.onfocus = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="rgb(200, 250,240)";};\r\n' \
-  '              e.onblur = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="";}\r\n' \
-  '              oform.appendChild(e);\r\n' \
-  '              e = document.createElement("span");\r\n' \
-  '              e.id = "opacity" + ls;\r\n' \
-  '              e.innerHTML = (parseFloat(opcts[l])*100).toFixed(0)+" %";\r\n' \
-  '              oform.appendChild(e);\r\n' \
-  '              document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
-  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
   '          let matrix = null;\r\n' \
   '          let lf = false;\r\n' \
   '          if (nlevel == null) {\r\n' \
@@ -7973,7 +7987,7 @@ class GPXTweakerWebInterfaceServer():
   '      function update_tiles() {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
   '        let tiles = Array.from(handle.getElementsByTagName("img"));\r\n' \
-  '        if (cleft == null) {\r\n' \
+  '        if (treset >= 1) {\r\n' \
   '          tiles.forEach((t) => handle.removeChild(t));\r\n' \
   '          tiles = [];\r\n' \
   '        }\r\n' \
@@ -7986,7 +8000,7 @@ class GPXTweakerWebInterfaceServer():
   '          theight = layer.height * layer.trscale;\r\n' \
   '          text = layer.ext;\r\n' \
   '          if (text == ".json" || twidth == 0 || theight == 0) {continue;}\r\n' \
-  '          [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
+  '          let [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
   '          let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
   '          let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
   '          let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
@@ -7995,7 +8009,7 @@ class GPXTweakerWebInterfaceServer():
   '          let rright = parseInt(vright / twidth + 1.5);\r\n' \
   '          let rtop = parseInt(vtop / theight - 1.5);\r\n' \
   '          let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
-  '          if (cleft == null) {\r\n' \
+  '          if (treset >= 1) {\r\n' \
   '            cleft = rright + 1;\r\n' \
   '            cright = rleft - 1;\r\n' \
   '            ctop = rbottom + 1;\r\n' \
@@ -8060,10 +8074,10 @@ class GPXTweakerWebInterfaceServer():
   '            layersc[l] = [cleft, cright, ctop, cbottom];\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        treset = 0;\r\n' \
   '        if (jmaps.length > 0) {\r\n' \
   '          let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '          for (const jmap of jmaps) {\r\n' \
-  '            jmap.resize();\r\n' \
   '            jmap.setCenter([lon, lat]);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -8611,6 +8625,14 @@ class GPXTweakerWebInterfaceServer():
   '        cpx = cpy = null;\r\n' \
   '        hpx = cx * (1 - r) + hpx * r;\r\n' \
   '        hpy = cy * (1 - r) + hpy * r;\r\n' \
+  '        if (mode != "map") {\r\n' \
+  '          if (jmaps.length > 0) {\r\n' \
+  '            for (const jmap of jmaps) {\r\n' \
+  '              jmap.setPixelRatio(zoom);\r\n' \
+  '              jmap.resize();\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        if (focused && scrollmode > 0) {\r\n' \
   '          if (focused.indexOf("segment") >= 0) {\r\n' \
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
@@ -8763,7 +8785,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
-  '          if (s.id == "tset" && layers != null) {\r\n' \
+  '          if (s.id == "tset" && mode != "map" && layers.length > 1) {\r\n' \
   '            document.getElementById("opanel").style.display = document.getElementById("opanel").style.display=="none"?"block":"none";\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
@@ -11513,10 +11535,12 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing++;\r\n' \
   '        xhrp.send(b);\r\n' \
   '      }\r\n' \
-  '      function open_3D(mode="p") {\r\n' \
+  '      function open_3D(mode3d="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (tlayers.has(tset) || jmaps.length > 0) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
-  '        track_save(mode);\r\n' \
+  '        if (mode != "map") {\r\n' \
+  '          if (tlayers.has(tset) || jmaps.length > 0) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
+  '        }\r\n' \
+  '        track_save(mode3d);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('if (! focused) {return;}', 'if (! focused) {scroll_to_track();return;}') + \
   '      function load_ipcb(t) {\r\n' \
   '        xhr_ongoing--;\r\n' \
@@ -14731,12 +14755,14 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        gctx.stroke();\r\n' \
   '      }\r\n' \
-  '      function open_3D(mode="p") {\r\n' \
+  '      function open_3D(mode3d="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (tlayers.has(tset) || jmaps.length > 0) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
+  '        if (mode != "map") {\r\n' \
+  '          if (tlayers.has(tset) || jmaps.length > 0) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
+  '        }\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function magnify_dec() {\r\n' \
   '        if (magnify > 1) {\r\n' \
@@ -15491,8 +15517,7 @@ class GPXTweakerWebInterfaceServer():
   '            twidth = layer.width * layer.trscale;\r\n' \
   '            theight = layer.height * layer.trscale;\r\n' \
   '            text = layer.ext;\r\n' \
-  '            if (text == ".json" || twidth == 0 || theight == 0) {continue;}\r\n' \
-  '            text = layer.ext;\r\n' \
+  '            if (twidth == 0 || theight == 0) {continue;}\r\n' \
   '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
   '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
   '            let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
@@ -15501,9 +15526,6 @@ class GPXTweakerWebInterfaceServer():
   '            let rright = parseInt(vright / twidth);\r\n' \
   '            let rtop = parseInt(vtop / theight);\r\n' \
   '            let rbottom = parseInt(vbottom / theight);\r\n' \
-  '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
-  '            prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '            let tsuf = text + "?" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
   '            if (tlayers.has(tset)) {\r\n' \
   '              ctx.globalAlpha = parseFloat(opacities.get(tset)[l]);\r\n' \
   '              if (tlayers.get(tset)[l][1].indexOf("x") >= 0) {\r\n' \
@@ -15512,16 +15534,50 @@ class GPXTweakerWebInterfaceServer():
   '                ctx.globalCompositeOperation = "source-over";\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            for (let row=rtop; row<=rbottom; row++) {\r\n' \
-  '              for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                let tile = new Image();\r\n' \
-  '                tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '                tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
-  '                tile.crossOrigin = "anonymous";\r\n' \
-  '                tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '            if (text == ".json") {\r\n' \
+  '              let cjdiv = document.createElement("div");\r\n' \
+  '              cjdiv.style.visibility = "hidden";\r\n' \
+  '              cjdiv.style.position = "absolute";\r\n' \
+  '              cjdiv.style.top = "0px";\r\n' \
+  '              cjdiv.style.left = "0px";\r\n' \
+  '              cjdiv.style.maxHeight = "10px";\r\n' \
+  '              cjdiv.style.maxWidth = "10px";\r\n' \
+  '              cjdiv.style.overflow = "hidden";\r\n' \
+  '              let jdiv = document.createElement("div");\r\n' \
+  '              cjdiv.appendChild(jdiv);\r\n' \
+  '              document.body.append(cjdiv);\r\n' \
+  '              jdiv.style.width = (cwidth / zoom).toString() + "px";\r\n' \
+  '              jdiv.style.height = (cheight / zoom).toString() + "px";\r\n' \
+  '              jdiv.backgroundColor = "rgba(0,0,0,0)";\r\n' \
+  '              let [lat, lon] = WebMercatortoWGS84((b[0] + b[1]) / 2 + htopx, -(b[2] + b[3]) / 2 + htopy);\r\n' \
+  '              let jmap = null;\r\n' \
+  '              try {\r\n' \
+  '                jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, preserveDrawingBuffer: true, pixelRatio: zoom, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1});\r\n' \
+  '              } catch(error) {\r\n' \
+  '                continue;\r\n' \
   '              }\r\n' \
+  '              jmap.once("load", (e) => {ctx.drawImage(jmap.getCanvas(), 0, 0, cwidth, cheight); prom_res();});\r\n' \
+  '              await prom;\r\n' \
+  '              prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '              jmap.once("idle", (e) => {ctx.drawImage(jmap.getCanvas(), 0, 0, cwidth, cheight); prom_res();});\r\n' \
+  '              await prom;\r\n' \
+  '              jmap.remove();\r\n' \
+  '              document.body.removeChild(cjdiv);\r\n' \
+  '            } else {\r\n' \
+  '              prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
+  '              let tsuf = text + "?" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
+  '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
+  '                for (let col=rleft; col<=rright; col++) {\r\n' \
+  '                  let tile = new Image();\r\n' \
+  '                  tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '                  tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
+  '                  tile.crossOrigin = "anonymous";\r\n' \
+  '                  tile.src = "http://" + host + (portmin + (row + col) % (portmax + 1 - portmin)).toString() + "/tiles/tile-" + row.toString() + "-" + col.toString() + tsuf;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              await prom;\r\n' \
   '            }\r\n' \
-  '            await prom;\r\n' \
   '          }\r\n' \
   '          if (tlayers.has(tset)) {ctx.globalAlpha = 1;}\r\n' \
   '        }\r\n' \
@@ -16576,6 +16632,12 @@ class GPXTweakerWebInterfaceServer():
           if zoom[-1] == '*':
             zoom = zoom[:-1].strip()
             s[-1][0] = len(s[-1])
+          try:
+            z = zoom.partition('/')
+            float(z[0] or '1') / float(z[2] or '1')
+          except:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
           s[-1].append([matrix, zoom])
       elif hcur[:18] == 'maptilescomposite ':
         if scur == 'alias':
@@ -16632,6 +16694,12 @@ class GPXTweakerWebInterfaceServer():
           if zoom[-1] == '*':
             zoom = zoom[:-1].strip()
             s[-1][0] = len(s[-1])
+          try:
+            z = zoom.partition('/')
+            float(z[0] or '1') / float(z[2] or '1')
+          except:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
           s[-1].append([matrix, zoom])
       elif hcur[:4] == 'map ' or hcur[:13] == 'elevationmap ':
         if scur == 'infos':
