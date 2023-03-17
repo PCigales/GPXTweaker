@@ -3183,7 +3183,7 @@ class WebMercatorMap(WGS84WebMercator):
           self.Tiles = self.Tiles.Wrap
           self.TilesInfos = infos
           return False
-      self.TilesInfos = self.Tiles.Infos
+      self.TilesInfos = {(rid[0], rid[1] if prov[0].get('format') != 'application/json' else str(int(rid[1]) - 1)): (self.Tiles.Infos[rid] if prov[0].get('format') != 'application/json' else {**prov[0], 'matrix': str(int(rid[1]) - 1), 'scale': prov[0]['basescale'] / (2 ** (int(rid[1]) - 1)) / self.CRS_MPU}) for rid, prov in providers.items()}
     except:
       return False
     return True
@@ -6397,7 +6397,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                     elif tsmt:
                       s = self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU / z
                     else:
-                      s = next(self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[t]]['scale'] if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if str(tl[l2][0]) not in tsos[2]) / z
+                      s = next(self.server.Interface.Map.TilesInfos[(tsos[0], str(tl[l2][0] - (1 if self.server.Interface.TilesSets[tsos[0]][1].get('format') == 'application/json' else 0)))]['scale'] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1] if str(tl[l2][0]) not in tsos[2]) / z
                     if sm < s:
                       l1 = l2
                     else:
@@ -6431,7 +6431,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   _send_err_fail()
                 else:
                   try:
-                    bscale = next(self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[t]]['scale'] if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if q['matrix'][0] not in tsos[2])
+                    bscale = next(self.server.Interface.Map.TilesInfos[(tsos[0], str(int(q['matrix'][0]) - (1 if self.server.Interface.TilesSets[tsos[0]][1].get('format') == 'application/json' else 0)))]['scale'] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1] if q['matrix'][0] not in tsos[2])
                     resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': ('.json' if ti['format'] == 'application/json' else WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img')), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in ((self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],) if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else ({**self.server.Interface.TilesSets[tsos[0]][1], 'matrix': tsos[2].get(q['matrix'][0], q['matrix'][0]), 'scale': self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU},))], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
@@ -6444,7 +6444,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if isinstance(rid, list):
                 tid = req.path.lower()[12:].split('?')[-1].rsplit(',', 1)
                 rid = (int(tid[0]), tid[1])
-                ti = self.server.Interface.Map.TilesInfos[rid]
+                ti = self.server.Interface.Map.Tiles.Infos[rid]
               else:
                 if req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
                   raise
@@ -6540,7 +6540,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if self.server.Interface.Mode == 'tiles':
               self.server.Interface.TLock.acquire()
               try:
-                if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
+                if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict) and self.server.Interface.TilesSets[self.server.Interface.TilesSet][1].get('format') != 'application/json':
                   tinfos = {self.server.Interface.Map.Tiles.Id: self.server.Interface.Map.TilesInfos}
                 else:
                   tinfos = self.server.Interface.Map.TilesInfos
@@ -6556,6 +6556,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   if f_l is not None:
                     n_f_l.append(((self.server.Interface.TilesSets[trid[0]][0], trid[1]), f_l))
               except:
+                raise
                 _send_err_fail()
                 continue
             elif self.server.Interface.Mode == 'map':
