@@ -125,6 +125,7 @@ FR_STRINGS = {
     'eerror': 'échec de la configuration du fournisseur d\'élévations (%s)',
     'itinerary': 'fournisseur d\'itinéraires configuré (%s)',
     'reversegeocoding': 'fournisseur de géocodages inversés configuré (%s)',
+    'maplibre': 'Ce programme fait appel à la bibliothèque MapLibre GL JS (https://github.com/maplibre/maplibre-gl-js), sous licence BSD 3-Clause, pour l\'affichage des jeux de tuiles définis à partir d\'un style au format JSON, par import depuis %s',
     'built': 'page d\'interface générée',
     'builtexp': 'page d\'interface de l\'explorateur générée',
     'request': 'réception de la requête %s %s',
@@ -285,7 +286,7 @@ FR_STRINGS = {
     'jm3dviewer1': 'Chargement de la visionneuse 3D en cours...',
     'jm3dviewer2': 'Visionneuse 3D démarrée',
     'jm3dviewer3': 'Échec du chargement de la visionneuse 3D',
-    'jm3dviewer4': 'Visionneuse 3D indisponible en mode superposition de jeux de tuiles',
+    'jm3dviewer4': 'Visionneuse 3D indisponible en mode superposition de jeux de tuiles ou jeu de tuile json',
     'jmmedia1': 'Récupération des données des médias en cours...',
     'jmmedia2': 'Récupération des données des médias effectuée',
     'jmmedia3': 'Échec de la récupération des données des médias',
@@ -446,6 +447,7 @@ EN_STRINGS = {
     'eerror': 'failure of the configuration of the elevations provider (%s)',
     'itinerary': 'itineraries provider configured (%s)',
     'reversegeocoding': 'reverse geocodings provider configured (%s)',
+    'maplibre': 'This program uses the MapLibre GL JS library (https://github.com/maplibre/maplibre-gl-js), licensed under the 3-Clause BSD license, to display tiles sets defined from a style in JSON format, by import from %s',
     'built': 'interface page generated',
     'builtexp': 'interface page of the explorer generated',
     'request': 'receipt of the request %s %s',
@@ -634,7 +636,7 @@ EN_STRINGS = {
     'jm3dviewer1': 'Loading of the 3D viewer in progress...',
     'jm3dviewer2': '3D viewer started',
     'jm3dviewer3': 'Failure of the loading of the 3D viewer',
-    'jm3dviewer4': '3D viewer unavailable in superposition of tiles sets mode',
+    'jm3dviewer4': '3D viewer unavailable in superposition of tiles sets or json tile set mode',
     'jtilt': 'Tilt:',
     'jrotation': 'Rotation:',
     'jzscale': 'Z scale:',
@@ -1995,9 +1997,9 @@ class TilesMixCache(TilesCache):
 
 class WebMercatorMap(WGS84WebMercator):
 
-  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf'}
+  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf'}
   DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
-  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf'}
+  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
   CRS = 'EPSG:3857'
@@ -2082,6 +2084,9 @@ class WebMercatorMap(WGS84WebMercator):
 
   def LinkLegend(self, legend):
     self.Legend = legend
+
+  def LinkJSONTiles(self, jsontiles):
+    self.JSONTiles = jsontiles
 
   @staticmethod
   def WGS84toCoord(lat, lon):
@@ -3147,7 +3152,14 @@ class WebMercatorMap(WGS84WebMercator):
 
   def SetTilesProviders(self, providers):
     try:
-      provs = providers.items()
+      provs = []
+      for rid, prov in providers.items():
+        if prov[0].get('format') == 'application/json':
+          if not hasattr(self, 'JSONTiles') or not self.JSONTiles.Load(prov[0], rid[0], **prov[1]):
+            continue
+          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1), (rid[1] if inf['type'] != 'vector' else str(int(rid[1]) - 1))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])))
+        else:
+          provs.append((rid, prov))
       tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], rid[1], **prov[1]) for rid, prov in provs}
       if self.TilesInfos:
         infos = {**self.TilesInfos}
@@ -3539,6 +3551,164 @@ class ElevationTilesCache(TilesCache):
         if not self.LazyConfigure(obj):
           return None
     return obj.Tiles
+
+
+class JSONTiles():
+
+  def __init__(self, tset_id_mult):
+    self.TilesSetIdMult = tset_id_mult
+    self.StylesCache = {}
+    self.GlyphsCache = {}
+    self.SpritesJSONCache = {}
+    self.SpritesPNGCache = {}
+    self.TilesInfosHandlingCache = {}
+
+  @staticmethod
+  def normurl(url):
+    while '/..' in url:
+      u1, u2 = url.split('/..')
+      url = urllib.parse.urljoin(u1 + '/', '..' + u2)
+    while '/.' in url:
+      u1, u2 = url.split('/.')
+      url = urllib.parse.urljoin(u1 + '/', '.' + u2)
+    return url
+
+  def Load(self, infos, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    if 'source' not in infos or infos.get('format') != 'application/json':
+      return False
+    if not tid in self.StylesCache:
+      infos['width'] = infos['height'] = 512
+      infos['basescale'] = WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 512
+      infos['topx'] = WGS84WebMercator.WGS84toWebMercator(0,-180)[0]
+      infos['topy'] = -WGS84WebMercator.WGS84toWebMercator(0,-180)[0]
+      headers = {'User-Agent': user_agent}
+      if referer:
+        headers['Referer'] = referer
+      try:
+        uri = infos['source'].format_map({'key': key or ''})
+      except:
+        return False
+      rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+      if rep.code != '200':
+        return False
+      try:
+        style = json.loads(rep.body)
+        if 'glyphs' in style:
+          glyphs = style['glyphs']
+          style['glyphs'] = '{netloc}/jsontiles/glyphs/%s/{fontstack}/{range}.pbf' % tid
+        else:
+          glyphs = ''
+        if 'sprite' in style:
+          sprite = style['sprite']
+          style['sprite'] = '{netloc}/jsontiles/sprite/%s/sprite' % tid
+        else:
+          sprite = ''
+        self.TilesInfosHandlingCache[tid] = []
+        sources = {}
+        if local_pattern is None:
+          pattern = None
+        else:
+          if '{' not in local_pattern:
+            local_pattern = os.path.join(local_pattern, WebMercatorMap.LOCALSTORE_DEFAULT_PATTERN)
+          tpattern = local_pattern
+          while '{matrix}' in tpattern:
+            tpattern = os.path.dirname(tpattern)
+          pattern = local_pattern.replace(tpattern, tpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}) + '\tiles\{layer}')
+        sid = 0
+        for name, desc in style['sources'].items():
+          if desc['type'] not in ('vector', 'raster'):
+            continue
+          sid += 1
+          if 'url' in desc:
+            uri_b = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['url']))
+            uri = uri_b.format_map({'key': key or ''})
+            rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+            if rep.code != '200':
+              return False
+            src = json.loads(rep.body)
+            tiles = JSONTiles.normurl(urllib.parse.urljoin(((uri_b.rstrip('/') + '/') if infos.get('slash_url') else uri_b), src['tiles'][0]))
+            scheme = src.get('scheme', desc.get('scheme'))
+          else:
+            tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
+            scheme = desc.get('scheme')
+          scheme = infos.get('scheme', scheme)
+          self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'type': desc['type'], 'layer': name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / (256 if desc['type'] == 'raster' else 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': (256 if desc['type'] == 'raster' else 512), 'height': (256 if desc['type'] == 'raster' else 512)}, {'local_pattern': pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
+          sources[name] = {'type': desc['type'], 'tiles': ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1], tid + self.TilesSetIdMult * sid)]}
+        style['sources'] = sources
+        self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)))
+      except:
+        return False
+    return True
+
+  def Unload(self):
+    self.GlyphsCache.clear()
+    self.SpritesPNGCache.clear()
+
+  def Style(self, tid):
+    return self.StylesCache.get(tid, (None,))[0]
+
+  def InfosHandling(self, tid):
+    return self.TilesInfosHandlingCache.get(tid)
+
+  def Glyph(self, tid, fontstack, fontrange, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    g = self.GlyphsCache.get((tid, fontstack, fontrange))
+    if g is not None:
+      return g
+    uri = self.StylesCache.get(tid, (None, None))[1]
+    if uri is None:
+      return None
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    try:
+      uri = uri.format_map({'key': key or '', 'fontstack': fontstack, 'range': fontrange})
+    except:
+      return None
+    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+    if rep.code != '200':
+      return None
+    self.GlyphsCache[(tid, fontstack, fontrange)] = rep.body
+    return rep.body
+
+  def SpriteJSON(self, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    s = self.SpritesJSONCache.get(tid)
+    if s is not None:
+      return s
+    uri = self.StylesCache.get(tid, (None, None, None))[2]
+    if uri is None:
+      return None
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    try:
+      uri = uri.format_map({'key': key or ''}) + '.json'
+    except:
+      return None
+    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+    if rep.code != '200':
+      return None
+    self.SpritesJSONCache[tid] = rep.body
+    return rep.body
+
+  def SpritePNG(self, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+    s = self.SpritesPNGCache.get(tid)
+    if s is not None:
+      return s
+    uri = self.StylesCache.get(tid, (None, None, None))[2]
+    if uri is None:
+      return None
+    headers = {'User-Agent': user_agent}
+    if referer:
+      headers['Referer'] = referer
+    try:
+      uri = uri.format_map({'key': key or ''}) + '.png'
+    except:
+      return None
+    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+    if rep.code != '200':
+      return None
+    self.SpritesPNGCache[tid] = rep.body
+    return rep.body
 
 
 class WGS84Elevation(WGS84Map):
@@ -6166,17 +6336,26 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.TLock.acquire()
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
-            tsmt = isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict)
             if 'set' in q:
               try:
-                if len(self.server.Interface.TilesSets[int(q['set'][0])][-1]) <= 1:
+                rset = int(q['set'][0])
+                if len(self.server.Interface.TilesSets[rset][-1]) <= 1:
                   raise
-                resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[int(q['set'][0])][-1]}).encode('utf-8')
-                self.server.Interface.TilesSet = int(q['set'][0])
+                if isinstance(self.server.Interface.TilesSets[rset][1], dict):
+                  if self.server.Interface.TilesSets[rset][1].get('format') == 'application/json' and self.server.Interface.JSONTiles is None:
+                    raise
+                elif any(self.server.Interface.TilesSets[tsos[0]][1].get('format') == 'application/json' for tsos in self.server.Interface.TilesSets[rset][1]) and self.server.Interface.JSONTiles is None:
+                  raise
+                resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[rset][-1]}).encode('utf-8')
+                self.server.Interface.TilesSet = rset
+                if self.server.Interface.JSONTiles is not None:
+                  self.server.Interface.JSONTiles.Unload()
                 _send_resp('application/json; charset=utf-8')
               except:
                 _send_err_fail()
             else:
+              tsmt = isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict)
+              tsj = self.server.Interface.TilesSets[self.server.Interface.TilesSet][1].get('format') == 'application/json' if tsmt else None
               l1 = 0
               if 'auto' in q:
                 tl = self.server.Interface.TilesSets[self.server.Interface.TilesSet][-1]
@@ -6190,7 +6369,13 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   m = None
                   while True:
                     if tl[l2][0] != m:
-                      if not (self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]) if tsmt else self.server.Interface.Map.SetTilesProviders({(tsos[0], tsos[2].get(str(tl[l2][0]), str(tl[l2][0]))): self.server.Interface.TilesSets[tsos[0]][1:3] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]})):
+                      if tsmt and not tsj:
+                        r = self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, str(tl[l2][0])), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], str(tl[l2][0]), **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2])
+                      elif tsmt:
+                        r = self.server.Interface.Map.SetTilesProviders({(self.server.Interface.TilesSet, str(tl[l2][0])): self.server.Interface.TilesSets[self.server.Interface.TilesSet][1:3]})
+                      else:
+                        r = self.server.Interface.Map.SetTilesProviders({(tsos[0], tsos[2].get(str(tl[l2][0]), str(tl[l2][0]))): self.server.Interface.TilesSets[tsos[0]][1:3] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]})
+                      if not r:
                         l2 += 1
                         if l2 >= l3:
                           l3 = (l1 + l3) // 2
@@ -6199,7 +6384,12 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                             break
                         continue
                       m = tl[l2][0]
-                    s = (self.server.Interface.Map.TilesInfos if tsmt else self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[next(t for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if str(tl[l2][0]) not in tsos[2])]])['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    if tsmt and not tsj:
+                      s = self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    elif tsmt:
+                      s = self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU / eval(tl[l2][1])
+                    else:
+                      s = next(self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[t]]['scale'] if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (tl[l2][0] - 1)) / self.server.Interface.Map.CRS_MPU for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if str(tl[l2][0]) not in tsos[2]) / eval(tl[l2][1])
                     if sm < s:
                       l1 = l2
                     else:
@@ -6210,35 +6400,45 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   q['matrix'] = [str(tl[l1][0])]
                 except:
                   pass
-              if tsmt:
+              if tsmt and not tsj:
                 if not self.server.Interface.Map.SetTilesProvider((self.server.Interface.TilesSet, q['matrix'][0]), self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], q['matrix'][0], **self.server.Interface.TilesSets[self.server.Interface.TilesSet][2]):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({**{k: self.server.Interface.Map.TilesInfos[k] for k in ('topx', 'topy', 'width', 'height')}, 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.Map.TilesInfos[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), 'img'), 'trscale': 1}], 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     _send_err_fail()
+              elif tsmt:
+                if not self.server.Interface.Map.SetTilesProviders({(self.server.Interface.TilesSet, q['matrix'][0]): self.server.Interface.TilesSets[self.server.Interface.TilesSet][1:3]}):
+                  _send_err_fail()
+                else:
+                  try:
+                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': '.json', 'trscale': 1}], 'matrix': q['matrix'][0], 'scale': self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    _send_resp('application/json; charset=utf-8')
+                  except:
+                    _send_err_fail()                  
               else:
                 if not self.server.Interface.Map.SetTilesProviders({(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0])): self.server.Interface.TilesSets[tsos[0]][1:3] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}):
                   _send_err_fail()
                 else:
                   try:
-                    bscale = self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[next(t for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if q['matrix'][0] not in tsos[2])]]['scale']
-                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img'), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    bscale = next(self.server.Interface.Map.TilesInfos[self.server.Interface.Map.Tiles.Id[t]]['scale'] if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) if q['matrix'][0] not in tsos[2])
+                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': ('.json' if ti['format'] == 'application/json' else WebMercatorMap.MIME_DOTEXT.get(ti.get('format'), 'img')), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in ((self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],) if self.server.Interface.TilesSets[tsos[0]][1].get('format') != 'application/json' else ({**self.server.Interface.TilesSets[tsos[0]][1], 'matrix': tsos[2].get(q['matrix'][0], q['matrix'][0]), 'scale': self.server.Interface.TilesSets[tsos[0]][1]['basescale'] / (2 ** (int(q['matrix'][0]) - 1)) / self.server.Interface.Map.CRS_MPU},))], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
+                    raise
                     _send_err_fail()
             self.server.Interface.TLock.release()
           elif req.path.lower()[:12] == '/tiles/tile-':
             try:
               rid = self.server.Interface.Map.Tiles.Id
               if isinstance(rid, list):
-                tid = req.path.lower()[12:].split('?')[-1].split(',')
+                tid = req.path.lower()[12:].split('?')[-1].rsplit(',', 1)
                 rid = (int(tid[0]), tid[1])
                 ti = self.server.Interface.Map.TilesInfos[rid]
               else:
-                if self.server.Interface.TilesSet != rid[0] or req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
+                if req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
                   raise
                 ti = self.server.Interface.Map.TilesInfos
               row, col = req.path.lower()[12:].split('.')[0].split('-')
@@ -6250,6 +6450,66 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_resp(ti.get('format'))
             else:
               _send_err_nf()
+          elif req.path.lower()[:17] == '/jsontiles/style/' and req.path.lower()[-11:] == '/style.json':
+            if self.server.Interface.Map.JSONTiles is None:
+              _send_err_fail()
+            try:
+              tid = int(req.path[17:-11])
+              if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
+                if tid != self.server.Interface.TilesSet:
+                  raise
+              elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
+                raise
+              resp_body = (self.server.Interface.Map.JSONTiles.Style(tid) or b'').replace(b'{netloc}', ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])).encode('utf-8'))
+              if not resp_body:
+                raise
+              _send_resp('application/json; charset=utf-8')
+            except:
+              _send_err_fail()
+          elif req.path.lower()[:18] == '/jsontiles/glyphs/':
+            if self.server.Interface.Map.JSONTiles is None:
+              _send_err_fail()
+            try:
+              tid = int(req.path[18:].split('/', 1)[0])
+              if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
+                if tid != self.server.Interface.TilesSet:
+                  raise
+              elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
+                raise
+              f, r = req.path[18:].split('/', 1)[1].rsplit('/', 1)
+              if r[-4:] != '.pbf':
+                raise
+              r = r[:-4]
+              resp_body = self.server.Interface.Map.JSONTiles.Glyph(tid, f, r, **self.server.Interface.TilesSets[tid][2]) or ''
+              if not resp_body:
+                raise
+              _send_resp('application/json; charset=utf-8')
+            except:
+              _send_err_fail()
+          elif req.path.lower()[:18] == '/jsontiles/sprite/':
+            if self.server.Interface.Map.JSONTiles is None:
+              _send_err_fail()
+            try:
+              tid = int(req.path[18:].split('/', 1)[0])
+              if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
+                if tid != self.server.Interface.TilesSet:
+                  raise
+              elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
+                raise
+              s, e = req.path[18:].split('/', 1)[1].rsplit('.', 1)
+              if s != 'sprite':
+                raise
+              if e == 'json':
+                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, **self.server.Interface.TilesSets[tid][2]) or ''
+              elif e == 'png':
+                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, **self.server.Interface.TilesSets[tid][2]) or ''
+              else:
+                raise
+              if not resp_body:
+                raise
+              _send_resp('application/json; charset=utf-8' if e == 'json' else 'image/png')
+            except:
+              _send_err_fail()
           elif req.path.lower()[:8] == '/map/map':
             resp_body = self.server.Interface.Map.Map
             if resp_body:
@@ -6924,6 +7184,16 @@ class GPXTweakerWebInterfaceServer():
   '      div[id=handle]>img {\r\n' \
   '        filter:var(--filter);\r\n' \
   '      }\r\n' \
+  '      div[id=view]>div[id^=jmap] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        pointer-events:none;\r\n' \
+  '        overflow:hidden;\r\n' \
+  '        width:calc(100% / var(--zoom));\r\n' \
+  '        height:calc(100% / var(--zoom));\r\n' \
+  '        transform-origin:left top;\r\n' \
+  '        transform:scale(var(--zoom));\r\n' \
+  '        background-color:rgba(0,0,0,0);\r\n' \
+  '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
   '        div[id=handle]>img::before{\r\n' \
   '          content:"";\r\n' \
@@ -6938,8 +7208,8 @@ class GPXTweakerWebInterfaceServer():
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
-  '      var layers = null;\r\n' \
-  '      var layersc = null;\r\n' \
+  '      var layers = [];\r\n' \
+  '      var layersc = [];\r\n' \
   '      var opacities = new Map();\r\n' \
   '      var cleft = null;\r\n' \
   '      var cright = null;\r\n' \
@@ -6960,6 +7230,7 @@ class GPXTweakerWebInterfaceServer():
   '        var zooms = ["1/8", "1/4", "1/2", "3/4", "1", "1.5", "2", "3", "4", "6", "8"];\r\n' \
   '        var tlock = false;\r\n' \
   '        var zoom_s = "1";\r\n' \
+  '        var jmaps = [];\r\n' \
   '      }\r\n' \
   '      var eset = -1;\r\n' \
   '      var iset = -1;\r\n' \
@@ -7522,20 +7793,37 @@ class GPXTweakerWebInterfaceServer():
   '            tlevel = nlevel;\r\n' \
   '          }\r\n' \
   '          if (! kzoom || nlevel == null) {zoom_s = tlevels[tlevel][1];}\r\n' \
-  '          if ("layers" in msg) {\r\n' \
-  '            layers = msg.layers;\r\n' \
-  '            layersc = Array(layers.length).fill([null, null, null, null]);\r\n' \
-  '          } else {\r\n' \
-  '            layers = layersc = null;\r\n' \
-  '            ttopx = msg.topx;\r\n' \
-  '            ttopy = msg.topy;\r\n' \
-  '            twidth = msg.width;\r\n' \
-  '            theight = msg.height\r\n' \
-  '            text = msg.ext;\r\n' \
-  '          } \r\n' \
+  '          layers = msg.layers;\r\n' \
+  '          layersc = Array(layers.length).fill([null, null, null, null]);\r\n' \
   '          let tscale_ex = tscale;\r\n' \
   '          tscale = msg.scale;\r\n' \
   '          cleft = null;\r\n' \
+  '          let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '          if (jmaps.length == 0) {\r\n' \
+  '            let tlays = null;\r\n' \
+  '            if (tlayers.has(tset)) {tlays = tlayers.get(tset);}\r\n' \
+  '            for (let l=0; l<layers.length; l++) {\r\n' \
+  '              if (layers[l].ext != ".json") {continue;}\r\n' \
+  '              let jdiv = document.createElement("div");\r\n' \
+  '              jdiv.id = "jmap" + jmaps.length.toString();\r\n' \
+  '              jdiv.style.zIndex = (l - layers.length).toString();\r\n' \
+  '              if (tlays != null) {\r\n' \
+  '                jdiv.style.opacity = "var(--opacity" + l.toString() + ")";\r\n' \
+  '                if (tlays[l][1].indexOf("x")>=0) {jdiv.style.mixBlendMode = "multiply";}\r\n' \
+  '              }\r\n' \
+  '              document.getElementById("view").insertBefore(jdiv, handle);\r\n' \
+  '              try {\r\n' \
+  '                jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1}));\r\n' \
+  '              } catch(error) {\r\n' \
+  '                document.getElementById("view").removeChild(jdiv);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            for (const jmap of jmaps) {\r\n' \
+  '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
+  '              jmap.setCenter([lon, lat]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
   '          rescale(tscale_ex);\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          document.getElementById("tset").style.pointerEvents = "";\r\n' \
@@ -7548,6 +7836,11 @@ class GPXTweakerWebInterfaceServer():
   '          for (let irule=nrule-1; irule>=0; irule--) {\r\n' \
   '            if ((rules[irule].selectorText || "").indexOf("tile-") > 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
   '          }\r\n' \
+  '          for (let jm=0; jm<jmaps.length; jm++) {\r\n' \
+  '            jmaps[jm].remove();\r\n' \
+  '            document.getElementById("view").removeChild(document.getElementById("jmap" + jm.toString()));\r\n' \
+  '          }\r\n' \
+  '          jmaps = [];\r\n' \
   '          if (tlayers.has(tset)) {\r\n' \
   '            let tlays = tlayers.get(tset);\r\n' \
   '            if (! opacities.has(tset)) {\r\n' \
@@ -7600,7 +7893,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            matrix = tlevels[tlevel][0];\r\n' \
   '            tlevels = msg.tlevels;\r\n' \
-  '            nlevel = tlevels[0];\r\n' \
+  '            nlevel = 1;\r\n' \
   '            for (let i=1; i<tlevels.length; i++) {\r\n' \
   '              if (tlevels[i][0] <= matrix) {nlevel = i;}\r\n' \
   '              if (tlevels[i][0] == matrix) {\r\n' \
@@ -7684,20 +7977,16 @@ class GPXTweakerWebInterfaceServer():
   '          tiles.forEach((t) => handle.removeChild(t));\r\n' \
   '          tiles = [];\r\n' \
   '        }\r\n' \
-  '        if (layers == null && (twidth == 0 || theight == 0)) {return;}\r\n' \
-  '        for (let l=0; l<(layers==null?1:layers.length); l++) {\r\n' \
-  '          let layer = null;\r\n' \
-  '          let tmatrix = document.getElementById("matrix").innerHTML;\r\n' \
-  '          if (layers != null) {\r\n' \
-  '            layer = layers[l];\r\n' \
-  '            tmatrix = layer.matrix;\r\n' \
-  '            ttopx = layer.topx;\r\n' \
-  '            ttopy = layer.topy;\r\n' \
-  '            twidth = layer.width * layer.trscale;\r\n' \
-  '            theight = layer.height * layer.trscale;\r\n' \
-  '            text = layer.ext;\r\n' \
-  '            [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
-  '          }\r\n' \
+  '        for (let l=0; l<layers.length; l++) {\r\n' \
+  '          let layer = layers[l];\r\n' \
+  '          let tmatrix = layer.matrix;\r\n' \
+  '          ttopx = layer.topx;\r\n' \
+  '          ttopy = layer.topy;\r\n' \
+  '          twidth = layer.width * layer.trscale;\r\n' \
+  '          theight = layer.height * layer.trscale;\r\n' \
+  '          text = layer.ext;\r\n' \
+  '          if (text == ".json" || twidth == 0 || theight == 0) {continue;}\r\n' \
+  '          [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
   '          let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
   '          let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
   '          let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
@@ -7723,7 +8012,7 @@ class GPXTweakerWebInterfaceServer():
   '                handle.removeChild(tile);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            let suf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(document.getElementById("tset").selectedIndex)[l][0]).toString() + "," + tmatrix;\r\n' \
+  '            let suf = text + "?" + (tlayers.has(document.getElementById("tset").selectedIndex)?tlayers.get(document.getElementById("tset").selectedIndex)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
   '            let pref = "tile-" + l.toString() + "-";\r\n' \
   '            if (tiles_hold == null) {\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
@@ -7768,7 +8057,14 @@ class GPXTweakerWebInterfaceServer():
   '            cright = rright;\r\n' \
   '            ctop = rtop;\r\n' \
   '            cbottom = rbottom;\r\n' \
-  '            if (layers != null) {layersc[l] = [cleft, cright, ctop, cbottom];}\r\n' \
+  '            layersc[l] = [cleft, cright, ctop, cbottom];\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (jmaps.length > 0) {\r\n' \
+  '          let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '          for (const jmap of jmaps) {\r\n' \
+  '            jmap.resize();\r\n' \
+  '            jmap.setCenter([lon, lat]);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -8770,7 +9066,7 @@ class GPXTweakerWebInterfaceServer():
   '        stroke:red;\r\n' \
   '        fill:red;\r\n' \
   '      }\r\n' \
-  '    </style>\r\n' \
+  '    </style>\r\n##JTSUPPORT##' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
   '      var hist = [[], []];\r\n' \
   '      var hist_b = 0;\r\n' \
@@ -11219,7 +11515,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (layers != null) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
+  '        if (tlayers.has(tset) || jmaps.length > 0) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
   '        track_save(mode);\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('if (! focused) {return;}', 'if (! focused) {scroll_to_track();return;}') + \
   '      function load_ipcb(t) {\r\n' \
@@ -13872,7 +14168,7 @@ class GPXTweakerWebInterfaceServer():
   '      div[id^=media] *:not(:last-child) {\r\n' \
   '        margin-right:14px;\r\n' \
   '      }\r\n' \
-  '    </style>\r\n' \
+  '    </style>\r\n##JTSUPPORT##' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
   '      var mportmin = ##MPORTMIN##;\r\n' \
   '      var mportmax = ##MPORTMAX##;\r\n' \
@@ -14437,7 +14733,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_3D(mode="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (layers != null) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
+  '        if (tlayers.has(tset) || jmaps.length > 0) {show_msg("{#jm3dviewer4#}", 10); return;}\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
   '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode + document.getElementById(`v3d${mode}dist`).innerHTML + "," + focused.substring(5));\r\n' \
@@ -15151,7 +15447,7 @@ class GPXTweakerWebInterfaceServer():
   '      async function download_map() {\r\n' \
   '        if (document.getElementById("tset").disabled || document.getElementById("edit").disabled) {return;}\r\n' \
   '        let b = track_boundaries();\r\n' \
-  '        if (b == null || (layers == null && (twidth == 0 || theight == 0))) {return;}\r\n' \
+  '        if (b == null) {return;}\r\n' \
   '        let cwidth = Math.ceil((b[1] - b[0]) / tscale * zoom);\r\n' \
   '        let cheight = Math.ceil((b[3] - b[2]) / tscale * zoom);\r\n' \
   '        if (cwidth > 11000 || cheight > 11000) {\r\n' \
@@ -15187,18 +15483,15 @@ class GPXTweakerWebInterfaceServer():
   '          tile.src = "/map/map" + text;\r\n' \
   '          await prom;\r\n' \
   '        } else {\r\n' \
-  '          for (let l=0; l<(layers==null?1:layers.length); l++) {\r\n' \
-  '            let layer = null;\r\n' \
-  '            let tmatrix = document.getElementById("matrix").innerHTML;\r\n' \
-  '            if (layers != null) {\r\n' \
-  '              layer = layers[l];\r\n' \
-  '              tmatrix = layer.matrix;\r\n' \
-  '              ttopx = layer.topx;\r\n' \
-  '              ttopy = layer.topy;\r\n' \
-  '              twidth = layer.width * layer.trscale;\r\n' \
-  '              theight = layer.height * layer.trscale;\r\n' \
-  '              text = layer.ext;\r\n' \
-  '            }\r\n' \
+  '          for (let l=0; l<layers.length; l++) {\r\n' \
+  '            let layer = layers[l];\r\n' \
+  '            tmatrix = layer.matrix;\r\n' \
+  '            ttopx = layer.topx;\r\n' \
+  '            ttopy = layer.topy;\r\n' \
+  '            twidth = layer.width * layer.trscale;\r\n' \
+  '            theight = layer.height * layer.trscale;\r\n' \
+  '            if (twidth == 0 || theight == 0) {return;}\r\n' \
+  '            text = layer.ext;\r\n' \
   '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
   '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
   '            let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
@@ -15209,8 +15502,8 @@ class GPXTweakerWebInterfaceServer():
   '            let rbottom = parseInt(vbottom / theight);\r\n' \
   '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '            prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '            let tsuf = text + "?" + (layers==null?document.getElementById("tset").selectedIndex:tlayers.get(tset)[l][0]).toString() + "," + tmatrix;\r\n' \
-  '            if (layers != null) {\r\n' \
+  '            let tsuf = text + "?" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
+  '            if (tlayers.has(tset)) {\r\n' \
   '              ctx.globalAlpha = parseFloat(opacities.get(tset)[l]);\r\n' \
   '              if (tlayers.get(tset)[l][1].indexOf("x") >= 0) {\r\n' \
   '                ctx.globalCompositeOperation = "multiply";\r\n' \
@@ -15229,7 +15522,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            await prom;\r\n' \
   '          }\r\n' \
-  '          if (layers != null) {ctx.globalAlpha = 1;}\r\n' \
+  '          if (tlayers.has(tset)) {ctx.globalAlpha = 1;}\r\n' \
   '        }\r\n' \
   '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
   '        let xs = new XMLSerializer;\r\n' \
@@ -15933,7 +16226,7 @@ class GPXTweakerWebInterfaceServer():
       if l[0] == '[' and l[-1] == ']':
         scur = l[1:-1].lower()
         if hcur == 'global':
-          if not scur in ('interfaceserver', 'proxy', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
+          if not scur in ('interfaceserver', 'proxy', 'jsontiles', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
@@ -16018,6 +16311,16 @@ class GPXTweakerWebInterfaceServer():
               self.Proxy['auth'] = value[1:-1]
           elif field == 'secure':
             self.Proxy['secure'] = value is True or value.lower() == 'yes'
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'jsontiles':
+          if field == 'enable':
+            self.JSONTiles = value
+          elif field == 'maplibrejs':
+            self.JSONTilesJS = value
+          elif field == 'maplibrecss':
+            self.JSONTilesCSS = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -16226,6 +16529,8 @@ class GPXTweakerWebInterfaceServer():
               s[1][field] = int(value)
             except:
               pass
+          elif field in ('scheme', 'slash_url') and hcur[:9] == 'maptiles ':
+            s[1][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -16435,6 +16740,9 @@ class GPXTweakerWebInterfaceServer():
     self.Ip = '127.0.0.1'
     self.Ports = (8000, 8000)
     self.Proxy = {'ip': '', 'port': 8080, 'auth': '', 'secure': False}
+    self.JSONTiles = False
+    self.JSONTilesJS = ''
+    self.JSONTilesCSS = ''
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
     self.TilesHoldSize = 0
@@ -16792,6 +17100,12 @@ class GPXTweakerWebInterfaceServer():
       self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
       self.Legend = MapLegend()
       self.Map.LinkLegend(self.Legend)
+      if self.JSONTiles:
+        print('')
+        print(LSTRINGS['interface']['maplibre'] % self.JSONTilesJS)
+        print('')
+        self.JSONTiles = JSONTiles(len(self.TilesSets))
+        self.Map.LinkJSONTiles(self.JSONTiles)
       if uri is not None:
         self.HTML = ''
       else:
@@ -16875,7 +17189,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##JTSUPPORT##', '    <script src="' + self.JSONTilesJS + '"></script>\r\n    <link href="' + self.JSONTilesCSS + '" rel="stylesheet" />\r\n' if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
@@ -17075,7 +17389,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##JTSUPPORT##', '    <script src="' + self.JSONTilesJS + '"></script>\r\n    <link href="' + self.JSONTilesCSS + '" rel="stylesheet" />\r\n' if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
