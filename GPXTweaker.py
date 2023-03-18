@@ -72,6 +72,37 @@ FR_STRINGS = {
     'tilerfail': 'échec de la fourniture de la tuile %s',
     'tileretrieved': 'tuile %s fournie'
   },
+  'jsontiles': {
+    '_id': 'Gestionnaire de jeu de tuiles json',
+    'styleload': 'chargement du style %s',
+    'stylecloaded': 'style %s chargé depuis le cache',
+    'stylelfound': 'style %s trouvé localement',
+    'stylelexpired': 'style local %s expiré',
+    'stylefetch': 'récupération du style %s',
+    'styleloaded': 'style %s chargé',
+    'stylefail': 'échec du chargement du style %s',
+    'glyphretrieve': 'fourniture du glyph %s [%s - %s]',
+    'glyphcretrieved': 'glyph %s [%s - %s] fourni depuis le cache',
+    'glyphlfound': 'glyph %s [%s - %s] trouvé localement',
+    'glyphlexpired': 'glyph local %s [%s - %s] expiré',
+    'glyphfetch': 'récupération du glyph %s [%s - %s]',
+    'glyphretrieved': 'glyph %s [%s - %s] fourni',
+    'glyphfail': 'échec de la fourniture du glyph %s [%s - %s]',
+    'spritejsonretrieve': 'fourniture du sprite json %s [%s]',
+    'spritejsoncretrieved': 'sprite json %s [%s] fourni depuis le cache',
+    'spritejsonlfound': 'sprite json %s [%s] trouvé localement',
+    'spritejsonlexpired': 'sprite json local %s [%s] expiré',
+    'spritejsonfetch': 'récupération du sprite json %s [%s]',
+    'spritejsonretrieved': 'sprite json %s [%s] fourni',
+    'spritejsonfail': 'échec de la fourniture du sprite json %s [%s]',
+    'spritepngretrieve': 'fourniture du sprite png %s [%s]',
+    'spritepngcretrieved': 'sprit png %s [%s] fourni depuis le cache',
+    'spritepnglfound': 'sprite png %s [%s] trouvé localement',
+    'spritepnglexpired': 'sprite png local %s [%s] expiré',
+    'spritepngfetch': 'récupération du sprite png %s [%s]',
+    'spritepngretrieved': 'sprite png %s [%s] fourni',
+    'spritepngfail': 'échec de la fourniture du sprite png %s [%s]',
+  },
   'legend': {
     '_id': 'Gestionnaire de légende',
     'legendretrieve': 'fourniture de la légende %s',
@@ -393,6 +424,37 @@ EN_STRINGS = {
     'tilefetch': 'fetching of tile %s',
     'tilerfail': 'failure of providing of tile %s',
     'tileretrieved': 'tile %s provided'
+  },
+  'jsontiles': {
+    '_id': 'Handler of json tile set',
+    'styleload': 'loading of the style %s',
+    'stylecloaded': 'style %s loaded from the cache',
+    'stylelfound': 'style %s found locally',
+    'stylelexpired': 'local style %s expired',
+    'stylefetch': 'retrieval of the style %s',
+    'styleloaded': 'style %s loaded',
+    'stylefail': 'failure of the loading of the style %s',
+    'glyphretrieve': 'providing of the glyph %s [%s - %s]',
+    'glyphcretrieved': 'glyph %s [%s - %s] provided from the cache',
+    'glyphlfound': 'glyph %s [%s - %s] found locally',
+    'glyphlexpired': 'glyph local %s [%s - %s] expired',
+    'glyphfetch': 'retrieval of the glyph %s [%s - %s]',
+    'glyphretrieved': 'glyph %s [%s - %s] provided',
+    'glyphfail': 'failure of the providing of the glyph %s [%s - %s]',
+    'spritejsonretrieve': 'providing of the sprite json %s [%s]',
+    'spritejsoncretrieved': 'sprite json %s [%s] provided from the cache',
+    'spritejsonlfound': 'sprite json %s [%s] found locally',
+    'spritejsonlexpired': 'local sprite json %s [%s] expired',
+    'spritejsonfetch': 'retrieval of the sprite json %s [%s]',
+    'spritejsonretrieved': 'sprite json %s [%s] provided',
+    'spritejsonfail': 'failure of the providing of the sprite json %s [%s]',
+    'spritepngretrieve': 'providing of the sprite png %s [%s]',
+    'spritepngcretrieved': 'sprit png %s [%s] provided from the cache',
+    'spritepnglfound': 'sprite png %s [%s] found locally',
+    'spritepnglexpired': 'local sprite png %s [%s] expired',
+    'spritepngfetch': 'retrieval of the sprite png %s [%s]',
+    'spritepngretrieved': 'sprite png %s [%s] provided',
+    'spritepngfail': 'failure of the providing of the sprite png %s [%s]',
   },
   'legend': {
     '_id': 'Legend handler',
@@ -3561,6 +3623,8 @@ class ElevationTilesCache(TilesCache):
 
 class JSONTiles():
 
+  LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{resource}'
+
   def __init__(self, tset_id_mult):
     self.TilesSetIdMult = tset_id_mult
     self.StylesCache = {}
@@ -3568,6 +3632,7 @@ class JSONTiles():
     self.SpritesJSONCache = {}
     self.SpritesPNGCache = {}
     self.TilesInfosHandlingCache = {}
+    self.log = partial(log, 'jsontiles')
 
   @staticmethod
   def normurl(url):
@@ -3579,71 +3644,206 @@ class JSONTiles():
       url = urllib.parse.urljoin(u1 + '/', '.' + u2)
     return url
 
-  def Load(self, infos, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+  @staticmethod
+  def _get_resource(rpath, rjson, local_expiration, local_store):
+    updt = False  
+    exp = False
+    loc_res = None
+    res = None
+    if not rpath:
+      return exp, updt, loc_res, res
+    try:
+      if os.path.exists(rpath):
+        if rjson:
+          f = open(rpath, 'rt', encoding='utf-8')
+          loc_res = json.load(f)
+        else:
+          f = open(rpath, 'rb')
+          loc_res = f.read()
+        if local_expiration is not None:
+          lmod = os.path.getmtime(rpath)
+          if local_expiration > max(time.time() - lmod, 0) / 86400:
+            res = loc_res
+          else:
+            exp = True
+        else:
+          res = loc_res
+      elif local_store:
+        updt = True
+    except:
+      pass
+    finally:
+      try:
+        f.close()
+      except:
+        pass
+    return exp, updt, loc_res, res
+
+  @staticmethod
+  def _put_resource(rpath, rjson, exp, updt, loc_res, res):
+    if exp:
+      if loc_res == res:
+        try:
+          os.utime(rpath, (time.time(),) * 2)
+        except:
+          pass
+      else:
+        updt = True
+    if updt:
+      try:
+        if rjson:
+          f = open(rpath, 'wt', encoding='utf-8')
+          json.dump(res, f)
+        else:
+          f = open(rpath, 'wb')
+          f.write(res)
+      except:
+        pass
+      finally:
+        try:
+          f.close()
+        except:
+          pass
+
+  def Load(self, infos, tid, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False):
     if 'source' not in infos or infos.get('format') != 'application/json':
       return False
-    if not tid in self.StylesCache:
-      infos['width'] = infos['height'] = 256
-      infos['basescale'] = WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256
-      infos['topx'] = WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
-      infos['topy'] = WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
+    self.log(2, 'styleload', infos)
+    if tid in self.StylesCache:
+      self.log(2, 'stylecloaded', infos)
+      return True
+    infos['width'] = infos['height'] = 256
+    infos['basescale'] = WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256
+    infos['topx'] = WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
+    infos['topy'] = WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
+    loc = False
+    updt = False
+    pattern = local_pattern
+    if pattern is not None:
+      try:
+        if '{' not in pattern:
+          pattern = os.path.join(pattern, self.LOCALSTORE_DEFAULT_PATTERN)
+        else:
+          while '{matrix}' in pattern:
+            pattern = os.path.dirname(pattern)
+          pattern = os.path.join(pattern, '{resource}')
+        a_l = infos.get('alias') or infos.get('layer', '')
+        pattern = pattern.format_map({**infos,  'alias|layer': a_l, 'resource': '{resource}'})
+        infopath = pattern.replace('{resource}',  a_l + ' - infos.json')
+        if os.path.exists(infopath):
+          f = open(infopath, 'rt', encoding='utf-8')
+          inf = json.load(f)
+          if False in (k not in infos or infos.get(k) == inf.get(k) for k in ('source', 'layer', 'format', 'slash_url')):
+            raise
+          if 'alias' in infos and 'alias' in inf:
+            if infos['alias'] != inf['alias']:
+              raise
+          if local_store:
+            for k in ('alias', 'width', 'height', 'basescale', 'topx', 'topy', 'overwrite_scheme', 'overwrite_names'):
+              if k in infos and infos[k] != inf[k]:
+                inf[k] = infos[k]
+                updt = True 
+          loc = True
+        elif local_store:
+          Path(os.path.dirname(infopath)).mkdir(parents=True, exist_ok=True)
+          loc = True
+          inf = infos
+          updt = True
+      except:
+        pass
+      finally:
+        try:
+          f.close()
+        except:
+          pass
+      try:
+        if updt:
+          f = open(infopath, 'wt', encoding='utf-8')
+          json.dump(inf, f)
+      except:        
+        pass
+      finally:
+        try:
+          f.close()
+        except:
+          pass
+    style = None
+    if loc:
+      try:
+        stylepath = pattern.replace('{resource}', a_l + ' - style.json')
+      except:
+        stylepath = ''
+      exp, updt, loc_style, style = JSONTiles._get_resource(stylepath, True, local_expiration, local_store)
+      if loc_style is not None:
+        self.log(2, 'stylelfound', infos)
+        if style is None:
+          self.log(2, 'stylelexpired', infos)
+    if style is None:
+      if only_local:
+        self.log(1, 'stylefail', infos)
+        return False
+      self.log(2, 'stylefetch', infos)
       headers = {'User-Agent': user_agent}
       if referer:
         headers['Referer'] = referer
       try:
         uri = infos['source'].format_map({'key': key or ''})
       except:
+        self.log(1, 'stylefail', infos)
         return False
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
       if rep.code != '200':
+        self.log(1, 'stylefail', infos)
         return False
       try:
         style = json.loads(rep.body)
-        if 'glyphs' in style:
-          glyphs = style['glyphs']
-          style['glyphs'] = '{netloc}/jsontiles/glyphs/%s/{fontstack}/{range}.pbf' % tid
-        else:
-          glyphs = ''
-        if 'sprite' in style:
-          sprite = style['sprite']
-          style['sprite'] = '{netloc}/jsontiles/sprite/%s/sprite' % tid
-        else:
-          sprite = ''
-        self.TilesInfosHandlingCache[tid] = []
-        sources = {}
-        if local_pattern is None:
-          pattern = None
-        else:
-          if '{' not in local_pattern:
-            local_pattern = os.path.join(local_pattern, WebMercatorMap.LOCALSTORE_DEFAULT_PATTERN)
-          tpattern = local_pattern
-          while '{matrix}' in tpattern:
-            tpattern = os.path.dirname(tpattern)
-          pattern = local_pattern.replace(tpattern, tpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}) + '\tiles\{layer}')
-        sid = 0
-        for name, desc in style['sources'].items():
-          if desc['type'] not in ('vector', 'raster'):
-            continue
-          sid += 1
-          if 'url' in desc:
-            uri_b = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['url']))
-            uri = uri_b.format_map({'key': key or ''})
-            rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
-            if rep.code != '200':
-              return False
-            src = json.loads(rep.body)
-            tiles = JSONTiles.normurl(urllib.parse.urljoin(((uri_b.rstrip('/') + '/') if infos.get('slash_url') else uri_b), src['tiles'][0]))
-            scheme = src.get('scheme', desc.get('scheme'))
-          else:
-            tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
-            scheme = desc.get('scheme')
-          scheme = infos.get('scheme', scheme)
-          self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'type': desc['type'], 'layer': name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / (256 if desc['type'] == 'raster' else 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': (256 if desc['type'] == 'raster' else 512), 'height': (256 if desc['type'] == 'raster' else 512)}, {'local_pattern': pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
-          sources[name] = {'type': desc['type'], 'tiles': ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1], tid + self.TilesSetIdMult * sid)]}
-        style['sources'] = sources
-        self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)))
       except:
+        self.log(1, 'stylefail', infos)
         return False
+    glyphs = style.get('glyphs', '')
+    sprite = style.get('sprite', '')
+    self.TilesInfosHandlingCache[tid] = []
+    sources = {}
+    try:
+      names = map(str.strip, infos.get('overwrite_names', '').split(','))
+      for name, desc in style['sources'].items():
+        if desc['type'] not in ('vector', 'raster'):
+          continue
+        if 'url' in desc:
+          uri_b = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['url']))
+          uri = uri_b.format_map({'key': key or ''})
+          rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+          if rep.code != '200':
+            raise
+          src = json.loads(rep.body)
+          tiles = JSONTiles.normurl(urllib.parse.urljoin(((uri_b.rstrip('/') + '/') if infos.get('slash_url') else uri_b), src['tiles'][0]))
+          scheme = src.get('scheme', desc.get('scheme'))
+        else:
+          tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
+          scheme = desc.get('scheme')
+        scheme = infos.get('overwrite_scheme', scheme)
+        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'type': desc['type'], 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / (256 if desc['type'] == 'raster' else 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': (256 if desc['type'] == 'raster' else 512), 'height': (256 if desc['type'] == 'raster' else 512)}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
+        sources[name] = {'type': desc['type'], 'tiles': [tiles]}
+      style['sources'] = sources
+    except:
+      self.log(1, 'stylefail', infos)
+      return False
+    if loc and local_store:
+      JSONTiles._put_resource(stylepath, True, exp, updt, loc_style, style)
+    try:
+      if 'glyphs' in style:
+        style['glyphs'] = '{netloc}/jsontiles/glyphs/%s/{fontstack}/{range}.pbf' % tid
+      if 'sprite' in style:
+        style['sprite'] = '{netloc}/jsontiles/sprite/%s/sprite' % tid
+      sid = 0
+      for name, desc in style['sources'].items():
+        sid += 1
+        desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1], tid + self.TilesSetIdMult * sid)]
+      self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layer': (a_l if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'only_local': only_local})
+    except:
+      self.log(1, 'stylefail', infos)
+      return False
+    self.log(2, 'styleloaded', infos)
     return True
 
   def Unload(self):
@@ -3656,65 +3856,102 @@ class JSONTiles():
   def InfosHandling(self, tid):
     return self.TilesInfosHandlingCache.get(tid)
 
-  def Glyph(self, tid, fontstack, fontrange, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
+  def Glyph(self, tid, fontstack, fontrange):
+    self.log(2, 'glyphretrieve', tid, fontstack, fontrange)
     g = self.GlyphsCache.get((tid, fontstack, fontrange))
     if g is not None:
+      self.log(2, 'glyphcretrieved', tid, fontstack, fontrange)
       return g
-    uri = self.StylesCache.get(tid, (None, None))[1]
+    uri, handling = self.StylesCache.get(tid, (None,) * 4)[1:4:2]
     if uri is None:
+      self.log(1, 'glyphfail', tid, fontstack, fontrange)
       return None
-    headers = {'User-Agent': user_agent}
-    if referer:
-      headers['Referer'] = referer
-    try:
-      uri = uri.format_map({'key': key or '', 'fontstack': fontstack, 'range': fontrange})
-    except:
-      return None
-    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
-    if rep.code != '200':
-      return None
-    self.GlyphsCache[(tid, fontstack, fontrange)] = rep.body
-    return rep.body
+    glyph = None
+    if handling['pattern'] is not None:
+      try:
+        glyphpath = handling['pattern'].replace('{resource}', '%s - %s.pbf' % (fontstack, fontrange))
+      except:
+        glyphpath = ''
+      exp, updt, loc_glyph, glyph = JSONTiles._get_resource(glyphpath, False, handling['local_expiration'], handling['local_store'])
+      if loc_glyph is not None:
+        self.log(2, 'glyphlfound', tid, fontstack, fontrange)
+        if glyph is None:
+          self.log(2, 'glyphlexpired', tid, fontstack, fontrange)
+    if glyph is None:
+      if handling['only_local']:
+        self.log(1, 'glyphfail', tid, fontstack, fontrange)
+        return None
+      self.log(2, 'glyphfetch', tid, fontstack, fontrange)
+      headers = {'User-Agent': handling['user_agent']}
+      if handling['referer']:
+        headers['Referer'] = handling['referer']
+      try:
+        uri = uri.format_map({'key': handling['key'] or '', 'fontstack': fontstack, 'range': fontrange})
+      except:
+        self.log(1, 'glyphfail', tid, fontstack, fontrange)
+        return None
+      rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
+      if rep.code != '200':
+        self.log(1, 'glyphfail', tid, fontstack, fontrange)
+        return None
+      glyph = rep.body
+    if handling['pattern'] is not None and handling['local_store']:
+      JSONTiles._put_resource(glyphpath, False, exp, updt, loc_glyph, glyph)
+    self.GlyphsCache[(tid, fontstack, fontrange)] = glyph
+    self.log(1, 'glyphretrieved', tid, fontstack, fontrange)
+    return glyph
 
-  def SpriteJSON(self, tid, scale='', local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
-    s = self.SpritesJSONCache.get((tid, scale))
+  def _sprite(self, tid, target, scale):
+    target= target.lower()
+    self.log(2, 'sprite%sretrieve' % target, tid, scale)
+    s = getattr(self, 'Sprites%sCache' % target.upper()).get((tid, scale))
     if s is not None:
+      self.log(2, 'sprite%scretrieved' % target, tid, scale)
       return s
-    uri = self.StylesCache.get(tid, (None, None, None))[2]
+    uri, handling = self.StylesCache.get(tid, (None,) * 4)[2:4]
     if uri is None:
+      self.log(1, 'sprite%sfail' % target, tid, scale)
       return None
-    headers = {'User-Agent': user_agent}
-    if referer:
-      headers['Referer'] = referer
-    try:
-      uri = uri.format_map({'key': key or ''}) + scale + '.json'
-    except:
-      return None
-    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
-    if rep.code != '200':
-      return None
-    self.SpritesJSONCache[(tid, scale)] = rep.body
-    return rep.body
+    sprite = None
+    if handling['pattern'] is not None:
+      try:
+        spritepath = handling['pattern'].replace('{resource}',  handling['alias_layer'] + ' - sprite%s.%s' % (scale, target.lower()))
+      except:
+        spritepath = ''
+      exp, updt, loc_sprite, sprite = JSONTiles._get_resource(spritepath, False, handling['local_expiration'], handling['local_store'])
+      if loc_sprite is not None:
+        self.log(2, 'sprite%slfound' % target, tid, scale)
+        if sprite is None:
+          self.log(2, 'sprite%slexpired' % target, tid, scale)
+    if sprite is None:
+      if handling['only_local']:
+        self.log(1, 'sprite%sfail' % target, tid, scale)
+        return None
+      self.log(2, 'sprite%sfetch' % target, tid, scale)
+      headers = {'User-Agent': handling['user_agent']}
+      if handling['referer']:
+        headers['Referer'] = handling['referer']
+      try:
+        uri = uri.format_map({'key': handling['key'] or ''}) + scale + '.' + target
+      except:
+        self.log(1, 'sprite%sfail' % target, tid, scale)
+        return None
+      rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
+      if rep.code != '200':
+        self.log(1, 'sprite%sfail' % target, tid, scale)
+        return None
+      sprite = rep.body
+    if handling['pattern'] is not None and handling['local_store']:
+      JSONTiles._put_resource(spritepath, False, exp, updt, loc_sprite, sprite)
+    getattr(self, 'Sprites%sCache' % target.upper())[(tid, scale)] = sprite
+    self.log(2, 'sprite%sretrieved' % target, tid, scale)
+    return sprite
 
-  def SpritePNG(self, tid, scale='', local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
-    s = self.SpritesPNGCache.get((tid, scale))
-    if s is not None:
-      return s
-    uri = self.StylesCache.get(tid, (None, None, None))[2]
-    if uri is None:
-      return None
-    headers = {'User-Agent': user_agent}
-    if referer:
-      headers['Referer'] = referer
-    try:
-      uri = uri.format_map({'key': key or ''}) + scale + '.png'
-    except:
-      return None
-    rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
-    if rep.code != '200':
-      return None
-    self.SpritesPNGCache[(tid, scale)] = rep.body
-    return rep.body
+  def SpriteJSON(self, tid, scale=''):
+    return self._sprite(tid, 'json', scale)
+
+  def SpritePNG(self, tid, scale=''):
+    return self._sprite(tid, 'png', scale)
 
 
 class WGS84Elevation(WGS84Map):
@@ -6488,7 +6725,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if r[-4:] != '.pbf':
                 raise
               r = r[:-4]
-              resp_body = self.server.Interface.Map.JSONTiles.Glyph(tid, f, r, **self.server.Interface.TilesSets[tid][2]) or ''
+              resp_body = self.server.Interface.Map.JSONTiles.Glyph(tid, f, r) or ''
               if not resp_body:
                 raise
               _send_resp('application/json; charset=utf-8')
@@ -6508,9 +6745,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if s[:6] != 'sprite':
                 raise
               if e == 'json':
-                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, s[6:] , **self.server.Interface.TilesSets[tid][2]) or ''
+                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, s[6:]) or ''
               elif e == 'png':
-                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, s[6:], **self.server.Interface.TilesSets[tid][2]) or ''
+                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, s[6:]) or ''
               else:
                 raise
               if not resp_body:
@@ -16586,7 +16823,7 @@ class GPXTweakerWebInterfaceServer():
               s[1][field] = int(value)
             except:
               pass
-          elif field in ('scheme', 'slash_url') and hcur[:9] == 'maptiles ':
+          elif field in ('overwrite_scheme', 'overwrite_names', 'slash_url') and hcur[:9] == 'maptiles ':
             s[1][field] = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
