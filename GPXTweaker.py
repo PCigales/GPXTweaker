@@ -2057,74 +2057,22 @@ class TilesMixCache(TilesCache):
     self.log(1, 'close')
 
 
-class WebMercatorMap(WGS84WebMercator):
+class BaseMap(WGS84WebMercator):
 
   EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'json': 'application/json'}
   DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
   MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/json': 'json'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
-  CRS = 'EPSG:3857'
-  CRS_MPU = 1
   LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
   LOCALSTORE_HGT_DEFAULT_PATTERN = '{alias|layer}\{hgt}.{ext}'
   WMS_PATTERN = {'GetCapabilities': '?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
-  WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
-  WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
-  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
-  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
-  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
-  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
-  MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE + '{wms}', 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
-  WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service'
-  MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE + '{wms}', 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
   WMTS_PATTERN = {'GetCapabilities': '?SERVICE=WMTS&REQUEST=GetCapabilities', 'GetTile': '?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={layer}&STYLE={style}&FORMAT={format}&TILEMATRIXSET={matrixset}&TILEMATRIX={matrix}&TILEROW={row}&TILECOL={col}'}
-  WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
-  TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
-  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
-  TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TC_IGN_HYBRIDE = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
-  TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
-  TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
-  TC_IGN_ESTOMPÉ = [['IGN_CARTES', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '18':'15'}]]
-  TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
-  TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
-  TC_OSM_SHADED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
-  TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
-  TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '75%'], ['WAYMARKED_TRAILSHIKING', '100%']]
-  TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
-  TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_GOOGLE_TERRAIN = {'alias': 'GOOGLE_TERRAIN', 'source': TS_GOOGLE_SOURCE + '/lyrs=p&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_GOOGLE_SATELLITE = {'alias': 'GOOGLE_SATELLITE', 'source': TS_GOOGLE_SOURCE + '/lyrs=s&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_BING_SOURCE = 'https://ecn.t0.tiles.virtualearth.net'
-  TS_BING_MAP = {'alias': 'BING_MAP', 'source': TS_BING_SOURCE + '/tiles/r{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_BING_AERIAL = {'alias': 'BING_AERIAL', 'source': TS_BING_SOURCE + '/tiles/a{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_BING_HYBRID = {'alias': 'BING_HYBRID', 'source': TS_BING_SOURCE + '/tiles/h{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  WMTS_ESRI_SOURCE = 'https://services.arcgisonline.com/arcgis/rest/services'
-  TS_ESRI_TOPOMAP = {'alias': 'ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + '/World_Topo_Map/MapServer/WMTS{wmts}', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
-  TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + '/World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
-  TS_ESRI_HILLSHADE = {'alias': 'ESRI_HILLSHADE', 'source': WMTS_ESRI_SOURCE + '/Elevation/World_Hillshade/MapServer/WMTS{wmts}', 'layer': 'Elevation_World_Hillshade', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
-  TC_ESRI_SHADED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
-  TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
-  TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts'
-  TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '{wmts}&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
-  TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
-  TS_HERE_NORMAL = {'alias': 'HERE_NORMAL', 'source': TS_HEREBASE_SOURCE + '/normal.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HERE_PEDESTRIAN = {'alias': 'HERE_PEDESTRIAN', 'source': TS_HEREBASE_SOURCE + '/pedestrian.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HEREAERIAL_SOURCE = 'https://1.aerial.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
-  TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE + '/terrain.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE + '/satellite.day/{matrix}/{col}/{row}/256/png8?apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE + '/hybrid.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+
+  def __new__(cls, *args, **kwargs):
+    if cls is BaseMap:
+      raise TypeError('the class BaseMap is not intended to be instantiated directly')
+    return object.__new__(cls) 
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -2143,20 +2091,6 @@ class WebMercatorMap(WGS84WebMercator):
       return dict(getattr(cls, 'MS_' + name))
     else:
       return None
-
-  def LinkLegend(self, legend):
-    self.Legend = legend
-
-  def LinkJSONTiles(self, jsontiles):
-    self.JSONTiles = jsontiles
-
-  @staticmethod
-  def WGS84toCoord(lat, lon):
-    try:
-      x, y = WebMercatorMap.WGS84toWebMercator(lat, lon)
-    except:
-      return None
-    return (x, y)
 
   def FetchMap(self, infos, minlat, maxlat, minlon, maxlon, maxheight, maxwidth, dpi=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None):
     self.log(2, 'mapfetch', infos)
@@ -2742,143 +2676,6 @@ class WebMercatorMap(WGS84WebMercator):
           pass
     return True
 
-  @staticmethod
-  def run_jpegtran(i1, i2, cmd):
-    kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
-    DWORD = ctypes.wintypes.DWORD
-    HANDLE = ctypes.wintypes.HANDLE
-    PVOID = ctypes.c_void_p
-    LPVOID = ctypes.wintypes.LPVOID
-    LPCWSTR = ctypes.wintypes.LPCWSTR
-    path = os.path.dirname(os.path.abspath(__file__))
-    r = True
-    w = True
-    o = b''
-    def pipe_read(p):
-      nr = DWORD()
-      nonlocal r
-      nonlocal o
-      try:
-        kernel32.ConnectNamedPipe(p, LPVOID(0))
-        if not r:
-          return
-        b = ctypes.create_string_buffer(0x100000)
-        while True:
-          if not kernel32.ReadFile(p, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
-            r = false
-          elif nr.value > 0:
-            o = o + b.raw[:nr.value]
-          else:
-            break
-        kernel32.CloseHandle(p)
-      except:
-        r = False
-        try:
-          kernel32.CloseHandle(p)
-        except:
-          pass
-    def pipe_write(p, i):
-      nw = DWORD()
-      nonlocal w
-      try:
-        kernel32.ConnectNamedPipe(p, LPVOID(0))
-        if not w:
-          return
-        if not kernel32.WriteFile(p, ctypes.cast(i, PVOID), DWORD(len(i)), ctypes.byref(nw), LPVOID(0)):
-          w = False
-        else:
-          kernel32.FlushFileBuffers(p)
-        kernel32.CloseHandle(p)
-      except:
-        w = False
-        try:
-          kernel32.CloseHandle(p)
-        except:
-          pass
-    try:
-      name = 'GPXTweaker' + base64.b32encode(os.urandom(10)).decode('utf-8')
-      pipe_w1 = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\write1_' + name), DWORD(0x00000002), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
-      if i2:
-        pipe_w2 = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\write2_' + name), DWORD(0x00000002), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
-      pipe_r = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x00000001), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
-    except:
-      return None
-    tr = threading.Thread(target=pipe_read, args=(pipe_r,), daemon=False)
-    tr.start()
-    tw1 = threading.Thread(target=pipe_write, args=(pipe_w1, i1), daemon=False)
-    tw1.start()
-    if i2:
-      tw2 = threading.Thread(target=pipe_write, args=(pipe_w2, i2), daemon=False)
-      tw2.start()
-    try:
-      process = subprocess.Popen(r'"%s\%s"' % (path, 'jpegtran.bat'), env={**os.environ, 'command': cmd.replace('##i1##', r'\\.\pipe\write1_' + name).replace('##i2##', r'\\.\pipe\write2_' + name).replace('##o##', r'\\.\pipe\read_' + name)}, creationflags=subprocess.CREATE_NO_WINDOW, startupinfo=subprocess.STARTUPINFO(dwFlags=subprocess.STARTF_USESHOWWINDOW, wShowWindow=6))
-    except:
-      try:
-        kernel32.CloseHandle(pipe_w1)
-        kernel32.CloseHandle(pipe_w2)
-        kernel32.CloseHandle(pipe_r)
-      except:
-        pass
-      return None
-    process.wait()
-    r = False
-    w = False
-    if tr.is_alive():
-      h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x40000000), DWORD(0), PVOID(0), DWORD(2), DWORD(0x00000000), HANDLE(0)))
-      kernel32.CloseHandle(h)
-    if tw1.is_alive():
-      h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\write1_' + name), DWORD(0x80000000), DWORD(0), PVOID(0), DWORD(4), DWORD(0x00000000), HANDLE(0)))
-      kernel32.CloseHandle(h)
-    if i2:
-      if tw2.is_alive():
-        h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\write2_' + name), DWORD(0x80000000), DWORD(0), PVOID(0), DWORD(4), DWORD(0x00000000), HANDLE(0)))
-        kernel32.CloseHandle(h)
-    tr.join()
-    if not o:
-      return None
-    else:
-      return o
-
-  def MergeTiles(self, infos, tiles):
-    if infos['format'] != 'image/jpeg':
-      return None
-    ref_tile = None
-    for c in range(len(tiles)):
-      for r in range(len(tiles[0])):
-        if tiles[c][r] is not None:
-          r0 = r
-          c0 = c
-          ref_tile = tiles[c][r]
-          break
-      if ref_tile:
-        break
-    if not ref_tile:
-      return None
-    m = self.run_jpegtran(ref_tile, None, '-crop %sx%s+0+%s ##i1## ##o##' % (infos['width'], infos['height'] * len(tiles[0]), infos['height'] * r0))
-    if not m:
-      return None
-    cols = [m] * len(tiles)
-    t = [None] * len(tiles)
-    def merge_col(c):
-      nonlocal cols
-      for r in range(len(tiles[0])):
-        if (r != r0 or c != c0) and tiles[c][r]:
-          o = self.run_jpegtran(cols[c], tiles[c][r], '-drop +0+%s ##i2## ##i1## ##o##' % (infos['height'] * r))
-          if o:
-            cols[c] = o
-    t = [threading.Thread(target=merge_col, args = (c,)) for c in range(len(tiles))]
-    for c in range(len(tiles)):
-      t[c].start()
-    for c in range(len(tiles)):
-      t[c].join()
-    m = self.run_jpegtran(cols[c0], None, '-crop %sx%s+%s+0 ##i1## ##o##' % (infos['width'] * len(tiles), infos['height'] * len(tiles[0]), infos['width'] * c0))
-    for c in range(len(tiles)):
-      if c != c0:
-        o = self.run_jpegtran(m, cols[c], '-drop +%s+0 ##i2## ##i1## ##o##' % (infos['width'] * c))
-        if o:
-          m = o
-    return m
-
   def RetrieveTile(self, infos, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local, pconnection=None, action=None, only_save=False):
     self.log(2, 'tileretrieve', infos)
     tile = None
@@ -3211,6 +3008,218 @@ class WebMercatorMap(WGS84WebMercator):
       return False
     return True
 
+
+class WebMercatorMap(BaseMap):
+
+  CRS = 'EPSG:3857'
+  CRS_MPU = 1
+  WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
+  WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
+  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
+  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
+  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
+  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
+  MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE + '{wms}', 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
+  WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service'
+  MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE + '{wms}', 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
+  WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
+  TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
+  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
+  TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TC_IGN_HYBRIDE = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
+  TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
+  TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
+  TC_IGN_ESTOMPÉ = [['IGN_CARTES', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '18':'15'}]]
+  TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
+  TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_OSM_SHADED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
+  TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '75%'], ['WAYMARKED_TRAILSHIKING', '100%']]
+  TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
+  TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_TERRAIN = {'alias': 'GOOGLE_TERRAIN', 'source': TS_GOOGLE_SOURCE + '/lyrs=p&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_GOOGLE_SATELLITE = {'alias': 'GOOGLE_SATELLITE', 'source': TS_GOOGLE_SOURCE + '/lyrs=s&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_SOURCE = 'https://ecn.t0.tiles.virtualearth.net'
+  TS_BING_MAP = {'alias': 'BING_MAP', 'source': TS_BING_SOURCE + '/tiles/r{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_AERIAL = {'alias': 'BING_AERIAL', 'source': TS_BING_SOURCE + '/tiles/a{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_BING_HYBRID = {'alias': 'BING_HYBRID', 'source': TS_BING_SOURCE + '/tiles/h{quadkey}.png?g=1', 'layer':'BING.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  WMTS_ESRI_SOURCE = 'https://services.arcgisonline.com/arcgis/rest/services'
+  TS_ESRI_TOPOMAP = {'alias': 'ESRI_TOPOMAP', 'source': WMTS_ESRI_SOURCE + '/World_Topo_Map/MapServer/WMTS{wmts}', 'layer': 'World_Topo_Map', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + '/World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TS_ESRI_HILLSHADE = {'alias': 'ESRI_HILLSHADE', 'source': WMTS_ESRI_SOURCE + '/Elevation/World_Hillshade/MapServer/WMTS{wmts}', 'layer': 'Elevation_World_Hillshade', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
+  TC_ESRI_SHADED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
+  TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts'
+  TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '{wmts}&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
+  TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
+  TS_HERE_NORMAL = {'alias': 'HERE_NORMAL', 'source': TS_HEREBASE_SOURCE + '/normal.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_PEDESTRIAN = {'alias': 'HERE_PEDESTRIAN', 'source': TS_HEREBASE_SOURCE + '/pedestrian.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HEREAERIAL_SOURCE = 'https://1.aerial.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
+  TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE + '/terrain.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE + '/satellite.day/{matrix}/{col}/{row}/256/png8?apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE + '/hybrid.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+
+  def LinkLegend(self, legend):
+    self.Legend = legend
+
+  def LinkJSONTiles(self, jsontiles):
+    self.JSONTiles = jsontiles
+
+  @staticmethod
+  def WGS84toCoord(lat, lon):
+    try:
+      x, y = WebMercatorMap.WGS84toWebMercator(lat, lon)
+    except:
+      return None
+    return (x, y)
+
+  @staticmethod
+  def run_jpegtran(i1, i2, cmd):
+    kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
+    DWORD = ctypes.wintypes.DWORD
+    HANDLE = ctypes.wintypes.HANDLE
+    PVOID = ctypes.c_void_p
+    LPVOID = ctypes.wintypes.LPVOID
+    LPCWSTR = ctypes.wintypes.LPCWSTR
+    path = os.path.dirname(os.path.abspath(__file__))
+    r = True
+    w = True
+    o = b''
+    def pipe_read(p):
+      nr = DWORD()
+      nonlocal r
+      nonlocal o
+      try:
+        kernel32.ConnectNamedPipe(p, LPVOID(0))
+        if not r:
+          return
+        b = ctypes.create_string_buffer(0x100000)
+        while True:
+          if not kernel32.ReadFile(p, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
+            r = false
+          elif nr.value > 0:
+            o = o + b.raw[:nr.value]
+          else:
+            break
+        kernel32.CloseHandle(p)
+      except:
+        r = False
+        try:
+          kernel32.CloseHandle(p)
+        except:
+          pass
+    def pipe_write(p, i):
+      nw = DWORD()
+      nonlocal w
+      try:
+        kernel32.ConnectNamedPipe(p, LPVOID(0))
+        if not w:
+          return
+        if not kernel32.WriteFile(p, ctypes.cast(i, PVOID), DWORD(len(i)), ctypes.byref(nw), LPVOID(0)):
+          w = False
+        else:
+          kernel32.FlushFileBuffers(p)
+        kernel32.CloseHandle(p)
+      except:
+        w = False
+        try:
+          kernel32.CloseHandle(p)
+        except:
+          pass
+    try:
+      name = 'GPXTweaker' + base64.b32encode(os.urandom(10)).decode('utf-8')
+      pipe_w1 = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\write1_' + name), DWORD(0x00000002), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
+      if i2:
+        pipe_w2 = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\write2_' + name), DWORD(0x00000002), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
+      pipe_r = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x00000001), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
+    except:
+      return None
+    tr = threading.Thread(target=pipe_read, args=(pipe_r,), daemon=False)
+    tr.start()
+    tw1 = threading.Thread(target=pipe_write, args=(pipe_w1, i1), daemon=False)
+    tw1.start()
+    if i2:
+      tw2 = threading.Thread(target=pipe_write, args=(pipe_w2, i2), daemon=False)
+      tw2.start()
+    try:
+      process = subprocess.Popen(r'"%s\%s"' % (path, 'jpegtran.bat'), env={**os.environ, 'command': cmd.replace('##i1##', r'\\.\pipe\write1_' + name).replace('##i2##', r'\\.\pipe\write2_' + name).replace('##o##', r'\\.\pipe\read_' + name)}, creationflags=subprocess.CREATE_NO_WINDOW, startupinfo=subprocess.STARTUPINFO(dwFlags=subprocess.STARTF_USESHOWWINDOW, wShowWindow=6))
+    except:
+      try:
+        kernel32.CloseHandle(pipe_w1)
+        kernel32.CloseHandle(pipe_w2)
+        kernel32.CloseHandle(pipe_r)
+      except:
+        pass
+      return None
+    process.wait()
+    r = False
+    w = False
+    if tr.is_alive():
+      h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x40000000), DWORD(0), PVOID(0), DWORD(2), DWORD(0x00000000), HANDLE(0)))
+      kernel32.CloseHandle(h)
+    if tw1.is_alive():
+      h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\write1_' + name), DWORD(0x80000000), DWORD(0), PVOID(0), DWORD(4), DWORD(0x00000000), HANDLE(0)))
+      kernel32.CloseHandle(h)
+    if i2:
+      if tw2.is_alive():
+        h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\write2_' + name), DWORD(0x80000000), DWORD(0), PVOID(0), DWORD(4), DWORD(0x00000000), HANDLE(0)))
+        kernel32.CloseHandle(h)
+    tr.join()
+    if not o:
+      return None
+    else:
+      return o
+
+  def MergeTiles(self, infos, tiles):
+    if infos['format'] != 'image/jpeg':
+      return None
+    ref_tile = None
+    for c in range(len(tiles)):
+      for r in range(len(tiles[0])):
+        if tiles[c][r] is not None:
+          r0 = r
+          c0 = c
+          ref_tile = tiles[c][r]
+          break
+      if ref_tile:
+        break
+    if not ref_tile:
+      return None
+    m = self.run_jpegtran(ref_tile, None, '-crop %sx%s+0+%s ##i1## ##o##' % (infos['width'], infos['height'] * len(tiles[0]), infos['height'] * r0))
+    if not m:
+      return None
+    cols = [m] * len(tiles)
+    t = [None] * len(tiles)
+    def merge_col(c):
+      nonlocal cols
+      for r in range(len(tiles[0])):
+        if (r != r0 or c != c0) and tiles[c][r]:
+          o = self.run_jpegtran(cols[c], tiles[c][r], '-drop +0+%s ##i2## ##i1## ##o##' % (infos['height'] * r))
+          if o:
+            cols[c] = o
+    t = [threading.Thread(target=merge_col, args = (c,)) for c in range(len(tiles))]
+    for c in range(len(tiles)):
+      t[c].start()
+    for c in range(len(tiles)):
+      t[c].join()
+    m = self.run_jpegtran(cols[c0], None, '-crop %sx%s+%s+0 ##i1## ##o##' % (infos['width'] * len(tiles), infos['height'] * len(tiles[0]), infos['width'] * c0))
+    for c in range(len(tiles)):
+      if c != c0:
+        o = self.run_jpegtran(m, cols[c], '-drop +%s+0 ##i2## ##i1## ##o##' % (infos['width'] * c))
+        if o:
+          m = o
+    return m
+
   @classmethod
   def TCAlias(cls, name):
     if hasattr(cls, 'TC_' + name):
@@ -3258,7 +3267,7 @@ class WebMercatorMap(WGS84WebMercator):
       pass
 
 
-class WGS84Map(WebMercatorMap):
+class WGS84Map(BaseMap):
   
   CRS = 'EPSG:4326'
   CRS_MPU = math.pi / 180 * WGS84WebMercator.R
@@ -3553,72 +3562,6 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
         cls.gdiplus.GdipDisposeImage(i)
         cls.Release(ist_)
     return True
-
-
-class ElevationTilesCache(TilesCache):
-
-  class _dict(dict):
-    def init(self, weights):
-      self.Length = 0
-      self.Weights = weights
-      self.LengthFlag = False
-    def pop(self, key, *default):
-      if key in self and not self.LengthFlag:
-        self.Length -= self.Weights[key[0]]
-      self.LengthFlag = True
-      if default:
-        r = super().pop(key, *default)
-      else:
-        r = super().pop(key)
-      self.LengthFlag = False
-      return r
-    def clear(self):
-      super().clear()
-      self.Length = 0
-    def __delitem__(self, key):
-      if key in self and not self.LengthFlag:
-        self.Length -= self.Weights[key[0]]
-      self.LengthFlag = True
-      r = super().__delitem__(key)
-      self.LengthFlag = False
-      return r
-    def __setitem__(self, key, value):
-      if key not in self and not self.LengthFlag:
-        self.Length += self.Weights[key[0]]
-      self.LengthFlag = True
-      r = super().__setitem__(key, value)
-      self.LengthFlag = False
-      return r
-    def __len__(self):
-      return round(self.Length)
-
-  def __init__(self, size=None, threads=None):
-    if size is not None:
-      super().__init__(size, threads, False)
-      self.Weights = {}
-      self.Length = 0
-      self.Buffer = ElevationTilesCache._dict()
-      self.Buffer.init(self.Weights)
-
-  @staticmethod
-  def LazyConfigure(obj):
-    with obj.LazyTiles.BLock:
-      try:
-        obj.Tiles = obj.LazyTiles
-        if not obj.SetTilesProvider(obj.LazyTiles.Id, *obj.LazyTilesArgs, lazy=False):
-          raise
-        obj.LazyTiles.Weights[obj.LazyTiles.Id] = obj.TilesInfos['width'] * obj.TilesInfos['height'] / 65536 / (1 if obj.TilesInfos['format'] == 'image/x-bil;bits=32' else 2)
-      except:
-        obj.Tiles = None
-        return False
-    return True
-
-  def __get__(self, obj, objtype=None):
-    with obj.LazyTiles.BLock:
-      if 'Tiles' not in vars(obj):
-        if not self.LazyConfigure(obj):
-          return None
-    return obj.Tiles
 
 
 class JSONTiles():
@@ -3952,6 +3895,72 @@ class JSONTiles():
 
   def SpritePNG(self, tid, scale=''):
     return self._sprite(tid, 'png', scale)
+
+
+class ElevationTilesCache(TilesCache):
+
+  class _dict(dict):
+    def init(self, weights):
+      self.Length = 0
+      self.Weights = weights
+      self.LengthFlag = False
+    def pop(self, key, *default):
+      if key in self and not self.LengthFlag:
+        self.Length -= self.Weights[key[0]]
+      self.LengthFlag = True
+      if default:
+        r = super().pop(key, *default)
+      else:
+        r = super().pop(key)
+      self.LengthFlag = False
+      return r
+    def clear(self):
+      super().clear()
+      self.Length = 0
+    def __delitem__(self, key):
+      if key in self and not self.LengthFlag:
+        self.Length -= self.Weights[key[0]]
+      self.LengthFlag = True
+      r = super().__delitem__(key)
+      self.LengthFlag = False
+      return r
+    def __setitem__(self, key, value):
+      if key not in self and not self.LengthFlag:
+        self.Length += self.Weights[key[0]]
+      self.LengthFlag = True
+      r = super().__setitem__(key, value)
+      self.LengthFlag = False
+      return r
+    def __len__(self):
+      return round(self.Length)
+
+  def __init__(self, size=None, threads=None):
+    if size is not None:
+      super().__init__(size, threads, False)
+      self.Weights = {}
+      self.Length = 0
+      self.Buffer = ElevationTilesCache._dict()
+      self.Buffer.init(self.Weights)
+
+  @staticmethod
+  def LazyConfigure(obj):
+    with obj.LazyTiles.BLock:
+      try:
+        obj.Tiles = obj.LazyTiles
+        if not obj.SetTilesProvider(obj.LazyTiles.Id, *obj.LazyTilesArgs, lazy=False):
+          raise
+        obj.LazyTiles.Weights[obj.LazyTiles.Id] = obj.TilesInfos['width'] * obj.TilesInfos['height'] / 65536 / (1 if obj.TilesInfos['format'] == 'image/x-bil;bits=32' else 2)
+      except:
+        obj.Tiles = None
+        return False
+    return True
+
+  def __get__(self, obj, objtype=None):
+    with obj.LazyTiles.BLock:
+      if 'Tiles' not in vars(obj):
+        if not self.LazyConfigure(obj):
+          return None
+    return obj.Tiles
 
 
 class WGS84Elevation(WGS84Map):
@@ -4327,7 +4336,7 @@ class WGS84Elevation(WGS84Map):
       pass
 
 
-class WGS84Itinerary(WGS84Map):
+class WGS84Itinerary():
 
   BASE64_TABLE = {chr(i + 63): i for i in range(64)}
   URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
@@ -4501,7 +4510,6 @@ class MapLegend():
   TL_IGN_CARTES = {'9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
   TL_IGN_NOMS = {'8': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-1M-10M.png', '9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png'}
   TL_IGN_PENTESMONTAGNE = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN/legendes/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN-legend.png'}
-
   
   def __init__(self):
     self.WMSCache = {}
