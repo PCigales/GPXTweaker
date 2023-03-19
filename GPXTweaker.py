@@ -2059,7 +2059,7 @@ class TilesMixCache(TilesCache):
 
 class BaseMap(WGS84WebMercator):
 
-  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'json': 'application/json'}
+  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'web': 'image/webp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'json': 'application/json'}
   DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
   MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/json': 'json'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
@@ -3238,7 +3238,7 @@ class WebMercatorMap(BaseMap):
         if prov[0].get('format') == 'application/json':
           if not hasattr(self, 'JSONTiles') or not self.JSONTiles.Load(prov[0], rid[0], **prov[1]):
             continue
-          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1), (rid[1] if inf['type'] != 'vector' else str(int(rid[1]) - 1))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])))
+          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1), str(int(rid[1]) + round(math.log2(256 / inf['width'])))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])))
         else:
           provs.append((rid, prov))
       tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], rid[1], **prov[1]) for rid, prov in provs}
@@ -3769,8 +3769,10 @@ class JSONTiles():
           tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
           scheme = desc.get('scheme')
         scheme = infos.get('overwrite_scheme', scheme)
-        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'type': desc['type'], 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / (256 if desc['type'] == 'raster' else 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': (256 if desc['type'] == 'raster' else 512), 'height': (256 if desc['type'] == 'raster' else 512)}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
+        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'type': desc['type'], 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512)}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
         sources[name] = {'type': desc['type'], 'tiles': [tiles]}
+        if 'tileSize' in desc:
+          sources[name]['tileSize'] = desc['tileSize']
       style['sources'] = sources
     except:
       self.log(1, 'stylefail', infos)
@@ -3785,7 +3787,7 @@ class JSONTiles():
       sid = 0
       for name, desc in style['sources'].items():
         sid += 1
-        desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1], tid + self.TilesSetIdMult * sid)]
+        desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1][0:4], tid + self.TilesSetIdMult * sid)]
       self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layer': (a_l if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'only_local': only_local})
     except:
       self.log(1, 'stylefail', infos)
