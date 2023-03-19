@@ -19,7 +19,7 @@ import os, os.path
 from pathlib import Path
 import re
 import json
-import base64 
+import base64
 import zlib
 import gzip
 import lzma
@@ -3033,6 +3033,8 @@ class WebMercatorMap(BaseMap):
   TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
   TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
   TC_IGN_ESTOMPÉ = [['IGN_CARTES', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '18':'15'}]]
+  TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles'
+  TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/standard.json', 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_scheme': 'xyz'}
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
@@ -3056,6 +3058,8 @@ class WebMercatorMap(BaseMap):
   TS_ESRI_IMAGERY = {'alias': 'ESRI_IMAGERY', 'source': WMTS_ESRI_SOURCE + '/World_Imagery/MapServer/WMTS{wmts}', 'layer': 'World_Imagery', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TS_ESRI_HILLSHADE = {'alias': 'ESRI_HILLSHADE', 'source': WMTS_ESRI_SOURCE + '/Elevation/World_Hillshade/MapServer/WMTS{wmts}', 'layer': 'Elevation_World_Hillshade', 'matrixset': 'default028mm', 'style': 'default', 'format': 'image/jpeg'}
   TC_ESRI_SHADED = [['ESRI_TOPOMAP', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TS_ESRI_REFERENCE = {'alias': 'ESRI_REFERENCE', 'source': 'https://www.arcgis.com/sharing/rest/content/items/2a2e806e6e654ea78ecb705149ceae9f/resources/styles/root.json', 'layer': 'Hybrid_Reference_Local', 'style': 'hybrid_reference_local', 'format': 'application/json', 'slash_url': True, 'overwrite_names': 'ESRI_WORLDBASEMAPV2'}
+  TC_ESRI_HYBRID = [['ESRI_IMAGERY', '100%'], ['ESRI_REFERENCE', '100%']]
   TS_THUNDERFOREST_SOURCE = 'https://tile.thunderforest.com'
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -6599,7 +6603,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   raise
                 resp_body = json.dumps({'tlevels': self.server.Interface.TilesSets[rset][-1]}).encode('utf-8')
                 self.server.Interface.TilesSet = rset
-                if self.server.Interface.JSONTiles is not None:
+                if self.server.Interface.JSONTiles:
                   self.server.Interface.JSONTiles.Unload()
                 _send_resp('application/json; charset=utf-8')
               except:
