@@ -2059,9 +2059,9 @@ class TilesMixCache(TilesCache):
 
 class BaseMap(WGS84WebMercator):
 
-  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'web': 'image/webp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'json': 'application/json'}
+  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'web': 'image/webp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'mvt': 'application/vnd.mapbox-vector-tile', 'geojson': 'application/geo+json', 'geo': 'application/geo+json', 'json': 'application/json'}
   DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
-  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/json': 'json'}
+  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/vnd.mapbox-vector-tile': 'mvt', 'application/geo+json': 'geojson', 'application/json': 'json'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
   LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
@@ -3044,6 +3044,8 @@ class WebMercatorMap(BaseMap):
   TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_WAYMARKED_TRAILSHIKING = {'alias': 'WAYMARKED_TRAILSHIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '75%'], ['WAYMARKED_TRAILSHIKING', '100%']]
+  TS_MAPTILER_SOURCE = 'https://api.maptiler.com/maps'
+  TS_MAPTILER_TOPO = {'alias': 'MAPTILER_TOPO', 'source': TS_MAPTILER_SOURCE + '/topo/style.json?key={key}', 'layer':'MAPTILER.TOPO', 'style': 'topo', 'format': 'application/json'}
   TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
   TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -3238,7 +3240,7 @@ class WebMercatorMap(BaseMap):
         if prov[0].get('format') == 'application/json':
           if not hasattr(self, 'JSONTiles') or not self.JSONTiles.Load(prov[0], rid[0], **prov[1]):
             continue
-          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1), str(int(rid[1]) + round(math.log2(256 / inf['width'])))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])))
+          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1),  str(min(max(mat, inf.get('minmat', mat)), inf.get('maxmat', mat)))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])) for mat in (int(rid[1]) + round(math.log2(256 / inf['width'])),))
         else:
           provs.append((rid, prov))
       tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], rid[1], **prov[1]) for rid, prov in provs}
@@ -3260,6 +3262,7 @@ class WebMercatorMap(BaseMap):
           return False
       self.TilesInfos = {rid: (self.Tiles.Infos[rid] if prov[0].get('format') != 'application/json' else {**prov[0], 'matrix': rid[1], 'scale': prov[0]['basescale'] / (2 ** int(rid[1])) / self.CRS_MPU}) for rid, prov in providers.items()}
     except:
+      raise
       return False
     return True
 
@@ -3765,14 +3768,22 @@ class JSONTiles():
           src = json.loads(rep.body)
           tiles = JSONTiles.normurl(urllib.parse.urljoin(((uri_b.rstrip('/') + '/') if infos.get('slash_url') else uri_b), src['tiles'][0]))
           scheme = src.get('scheme', desc.get('scheme'))
+          minzoom = src.get('minzoom', None)
+          maxzoom = src.get('maxzoom', None)
         else:
           tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
           scheme = desc.get('scheme')
+          minzoom = desc.get('minzoom', None)
+          maxzoom = desc.get('maxzoom', None)
         scheme = infos.get('overwrite_scheme', scheme)
-        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'type': desc['type'], 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512)}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
+        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if scheme == 'tms' else '{row}')), 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512), **({'minmat': minzoom} if minzoom is not None else {}), **({'maxmat': maxzoom} if maxzoom is not None else {})}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth}))
         sources[name] = {'type': desc['type'], 'tiles': [tiles]}
         if 'tileSize' in desc:
           sources[name]['tileSize'] = desc['tileSize']
+        if minzoom is not None:
+          sources[name]['minzoom'] = minzoom
+        if maxzoom is not None:
+          sources[name]['maxzoom'] = maxzoom
       style['sources'] = sources
     except:
       self.log(1, 'stylefail', infos)
@@ -6693,14 +6704,14 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             try:
               rid = self.server.Interface.Map.Tiles.Id
               if isinstance(rid, list):
-                tid = req.path.lower()[12:].split('?')[-1].rsplit(',', 1)
+                tid = req.path.lower()[12:].rsplit('?', 1)[-1].rsplit(',', 1)
                 rid = (int(tid[0]), tid[1])
                 ti = self.server.Interface.Map.Tiles.Infos[rid]
               else:
                 if req.path.lower()[12:].split('?')[-1] != '%s,%s' % rid:
                   raise
                 ti = self.server.Interface.Map.TilesInfos
-              row, col = req.path.lower()[12:].split('.')[0].split('-')
+              row, col = req.path.lower()[12:].split('.', 1)[0].split('-')
               resp_body = self.server.Interface.Map.Tiles[(rid, (int(row), int(col)))](20)
             except:
               _send_err_fail()
@@ -8136,6 +8147,12 @@ class GPXTweakerWebInterfaceServer():
   '            for (const jmap of jmaps) {\r\n' \
   '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
   '              jmap.setCenter([lon, lat]);\r\n' \
+  '              for (const e of Object.entries(jmap.style.sourceCaches)) {\r\n' \
+  '                try {\r\n' \
+  '                  e[1].clearTiles();\r\n' \
+  '                  jmap.getSource(e[0]).load();\r\n' \
+  '                } catch(error) {null;}\r\n' \
+  '              };\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          treset = 1;\r\n' \
@@ -8879,7 +8896,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (mode != "map") {\r\n' \
   '          if (jmaps.length > 0) {\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
-  '              jmap.setPixelRatio(zoom);\r\n' \
+  '              jmap.setPixelRatio(Math.max(zoom, 1));\r\n' \
   '              jmap.resize();\r\n' \
   '            }\r\n' \
   '          }\r\n' \
