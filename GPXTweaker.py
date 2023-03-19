@@ -1,4 +1,4 @@
-# GPXTweaker v1.14.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.15.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -3240,7 +3240,7 @@ class WebMercatorMap(BaseMap):
         if prov[0].get('format') == 'application/json':
           if not hasattr(self, 'JSONTiles') or not self.JSONTiles.Load(prov[0], rid[0], **prov[1]):
             continue
-          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1),  str(min(max(mat, inf.get('minmat', mat)), inf.get('maxmat', mat)))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])) for mat in (int(rid[1]) + round(math.log2(256 / inf['width'])),))
+          provs.extend(((rid[0] + self.JSONTiles.TilesSetIdMult * (sid + 1), str(min(max(mat, inf.get('minmat', mat)), inf.get('maxmat', mat)))), (inf, hand)) for sid, (inf, hand) in enumerate(self.JSONTiles.InfosHandling(rid[0])) for mat in (int(rid[1]) + round(math.log2(256 / inf['width'])),))
         else:
           provs.append((rid, prov))
       tile_generator_builders = {rid: partial(self.TileGenerator, prov[0], rid[1], **prov[1]) for rid, prov in provs}
@@ -3262,7 +3262,6 @@ class WebMercatorMap(BaseMap):
           return False
       self.TilesInfos = {rid: (self.Tiles.Infos[rid] if prov[0].get('format') != 'application/json' else {**prov[0], 'matrix': rid[1], 'scale': prov[0]['basescale'] / (2 ** int(rid[1])) / self.CRS_MPU}) for rid, prov in providers.items()}
     except:
-      raise
       return False
     return True
 
@@ -17880,7 +17879,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.14.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.15.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
