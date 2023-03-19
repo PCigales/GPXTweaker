@@ -8094,7 +8094,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          document.getElementById("view").insertBefore(jdiv, handle);\r\n' \
   '          try {\r\n' \
-  '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1}));\r\n' \
+  '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1}));\r\n' \
   '          } catch(error) {\r\n' \
   '            document.getElementById("view").removeChild(jdiv);\r\n' \
   '          }\r\n' \
