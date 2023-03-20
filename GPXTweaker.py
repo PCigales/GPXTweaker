@@ -3046,6 +3046,7 @@ class WebMercatorMap(BaseMap):
   TC_WAYMARKED_HIKE = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '75%'], ['WAYMARKED_TRAILSHIKING', '100%']]
   TS_MAPTILER_SOURCE = 'https://api.maptiler.com/maps'
   TS_MAPTILER_TOPO = {'alias': 'MAPTILER_TOPO', 'source': TS_MAPTILER_SOURCE + '/topo/style.json?key={key}', 'layer':'MAPTILER.TOPO', 'style': 'topo', 'format': 'application/json'}
+  TS_MAPTILER_OUTDOORS = {'alias': 'MAPTILER_OUTDOORS', 'source': TS_MAPTILER_SOURCE + '/outdoor-v2/style.json?key={key}', 'layer':'MAPTILER.OUTDOORS', 'style': 'outdoors', 'format': 'application/json'}
   TS_GOOGLE_SOURCE = 'https://mts1.google.com/vt'
   TS_GOOGLE_MAP = {'alias': 'GOOGLE_MAP', 'source': TS_GOOGLE_SOURCE + '/lyrs=m&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_GOOGLE_HYBRID = {'alias': 'GOOGLE_HYBRID', 'source': TS_GOOGLE_SOURCE + '/lyrs=y&x={col}&y={row}&z={matrix}', 'layer':'GOOGLE.MAP', 'format': 'image/png', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -3770,7 +3771,7 @@ class JSONTiles():
     try:
       names = map(str.strip, infos.get('overwrite_names', '').split(','))
       for name, desc in style['sources'].items():
-        if desc['type'] not in ('vector', 'raster'):
+        if desc['type'] not in ('vector', 'raster', 'raster-dem'):
           continue
         if 'url' in desc:
           uri_b = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['url']))
