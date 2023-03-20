@@ -3728,10 +3728,10 @@ class JSONTiles():
         if style is None:
           self.log(2, 'stylelexpired', infos)
     if style is None:
+      if only_local:
+        self.log(1, 'stylefail', infos)
+        return False
       if '://' in infos['source']:
-        if only_local:
-          self.log(1, 'stylefail', infos)
-          return False
         self.log(2, 'stylefetch', infos)
         headers = {'User-Agent': user_agent}
         if referer:
@@ -3785,7 +3785,6 @@ class JSONTiles():
           maxzoom = src.get('maxzoom', None)
         else:
           tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
-          print(tiles)
           scheme = desc.get('scheme')
           minzoom = desc.get('minzoom', None)
           maxzoom = desc.get('maxzoom', None)
