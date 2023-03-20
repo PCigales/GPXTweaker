@@ -3728,27 +3728,41 @@ class JSONTiles():
         if style is None:
           self.log(2, 'stylelexpired', infos)
     if style is None:
-      if only_local:
-        self.log(1, 'stylefail', infos)
-        return False
-      self.log(2, 'stylefetch', infos)
-      headers = {'User-Agent': user_agent}
-      if referer:
-        headers['Referer'] = referer
-      try:
-        uri = infos['source'].format_map({'key': key or ''})
-      except:
-        self.log(1, 'stylefail', infos)
-        return False
-      rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
-      if rep.code != '200':
-        self.log(1, 'stylefail', infos)
-        return False
-      try:
-        style = json.loads(rep.body)
-      except:
-        self.log(1, 'stylefail', infos)
-        return False
+      if '://' in infos['source']:
+        if only_local:
+          self.log(1, 'stylefail', infos)
+          return False
+        self.log(2, 'stylefetch', infos)
+        headers = {'User-Agent': user_agent}
+        if referer:
+          headers['Referer'] = referer
+        try:
+          uri = infos['source'].format_map({'key': key or ''})
+        except:
+          self.log(1, 'stylefail', infos)
+          return False
+        rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+        if rep.code != '200':
+          self.log(1, 'stylefail', infos)
+          return False
+        try:
+          style = json.loads(rep.body)
+        except:
+          self.log(1, 'stylefail', infos)
+          return False
+      else:
+        self.log(2, 'stylefetch', infos)
+        try:
+          f = open(infos['source'], 'rt', encoding='utf-8')
+          style = json.load(f)
+        except:
+          self.log(1, 'stylefail', infos)
+          return False
+        finally:
+          try:
+            f.close()
+          except:
+            pass
     glyphs = style.get('glyphs', '')
     sprite = style.get('sprite', '')
     self.TilesInfosHandlingCache[tid] = []
@@ -3771,6 +3785,7 @@ class JSONTiles():
           maxzoom = src.get('maxzoom', None)
         else:
           tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
+          print(tiles)
           scheme = desc.get('scheme')
           minzoom = desc.get('minzoom', None)
           maxzoom = desc.get('maxzoom', None)
@@ -8895,7 +8910,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (mode != "map") {\r\n' \
   '          if (jmaps.length > 0) {\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
-  '              jmap.setPixelRatio(Math.max(zoom, 1));\r\n' \
+  '              jmap.setPixelRatio(Math.max(zoom, Math.min(1.5 * zoom, 1)));\r\n' \
   '              jmap.resize();\r\n' \
   '            }\r\n' \
   '          }\r\n' \
