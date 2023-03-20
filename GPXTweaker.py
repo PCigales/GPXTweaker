@@ -3262,7 +3262,6 @@ class WebMercatorMap(BaseMap):
           return False
       self.TilesInfos = {rid: (self.Tiles.Infos[rid] if prov[0].get('format') != 'application/json' else {**prov[0], 'matrix': rid[1], 'scale': prov[0]['basescale'] / (2 ** int(rid[1])) / self.CRS_MPU}) for rid, prov in providers.items()}
     except:
-      raise
       return False
     return True
 
@@ -3800,7 +3799,6 @@ class JSONTiles():
           sources[name]['maxzoom'] = maxzoom
       style['sources'] = sources
     except:
-      raise
       self.log(1, 'stylefail', infos)
       return False
     if loc and local_store:
