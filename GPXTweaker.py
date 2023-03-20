@@ -3262,6 +3262,7 @@ class WebMercatorMap(BaseMap):
           return False
       self.TilesInfos = {rid: (self.Tiles.Infos[rid] if prov[0].get('format') != 'application/json' else {**prov[0], 'matrix': rid[1], 'scale': prov[0]['basescale'] / (2 ** int(rid[1])) / self.CRS_MPU}) for rid, prov in providers.items()}
     except:
+      raise
       return False
     return True
 
@@ -3731,11 +3732,11 @@ class JSONTiles():
       if only_local:
         self.log(1, 'stylefail', infos)
         return False
+      headers = {'User-Agent': user_agent}
+      if referer:
+        headers['Referer'] = referer
       if '://' in infos['source']:
         self.log(2, 'stylefetch', infos)
-        headers = {'User-Agent': user_agent}
-        if referer:
-          headers['Referer'] = referer
         try:
           uri = infos['source'].format_map({'key': key or ''})
         except:
@@ -3799,6 +3800,7 @@ class JSONTiles():
           sources[name]['maxzoom'] = maxzoom
       style['sources'] = sources
     except:
+      raise
       self.log(1, 'stylefail', infos)
       return False
     if loc and local_store:
@@ -6744,9 +6746,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
                 raise
               resp_body = (self.server.Interface.Map.JSONTiles.Style(tid) or b'').replace(b'{netloc}', ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])).encode('utf-8'))
-              if not resp_body:
-                raise
-              _send_resp('application/json; charset=utf-8')
+              if resp_body:
+                _send_resp('application/json; charset=utf-8')
+              else:
+                _send_err_nf()
             except:
               _send_err_fail()
           elif req.path.lower()[:18] == '/jsontiles/glyphs/':
@@ -6764,9 +6767,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 raise
               r = r[:-4]
               resp_body = self.server.Interface.Map.JSONTiles.Glyph(tid, f, r) or ''
-              if not resp_body:
-                raise
-              _send_resp('application/json; charset=utf-8')
+              if resp_body:
+                _send_resp('application/json; charset=utf-8')
+              else:
+                _send_err_nf()
             except:
               _send_err_fail()
           elif req.path.lower()[:18] == '/jsontiles/sprite/':
@@ -6788,9 +6792,10 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, s[6:]) or ''
               else:
                 raise
-              if not resp_body:
-                raise
-              _send_resp('application/json; charset=utf-8' if e == 'json' else 'image/png')
+              if resp_body:
+                _send_resp('application/json; charset=utf-8' if e == 'json' else 'image/png')
+              else:
+                _send_err_nf()
             except:
               _send_err_fail()
           elif req.path.lower()[:8] == '/map/map':
