@@ -5,6 +5,7 @@ This program is free software: you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+This program uses the MapLibre GL JS library (https://github.com/maplibre/maplibre-gl-js), licensed under the 3-Clause BSD license, to display tiles sets defined from a style in JSON format, by import of the main script and its style in the web interface pages, if the feature is enabled in the configuration file through the [JSONTiles] part on the [[Global]] section.
 
 Description in english in the second part of this document.
 
