@@ -8151,7 +8151,7 @@ class GPXTweakerWebInterfaceServer():
   '              let li = document.createElement("link");\r\n' \
   '              li.href = "##TMAPLIBRECSS##";\r\n' \
   '              li.rel = "stylesheet";\r\n' \
-  '              sc.onload = li.onload = (e) => {if (tmaplibre==false) {tmaplibre=true;} else {load_tcb(t,nset,nlevel,kzoom);sc.remove();li.remove();};};\r\n' \
+  '              sc.onload = li.onload = (e) => {if (tmaplibre==false) {tmaplibre=true;} else {load_tcb(t,nset,nlevel,kzoom);if (tmaplibre==null) {sc.remove();li.remove();};};};\r\n' \
   '              sc.onerror = li.onerror = (e) => {if (tmaplibre==true) {tmaplibre=null;load_tcb(t,nset,nlevel,kzoom);sc.remove();li.remove();} else {tmaplibre=null;};};\r\n' \
   '              document.head.insertBefore(sc, document.head.getElementsByTagName("script")[0]);\r\n' \
   '              document.head.insertBefore(li, document.head.getElementsByTagName("script")[1]);\r\n' \
