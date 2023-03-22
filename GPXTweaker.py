@@ -2059,9 +2059,9 @@ class TilesMixCache(TilesCache):
 
 class BaseMap(WGS84WebMercator):
 
-  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'web': 'image/webp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'mvt': 'application/vnd.mapbox-vector-tile', 'geojson': 'application/geo+json', 'geo': 'application/geo+json', 'json': 'application/json'}
+  EXT_MIME = {'jpg': 'image/jpeg', 'png': 'image/png', 'bil': 'image/x-bil;bits=32', 'hgt': 'image/hgt', 'tif': 'image/tiff', 'png': 'image/png', 'bmp': 'image/bmp', 'web': 'image/webp', 'webp': 'image/webp', 'gif': 'image/gif', 'pdf': 'application/pdf', 'pbf': 'application/x-protobuf', 'mvt': 'application/vnd.mapbox-vector-tile', 'geojson': 'application/geo+json', 'geo': 'application/geo+json', 'json': 'application/json', 'svg': 'image/svg+xml'}
   DOTEXT_MIME = {'.' + e: m for e, m in EXT_MIME.items()}
-  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/vnd.mapbox-vector-tile': 'mvt', 'application/geo+json': 'geojson', 'application/json': 'json'}
+  MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/vnd.mapbox-vector-tile': 'mvt', 'application/geo+json': 'geojson', 'application/json': 'json', 'image/svg+xml': 'svg'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
   LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
@@ -6687,7 +6687,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.Map.TilesInfos[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), '.img'), 'trscale': 1}], 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.Map.TilesInfos[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(self.server.Interface.Map.TilesInfos.get('format'), '.img')}], 'scale': self.server.Interface.Map.TilesInfos['scale'] / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     _send_err_fail()
@@ -6696,7 +6696,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   _send_err_fail()
                 else:
                   try:
-                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': '.json', 'trscale': 1}], 'matrix': q['matrix'][0], 'scale': self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** int(q['matrix'][0])) / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': '.json'}], 'matrix': q['matrix'][0], 'scale': self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** int(q['matrix'][0])) / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     _send_err_fail()                  
@@ -6706,7 +6706,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 else:
                   try:
                     bscale = next(self.server.Interface.Map.TilesInfos[(tsos[0], q['matrix'][0])]['scale'] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1] if q['matrix'][0] not in tsos[2])
-                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy', 'width', 'height')}, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format', ''), '.img'), 'trscale': ti['scale'] / bscale} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy')}, 'width': ti['width'] * ti['scale'] / bscale, 'height': ti['height'] * ti['scale'] / bscale, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format', ''), '.img')} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     raise
@@ -8294,8 +8294,8 @@ class GPXTweakerWebInterfaceServer():
   '          let tmatrix = layer.matrix;\r\n' \
   '          ttopx = layer.topx;\r\n' \
   '          ttopy = layer.topy;\r\n' \
-  '          twidth = layer.width * layer.trscale;\r\n' \
-  '          theight = layer.height * layer.trscale;\r\n' \
+  '          twidth = layer.width;\r\n' \
+  '          theight = layer.height;\r\n' \
   '          text = layer.ext;\r\n' \
   '          if (text == ".json" || twidth == 0 || theight == 0) {continue;}\r\n' \
   '          let [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
@@ -8372,7 +8372,7 @@ class GPXTweakerWebInterfaceServer():
   '            layersc[l] = [cleft, cright, ctop, cbottom];\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        treset = 0;\r\n' \
+  '        if (treset == 1) {treset = 0;}\r\n' \
   '        if (jmaps.length > 0) {\r\n' \
   '          let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '          for (const jmap of jmaps) {\r\n' \
@@ -15813,8 +15813,8 @@ class GPXTweakerWebInterfaceServer():
   '            tmatrix = layer.matrix;\r\n' \
   '            ttopx = layer.topx;\r\n' \
   '            ttopy = layer.topy;\r\n' \
-  '            twidth = layer.width * layer.trscale;\r\n' \
-  '            theight = layer.height * layer.trscale;\r\n' \
+  '            twidth = layer.width;\r\n' \
+  '            theight = layer.height;\r\n' \
   '            text = layer.ext;\r\n' \
   '            if (twidth == 0 || theight == 0) {continue;}\r\n' \
   '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
