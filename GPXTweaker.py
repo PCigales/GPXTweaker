@@ -6706,7 +6706,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 else:
                   try:
                     bscale = next(self.server.Interface.Map.TilesInfos[(tsos[0], q['matrix'][0])]['scale'] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1] if q['matrix'][0] not in tsos[2])
-                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy')}, 'width': ti['width'] * ti['scale'] / bscale, 'height': ti['height'] * ti['scale'] / bscale, 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format', ''), '.img')} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
+                    resp_body = json.dumps({'layers': [{**{k: ti[k] for k in ('matrix', 'topx', 'topy')}, 'width': round(ti['width'] * ti['scale'] / bscale, 5), 'height': round(ti['height'] * ti['scale'] / bscale, 5), 'ext': WebMercatorMap.MIME_DOTEXT.get(ti.get('format', ''), '.img')} for t, tsos in enumerate(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]) for ti in (self.server.Interface.Map.TilesInfos[(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0]))],)], 'scale': bscale / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
                     raise
