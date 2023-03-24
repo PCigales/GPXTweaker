@@ -8136,11 +8136,17 @@ class GPXTweakerWebInterfaceServer():
   '            tlevel = nlevel;\r\n' \
   '            layers = [];\r\n' \
   '            if (treset == 2) {set_jmaps();}\r\n' \
+  '            for (const jmap of jmaps) {\r\n' \
+  '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
+  '              for (const e of Object.entries(jmap.style.sourceCaches)) {\r\n' \
+  '                try {e[1].clearTiles();} catch(error) {null;}\r\n' \
+  '              };\r\n' \
+  '            }\r\n' \
   '            if (! kzoom && tlevels.length > 0) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '          }\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
   '          document.getElementById("tset").style.pointerEvents = "";\r\n' \
-  '          treset = 1;\r\n' \
+  '          if (treset == 0) {treset = 1;}\r\n' \
   '          rescale();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
