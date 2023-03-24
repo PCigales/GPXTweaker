@@ -8135,7 +8135,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (nset == null) {\r\n' \
   '            tlevel = nlevel;\r\n' \
   '            layers = [];\r\n' \
-  '            set_jmaps();\r\n' \
+  '            if (treset == 2) {set_jmaps();}\r\n' \
   '            if (! kzoom && tlevels.length > 0) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '          }\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
