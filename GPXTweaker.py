@@ -8134,6 +8134,8 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
   '            tlevel = nlevel;\r\n' \
+  '            layers = [];\r\n' \
+  '            set_jmaps();\r\n' \
   '            if (! kzoom && tlevels.length > 0) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '          }\r\n' \
   '          document.getElementById("tset").disabled = false;\r\n' \
@@ -16599,8 +16601,8 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif hcur[:18] == 'maptilescomposite ':
           if scur == 'layer':
-            s[1].append([None, '1.00', {}])
-          elif scur not in ('alias', 'display'):
+            s[1].append([len(self.TilesSets) - 1, '1.00', {}])
+          elif scur not in ('layers', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
@@ -16940,8 +16942,8 @@ class GPXTweakerWebInterfaceServer():
             return False
           s[-1].append([matrix, zoom])
       elif hcur[:18] == 'maptilescomposite ':
-        if scur == 'alias':
-          if field == 'name':
+        if scur == 'layers':
+          if field == 'alias':
             try:
               s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1].get('alias') == layer[0]), ('x%.2f' if layer[1].startswith(('x', 'X')) else '%.2f') % max(0, min(1, (float(layer[1].lstrip('xX')[:-1]) / 100 if layer[1].endswith('%') else float(layer[1].lstrip('xX'))))), layer[2] if len(layer) >= 3 else {}] for layer in WebMercatorMap.TCAlias(value))
             except:
@@ -16952,7 +16954,15 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif scur == 'layer':
           value = value.rstrip()
-          if field == 'name':
+          if field == 'alias':
+            try:
+              s[1][-1][0] = next(i for i in range(len(self.TilesSets) - 1) if self.TilesSets[i][1].get('alias') == value)
+              if not isinstance(self.TilesSets[s[1][-1][0]][1], dict):
+                raise
+            except:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+          elif field == 'name':
             try:
               s[1][-1][0] = next(i for i in range(len(self.TilesSets) - 1) if self.TilesSets[i][0] == value)
               if not isinstance(self.TilesSets[s[1][-1][0]][1], dict):
