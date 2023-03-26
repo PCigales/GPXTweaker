@@ -17951,7 +17951,10 @@ if __name__ == '__main__':
     if args.uri.rpartition('.')[2] != 'gpx':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=((os.path.expandvars(args.conf).rstrip('\\') or os.path.dirname(os.path.abspath(__file__))) + '\GPXTweaker.cfg'), launch=(not args.noopen))
+  cfg = os.path.expandvars(args.conf).rstrip('\\')
+  if not os.path.isfile(cfg):
+    cfg = os.path.join(cfg or os.path.dirname(os.path.abspath(__file__)), 'GPXTweaker.cfg')
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=cfg, launch=(not args.noopen))
   if GPXTweakerInterface is None:
     exit()
   print(LSTRINGS['parser']['keyboard'])
