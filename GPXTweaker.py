@@ -1,4 +1,4 @@
-# GPXTweaker v1.15.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -7478,6 +7478,7 @@ class GPXTweakerWebInterfaceServer():
   '        transform-origin:left top;\r\n' \
   '        transform:scale(var(--zoom));\r\n' \
   '        background-color:rgba(0,0,0,0);\r\n' \
+  '        filter:var(--filter);\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
   '        div[id=handle]>img::before{\r\n' \
@@ -17928,7 +17929,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.15.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
