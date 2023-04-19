@@ -1,4 +1,4 @@
-﻿# GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
