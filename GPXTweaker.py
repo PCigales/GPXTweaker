@@ -1,4 +1,4 @@
-# GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -6732,10 +6732,47 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_resp(ti.get('format'))
             else:
               _send_err_nf()
-          elif req.path.lower()[:17] == '/jsontiles/style/' and req.path.lower()[-11:] == '/style.json':
+          elif req.path.lower()[:20] == '/jsontiles/maplibre_':
             if not self.server.Interface.Map.JSONTiles:
               _send_err_fail()
+              continue
+            resp_body = self.server.Interface.JSONTilesLib.get(req.path[20:], b'')
+            if req.path.lower()[20:22] == 'js':
+              uri = (self.server.Interface.JSONTilesJS[0], req.path[22:]) if not resp_body else ''
+              ct = 'text/javascript'
+            elif req.path.lower()[20:23] == 'css':
+              uri = (self.server.Interface.JSONTilesCSS[0], req.path[23:]) if not resp_body else ''
+              ct = 'text/css'
+            else:
+              _send_err_fail()
+              continue
             try:
+              f = None
+              if not resp_body:
+                if uri[0][:4].lower() == 'http':
+                  uri = urllib.parse.urljoin(uri[0], uri[1], allow_fragments=False)
+                  rep = HTTPRequest(uri)
+                  if rep.code != '200':
+                    raise
+                  resp_body = rep.body
+                else:
+                  uri = os.path.join(uri[0], uri[1].replace('/', '\\').lstrip('\\'))
+                  f = open(uri, 'rb')
+                  resp_body = f.read()
+                self.server.Interface.JSONTilesLib[req.path[20:]] = resp_body
+              _send_resp(ct)
+            except:
+              _send_err_nf()
+            finally:
+              if f is not None:
+                try:
+                  f.close()
+                except:
+                  pass
+          elif req.path.lower()[:17] == '/jsontiles/style/' and req.path.lower()[-11:] == '/style.json':
+            try:
+              if not self.server.Interface.Map.JSONTiles:
+                raise
               tid = int(req.path[17:-11])
               if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
                 if tid != self.server.Interface.TilesSet:
@@ -6750,9 +6787,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             except:
               _send_err_fail()
           elif req.path.lower()[:18] == '/jsontiles/glyphs/':
-            if not self.server.Interface.Map.JSONTiles:
-              _send_err_fail()
             try:
+              if not self.server.Interface.Map.JSONTiles:
+                raise
               tid = int(req.path[18:].split('/', 1)[0])
               if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
                 if tid != self.server.Interface.TilesSet:
@@ -6771,9 +6808,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             except:
               _send_err_fail()
           elif req.path.lower()[:18] == '/jsontiles/sprite/':
-            if not self.server.Interface.Map.JSONTiles:
-              _send_err_fail()
             try:
+              if not self.server.Interface.Map.JSONTiles:
+                raise
               tid = int(req.path[18:].split('/', 1)[0])
               if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
                 if tid != self.server.Interface.TilesSet:
@@ -8156,12 +8193,12 @@ class GPXTweakerWebInterfaceServer():
   '          if (treset == 2 && tmaplibre == false) {\r\n' \
   '            if (msg.layers.some((l)=>l.ext==".json")) {\r\n' \
   '              let sc = document.createElement("script");\r\n' \
-  '              sc.src = "##TMAPLIBREJS##";\r\n' \
+  '              sc.src = "/jsontiles/maplibre_js/##TMAPLIBREJS##";\r\n' \
   '              let li = document.createElement("link");\r\n' \
-  '              li.href = "##TMAPLIBRECSS##";\r\n' \
+  '              li.href = "/jsontiles/maplibre_css/##TMAPLIBRECSS##";\r\n' \
   '              li.rel = "stylesheet";\r\n' \
   '              sc.onload = li.onload = (e) => {if (tmaplibre==false) {tmaplibre=true;} else {load_tcb(t,nset,nlevel,kzoom);if (tmaplibre==null) {sc.remove();li.remove();};};};\r\n' \
-  '              sc.onerror = li.onerror = (e) => {if (tmaplibre==true) {tmaplibre=null;load_tcb(t,nset,nlevel,kzoom);sc.remove();li.remove();} else {tmaplibre=null;};};\r\n' \
+  '              sc.onerror = li.onerror = (e) => {if (tmaplibre!=false) {tmaplibre=null;load_tcb(t,nset,nlevel,kzoom);sc.remove();li.remove();} else {tmaplibre=null;};};\r\n' \
   '              document.head.insertBefore(sc, document.head.getElementsByTagName("script")[0]);\r\n' \
   '              document.head.insertBefore(li, document.head.getElementsByTagName("script")[1]);\r\n' \
   '              return;\r\n' \
@@ -16683,10 +16720,19 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'jsontiles':
           if field == 'enable':
             self.JSONTiles = value
-          elif field == 'maplibrejs':
-            self.JSONTilesJS = value
-          elif field == 'maplibrecss':
-            self.JSONTilesCSS = value
+          elif field in ('maplibrejs', 'maplibrecss'):
+            if '://' in value:
+              value = urllib.parse.urlsplit(value, allow_fragments=False)
+              if value.scheme.lower() not in ('http', 'https'):
+                self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+                return False
+              value = (value.scheme + '://' + value.netloc, value.path.lstrip('/') + ('?' + value.query if value.query else ''))
+            else:
+              value = os.path.split(os.path.abspath(os.path.expandvars(value)))
+            if field == 'maplibrejs':
+              self.JSONTilesJS = value
+            else:
+              self.JSONTilesCSS = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -16810,7 +16856,7 @@ class GPXTweakerWebInterfaceServer():
           return False
       elif hcur == 'explorer':
         if scur == 'folders':
-          fold = os.path.abspath(os.path.expandvars(l.lstrip().rstrip()))
+          fold = os.path.abspath(os.path.expandvars(l.lstrip()))
           if os.path.isdir(fold):
             self.Folders.append(fold)
         elif scur == 'statistics':
@@ -16849,7 +16895,7 @@ class GPXTweakerWebInterfaceServer():
                 self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                 return False
           elif field == 'album':
-            fold = os.path.abspath(os.path.expandvars(value.lstrip().rstrip()))
+            fold = os.path.abspath(os.path.expandvars(value))
             if os.path.isdir(fold):
               self.MediaFolders.append(fold)
           elif field == 'photos':
@@ -17127,8 +17173,9 @@ class GPXTweakerWebInterfaceServer():
     self.Ports = (8000, 8000)
     self.Proxy = {'ip': '', 'port': 8080, 'auth': '', 'secure': False}
     self.JSONTiles = False
-    self.JSONTilesJS = ''
-    self.JSONTilesCSS = ''
+    self.JSONTilesJS = ('', '')
+    self.JSONTilesCSS = ('', '')
+    self.JSONTilesLib = {}
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
     self.TilesHoldSize = 0
@@ -17206,7 +17253,7 @@ class GPXTweakerWebInterfaceServer():
       self.log(0, 'cerror', cfg)
       return None
     if self.JSONTiles:
-      print(LSTRINGS['interface']['maplibre'] % self.JSONTilesJS)
+      print(LSTRINGS['interface']['maplibre'] % (urllib.parse.urljoin(*self.JSONTilesJS, allow_fragments=False) if self.JSONTilesJS[0][:4].lower() == 'http' else os.path.join(*self.JSONTilesJS)))
       print('')
     self.GPXTweakerInterfaceServerInstances = list(range(self.Ports[0], self.Ports[1] + 1))
     self.GPXTweakerInterfaceServerInstances.extend(range(self.MediaPorts[0], min(self.Ports[0], self.MediaPorts[1] + 1)))
@@ -17575,7 +17622,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS.replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS.replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
@@ -17775,7 +17822,7 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS.replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS.replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
