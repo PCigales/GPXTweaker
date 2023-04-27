@@ -12087,7 +12087,7 @@ class GPXTweakerWebInterfaceServer():
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (document.activeElement) {\r\n' \
-  '          if (e.button == 2 || elt.id.indexOf("dot") < 0 || (document.activeElement.id?!(new RegExp("^"+elt.id.replace("dot", "point")+"[^0-9]*$")).test(document.activeElement.id):true)) {document.activeElement.blur();}\r\n' \
+  '          if (document.activeElement.nodeName != "BODY" && (e.button == 2 || elt.id.indexOf("dot") < 0 || (document.activeElement.id || "").slice(0, -2) != elt.id.replace("dot", "point") + "l")) {document.activeElement.blur();}\r\n' \
   '        }\r\n' \
   '        if (e.button == 0) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
@@ -16285,7 +16285,9 @@ class GPXTweakerWebInterfaceServer():
   '        e.preventDefault();\r\n' \
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
-  '        if (document.activeElement) {document.activeElement.blur();}\r\n' \
+  '        if (document.activeElement) {\r\n' \
+  '          if (document.activeElement.nodeName != "BODY") {document.activeElement.blur();}\r\n' \
+  '        }\r\n' \
   '        if (e.button == 2) {\r\n' \
   '          if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
   '          document.oncontextmenu = mouse_click;\r\n' \
