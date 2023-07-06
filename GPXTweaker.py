@@ -13579,8 +13579,8 @@ class GPXTweakerWebInterfaceServer():
   '            <path pointer-events="none" id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" fill-opacity="1" transform="scale(1) rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 l0.15 -0.1 l0.15 0.1 l-0.15 -0.4"/>\r\n' \
   '          <title>{#jminimap#}</title>\r\n' \
   '          </svg>\r\n' \
-  '          <div id="panel_rg" style="display:none;position:absolute;top:10vh;right:2px;width:10.2em;height:1.9em;font-size:80%;">\r\n' \
-  '            <select id="select_rg" name="select_rg" autocomplete="off" style="width:10em;height:1.7em;background-color:lightgray;" onchange="rgset=this.selectedIndex">##RGSETS##</select>\r\n' \
+  '          <div id="panel_rg" style="display:none;position:absolute;top:10vh;right:2px;width:11.7em;height:1.9em;font-size:80%;">\r\n' \
+  '            <select id="select_rg" name="select_rg" autocomplete="off" style="width:11.5em;height:1.7em;background-color:lightgray;" onchange="rgset=this.selectedIndex">##RGSETS##</select>\r\n' \
   '          </div>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
