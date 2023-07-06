@@ -4477,9 +4477,9 @@ class WGS84Itinerary():
 
 class WGS84ReverseGeocoding():
 
-  AS_IGN_LOOK4_50 = {'alias': 'IGN_LOOK4_50', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
-  AS_IGN_LOOK4 = AS_IGN_LOOK4_150 = {'alias': 'IGN_LOOK4_150', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
-  AS_IGN_LOOK4_250 = {'alias': 'IGN_LOOK4_250', 'source': 'https://geocodage.ign.fr/look4/poi/reverse?searchGeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lonlat={lon},{lat}','key': ('features', 'properties', 'extraFields', 'names')}
+  AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}','key': ('features', 'properties', 'extrafields', 'names')}
+  AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}','key': ('features', 'properties', 'extrafields', 'names')}
+  AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}','key': ('features', 'properties', 'extrafields', 'names')}
   AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2','key': ('display_name',)}
   AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
   AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
