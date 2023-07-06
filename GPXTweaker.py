@@ -11454,7 +11454,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '          if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
   '          segments_calc(...segs);\r\n' \
-  '          if (msg) {show_msg(msg, 2);}\r\n' \
+  '          show_msg(msg, 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
