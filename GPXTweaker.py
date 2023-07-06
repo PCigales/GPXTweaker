@@ -193,7 +193,7 @@ FR_STRINGS = {
     'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude',
     'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude&#13;&#10;+shift: intervertir avec les données d\'altitude',
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
-    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace',
+    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace&#13;&#10;+shift: supprimer l\'horodatage',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
     'jswitchpoints': 'afficher / masquer les marques de point et point de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
@@ -311,6 +311,9 @@ FR_STRINGS = {
     'jmdatetime1': 'Horodatage du point mis à jour',
     'jmdatetime2': 'Horodatages du segment mis à jour',
     'jmdatetime3': 'Horodatages de la trace mis à jour',
+    'jmdatetime4': 'Horodatage du point supprimé',
+    'jmdatetime5': 'Horodatages du segment supprimés',
+    'jmdatetime6': 'Horodatages de la trace supprimés',
     'jmsave1': 'Sauvegarde en cours...',
     'jmsave2': 'Sauvegarde effectuée',
     'jmsave3': 'Échec de la sauvegarde',
@@ -546,7 +549,7 @@ EN_STRINGS = {
     'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track&#13;&#10;+alt: from the altitude data',
     'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track#13;&#10;+alt: from the altitude data&#13;&#10;+shift: switch with the altitude data',
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
-    'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track',
+    'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track&#13;&#10;+shift: remove the timestamp(s)',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
     'jswitchpoints': 'show / hide the marks of point and waypoint&#13;&#10;+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
@@ -664,6 +667,9 @@ EN_STRINGS = {
     'jmdatetime1': 'Timestamp of the point updated',
     'jmdatetime2': 'Timestamps of the segment updated',
     'jmdatetime3': 'Timestamps of the track updated',
+    'jmdatetime4': 'Timestamp of the point removed',
+    'jmdatetime5': 'Timestamps of the segment removed',
+    'jmdatetime6': 'Timestamps of the track removed',
     'jmsave1': 'Backup in progress...',
     'jmsave2': 'Backup completed',
     'jmsave3': 'Failure of the backup',
@@ -11399,7 +11405,7 @@ class GPXTweakerWebInterfaceServer():
   '        segments_calc(seg_foc);\r\n' \
   '        show_msg(((pt_foc==null)?"{#jmaltitudesjoin1#}":"{#jmaltitudesjoin2#}"), 2);\r\n' \
   '      }\r\n' \
-  '      function datetime_interpolate() {\r\n' \
+  '      function datetime_interpolate(remove=false) {\r\n' \
   '        let segs = [];\r\n' \
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
@@ -11411,6 +11417,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (segs.length == 0) {return;}\r\n' \
   '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          if (! document.getElementById(focused).checked) {return;}\r\n' \
   '          seg_foc = document.getElementById(focused + "cont");\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
@@ -11426,6 +11433,30 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        let batch = ++hist_b;\r\n' \
+  '        if (remove) {\r\n' \
+  '          for (let s=0; s<segs.length; s++) {\r\n' \
+  '            let spans = pt_foc==null?Array.from(segs[s].getElementsByTagName("span")):[document.getElementById(pt_foc + "focus")];\r\n' \
+  '            for (let p=0; p<spans.length; p++) {\r\n' \
+  '              pt = spans[p].id.slice(0, -5);\r\n' \
+  '              if ((pt_foc == null && document.getElementById(pt).checked && document.getElementById(pt).value != "error") || pt_foc == pt) {\r\n' \
+  '                focused = pt;\r\n' \
+  '                save_old();\r\n' \
+  '                hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                document.getElementById(pt + "time").value = "";\r\n' \
+  '                for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
+  '                  if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
+  '                }\r\n' \
+  '                point_edit(false, false, false, false);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
+  '          if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
+  '          if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
+  '          segments_calc(...segs);\r\n' \
+  '          if (msg) {show_msg(msg, 2);}\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
   '          let lc = -1;\r\n' \
@@ -12018,7 +12049,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate()">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
