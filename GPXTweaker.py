@@ -1,4 +1,4 @@
-# GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.15.2 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -11434,27 +11434,33 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let batch = ++hist_b;\r\n' \
   '        if (remove) {\r\n' \
+  '          let msg = null;\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            let spans = pt_foc==null?Array.from(segs[s].getElementsByTagName("span")):[document.getElementById(pt_foc + "focus")];\r\n' \
   '            for (let p=0; p<spans.length; p++) {\r\n' \
   '              pt = spans[p].id.slice(0, -5);\r\n' \
   '              if ((pt_foc == null && document.getElementById(pt).checked && document.getElementById(pt).value != "error") || pt_foc == pt) {\r\n' \
-  '                focused = pt;\r\n' \
-  '                save_old();\r\n' \
-  '                hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                document.getElementById(pt + "time").value = "";\r\n' \
-  '                for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
-  '                  if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
+  '                if (document.getElementById(pt + "time").value != "") {\r\n' \
+  '                  msg = "";\r\n' \
+  '                  focused = pt;\r\n' \
+  '                  save_old();\r\n' \
+  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  document.getElementById(pt + "time").value = "";\r\n' \
+  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
+  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
+  '                  }\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
   '                }\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          let msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
-  '          if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
-  '          if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '          segments_calc(...segs);\r\n' \
-  '          show_msg(msg, 2);\r\n' \
+  '          if (msg != null) {\r\n' \
+  '            msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
+  '            if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
+  '            if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
+  '            segments_calc(...segs);\r\n' \
+  '            show_msg(msg, 2);\r\n' \
+  '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
@@ -18012,7 +18018,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.15.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.15.2 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
