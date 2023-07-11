@@ -17224,8 +17224,8 @@ class GPXTweakerWebInterfaceServer():
     self.Ports = (8000, 8000)
     self.Proxy = {'ip': '', 'port': 8080, 'auth': '', 'secure': False}
     self.JSONTiles = False
-    self.JSONTilesJS = ('', '')
-    self.JSONTilesCSS = ('', '')
+    self.JSONTilesJS = ('https://unpkg.com', 'maplibre-gl@latest/dist/maplibre-gl.js')
+    self.JSONTilesCSS = ('https://unpkg.com', 'maplibre-gl@latest/dist/maplibre-gl.css')
     self.JSONTilesLib = {}
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
