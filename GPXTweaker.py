@@ -1,4 +1,4 @@
-# GPXTweaker v1.15.2 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -3021,7 +3021,7 @@ class WebMercatorMap(BaseMap):
   CRS_MPU = 1
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
   WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
-  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
+  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/tiff', 'styles': ''}
   MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
   MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
   MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
@@ -3565,20 +3565,16 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       h_ = cls.GlobalAlloc(0x42, 0)
       ist_ = ctypes.c_void_p()
       cls.CreateStreamOnHGlobal(h_, True, ctypes.byref(ist_))
-      if cls.gdiplus.GdipSaveImageToStream(i, ist_, ctypes.c_char_p(b'\x06\xf4|U\x04\x1a\xd3\x11\x9as\x00\x00\xf8\x1e\xf3.'), None):
+      if cls.gdiplus.GdipSaveImageToStream(i, ist_, ctypes.c_char_p(cls.png_clsid), None):
         raise
       hl_ = cls.GlobalLock(h_)
       self.converted = ctypes.string_at(hl_, cls.GlobalSize(h_))
       cls.GlobalUnlock(h_)
-      cls.gdiplus.GdipDisposeImage(i)
-      cls.Release(ist)
-      cls.Release(ist_)
     except:
       return False
     finally:
       cls.Release(ist)
       if i is not None:
-        cls.GlobalUnlock(h_)
         cls.gdiplus.GdipDisposeImage(i)
         cls.Release(ist_)
     return True
@@ -12437,13 +12433,13 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
   '                    <span id="waypoint%sfocus">\r\n' \
   '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
   '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
+  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
   '                      <label for="waypoint%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
+  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[+-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
+  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[\\+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
   '                      <label for="waypoint%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s"><br>\r\n' \
   '                    </span>\r\n' \
@@ -12455,15 +12451,15 @@ class GPXTweakerWebInterfaceServer():
   '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
   '                    <span id="point%sfocus">\r\n' \
   '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" ><br>\r\n' \
+  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" ><br>\r\n' \
   '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
+  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
   '                      <label for="point%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="point%sele" name="point%sele" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
+  '                      <input type="text" id="point%sele" name="point%sele" pattern="([\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="point%salt">{jalt}</label>\r\n' \
-  '                      <input type="text" id="point%salt" name="point%salt" pattern="([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
+  '                      <input type="text" id="point%salt" name="point%salt" pattern="([\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
   '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[+-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
+  '                      <input type="text" id="point%stime" name="point%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[\\+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
   '                    </span>\r\n' \
   '                  </div>'
   HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -16593,7 +16589,7 @@ class GPXTweakerWebInterfaceServer():
   '                      <label for="track%sname">{jname}</label>\r\n' \
   '                      <input type="text" id="track%sname" name="track%sname" value="%s"><br>\r\n' \
   '                      <label for="track%sfile" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">{jfile}</label>\r\n' \
-  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s"><br>\r\n' \
+  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s"><br>\r\n' \
   '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
   '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
   '                      <label for="track%speriod">{jperiod}</label>\r\n' \
@@ -18027,7 +18023,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.15.2 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
