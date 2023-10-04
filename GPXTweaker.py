@@ -2070,8 +2070,8 @@ class BaseMap(WGS84WebMercator):
   MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/vnd.mapbox-vector-tile': 'mvt', 'application/geo+json': 'geojson', 'application/json': 'json', 'image/svg+xml': 'svg'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
-  LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
-  LOCALSTORE_HGT_DEFAULT_PATTERN = '{alias|layer}\{hgt}.{ext}'
+  LOCALSTORE_DEFAULT_PATTERN = r'{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
+  LOCALSTORE_HGT_DEFAULT_PATTERN = r'{alias|layer}\{hgt}.{ext}'
   WMS_PATTERN = {'GetCapabilities': '?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
   WMTS_PATTERN = {'GetCapabilities': '?SERVICE=WMTS&REQUEST=GetCapabilities', 'GetTile': '?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={layer}&STYLE={style}&FORMAT={format}&TILEMATRIXSET={matrixset}&TILEMATRIX={matrix}&TILEROW={row}&TILECOL={col}'}
 
@@ -3582,7 +3582,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
 
 class JSONTiles():
 
-  LOCALSTORE_DEFAULT_PATTERN = '{alias|layer}\{resource}'
+  LOCALSTORE_DEFAULT_PATTERN = r'{alias|layer}\{resource}'
 
   def __init__(self, tset_id_mult):
     self.TilesSetIdMult = tset_id_mult
@@ -4380,7 +4380,7 @@ class WGS84Itinerary():
 
   BASE64_TABLE = {chr(i + 63): i for i in range(64)}
   URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
-  POLYLINE_RE =  re.compile('^{(flexible_)polyline}$|^{polyline(\d+)?}$', re.ASCII).match
+  POLYLINE_RE =  re.compile(r'^{(flexible_)polyline}$|^{polyline(\d+)?}$', re.ASCII).match
 
   AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/{key}/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
@@ -8933,13 +8933,13 @@ class GPXTweakerWebInterfaceServer():
   '        while (true) {\r\n' \
   '          if (y - yl >= 16 || yl - y >= 10 || fin) {\r\n' \
   '            if (gy_ind == 0) {\r\n' \
-  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
+  '              gctx.fillText(((maxy - (y - yt) / cy) / 1000).toFixed(1).replace(/^-(0*(\\.0*)?$)/,"$1") + "km", xl - 2, y);\r\n' \
   '            } else if (gy_ind == 5 || gy_ind == 6) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\\.0*)?$)/,"$1") + "%", xl - 2, y);\r\n' \
   '            } else if (gy_ind == 7) {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(1).replace(/^-(0*(\\.0*)?$)/,"$1") + "km/h", xl - 2, y);\r\n' \
   '            } else {\r\n' \
-  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
+  '              gctx.fillText((maxy - (y - yt) / cy).toFixed(0).replace(/^-(0*(\\.0*)?$)/,"$1") + "m", xl - 2, y);\r\n' \
   '            }\r\n' \
   '            if (fin) {break;}\r\n' \
   '          }\r\n' \
@@ -9542,7 +9542,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gmaxx = null;\r\n' \
   '        let gmaxy = null;\r\n' \
   '        for (let t=0; t<tracks.length; t++) {\r\n' \
-  '          let d = tracks[t].firstElementChild.getAttribute("d").match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g);\r\n' \
+  '          let d = tracks[t].firstElementChild.getAttribute("d").match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '          let minx = null;\r\n' \
   '          let miny = null;\r\n' \
   '          let maxx = null;\r\n' \
@@ -10027,7 +10027,7 @@ class GPXTweakerWebInterfaceServer():
   '            let path = document.getElementById("path" + s.toString());\r\n' \
   '            let pt = document.getElementById("segment" + s.toString() + "cont").firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
   '            let d = path.getAttribute("d");\r\n' \
-  '            let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g);\r\n' \
+  '            let dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '            let d_r = "M0 0";\r\n' \
   '            for (let p=1; p<dots.length; p++) {\r\n' \
   '              let pt_s = points[parseInt(pt.id.slice(5, -4))];\r\n' \
@@ -10417,9 +10417,9 @@ class GPXTweakerWebInterfaceServer():
   '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?stat_p[3].toFixed(0):"[ag]") + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
   '          } else if (fpan == 1) {\r\n' \
-  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\d+m\|/, stat_p[2].toFixed(0) + "m|").replace(/\d+m\)/, stat_p[3].toFixed(0) + "m)");\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, stat_p[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat_p[3].toFixed(0) + "m)");\r\n' \
   '          } else if (fpan == 2 && gpucomp == 0) {\r\n' \
-  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\|.*?km\|/, "|" + (stat_p[6] / 1000).toFixed(2) + "km|");\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat_p[6] / 1000).toFixed(2) + "km|");\r\n' \
   '          }\r\n' \
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
@@ -10573,9 +10573,9 @@ class GPXTweakerWebInterfaceServer():
   '              let seg_desc = segs[s].firstElementChild.nextElementSibling;\r\n' \
   '              let stat = stats[seg_ind][stats[seg_ind].length - 1];\r\n' \
   '              if (gpucomp == 2 && fpan == 2) {\r\n' \
-  '                seg_desc.innerHTML = seg_desc.innerHTML.replace(/\d+m\|/, "[eg]m|").replace(/\d+m\)/, "[ag]m)");\r\n' \
+  '                seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, "[eg]m|").replace(/\\d+m\\)/, "[ag]m)");\r\n' \
   '              }\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\|.*?km\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace("[eg]", stat[2].toFixed(0)).replace("[ag]", stat[3].toFixed(0));\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace("[eg]", stat[2].toFixed(0)).replace("[ag]", stat[3].toFixed(0));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          gpu_part = fpan == 0 && i != stats.reduce((p,c) => p + c.length, 0);\r\n' \
@@ -11057,7 +11057,7 @@ class GPXTweakerWebInterfaceServer():
   '          let sdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
-  '          let dots = d.match(/[LMm] *\d+([.]\d*)? +\d+([.]\d*)?/g).slice(1);\r\n' \
+  '          let dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g).slice(1);\r\n' \
   '          let d_f = "M0 0";\r\n' \
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
@@ -11511,7 +11511,7 @@ class GPXTweakerWebInterfaceServer():
   '                  focused = spans[pm[i][0]].id.slice(0, -5);\r\n' \
   '                  save_old();\r\n' \
   '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((stime + inv_vit * pm[i][1]) / 1000) * 1000)).toISOString().replace(/\.[0-9]*/,"");\r\n' \
+  '                  document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((stime + inv_vit * pm[i][1]) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
   '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
   '                  }\r\n' \
@@ -11531,7 +11531,7 @@ class GPXTweakerWebInterfaceServer():
   '                    focused = spans[pm_b[i][0]].id.slice(0, -5);\r\n' \
   '                    save_old();\r\n' \
   '                    hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                    document.getElementById(spans[pm_b[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((dist_b==0?btime:(btime + inv_vit * (pm_b[i][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\.[0-9]*/,"");\r\n' \
+  '                    document.getElementById(spans[pm_b[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((dist_b==0?btime:(btime + inv_vit * (pm_b[i][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                    for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
   '                      if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
   '                    }\r\n' \
@@ -14309,9 +14309,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (! window.opener.hasOwnProperty("pointed_waypoint")) {return;}\r\n' \
   '        let c = null;\r\n' \
   '        if (e.target.htmlFor == "eye_info") {\r\n' \
-  '          c = e_info.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '          c = e_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        } else if (e.target.htmlFor == "target_info") {\r\n' \
-  '          c = t_info.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        }\r\n' \
   '        if (c) {\r\n' \
   '          if (c.length == 3) {\r\n' \
@@ -14334,7 +14334,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let c_ = f.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '        let c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        if (! c_) {return;}\r\n' \
   '        if (c_.length != 3) {return;}\r\n' \
   '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
@@ -14358,7 +14358,7 @@ class GPXTweakerWebInterfaceServer():
   '        let c = null;\r\n' \
   '        let dpos = f.value.indexOf(" | ");\r\n' \
   '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
-  '        c = f.value.match(/lat: ([0-9\.]*?)° lon: ([0-9\.]*?)° /);\r\n' \
+  '        c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        if (c) {\r\n' \
   '          if (c.length == 3) {\r\n' \
   '            let plat = parseFloat(c[1]);\r\n' \
@@ -16055,7 +16055,7 @@ class GPXTweakerWebInterfaceServer():
   '        for (let t=0; t<trks.length; t++) {\r\n' \
   '          if (trks[t].firstElementChild.checked) {\r\n' \
   '            let trkid = trks[t].id.slice(5,-4);\r\n' \
-  '            let name = document.getElementById("track" + trkid + "desc").textContent.match(/^(.*)\((?!.*\()(.*)\)$/);\r\n' \
+  '            let name = document.getElementById("track" + trkid + "desc").textContent.match(/^(.*)\\((?!.*\\()(.*)\\)$/);\r\n' \
   '            let color = document.getElementById("track" + trkid + "color").value;\r\n' \
   '            let tsp = document.createElementNS("http://www.w3.org/2000/svg", "tspan");\r\n' \
   '            tsp.setAttribute("x", "10");\r\n' \
@@ -16613,7 +16613,7 @@ class GPXTweakerWebInterfaceServer():
   '  <svg id="waydots%s" viewbox="##VIEWBOX##" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
   '                </svg>\r\n              '
 
-  def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg'):
+  def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + r'\GPXTweaker.cfg'):
     try:
       f = open(uri, 'rt', encoding='utf-8')
       cfg = f.read()
@@ -17210,7 +17210,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, record_map=None, cfg=os.path.dirname(os.path.abspath(__file__)) + '\GPXTweaker.cfg', launch=None):
+  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, record_map=None, cfg=os.path.dirname(os.path.abspath(__file__)) + r'\GPXTweaker.cfg', launch=None):
     self = object.__new__(cls)
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
