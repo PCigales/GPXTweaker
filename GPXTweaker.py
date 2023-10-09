@@ -9106,7 +9106,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let filter = "none";\r\n' \
   '        if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
-  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer color-interpolation-filters=\\"sRGB\\"><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
   '        }\r\n' \
   '        document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '        show_msg("{#jmadjust#}".replace("%s", adjustment_a.toFixed(1)).replace("%s", adjustment_e.toFixed(1)), 2);\r\n' \
@@ -9347,7 +9347,7 @@ class GPXTweakerWebInterfaceServer():
   '          [adjustment_a, adjustment_e] = prev_state[5].split("-").map(Number);\r\n' \
   '          let filter = "none";\r\n' \
   '          if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
-  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer color-interpolation-filters=\\"sRGB\\"><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
   '          }\r\n' \
   '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
