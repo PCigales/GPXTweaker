@@ -229,11 +229,11 @@ FR_STRINGS = {
     'jexptset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du service de cartographie en ligne&#13;&#10;en mode superposition de jeux de tuiles, clic droit: afficher / masquer les contrôles de transparence de couche&#13;&#10;alt + clic droit: afficher la légende si disponible',
     'jexpeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du service de cartographie en ligne',
     'jexpiset': 'sélectionner le service de cartographie en ligne&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
-    'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer',
-    'jexpminus': 'dézoomer&#13;&#10;+ctrl: atténuer&#13;&#10;+alt: affiner',
+    'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer&#13;&#10;+shift: éclaircir',
+    'jexpminus': 'dézoomer&#13;&#10;+ctrl: atténuer&#13;&#10;+shift: éclaircir&#13;&#10;+alt: affiner',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
-    'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer',
-    'jexpplus': 'zoomer&#13;&#10;+ctrl: réaccentuer&#13;&#10;+alt: épaissir',
+    'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer&#13;&#10;+shift: réassombrir',
+    'jexpplus': 'zoomer&#13;&#10;+ctrl: réaccentuer&#13;&#10;+shift: réassombrir&#13;&#10;+alt: épaissir',
     'jdfpanel': 'Plage lissage points',
     'jmtpanel': 'Taille des miniatures',
     'jpixels': '&nbsp;pixels',
@@ -277,6 +277,7 @@ FR_STRINGS = {
     'jgraphaltslope': 'pente alt',
     'jgraphspeed': 'vitesse',
     'jgraphtime': 'durée',
+    'jmadjust': 'Ajustement de la carte (amplitude: %s - exposant: %s)',
     'jmundo1': 'Insertion de %s point(s) annulée',
     'jmundo2': 'Modification de %s point(s) annulée',
     'jmredo1': 'Insertion de %s point(s) rétablie',
@@ -585,11 +586,11 @@ EN_STRINGS = {
     'jexptset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the online mapping service&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency&#13;&#10;alt + right click: display the legend if available',
     'jexpeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the online mapping service',
     'jexpiset': 'select the online mapping service&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
-    'jminus': 'zoom out&#13;&#10;+ctrl: attenuate',
-    'jexpminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+alt: thin',
+    'jminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+shift: lighten',
+    'jexpminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+shift: lighten&#13;&#10;+alt: thin',
     'jlock': 'lock / unlock the set of tiles',
-    'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate',
-    'jexpplus': 'zoom in&#13;&#10;+ctrl: reaccentuate&#13;&#10;+alt: thicken',
+    'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate&#13;&#10;+shift: redarken',
+    'jexpplus': 'zoom in&#13;&#10;+ctrl: reaccentuate&#13;&#10;+shift: redarken&#13;&#10;+alt: thicken',
     'jdfpanel': 'Range points smoothing',
     'jmtpanel': 'Thumbnails size',
     'jpixels': '&nbsp;pixels',
@@ -633,6 +634,7 @@ EN_STRINGS = {
     'jgraphaltslope': 'alt slope',
     'jgraphspeed': 'speed',
     'jgraphtime': 'duration',
+    'jmadjust': 'Adjustement of the map (amplitude: %s - exponent: %s)',
     'jmundo1': 'Insertion of %s point(s) cancelled',
     'jmundo2': 'Modification of %s point(s) cancelled',
     'jmredo1': 'Insertion of %s point(s) restored',
@@ -1335,20 +1337,29 @@ class NestedSSLContext(ssl.SSLContext):
 
   class SSLSocket(ssl.SSLSocket):
 
+    def __new__(cls, *args, **kwargs):
+      if not hasattr(cls, 'sock'):
+        raise TypeError('%s does not have a public constructor. Instances are returned by NestedSSLContext.wrap_socket().' % cls.__name__)
+      cls_ = cls.__bases__[0]
+      self = super(cls_, cls_).__new__(cls_, *args, **kwargs)
+      self.socket = cls.sock
+      cls.sock = None
+      return self
+
+    class _PSocket:
+
+      def __init__(self, s):
+        self.s = s
+
+      def detach(self):
+        pass
+
+      def __getattr__(self, name):
+        return getattr(self.s, name)
+
     @classmethod
     def _create(cls, sock, *args, do_handshake_on_connect=True, **kwargs):
-      so = socket.socket(family=sock.family, type=sock.type, proto=sock.proto, fileno=sock.fileno())
-      self = ssl.SSLSocket._create.__func__(NestedSSLContext.SSLSocket, so, *args, do_handshake_on_connect=False, **kwargs)
-      self.socket = sock
-      self.do_handshake_on_connect = do_handshake_on_connect
-      if self._connected and do_handshake_on_connect:
-        try:
-          if self.gettimeout() == 0:
-            raise ValueError("do_handshake_on_connect should not be specified for non-blocking sockets")
-          self.do_handshake()
-        except (OSError, ValueError):
-          self.close()
-          raise
+      self = ssl.SSLSocket._create.__func__(type('BoundSSLSocket', (cls,), {'sock': sock}), cls._PSocket(sock), *args, **kwargs)
       return self
 
     def close(self):
@@ -1380,16 +1391,16 @@ class NestedSSLContext(ssl.SSLContext):
       self.sslsocket = ssl_sock
       self.inc = ssl.MemoryBIO()
       self.out = ssl.MemoryBIO()
-      self.sslobj = context.wrap_bio(self.inc, self.out, server_side, server_hostname)
+      self._sslobj = context.wrap_bio(self.inc, self.out, server_side, server_hostname)._sslobj
 
     def __getattr__(self, name):
-      return self.sslobj._sslobj.__getattribute__(name)
+      return self._sslobj.__getattribute__(name)
 
     def __setattr__(self, name, value):
-      if name in ('sslsocket', 'inc', 'out', 'sslobj'):
+      if name in ('sslsocket', 'inc', 'out', '_sslobj'):
         object.__setattr__(self, name, value)
       else:
-        self.sslobj._sslobj.__setattr__(name, value)
+        self._sslobj.__setattr__(name, value)
 
     def _read_record(self):
       bl = b''
@@ -1409,27 +1420,27 @@ class NestedSSLContext(ssl.SSLContext):
         l -= bl
       self.inc.write(b)
 
-    def interface(self, action):
+    def interface(self, action, *args, **kwargs):
       timeout = self.sslsocket.gettimeout()
       if timeout:
         t = time.monotonic()
       while True:
         try:
-          res = action()
+          res = action(*args, **kwargs)
         except (ssl.SSLWantReadError, ssl.SSLWantWriteError) as err:
           if timeout:
             if time.monotonic() - t > timeout:
               raise TimeoutError(10060, 'timed out')
           if self.out.pending:
             self.sslsocket.socket.sendall(self.out.read())
-          if err.errno == ssl.SSL_ERROR_WANT_READ:
+          if err.errno == ssl.SSL_ERROR_WANT_READ and not self.inc.pending:
             if timeout:
               if time.monotonic() - t > timeout:
                 raise TimeoutError(10060, 'timed out')
             try:
               self._read_record()
             except ConnectionResetError:
-              if action == self.sslobj._sslobj.do_handshake:
+              if action == self._sslobj.do_handshake:
                 raise ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host')
               else:
                 raise ssl.SSLEOFError(ssl.SSL_ERROR_EOF, 'EOF occurred in violation of protocol')
@@ -1442,23 +1453,20 @@ class NestedSSLContext(ssl.SSLContext):
           return res
 
     def do_handshake(self):
-      return self.interface(self.sslobj._sslobj.do_handshake)
+      return self.interface(self._sslobj.do_handshake)
 
     def read(self, length=16384, buffer=None):
-      return self.interface(partial(self.sslobj._sslobj.read, length) if buffer is None else partial(self.sslobj._sslobj.read, length, buffer))
+      return self.interface(self._sslobj.read, length) if buffer is None else self.interface(self._sslobj.read, length, buffer)
 
     def write(self, bytes):
-      w = self.sslobj._sslobj.write(bytes)
-      if self.out.pending:
-        self.sslsocket.socket.sendall(self.out.read())
-      return w
+      return self.interface(self._sslobj.write, bytes)
 
     def shutdown(self):
-      self.interface(self.sslobj._sslobj.shutdown)
+      self.interface(self._sslobj.shutdown)
       return self.sslsocket.socket
 
     def verify_client_post_handshake(self):
-      return self.interface(self.sslobj._sslobj.verify_client_post_handshake)
+      return self.interface(self._sslobj.verify_client_post_handshake)
 
   def __init__(self, *args, **kwargs):
     self.DefaultSSLContext = ssl.SSLContext(*args, **kwargs)
@@ -7568,6 +7576,8 @@ class GPXTweakerWebInterfaceServer():
   '        var treset = 0;\r\n' \
   '        var jmaps = [];\r\n' \
   '      }\r\n' \
+  '      var adjustment_a = 1.0;\r\n' \
+  '      var adjustment_e = 1.0;\r\n' \
   '      var eset = -1;\r\n' \
   '      var iset = -1;\r\n' \
   '      var dots_visible = false;\r\n' \
@@ -9087,26 +9097,19 @@ class GPXTweakerWebInterfaceServer():
   '      function zoom_inc(cx=null, cy=null) {\r\n' \
   '        if (! document.getElementById("tset").disabled) {zoom_change(1, cx, cy);}\r\n' \
   '      }\r\n' \
-  '      function opacity_dec() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        let opacity = 1;\r\n' \
-  '        if (filter && filter != "none") {\r\n' \
-  '          opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
+  '      function map_adjust(s, t) {\r\n' \
+  '        let adj = "adjustment_" + t;\r\n' \
+  '        if (s == "-") {\r\n' \
+  '          if (window[adj] > 0.19) {window[adj] -= 0.1;} else {return;}\r\n' \
+  '        } else {\r\n' \
+  '          if (window[adj] < 0.91) {window[adj] += 0.1;} else {return;}\r\n' \
   '        }\r\n' \
-  '        if (opacity > 0.19) {\r\n' \
-  '          filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity - 0.1).toFixed(1)).replace(/%b/g, (1.1 - opacity).toFixed(1));\r\n' \
-  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        let filter = "none";\r\n' \
+  '        if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function opacity_inc() {\r\n' \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (filter && filter != "none") {\r\n' \
-  '          let opacity = parseFloat(filter.match(/slope=\\\\?"(0\\.[0-9])\\\\?"/)[1]);\r\n' \
-  '          if (opacity < 0.81) {\r\n' \
-  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncG type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/><feFuncB type=\\"linear\\" slope=\\"%a\\" intercept=\\"%b\\"/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%a/g, (opacity + 0.1).toFixed(1)).replace(/%b/g, (0.9 - opacity).toFixed(1));\r\n' \
-  '          } else {filter = "none";}\r\n' \
-  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
-  '        }\r\n' \
+  '        document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        show_msg("{#jmadjust#}".replace("%s", adjustment_a.toFixed(1)).replace("%s", adjustment_e.toFixed(1)), 2);\r\n' \
   '      }\r\n' \
   '      function scrollcross(sw=false) {\r\n' \
   '        if (sw) {\r\n' \
@@ -9341,7 +9344,12 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing--;\r\n' \
   '        scroll_to_track();\r\n' \
   '        if (prev_state != null) {\r\n' \
-  '          document.documentElement.style.setProperty("--filter", prev_state[5]);\r\n' \
+  '          [adjustment_a, adjustment_e] = prev_state[5].split("-").map(Number);\r\n' \
+  '          let filter = "none";\r\n' \
+  '          if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
+  '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
+  '          }\r\n' \
+  '          document.documentElement.style.setProperty("--filter", filter);\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
   '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {document.getElementById("eset").selectedIndex = eset;}\r\n' \
   '          iset = parseInt(prev_state[7]);\r\n' \
@@ -9379,9 +9387,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
-  '        let filter = document.documentElement.style.getPropertyValue("--filter");\r\n' \
-  '        if (! filter) {filter = "none";}\r\n' \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + filter + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + JSON.stringify(Array.from(opacities)));\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + JSON.stringify(Array.from(opacities)));\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -12059,7 +12065,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():zoom_dec()">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?opacity_inc():zoom_inc()">+</button></span>\r\n' + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -16272,7 +16278,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:63.4em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?opacity_dec():(event.altKey?magnify_dec():zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?opacity_inc():(event.altKey?magnify_inc():zoom_inc())">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:63.4em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
