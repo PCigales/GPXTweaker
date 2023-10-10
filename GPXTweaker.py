@@ -213,7 +213,7 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
-    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché', 
+    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
@@ -570,7 +570,7 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
-    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the list of tracks&#13;&#10;+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph', 
+    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the list of tracks&#13;&#10;+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
@@ -1323,7 +1323,7 @@ class HTTPBaseRequest():
           if hauth is not None:
             headers['Authorization'] = hauth
           else:
-            del headers['Authorization']   
+            del headers['Authorization']
     if headers['Connection'] == 'close' or resp.expect_close:
       try:
         pconnection[0].close()
@@ -1563,7 +1563,7 @@ def gen_HTTPRequest(proxy=None):
 class WGS84WebMercator():
 
   R = 6378137.0
-  
+
   @staticmethod
   def WGS84toWebMercator(lat, lon):
     return (math.radians(lon) * WGS84WebMercator.R, math.log(math.tan(math.pi / 4 + math.radians(lat) / 2)) * WGS84WebMercator.R)
@@ -1989,7 +1989,7 @@ class TilesMixCache(TilesCache):
     try:
       for t in th:
         if self.Closed:
-          raise      
+          raise
         t.join()
       if [] in gens.values():
         raise
@@ -2086,7 +2086,7 @@ class BaseMap(WGS84WebMercator):
   def __new__(cls, *args, **kwargs):
     if cls is BaseMap:
       raise TypeError('the class BaseMap is not intended to be instantiated directly')
-    return object.__new__(cls) 
+    return object.__new__(cls)
 
   def __init__(self, tiles_buffer_size=None, tiles_max_threads=None):
     self.Map = None
@@ -2318,7 +2318,7 @@ class BaseMap(WGS84WebMercator):
       return dict(getattr(cls, 'TS_' + name))
     else:
       return None
-      
+
   @classmethod
   def WGS84toTile(cls, infos, lat, lon):
     try:
@@ -2398,7 +2398,7 @@ class BaseMap(WGS84WebMercator):
           if c_node.localName == 'Identifier':
             if _XMLGetNodeText(c_node) == infos['style']:
               style = node
-            break 
+            break
           if style:
             break
       if not style:
@@ -2409,7 +2409,7 @@ class BaseMap(WGS84WebMercator):
           if c_node.localName == 'TileMatrixSet':
             if _XMLGetNodeText(c_node) == infos['matrixset']:
               matrixset = node
-            break 
+            break
           if matrixset:
             break
       if not matrixset:
@@ -2841,7 +2841,7 @@ class BaseMap(WGS84WebMercator):
       bound_retrieve_tiles.pconnection = pconnections[ind]
       return bound_retrieve_tiles
     return bind_retrieve_tiles(0) if number == 1 else [bind_retrieve_tiles(i) for i in range(number)]
-      
+
   def RetrieveTiles(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, memory_store=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, only_local=False, threads=10):
     if not local_store and memory_store is None:
       return False
@@ -2936,7 +2936,7 @@ class BaseMap(WGS84WebMercator):
       except:
         return False
       if minrow > maxrow or mincol > maxcol:
-        return False      
+        return False
       box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
       for col in range(mincol, maxcol + 1):
         tiles.append([None] * (maxrow + 1 - minrow))
@@ -3296,7 +3296,7 @@ class WebMercatorMap(BaseMap):
 
 
 class WGS84Map(BaseMap):
-  
+
   CRS = 'EPSG:4326'
   CRS_MPU = math.pi / 180 * WGS84WebMercator.R
   WMS_BBOX = '{miny},{minx},{maxy},{maxx}'
@@ -3317,7 +3317,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
   TAGS_SHORT = {258: 'bits_per_sample', 259: 'compression' , 277: 'samples_per_pixel', 284: 'planar_configuration', 317: 'predictor', 339: 'sample_format'}
   TAGS_SHORT_LONG = {256: 'image_width', 257: 'image_length', 273: 'strip_offsets', 278: 'rows_per_strip', 279: 'strip_byte_counts', 322: 'tile_width', 323: 'tile_length', 325: 'tile_byte_counts'}
   TAGS_LONG = {324: 'tile_offsets'}
-  
+
   kernel32 = None
 
   @classmethod
@@ -3543,13 +3543,13 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       cls.GlobalAlloc.argtypes = ctypes.wintypes.UINT, ctypes.c_ssize_t
       cls.GlobalAlloc.restype = ctypes.wintypes.HANDLE
       cls.GlobalLock = cls.kernel32.GlobalLock
-      cls.GlobalLock.argtypes = ctypes.wintypes.HGLOBAL, 
+      cls.GlobalLock.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalLock.restype = ctypes.wintypes.LPVOID
       cls.GlobalUnlock = cls.kernel32.GlobalUnlock
-      cls.GlobalUnlock.argtypes = ctypes.wintypes.HGLOBAL, 
+      cls.GlobalUnlock.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalUnlock.restype = ctypes.wintypes.LPVOID
       cls.GlobalSize = cls.kernel32.GlobalSize
-      cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL, 
+      cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalSize.restype = ctypes.c_ssize_t
       cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
       cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, "Release")
@@ -3564,7 +3564,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       hl = cls.GlobalLock(h)
       ctypes.memmove(hl, self.image, len(self.image))
       cls.GlobalUnlock(h)
-      ist = ctypes.c_void_p() 
+      ist = ctypes.c_void_p()
       cls.CreateStreamOnHGlobal(h, True, ctypes.byref(ist))
       i = ctypes.c_void_p()
       if cls.gdiplus.GdipLoadImageFromStream(ist, ctypes.byref(i)):
@@ -3613,7 +3613,7 @@ class JSONTiles():
 
   @staticmethod
   def _get_resource(rpath, rjson, local_expiration, local_store):
-    updt = False  
+    updt = False
     exp = False
     loc_res = None
     res = None
@@ -3709,7 +3709,7 @@ class JSONTiles():
             for k in ('alias', 'width', 'height', 'basescale', 'topx', 'topy', 'overwrite_schemes', 'overwrite_names'):
               if k in infos and infos[k] != inf[k]:
                 inf[k] = infos[k]
-                updt = True 
+                updt = True
           loc = True
         elif local_store:
           Path(os.path.dirname(infopath)).mkdir(parents=True, exist_ok=True)
@@ -3727,7 +3727,7 @@ class JSONTiles():
         if updt:
           f = open(infopath, 'wt', encoding='utf-8')
           json.dump(inf, f)
-      except:        
+      except:
         pass
       finally:
         try:
@@ -4067,7 +4067,7 @@ class WGS84Elevation(WGS84Map):
   @classmethod
   def ElevationfromTile(cls, infos, tile, lat, lon):
     px = (lon - infos['topx']) * cls.CRS_MPU / infos['scale'] - infos['col'] * infos['width']
-    py = (infos['topy'] - lat) * cls.CRS_MPU / infos['scale'] - infos['row'] * infos['height'] 
+    py = (infos['topy'] - lat) * cls.CRS_MPU / infos['scale'] - infos['row'] * infos['height']
     if infos['format'] == 'image/x-bil;bits=32':
       try:
         if px < 0 or px >= infos['width'] or py < 0 or py >= infos['height']:
@@ -4314,7 +4314,7 @@ class WGS84Elevation(WGS84Map):
         ele = ele[0]
       except:
         return None
-    return ele      
+    return ele
 
   def GenerateBil32Map(self, infos, minlat, maxlat, minlon, maxlon, nbpoints, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, threads=10):
     if nbpoints <= 1 or minlat >= maxlat or minlon >= maxlon:
@@ -4369,7 +4369,7 @@ class WGS84Elevation(WGS84Map):
       if rid is None:
         self.LazyTilesArgs = None
       else:
-        self.LazyTilesArgs = (infos_base, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local)      
+        self.LazyTilesArgs = (infos_base, matrix, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, only_local)
         self.LazyTiles.Id = rid
       return False
     else:
@@ -4560,7 +4560,7 @@ class MapLegend():
   TL_IGN_PENTESMONTAGNE = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN/legendes/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN-legend.png'}
   TL_CYCLOSM = {'*': 'https://veillecarto2-0.fr/wp-content/uploads/2019/10/extrait_le%CC%81gende.png'}
   TL_THUNDERFOREST_CYCLE = {'*': 'https://www.cyclestreets.net/images/general/mapkeyopencyclemap.png'}
-  
+
   def __init__(self):
     self.WMSCache = {}
     self.WMTSCache = {}
@@ -4620,7 +4620,7 @@ class MapLegend():
                 style_name = _XMLGetNodeText(c_node)
                 if style_name in styles or def_style:
                   style = s_node
-                break 
+                break
             if style:
               try:
                 l_node = style.getElementsByTagNameNS('*', 'LegendURL')[0]
@@ -4746,7 +4746,7 @@ class MapLegend():
           if c_node.localName == 'Identifier':
             if _XMLGetNodeText(c_node) == infos['style']:
               style = node
-            break 
+            break
         if style:
           break
       if not style:
@@ -5118,7 +5118,7 @@ class XMLElement(XMLNode):
 class XMLCharacterData(XMLNode):
 
   __slots__ = ('data',)
-  
+
   namespaceURI = XMLNode.EMPTY_NAMESPACE
   prefix = XMLNode.EMPTY_PREFIX
 
@@ -5143,7 +5143,7 @@ class XMLCharacterData(XMLNode):
 class XMLText(XMLCharacterData):
 
   __slots__ = ()
-  
+
   nodeType = XMLNode.TEXT_NODE
   name = localName = '#text'
 
@@ -5278,7 +5278,7 @@ class ExpatGPXBuilder:
     self.Parser.EndNamespaceDeclHandler = self.EndNamespaceDeclHandler
     self.Parser.CommentHandler = self.CommentHandler
     self.Parser.DefaultHandler = self.DefaultHandler
-    
+
   def Parse(self, xmlstring):
     self.NewParser()
     try:
@@ -5355,7 +5355,7 @@ class ExpatGPXBuilder:
               uri2 = self.intern(uri2, uri2)
               qname = prefix + ':' + localname
               qname = self.intern(qname, qname)
-              node.attributes[(uri2, localname)] = [qname, attributes[i + 1]]          
+              node.attributes[(uri2, localname)] = [qname, attributes[i + 1]]
           elif l == 2:
             uri2, localname = parts
             localname = self.intern(localname, localname)
@@ -5448,7 +5448,7 @@ class WGS84Track(WGS84WebMercator):
   @property
   def OTrack(self):
     return self._tracks[0]
-  
+
   @OTrack.setter
   def OTrack(self, value):
     self._tracks[0] = value
@@ -5462,7 +5462,7 @@ class WGS84Track(WGS84WebMercator):
   @property
   def STrack(self):
     return self._tracks[1]
-  
+
   @STrack.setter
   def STrack(self, value):
     self._tracks[1] = value
@@ -5476,7 +5476,7 @@ class WGS84Track(WGS84WebMercator):
   @property
   def Track(self):
     return self._tracks[2]
-  
+
   @Track.setter
   def Track(self, value):
     self._tracks[2] = value
@@ -6030,7 +6030,7 @@ class WGS84Track(WGS84WebMercator):
               if u is None:
                 r.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
               elif u != _v[1]:
-                raise          
+                raise
           elif u != _v[1]:
             raise
         elif not _w:
@@ -6041,13 +6041,13 @@ class WGS84Track(WGS84WebMercator):
             _trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
       if mode == 's':
         for _ln, _v in _trk.getNameSpaces():
-          u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)          
-          if u is None:          
+          u = trk.getAttribute(_ln, self.XMLNS_NAMESPACE)
+          if u is None:
             u = r.getAttribute(_ln, self.XMLNS_NAMESPACE)
             if u is None:
               trk.setAttribute(_ln, self.intern(_v[1], _v[1]), self.XMLNS_NAMESPACE, _v[0])
             elif u != _v[1]:
-              raise          
+              raise
           elif u != _v[1]:
             raise
       no = None
@@ -6121,7 +6121,7 @@ class WebMapping():
 class GeotaggedMedia():
 
   MP4_EPOCH = 2082844800
-  
+
   def __init__(self, folders, photos=True, videos=True, box=None):
     self.Folders = folders
     self.Photos = photos
@@ -6351,7 +6351,7 @@ class GeotaggedMedia():
         lon = float(lon[0:1] + b'1') * (float(lon[1:4]) + float(lon[4:6]) / 60 + float(lon[6:]) / 3600)
       else:
         raise
-      f.seek(mvhd[0] + 4) 
+      f.seek(mvhd[0] + 4)
       datetime = struct.unpack('>I', f.read(4))[0]
       if datetime:
         datetime = time.strftime('%x %X', time.localtime(struct.unpack('>I', f.read(4))[0] - GeotaggedMedia.MP4_EPOCH))
@@ -6378,7 +6378,7 @@ class GeotaggedMedia():
         if t == b'tkhd':
           if l < 84:
             raise
-          f.seek(40, os.SEEK_CUR) 
+          f.seek(40, os.SEEK_CUR)
           matrix = f.read(36)
           if matrix[0:4] == b'\x00\x01\x00\x00':
             width = struct.unpack('>I', f.read(4))[0] >> 16
@@ -6460,7 +6460,7 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
     except:
       pass
     super().server_bind()
-    
+
   def shutdown(self):
     super().shutdown()
     self.socket.close()
@@ -6718,7 +6718,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                     resp_body = json.dumps({'layers': [{**{k: self.server.Interface.TilesSets[self.server.Interface.TilesSet][1][k] for k in ('topx', 'topy', 'width', 'height')}, 'ext': '.json'}], 'matrix': q['matrix'][0], 'scale': self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]['basescale'] / (2 ** int(q['matrix'][0])) / self.server.Interface.Map.CRS_MPU, 'level': l1}).encode('utf-8')
                     _send_resp('application/json; charset=utf-8')
                   except:
-                    _send_err_fail()                  
+                    _send_err_fail()
               else:
                 if not self.server.Interface.Map.SetTilesProviders({(tsos[0], tsos[2].get(q['matrix'][0], q['matrix'][0])): self.server.Interface.TilesSets[tsos[0]][1:3] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]}):
                   _send_err_fail()
@@ -9108,7 +9108,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
   '            filter = "url(\'data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\"><filter id=\\"attenuate\\"><feComponentTransfer color-interpolation-filters=\\"sRGB\\"><feFuncR %f/><feFuncG %f/><feFuncB %f/></feComponentTransfer></filter></svg>#attenuate\')".replace(/%f/g, `type=\\"gamma\\" offset=\\"${(1.0 - adjustment_a).toFixed(1)}\\" amplitude=\\"${adjustment_a.toFixed(1)}\\" exponent=\\"${adjustment_e.toFixed(1)}\\"`);\r\n' \
   '        }\r\n' \
-  '        document.documentElement.style.setProperty("--filter", filter);\r\n' \
+  '        document.getElementById("dummy").style.filter = filter;\r\n' \
+  '        setTimeout(() => document.documentElement.style.setProperty("--filter", filter), 1);\r\n' \
   '        show_msg("{#jmadjust#}".replace("%s", adjustment_a.toFixed(1)).replace("%s", adjustment_e.toFixed(1)), 2);\r\n' \
   '      }\r\n' \
   '      function scrollcross(sw=false) {\r\n' \
@@ -12065,7 +12066,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button><span id="dummy" style="display:inline-block;visibility:hidden;width:0px;"/></span></span>\r\n' + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -16278,7 +16279,7 @@ class GPXTweakerWebInterfaceServer():
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="font-size:80%;">&#128269;&#xfe0e;</button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:63.4em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:63.4em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button><span id="dummy" style="display:inline-block;visibility:hidden;width:0px;"/></span></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -17784,7 +17785,7 @@ class GPXTweakerWebInterfaceServer():
       _e_m_ = self.Elevation.Map
       eles = tuple(tuple(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
       minele = min(min(eles[row]) for row in range(nrow))
-      maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)  
+      maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
     minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
     maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
     xy_den = max(maxx - minx, maxy - miny) / 2
@@ -17898,7 +17899,7 @@ class GPXTweakerWebInterfaceServer():
         n = n.strip('\r\n ')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</div>', pos) + 6:]
       else:
-        pos = self.HTMLExp.find('\r\n                </form>', self.HTMLExp.find('<form id="tracksform"')) 
+        pos = self.HTMLExp.find('\r\n                </form>', self.HTMLExp.find('<form id="tracksform"'))
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
         pos = self.HTMLExp.find('<br>', self.HTMLExp.find('<div id="tracks"'))
         self.HTMLExp = self.HTMLExp[:self.HTMLExp.rfind('(', 0, pos)] + '(%d)' % len(self.Tracks) + self.HTMLExp[pos:]
