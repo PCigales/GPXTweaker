@@ -1,4 +1,4 @@
-﻿# GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -9105,8 +9105,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (window[adj] < 0.91) {window[adj] += 0.1;} else {return;}\r\n' \
   '        }\r\n' \
   '        Array.from(document.getElementById("attenuate").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
-  '        if (adjustment_a < 0.91 || adjustment_e < 0.91 ) {\r\n' \
-  '          if (document.documentElement.style.getPropertyValue("--filter").length <= 4) {document.documentElement.style.setProperty("--filter", "url(#attenuate)");}\r\n' \
+  '        if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
+  '          if ((document.documentElement.style.getPropertyValue("--filter") || "").length <= 4) {document.documentElement.style.setProperty("--filter", "url(#attenuate)");}\r\n' \
   '        } else {\r\n' \
   '          document.documentElement.style.setProperty("--filter", "none");\r\n' \
   '        }\r\n' \
@@ -9356,8 +9356,8 @@ class GPXTweakerWebInterfaceServer():
   '        scroll_to_track();\r\n' \
   '        if (prev_state != null) {\r\n' \
   '          [adjustment_a, adjustment_e] = prev_state[5].split("-").map(Number);\r\n' \
-  '          Array.from(document.getElementById("attenuate").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
   '          if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
+  '            Array.from(document.getElementById("attenuate").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
   '            document.documentElement.style.setProperty("--filter", "url(#attenuate)");\r\n' \
   '          }\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
