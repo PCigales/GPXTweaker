@@ -7526,9 +7526,6 @@ class GPXTweakerWebInterfaceServer():
   '        padding-left:0.4em;\r\n' \
   '        border-left:1px rgb(225,225,225) solid;\r\n' \
   '      }\r\n' \
-  '      div[id=handle]>img {\r\n' \
-  '        filter:var(--filter);\r\n' \
-  '      }\r\n' \
   '      div[id=view]>div[id^=jmap] {\r\n' \
   '        position:absolute;\r\n' \
   '        pointer-events:none;\r\n' \
@@ -7538,7 +7535,6 @@ class GPXTweakerWebInterfaceServer():
   '        transform-origin:left top;\r\n' \
   '        transform:scale(var(--zoom));\r\n' \
   '        background-color:rgba(0,0,0,0);\r\n' \
-  '        filter:var(--filter);\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
   '        div[id=handle]>img::before{\r\n' \
@@ -8125,13 +8121,13 @@ class GPXTweakerWebInterfaceServer():
   '        for (let irule=nrule-1; irule>=0; irule--) {\r\n' \
   '          if ((rules[irule].selectorText || "").indexOf("tile-") > 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
   '        }\r\n' \
+  '        nrule = rules.length;\r\n' \
   '        if (tlayers.has(tset)) {\r\n' \
   '          let tlays = tlayers.get(tset);\r\n' \
   '          if (! opacities.has(tset)) {\r\n' \
   '            opacities.set(tset, tlays.map((l)=>l[1].replace("x", "")));\r\n' \
   '          }\r\n' \
   '          let opcts = opacities.get(tset);\r\n' \
-  '          nrule = rules.length;\r\n' \
   '          let tiset = document.getElementById("tset");\r\n' \
   '          for (let l=0; l<tlays.length; l++) {\r\n' \
   '            let ls = l.toString();\r\n' \
@@ -8163,6 +8159,8 @@ class GPXTweakerWebInterfaceServer():
   '            document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
   '            document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
   '          }\r\n' \
+  '        } else {\r\n' \
+  '          document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-0] {z-index:-1;}", nrule);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function set_jmaps() {\r\n' \
@@ -8243,7 +8241,6 @@ class GPXTweakerWebInterfaceServer():
   '          if (treset == 2) {\r\n' \
   '            set_jmaps();\r\n' \
   '            set_opacities();\r\n' \
-  '            document.getElementById("background").style.zIndex = -1 - layers.length;\r\n' \
   '          } else {\r\n' \
   '            let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
@@ -8339,6 +8336,7 @@ class GPXTweakerWebInterfaceServer():
   '            tile.onerror =  function(e) {tile.onerror = null; text = ".png"; tile.src = "/map/" + tile.id + text;};\r\n' \
   '          }\r\n' \
   '          tile.src = "/map/" + tile.id + text;\r\n' \
+  '          tile.style.zIndex = -1;\r\n' \
   '        } else {\r\n' \
   '          let tpos = row.toString() + "-" + col.toString();\r\n' \
   '          tile.id = pref + tpos;\r\n' \
@@ -9398,7 +9396,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + JSON.stringify(Array.from(opacities)));\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "{}" : JSON.stringify(Array.from(opacities))));\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -12110,7 +12108,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);z-index:-2;pointer-events:none;"></div>\r\n' \
+  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);pointer-events:none;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
@@ -15894,7 +15892,6 @@ class GPXTweakerWebInterfaceServer():
   '        mcnv2d.width = cwidth;\r\n' \
   '        mcnv2d.height = cheight;\r\n' \
   '        ctx.globalCompositeOperation = "source-over";\r\n' \
-  '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
   '        ctx.fillStyle = "rgb(40,45,50)";\r\n' \
   '        ctx.fillRect(0, 0, mcnv2d.width, mcnv2d.height);\r\n' \
   '        let prom_res = null;\r\n' \
@@ -16043,6 +16040,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '        msgn = show_msg("{#jmdownmap3#}", 0, msgn);\r\n' \
   '        ctx.globalCompositeOperation = "destination-over";\r\n' \
+  '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
   '        ctx.drawImage(mcnv2d, 0, 0);\r\n' \
   '        mcnv2d.width = mcnv2d.height = 1;\r\n' \
   '        msgn = show_msg("{#jmdownmap4#}", 0, msgn);\r\n' \
@@ -16316,7 +16314,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);z-index:-2;pointer-events:none;"></div>\r\n' \
+  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);pointer-events:none;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
