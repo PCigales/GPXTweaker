@@ -8157,9 +8157,11 @@ class GPXTweakerWebInterfaceServer():
   '            e.innerHTML = (parseFloat(opcts[l])*100).toFixed(0)+" %";\r\n' \
   '            oform.appendChild(e);\r\n' \
   '            document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
-  '            document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
+  '            if (layers[l].ext != ".json") {\r\n' \
+  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
-  '        } else {\r\n' \
+  '        } else if (layers[0].ext != ".json") {\r\n' \
   '          document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-0] {z-index:-1;}", nrule);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -8414,8 +8416,6 @@ class GPXTweakerWebInterfaceServer():
   '                      if (tile.naturalWidth) {\r\n' \
   '                        tile.id = pref + tpos;\r\n' \
   '                        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
-  '                        tile.style.opacity = "";\r\n' \
-  '                        tile.style.zIndex = "";\r\n' \
   '                      } else {\r\n' \
   '                        tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
   '                      }\r\n' \
