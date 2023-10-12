@@ -8169,7 +8169,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (tmaplibre != true) {return;}\r\n' \
   '        for (let jm=0; jm<jmaps.length; jm++) {\r\n' \
   '          jmaps[jm].remove();\r\n' \
-  '          document.getElementById("view").removeChild(document.getElementById("jmap" + jm.toString()));\r\n' \
+  '          viewpane.removeChild(document.getElementById("jmap" + jm.toString()));\r\n' \
   '        }\r\n' \
   '        jmaps = [];\r\n' \
   '        let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
@@ -8184,11 +8184,11 @@ class GPXTweakerWebInterfaceServer():
   '            jdiv.style.opacity = "var(--opacity" + l.toString() + ")";\r\n' \
   '            if (tlays[l][1].indexOf("x")>=0) {jdiv.style.mixBlendMode = "multiply";}\r\n' \
   '          }\r\n' \
-  '          document.getElementById("view").insertBefore(jdiv, handle);\r\n' \
+  '          viewpane.insertBefore(jdiv, handle);\r\n' \
   '          try {\r\n' \
   '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1}));\r\n' \
   '          } catch(error) {\r\n' \
-  '            document.getElementById("view").removeChild(jdiv);\r\n' \
+  '            viewpane.removeChild(jdiv);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -12110,7 +12110,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;background:rgb(40,45,50);filter:var(--filter);z-index:-2;"></div>\r\n' \
+  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;background:rgb(40,45,50);filter:var(--filter);z-index:-2;;pointer-events:none;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
@@ -16316,7 +16316,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;background:rgb(40,45,50);filter:var(--filter);z-index:-2;"></div>\r\n' \
+  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;background:rgb(40,45,50);filter:var(--filter);z-index:-2;pointer-events:none;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
