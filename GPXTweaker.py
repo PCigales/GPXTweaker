@@ -8243,6 +8243,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (treset == 2) {\r\n' \
   '            set_jmaps();\r\n' \
   '            set_opacities();\r\n' \
+  '            document.getElementById("background").style.zIndex = -1 - layers.length;\r\n' \
   '          } else {\r\n' \
   '            let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
@@ -12109,6 +12110,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;background:rgb(40,45,50);filter:var(--filter);z-index:-2;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
@@ -15893,6 +15895,8 @@ class GPXTweakerWebInterfaceServer():
   '        mcnv2d.height = cheight;\r\n' \
   '        ctx.globalCompositeOperation = "source-over";\r\n' \
   '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
+  '        ctx.fillStyle = "rgb(40,45,50)";\r\n' \
+  '        ctx.fillRect(0, 0, mcnv2d.width, mcnv2d.height);\r\n' \
   '        let prom_res = null;\r\n' \
   '        let prom = null;\r\n' \
   '        let prom_c = null;\r\n' \
@@ -16312,6 +16316,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;background:rgb(40,45,50);filter:var(--filter);z-index:-2;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
