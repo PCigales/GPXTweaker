@@ -16858,6 +16858,47 @@ class GPXTweakerWebInterfaceServer():
   '  <svg id="waydots%s" viewbox="##VIEWBOX##" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
   '                </svg>\r\n              '
 
+  @staticmethod
+  def cpu_pcores_count():
+    try:
+      kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
+      byref = ctypes.byref
+      sizeof = ctypes.sizeof
+      DWORD = ctypes.wintypes.DWORD
+      WORD = ctypes.wintypes.WORD
+      BYTE = ctypes.wintypes.BYTE
+      ULONG_PTR = ctypes.c_size_t
+      ULONGLONG = ctypes.c_ulonglong
+      INT = ctypes.c_int
+      STRUCTURE = ctypes.Structure
+      UNION = ctypes.Union
+      class PROCESSOR_CORE(STRUCTURE):
+        _fields_ = [('Flags', BYTE)]
+      class NUMA_NODE(STRUCTURE):
+        _fields_ = [('NodeNumber', DWORD)]
+      class CACHE_DESCRIPTOR(STRUCTURE):
+        _fields_ = [('Level', BYTE), ('Associativity', BYTE), ('LineSize', WORD), ('Size', DWORD), ('Type',INT)]
+      class DUMMYUNIONNAME(UNION):
+        _fields_ = [('ProcessorCore', PROCESSOR_CORE), ('NumaNode', NUMA_NODE), ('Cache', CACHE_DESCRIPTOR), ('Reserved', ULONGLONG * 2)]
+      class SYSTEM_LOGICAL_PROCESSOR_INFORMATION(STRUCTURE):
+        _anonymous_ = ('DUMMYUNIONNAME',)
+        _fields_ = [('ProcessorMask', ULONG_PTR), ('Relationship', INT), ('DUMMYUNIONNAME', DUMMYUNIONNAME)]
+      b = ctypes.create_string_buffer(0)
+      s = DWORD(0)
+      kernel32.GetLogicalProcessorInformation(b, byref(s))
+      if kernel32.GetLastError() != 122:
+        return None
+      b = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION * (s.value // sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION)))()
+      if not kernel32.GetLogicalProcessorInformation(b, byref(s)):
+        return None
+      npcores = 0
+      for i in b:
+        if not i.Relationship:
+          npcores += 1
+      return npcores
+    except:
+      return None
+
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + r'\GPXTweaker.cfg'):
     try:
       f = open(uri, 'rt', encoding='utf-8')
@@ -17148,7 +17189,13 @@ class GPXTweakerWebInterfaceServer():
       elif hcur == 'explorer':
         if scur == 'loading':
           if field == 'workers':
-            self.ExplorerLoadingWorkers = 1 if value is None else max(1, int(value))
+            if value in ('*', 'auto', True):
+              npcores = self.cpu_pcores_count()
+              self.ExplorerLoadingWorkers = 1 if npcores is None else max(1, npcores)
+            elif value in (None, False):
+              self.ExplorerLoadingWorkers = 1
+            else:
+              self.ExplorerLoadingWorkers = max(1, int(value))
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -17680,8 +17727,7 @@ class GPXTweakerWebInterfaceServer():
             break
       else:
         self.GPXLoader = GPXLoader(self.ExplorerLoadingWorkers, self.SLock)
-        l = (tuple(uris))
-        self.Tracks, self.TracksBoundaries, tskipped, taborted, gaborted = self.GPXLoader.Load(l, (dminlat, dmaxlat, dminlon, dmaxlon), (self.VMinLat, self.VMaxLat, self.VMinLon, self.VMaxLon))
+        self.Tracks, self.TracksBoundaries, tskipped, taborted, gaborted = self.GPXLoader.Load(tuple(uris), (dminlat, dmaxlat, dminlon, dmaxlon), (self.VMinLat, self.VMaxLat, self.VMinLon, self.VMaxLon))
       if tskipped or taborted or gaborted:
         self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted)
       else:
