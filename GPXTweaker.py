@@ -8196,7 +8196,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
-  '            tlevel = nlevel;\r\n' \
+  '            tlevel = nlevel || 1;\r\n' \
   '            layers = [];\r\n' \
   '            if (treset == 2) {set_jmaps();}\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
