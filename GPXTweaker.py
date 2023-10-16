@@ -39,7 +39,6 @@ import msvcrt
 import locale
 import argparse
 import gc
-import pickle
 
 locale.setlocale(locale.LC_TIME, '')
 
@@ -7463,7 +7462,7 @@ class GPXLoader():
                   trck.log(0, 'lerror', uri + (' <%s>' % trk))
                 with gindex.get_lock():
                   print(*LogBuffer, sep='\r\n')
-                LogBuffer.clear()                
+                LogBuffer.clear()
                 taborted += trk + 1
                 garb.append(trck)
               break
