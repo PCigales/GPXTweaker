@@ -7109,7 +7109,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               ouri, track = self.server.Interface.Tracks[tr_ind]
               trkid = track.TrkId
               _tracks = track._tracks
-              nuri = track.DetachFromGPX((tr[1] for tr in self.server.Interface.Tracks if tr[1] != track and tr[0] == ouri), ouri)
+              nuri = track.DetachFromGPX((tr[1] for tr in self.server.Interface.Tracks if tr[0] == ouri and tr[1].TrkId != track.TrkId), ouri)
               if not nuri:
                 raise
             except:
@@ -7138,7 +7138,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               uri1, track1 = self.server.Interface.Tracks[tr_ind1]
               uri2, track2 = self.server.Interface.Tracks[tr_ind2]
               _tracks = track2._tracks
-              if not track1.AppendToGPX(track2, (tr[1] for tr in self.server.Interface.Tracks if tr[1] != track1 and tr[0] == uri1), mode, uri1):
+              if not track1.AppendToGPX(track2, (tr[1] for tr in self.server.Interface.Tracks if tr[0] == uri1 and tr[1].TrkId != track1.TrkId), mode, uri1):
                 raise
               del track1.OTrack
               track1.OTrack = track1.Track
@@ -7403,6 +7403,7 @@ class WGS84TrackProxy():
           object.__delattr__(self, att)
 
   def __getattr__(self, name):
+    print(name)
     self._gather()
     return getattr(self._track, name)
 
@@ -7410,7 +7411,7 @@ class WGS84TrackProxy():
     self._gather()
     setattr(self._track, name, value)
 
-  def _delattr(self, name):
+  def __delattr__(self, name):
    self._gather()
    delattr(self._track, name)
 
@@ -7526,18 +7527,17 @@ class GPXLoader():
       gc.enable()
     while gtracks:
       try:
-        ind_trk = connection.recv()
+        ind = connection.recv()
       except EOFError:
         for tracks in gtracks.values():
           for trck in tracks:
             trck.OTrack = trck.STrack = None
             del trck.Track
         break
-      ind, trk = ind_trk
-      connection.send(gtracks[ind][trk])
-      gtracks[ind][trk] = None
-      if not any(gtracks[ind]):
-        del gtracks[ind]
+      connection.send(tuple(trck for trck in gtracks[ind]))
+      gtracks[ind][0].OTrack = gtracks[ind][0].STrack = None
+      del gtracks[ind][0].Track
+      del gtracks[ind]
 
   def Retrieve(self, tindex):
     with self.RCondition:
@@ -7556,9 +7556,12 @@ class GPXLoader():
     return self.Tracks[tindex][1]
 
   def Repatriate(self):
+    l = len(self.CTracks)
     while True:
       with self.RCondition:
-        if self.RIndex >= len(self.CTracks):
+        if self.RIndex >= l:
+          for trck in self.Tracks:
+            print(trck[0], trck[1].Track)
           break
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
@@ -7567,11 +7570,17 @@ class GPXLoader():
           self.RIndex += 1
         if self.CTracks[tindex] is None:
           continue
-      self.CTracks[tindex][1].send(self.CTracks[tindex][0])
-      self.Tracks[tindex][1] = self.CTracks[tindex][1].recv()
-      self.Tracks[tindex][1].ULock = self.SLock
+      gind = self.CTracks[tindex][0]
+      self.CTracks[tindex][1].send(gind)
+      tracks = self.CTracks[tindex][1].recv()
+      _tindex = tindex
       with self.RCondition:
-        self.CTracks[tindex] = None
+        while _tindex >= 1 and self.CTracks[_tindex - 1] and self.CTracks[_tindex - 1][0] == gind:
+          _tindex -= 1
+        for _tindex, track in zip(range(_tindex, _tindex + len(tracks)), tracks):
+          self.Tracks[_tindex][1] = track
+          self.Tracks[_tindex][1].ULock = self.SLock
+          self.CTracks[_tindex] = None
         self.RCondition.notify_all()
 
   def Load(self, uris, dboundaries, mboundaries):
@@ -7602,7 +7611,7 @@ class GPXLoader():
     tindex = 0
     self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for gind, uri in enumerate(uris) for track in gtracks[gind])]
     tracksb = [trackb for gind in range(len(uris)) for trackb in gtracksb[gind]]
-    self.CTracks = [((gind, trk), gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
+    self.CTracks = [(gind, gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
     self.RThread = threading.Thread(target=self.Repatriate)
     self.RThread.start()
     return self.Tracks, tracksb, tskipped, taborted, gaborted
