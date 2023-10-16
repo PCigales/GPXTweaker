@@ -763,24 +763,46 @@ try:
 except:
   pass
 
+def enable_vt100():
+  try:
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    byref = ctypes.byref
+    DWORD = ctypes.wintypes.DWORD
+    HANDLE = ctypes.wintypes.HANDLE
+    m = DWORD()
+    h = HANDLE(msvcrt.get_osfhandle(sys.stdout.fileno()))
+    if not kernel32.GetConsoleMode(h, byref(m)):
+      return False
+    if not kernel32.SetConsoleMode(h, DWORD(m.value | 5)):
+      return False
+  except:
+    return False
+  return True
+
 VERBOSITY = 0
 if __name__ == '__mp_main__':
+  VT100 = False
   LogBuffer = []
-  def log(kmod, level, kmsg, *var):
+  def log(kmod, level, kmsg, *var, color=None):
     if level <= VERBOSITY:
-      now = time.localtime()
+      now = time.strftime('%x %X', time.localtime())
+      if color and VT100:
+        now = '\033[%dm%s\033[0m' % (color, now)
       try:
-        LogBuffer.append('%s : %s -> %s' % (time.strftime('%x %X', now), LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
+        LogBuffer.append('%s : %s -> %s' % (now, LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
       except:
-        LogBuffer.append('%s : %s -> %s' % (time.strftime('%x %X', now), kmod, '->', kmsg, var))
+        LogBuffer.append('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
 else:
-  def log(kmod, level, kmsg, *var):
+  VT100 = enable_vt100()    
+  def log(kmod, level, kmsg, *var, color=None):
     if level <= VERBOSITY:
-      now = time.localtime()
+      now = time.strftime('%x %X', time.localtime())
+      if color and VT100:
+        now = '\033[%dm%s\033[0m' % (color, now)
       try:
-        print(time.strftime('%x %X', now), ':', LSTRINGS[kmod]['_id'], '->', LSTRINGS[kmod][kmsg] % var)
+        print(now, ':', LSTRINGS[kmod]['_id'], '->', LSTRINGS[kmod][kmsg] % var)
       except:
-        print(time.strftime('%x %X', now), ':', kmod, '->', kmsg, var)
+        print(now, ':', kmod, '->', kmsg, var)
 
 
 def _XMLGetNodeText(nodes):
@@ -5682,7 +5704,7 @@ class WGS84Track(WGS84WebMercator):
       self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
     except:
       self.__init__()
-      self.log(0, 'oerror', uri)
+      self.log(0, 'oerror', uri, color=31)
       if gcie:
         gc.enable()
       return False
@@ -5697,7 +5719,7 @@ class WGS84Track(WGS84WebMercator):
         self.__init__()
       else:
         self.OTrack = self.STrack = self.Track
-      self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''))
+      self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''), color=31)
       if gcie:
         gc.enable()
       return False
@@ -5705,7 +5727,7 @@ class WGS84Track(WGS84WebMercator):
       self.OTrack = self.STrack = self.Track
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
-    self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
+    self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts), color=32)
     if gcie:
       gc.enable()
     return True
@@ -7408,9 +7430,11 @@ class GPXLoader():
     self.Closed = False
 
   @staticmethod
-  def Worker(gindex, connection, dboundaries, mboundaries, verbosity):
+  def Worker(gindex, connection, dboundaries, mboundaries, verbosity, vt100):
     global VERBOSITY
     VERBOSITY = verbosity
+    global VT100
+    VT100 = vt100
     uris = connection.recv()
     builder = ExpatGPXBuilder()
     gtracks = {}
@@ -7475,7 +7499,7 @@ class GPXLoader():
             maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=dboundaries[3])
             if minlat < mboundaries[0] or maxlat > mboundaries[1] or minlon < mboundaries[2] or maxlon > mboundaries[3]:
               tskipped += 1
-              log('interface', 0, 'berror6')
+              log('interface', 0, 'berror6', color=31)
             else:
               gtracks.setdefault(ind, []).append(track)
               with qcondition:
@@ -7553,7 +7577,7 @@ class GPXLoader():
     gindex = multiprocessing.Value('I', 0)
     pipes = tuple(multiprocessing.Pipe() for i in range(self.NWorkers))
     self.Connections = tuple(pipe[0] for pipe in pipes)
-    self.Workers = tuple(multiprocessing.Process(target=self.Worker, args=(gindex, pipe[1], dboundaries, mboundaries, VERBOSITY)) for pipe in pipes)
+    self.Workers = tuple(multiprocessing.Process(target=self.Worker, args=(gindex, pipe[1], dboundaries, mboundaries, VERBOSITY, VT100)) for pipe in pipes)
     for worker in self.Workers:
       worker.start()
     for connection in self.Connections:
@@ -17728,7 +17752,7 @@ class GPXTweakerWebInterfaceServer():
             if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
               if uri is None:
                 tskipped += 1
-                self.log(0, 'berror6')
+                self.log(0, 'berror6', color=31)
               else:
                 self.log(0, 'berror4')
                 garb.append(track)
@@ -17755,9 +17779,9 @@ class GPXTweakerWebInterfaceServer():
         self.GPXLoader = GPXLoader(self.ExplorerLoadingWorkers, self.SLock)
         self.Tracks, self.TracksBoundaries, tskipped, taborted, gaborted = self.GPXLoader.Load(tuple(uris), (dminlat, dmaxlat, dminlon, dmaxlon), (self.VMinLat, self.VMaxLat, self.VMinLon, self.VMaxLon))
       if tskipped or taborted or gaborted:
-        self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted)
+        self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted, color=31)
       else:
-        self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti)
+        self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti, color=32)
       minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
       maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
       minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
