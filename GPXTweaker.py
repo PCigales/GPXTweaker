@@ -7560,8 +7560,6 @@ class GPXLoader():
     while True:
       with self.RCondition:
         if self.RIndex >= l:
-          for trck in self.Tracks:
-            print(trck[0], trck[1].Track)
           break
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
