@@ -7206,6 +7206,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               tind, tdef = req.path.split('?')[1].split(',', 1)
               tdef = tdef.split('|')
               self.server.Interface.TrackInd = int(tind)
+              self.server.Interface.Tracks[self.server.Interface.TrackInd][1].BuildWebMercator
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               self.server.Interface.HTML = ''
               self.server.Interface.EditMode(*map(float, tdef))
