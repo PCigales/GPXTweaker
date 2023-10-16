@@ -39,6 +39,7 @@ import msvcrt
 import locale
 import argparse
 import gc
+import pickle
 
 locale.setlocale(locale.LC_TIME, '')
 
@@ -7081,6 +7082,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               tr_ind = int(req.path.split('?')[1])
               ouri, track = self.server.Interface.Tracks[tr_ind]
               trkid = track.TrkId
@@ -7108,6 +7111,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             mode = 's' if req.path.lower()[:12] == '/incorporate' else ('ta' if req.path.lower()[:15] == '/integrateafter' else 'tb')
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(','))
               uri1, track1 = self.server.Interface.Tracks[tr_ind1]
               uri2, track2 = self.server.Interface.Tracks[tr_ind2]
@@ -7144,6 +7149,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               f_ind = int(req.path.split('?')[1])
               uri = os.path.join(self.server.Interface.Folders[f_ind], 'new.gpx')
               suf = 0
@@ -7170,6 +7177,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
           elif req.path.lower()[:5] == '/edit':
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               if self.server.Interface.HTML:
                 _send_err_bad()
                 continue
@@ -7364,17 +7373,24 @@ class WGS84TrackProxy():
     object.__setattr__(self, '_rlock', threading.Lock())
     object.__setattr__(self, '_track', None)
 
-  def __getattr__(self, name):
+  def _gather(self):
     with self._rlock:
       if self._track is None:
         object.__setattr__(self, '_track', self._retrieve())
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
+          object.__delattr__(self, att)
+
+  def __getattr__(self, name):
+    self._gather()
     return getattr(self._track, name)
 
   def __setattr__(self, name, value):
-    with self._rlock:
-      if self._track is None:
-        object.__setattr__(self, '_track', self._retrieve())
+    self._gather()
     setattr(self._track, name, value)
+
+  def _delattr(self, name):
+   self._gather()
+   delattr(self._track, name)
 
 
 class GPXLoader():
@@ -7386,7 +7402,8 @@ class GPXLoader():
     self.SLock = slock
     self.Tracks = []
     self.CTracks = []
-    self.RTracks = []
+    self.RIndex = 0
+    self.RPTracks = deque()
     self.RThread = None
     self.RCondition = threading.Condition()
     self.Closed = False
@@ -7501,17 +7518,29 @@ class GPXLoader():
   def Retrieve(self, tindex):
     with self.RCondition:
       if self.CTracks[tindex] and not self.Closed:
-        self.RTracks.append(tindex)
-      while self.CTracks[tindex] and not self.Closed:
+        self.RPTracks.append(tindex)
+      while self.CTracks[tindex]:
+        if self.Closed:
+          _track = self.Tracks[tindex][1]
+          track = object.__new__(WGS84Track)
+          track.log = partial(log, 'track')
+          track.__init__()
+          for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
+            setattr(track, att, getattr(_track, att))
+          return track
         self.RCondition.wait()
-    return WGS84Track() if self.Closed else self.Tracks[tindex][1]
+    return self.Tracks[tindex][1]
 
-  def Rapatriate(self):
+  def Repatriate(self):
     while True:
       with self.RCondition:
-        if not self.RTracks:
+        if self.RIndex >= len(self.CTracks):
           break
-        tindex = self.RTracks.pop()
+        if self.RPTracks:
+          tindex = self.RPTracks.popleft()
+        else:
+          tindex = self.RIndex
+          self.RIndex += 1
         if self.CTracks[tindex] is None:
           continue
       self.CTracks[tindex][1].send(self.CTracks[tindex][0])
@@ -7526,7 +7555,6 @@ class GPXLoader():
     pipes = tuple(multiprocessing.Pipe() for i in range(self.NWorkers))
     self.Connections = tuple(pipe[0] for pipe in pipes)
     self.Workers = tuple(multiprocessing.Process(target=self.Worker, args=(gindex, pipe[1], dboundaries, mboundaries, VERBOSITY)) for pipe in pipes)
-    ti=time.time()
     for worker in self.Workers:
       worker.start()
     for connection in self.Connections:
@@ -7551,15 +7579,14 @@ class GPXLoader():
     self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for gind, uri in enumerate(uris) for track in gtracks[gind])]
     tracksb = [trackb for gind in range(len(uris)) for trackb in gtracksb[gind]]
     self.CTracks = [((gind, trk), gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
-    self.RTracks = list(range(len(self.CTracks) - 1, -1, -1))
-    self.RThread = threading.Thread(target=self.Rapatriate)
+    self.RThread = threading.Thread(target=self.Repatriate)
     self.RThread.start()
     return self.Tracks, tracksb, tskipped, taborted, gaborted
 
   def Close(self):
     self.Closed = True
     with self.RCondition:
-      self.RTracks.clear()
+      self.RIndex = len(self.CTracks)
     if self.RThread is not None:
       self.RThread.join()
     for connection in self.Connections:
