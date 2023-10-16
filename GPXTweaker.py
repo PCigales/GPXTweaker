@@ -793,7 +793,7 @@ if __name__ == '__mp_main__':
       except:
         LogBuffer.append('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
 else:
-  VT100 = enable_vt100()    
+  VT100 = enable_vt100()
   def log(kmod, level, kmsg, *var, color=None):
     if level <= VERBOSITY:
       now = time.strftime('%x %X', time.localtime())
@@ -7416,6 +7416,7 @@ class WGS84TrackProxy():
 
   def __eq__(self, other):
     return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
+
 
 class GPXLoader():
 
