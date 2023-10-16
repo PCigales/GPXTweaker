@@ -7414,6 +7414,8 @@ class WGS84TrackProxy():
    self._gather()
    delattr(self._track, name)
 
+  def __eq__(self, other):
+    return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
 
 class GPXLoader():
 
