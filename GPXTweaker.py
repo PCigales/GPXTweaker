@@ -7403,7 +7403,6 @@ class WGS84TrackProxy():
           object.__delattr__(self, att)
 
   def __getattr__(self, name):
-    print(name)
     self._gather()
     return getattr(self._track, name)
 
