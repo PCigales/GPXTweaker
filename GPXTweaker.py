@@ -1,4 +1,4 @@
-# GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.16.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -5657,6 +5657,16 @@ class WGS84Track(WGS84WebMercator):
         return False
     return True
 
+  def _intern(self):
+    self.intern = self.intern_dict.setdefault
+    self.XMLNS = self.intern('xmlns', 'xmlns')
+    self.XMLNS_NAMESPACE = self.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
+    self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
+    self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
+    self.MT = self.intern('mytrails', 'mytrails')
+    self.XMLNS_MT = self.intern('xmlns:mytrails', 'xmlns:mytrails')
+    self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
+
   def LoadGPX(self, uri, trkid=None, source=None, builder=None):
     if self.Track is not None:
       return False
@@ -5694,14 +5704,7 @@ class WGS84Track(WGS84WebMercator):
         if self.Track is None:
           raise
         self.intern_dict = builder.intern_dict
-      self.intern = self.intern_dict.setdefault
-      self.XMLNS = self.intern('xmlns', 'xmlns')
-      self.XMLNS_NAMESPACE = self.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
-      self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
-      self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
-      self.MT = self.intern('mytrails', 'mytrails')
-      self.XMLNS_MT = self.intern('xmlns:mytrails', 'xmlns:mytrails')
-      self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
+      self._intern()
     except:
       self.__init__()
       self.log(0, 'oerror', uri, color=31)
@@ -7109,7 +7112,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               ouri, track = self.server.Interface.Tracks[tr_ind]
               trkid = track.TrkId
               _tracks = track._tracks
-              nuri = track.DetachFromGPX((tr[1] for tr in self.server.Interface.Tracks if tr[0] == ouri and tr[1].TrkId != track.TrkId), ouri)
+              nuri = track.DetachFromGPX((tr[1] for tr in self.server.Interface.Tracks if tr[1] != track and tr[0] == ouri), ouri)
               if not nuri:
                 raise
             except:
@@ -7138,7 +7141,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               uri1, track1 = self.server.Interface.Tracks[tr_ind1]
               uri2, track2 = self.server.Interface.Tracks[tr_ind2]
               _tracks = track2._tracks
-              if not track1.AppendToGPX(track2, (tr[1] for tr in self.server.Interface.Tracks if tr[0] == uri1 and tr[1].TrkId != track1.TrkId), mode, uri1):
+              if not track1.AppendToGPX(track2, (tr[1] for tr in self.server.Interface.Tracks if tr[1] != track1 and tr[0] == uri1), mode, uri1):
                 raise
               del track1.OTrack
               track1.OTrack = track1.Track
@@ -7396,27 +7399,41 @@ class WGS84TrackProxy():
     for att in ('_track', 'WebMercatorWpts', 'WebMercatorPts'):
       object.__setattr__(self, att, None)
 
-  def _gather(self):
-    with self._rlock:
-      if self._track is None:
-        object.__setattr__(self, '_track', self._retrieve())
-        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
-          object.__delattr__(self, att)
+  def _gather(self, ulock, intern_dict, _tracks):
+    if self._track is None:
+      track = object.__new__(WGS84Track)
+      track.ULock = ulock
+      track._tracks = _tracks
+      for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+        setattr(track, att, getattr(self, att))
+      track.intern_dict = intern_dict
+      track._intern()
+      track.log = partial(log, 'track')
+      object.__setattr__(self, '_track', track)
+      for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+        object.__delattr__(self, att)
+    return self._track
 
   def __getattr__(self, name):
-    self._gather()
-    return getattr(self._track, name)
+    with self._rlock:
+      if self._track is None:
+        self._retrieve()
+      return getattr(self._track, name)
 
   def __setattr__(self, name, value):
-    if name in ('WebMercatorWpts', 'WebMercatorPts'):
-      object.__setattr__(self, name, value)
-    else:
-      self._gather()
+    with self._rlock:
+      if self._track is None:
+        if name in ('WebMercatorWpts', 'WebMercatorPts'):
+          object.__setattr__(self, name, value)
+          return
+        self._retrieve()
       setattr(self._track, name, value)
 
   def __delattr__(self, name):
-   self._gather()
-   delattr(self._track, name)
+    with self._rlock:
+      if self._track is None:
+        self._retrieve()
+      delattr(self._track, name)
 
   def __eq__(self, other):
     return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
@@ -7535,18 +7552,20 @@ class GPXLoader():
         trck.OTrack = trck.STrack = None
         del trck.Track
       gc.enable()
+    for ind in gtracks:
+      gtracks[ind] = gtracks[ind][0]
     while gtracks:
       try:
         ind = connection.recv()
       except EOFError:
-        for tracks in gtracks.values():
-          for trck in tracks:
-            trck.OTrack = trck.STrack = None
-            del trck.Track
+        for trck in gtracks.values():
+          trck.OTrack = trck.STrack = None
+          del trck.Track
         break
-      connection.send(tuple(trck for trck in gtracks[ind]))
-      gtracks[ind][0].OTrack = gtracks[ind][0].STrack = None
-      del gtracks[ind][0].Track
+      gtrack = gtracks[ind]
+      connection.send((gtrack.intern_dict, gtrack.Track))
+      gtrack.OTrack = gtrack.STrack = None
+      del gtrack.Track
       del gtracks[ind]
 
   def Retrieve(self, tindex):
@@ -7556,21 +7575,15 @@ class GPXLoader():
         self.RCondition.notify_all()
       while self.CTracks[tindex]:
         if self.Closed:
-          _track = self.Tracks[tindex][1]
-          track = object.__new__(WGS84Track)
-          track.log = partial(log, 'track')
-          track.__init__()
-          for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
-            setattr(track, att, getattr(_track, att))
-          return track
+          self.Tracks[tindex][1]._gather(self.SLock, {}, [None] * 3)
+          return
         self.RCondition.wait()
-    return self.Tracks[tindex][1]
 
   def Repatriate(self):
     l = len(self.CTracks)
     while True:
       with self.RCondition:
-        if self.RIndex >= l:
+        if self.RIndex >= l or self.Closed:
           break
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
@@ -7583,16 +7596,12 @@ class GPXLoader():
             continue
         if self.CTracks[tindex] is None:
           continue
-      gind = self.CTracks[tindex][0]
-      self.CTracks[tindex][1].send(gind)
-      tracks = self.CTracks[tindex][1].recv()
-      _tindex = tindex
+      self.CTracks[tindex][2].send(self.CTracks[tindex][0])
+      intern_dict, gtrack = self.CTracks[tindex][2].recv()
+      _tracks = [gtrack] * 3
       with self.RCondition:
-        while _tindex >= 1 and self.CTracks[_tindex - 1] and self.CTracks[_tindex - 1][0] == gind:
-          _tindex -= 1
-        for _tindex, track in zip(range(_tindex, _tindex + len(tracks)), tracks):
-          self.Tracks[_tindex][1] = track
-          self.Tracks[_tindex][1].ULock = self.SLock
+        for _tindex in range(*map(tindex.__add__, self.CTracks[tindex][1])):
+          self.Tracks[_tindex][1] = self.Tracks[_tindex][1]._gather(self.SLock, intern_dict, _tracks)
           self.CTracks[_tindex] = None
         self.RCondition.notify_all()
 
@@ -7624,7 +7633,7 @@ class GPXLoader():
     tindex = 0
     self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for gind, uri in enumerate(uris) for track in gtracks[gind])]
     tracksb = [trackb for gind in range(len(uris)) for trackb in gtracksb[gind]]
-    self.CTracks = [(gind, gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
+    self.CTracks = [(gind, (-trk, len(gtracks[gind]) - trk), gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
     self.RThread = threading.Thread(target=self.Repatriate)
     self.RThread.start()
     return self.Tracks, tracksb, tskipped, taborted, gaborted
@@ -7632,7 +7641,6 @@ class GPXLoader():
   def Close(self):
     self.Closed = True
     with self.RCondition:
-      self.RIndex = len(self.CTracks)
       self.RCondition.notify_all()
     if self.RThread is not None:
       self.RThread.join()
@@ -18414,7 +18422,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.16.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('');
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
