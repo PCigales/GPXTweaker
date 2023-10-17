@@ -7571,7 +7571,7 @@ class GPXLoader():
                 gaborted += 1
               else:
                 for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
-                  trck.log(0, 'lerror', uri, trk)
+                  trck.log(0, 'lerror', uri + (' <%s>' % trk))
                 with gindex.get_lock():
                   print(*LogBuffer, sep='\r\n')
                 LogBuffer.clear()
