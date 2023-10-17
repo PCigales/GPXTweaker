@@ -39,6 +39,7 @@ import msvcrt
 import locale
 import argparse
 import gc
+import pickle
 
 locale.setlocale(locale.LC_TIME, '')
 
@@ -5501,6 +5502,28 @@ class ExpatGPXBuilder:
     self.CurText = ''
 
 
+class GCManager():
+
+  def __init__(self):
+    self.gcie = gc.isenabled()
+    self.gcnd = 0
+    self.gcl = threading.Lock()
+
+  def disable(self):
+    with self.gcl:
+      if not self.gcnd:
+        gc.disable()
+      self.gcnd += 1
+
+  def restore(self):
+    with self.gcl:
+      self.gcnd -= 1
+      if not self.gcnd and self.gcie:
+        gc.enable()
+
+GCMan = GCManager()
+
+
 class WGS84Track(WGS84WebMercator):
 
   def __init__(self, unlink_lock=None):
@@ -5729,8 +5752,7 @@ class WGS84Track(WGS84WebMercator):
     if self.Track is not None:
       return False
     self.log(1, 'load', uri + ((' <%s>' % trkid) if trkid is not None else ''))
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     try:
       if source is not None and source is not self:
         self._tracks = source._tracks
@@ -5766,8 +5788,7 @@ class WGS84Track(WGS84WebMercator):
     except:
       self.__init__()
       self.log(0, 'oerror', uri, color=31)
-      if gcie:
-        gc.enable()
+      GCMan.restore()
       return False
     self.TrkId = trkid or 0
     try:
@@ -5781,16 +5802,14 @@ class WGS84Track(WGS84WebMercator):
       else:
         self.OTrack = self.STrack = self.Track
       self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''), color=31)
-      if gcie:
-        gc.enable()
+      GCMan.restore()
       return False
     if source is None or source is self:
       self.OTrack = self.STrack = self.Track
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts), color=32)
-    if gcie:
-      gc.enable()
+    GCMan.restore()
     return True
 
   def BuildWebMercator(self):
@@ -5882,8 +5901,7 @@ class WGS84Track(WGS84WebMercator):
     self._XMLUpdateChildNode(node, localname, child, predecessors, uri)
 
   def UpdateGPX(self, msg, uri=None, backup=True):
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     del self.Track
     self.Track = self.OTrack.cloneNode()
     r = self.Track.documentElement
@@ -6036,15 +6054,13 @@ class WGS84Track(WGS84WebMercator):
       self.ProcessGPX('a' if '\r\n=\r\n' in msg else 'e')
       return False
     finally:
-      if gcie:
-        gc.enable()
+      GCMan.restore()
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     return True
 
   def DetachFromGPX(self, others, uri=None, backup=True):
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     _tracks = self._tracks
     trkid = self.TrkId
     self.Track = self.OTrack.cloneNode()
@@ -6068,8 +6084,7 @@ class WGS84Track(WGS84WebMercator):
       self._tracks = _tracks
       del self.Track
       self.Track = self.OTrack
-      if gcie:
-        gc.enable()
+      GCMan.restore()
       return False
     self.TrkId = 0
     try:
@@ -6087,13 +6102,11 @@ class WGS84Track(WGS84WebMercator):
           tr.TrkId -= 1
     except:
       pass
-    if gcie:
-      gc.enable()
+    GCMan.restore()
     return nuri or True
 
   def AppendToGPX(self, track, others, mode='s', uri=None, backup=True):
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     trkid = self.TrkId
     del self.Track
     self.Track = self.OTrack.cloneNode()
@@ -6175,8 +6188,7 @@ class WGS84Track(WGS84WebMercator):
         self.ProcessGPX('a')
       else:
         self.ProcessGPX('w')
-      if gcie:
-        gc.enable()
+      GCMan.restore()
       return False
     for s in track.intern_dict.items():
       self.intern(*s)
@@ -6192,8 +6204,7 @@ class WGS84Track(WGS84WebMercator):
         if tr.TrkId >= trkid:
           tr.TrkId += 1
       tr.ProcessGPX('w')
-    if gcie:
-      gc.enable()
+    GCMan.restore()
     return True
 
 
@@ -7523,7 +7534,7 @@ class GPXLoader():
     self.log(2, 'init', nworkers)
 
   @staticmethod
-  def Worker(gindex, connection, dboundaries, mboundaries, verbosity, vt100):
+  def Worker(gindex, connection, dboundaries, mboundaries, verbosity, vt100, anticipatory):
     global VERBOSITY
     VERBOSITY = verbosity
     global VT100
@@ -7562,7 +7573,7 @@ class GPXLoader():
         stop = True
     sthread = threading.Thread(target=send)
     sthread.start()
-    gc.disable()
+    GCMan.disable()
     try:
       tskipped = taborted = gaborted = 0
       garb = []
@@ -7640,7 +7651,7 @@ class GPXLoader():
       for trck in garb:
         trck.OTrack = trck.STrack = None
         del trck.Track
-      gc.enable()
+      GCMan.restore()
     wlog(2, 'weload', wname)
     for ind in gtracks:
       gtracks[ind] = gtracks[ind][0]
@@ -7650,6 +7661,7 @@ class GPXLoader():
         del trck.Track
       wlog(2, 'winterrupt', wname)
       exit()
+    pickled = (None, None)
     while gtracks:
       try:
         ind = connection.recv()
@@ -7659,12 +7671,20 @@ class GPXLoader():
           del trck.Track
         break
       wlog(2, 'wrdoc', wname, uris[ind])
-      gtrack = gtracks[ind]
-      connection.send((gtrack.intern_dict, gtrack.Track))
+      if ind == pickled[0]:
+        connection.send_bytes(pickled[1])
+        pickled = (None, None)
+      else:
+        gtrack = gtracks[ind]
+        connection.send((gtrack.intern_dict, gtrack.Track))
       wlog(2, 'wsdoc', wname, uris[ind])
       gtrack.OTrack = gtrack.STrack = None
       del gtrack.Track
       del gtracks[ind]
+      if anticipatory and pickled[0] is None and gtracks and not connection.poll(0):
+        ind = next(iter(gtracks))
+        gtrack = gtracks[ind]
+        pickled = (ind, pickle.dumps((gtrack.intern_dict, gtrack.Track)))
     wlog(2, 'wend', wname)
 
   def Retrieve(self, tindex):
@@ -7681,20 +7701,23 @@ class GPXLoader():
   def Repatriate(self):
     self.log(2, 'rstarty' if self.Repatriation else 'rstartn')
     l = len(self.CTracks)
+    GCMan.disable()
     while True:
       with self.RCondition:
         if self.RIndex >= l or self.Closed:
           break
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
-          self.log(2, 'rrequest', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
+          self.log(0, 'rrequest', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
         else:
           if self.Repatriation:
             tindex = self.RIndex
             self.log(2, 'rhandle', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
             self.RIndex += 1
           else:
+            GCMan.restore()
             self.RCondition.wait()
+            GCMan.disable()
             continue
         if self.CTracks[tindex] is None:
           self.log(2, 'rabort', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
@@ -7708,13 +7731,14 @@ class GPXLoader():
           self.CTracks[_tindex] = None
           self.log(2, 'rretrieved', self.Tracks[_tindex][0], self.Tracks[_tindex][1].TrkId)
         self.RCondition.notify_all()
+    GCMan.restore()
     self.log(2, 'rend' if self.RIndex >= l else 'rstop')
 
   def Load(self, uris, dboundaries, mboundaries, stop=(lambda:False)):
     gindex = multiprocessing.Value('I', 0)
     pipes = tuple(multiprocessing.Pipe() for i in range(self.NWorkers))
     self.Connections = tuple(pipe[0] for pipe in pipes)
-    self.Workers = tuple(multiprocessing.Process(target=self.Worker, args=(gindex, pipe[1], dboundaries, mboundaries, VERBOSITY, VT100)) for pipe in pipes)
+    self.Workers = tuple(multiprocessing.Process(target=self.Worker, args=(gindex, pipe[1], dboundaries, mboundaries, VERBOSITY, VT100, self.Repatriation)) for pipe in pipes)
     for worker in self.Workers:
       worker.start()
     for connection in self.Connections:
@@ -17854,8 +17878,7 @@ class GPXTweakerWebInterfaceServer():
       trk = 0
       nbtrk = None
     ti = time.time()
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     garb = []
     dminlat = self.DefLat if (not bmap or map_minlat is None) else map_minlat
     dmaxlat = self.DefLat if (not bmap or map_maxlat is None) else map_maxlat
@@ -18141,8 +18164,7 @@ class GPXTweakerWebInterfaceServer():
         self.GPXLoader.Close()
       u_thread = threading.Thread(target=_unlink)
       u_thread.start()
-      if gcie:
-        gc.enable()
+      GCMan.restore()
 
   def _build_pathes(self):
     def _coord_to_vb(x, y):
