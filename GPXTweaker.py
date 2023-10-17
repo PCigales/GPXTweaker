@@ -137,6 +137,29 @@ FR_STRINGS = {
      'moerror': 'échec de l\'ouverture du média %s',
      'mopened': 'média %s ouvert'
   },
+  'loader': {
+     '_id': 'Chargeur de traces',
+     'init': 'initialisation (processus de travail: %s)',
+     'rtrack': 'réception des données de la trace %s <%s>',
+     'etrack': 'fin de la réception des données de trace',
+     'wstart': 'processus de travail %s - démarrage',
+     'wload': 'processus de travail %s - prise en charge du chargement du fichier %s',
+     'wiqueue': 'processus de travail %s - mise en queue des données de la trace %s <%s>',
+     'wsqueue': 'processus de travail %s - transfert des données de la trace %s <%s>',
+     'weload': 'processus de travail %s - fin du chargement de fichier',
+     'wrdoc': 'processus de travail %s - réception de la demande de transfert du document du fichier %s',
+     'wsdoc': 'processus de travail %s - transfert du document du fichier %s',
+     'wend': 'processus de travail: %s - arrêt',
+     'rstarty': 'démarrage du gestionnaire de rapatriement de document de fichier (par anticipation: oui)',
+     'rstartn': 'démarrage du gestionnaire de rapatriement de document de fichier (par anticipation: non)',
+     'rrequest': 'gestionnaire de rapatriement - réception de la demande de récupération de la trace %s <%s>',
+     'rhandle': 'gestionnaire de rapatriement - récupération anticipée de la trace %s <%s>',
+     'rabort': 'gestionnaire de rapatriement - trace %s <%s> déjà récupérée',
+     'rretrieved': 'gestionnaire de rapatriement - trace %s <%s> récupérée',
+     'rend': 'fin du rapatriement de document de fichier',
+     'rstop': 'arrêt du gestionnaire de rapatriement de document de fichier',
+     'close': 'fermeture'
+  },
   'interface': {
     '_id': 'Interface',
     'conf': 'chargement de la configuration',
@@ -494,6 +517,29 @@ EN_STRINGS = {
      'moerror': 'failure of the opening of the media %s',
      'mopened': 'media %s opened'
   },
+  'loader': {
+     '_id': 'Tracks loader',
+     'init': 'initialization (worker processes: %s)',
+     'rtrack': 'receipt of the data of the track %s <%s>',
+     'etrack': 'end of the receipt of the data of track',
+     'wstart': 'worker process %s - start',
+     'wload': 'worker process %s - handling of the loading of the file %s',
+     'wiqueue': 'worker process %s - queuing of the data of the track %s <%s>',
+     'wsqueue': 'worker process %s - transfer of the data of the track %s <%s>',
+     'weload': 'worker process %s - end of the loading of file',
+     'wrdoc': 'worker process %s - receipt of the transfer request of the document of the file %s',
+     'wsdoc': 'worker process %s - transfer of the document of the file %s',
+     'wend': 'worker process: %s - stop',
+     'rstarty': 'start of the handler of repatriation of document of file (anticipatory: yes)',
+     'rstartn': 'start of the handler of repatriation of document of file (anticipatory: no)',
+     'rrequest': 'handler of repatriation - receipt of the request of retrieval of the track %s <%s>',
+     'rhandle': 'handler of repatriation - anticipatory retrieving of the track %s <%s>',
+     'rabort': 'handler of repatriation - track %s <%s> already retrieved',
+     'rretrieved': 'handler of repatriation - track %s <%s> retrieved',
+     'rend': 'end of the repatriation of document of file',
+     'rstop': 'shutdown of the handler of repatriation of document of file',
+     'close': 'shutdown'
+  },
   'interface': {
     '_id': 'Interface',
     'conf': 'loading of configuration',
@@ -783,15 +829,21 @@ VERBOSITY = 0
 if __name__ == '__mp_main__':
   VT100 = False
   LogBuffer = []
-  def log(kmod, level, kmsg, *var, color=None):
+  def log(kmod, level, kmsg, *var, color=None, buffer=True):
     if level <= VERBOSITY:
       now = time.strftime('%x %X', time.localtime())
       if color and VT100:
         now = '\033[%dm%s\033[0m' % (color, now)
-      try:
-        LogBuffer.append('%s : %s -> %s' % (now, LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
-      except:
-        LogBuffer.append('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
+      if buffer:
+        try:
+          LogBuffer.append('%s : %s -> %s' % (now, LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
+        except:
+          LogBuffer.append('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
+      else:
+        try:
+          print('%s : %s -> %s' % (now, LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
+        except:
+          print('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
 else:
   VT100 = enable_vt100()
   def log(kmod, level, kmsg, *var, color=None):
@@ -3585,7 +3637,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalSize.restype = ctypes.c_ssize_t
       cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
-      cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, "Release")
+      cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, 'Release')
       cls.CreateStreamOnHGlobal = cls.ole32.CreateStreamOnHGlobal
       cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.c_bool, ctypes.c_void_p
       cls.gdiplus = ctypes.WinDLL('gdiplus',  use_last_error=True)
@@ -7209,7 +7261,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               tind, tdef = req.path.split('?')[1].split(',', 1)
               tdef = tdef.split('|')
               self.server.Interface.TrackInd = int(tind)
-              self.server.Interface.Tracks[self.server.Interface.TrackInd][1].BuildWebMercator
+              self.server.Interface.Tracks[self.server.Interface.TrackInd][1].Track
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               self.server.Interface.HTML = ''
               self.server.Interface.EditMode(*map(float, tdef))
@@ -7457,6 +7509,8 @@ class GPXLoader():
     self.RThread = None
     self.RCondition = threading.Condition()
     self.Closed = False
+    self.log = partial(log, 'loader')
+    self.log(2, 'init', nworkers)
 
   @staticmethod
   def Worker(gindex, connection, dboundaries, mboundaries, verbosity, vt100):
@@ -7464,6 +7518,9 @@ class GPXLoader():
     VERBOSITY = verbosity
     global VT100
     VT100 = vt100
+    wlog = partial(log, 'loader', buffer=False)
+    wname = multiprocessing.current_process().name.rpartition('-')[2]
+    wlog(2, 'wstart', wname)
     uris = connection.recv()
     builder = ExpatGPXBuilder()
     gtracks = {}
@@ -7481,6 +7538,7 @@ class GPXLoader():
         connection.send(ind)
         connection.send((track.TrkId, track.Name, track.Color, track.Wpts, track.Pts))
         connection.send(b)
+        wlog(2, 'wsqueue', wname, uris[ind], track.TrkId)
       connection.send(None)
       connection.send((tskipped, taborted, gaborted))
     sthread = threading.Thread(target=send)
@@ -7496,6 +7554,7 @@ class GPXLoader():
             break
           gindex.value += 1
         uri = uris[ind]
+        wlog(2, 'wload', wname, uri)
         trk = 0
         nbtrk = 1
         trck = None
@@ -7512,7 +7571,7 @@ class GPXLoader():
                 gaborted += 1
               else:
                 for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
-                  trck.log(0, 'lerror', uri + (' <%s>' % trk))
+                  trck.log(0, 'lerror', uri, trk)
                 with gindex.get_lock():
                   print(*LogBuffer, sep='\r\n')
                 LogBuffer.clear()
@@ -7532,6 +7591,7 @@ class GPXLoader():
             else:
               gtracks.setdefault(ind, []).append(track)
               with qcondition:
+                wlog(2, 'wiqueue', wname, uri, trk)
                 squeue.append((ind, track, (minlat, maxlat, minlon, maxlon)))
                 qcondition.notify_all()
             with gindex.get_lock():
@@ -7552,6 +7612,7 @@ class GPXLoader():
         trck.OTrack = trck.STrack = None
         del trck.Track
       gc.enable()
+    wlog(2, 'weload', wname)
     for ind in gtracks:
       gtracks[ind] = gtracks[ind][0]
     while gtracks:
@@ -7562,11 +7623,14 @@ class GPXLoader():
           trck.OTrack = trck.STrack = None
           del trck.Track
         break
+      wlog(2, 'wrdoc', wname, uris[ind])
       gtrack = gtracks[ind]
       connection.send((gtrack.intern_dict, gtrack.Track))
+      wlog(2, 'wsdoc', wname, uris[ind])
       gtrack.OTrack = gtrack.STrack = None
       del gtrack.Track
       del gtracks[ind]
+    wlog(2, 'wend', wname)
 
   def Retrieve(self, tindex):
     with self.RCondition:
@@ -7580,6 +7644,7 @@ class GPXLoader():
         self.RCondition.wait()
 
   def Repatriate(self):
+    self.log(2, 'rstarty' if self.Repatriation else 'rstartn')
     l = len(self.CTracks)
     while True:
       with self.RCondition:
@@ -7587,14 +7652,17 @@ class GPXLoader():
           break
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
+          self.log(2, 'rrequest', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
         else:
           if self.Repatriation:
             tindex = self.RIndex
+            self.log(2, 'rhandle', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
             self.RIndex += 1
           else:
             self.RCondition.wait()
             continue
         if self.CTracks[tindex] is None:
+          self.log(2, 'rabort', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
           continue
       self.CTracks[tindex][2].send(self.CTracks[tindex][0])
       intern_dict, gtrack = self.CTracks[tindex][2].recv()
@@ -7603,7 +7671,9 @@ class GPXLoader():
         for _tindex in range(*map(tindex.__add__, self.CTracks[tindex][1])):
           self.Tracks[_tindex][1] = self.Tracks[_tindex][1]._gather(self.SLock, intern_dict, _tracks)
           self.CTracks[_tindex] = None
+          self.log(2, 'rretrieved', self.Tracks[_tindex][0], self.Tracks[_tindex][1].TrkId)
         self.RCondition.notify_all()
+    self.log(2, 'rend' if self.RIndex >= l else 'rstop')
 
   def Load(self, uris, dboundaries, mboundaries):
     gindex = multiprocessing.Value('I', 0)
@@ -7630,10 +7700,12 @@ class GPXLoader():
           gtracks[gind].append(connection.recv())
           gtracksb[gind].append(connection.recv())
           gtracksc[gind] = connection
+          self.log(2, 'rtrack', uris[gind], gtracks[gind][-1][0])
     tindex = 0
     self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for gind, uri in enumerate(uris) for track in gtracks[gind])]
     tracksb = [trackb for gind in range(len(uris)) for trackb in gtracksb[gind]]
     self.CTracks = [(gind, (-trk, len(gtracks[gind]) - trk), gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
+    self.log(2, 'etrack')
     self.RThread = threading.Thread(target=self.Repatriate)
     self.RThread.start()
     return self.Tracks, tracksb, tskipped, taborted, gaborted
@@ -7649,6 +7721,7 @@ class GPXLoader():
     for worker in self.Workers:
       worker.join()
       worker.close()
+    self.log(2, 'close')
 
 
 class GPXTweakerWebInterfaceServer():
