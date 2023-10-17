@@ -7400,40 +7400,40 @@ class WGS84TrackProxy():
       object.__setattr__(self, att, None)
 
   def _gather(self, ulock, intern_dict, _tracks):
-    if self._track is None:
-      track = object.__new__(WGS84Track)
-      track.ULock = ulock
-      track._tracks = _tracks
-      for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
-        setattr(track, att, getattr(self, att))
-      track.intern_dict = intern_dict
-      track._intern()
-      track.log = partial(log, 'track')
-      object.__setattr__(self, '_track', track)
-      for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
-        object.__delattr__(self, att)
+    with self._rlock:
+      if self._track is None:
+        track = object.__new__(WGS84Track)
+        track.ULock = ulock
+        track._tracks = _tracks
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+          setattr(track, att, getattr(self, att))
+        track.intern_dict = intern_dict
+        track._intern()
+        track.log = partial(log, 'track')
+        object.__setattr__(self, '_track', track)
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+          object.__delattr__(self, att)
     return self._track
 
   def __getattr__(self, name):
-    with self._rlock:
-      if self._track is None:
-        self._retrieve()
-      return getattr(self._track, name)
+    if self._track is None:
+      self._retrieve()
+    return getattr(self._track, name)
 
   def __setattr__(self, name, value):
-    with self._rlock:
-      if self._track is None:
-        if name in ('WebMercatorWpts', 'WebMercatorPts'):
+    if name in ('WebMercatorWpts', 'WebMercatorPts'):
+      with self._rlock:
+        if self._track is None:
           object.__setattr__(self, name, value)
           return
-        self._retrieve()
-      setattr(self._track, name, value)
+    if self._track is None:
+      self._retrieve()
+    setattr(self._track, name, value)
 
   def __delattr__(self, name):
-    with self._rlock:
-      if self._track is None:
-        self._retrieve()
-      delattr(self._track, name)
+    if self._track is None:
+      self._retrieve()
+    delattr(self._track, name)
 
   def __eq__(self, other):
     return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
