@@ -7393,13 +7393,14 @@ class WGS84TrackProxy():
       object.__setattr__(self, att, locals()[att.lower()])
     object.__setattr__(self, '_retrieve', retrieve)
     object.__setattr__(self, '_rlock', threading.Lock())
-    object.__setattr__(self, '_track', None)
+    for att in ('_track', 'WebMercatorWpts', 'WebMercatorPts'):
+      object.__setattr__(self, att, None)
 
   def _gather(self):
     with self._rlock:
       if self._track is None:
         object.__setattr__(self, '_track', self._retrieve())
-        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
           object.__delattr__(self, att)
 
   def __getattr__(self, name):
@@ -7407,8 +7408,11 @@ class WGS84TrackProxy():
     return getattr(self._track, name)
 
   def __setattr__(self, name, value):
-    self._gather()
-    setattr(self._track, name, value)
+    if name in ('WebMercatorWpts', 'WebMercatorPts'):
+      object.__setattr__(self, name, value)
+    else:
+      self._gather()
+      setattr(self._track, name, value)
 
   def __delattr__(self, name):
    self._gather()
@@ -7417,11 +7421,15 @@ class WGS84TrackProxy():
   def __eq__(self, other):
     return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
 
+  def BuildWebMercator(self):
+    return WGS84Track.BuildWebMercator(self)
+
 
 class GPXLoader():
 
-  def __init__(self, nworkers, slock):
+  def __init__(self, nworkers, repatriation, slock=None):
     self.NWorkers = nworkers
+    self.Repatriation = repatriation
     self.Workers = []
     self.Connections = []
     self.SLock = slock
@@ -7545,13 +7553,14 @@ class GPXLoader():
     with self.RCondition:
       if self.CTracks[tindex] and not self.Closed:
         self.RPTracks.append(tindex)
+        self.RCondition.notify_all()
       while self.CTracks[tindex]:
         if self.Closed:
           _track = self.Tracks[tindex][1]
           track = object.__new__(WGS84Track)
           track.log = partial(log, 'track')
           track.__init__()
-          for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
+          for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
             setattr(track, att, getattr(_track, att))
           return track
         self.RCondition.wait()
@@ -7566,8 +7575,12 @@ class GPXLoader():
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
         else:
-          tindex = self.RIndex
-          self.RIndex += 1
+          if self.Repatriation:
+            tindex = self.RIndex
+            self.RIndex += 1
+          else:
+            self.RCondition.wait()
+            continue
         if self.CTracks[tindex] is None:
           continue
       gind = self.CTracks[tindex][0]
@@ -7620,6 +7633,7 @@ class GPXLoader():
     self.Closed = True
     with self.RCondition:
       self.RIndex = len(self.CTracks)
+      self.RCondition.notify_all()
     if self.RThread is not None:
       self.RThread.join()
     for connection in self.Connections:
@@ -17256,6 +17270,8 @@ class GPXTweakerWebInterfaceServer():
               self.ExplorerLoadingWorkers = 1
             else:
               self.ExplorerLoadingWorkers = max(1, int(value))
+          elif field == 'repatriation':
+            self.ExplorerLoadingRepatriation = bool(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -17591,6 +17607,7 @@ class GPXTweakerWebInterfaceServer():
     self.DefLat = None
     self.DefLon = None
     self.ExplorerLoadingWorkers = 1
+    self.ExplorerLoadingRepatriation = True
     self.Folders = []
     self.MediaPorts = ''
     self.MediaFolders = []
@@ -17786,7 +17803,7 @@ class GPXTweakerWebInterfaceServer():
             self.TrackInd = 0
             break
       else:
-        self.GPXLoader = GPXLoader(self.ExplorerLoadingWorkers, self.SLock)
+        self.GPXLoader = GPXLoader(self.ExplorerLoadingWorkers, self.ExplorerLoadingRepatriation, self.SLock)
         self.Tracks, self.TracksBoundaries, tskipped, taborted, gaborted = self.GPXLoader.Load(tuple(uris), (dminlat, dmaxlat, dminlon, dmaxlon), (self.VMinLat, self.VMaxLat, self.VMinLon, self.VMaxLon))
       if tskipped or taborted or gaborted:
         self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted, color=31)
