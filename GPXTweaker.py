@@ -7708,7 +7708,7 @@ class GPXLoader():
           break
         if self.RPTracks:
           tindex = self.RPTracks.popleft()
-          self.log(0, 'rrequest', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
+          self.log(2, 'rrequest', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
         else:
           if self.Repatriation:
             tindex = self.RIndex
