@@ -7608,7 +7608,7 @@ class GPXLoader():
                   print(*LogBuffer, sep='\r\n')
                 LogBuffer.clear()
                 taborted += trk + 1
-                garb.append(trck)
+                garb.append(trck.Track)
               break
             else:
               taborted += 1
@@ -7621,7 +7621,7 @@ class GPXLoader():
               tskipped += 1
               log('interface', 0, 'berror6', color=31)
             else:
-              gtracks.setdefault(ind, []).append(track)
+              gtracks.setdefault(ind, trck.Track)
               with qcondition:
                 wlog(2, 'wiqueue', wname, uri, trk)
                 squeue.append((ind, track, (minlat, maxlat, minlon, maxlon)))
@@ -7634,57 +7634,55 @@ class GPXLoader():
           trk += 1
         else:
           if not gtracks.get(ind):
-            garb.append(trck)
+            garb.append(trck.Track)
     except Interrupted:
-      for ind in gtracks:
-        gtracks[ind] = gtracks[ind][0]
-      for trck in gtracks.values():
-        trck.OTrack = trck.STrack = None
-        del trck.Track
-      wlog(2, 'winterrupt', wname)
       exit()
     finally:
       lend = True
       with qcondition:
         qcondition.notify_all()
-      sthread.join()
       for trck in garb:
-        trck.OTrack = trck.STrack = None
-        del trck.Track
+        try:
+          trck.unlink()
+        except:
+          pass
+      garb.clear()
+      if stop:
+        for trck in gtracks.values():
+          try:
+            trck.unlink()
+          except:
+            pass
+        wlog(2, 'winterrupt', wname)
+      sthread.join()
       GCMan.restore()
     wlog(2, 'weload', wname)
-    for ind in gtracks:
-      gtracks[ind] = gtracks[ind][0]
-    if stop:
-      for trck in gtracks.values():
-        trck.OTrack = trck.STrack = None
-        del trck.Track
-      wlog(2, 'winterrupt', wname)
-      exit()
     pickled = (None, None)
     while gtracks:
       try:
         ind = connection.recv()
       except EOFError:
         for trck in gtracks.values():
-          trck.OTrack = trck.STrack = None
-          del trck.Track
+          try:
+            trck.unlink()
+          except:
+            pass
         break
       wlog(2, 'wrdoc', wname, uris[ind])
       if ind == pickled[0]:
         connection.send_bytes(pickled[1])
         pickled = (None, None)
       else:
-        gtrack = gtracks[ind]
-        connection.send((gtrack.intern_dict, gtrack.Track))
+        connection.send((builder.intern_dict, gtracks[ind]))
       wlog(2, 'wsdoc', wname, uris[ind])
-      gtrack.OTrack = gtrack.STrack = None
-      del gtrack.Track
+      try:
+        gtracks[ind].unlink()
+      except:
+        pass
       del gtracks[ind]
       if anticipatory and pickled[0] is None and gtracks and not connection.poll(0):
         ind = next(iter(gtracks))
-        gtrack = gtracks[ind]
-        pickled = (ind, pickle.dumps((gtrack.intern_dict, gtrack.Track)))
+        pickled = (ind, pickle.dumps((builder.intern_dict, gtracks[ind])))
     wlog(2, 'wend', wname)
 
   def Retrieve(self, tindex):
@@ -7766,9 +7764,9 @@ class GPXLoader():
           gtracksc[gind] = connection
           self.log(2, 'rtrack', uris[gind], gtracks[gind][-1][0])
     tindex = 0
-    self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for gind, uri in enumerate(uris) for track in gtracks[gind])]
-    tracksb = [trackb for gind in range(len(uris)) for trackb in gtracksb[gind]]
-    self.CTracks = [(gind, (-trk, len(gtracks[gind]) - trk), gtracksc[gind]) for gind in range(len(uris)) for trk in range(len(gtracks[gind]))]
+    self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for uri, gtrack in zip(uris, gtracks) for track in gtrack)]
+    tracksb = [trackb for gtrackb in gtracksb for trackb in gtrackb]
+    self.CTracks = [(gind, (-trk, l - trk), gtrackc) for gind, (gtrackc, l) in enumerate(zip(gtracksc, map(len, gtracks))) for trk in range(l)]
     self.log(2, 'etrack')
     self.RThread = threading.Thread(target=self.Repatriate)
     self.RThread.start()
