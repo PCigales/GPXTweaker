@@ -1,4 +1,4 @@
-# GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.16.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -16,6 +16,7 @@ import email.utils
 import time
 import threading
 import os, os.path
+import multiprocessing
 from pathlib import Path
 import re
 import json
@@ -38,6 +39,7 @@ import msvcrt
 import locale
 import argparse
 import gc
+import pickle
 
 locale.setlocale(locale.LC_TIME, '')
 
@@ -136,6 +138,31 @@ FR_STRINGS = {
      'moerror': 'échec de l\'ouverture du média %s',
      'mopened': 'média %s ouvert'
   },
+  'loader': {
+     '_id': 'Chargeur de traces',
+     'init': 'initialisation (processus de travail: %s)',
+     'rtrack': 'réception des données de la trace %s <%s>',
+     'itrack': 'interruption de la réception des données de trace',
+     'etrack': 'fin de la réception des données de trace',
+     'wstart': 'processus de travail %s - démarrage',
+     'wload': 'processus de travail %s - prise en charge du chargement du fichier %s',
+     'wiqueue': 'processus de travail %s - mise en queue des données de la trace %s <%s>',
+     'wsqueue': 'processus de travail %s - transfert des données de la trace %s <%s>',
+     'weload': 'processus de travail %s - fin du chargement de fichier',
+     'wrdoc': 'processus de travail %s - réception de la demande de transfert du document du fichier %s',
+     'wsdoc': 'processus de travail %s - transfert du document du fichier %s',
+     'winterrupt': 'processus de travail: %s - interruption',
+     'wend': 'processus de travail: %s - arrêt',
+     'rstarty': 'démarrage du gestionnaire de rapatriement de document de fichier (par anticipation: oui)',
+     'rstartn': 'démarrage du gestionnaire de rapatriement de document de fichier (par anticipation: non)',
+     'rrequest': 'gestionnaire de rapatriement - réception de la demande de récupération de la trace %s <%s>',
+     'rhandle': 'gestionnaire de rapatriement - récupération anticipée de la trace %s <%s>',
+     'rabort': 'gestionnaire de rapatriement - trace %s <%s> déjà récupérée',
+     'rretrieved': 'gestionnaire de rapatriement - trace %s <%s> récupérée',
+     'rend': 'fin du rapatriement de document de fichier',
+     'rstop': 'arrêt du gestionnaire de rapatriement de document de fichier',
+     'close': 'fermeture'
+  },
   'interface': {
     '_id': 'Interface',
     'conf': 'chargement de la configuration',
@@ -152,6 +179,7 @@ FR_STRINGS = {
     'berror4': 'échec de la génération de la page d\'interface (trace débordant de la vue)',
     'berror5': 'échec de la génération de la page d\'interface (paramètres de jeux ou de cache de tuiles)',
     'berror6': 'trace sautée car débordant de la vue',
+    'berrori': 'génération de la page d\'interface interrompue',
     'elevation': 'fournisseur d\'élévations configuré (%s)',
     'eerror': 'échec de la configuration du fournisseur d\'élévations (%s)',
     'itinerary': 'fournisseur d\'itinéraires configuré (%s)',
@@ -493,6 +521,31 @@ EN_STRINGS = {
      'moerror': 'failure of the opening of the media %s',
      'mopened': 'media %s opened'
   },
+  'loader': {
+     '_id': 'Tracks loader',
+     'init': 'initialization (worker processes: %s)',
+     'rtrack': 'receipt of the data of the track %s <%s>',
+     'itrack': 'interruption of the receipt of the data of track',
+     'etrack': 'end of the receipt of the data of track',
+     'wstart': 'worker process %s - start',
+     'wload': 'worker process %s - handling of the loading of the file %s',
+     'wiqueue': 'worker process %s - queuing of the data of the track %s <%s>',
+     'wsqueue': 'worker process %s - transfer of the data of the track %s <%s>',
+     'weload': 'worker process %s - end of the loading of file',
+     'wrdoc': 'worker process %s - receipt of the transfer request of the document of the file %s',
+     'wsdoc': 'worker process %s - transfer of the document of the file %s',
+     'winterrupt': 'worker process: %s - interruption',
+     'wend': 'worker process: %s - stop',
+     'rstarty': 'start of the handler of repatriation of document of file (anticipatory: yes)',
+     'rstartn': 'start of the handler of repatriation of document of file (anticipatory: no)',
+     'rrequest': 'handler of repatriation - receipt of the request of retrieval of the track %s <%s>',
+     'rhandle': 'handler of repatriation - anticipatory retrieving of the track %s <%s>',
+     'rabort': 'handler of repatriation - track %s <%s> already retrieved',
+     'rretrieved': 'handler of repatriation - track %s <%s> retrieved',
+     'rend': 'end of the repatriation of document of file',
+     'rstop': 'shutdown of the handler of repatriation of document of file',
+     'close': 'shutdown'
+  },
   'interface': {
     '_id': 'Interface',
     'conf': 'loading of configuration',
@@ -509,6 +562,7 @@ EN_STRINGS = {
     'berror4': 'failure of the generation of the interface page (track overflowing with the view)',
     'berror5': 'failure of the generation of the interface page (settings of tiles sets or cache)',
     'berror6': 'track skipped because overflowing with the view',
+    'berrori': 'generation of the interface page interrupted',
     'elevation': 'elevations provider configured (%s)',
     'eerror': 'failure of the configuration of the elevations provider (%s)',
     'itinerary': 'itineraries provider configured (%s)',
@@ -762,14 +816,52 @@ try:
 except:
   pass
 
+def enable_vt100():
+  try:
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    byref = ctypes.byref
+    DWORD = ctypes.wintypes.DWORD
+    HANDLE = ctypes.wintypes.HANDLE
+    m = DWORD()
+    h = HANDLE(msvcrt.get_osfhandle(sys.stdout.fileno()))
+    if not kernel32.GetConsoleMode(h, byref(m)):
+      return False
+    if not kernel32.SetConsoleMode(h, DWORD(m.value | 5)):
+      return False
+  except:
+    return False
+  return True
+
 VERBOSITY = 0
-def log(kmod, level, kmsg, *var):
-  if level <= VERBOSITY:
-    now = time.localtime()
-    try:
-      print(time.strftime('%x %X', now), ':', LSTRINGS[kmod]['_id'], '->', LSTRINGS[kmod][kmsg] % var)
-    except:
-      print(time.strftime('%x %X', now), ':', kmod, '->', kmsg, var)
+if __name__ == '__mp_main__':
+  VT100 = False
+  LogBuffer = []
+  def log(kmod, level, kmsg, *var, color=None, buffer=True):
+    if level <= VERBOSITY:
+      now = time.strftime('%x %X', time.localtime())
+      if color and VT100:
+        now = '\033[%dm%s\033[0m' % (color, now)
+      if buffer:
+        try:
+          LogBuffer.append('%s : %s -> %s' % (now, LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
+        except:
+          LogBuffer.append('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
+      else:
+        try:
+          print('%s : %s -> %s' % (now, LSTRINGS[kmod]['_id'], LSTRINGS[kmod][kmsg] % var))
+        except:
+          print('%s : %s -> %s' % (now, kmod, '->', kmsg, var))
+else:
+  VT100 = enable_vt100()
+  def log(kmod, level, kmsg, *var, color=None):
+    if level <= VERBOSITY:
+      now = time.strftime('%x %X', time.localtime())
+      if color and VT100:
+        now = '\033[%dm%s\033[0m' % (color, now)
+      try:
+        print(now, ':', LSTRINGS[kmod]['_id'], '->', LSTRINGS[kmod][kmsg] % var)
+      except:
+        print(now, ':', kmod, '->', kmsg, var)
 
 
 def _XMLGetNodeText(nodes):
@@ -3552,7 +3644,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalSize.restype = ctypes.c_ssize_t
       cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
-      cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, "Release")
+      cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, 'Release')
       cls.CreateStreamOnHGlobal = cls.ole32.CreateStreamOnHGlobal
       cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.c_bool, ctypes.c_void_p
       cls.gdiplus = ctypes.WinDLL('gdiplus',  use_last_error=True)
@@ -5410,6 +5502,28 @@ class ExpatGPXBuilder:
     self.CurText = ''
 
 
+class GCManager():
+
+  def __init__(self):
+    self.gcie = gc.isenabled()
+    self.gcnd = 0
+    self.gcl = threading.Lock()
+
+  def disable(self):
+    with self.gcl:
+      if not self.gcnd:
+        gc.disable()
+      self.gcnd += 1
+
+  def restore(self):
+    with self.gcl:
+      self.gcnd -= 1
+      if not self.gcnd and self.gcie:
+        gc.enable()
+
+GCMan = GCManager()
+
+
 class WGS84Track(WGS84WebMercator):
 
   def __init__(self, unlink_lock=None):
@@ -5426,7 +5540,7 @@ class WGS84Track(WGS84WebMercator):
     self.intern = None
     if not hasattr(self, 'log'):
       self.log = partial(log, 'track')
-      self.log(1, 'init')
+      self.log(2, 'init')
 
   def _unlink(self, track):
     if self.ULock is not None:
@@ -5624,12 +5738,21 @@ class WGS84Track(WGS84WebMercator):
         return False
     return True
 
+  def _intern(self):
+    self.intern = self.intern_dict.setdefault
+    self.XMLNS = self.intern('xmlns', 'xmlns')
+    self.XMLNS_NAMESPACE = self.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
+    self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
+    self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
+    self.MT = self.intern('mytrails', 'mytrails')
+    self.XMLNS_MT = self.intern('xmlns:mytrails', 'xmlns:mytrails')
+    self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
+
   def LoadGPX(self, uri, trkid=None, source=None, builder=None):
     if self.Track is not None:
       return False
     self.log(1, 'load', uri + ((' <%s>' % trkid) if trkid is not None else ''))
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     try:
       if source is not None and source is not self:
         self._tracks = source._tracks
@@ -5661,19 +5784,11 @@ class WGS84Track(WGS84WebMercator):
         if self.Track is None:
           raise
         self.intern_dict = builder.intern_dict
-      self.intern = self.intern_dict.setdefault
-      self.XMLNS = self.intern('xmlns', 'xmlns')
-      self.XMLNS_NAMESPACE = self.intern(XMLNode.XMLNS_NAMESPACE, XMLNode.XMLNS_NAMESPACE)
-      self.GPX_NAMESPACE = self.intern('http://www.topografix.com/GPX/1/1', 'http://www.topografix.com/GPX/1/1')
-      self.GPXSTYLE_NAMESPACE = self.intern('http://www.topografix.com/GPX/gpx_style/0/2', 'http://www.topografix.com/GPX/gpx_style/0/2')
-      self.MT = self.intern('mytrails', 'mytrails')
-      self.XMLNS_MT = self.intern('xmlns:mytrails', 'xmlns:mytrails')
-      self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
+      self._intern()
     except:
       self.__init__()
-      self.log(0, 'oerror', uri)
-      if gcie:
-        gc.enable()
+      self.log(0, 'oerror', uri, color=31)
+      GCMan.restore()
       return False
     self.TrkId = trkid or 0
     try:
@@ -5686,17 +5801,15 @@ class WGS84Track(WGS84WebMercator):
         self.__init__()
       else:
         self.OTrack = self.STrack = self.Track
-      self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''))
-      if gcie:
-        gc.enable()
+      self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''), color=31)
+      GCMan.restore()
       return False
     if source is None or source is self:
       self.OTrack = self.STrack = self.Track
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
-    self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts))
-    if gcie:
-      gc.enable()
+    self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts), color=32)
+    GCMan.restore()
     return True
 
   def BuildWebMercator(self):
@@ -5788,8 +5901,7 @@ class WGS84Track(WGS84WebMercator):
     self._XMLUpdateChildNode(node, localname, child, predecessors, uri)
 
   def UpdateGPX(self, msg, uri=None, backup=True):
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     del self.Track
     self.Track = self.OTrack.cloneNode()
     r = self.Track.documentElement
@@ -5942,15 +6054,13 @@ class WGS84Track(WGS84WebMercator):
       self.ProcessGPX('a' if '\r\n=\r\n' in msg else 'e')
       return False
     finally:
-      if gcie:
-        gc.enable()
+      GCMan.restore()
     self.WebMercatorWpts = None
     self.WebMercatorPts = None
     return True
 
   def DetachFromGPX(self, others, uri=None, backup=True):
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     _tracks = self._tracks
     trkid = self.TrkId
     self.Track = self.OTrack.cloneNode()
@@ -5974,8 +6084,7 @@ class WGS84Track(WGS84WebMercator):
       self._tracks = _tracks
       del self.Track
       self.Track = self.OTrack
-      if gcie:
-        gc.enable()
+      GCMan.restore()
       return False
     self.TrkId = 0
     try:
@@ -5993,13 +6102,11 @@ class WGS84Track(WGS84WebMercator):
           tr.TrkId -= 1
     except:
       pass
-    if gcie:
-      gc.enable()
+    GCMan.restore()
     return nuri or True
 
   def AppendToGPX(self, track, others, mode='s', uri=None, backup=True):
-    gcie = gc.isenabled()
-    gc.disable()
+    GCMan.disable()
     trkid = self.TrkId
     del self.Track
     self.Track = self.OTrack.cloneNode()
@@ -6081,8 +6188,7 @@ class WGS84Track(WGS84WebMercator):
         self.ProcessGPX('a')
       else:
         self.ProcessGPX('w')
-      if gcie:
-        gc.enable()
+      GCMan.restore()
       return False
     for s in track.intern_dict.items():
       self.intern(*s)
@@ -6098,8 +6204,7 @@ class WGS84Track(WGS84WebMercator):
         if tr.TrkId >= trkid:
           tr.TrkId += 1
       tr.ProcessGPX('w')
-    if gcie:
-      gc.enable()
+    GCMan.restore()
     return True
 
 
@@ -7070,6 +7175,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               tr_ind = int(req.path.split('?')[1])
               ouri, track = self.server.Interface.Tracks[tr_ind]
               trkid = track.TrkId
@@ -7097,6 +7204,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             mode = 's' if req.path.lower()[:12] == '/incorporate' else ('ta' if req.path.lower()[:15] == '/integrateafter' else 'tb')
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               tr_ind1, tr_ind2 = map(int, req.path.split('?')[1].split(','))
               uri1, track1 = self.server.Interface.Tracks[tr_ind1]
               uri2, track2 = self.server.Interface.Tracks[tr_ind2]
@@ -7133,6 +7242,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               continue
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               f_ind = int(req.path.split('?')[1])
               uri = os.path.join(self.server.Interface.Folders[f_ind], 'new.gpx')
               suf = 0
@@ -7159,12 +7270,15 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
           elif req.path.lower()[:5] == '/edit':
             self.server.Interface.SLock.acquire()
             try:
+              if self.server.Interface.HTMLExp is None:
+                raise
               if self.server.Interface.HTML:
                 _send_err_bad()
                 continue
               tind, tdef = req.path.split('?')[1].split(',', 1)
               tdef = tdef.split('|')
               self.server.Interface.TrackInd = int(tind)
+              self.server.Interface.Tracks[self.server.Interface.TrackInd][1].Track
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
               self.server.Interface.HTML = ''
               self.server.Interface.EditMode(*map(float, tdef))
@@ -7342,6 +7456,334 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             _send_err_nf()
         elif req.method:
           _send_err_ni()
+
+
+class WGS84TrackProxy():
+
+  def __init__(self, trkid, name, color, wpts, pts, retrieve):
+    for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
+      object.__setattr__(self, att, locals()[att.lower()])
+    object.__setattr__(self, '_retrieve', retrieve)
+    object.__setattr__(self, '_rlock', threading.Lock())
+    for att in ('_track', 'WebMercatorWpts', 'WebMercatorPts'):
+      object.__setattr__(self, att, None)
+
+  def _gather(self, ulock, intern_dict, _tracks):
+    with self._rlock:
+      if self._track is None:
+        track = object.__new__(WGS84Track)
+        track.ULock = ulock
+        track._tracks = _tracks
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+          setattr(track, att, getattr(self, att))
+        track.intern_dict = intern_dict
+        track._intern()
+        track.log = partial(log, 'track')
+        object.__setattr__(self, '_track', track)
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+          object.__delattr__(self, att)
+    return self._track
+
+  def __getattr__(self, name):
+    if self._track is None:
+      self._retrieve()
+    return getattr(self._track, name)
+
+  def __setattr__(self, name, value):
+    if name in ('WebMercatorWpts', 'WebMercatorPts'):
+      with self._rlock:
+        if self._track is None:
+          object.__setattr__(self, name, value)
+          return
+    if self._track is None:
+      self._retrieve()
+    setattr(self._track, name, value)
+
+  def __delattr__(self, name):
+    if self._track is None:
+      self._retrieve()
+    delattr(self._track, name)
+
+  def __eq__(self, other):
+    return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
+
+  def BuildWebMercator(self):
+    return WGS84Track.BuildWebMercator(self)
+
+
+class Interrupted(Exception):
+  pass
+
+
+class GPXLoader():
+
+  def __init__(self, nworkers, repatriation, slock=None):
+    self.NWorkers = nworkers
+    self.Repatriation = repatriation
+    self.Workers = []
+    self.Connections = []
+    self.SLock = slock
+    self.Tracks = []
+    self.CTracks = []
+    self.RIndex = 0
+    self.RPTracks = deque()
+    self.RThread = None
+    self.RCondition = threading.Condition()
+    self.Closed = False
+    self.log = partial(log, 'loader')
+    self.log(2, 'init', nworkers)
+
+  @staticmethod
+  def Worker(gindex, connection, dboundaries, mboundaries, verbosity, vt100, anticipatory):
+    global VERBOSITY
+    VERBOSITY = verbosity
+    global VT100
+    VT100 = vt100
+    wlog = partial(log, 'loader', buffer=False)
+    wname = multiprocessing.current_process().name.rpartition('-')[2]
+    wlog(2, 'wstart', wname)
+    uris = connection.recv()
+    builder = ExpatGPXBuilder()
+    gtracks = {}
+    squeue = deque()
+    qcondition = threading.Condition()
+    lend = False
+    stop = False
+    def send():
+      nonlocal stop
+      while True:
+        with qcondition:
+          while not squeue and not lend:
+            qcondition.wait()
+          if not squeue and lend:
+            break
+        ind, track, b = squeue.popleft()
+        try:
+          connection.send(ind)
+          connection.send((track.TrkId, track.Name, track.Color, track.Wpts, track.Pts))
+          connection.send(b)
+          wlog(2, 'wsqueue', wname, uris[ind], track.TrkId)
+        except BrokenPipeError:
+          stop = True
+          return
+      try:
+        connection.send(None)
+        connection.send((tskipped, taborted, gaborted))
+      except BrokenPipeError:
+        stop = True
+    sthread = threading.Thread(target=send)
+    sthread.start()
+    GCMan.disable()
+    try:
+      tskipped = taborted = gaborted = 0
+      garb = []
+      while True:
+        with gindex.get_lock():
+          ind = gindex.value
+          if ind >= len(uris):
+            break
+          gindex.value += 1
+        uri = uris[ind]
+        wlog(2, 'wload', wname, uri)
+        trk = 0
+        nbtrk = 1
+        trck = None
+        while trk < nbtrk:
+          if stop:
+            raise Interrupted
+          track = WGS84Track()
+          trck = trck or track
+          l = track.LoadGPX(uri, trk, trck, builder)
+          if not l:
+            with gindex.get_lock():
+              print(*LogBuffer, sep='\r\n')
+            LogBuffer.clear()
+            if trck.Pts is None:
+              if trck.Track is None:
+                gaborted += 1
+              else:
+                for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
+                  trck.log(0, 'lerror', uri + (' <%s>' % trk))
+                with gindex.get_lock():
+                  print(*LogBuffer, sep='\r\n')
+                LogBuffer.clear()
+                taborted += trk + 1
+                garb.append(trck.Track)
+              break
+            else:
+              taborted += 1
+          else:
+            minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=dboundaries[0])
+            maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=dboundaries[1])
+            minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=dboundaries[2])
+            maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=dboundaries[3])
+            if minlat < mboundaries[0] or maxlat > mboundaries[1] or minlon < mboundaries[2] or maxlon > mboundaries[3]:
+              tskipped += 1
+              log('interface', 0, 'berror6', color=31)
+            else:
+              gtracks.setdefault(ind, trck.Track)
+              with qcondition:
+                wlog(2, 'wiqueue', wname, uri, trk)
+                squeue.append((ind, track, (minlat, maxlat, minlon, maxlon)))
+                qcondition.notify_all()
+            with gindex.get_lock():
+              print(*LogBuffer, sep='\r\n')
+            LogBuffer.clear()
+          if nbtrk == 1:
+            nbtrk = len(track.Track.documentElement.getChildren('trk'))
+          trk += 1
+        else:
+          if not gtracks.get(ind):
+            garb.append(trck.Track)
+    except Interrupted:
+      exit()
+    finally:
+      lend = True
+      with qcondition:
+        qcondition.notify_all()
+      for trck in garb:
+        try:
+          trck.unlink()
+        except:
+          pass
+      garb.clear()
+      if stop:
+        for trck in gtracks.values():
+          try:
+            trck.unlink()
+          except:
+            pass
+        wlog(2, 'winterrupt', wname)
+      sthread.join()
+      GCMan.restore()
+    wlog(2, 'weload', wname)
+    pickled = (None, None)
+    while gtracks:
+      try:
+        ind = connection.recv()
+      except EOFError:
+        for trck in gtracks.values():
+          try:
+            trck.unlink()
+          except:
+            pass
+        break
+      wlog(2, 'wrdoc', wname, uris[ind])
+      if ind == pickled[0]:
+        connection.send_bytes(pickled[1])
+        pickled = (None, None)
+      else:
+        connection.send((builder.intern_dict, gtracks[ind]))
+      wlog(2, 'wsdoc', wname, uris[ind])
+      try:
+        gtracks[ind].unlink()
+      except:
+        pass
+      del gtracks[ind]
+      if anticipatory and pickled[0] is None and gtracks and not connection.poll(0):
+        ind = next(iter(gtracks))
+        pickled = (ind, pickle.dumps((builder.intern_dict, gtracks[ind])))
+    wlog(2, 'wend', wname)
+
+  def Retrieve(self, tindex):
+    with self.RCondition:
+      if self.CTracks[tindex] and not self.Closed:
+        self.RPTracks.append(tindex)
+        self.RCondition.notify_all()
+      while self.CTracks[tindex]:
+        if self.Closed:
+          self.Tracks[tindex][1]._gather(self.SLock, {}, [None] * 3)
+          return
+        self.RCondition.wait()
+
+  def Repatriate(self):
+    self.log(2, 'rstarty' if self.Repatriation else 'rstartn')
+    l = len(self.CTracks)
+    GCMan.disable()
+    while True:
+      with self.RCondition:
+        if self.RIndex >= l or self.Closed:
+          break
+        if self.RPTracks:
+          tindex = self.RPTracks.popleft()
+          self.log(2, 'rrequest', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
+        else:
+          if self.Repatriation:
+            tindex = self.RIndex
+            self.log(2, 'rhandle', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
+            self.RIndex += 1
+          else:
+            GCMan.restore()
+            self.RCondition.wait()
+            GCMan.disable()
+            continue
+        if self.CTracks[tindex] is None:
+          self.log(2, 'rabort', self.Tracks[tindex][0], self.Tracks[tindex][1].TrkId)
+          continue
+      self.CTracks[tindex][2].send(self.CTracks[tindex][0])
+      intern_dict, gtrack = self.CTracks[tindex][2].recv()
+      _tracks = [gtrack] * 3
+      with self.RCondition:
+        for _tindex in range(*map(tindex.__add__, self.CTracks[tindex][1])):
+          self.Tracks[_tindex][1] = self.Tracks[_tindex][1]._gather(self.SLock, intern_dict, _tracks)
+          self.CTracks[_tindex] = None
+          self.log(2, 'rretrieved', self.Tracks[_tindex][0], self.Tracks[_tindex][1].TrkId)
+        self.RCondition.notify_all()
+    GCMan.restore()
+    self.log(2, 'rend' if self.RIndex >= l else 'rstop')
+
+  def Load(self, uris, dboundaries, mboundaries, stop=(lambda:False)):
+    gindex = multiprocessing.Value('I', 0)
+    pipes = tuple(multiprocessing.Pipe() for i in range(self.NWorkers))
+    self.Connections = tuple(pipe[0] for pipe in pipes)
+    self.Workers = tuple(multiprocessing.Process(target=self.Worker, args=(gindex, pipe[1], dboundaries, mboundaries, VERBOSITY, VT100, self.Repatriation)) for pipe in pipes)
+    for worker in self.Workers:
+      worker.start()
+    for connection in self.Connections:
+      connection.send(uris)
+    gtracks = [[] for i in range(len(uris))]
+    gtracksb = [[] for i in range(len(uris))]
+    gtracksc = [None] * len(uris)
+    nlworkers = self.NWorkers
+    tskipped = taborted = gaborted = 0
+    while nlworkers > 0:
+      if stop():
+        for connection in self.Connections:
+          connection.close()
+        self.log(2, 'itrack')
+        raise Interrupted()
+      rconnections = multiprocessing.connection.wait(self.Connections)
+      for connection in rconnections:
+        gind = connection.recv()
+        if gind is None:
+          nlworkers -= 1
+          tskipped, taborted, gaborted = (a + b for a, b in zip((tskipped, taborted, gaborted), connection.recv()))
+        else:
+          gtracks[gind].append(connection.recv())
+          gtracksb[gind].append(connection.recv())
+          gtracksc[gind] = connection
+          self.log(2, 'rtrack', uris[gind], gtracks[gind][-1][0])
+    tindex = 0
+    self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for uri, gtrack in zip(uris, gtracks) for track in gtrack)]
+    tracksb = [trackb for gtrackb in gtracksb for trackb in gtrackb]
+    self.CTracks = [(gind, (-trk, l - trk), gtrackc) for gind, (gtrackc, l) in enumerate(zip(gtracksc, map(len, gtracks))) for trk in range(l)]
+    self.log(2, 'etrack')
+    self.RThread = threading.Thread(target=self.Repatriate)
+    self.RThread.start()
+    return self.Tracks, tracksb, tskipped, taborted, gaborted
+
+  def Close(self):
+    self.Closed = True
+    with self.RCondition:
+      self.RCondition.notify_all()
+    if self.RThread is not None:
+      self.RThread.join()
+    for connection in self.Connections:
+      connection.close()
+    for worker in self.Workers:
+      worker.join()
+      worker.close()
+    self.log(2, 'close')
 
 
 class GPXTweakerWebInterfaceServer():
@@ -16633,6 +17075,47 @@ class GPXTweakerWebInterfaceServer():
   '  <svg id="waydots%s" viewbox="##VIEWBOX##" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
   '                </svg>\r\n              '
 
+  @staticmethod
+  def cpu_pcores_count():
+    try:
+      kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
+      byref = ctypes.byref
+      sizeof = ctypes.sizeof
+      DWORD = ctypes.wintypes.DWORD
+      WORD = ctypes.wintypes.WORD
+      BYTE = ctypes.wintypes.BYTE
+      ULONG_PTR = ctypes.c_size_t
+      ULONGLONG = ctypes.c_ulonglong
+      INT = ctypes.c_int
+      STRUCTURE = ctypes.Structure
+      UNION = ctypes.Union
+      class PROCESSOR_CORE(STRUCTURE):
+        _fields_ = [('Flags', BYTE)]
+      class NUMA_NODE(STRUCTURE):
+        _fields_ = [('NodeNumber', DWORD)]
+      class CACHE_DESCRIPTOR(STRUCTURE):
+        _fields_ = [('Level', BYTE), ('Associativity', BYTE), ('LineSize', WORD), ('Size', DWORD), ('Type',INT)]
+      class DUMMYUNIONNAME(UNION):
+        _fields_ = [('ProcessorCore', PROCESSOR_CORE), ('NumaNode', NUMA_NODE), ('Cache', CACHE_DESCRIPTOR), ('Reserved', ULONGLONG * 2)]
+      class SYSTEM_LOGICAL_PROCESSOR_INFORMATION(STRUCTURE):
+        _anonymous_ = ('DUMMYUNIONNAME',)
+        _fields_ = [('ProcessorMask', ULONG_PTR), ('Relationship', INT), ('DUMMYUNIONNAME', DUMMYUNIONNAME)]
+      b = ctypes.create_string_buffer(0)
+      s = DWORD(0)
+      kernel32.GetLogicalProcessorInformation(b, byref(s))
+      if kernel32.GetLastError() != 122:
+        return None
+      b = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION * (s.value // sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION)))()
+      if not kernel32.GetLogicalProcessorInformation(b, byref(s)):
+        return None
+      npcores = 0
+      for i in b:
+        if not i.Relationship:
+          npcores += 1
+      return npcores
+    except:
+      return None
+
   def _load_config(self, uri=os.path.dirname(os.path.abspath(__file__)) + r'\GPXTweaker.cfg'):
     try:
       f = open(uri, 'rt', encoding='utf-8')
@@ -16699,7 +17182,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur == 'explorer':
-          if not scur in ('folders', 'statistics', 'media') and scur[:11] != 'webmapping ':
+          if not scur in ('loading', 'folders', 'statistics', 'media') and scur[:11] != 'webmapping ':
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
           if scur[:11] == 'webmapping ':
@@ -16921,7 +17404,21 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
       elif hcur == 'explorer':
-        if scur == 'folders':
+        if scur == 'loading':
+          if field == 'workers':
+            if value in ('*', 'auto', True):
+              npcores = self.cpu_pcores_count()
+              self.ExplorerLoadingWorkers = 1 if npcores is None else max(1, npcores)
+            elif value in (None, False):
+              self.ExplorerLoadingWorkers = 1
+            else:
+              self.ExplorerLoadingWorkers = max(1, int(value))
+          elif field == 'repatriation':
+            self.ExplorerLoadingRepatriation = bool(value)
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur == 'folders':
           fold = os.path.abspath(os.path.expandvars(l.lstrip()))
           if os.path.isdir(fold):
             self.Folders.append(fold)
@@ -17230,7 +17727,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(1, 'cloaded')
     return True
 
-  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, record_map=None, cfg=os.path.dirname(os.path.abspath(__file__)) + r'\GPXTweaker.cfg', launch=None):
+  def __new__(cls, uri=None, trk=None, bmap=None, emap=None, map_minlat=None, map_maxlat=None, map_minlon=None, map_maxlon=None, map_resolution=None, map_maxheight=2000, map_maxwidth=4000, map_dpi=None, record_map=None, cfg=os.path.dirname(os.path.abspath(__file__)) + r'\GPXTweaker.cfg', launch=None, stop=(lambda:False)):
     self = object.__new__(cls)
     self.SessionStoreValue = str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time())))
     self.SessionId = None
@@ -17252,6 +17749,8 @@ class GPXTweakerWebInterfaceServer():
     self.VMaxLon = 180
     self.DefLat = None
     self.DefLon = None
+    self.ExplorerLoadingWorkers = 1
+    self.ExplorerLoadingRepatriation = True
     self.Folders = []
     self.MediaPorts = ''
     self.MediaFolders = []
@@ -17309,6 +17808,7 @@ class GPXTweakerWebInterfaceServer():
     self.SLock = threading.Lock()
     self.TLock = threading.Lock()
     self.Builder = ExpatGPXBuilder()
+    self.GPXLoader = None
     self.Media = None
     self.log = partial(log, 'interface')
     self.log(1, 'conf')
@@ -17375,74 +17875,84 @@ class GPXTweakerWebInterfaceServer():
       uris = (os.path.join(e[0], f) for folder in self.Folders for e in os.walk(folder) for f in e[2] if k(f.rpartition('.')))
       trk = 0
       nbtrk = None
-      u = next(uris, None)
-    trck = None
     ti = time.time()
-    gcie = gc.isenabled()
-    gc.disable()
-    tskipped = 0
-    taborted = 0
-    gaborted = 0
+    GCMan.disable()
     garb = []
+    dminlat = self.DefLat if (not bmap or map_minlat is None) else map_minlat
+    dmaxlat = self.DefLat if (not bmap or map_maxlat is None) else map_maxlat
+    dminlon = self.DefLon if (not bmap or map_minlon is None) else map_minlon
+    dmaxlon = self.DefLon if (not bmap or map_maxlon is None) else map_maxlon
     try:
-      while u is not None:
-        track = WGS84Track(self.SLock)
-        trck = trck or track
-        if not track.LoadGPX(u, trk, trck, self.Builder):
-          if uri is None:
-            if trck.Pts is None:
-              if trck.Track is None:
-                gaborted += 1
+      if uri or self.ExplorerLoadingWorkers == 1:
+        trck = None
+        tskipped = 0
+        taborted = 0
+        gaborted = 0
+        if uri is None:
+          u = next(uris, None)
+        while u is not None:
+          if stop():
+            raise Interrupted()
+          track = WGS84Track(self.SLock)
+          trck = trck or track
+          if not track.LoadGPX(u, trk, trck, self.Builder):
+            if uri is None:
+              if trck.Pts is None:
+                if trck.Track is None:
+                  gaborted += 1
+                else:
+                  for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
+                    trck.log(0, 'lerror', u + (' <%s>' % trk))
+                  taborted += trk + 1
+                  trk = 0
+                  garb.append(trck)
+                trck = None
+                u = next(uris, None)
+                continue
               else:
-                for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
-                  trck.log(0, 'lerror', u + (' <%s>' % trk))
-                taborted += trk + 1
-                trk = 0
+                taborted += 1
+            else:
+              if trck.Track is not None:
+                garb.append(trck)
+              return None
+          else:
+            minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=dminlat)
+            maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=dmaxlat)
+            minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=dminlon)
+            maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=dmaxlon)
+            if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
+              if uri is None:
+                tskipped += 1
+                self.log(0, 'berror6', color=31)
+              else:
+                self.log(0, 'berror4')
+                garb.append(track)
+                return None
+            else:
+              self.Tracks.append([u, track])
+              self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
+          if uri is None:
+            if nbtrk is None:
+              nbtrk = len(track.Track.documentElement.getChildren('trk'))
+            trk += 1
+            if trk >= nbtrk:
+              trk = 0
+              nbtrk = None
+              if (self.Tracks[-1][0] if self.Tracks else None) != u:
                 garb.append(trck)
               trck = None
               u = next(uris, None)
-              continue
-            else:
-              taborted += 1
           else:
-            if trck.Track is not None:
-              garb.append(trck)
-            return None
-        else:
-          minlat = min((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
-          maxlat = max((p[1][0] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
-          minlon = min((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
-          maxlon = max((p[1][1] for seg in (*track.Pts, track.Wpts) for p in seg), default=(self.DefLon if (not bmap or map_maxlon is None) else map_maxlon))
-          if minlat < self.VMinLat or maxlat > self.VMaxLat or minlon < self.VMinLon or maxlon > self.VMaxLon:
-            if uri is None:
-              tskipped += 1
-              self.log(0, 'berror6')
-            else:
-              self.log(0, 'berror4')
-              garb.append(track)
-              return None
-          else:
-            self.Tracks.append([u, track])
-            self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
-        if uri is None:
-          if nbtrk is None:
-            nbtrk = len(track.Track.documentElement.getChildren('trk'))
-          trk += 1
-          if trk >= nbtrk:
-            trk = 0
-            nbtrk = None
-            if (self.Tracks[-1][0] if self.Tracks else None) != u:
-              garb.append(trck)
-            trck = None
-            u = next(uris, None)
-        else:
-          self.Uri, self.Track = self.Tracks[0]
-          self.TrackInd = 0
-          break
-      if tskipped or taborted or gaborted:
-        self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted)
+            self.Uri, self.Track = self.Tracks[0]
+            self.TrackInd = 0
+            break
       else:
-        self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti)
+        self.GPXLoader = GPXLoader(self.ExplorerLoadingWorkers, self.ExplorerLoadingRepatriation, self.SLock)
+        self.Tracks, self.TracksBoundaries, tskipped, taborted, gaborted = self.GPXLoader.Load(tuple(uris), (dminlat, dmaxlat, dminlon, dmaxlon), (self.VMinLat, self.VMaxLat, self.VMinLon, self.VMaxLon), stop)
+      if tskipped or taborted or gaborted:
+        self.log(0, 'bloaded2', len(self.Tracks), time.time() - ti, tskipped, taborted, gaborted, color=31)
+      else:
+        self.log(0, 'bloaded1', len(self.Tracks), time.time() - ti, color=32)
       minlat = min((b[0] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_minlat is None) else map_minlat))
       maxlat = max((b[1] for b in self.TracksBoundaries), default=(self.DefLat if (not bmap or map_maxlat is None) else map_maxlat))
       minlon = min((b[2] for b in self.TracksBoundaries), default=(self.DefLon if (not bmap or map_minlon is None) else map_minlon))
@@ -17452,6 +17962,8 @@ class GPXTweakerWebInterfaceServer():
         return None
       clamp_lat = lambda v: min(self.VMaxLat, max(self.VMinLat, v))
       clamp_lon = lambda v: min(self.VMaxLon, max(self.VMinLon, v))
+      if stop():
+        raise Interrupted()
       if bmap:
         self.Mode = 'map'
         self.Map = WebMercatorMap()
@@ -17518,6 +18030,8 @@ class GPXTweakerWebInterfaceServer():
       self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
       for t in range(len(self.TracksBoundaries)):
         self.TracksBoundaries[t] = tuple(b[i] for i in (0,1) for b in (WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][0] - 0.008), clamp_lon(self.TracksBoundaries[t][2] - 0.011)), WGS84WebMercator.WGS84toWebMercator(clamp_lat(self.TracksBoundaries[t][1] + 0.008), clamp_lon(self.TracksBoundaries[t][3] + 0.011))))
+      if stop():
+        raise Interrupted()
       if emap:
         self.Elevation = WGS84Elevation()
         self.ElevationsProviders = []
@@ -17563,6 +18077,8 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.log(0, 'eerror', '-')
         self.ElevationProvider = None
+      if stop():
+        raise Interrupted()
       self.Itinerary = WGS84Itinerary()
       if len(self.ItinerariesProviders) > 0:
         self.ItineraryProviderSel = 0
@@ -17605,6 +18121,8 @@ class GPXTweakerWebInterfaceServer():
       if self.JSONTiles:
         self.JSONTiles = JSONTiles(len(self.TilesSets))
         self.Map.LinkJSONTiles(self.JSONTiles)
+      if stop():
+        raise Interrupted()
       if uri is not None:
         self.HTML = ''
       else:
@@ -17615,6 +18133,7 @@ class GPXTweakerWebInterfaceServer():
           self.log(0, 'berror')
           return None
         add = 'http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))
+        print('')
         if launch:
           webbrowser.open(add)
         else:
@@ -17625,6 +18144,9 @@ class GPXTweakerWebInterfaceServer():
           except:
             print(LSTRINGS['parser']['open'] % add)
       return self
+    except Interrupted:
+      self.log(0, 'berrori')
+      return None
     except:
       self.log(0, 'berror')
       return None
@@ -17632,13 +18154,15 @@ class GPXTweakerWebInterfaceServer():
       def _unlink():
         for trcks in (garb, (tr[1] for tr in self.Tracks)) if (self.HTML is None and self.HTMLExp is None) else (garb, ):
           for trck in trcks:
-            trck.ULock = None
-            trck.OTrack = trck.STrack = None
-            del trck.Track
+            if not isinstance(trck, WGS84TrackProxy):
+              trck.ULock = None
+              trck.OTrack = trck.STrack = None
+              del trck.Track
+      if self.GPXLoader and (self.HTML is None and self.HTMLExp is None):
+        self.GPXLoader.Close()
       u_thread = threading.Thread(target=_unlink)
       u_thread.start()
-      if gcie:
-        gc.enable()
+      GCMan.restore()
 
   def _build_pathes(self):
     def _coord_to_vb(x, y):
@@ -18031,20 +18555,23 @@ class GPXTweakerWebInterfaceServer():
     self.Map.Close()
     self.Elevation.Close()
     with self.SLock:
+      if self.GPXLoader:
+        self.GPXLoader.Close()
       for tr in self.Tracks:
         trck = tr[1]
-        trck.ULock = None
-        trck.OTrack = trck.STrack = None
-        del trck.Track
+        if not isinstance(trck, WGS84TrackProxy):
+          trck.ULock = None
+          trck.OTrack = trck.STrack = None
+          del trck.Track
       self.HTML = self.HTMLExp = self.HTML3D = self.HTML3DData = None
     with self.Media.DLock:
       self.Media.Data = None
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.15.3 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.16.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
-  print('');
+  print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
   CustomArgumentParser = partial(argparse.ArgumentParser, formatter_class=formatter, add_help=False)
   parser = CustomArgumentParser()
@@ -18065,10 +18592,12 @@ if __name__ == '__main__':
     if args.uri.rpartition('.')[2] != 'gpx':
       parser.error(LSTRINGS['parser']['gpx'])
   VERBOSITY = args.verbosity
+  print(LSTRINGS['parser']['keyboard'])
+  print('')
   cfg = os.path.expandvars(args.conf).rstrip('\\')
   if not os.path.isfile(cfg):
     cfg = os.path.join(cfg or os.path.dirname(os.path.abspath(__file__)), 'GPXTweaker.cfg')
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=cfg, launch=(not args.noopen))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=cfg, launch=(not args.noopen), stop=(stop := (lambda: bool(msvcrt.kbhit() and ((c := msvcrt.getch().upper()) == b'S' or (c == b'\xe0' and msvcrt.getch() and False) or stop())))))
   if GPXTweakerInterface is None:
     exit()
   print(LSTRINGS['parser']['keyboard'])
