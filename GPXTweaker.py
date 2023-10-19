@@ -7560,8 +7560,7 @@ class GPXLoader():
         ind, track, b = squeue.popleft()
         try:
           connection.send(ind)
-          connection.send((track.TrkId, track.Name, track.Color, track.Wpts, track.Pts))
-          connection.send(b)
+          connection.send(((track.TrkId, track.Name, track.Color, track.Wpts, track.Pts), b))
           wlog(2, 'wsqueue', wname, uris[ind], track.TrkId)
         except BrokenPipeError:
           stop = True
@@ -7759,11 +7758,11 @@ class GPXLoader():
           nlworkers -= 1
           tskipped, taborted, gaborted = (a + b for a, b in zip((tskipped, taborted, gaborted), connection.recv()))
         else:
-          gtracks[gind].append(connection.recv())
-          gtracksb[gind].append(connection.recv())
+          track, trackb = connection.recv()
+          gtracks[gind].append(track)
+          gtracksb[gind].append(trackb)
           gtracksc[gind] = connection
           self.log(2, 'rtrack', uris[gind], gtracks[gind][-1][0])
-    tindex = 0
     self.Tracks = [[uri, WGS84TrackProxy(*track, partial(self.Retrieve, tindex))] for tindex, (uri, track) in enumerate((uri, track) for uri, gtrack in zip(uris, gtracks) for track in gtrack)]
     tracksb = [trackb for gtrackb in gtracksb for trackb in gtrackb]
     self.CTracks = [(gind, (-trk, l - trk), gtrackc) for gind, (gtrackc, l) in enumerate(zip(gtracksc, map(len, gtracks))) for trk in range(l)]
