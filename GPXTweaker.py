@@ -6725,8 +6725,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if self.server.Interface.HTMLExp == '':
               self.server.Interface.ExploreMode()
             self.server.Interface.HTML = None
-            self.server.Interface.SLock.release()
             if not self.server.Interface.HTMLExp:
+              self.server.Interface.SLock.release()
               _send_err_nf()
               continue
             self.server.Interface.PSessionId = None
@@ -6736,6 +6736,11 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             else:
               resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             _send_resp('text/html; charset=utf-8')
+            try:
+              self.server.Interface.HTMLExpData = json.dumps([[[p[1] for p in seg] for seg in tr[1].Pts] for tr in self.server.Interface.Tracks], allow_nan=False, check_circular=False, separators=(',', ':')).encode('utf-8')
+            except:
+              pass
+            self.server.Interface.SLock.release()
           elif req.path.lower()[:13] == '/tiles/switch':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
@@ -7082,11 +7087,14 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if not self.server.Interface.HTMLExp:
               _send_err_nf()
               continue
-            try:
-              resp_body = json.dumps([[[p[1] for p in seg] for seg in tr[1].Pts] for tr in self.server.Interface.Tracks], check_circular=False, separators=(',', ':')).encode('utf-8')
-              _send_resp('application/json; charset=utf-8')
-            except:
+            self.server.Interface.SLock.acquire()
+            if self.server.Interface.HTMLExpData is None:
               _send_err_fail()
+            else:
+              resp_body = self.server.Interface.HTMLExpData
+              self.server.Interface.HTMLExpData = None
+              _send_resp('application/json; charset=utf-8')
+            self.server.Interface.SLock.release()
           elif req.path.lower() == '/media/gps_ar':
             if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
@@ -15247,7 +15255,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0)) {\r\n' + HTML_SEGCALC_1_TEMPLATE + \
   '          for (let p=0; p<seg.length; p++) {\r\n' \
   '            let pt = seg[p];\r\n' \
-  '            let ea = [parseFloat(pt[2]), parseFloat(pt[3])];\r\n' \
+  '            let ea = [pt[2], pt[3]];\r\n' \
   '            for (let v=0; v<2; v++) {\r\n' \
   '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
@@ -15256,7 +15264,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            if (fpan == 0 || fpan == 2) {\r\n' \
-  '              let t = Date.parse(pt[4]);\r\n' + HTML_SEGCALC_2_TEMPLATE + \
+  '              let t = pt[4];\r\n' + HTML_SEGCALC_2_TEMPLATE + \
   '            if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
   '              stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
   '              stat[5] = isNaN(ea[1])?ea_p[1]:ea[1];\r\n' \
@@ -15265,8 +15273,8 @@ class GPXTweakerWebInterfaceServer():
   '            if (p_p == null) {\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0 || smoothed_ch) {\r\n' \
-  '                  lat = parseFloat(seg_c[p][0]);\r\n' \
-  '                  lon = parseFloat(seg_c[p][1]);\r\n' \
+  '                  lat = seg_c[p][0];\r\n' \
+  '                  lon = seg_c[p][1];\r\n' \
   '                }\r\n' \
   '              } else if (fpan == 0) {\r\n' \
   '                teahs.set([stat[0], isNaN(ea[0])?ea_p[0]:ea[0], isNaN(ea[1])?ea_p[1]:ea[1], el_p], 4 * ind);\r\n' \
@@ -15279,8 +15287,8 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0 || smoothed_ch) {\r\n' \
-  '                  lat = parseFloat(seg_c[p][0]);\r\n' \
-  '                  lon = parseFloat(seg_c[p][1]);\r\n' \
+  '                  lat = seg_c[p][0];\r\n' \
+  '                  lon = seg_c[p][1];\r\n' \
   '                  stat[1] = stat_p[1] + distance(lat_p, lon_p, null, lat, lon, null);\r\n' \
   '                  if (fpan != 0) {stats[seg_ind][stat_i][1] = stat[1];}\r\n' \
   '                }\r\n' \
@@ -15332,14 +15340,14 @@ class GPXTweakerWebInterfaceServer():
   '                if (gpucomp == 0) {\r\n' \
   '                  let tl = [htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top), htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left)];\r\n' \
   '                  let g = [];\r\n' \
-  '                  seg.forEach((c) => {let [x, y] = WGS84toWebMercator(parseFloat(c[0]), parseFloat(c[1])); g.push(x - tl[1], tl[0] - y)});\r\n' \
+  '                  seg.forEach((c) => {let [x, y] = WGS84toWebMercator(c[0], c[1]); g.push(x - tl[1], tl[0] - y)});\r\n' \
   '                  tracks_xys.set(g, 2 * ind);\r\n' \
   '                } else {\r\n' \
   '                  starts.push(starts[starts.length - 1] + nbp);\r\n' \
   '                  let tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top));\r\n' \
   '                  tls.push(tl);\r\n' \
   '                  let g = [];\r\n' \
-  '                  seg.forEach((c) => g.push(tl[0] - parseFloat(c[0]), parseFloat(c[1]) - tl[1]));\r\n' \
+  '                  seg.forEach((c) => g.push(tl[0] - c[0], c[1] - tl[1]));\r\n' \
   '                  lls.set(g, 2 * ind);\r\n' \
   '                }\r\n' \
   '                ind += nbp;\r\n' \
@@ -15483,28 +15491,21 @@ class GPXTweakerWebInterfaceServer():
   '              let te = null;\r\n' \
   '              let slat = null;\r\n' \
   '              let slon = null;\r\n' \
-  '              for (let s=0; s<segs.length; s++) {\r\n' \
-  '                for (let p=0; p<segs[s].length; p++) {\r\n' \
-  '                  let t = Date.parse(segs[s][p][4]);\r\n' \
+  '              for (const seg of segs) {\r\n' \
+  '                for (let p=0; p<seg.length; p++) {\r\n' \
+  '                  let t = seg[p][4];\r\n' \
   '                  if (! isNaN(t)) {\r\n' \
   '                    ts = Math.min(t, ts==null?t:ts);\r\n' \
   '                    te = Math.max(t, te==null?t:te);\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              for (let s=0; s<segs.length; s++) {\r\n' \
-  '                for (let p=0; p<segs[s].length; p++) {\r\n' \
-  '                  if (noe) {\r\n' \
-  '                    if (! isNaN(parseFloat(segs[s][p][2]))) {noe = false;}\r\n' \
-  '                  }\r\n' \
-  '                  if (noa) {\r\n' \
-  '                    if (! isNaN(parseFloat(segs[s][p][3]))) {noa = false;}\r\n' \
-  '                  }\r\n' \
-  '                  if (slat == null) {\r\n' \
-  '                    slat = segs[s][p][0];\r\n' \
-  '                    slon = segs[s][p][1];\r\n' \
-  '                  }\r\n' \
-  '                  if (! noe && ! noa && slat != null) {break;}\r\n' \
+  '              for (const seg of segs) {\r\n' \
+  '                if (noe) {noe = ! seg.some((c) => ! isNaN(c[2]))}\r\n' \
+  '                if (noa) {noa = ! seg.some((c) => ! isNaN(c[3]))}\r\n' \
+  '                if (slat == null && seg.length > 0) {\r\n' \
+  '                  slat = seg[0][0];\r\n' \
+  '                  slon = seg[0][1];\r\n' \
   '                }\r\n' \
   '                if (! noe && ! noa && slat != null) {break;}\r\n' \
   '              }\r\n' \
@@ -16965,6 +16966,7 @@ class GPXTweakerWebInterfaceServer():
   '      function load_dcb(t) {\r\n' \
   '        if (t.status != 200) {error_dcb();return;}\r\n' \
   '        tracks_pts = JSON.parse(t.response);\r\n' \
+  '        tracks_pts.forEach((c) => {c.forEach((c) => {c.forEach((c) => {if (c[2] == "") {c[2] = NaN}; if (c[3] == "") {c[3] = NaN}; c[4] = Date.parse(c[4])})})});\r\n' \
   '        page_load(true);\r\n' \
   '      }\r\n' \
   '      function page_load(fol=false) {\r\n' \
@@ -17793,6 +17795,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML3DData = None
     self.HTML3DElevationProvider = None
     self.HTMLExp = None
+    self.HTMLExpData = None
     self.TracksBoundaries = []
     self.VMinx = None
     self.VMaxx = None
