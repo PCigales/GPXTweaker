@@ -6739,7 +6739,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             try:
               self.server.Interface.HTMLExpData = json.dumps([[[p[1] for p in seg] for seg in tr[1].Pts] for tr in self.server.Interface.Tracks], allow_nan=False, check_circular=False, separators=(',', ':')).encode('utf-8')
             except:
-              pass
+              self.server.Interface.HTMLExpData = None
             self.server.Interface.SLock.release()
           elif req.path.lower()[:13] == '/tiles/switch':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
