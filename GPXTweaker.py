@@ -1,4 +1,4 @@
-# GPXTweaker v1.16.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.16.1 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -6736,11 +6736,13 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             else:
               resp_body = self.server.Interface.HTMLExp.replace('##SESSIONSTORE##', '').replace('##SESSIONSTOREVALUE##', self.server.Interface.SessionStoreValue).replace('##SESSIONID##', self.server.Interface.SessionId).encode('utf-8')
             _send_resp('text/html; charset=utf-8')
+            GCMan.disable()
             try:
               self.server.Interface.HTMLExpData = json.dumps([[[p[1] for p in seg] for seg in tr[1].Pts] for tr in self.server.Interface.Tracks], allow_nan=False, check_circular=False, separators=(',', ':')).encode('utf-8')
             except:
               self.server.Interface.HTMLExpData = None
             self.server.Interface.SLock.release()
+            GCMan.restore()
           elif req.path.lower()[:13] == '/tiles/switch':
             if req.header('If-Match', '') not in (self.server.Interface.SessionId, self.server.Interface.PSessionId):
               _send_err_bad()
@@ -15501,8 +15503,8 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '              }\r\n' \
   '              for (const seg of segs) {\r\n' \
-  '                if (noe) {noe = ! seg.some((c) => ! isNaN(c[2]))}\r\n' \
-  '                if (noa) {noa = ! seg.some((c) => ! isNaN(c[3]))}\r\n' \
+  '                if (noe) {noe = seg.every((c) => isNaN(c[2]))}\r\n' \
+  '                if (noa) {noa = seg.every((c) => isNaN(c[3]))}\r\n' \
   '                if (slat == null && seg.length > 0) {\r\n' \
   '                  slat = seg[0][0];\r\n' \
   '                  slon = seg[0][1];\r\n' \
@@ -18571,7 +18573,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.16.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.16.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
