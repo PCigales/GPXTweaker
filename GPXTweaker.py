@@ -7843,7 +7843,7 @@ class GPXTweakerWebInterfaceServer():
   '        cursor:pointer;\r\n' \
   '        stroke-width:1.5;\r\n' \
   '      }\r\n' \
-  '      path {\r\n' \
+  '      svg[id^=track] path {\r\n' \
   '        pointer-events:stroke;\r\n' \
   '        cursor:pointer;\r\n' \
   '        stroke-width:calc(2px * var(--magnify));\r\n' \
@@ -8035,7 +8035,9 @@ class GPXTweakerWebInterfaceServer():
   '      if (tholdsize > 0 && navigator.userAgent.toLowerCase().indexOf("firefox") < 0) {var tiles_hold = new Map();}\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
-  '      var xhr_ongoing = 0;\r\n'
+  '      var xhr_ongoing = 0;\r\n' \
+  '      var graph_ip = null;\r\n' \
+  '      var graph_px = null;\r\n'
   HTML_GPUSTATS_TEMPLATE = \
   '      class GPUStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
@@ -9215,6 +9217,191 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("mtpanel").style.display = "none";\r\n' \
   '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
   '      }\r\n' \
+  '      function graph_point(bx=null) {\r\n' \
+  '        let graph = document.getElementById("graph");\r\n' \
+  '        if (graph.style.display == "none") {return;}\r\n' \
+  '        let graphc = document.getElementById("graphc");\r\n' \
+  '        let xl = graphc.offsetLeft + 45;\r\n' \
+  '        let xr = graphc.offsetLeft + parseFloat(graphc.getAttribute("width")) - 20;\r\n' \
+  '        let gbar = document.getElementById("gbar");\r\n' \
+  '        gbar.style.display = "none";\r\n' \
+  '        let gbarc = document.getElementById("gbarc");\r\n' \
+  '        gbarc.style.display = "none";\r\n' \
+  '        let graphpx = document.getElementById("graphpx");\r\n' \
+  '        let graphpy = document.getElementById("graphpy");\r\n' \
+  '        let gpx = graphpx.innerHTML;\r\n' \
+  '        let gpy = graphpy.innerHTML;\r\n' \
+  '        graphpx.innerHTML = "";\r\n' \
+  '        graphpy.innerHTML = "";\r\n' \
+  '        if (graph_ip.length < 2) {return;}\r\n' \
+  '        let segs = null;\r\n' \
+  '        let segf = null;\r\n' \
+  '        let segf_ind = null;\r\n' \
+  '        let foc_ind = null;\r\n' \
+  '        let stat_ind = null;\r\n' \
+  '        let stats = null;\r\n' \
+  '        let tr_ind = null;\r\n' \
+  '        if (bx == null) {\r\n' \
+  '          if (focused.substring(0, 5) == "point") {\r\n' \
+  '            segf = document.getElementById(focused + "cont").parentNode;\r\n' \
+  '            if (! segf.firstElementChild.checked) {return;}\r\n' \
+  '            foc_ind = parseInt(focused.substring(5));\r\n' \
+  '            if (foc_ind >= point_stat.length) {return;}\r\n' \
+  '            stat_ind = point_stat[foc_ind];\r\n' \
+  '            if (stat_ind == null) {return;}\r\n' \
+  '            segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
+  '            segs = document.getElementById("pointsform").children;\r\n' \
+  '            stats = window["stats"];\r\n' \
+  '          } else if (focused.substring(0, 5) == "track") {\r\n' \
+  '            tr_ind = parseInt(focused.substring(5));\r\n' \
+  '            foc_ind = focused_targeted;\r\n' \
+  '            if (foc_ind == null) {return;}\r\n' \
+  '            let xys_ind = 2 * (tracks_xy_offsets[tr_ind] + foc_ind);\r\n' \
+  '            let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
+  '            set_target([xys[xys_ind] + prop_to_wmvalue(document.getElementById(focused).style.left), xys[xys_ind + 1] + prop_to_wmvalue(document.getElementById(focused).style.top)]);\r\n' \
+  '            segf_ind = -1;\r\n' \
+  '            let nbpt = 0;\r\n' \
+  '            segs = tracks_pts[tr_ind];\r\n' \
+  '            while (nbpt <= foc_ind) {\r\n' \
+  '              segf_ind++;\r\n' \
+  '              nbpt += segs[segf_ind].length;\r\n' \
+  '            }\r\n' \
+  '            stat_ind = foc_ind - nbpt + segs[segf_ind].length;\r\n' \
+  '            stats = tracks_stats[tr_ind];\r\n' \
+  '          } else {return;}\r\n' \
+  '          if (graph_px[foc_ind] != undefined) {\r\n' \
+  '            gbar.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
+  '            if (gbarc.getAttribute("stroke") != "darkgray") {\r\n' \
+  '              gbarc.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
+  '            }\r\n' \
+  '            gbar.style.display = "";\r\n' \
+  '            gbarc.style.display = "";\r\n' \
+  '            if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
+  '              let dur = Math.round(stats[segf_ind][stat_ind][0]);\r\n' \
+  '              let dur_s = dur % 60;\r\n' \
+  '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              let dur_s_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                let seg_ind = null;\r\n' \
+  '                if (tr_ind == null) {\r\n' \
+  '                  if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '                  seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                } else {\r\n' \
+  '                  seg_ind = s;\r\n' \
+  '                }\r\n' \
+  '                if (seg_ind == segf_ind) {break;}\r\n' \
+  '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '                dur += stats[seg_ind][stats[seg_ind].length - 1][0];\r\n' \
+  '              }\r\n' \
+  '              dur_s = dur % 60;\r\n' \
+  '              dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '              dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '              graphpx.innerHTML = dur_c + "<br>" + dur_s_c;\r\n' \
+  '            } else {\r\n' \
+  '              let dist_s = stats[segf_ind][stat_ind][6];\r\n' \
+  '              let dist = dist_s;\r\n' \
+  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '                let seg_ind = null;\r\n' \
+  '                if (tr_ind == null) {\r\n' \
+  '                  if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '                  seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                } else {\r\n' \
+  '                  seg_ind = s;\r\n' \
+  '                }\r\n' \
+  '                if (seg_ind == segf_ind) {break;}\r\n' \
+  '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '                dist += stats[seg_ind][stats[seg_ind].length - 1][6];\r\n' \
+  '              }\r\n' \
+  '              graphpx.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
+  '            }\r\n' \
+  '            let yi = document.getElementById("graphy").selectedIndex;\r\n' \
+  '            switch (yi) {\r\n' \
+  '              case 0:\r\n' \
+  '                let dist_s = stats[segf_ind][stat_ind][6];\r\n' \
+  '                let dist = dist_s;\r\n' \
+  '                for (let s=0; s<segs.length; s++) {\r\n' \
+  '                  let seg_ind = null;\r\n' \
+  '                  if (tr_ind == null) {\r\n' \
+  '                    if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '                    seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                  } else {\r\n' \
+  '                    seg_ind = s;\r\n' \
+  '                  }\r\n' \
+  '                  if (seg_ind == segf_ind) {break;}\r\n' \
+  '                  if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '                  dist += stats[seg_ind][stats[seg_ind].length - 1][6];\r\n' \
+  '                }\r\n' \
+  '                graphpy.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
+  '                break;\r\n' \
+  '              case 1:\r\n' \
+  '                graphpy.innerHTML = (tr_ind==null?document.getElementById(focused + "ele").value:segs[segf_ind][stat_ind][2]) + "m";\r\n' \
+  '                break\r\n' \
+  '              case 2:\r\n' \
+  '                graphpy.innerHTML = (tr_ind==null?document.getElementById(focused + "alt").value:segs[segf_ind][stat_ind][3]) + "m";\r\n' \
+  '                break\r\n' \
+  '              case 3:\r\n' \
+  '              case 4:\r\n' \
+  '                let g_s = stats[segf_ind][stat_ind][yi - 1];\r\n' \
+  '                let g = g_s;\r\n' \
+  '                for (let s=0; s<segs.length; s++) {\r\n' \
+  '                  let seg_ind = null;\r\n' \
+  '                  if (tr_ind == null) {\r\n' \
+  '                    if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
+  '                    seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                  } else {\r\n' \
+  '                    seg_ind = s;\r\n' \
+  '                  }\r\n' \
+  '                  if (seg_ind == segf_ind) {break;}\r\n' \
+  '                  if (stats[seg_ind].length == 0) {continue;}\r\n' \
+  '                  g += stats[seg_ind][stats[seg_ind].length - 1][yi - 1];\r\n' \
+  '                }\r\n' \
+  '                graphpy.innerHTML = g.toFixed(1) + "m<br>" + g_s.toFixed(1) + "m";\r\n' \
+  '                break;\r\n' \
+  '                break;\r\n' \
+  '              case 5:\r\n' \
+  '                graphpy.innerHTML = (stats[segf_ind][stat_ind][4] * 100).toFixed(1) + "%";\r\n' \
+  '                break\r\n' \
+  '              case 6:\r\n' \
+  '                graphpy.innerHTML = (stats[segf_ind][stat_ind][5] * 100).toFixed(1) + "%";\r\n' \
+  '                break\r\n' \
+  '              case 7:\r\n' \
+  '                graphpy.innerHTML = (stats[segf_ind][stat_ind][7] * 3.6 ).toFixed(1) + "km/h";\r\n' \
+  '                break\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          let x = Math.max(Math.min(bx + 1, xr), xl);\r\n' \
+  '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
+  '          gbarc.style.display = "";\r\n' \
+  '          let ind1 = 0;\r\n' \
+  '          let ind2 = graph_ip.length - 1;\r\n' \
+  '          x = x + 45 - xl;\r\n' \
+  '          while (ind1 < ind2) {\r\n' \
+  '            let inda = Math.floor((ind1 + ind2) / 2);\r\n' \
+  '            let indb = inda + 1;\r\n' \
+  '            while (graph_px[graph_ip[inda]] == graph_px[graph_ip[indb]] && indb < ind2) {indb++;}\r\n' \
+  '            let da = Math.abs(graph_px[graph_ip[inda]] - x);\r\n' \
+  '            let db = Math.abs(graph_px[graph_ip[indb]] - x);\r\n' \
+  '            if (da <= db) {ind2 = inda;} else {ind1 = indb;}\r\n' \
+  '          }\r\n' \
+  '          if (focused.substring(0, 5) == "track") {\r\n' \
+  '            focused_targeted = ind1;\r\n' \
+  '            graph_point();\r\n' \
+  '          } else {\r\n' \
+  '            if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
+  '              let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
+  '              element_click(null, pt);\r\n' \
+  '            } else {\r\n' \
+  '              gbar.style.display = "";\r\n' \
+  '              graphpx.innerHTML = gpx;\r\n' \
+  '              graphpy.innerHTML = gpy;\r\n' \
+  '            }\r\n' \
+  '            if (scrollmode_ex > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode_ex == 2);}\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
   '        let graphc = document.getElementById("graphc");\r\n' \
@@ -9236,11 +9423,17 @@ class GPXTweakerWebInterfaceServer():
   '            graph.style.display = "none";\r\n' \
   '            document.getElementById("gbar").style.display = "none";\r\n' \
   '            document.getElementById("gbarc").style.display = "none";\r\n' \
-  '            if (typeof graph_ip != typeof undefined) {\r\n' \
-  '              graph_ip = null;\r\n' \
-  '              graph_px = null;\r\n' \
-  '            }\r\n' \
+  '            document.getElementById("graphpx").innerHTML = "";\r\n' \
+  '            document.getElementById("graphpy").innerHTML = "";\r\n' \
+  '            graph_ip = null;\r\n' \
+  '            graph_px = null;\r\n' \
   '            graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
+  '            if (document.getElementById("target_mark") != null) {\r\n' \
+  '              if (focused_targeted) {\r\n' \
+  '                focused_targeted = null;\r\n' \
+  '                set_target();\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            rescale();\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
@@ -9313,6 +9506,10 @@ class GPXTweakerWebInterfaceServer():
   '                  break;\r\n' \
   '              }\r\n'
   HTML_GRAPH3_TEMPLATE = \
+  '        if (gx.length < 2) {\r\n' \
+  '          graph_point();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        let minx = gx[0];\r\n' \
   '        let maxx = gx[0];\r\n' \
   '        let miny = gy[0];\r\n' \
@@ -9412,7 +9609,19 @@ class GPXTweakerWebInterfaceServer():
   '          if (y < yt) {y = yt;}\r\n' \
   '        }\r\n' \
   '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
-  '        gctx.beginPath();\r\n'
+  '        gctx.beginPath();\r\n' \
+  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
+  '          if (i == gc[0]) {\r\n' \
+  '            gctx.moveTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
+  '            gc.shift();\r\n' \
+  '          } else {\r\n' \
+  '            gctx.lineTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        gctx.stroke();\r\n' \
+  '        graph_point();\r\n' \
+  '      }\r\n'
   HTML_MAP_TEMPLATE = \
   '      function switch_3Dpanel() {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
@@ -9457,6 +9666,9 @@ class GPXTweakerWebInterfaceServer():
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
   '          } else if (focused.indexOf("track") >= 0){\r\n' \
   '            scroll_to_track(document.getElementById(focused), scrollmode == 2);\r\n' \
+  '            if (document.getElementById("target_mark").style.display != "none") {\r\n' \
+  '              scroll_to_target(scrollmode == 2);\r\n' \
+  '            }\r\n' \
   '          } else {\r\n' \
   '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
   '          }\r\n' \
@@ -9564,7 +9776,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function scrollcross(sw=false) {\r\n' \
   '        if (sw) {\r\n' \
-  '          scrollmode = (scrollmode + 1) % 3;\r\n' \
+  '          scrollmode = scrollmode_ex = (scrollmode + 1) % 3;\r\n' \
   '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n' \
   '        } else {\r\n' \
   '          if (! focused) {return;}\r\n' \
@@ -9574,6 +9786,9 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (focused.substring(0, 3) == "tra") {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
   '            scroll_to_track(document.getElementById(focused), true);\r\n' \
+  '            if (document.getElementById("target_mark").style.display != "none") {\r\n' \
+  '              scroll_to_target(true);\r\n' \
+  '            }\r\n' \
   '          } else {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
   '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
@@ -9758,7 +9973,7 @@ class GPXTweakerWebInterfaceServer():
   '        </tr>\r\n' \
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
-  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;">\r\n' \
+  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;overflow:hidden;">\r\n' \
   '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
   '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
@@ -9840,7 +10055,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("v3dsmargin").value = parseFloat(prev_state[17]);\r\n' \
   '          document.getElementById("dfdist").innerHTML = prev_state[18];\r\n' \
   '          document.getElementById("dffilter").value = parseFloat(prev_state[18]);\r\n' \
-  '          scrollmode = parseInt(prev_state[19]);\r\n' \
+  '          scrollmode = scrollmode_ex = parseInt(prev_state[19]);\r\n' \
   '        } else {\r\n' \
   '          eset = document.getElementById("eset").selectedIndex;\r\n' \
   '          if (document.getElementById("iset").name == "iset") {iset = document.getElementById("iset").selectedIndex;}\r\n' \
@@ -9915,9 +10130,7 @@ class GPXTweakerWebInterfaceServer():
   '      var stats = [];\r\n' \
   '      var gpu_part = gpucomp >=1?true:false;\r\n' \
   '      var smoothed = false;\r\n' \
-  '      var point_stat = [];\r\n' \
-  '      var graph_ip = null;\r\n' \
-  '      var graph_px = null;\r\n' + HTML_GPUSTATS_TEMPLATE + \
+  '      var point_stat = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("tweaker");}\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -10766,8 +10979,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (pt.value == "error") {pt.checked = ! pt.checked;}\r\n' \
   '        if (pt.checked) {point_undelete(pt, batch);} else {point_delete(pt, batch);}\r\n' \
   '      }\r\n' \
-  '      function pointed_waypoint(coord) {\r\n' \
-  '        let wm = WGS84toWebMercator(...coord);\r\n' \
+  '      function pointed3d_waypoint(lat, lon) {\r\n' \
+  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '        if (focused) {\r\n' \
   '          ex_foc = focused;\r\n' \
@@ -10784,13 +10997,13 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (w < wpts.length) {\r\n' \
   '          element_click(null, document.getElementById(wpt.id + "desc"), false);\r\n' \
-  '          document.getElementById(wpt.id + "lat").value = coord[0].toFixed(6);\r\n' \
-  '          document.getElementById(wpt.id + "lon").value = coord[1].toFixed(6);\r\n' \
+  '          document.getElementById(wpt.id + "lat").value = lat.toFixed(6);\r\n' \
+  '          document.getElementById(wpt.id + "lon").value = lon.toFixed(6);\r\n' \
   '          document.getElementById(wpt.id + "ele").value = "";\r\n' \
   '          document.getElementById(wpt.id + "time").value = "";\r\n' \
   '          point_edit(false, true, false, true);\r\n' \
   '        } else {\r\n' \
-  '          point_insert("a", coord);\r\n' \
+  '          point_insert("a", [lat, lon]);\r\n' \
   '          document.getElementById(focused + "name").value = "#### 3D ####";\r\n' \
   '          point_edit(false, false, false, false);\r\n' \
   '          wpt = document.getElementById(focused);\r\n' \
@@ -12079,157 +12292,7 @@ class GPXTweakerWebInterfaceServer():
   '          dist += stat[6];\r\n' \
   '          ele += stat[2];\r\n' \
   '          alt += stat[3];\r\n' \
-  '        }\r\n' \
-  '        if (gx.length < 2) {\r\n' \
-  '          graph_point();\r\n' \
-  '          return;\r\n' \
   '        }\r\n' + HTML_GRAPH3_TEMPLATE + \
-  '        for (let i=0; i<gx.length; i++) {\r\n' \
-  '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
-  '          if (i == gc[0]) {\r\n' \
-  '            gctx.moveTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
-  '            gc.shift();\r\n' \
-  '          } else {\r\n' \
-  '            gctx.lineTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        gctx.stroke();\r\n' \
-  '        graph_point();\r\n' \
-  '      }\r\n' \
-  '      function graph_point(bx) {\r\n' \
-  '        let graph = document.getElementById("graph");\r\n' \
-  '        if (graph.style.display == "none") {return;}\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let xl = graphc.offsetLeft + 45;\r\n' \
-  '        let xr = graphc.offsetLeft + parseFloat(graphc.getAttribute("width")) - 20;\r\n' \
-  '        let gbar = document.getElementById("gbar");\r\n' \
-  '        gbar.style.display = "none";\r\n' \
-  '        let gbarc = document.getElementById("gbarc");\r\n' \
-  '        gbarc.style.display = "none";\r\n' \
-  '        let graphpx = document.getElementById("graphpx");\r\n' \
-  '        let graphpy = document.getElementById("graphpy");\r\n' \
-  '        let gpx = graphpx.innerHTML;\r\n' \
-  '        let gpy = graphpy.innerHTML;\r\n' \
-  '        graphpx.innerHTML = "";\r\n' \
-  '        graphpy.innerHTML = "";\r\n' \
-  '        if (graph_ip.length < 2) {return;}\r\n' \
-  '        if (bx == null) {\r\n' \
-  '          if (focused.substring(0, 5) != "point") {return;}\r\n' \
-  '          let segf = document.getElementById(focused + "cont").parentNode;\r\n' \
-  '          if (! segf.firstElementChild.checked) {return;}\r\n' \
-  '          let foc_ind = parseInt(focused.substring(5));\r\n' \
-  '          if (foc_ind >= point_stat.length) {return;}\r\n' \
-  '          if (point_stat[foc_ind] == null) {return;}\r\n' \
-  '          let segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
-  '          if (graph_px[foc_ind] != undefined) {\r\n' \
-  '            gbar.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
-  '            if (gbarc.getAttribute("stroke") != "darkgray") {\r\n' \
-  '              gbarc.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
-  '            }\r\n' \
-  '            gbar.style.display = "";\r\n' \
-  '            gbarc.style.display = "";\r\n' \
-  '            let segs = document.getElementById("pointsform").children;\r\n' \
-  '            if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
-  '              let dur = Math.round(stats[segf_ind][point_stat[foc_ind]][0]);\r\n' \
-  '              let dur_s = dur % 60;\r\n' \
-  '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              let dur_s_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
-  '              for (let s=0; s<segs.length; s++) {\r\n' \
-  '                if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
-  '                if (seg_ind == segf_ind) {break;}\r\n' \
-  '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                dur += stats[seg_ind][stats[seg_ind].length - 1][0];\r\n' \
-  '              }\r\n' \
-  '              dur_s = dur % 60;\r\n' \
-  '              dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '              dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
-  '              graphpx.innerHTML = dur_c + "<br>" + dur_s_c;\r\n' \
-  '            } else {\r\n' \
-  '              let dist_s = stats[segf_ind][point_stat[foc_ind]][6];\r\n' \
-  '              let dist = dist_s;\r\n' \
-  '              for (let s=0; s<segs.length; s++) {\r\n' \
-  '                if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
-  '                if (seg_ind == segf_ind) {break;}\r\n' \
-  '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                dist += stats[seg_ind][stats[seg_ind].length - 1][6];\r\n' \
-  '              }\r\n' \
-  '              graphpx.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
-  '            }\r\n' \
-  '            let yi = document.getElementById("graphy").selectedIndex;\r\n' \
-  '            switch (yi) {\r\n' \
-  '              case 0:\r\n' \
-  '                let dist_s = stats[segf_ind][point_stat[foc_ind]][6];\r\n' \
-  '                let dist = dist_s;\r\n' \
-  '                for (let s=0; s<segs.length; s++) {\r\n' \
-  '                  if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                  let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
-  '                  if (seg_ind == segf_ind) {break;}\r\n' \
-  '                  if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                  dist += stats[seg_ind][stats[seg_ind].length - 1][6];\r\n' \
-  '                }\r\n' \
-  '                graphpy.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
-  '                break;\r\n' \
-  '              case 1:\r\n' \
-  '                graphpy.innerHTML = document.getElementById(focused + "ele").value + "m";\r\n' \
-  '                break\r\n' \
-  '              case 2:\r\n' \
-  '                graphpy.innerHTML = document.getElementById(focused + "alt").value + "m";\r\n' \
-  '                break\r\n' \
-  '              case 3:\r\n' \
-  '              case 4:\r\n' \
-  '                let g_s = stats[segf_ind][point_stat[foc_ind]][yi - 1];\r\n' \
-  '                let g = g_s;\r\n' \
-  '                for (let s=0; s<segs.length; s++) {\r\n' \
-  '                  if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                  let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
-  '                  if (seg_ind == segf_ind) {break;}\r\n' \
-  '                  if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                  g += stats[seg_ind][stats[seg_ind].length - 1][yi - 1];\r\n' \
-  '                }\r\n' \
-  '                graphpy.innerHTML = g.toFixed(1) + "m<br>" + g_s.toFixed(1) + "m";\r\n' \
-  '                break;\r\n' \
-  '                break;\r\n' \
-  '              case 5:\r\n' \
-  '                graphpy.innerHTML = (stats[segf_ind][point_stat[foc_ind]][4] * 100).toFixed(1) + "%";\r\n' \
-  '                break\r\n' \
-  '              case 6:\r\n' \
-  '                graphpy.innerHTML = (stats[segf_ind][point_stat[foc_ind]][5] * 100).toFixed(1) + "%";\r\n' \
-  '                break\r\n' \
-  '              case 7:\r\n' \
-  '                graphpy.innerHTML = (stats[segf_ind][point_stat[foc_ind]][7] * 3.6 ).toFixed(1) + "km/h";\r\n' \
-  '                break\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '        } else {\r\n' \
-  '          let x = Math.max(Math.min(bx + 1, xr), xl);\r\n' \
-  '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
-  '          gbarc.style.display = "";\r\n' \
-  '          let ind1 = 0;\r\n' \
-  '          let ind2 = graph_ip.length - 1;\r\n' \
-  '          x = x + 45 - xl;\r\n' \
-  '          while (ind1 < ind2) {\r\n' \
-  '            let inda = Math.floor((ind1 + ind2) / 2);\r\n' \
-  '            let indb = inda + 1;\r\n' \
-  '            while (graph_px[graph_ip[inda]] == graph_px[graph_ip[indb]] && indb < ind2) {indb++;}\r\n' \
-  '            let da = Math.abs(graph_px[graph_ip[inda]] - x);\r\n' \
-  '            let db = Math.abs(graph_px[graph_ip[indb]] - x);\r\n' \
-  '            if (da <= db) {ind2 = inda;} else {ind1 = indb;}\r\n' \
-  '          }\r\n' \
-  '          if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
-  '            let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
-  '            element_click(null, pt);\r\n' \
-  '          } else {\r\n' \
-  '            gbar.style.display = "";\r\n' \
-  '            graphpx.innerHTML = gpx;\r\n' \
-  '            graphpy.innerHTML = gpy;\r\n' \
-  '          }\r\n' \
-  '          if (scrollmode_ex > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode_ex == 2);}\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
   '      function error_pcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '      }\r\n' \
@@ -14036,17 +14099,17 @@ class GPXTweakerWebInterfaceServer():
   '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" onmousedown="mouse_down(event)" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
   '          <div id="panel_infos" style="display:none;position:absolute;top:5px;left:5px;width:calc(100vw - 10vh - 18em);height:3em;font-size:90%;color:black;background-color:rgba(210,210,210,0.85);">\r\n' \
   '            <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:hidden;height:3em;">\r\n' \
-  '              <label for="eye_info" style="top:2px;" onclick="event.altKey?complete_infos(event):update_waypoint(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
-  '              <label for="target_info" style="bottom:2px;" onclick="event.altKey?complete_infos(event):update_waypoint(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly style="bottom:2px;">\r\n' \
+  '              <label for="eye_info" style="top:2px;" onclick="event.altKey?complete_infos(event):update_pointer(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
+  '              <label for="target_info" style="bottom:2px;" onclick="event.altKey?complete_infos(event):update_pointer(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly style="bottom:2px;">\r\n' \
   '            </form>\r\n' \
   '          </div>\r\n' \
   '          <svg id="target_mark" viewbox="-1 -1 2 2" pointer-events="none" stroke-width="1" style="display:none;position:absolute;top:0%;left:0%;width:2vh;height:2vh;" fill="none">\r\n' \
   '            <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
   '            <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black""/>\r\n' \
-  '            <line x1="-0.9" y1="0" x2="0.9" y2 ="0" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
-  '            <line x1="-0.9" y1="0" x2="0.9" y2 ="0" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
-  '            <line x1="0" y1="-0.9" x2="0" y2 ="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
-  '            <line x1="0" y1="-0.9" x2="0" y2 ="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
+  '            <line x1="-0.9" y1="0" x2="0.9" y2="0" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '            <line x1="-0.9" y1="0" x2="0.9" y2="0" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
+  '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
   '          </svg>\r\n' \
   '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
   '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
@@ -14769,23 +14832,21 @@ class GPXTweakerWebInterfaceServer():
   '          predraw = true;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function update_waypoint(e) {\r\n' \
+  '      function update_pointer(e) {\r\n' \
   '        e.preventDefault();\r\n' \
   '        e.stopPropagation();\r\n' \
   '        if (! window.opener) {return;}\r\n' \
-  '        if (! window.opener.hasOwnProperty("pointed_waypoint")) {return;}\r\n' \
   '        let c = null;\r\n' \
   '        if (e.target.htmlFor == "eye_info") {\r\n' \
   '          c = e_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        } else if (e.target.htmlFor == "target_info") {\r\n' \
   '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        }\r\n' \
-  '        if (c) {\r\n' \
-  '          if (c.length == 3) {\r\n' \
-  '            let plat = parseFloat(c[1]);\r\n' \
-  '            let plon = parseFloat(c[2]);\r\n' \
-  '            window.opener.pointed_waypoint([plat, plon]);\r\n' \
-  '          }\r\n' \
+  '        if (! c || c.length != 3) {return;}\r\n' \
+  '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
+  '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
+  '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
+  '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function toggle_reversegeocodingswitch() {\r\n' \
@@ -14973,7 +15034,7 @@ class GPXTweakerWebInterfaceServer():
   '        stroke-width:calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        paint-order:stroke;\r\n' \
   '      }\r\n' \
-  '      svg circle {\r\n' \
+  '      svg[id*=waydots] circle {\r\n' \
   '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
@@ -15059,9 +15120,11 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_xys = null;\r\n' \
   '      var tracks_pts_smoothed = null;\r\n' \
   '      var tracks_xys_smoothed = null;\r\n' \
+  '      var tracks_xy_offsets = null;\r\n' \
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
+  '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
   '      var media_ex_visible = false;\r\n' \
   '      var media_gps_ar = null;\r\n' \
@@ -15231,6 +15294,8 @@ class GPXTweakerWebInterfaceServer():
   '            if (scrollmode > 0) {scroll_to_track(document.getElementById(focused), scrollmode == 2)};\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        focused_targeted = null;\r\n' \
+  '        set_target();\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_over(trk) {\r\n' \
@@ -15319,7 +15384,8 @@ class GPXTweakerWebInterfaceServer():
   '        let teahs = null;\r\n' \
   '        let nbtracks = tracks_pts.length;\r\n' \
   '        if (fpan == 0) {\r\n' \
-  '          let nbpt = tracks_pts.reduce((p,c) => p + c.reduce((p,c) => p + c.length, 0), 0);\r\n' \
+  '          tracks_xy_offsets = tracks_pts.reduce((p,c,i) => p.push(p[i] + c.reduce((p,c) => p + c.length, 0)) && p, [0]);\r\n' \
+  '          let nbpt = tracks_xy_offsets[nbtracks];\r\n' \
   '          tracks_xys = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
   '          tracks_pts_smoothed = null;\r\n' \
   '          tracks_xys_smoothed = null;\r\n' \
@@ -15574,15 +15640,22 @@ class GPXTweakerWebInterfaceServer():
   '      function track_color(trk) {\r\n' \
   '        if (document.getElementById(trk.id.slice(0, -5)).getAttribute("stroke").toUpperCase() != trk.value.toUpperCase()) {track_save(trk);}\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
-  '        if (focused == "") {return;}\r\n' \
-  '        let stats = tracks_stats[parseInt(focused.substring(5))];\r\n' \
+  '        if (focused == "") {\r\n' \
+  '          graph_px = [];\r\n' \
+  '          graph_ip = [];\r\n' \
+  '          focused_targeted = null;\r\n' \
+  '          graph_point();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let tr_ind = parseInt(focused.substring(5));\r\n' \
+  '        let stats = tracks_stats[tr_ind];\r\n' \
   '        for (let s=0; s<stats.length; s++) {\r\n' \
   '          if (stats[s].length == 0) {continue;}\r\n' \
   '          let stat = null;\r\n' \
   '          gc.push(gx.length);\r\n' \
   '          for (let p=0; p<stats[s].length; p++) {\r\n' \
   '            stat = stats[s][p];\r\n' \
-  '            let pt = tracks_pts[parseInt(focused.substring(5))][s][p];\r\n' \
+  '            let pt = tracks_pts[tr_ind][s][p];\r\n' \
   '            let ea = null;\r\n' \
   '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '            }\r\n' \
@@ -15592,16 +15665,46 @@ class GPXTweakerWebInterfaceServer():
   '          ele += stat[2];\r\n' \
   '          alt += stat[3];\r\n' \
   '        }\r\n' \
-  '        if (gx.length < 2) {return;}\r\n' + HTML_GRAPH3_TEMPLATE + \
-  '        for (let i=0; i<gx.length; i++) {\r\n' \
-  '          if (i == gc[0]) {\r\n' \
-  '            gctx.moveTo((gx[i] - minx) * cx + xl, (maxy - gy[i]) * cy + yt);\r\n' \
-  '            gc.shift();\r\n' \
-  '          } else {\r\n' \
-  '            gctx.lineTo((gx[i] - minx) * cx + xl, (maxy - gy[i]) * cy + yt);\r\n' \
-  '          }\r\n' \
+  '        graph_px = Array(gx.length);\r\n' \
+  '        graph_ip = Array.from(graph_px, (c,i) => i);\r\n' + HTML_GRAPH3_TEMPLATE + \
+  '      function scroll_to_target(center=true, xy=null) {\r\n' \
+  '        if (xy == null) {\r\n' \
+  '          let tm = document.getElementById("target_mark");\r\n' \
+  '          xy = [prop_to_wmvalue(tm.style.left), prop_to_wmvalue(tm.style.top)];\r\n' \
   '        }\r\n' \
-  '        gctx.stroke();\r\n' \
+  '        if (center) {\r\n' \
+  '          hpx = viewpane.offsetWidth / 2 - xy[0] * zoom / tscale;\r\n' \
+  '          hpy = viewpane.offsetHeight / 2 - xy[1] * zoom / tscale;\r\n' \
+  '        } else {\r\n' \
+  '          let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '          hpx = Math.max(Math.min(hpx, -o - xy[0] * zoom / tscale + viewpane.offsetWidth), o - xy[0] * zoom / tscale);\r\n' \
+  '          hpy = Math.max(Math.min(hpy, -o - xy[1] * zoom / tscale + viewpane.offsetHeight), o - xy[1] * zoom / tscale);\r\n' \
+  '        }\r\n' \
+  '        reframe();\r\n' \
+  '      }\r\n' \
+  '      function set_target(xy=null) {\r\n' \
+  '        let tm = document.getElementById("target_mark");\r\n' \
+  '        if (xy == null) {\r\n' \
+  '          tm.style.display = "none";\r\n' \
+  '        } else {\r\n' \
+  '          tm.style.left = wmvalue_to_prop(xy[0], 0);\r\n' \
+  '          tm.style.top = wmvalue_to_prop(xy[1], 0);\r\n' \
+  '          tm.style.display = "";\r\n' \
+  '          if (scrollmode_ex > 0) {scroll_to_target(scrollmode_ex == 2, xy);}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function pointed3d_target(lat, lon, track) {\r\n' \
+  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
+  '        if (focused) {\r\n' \
+  '          track_click(null, document.getElementById(focused + "desc"), false);\r\n' \
+  '        }\r\n' \
+  '        console.log(track);\r\n' \
+  '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
+  '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
+  '        set_target(xy);\r\n' \
+  '        scroll_to_target(true, xy);\r\n' \
+  '        window.alert("3D");\r\n' \
   '      }\r\n' \
   '      function open_3D(mode3d="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
@@ -15995,12 +16098,12 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
   '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            let w = document.getElementById("waydots0");\r\n' \
-  '            document.getElementById("handle").insertBefore(e, w);\r\n' \
-  '            e.outerHTML = w==null?msg[n]:(msg[n].substring(2)+"  ");\r\n' \
+  '            document.getElementById("handle").insertBefore(e, w==null?document.getElementById("target_mark"):w);\r\n' \
+  '            e.outerHTML = msg[n].substring(2) + "  ";\r\n' \
   '          } else {\r\n' \
   '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
-  '            document.getElementById("handle").appendChild(e);\r\n' \
-  '            e.outerHTML = msg[n];\r\n' \
+  '            document.getElementById("handle").insertBefore(e, document.getElementById("target_mark"));\r\n' \
+  '            e.outerHTML = msg[n].substring(2) + "  ";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\d+/, (tracks_pts.length + 1).toString());\r\n' \
@@ -16288,7 +16391,7 @@ class GPXTweakerWebInterfaceServer():
   '        let mpview = document.getElementById("mediapreview");\r\n' \
   '        if (mpview.style.display == "none") {\r\n' \
   '          if (graph) {return;}\r\n' \
-  '          document.getElementById("graph").style.display = "none";\r\n' \
+  '          if (document.getElementById("graph").style.display != "none") {refresh_graph(true);}\r\n' \
   '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          mpview.dataset.sl = "0";\r\n' \
@@ -16760,7 +16863,13 @@ class GPXTweakerWebInterfaceServer():
   '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);pointer-events:none;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
-  '              #<#PATHES#>##<#WAYDOTS#>#</div>\r\n' \
+  '              #<#PATHES#>##<#WAYDOTS#>#  <svg id="target_mark" viewbox="-20 -20 40 40" pointer-events="none" style="display:none;position:absolute;top:0;left:0;width:10px;height:10px;z-index:2;transform:translate(-50%,-50%) scale(calc(1 + var(--magnify)))" stroke-width="2" stroke="blue" fill="yellow">\r\n' \
+  '                  <path d="M18 -7 Q10 -1 2 0 Q10 1 18 7 Z"></path>\r\n' \
+  '                  <path d="M-18 -7 Q-10 -1 -2 0 Q-10 1 -18 7 Z"></path>\r\n' \
+  '                  <path d="M-7 18 Q-1 10 0 2 Q1 10 7 18 Z"></path>\r\n' \
+  '                  <path d="M-7 -18 Q-1 -10 0 -2 Q1 -10 7 -18 Z"></path>\r\n' \
+  '                </svg>\r\n' \
+  '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
   '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
@@ -16805,6 +16914,16 @@ class GPXTweakerWebInterfaceServer():
   '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '            media_ex_visible = media_visible;\r\n' \
   '            hide_media("m");\r\n' \
+  '          } else if (e.target.id == "gbarc") {\r\n' \
+  '            hand = e.target;\r\n' \
+  '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
+  '            hand.setAttribute("stroke", "darkgray");\r\n' \
+  '            hand.setPointerCapture(pointer_e);\r\n' \
+  '          } else if (e.target.id == "graphc") {\r\n' \
+  '            hand = document.getElementById("gbarc");\r\n' \
+  '            hand.setAttribute("stroke", "darkgray");\r\n' \
+  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
+  '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -16821,9 +16940,15 @@ class GPXTweakerWebInterfaceServer():
   '            window.clearInterval(mouse_out);\r\n' \
   '            mouse_out = null;\r\n' \
   '          }\r\n' \
+  '          if (hand.id == "view") {\r\n' \
+  '            viewpane.style.cursor = "";\r\n' \
+  '            viewpane.releasePointerCapture(pointer_e);\r\n' \
+  '          } else {\r\n' \
+  '            hand.releasePointerCapture(pointer_e);\r\n' \
+  '            hand.setAttribute("stroke", "none");\r\n' \
+  '            graph_point();\r\n' \
+  '          }\r\n' \
   '          hand = null;\r\n' \
-  '          viewpane.style.cursor = "";\r\n' \
-  '          viewpane.releasePointerCapture(pointer_e);\r\n' \
   '          pointer_e = null;\r\n' \
   '          if (media_ex_visible) {\r\n' \
   '            show_media();\r\n' \
@@ -16893,6 +17018,10 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
+  '          if (hand.id == "gbarc") {\r\n' \
+  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
   '          let pl = p.offsetLeft;\r\n' \
   '          let pr = pl + p.offsetWidth;\r\n' \
@@ -18455,7 +18584,7 @@ class GPXTweakerWebInterfaceServer():
       else:
         pos = self.HTMLExp.find('  <svg id="waydots')
         if pos < 0:
-          pos = self.HTMLExp.find('</div>\r\n              <div id="scalebox"')
+          pos = self.HTMLExp.find('  <svg id="target_mark')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
       if retrieve is not None:
         retrieve['track%d' % t] = n
@@ -18466,7 +18595,7 @@ class GPXTweakerWebInterfaceServer():
         n = n.strip('\r\n ')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 6:]
       else:
-        pos = self.HTMLExp.find('</div>\r\n              <div id="scalebox"')
+        pos = self.HTMLExp.find('  <svg id="target_mark')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
       if retrieve is not None:
         retrieve['waydots%d' % t] = n
