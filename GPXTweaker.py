@@ -1,4 +1,4 @@
-# GPXTweaker v1.16.1 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -9429,7 +9429,7 @@ class GPXTweakerWebInterfaceServer():
   '            graph_px = null;\r\n' \
   '            graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
   '            if (document.getElementById("target_mark") != null) {\r\n' \
-  '              if (focused_targeted) {\r\n' \
+  '              if (focused_targeted != null) {\r\n' \
   '                focused_targeted = null;\r\n' \
   '                set_target();\r\n' \
   '              }\r\n' \
@@ -15034,7 +15034,7 @@ class GPXTweakerWebInterfaceServer():
   '        stroke-width:calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        paint-order:stroke;\r\n' \
   '      }\r\n' \
-  '      svg[id*=waydots] circle {\r\n' \
+  '      svg circle {\r\n' \
   '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
@@ -15699,7 +15699,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused) {\r\n' \
   '          track_click(null, document.getElementById(focused + "desc"), false);\r\n' \
   '        }\r\n' \
-  '        console.log(track);\r\n' \
   '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
   '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
@@ -18702,7 +18701,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.16.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
