@@ -9279,7 +9279,7 @@ class GPXTweakerWebInterfaceServer():
   '            stats = window["stats"];\r\n' \
   '          } else if (focused.substring(0, 5) == "track") {\r\n' \
   '            tr_ind = parseInt(focused.substring(5));\r\n' \
-  '            foc_ind = focused_targeted;\r\n' \
+  '            foc_ind = graph_ip[focused_targeted];\r\n' \
   '            if (foc_ind == null) {return;}\r\n' \
   '            let xys_ind = 2 * (tracks_xy_offsets[tr_ind] + foc_ind);\r\n' \
   '            let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
@@ -9412,7 +9412,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (da <= db) {ind2 = inda;} else {ind1 = indb;}\r\n' \
   '          }\r\n' \
   '          if (focused.substring(0, 5) == "track") {\r\n' \
-  '            focused_targeted = graph_ip[ind1];\r\n' \
+  '            focused_targeted = ind1;\r\n' \
   '            graph_point();\r\n' \
   '          } else {\r\n' \
   '            if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
@@ -12603,7 +12603,7 @@ class GPXTweakerWebInterfaceServer():
   '      xhrip.addEventListener("error", error_ipcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;">\r\n' \
+  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
   '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:21em;">\r\n' \
@@ -12888,6 +12888,10 @@ class GPXTweakerWebInterfaceServer():
   '        if (! e.altKey) {\r\n' \
   '          if (e.shiftKey) {scroll_dview(-e.deltaY, 0);} else {scroll_dview(0, -e.deltaY);}\r\n' \
   '          return;\r\n' \
+  '        }\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (window.onkeyup == null && document.hasFocus()) {\r\n' \
+  '          window.onkeyup = function (e) {console.log(e);if (e.key == "Alt") {e.preventDefault(); e.stopPropagation();}; window.onkeyup = null;};console.log("e");\r\n' \
   '        }\r\n' \
   '        if (! focused) {return;}\r\n' \
   '        if (focused.indexOf("point") >= 0) {\r\n' \
@@ -16841,7 +16845,7 @@ class GPXTweakerWebInterfaceServer():
   '      var xhrex = new XMLHttpRequest();\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;">\r\n' \
+  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
   '    <table style="width:98vw;">\r\n' \
   '      <colgroup>\r\n' \
   '        <col style="width:21em;">\r\n' \
@@ -17074,17 +17078,35 @@ class GPXTweakerWebInterfaceServer():
   '          if (e.shiftKey) {scroll_dview(-e.deltaY, 0);} else {scroll_dview(0, -e.deltaY);}\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (window.onkeyup == null && document.hasFocus()) {\r\n' \
+  '          window.onkeyup = function (e) {console.log(e);if (e.key == "Alt") {e.preventDefault(); e.stopPropagation();}; window.onkeyup = null;};\r\n' \
+  '        }\r\n' \
   '        if (! focused) {return;}\r\n' \
-  '        tr = document.getElementById(focused + "cont");\r\n' \
-  '        do {\r\n' \
+  '        if (graph_ip != null && focused_targeted != null) {\r\n' \
   '          if (e.deltaY > 0) {\r\n' \
-  '            tr = tr.nextElementSibling;\r\n' \
+  '            if (focused_targeted < graph_ip.length - 1) {\r\n' \
+  '              focused_targeted++;\r\n' \
+  '              graph_point();\r\n' \
+  '            }\r\n' \
   '          } else {\r\n' \
-  '            tr = tr.previousElementSibling;\r\n' \
+  '            if (focused_targeted > 0) {\r\n' \
+  '              focused_targeted--;\r\n' \
+  '              graph_point();\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
-  '          if (! tr) {return;}\r\n' \
-  '        } while (! tr.firstElementChild.checked || tr.style.display == "none")\r\n' \
-  '        track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
+  '        } else {\r\n' \
+  '          tr = document.getElementById(focused + "cont");\r\n' \
+  '          do {\r\n' \
+  '            if (e.deltaY > 0) {\r\n' \
+  '              tr = tr.nextElementSibling;\r\n' \
+  '            } else {\r\n' \
+  '              tr = tr.previousElementSibling;\r\n' \
+  '            }\r\n' \
+  '            if (! tr) {return;}\r\n' \
+  '          } while (! tr.firstElementChild.checked || tr.style.display == "none")\r\n' \
+  '          track_click(null, document.getElementById(tr.id.replace("cont", "desc")));\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function window_resize() {\r\n' \
   '        if (document.fullscreen) {\r\n' \
