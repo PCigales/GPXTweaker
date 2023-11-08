@@ -9412,7 +9412,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (da <= db) {ind2 = inda;} else {ind1 = indb;}\r\n' \
   '          }\r\n' \
   '          if (focused.substring(0, 5) == "track") {\r\n' \
-  '            focused_targeted = ind1;\r\n' \
+  '            focused_targeted = graph_ip[ind1];\r\n' \
   '            graph_point();\r\n' \
   '          } else {\r\n' \
   '            if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
@@ -9529,8 +9529,15 @@ class GPXTweakerWebInterfaceServer():
   '                case 1:\r\n' \
   '                  gx.push(dist + stat[6]);\r\n' \
   '                  break;\r\n' \
-  '              }\r\n'
-  HTML_GRAPH3_TEMPLATE = \
+  '              }\r\n' \
+  '              graph_ip.push(parseInt(spans[p].id.slice(5, -5)));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          dur += stat[0];\r\n' \
+  '          dist += stat[6];\r\n' \
+  '          ele += stat[2];\r\n' \
+  '          alt += stat[3];\r\n' \
+  '        }\r\n' \
   '        if (gx.length < 2) {\r\n' \
   '          graph_point();\r\n' \
   '          return;\r\n' \
@@ -12310,14 +12317,6 @@ class GPXTweakerWebInterfaceServer():
   '            stat = stats[seg_ind][st];\r\n' \
   '            let ea = null;\r\n' \
   '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(document.getElementById(spans[p].id.replace("focus", gy_ind==1?"ele":"alt")).value);}\r\n' + HTML_GRAPH2_TEMPLATE + \
-  '              graph_ip.push(parseInt(spans[p].id.slice(5, -5)));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          dur += stat[0];\r\n' \
-  '          dist += stat[6];\r\n' \
-  '          ele += stat[2];\r\n' \
-  '          alt += stat[3];\r\n' \
-  '        }\r\n' + HTML_GRAPH3_TEMPLATE + \
   '      function error_pcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '      }\r\n' \
@@ -15665,33 +15664,27 @@ class GPXTweakerWebInterfaceServer():
   '      function track_color(trk) {\r\n' \
   '        if (document.getElementById(trk.id.slice(0, -5)).getAttribute("stroke").toUpperCase() != trk.value.toUpperCase()) {track_save(trk);}\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
+  '        graph_ip = [];\r\n' \
   '        if (focused == "") {\r\n' \
   '          graph_px = [];\r\n' \
-  '          graph_ip = [];\r\n' \
   '          focused_targeted = null;\r\n' \
   '          graph_point();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        let tr_ind = parseInt(focused.substring(5));\r\n' \
+  '        graph_px = Array(tracks_xy_offsets[tr_ind + 1] - tracks_xy_offsets[tr_ind]);\r\n' \
   '        let stats = tracks_stats[tr_ind];\r\n' \
+  '        let p_ind = -1;\r\n' \
   '        for (let s=0; s<stats.length; s++) {\r\n' \
   '          if (stats[s].length == 0) {continue;}\r\n' \
   '          let stat = null;\r\n' \
-  '          gc.push(gx.length);\r\n' \
+  '          if (gc[gc.length - 1] != graph_ip.length) {gc.push(graph_ip.length);}\r\n' \
   '          for (let p=0; p<stats[s].length; p++) {\r\n' \
+  '            p_ind++;\r\n' \
   '            stat = stats[s][p];\r\n' \
   '            let pt = tracks_pts[tr_ind][s][p];\r\n' \
   '            let ea = null;\r\n' \
-  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE + \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          dur += stat[0];\r\n' \
-  '          dist += stat[6];\r\n' \
-  '          ele += stat[2];\r\n' \
-  '          alt += stat[3];\r\n' \
-  '        }\r\n' \
-  '        graph_px = Array(gx.length);\r\n' \
-  '        graph_ip = Array.from(graph_px, (c,i) => i);\r\n' + HTML_GRAPH3_TEMPLATE + \
+  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE.replace('graph_ip.push(parseInt(spans[p].id.slice(5, -5)))', 'graph_ip.push(p_ind)') + \
   '      function scroll_to_target(center=true, xy=null) {\r\n' \
   '        if (xy == null) {\r\n' \
   '          let tm = document.getElementById("target_mark");\r\n' \
