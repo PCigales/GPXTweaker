@@ -9279,8 +9279,8 @@ class GPXTweakerWebInterfaceServer():
   '            stats = window["stats"];\r\n' \
   '          } else if (focused.substring(0, 5) == "track") {\r\n' \
   '            tr_ind = parseInt(focused.substring(5));\r\n' \
+  '            if (focused_targeted == null) {return;}\r\n' \
   '            foc_ind = graph_ip[focused_targeted];\r\n' \
-  '            if (foc_ind == null) {return;}\r\n' \
   '            let xys_ind = 2 * (tracks_xy_offsets[tr_ind] + foc_ind);\r\n' \
   '            let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
   '            set_target([xys[xys_ind] + prop_to_wmvalue(document.getElementById(focused).style.left), xys[xys_ind + 1] + prop_to_wmvalue(document.getElementById(focused).style.top)]);\r\n' \
@@ -9427,7 +9427,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function refresh_graph(sw=false) {\r\n' \
+  '      function refresh_graph(sw=false, ch=false) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
   '        let graphc = document.getElementById("graphc");\r\n' \
   '        let gwidth = null;\r\n' \
@@ -9491,6 +9491,12 @@ class GPXTweakerWebInterfaceServer():
   '        let dist = 0;\r\n' \
   '        let ele = 0;\r\n' \
   '        let alt = 0;\r\n' \
+  '        if (ch && document.getElementById("target_mark") != null) {\r\n' \
+  '          if (focused_targeted != null) {\r\n' \
+  '            focused_targeted = null;\r\n' \
+  '            set_target();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        let gx_ind = document.getElementById("graphx").selectedIndex;\r\n' \
   '        let gy_ind = document.getElementById("graphy").selectedIndex;\r\n'
   HTML_GRAPH2_TEMPLATE = \
@@ -10006,8 +10012,8 @@ class GPXTweakerWebInterfaceServer():
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;overflow:hidden;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph(null, true)"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph(null, true)"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
