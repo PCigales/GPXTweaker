@@ -12891,7 +12891,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        e.stopPropagation();\r\n' \
   '        if (window.onkeyup == null && document.hasFocus()) {\r\n' \
-  '          window.onkeyup = function (e) {if (e.key == "Alt") {e.preventDefault(); e.stopPropagation();}; window.onkeyup = null;};console.log("e");\r\n' \
+  '          window.onkeyup = function (e) {if (e.key == "Alt") {e.preventDefault(); e.stopPropagation();}; window.onkeyup = null;};\r\n' \
   '        }\r\n' \
   '        if (! focused) {return;}\r\n' \
   '        if (focused.indexOf("point") >= 0) {\r\n' \
