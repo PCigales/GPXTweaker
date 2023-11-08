@@ -8216,16 +8216,18 @@ class GPXTweakerWebInterfaceServer():
   '              float c;\r\n' \
   '              float su = 0.0;\r\n' \
   '              vec3 sss = vec3(0.0);\r\n' \
-  '              for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                gsssf = vec4(gsssf.s - texelFetch(gtex, ivec2((p + 1) % ${GPUStats.tw}, (p + 1) / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).stp);\r\n' \
-  '                if (gsssf.s < - drange) {break;}\r\n' \
-  '                c = (gsssn.s - gsssf.s) / (1.0 - gsssf.s);\r\n' \
-  '                sss += gsssf.tpq * c;\r\n' \
-  '                su += c;\r\n' \
-  '                gsssn = gsssf;\r\n' \
-  '              }\r\n' \
-  '              if (gsssn.s != 0.0) {\r\n' \
-  '                vsss = clamp((vsss + sss / 2.0) / (1.0 + su / 2.0), vec3(-slmax), vec3(slmax));\r\n' \
+  '              if (texelFetch(gtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s <= drange) {\r\n' \
+  '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
+  '                  gsssf = vec4(gsssf.s - texelFetch(gtex, ivec2((p + 1) % ${GPUStats.tw}, (p + 1) / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).stp);\r\n' \
+  '                  if (gsssf.s < - drange) {break;}\r\n' \
+  '                  c = (gsssn.s - gsssf.s) / (1.0 - gsssf.s);\r\n' \
+  '                  sss += gsssf.tpq * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  gsssn = gsssf;\r\n' \
+  '                }\r\n' \
+  '                if (gsssn.s != 0.0) {\r\n' \
+  '                  vsss = clamp((vsss + sss / 2.0) / (1.0 + su / 2.0), vec3(-slmax), vec3(slmax));\r\n' \
+  '                }\r\n' \
   '              }\r\n' \
   '              vsss.p = texelFetch(gtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s * sqrt(1.0 + pow(vsss.p, 2.0));\r\n' \
   '            }\r\n' \
@@ -8233,6 +8235,7 @@ class GPXTweakerWebInterfaceServer():
   '          let vertex_s2bshader_s = `#version 300 es\r\n' \
   '            in int vstart;\r\n' \
   '            uniform sampler2D teahtex;\r\n' \
+  '            uniform sampler2D ssstex;\r\n' \
   '            uniform sampler2D stex;\r\n' \
   '            uniform float trange;\r\n' \
   '            uniform float spmax;\r\n' \
@@ -8247,17 +8250,27 @@ class GPXTweakerWebInterfaceServer():
   '              float su = 0.0;\r\n' \
   '              float s = 0.0;\r\n' \
   '              if (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
+  '                bool b = false;\r\n' \
   '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
   '                  tsf = vec2(texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(stex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s);\r\n' \
   '                  if (tsf.s < tsc.s - trange) {break;}\r\n' \
+  '                  b = true;\r\n' \
   '                  c = (tsn.s - tsf.s) / (1.0 + tsc.s - tsf.s);\r\n' \
   '                  s += tsf.t * c;\r\n' \
   '                  su += c;\r\n' \
   '                  tsn = tsf;\r\n' \
   '                }\r\n' \
-  '                if (tsn.s != tsc.s) {\r\n' \
-  '                  vs = min((vs + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
+  '                if (b) {\r\n' \
+  '                  if (tsn.s != tsc.s) {\r\n' \
+  '                    vs = min((vs + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
+  '                  }\r\n' \
+  '                } else if (gl_InstanceID > 0){\r\n' \
+  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p / (texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s), spmax);\r\n' \
   '                }\r\n' \
+  '              } else if (gl_InstanceID > 0 ? (texelFetch(teahtex, ivec2((pc) % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s <= trange): true){\r\n' \
+  '                vs = min(texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p / (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s), spmax);\r\n' \
+  '              } else {\r\n' \
+  '                vs = min((texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p + texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p)/ (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s), spmax);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
@@ -9134,21 +9147,23 @@ class GPXTweakerWebInterfaceServer():
   '              stats[seg_ind][p][6] = Math.max(Math.min(stats[seg_ind][p][6], slmax), -slmax);\r\n' \
   '            }\r\n' \
   '            for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
-  '              let ps = p;\r\n' \
-  '              let s = [0, 0, 0];\r\n' \
-  '              let su = 0;\r\n' \
-  '              for (ps=p-1; ps>=0; ps--) {\r\n' \
-  '                if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - drange) {break;}\r\n' \
-  '                let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
-  '                s[0] += stats[seg_ind][ps][4] * c;\r\n' \
-  '                s[1] += stats[seg_ind][ps][5] * c;\r\n' \
-  '                s[2] += stats[seg_ind][ps][6] * c;\r\n' \
-  '                su += c;\r\n' \
-  '              }\r\n' \
-  '              if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
-  '                stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2 ) / (1 + su/2)));\r\n' \
-  '                stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2 ) / (1 + su/2)));\r\n' \
-  '                stats[seg_ind][p][6] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][6] + s[2]/2 ) / (1 + su/2)));\r\n' \
+  '              if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
+  '                let ps = p;\r\n' \
+  '                let s = [0, 0, 0];\r\n' \
+  '                let su = 0;\r\n' \
+  '                for (ps=p-1; ps>=0; ps--) {\r\n' \
+  '                  if (stats[seg_ind][ps][1] < stats[seg_ind][p][1] - drange) {break;}\r\n' \
+  '                  let c = (stats[seg_ind][ps+1][1] - stats[seg_ind][ps][1]) / (stats[seg_ind][p][1] - stats[seg_ind][ps][1] + 1);\r\n' \
+  '                  s[0] += stats[seg_ind][ps][4] * c;\r\n' \
+  '                  s[1] += stats[seg_ind][ps][5] * c;\r\n' \
+  '                  s[2] += stats[seg_ind][ps][6] * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                }\r\n' \
+  '                if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
+  '                  stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][6] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][6] + s[2]/2) / (1 + su/2)));\r\n' \
+  '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            let sl = stats[seg_ind][0][6];\r\n' \
@@ -9177,20 +9192,30 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            stats[seg_ind][p][7] = Math.min(stats[seg_ind][p][7], spmax);\r\n' \
   '          }\r\n' \
-  '          for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
+  '          for (let p=stats[seg_ind].length-2; p>=0; p--) {\r\n' \
   '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
   '              let ps = p;\r\n' \
+  '              let b = false;\r\n' \
   '              let s = 0;\r\n' \
   '              let su = 0;\r\n' \
   '              for (ps=p-1; ps>=0; ps--) {\r\n' \
   '                if (stats[seg_ind][ps][0] < stats[seg_ind][p][0] - trange) {break;}\r\n' \
+  '                b = true;\r\n' \
   '                let c = (stats[seg_ind][ps+1][0] - stats[seg_ind][ps][0]) / (stats[seg_ind][p][0] - stats[seg_ind][ps][0] + 1);\r\n' \
   '                s += stats[seg_ind][ps][7] * c;\r\n' \
   '                su += c;\r\n' \
   '              }\r\n' \
-  '              if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
-  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][7] + s/2 ) / (1 + su/2));\r\n' \
+  '              if (b) {\r\n' \
+  '                if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
+  '                  stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][7] + s/2) / (1 + su/2));\r\n' \
+  '                }\r\n' \
+  '              } else if (p > 0) {\r\n' \
+  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p][0] - stats[seg_ind][p-1][0]));\r\n' \
   '              }\r\n' \
+  '            } else if (p == 0 || stats[seg_ind][p][0] - stats[seg_ind][p-1][0] <= trange) {\r\n' \
+  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
+  '            } else {\r\n' \
+  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n'
@@ -9924,7 +9949,7 @@ class GPXTweakerWebInterfaceServer():
   '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
   '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
-  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="100" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="200" step="2" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
   '            <div id="filterpanel3">\r\n' \
@@ -17892,7 +17917,7 @@ class GPXTweakerWebInterfaceServer():
     self.EleGainThreshold = 10
     self.AltGainThreshold = 5
     self.SlopeRange = 80
-    self.SlopeMax = 50
+    self.SlopeMax = 100
     self.SpeedRange = 60
     self.SpeedMax = 8
     self.V3DPanoMargin = 0.5
