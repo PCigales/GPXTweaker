@@ -8249,8 +8249,8 @@ class GPXTweakerWebInterfaceServer():
   '              float c;\r\n' \
   '              float su = 0.0;\r\n' \
   '              float s = 0.0;\r\n' \
+  '              bool b = false;\r\n' \
   '              if (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
-  '                bool b = false;\r\n' \
   '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
   '                  tsf = vec2(texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(stex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s);\r\n' \
   '                  if (tsf.s < tsc.s - trange) {break;}\r\n' \
@@ -9213,9 +9213,9 @@ class GPXTweakerWebInterfaceServer():
   '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p][0] - stats[seg_ind][p-1][0]));\r\n' \
   '              }\r\n' \
   '            } else if (p == 0 || stats[seg_ind][p][0] - stats[seg_ind][p-1][0] <= trange) {\r\n' \
-  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
+  '              stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
   '            } else {\r\n' \
-  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
+  '              stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n'
@@ -9949,7 +9949,7 @@ class GPXTweakerWebInterfaceServer():
   '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
   '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
-  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="200" step="2" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="200" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
   '            <div id="filterpanel3">\r\n' \
