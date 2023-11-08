@@ -9530,7 +9530,7 @@ class GPXTweakerWebInterfaceServer():
   '                  gx.push(dist + stat[6]);\r\n' \
   '                  break;\r\n' \
   '              }\r\n' \
-  '              graph_ip.push(parseInt(spans[p].id.slice(5, -5)));\r\n' \
+  '              graph_ip.push(p_ind);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          dur += stat[0];\r\n' \
@@ -12312,7 +12312,8 @@ class GPXTweakerWebInterfaceServer():
   '          let spans = segs[s].getElementsByTagName("span");\r\n' \
   '          if (gc[gc.length - 1] != graph_ip.length) {gc.push(graph_ip.length);}\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            let st = point_stat[parseInt(spans[p].id.slice(5, -5))];\r\n' \
+  '            let p_ind = parseInt(spans[p].id.slice(5, -5));\r\n' \
+  '            let st = point_stat[p_ind];\r\n' \
   '            if (st == null) {continue;}\r\n' \
   '            stat = stats[seg_ind][st];\r\n' \
   '            let ea = null;\r\n' \
@@ -15684,7 +15685,7 @@ class GPXTweakerWebInterfaceServer():
   '            stat = stats[s][p];\r\n' \
   '            let pt = tracks_pts[tr_ind][s][p];\r\n' \
   '            let ea = null;\r\n' \
-  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE.replace('graph_ip.push(parseInt(spans[p].id.slice(5, -5)))', 'graph_ip.push(p_ind)') + \
+  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '      function scroll_to_target(center=true, xy=null) {\r\n' \
   '        if (xy == null) {\r\n' \
   '          let tm = document.getElementById("target_mark");\r\n' \
