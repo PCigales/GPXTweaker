@@ -8265,7 +8265,7 @@ class GPXTweakerWebInterfaceServer():
   '                    vs = min((vs + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
   '                  }\r\n' \
   '                } else if (gl_InstanceID > 0){\r\n' \
-  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p / (texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s), spmax);\r\n' \
+  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p / (tsc.s - tsf.s), spmax);\r\n' \
   '                }\r\n' \
   '              } else if (gl_InstanceID > 0 ? (texelFetch(teahtex, ivec2((pc) % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s <= trange): true){\r\n' \
   '                vs = min(texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p / (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s), spmax);\r\n' \
@@ -9427,7 +9427,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function refresh_graph(sw=false, ch=false) {\r\n' \
+  '      function refresh_graph(sw=false) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
   '        let graphc = document.getElementById("graphc");\r\n' \
   '        let gwidth = null;\r\n' \
@@ -9454,10 +9454,7 @@ class GPXTweakerWebInterfaceServer():
   '            graph_px = null;\r\n' \
   '            graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
   '            if (document.getElementById("target_mark") != null) {\r\n' \
-  '              if (focused_targeted != null) {\r\n' \
-  '                focused_targeted = null;\r\n' \
-  '                set_target();\r\n' \
-  '              }\r\n' \
+  '              if (focused_targeted != null) {set_target();}\r\n' \
   '            }\r\n' \
   '            rescale();\r\n' \
   '            return;\r\n' \
@@ -9491,14 +9488,9 @@ class GPXTweakerWebInterfaceServer():
   '        let dist = 0;\r\n' \
   '        let ele = 0;\r\n' \
   '        let alt = 0;\r\n' \
-  '        if (ch && document.getElementById("target_mark") != null) {\r\n' \
-  '          if (focused_targeted != null) {\r\n' \
-  '            focused_targeted = null;\r\n' \
-  '            set_target();\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
   '        let gx_ind = document.getElementById("graphx").selectedIndex;\r\n' \
-  '        let gy_ind = document.getElementById("graphy").selectedIndex;\r\n'
+  '        let gy_ind = document.getElementById("graphy").selectedIndex;\r\n' \
+  '        let p_targeted = null;\r\n'
   HTML_GRAPH2_TEMPLATE = \
   '            let dr = true;\r\n' \
   '            switch (gy_ind) {\r\n' \
@@ -9543,6 +9535,21 @@ class GPXTweakerWebInterfaceServer():
   '          dist += stat[6];\r\n' \
   '          ele += stat[2];\r\n' \
   '          alt += stat[3];\r\n' \
+  '        }\r\n' \
+  '        if (p_targeted != null) {\r\n' \
+  '          if (graph_ip.length < 2) {\r\n' \
+  '            set_target();\r\n' \
+  '          } else if (gy_ind == 0 || gy_ind >= 3) {\r\n' \
+  '            focused_targeted = p_targeted;\r\n' \
+  '          } else {\r\n' \
+  '            let ind1 = 0;\r\n' \
+  '            let ind2 = graph_ip.length - 1;\r\n' \
+  '            while (ind1 < ind2) {\r\n' \
+  '              indm = Math.floor((ind1 + ind2) / 2);\r\n' \
+  '              if (graph_ip[indm] < p_targeted) {ind1 = indm + 1;} else {ind2 = indm;}\r\n' \
+  '            }\r\n' \
+  '            if (graph_ip[ind2] == p_targeted) {focused_targeted = ind2;} else {set_target();}\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        if (gx.length < 2) {\r\n' \
   '          graph_point();\r\n' \
@@ -10012,8 +10019,8 @@ class GPXTweakerWebInterfaceServer():
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;overflow:hidden;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph(null, true)"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph(null, true)"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
@@ -15329,7 +15336,6 @@ class GPXTweakerWebInterfaceServer():
   '            if (scrollmode > 0) {scroll_to_track(document.getElementById(focused), scrollmode == 2)};\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        focused_targeted = null;\r\n' \
   '        set_target();\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
@@ -15675,6 +15681,7 @@ class GPXTweakerWebInterfaceServer():
   '      function track_color(trk) {\r\n' \
   '        if (document.getElementById(trk.id.slice(0, -5)).getAttribute("stroke").toUpperCase() != trk.value.toUpperCase()) {track_save(trk);}\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
+  '        if (focused_targeted != null) {p_targeted = graph_ip[focused_targeted];}\r\n' \
   '        graph_ip = [];\r\n' \
   '        if (focused == "") {\r\n' \
   '          graph_px = [];\r\n' \
@@ -15714,6 +15721,7 @@ class GPXTweakerWebInterfaceServer():
   '      function set_target(xy=null) {\r\n' \
   '        let tm = document.getElementById("target_mark");\r\n' \
   '        if (xy == null) {\r\n' \
+  '          focused_targeted = null;\r\n' \
   '          tm.style.display = "none";\r\n' \
   '        } else {\r\n' \
   '          tm.style.left = wmvalue_to_prop(xy[0], 0);\r\n' \
