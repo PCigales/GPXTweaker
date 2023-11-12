@@ -184,6 +184,7 @@ FR_STRINGS = {
     'eerror': 'échec de la configuration du fournisseur d\'élévations (%s)',
     'itinerary': 'fournisseur d\'itinéraires configuré (%s)',
     'reversegeocoding': 'fournisseur de géocodages inversés configuré (%s)',
+    'geocoding': 'fournisseur de géocodages configuré (%s)',
     'maplibre': 'Ce programme fait appel à la bibliothèque MapLibre GL JS (https://github.com/maplibre/maplibre-gl-js), sous licence BSD 3-Clause, pour l\'affichage des jeux de tuiles définis à partir d\'un style au format JSON, par import depuis %s',
     'built': 'page d\'interface générée',
     'builtexp': 'page d\'interface de l\'explorateur générée',
@@ -241,15 +242,16 @@ FR_STRINGS = {
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
-    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
-    'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
+    'jzoomall': 'recadrer sur toutes les traces cochées et listées&#13;&#10;+alt: recadrer sur toutes les traces cochées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
+    'jtrackedit': 'éditer la trace',
+    'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
-    'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
-    'jtrackedit': 'éditer la trace',
-    'jzoomall': 'recadrer sur toutes les traces cochées&#13;&#10;+alt: recadrer sur toutes les traces cochées et listées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
+    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
+    'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
+    'jsearch': 'ouvrir / fermer le panneau de recherche de lieu',
     'jswitchsmooth': 'activer / désactiver le lissage des traces (∻ désactivé | ÷ activé)&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage',
     'jtset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires&#13;&#10;en mode superposition de jeux de tuiles, clic droit: afficher / masquer les contrôles de transparence de couche&#13;&#10;alt + clic droit: afficher la légende si disponible',
     'jeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du fournisseur d\'itinéraires',
@@ -279,6 +281,7 @@ FR_STRINGS = {
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)&#13;&#10;+alt: centrer sur le pointeur',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jgset': 'sélectionner le fournisseur de géocodages',
     'jhelp3d': 'survol souris de la mini-carte pour afficher sa légende&#13;&#10;clic sur la vue 3d puis :&#13;&#10;flèche haut / bas ou roulette souris pour avancer / reculer&#13;&#10;flèche gauche / droite ou clic-glisse horizontal pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante  ou clic-glisse vertical pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression ou clic roulette pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -378,6 +381,11 @@ FR_STRINGS = {
     'jmnew1': 'Création en cours...',
     'jmnew2': 'Création effectuée',
     'jmnew3': 'Échec de la création',
+    'jmsearchno': 'Aucun fournisseur de géocodages configuré',
+    'jmsearchshort': 'Chaîne de requête trop courte (au moins deux caractères requis)',
+    'jmsearch1': 'Récupération des lieux en cours...',
+    'jmsearch2': 'Lieux récupérés: %s',
+    'jmsearch3': 'Échec de la récupération des lieux',
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jzscale': 'Échelle Z:',
@@ -567,6 +575,7 @@ EN_STRINGS = {
     'eerror': 'failure of the configuration of the elevations provider (%s)',
     'itinerary': 'itineraries provider configured (%s)',
     'reversegeocoding': 'reverse geocodings provider configured (%s)',
+    'geocoding': 'geocodings provider configured (%s)',
     'maplibre': 'This program uses the MapLibre GL JS library (https://github.com/maplibre/maplibre-gl-js), licensed under the 3-Clause BSD license, to display tiles sets defined from a style in JSON format, by import from %s',
     'built': 'interface page generated',
     'builtexp': 'interface page of the explorer generated',
@@ -624,15 +633,16 @@ EN_STRINGS = {
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
-    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the list of tracks&#13;&#10;+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
-    'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
+    'jzoomall': 'reframe on all ticked and listed tracks&#13;&#10;+alt: reframe on all ticked tracks&#13;&#10;+shift: reframe on the focused track',
+    'jtrackedit': 'edit the track',
+    'jtracknew': 'create a new empty track in the first ticked folder',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
-    'jtracknew': 'create a new empty track in the first ticked folder',
-    'jtrackedit': 'edit the track',
-    'jzoomall': 'reframe on all ticked tracks&#13;&#10;+alt: reframe on all ticked and listed tracks&#13;&#10;+shift: reframe on the focused track',
+    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the list of tracks&#13;&#10;+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
+    'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jwebmapping': 'display the starting point in the online mapping service',
+    'jsearch': 'open / close the place search panel',
     'jswitchsmooth': 'toggle the smoothing of the tracks (∻ disabled | ÷ enabled)&#13;&#10;+ctrl: show / hide the controls of the smoothing filter',
     'jtset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the itineraries provider&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency&#13;&#10;alt + right click: display the legend if available',
     'jeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the itineraries provider',
@@ -662,6 +672,7 @@ EN_STRINGS = {
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexpscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)&#13;&#10;+alt: center on the pointer',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
+    'jgset': 'select the geocodings provider',
     'jhelp3d': 'mouse over the mini-map to display its legend&#13;&#10;click on the 3d view then :&#13;&#10;arrow up / down or mouse wheel to move forward / backward&#13;&#10;arrow left / right or horizontal click-drag to rotate left / right&#13;&#10;page up / down or vertical click-drag to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete or wheel click to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -757,6 +768,11 @@ EN_STRINGS = {
     'jmnew1': 'Creation in progress...',
     'jmnew2': 'Creation completed',
     'jmnew3': 'Failure of the creation',
+    'jmsearchno': 'No geocodings provider configured',
+    'jmsearchshort': 'Query string too short (at least two characters required)',
+    'jmsearch1': 'Retrieval of the places in progress...',
+    'jmsearch2': 'Places retrieved: %s',
+    'jmsearch3': 'Failure of the retrieval of the places',
     'jm3dviewer1': 'Loading of the 3D viewer in progress...',
     'jm3dviewer2': '3D viewer started',
     'jm3dviewer3': 'Failure of the loading of the 3D viewer',
@@ -4643,6 +4659,65 @@ class WGS84ReverseGeocoding():
       return None
 
 
+class WGS84Geocoding():
+
+  AS_IGN_GEOCODAGE = {'alias': 'IGN_GEOCODAGE', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20&lat={lat}&lon={lon}','key': (('features', '*', 'geometry', 'coordinates', '1'), ('features', '*', 'geometry', 'coordinates', '0'), ('features', '*', 'properties', 'extrafields', 'names', 0))}
+  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=poi&viewbox={lon1},{lat1},{lon2},{lat2}','key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'))}
+  # AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
+  # AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
+  # AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}','key': ('items', 'title')}
+
+  @classmethod
+  def ASAlias(cls, name):
+    if hasattr(cls, 'AS_' + name):
+      return dict(getattr(cls, 'AS_' + name))
+    else:
+      return None
+
+  @staticmethod
+  def _parse_json(j, k, f=0):
+    if f < len(k):
+      if k[f] == '*':
+        return tuple(r for e in j for r in WGS84Geocoding._parse_json(e, k, f+1))
+      else:
+        try:
+          e = j[k[f]]
+        except:
+          e = j[int(k[f])]
+        return WGS84Geocoding._parse_json(e, k, f+1)
+    else:
+      return (j, )
+
+  def RequestPlaces(self, infos, query, minlat, maxlat, minlon, maxlon, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
+    if len(query) < 2:
+      return None
+    if not isinstance(minlat, (float, int)) or not isinstance(maxlat, (float, int)) or not isinstance(minlon, (float, int)) or not isinstance(maxlon, (float, int)):
+      return None
+    headers = {}
+    if referer:
+      headers['Referer'] = referer
+    if user_agent:
+      headers['User-Agent'] = user_agent
+    if not infos.get('source'):
+      return None
+    try:
+      uri = infos['source'].format_map({'key': key or '', 'query': urllib.parse.quote_plus(query), 'lat1': minlat, 'lat2': maxlat, 'lon1': minlon, 'lon2': maxlon, 'lat': (minlat + maxlat) / 2, 'lon': (minlon + maxlon) / 2})
+      rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
+      if rep.code != '200':
+        return None
+      if not rep.body:
+        return None
+      if 'key' in infos:
+        jplaces = json.loads(rep.body)
+        return tuple(zip(map(float, WGS84Geocoding._parse_json(jplaces, infos['key'][0])), map(float, WGS84Geocoding._parse_json(jplaces, infos['key'][1])), map(escape, WGS84Geocoding._parse_json(jplaces, infos['key'][2]))))
+      elif 'regex' in infos:
+        return re.search(infos['regex'],rep.body.decode('utf-8')).group(1)
+      else:
+        return None
+    except:
+      return None
+
+
 class MapLegend():
 
   ML_IGN_PLANV2 = {'*': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
@@ -7462,6 +7537,24 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_resp('text/plain; charset=utf-8')
             except:
               _send_err_fail()
+          elif req.path.lower()[:10] == '/geocoding':
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(req.path).query)
+            try:
+              if int(q['gset'][0]) != self.server.Interface.GeocodingProviderSel:
+                self.server.Interface.GeocodingProviderConnection = [[None]]
+                self.server.Interface.GeocodingProviderSel = int(q['gset'][0])
+                self.server.Interface.log(1, 'geocoding', self.server.Interface.GeocodingsProviders[self.server.Interface.GeocodingProviderSel][0])
+            except:
+              _send_err_fail()
+              continue
+            try:
+              places = self.server.Interface.GeocodingProvider(*json.loads(req.body))
+              if places is None:
+                raise
+              resp_body = json.dumps(places).encode('utf-8')
+              _send_resp('application/json; charset=utf-8')
+            except:
+              _send_err_fail()
           else:
             _send_err_nf()
         elif req.method:
@@ -9706,16 +9799,24 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (focused && scrollmode > 0) {\r\n' \
-  '          if (focused.indexOf("segment") >= 0) {\r\n' \
-  '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
-  '          } else if (focused.indexOf("track") >= 0){\r\n' \
-  '            scroll_to_track(document.getElementById(focused), scrollmode == 2);\r\n' \
+  '        if (scrollmode > 0) {\r\n' \
+  '          if (focused) {\r\n' \
+  '            if (focused.indexOf("segment") >= 0) {\r\n' \
+  '              scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
+  '            } else if (focused.indexOf("track") >= 0){\r\n' \
+  '              scroll_to_track(document.getElementById(focused), scrollmode == 2);\r\n' \
+  '              if (document.getElementById("target_mark").style.display != "none") {\r\n' \
+  '                scroll_to_target(scrollmode == 2);\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
+  '            }\r\n' \
+  '          } else if (document.getElementById("target_mark") != null) {\r\n' \
   '            if (document.getElementById("target_mark").style.display != "none") {\r\n' \
   '              scroll_to_target(scrollmode == 2);\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
-  '            scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
+  '            reframe();\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          reframe();\r\n' \
@@ -9824,17 +9925,17 @@ class GPXTweakerWebInterfaceServer():
   '          scrollmode = scrollmode_ex = (scrollmode + 1) % 3;\r\n' \
   '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n' \
   '        } else {\r\n' \
+  '          if (target) {\r\n' \
+  '            if (document.getElementById("target_mark").style.display != "none") {scroll_to_target(true);}\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          if (! focused) {return;}\r\n' \
   '          if (focused.substring(0, 3) == "seg") {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"start"});\r\n' \
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), true);\r\n' \
   '          } else if (focused.substring(0, 3) == "tra") {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
-  '            if (target) {\r\n' \
-  '              if (document.getElementById("target_mark").style.display != "none") {scroll_to_target(true);}\r\n' \
-  '            } else {\r\n' \
-  '              scroll_to_track(document.getElementById(focused), true);\r\n' \
-  '            }\r\n' \
+  '            scroll_to_track(document.getElementById(focused), true);\r\n' \
   '          } else {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
   '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
@@ -14937,7 +15038,7 @@ class GPXTweakerWebInterfaceServer():
   '            let xhrrg = new XMLHttpRequest();\r\n' \
   '            xhrrg.onerror = error_rgcb;\r\n' \
   '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
-  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + rgset.toString());\r\n' \
+  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
   '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
   '          }\r\n' \
@@ -15009,7 +15110,7 @@ class GPXTweakerWebInterfaceServer():
   '        color:rgb(250,220,200);\r\n' \
   '      }\r\n' \
   '      input[id=tracksfilter] {\r\n' \
-  '        max-width:calc(98vw - 73em);\r\n' \
+  '        max-width:calc(98vw - 78em);\r\n' \
   '        width:25em;\r\n' \
   '        font-size:70%;\r\n' \
   '      }\r\n' \
@@ -15150,6 +15251,24 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      div[id^=media] *:not(:last-child) {\r\n' \
   '        margin-right:14px;\r\n' \
+  '      }\r\n' \
+  '      div[id=searchpanel] {\r\n' \
+  '        position:relative;\r\n' \
+  '        width:100%;\r\n' \
+  '        height:25vh;\r\n' \
+  '        border-top:1px darkgray solid;\r\n' \
+  '        overflow: hidden;\r\n' \
+  '      }\r\n' \
+  '      input[type=radio] {\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '        margin:0.2em 0.5em 0.2em 0.5em;\r\n' \
+  '        accent-color:dodgerblue;\r\n' \
+  '      }\r\n' \
+  '      label[for^=place] {\r\n' \
+  '        vertical-align:middle;\r\n' \
+  '      }\r\n' \
+  '      input[type=radio]:checked+label[for^=place] {\r\n' \
+  '        color:dodgerblue\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
@@ -15338,6 +15457,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        set_target();\r\n' \
+  '        document.getElementById("places").reset();\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_over(trk) {\r\n' \
@@ -15781,21 +15901,21 @@ class GPXTweakerWebInterfaceServer():
   '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function tracks_filter_history() {\r\n' \
-  '        let filt = document.getElementById("tracksfilter").value;\r\n' \
-  '        if (! filt) {return;}\r\n' \
-  '        let fhist = document.getElementById("tracksfilterhistory");\r\n' \
-  '        let fopts = fhist.getElementsByTagName("option");\r\n' \
+  '      function input_history(input) {\r\n' \
+  '        let val = input.value;\r\n' \
+  '        if (! val) {return;}\r\n' \
+  '        let hist = input.nextElementSibling;\r\n' \
+  '        let opts = hist.getElementsByTagName("option");\r\n' \
   '        let opt = null;\r\n' \
-  '        for (let o=0; o<fopts.length; o++) {\r\n' \
-  '          if (fopts[o].value.toLowerCase() == filt.toLowerCase()) {\r\n' \
-  '            opt = fhist.removeChild(fopts[o]);\r\n' \
+  '        for (let o=0; o<opts.length; o++) {\r\n' \
+  '          if (opts[o].value.toLowerCase() == val.toLowerCase()) {\r\n' \
+  '            opt = hist.removeChild(opts[o]);\r\n' \
   '            break;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (opt == null) {opt = document.createElement("option");}\r\n' \
-  '        opt.value = filt;\r\n' \
-  '        fhist.insertBefore(opt, fhist.firstElementChild);\r\n' \
+  '        opt.value = val;\r\n' \
+  '        hist.insertBefore(opt, hist.firstElementChild);\r\n' \
   '      }\r\n' \
   '      function tracks_sort() {\r\n' \
   '        let crit = document.getElementById("oset").selectedIndex;\r\n' \
@@ -16034,7 +16154,7 @@ class GPXTweakerWebInterfaceServer():
   '        let msgn = show_msg("{#jmdetach1#}", 0);\r\n' \
   '        xhrtr.onload = (e) => {load_tdcb(e.target, foc)?show_msg("{#jmdetach2#}", 5, msgn):show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("GET", "/detach?" + foc.substring(5));\r\n' \
+  '        xhrtr.open("GET", "/detach?" + encodeURIComponent(foc.substring(5)));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
@@ -16116,7 +16236,7 @@ class GPXTweakerWebInterfaceServer():
   '        let msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
   '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)?show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn):show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + ind1.toString() + "," + ind2.toString());\r\n' \
+  '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + encodeURIComponent(ind1.toString()) + "," + encodeURIComponent(ind2.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
@@ -16173,7 +16293,7 @@ class GPXTweakerWebInterfaceServer():
   '        let msgn = show_msg("{#jmnew1#}", 0);\r\n' \
   '        xhrtr.onload = (e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("GET", "/new?" + f_ind.toString());\r\n' \
+  '        xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
@@ -16424,11 +16544,12 @@ class GPXTweakerWebInterfaceServer():
   '      function photo_fs(p) {\r\n' \
   '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
   '      }\r\n' \
-  '      function switch_mediapreview(graph=false) {\r\n' \
+  '      function switch_mediapreview(other=false) {\r\n' \
   '        let mpview = document.getElementById("mediapreview");\r\n' \
   '        if (mpview.style.display == "none") {\r\n' \
-  '          if (graph) {return;}\r\n' \
+  '          if (other) {return;}\r\n' \
   '          if (document.getElementById("graph").style.display != "none") {refresh_graph(true);}\r\n' \
+  '          switch_spanel(true);\r\n' \
   '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          mpview.dataset.sl = "0";\r\n' \
@@ -16439,7 +16560,7 @@ class GPXTweakerWebInterfaceServer():
   '          mpview.innerHTML = "";\r\n' \
   '          mpview.style.display = "none";\r\n' \
   '          mpview.dataset.sl = "0";\r\n' \
-  '          if (! graph) {\r\n' \
+  '          if (! other) {\r\n' \
   '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            rescale();\r\n' \
@@ -16743,13 +16864,91 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function open_explorer(target) {\r\n' \
   '        if (target.slice(0, 6) == "folder") {\r\n' \
-  '          xhrex.open("GET", "/explorer?folder-" + target.substring(6));\r\n' \
+  '          xhrex.open("GET", "/explorer?folder-" + encodeURIComponent(target.substring(6)));\r\n' \
   '        } else if (target.slice(-4) == "file") {\r\n' \
   '          if (window.getSelection) {window.getSelection().removeAllRanges();}\r\n' \
-  '          xhrex.open("GET", "/explorer?file-" + target.slice(5, -4));\r\n' \
+  '          xhrex.open("GET", "/explorer?file-" + encodeURIComponent(target.slice(5, -4)));\r\n' \
   '        } else {return;}\r\n' \
   '        xhrex.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrex.send();\r\n' \
+  '      }\r\n' \
+  '      function switch_spanel(other=false) {\r\n' \
+  '        let mspanel = document.getElementById("searchpanel");\r\n' \
+  '        if (mspanel.style.display == "none") {\r\n' \
+  '          if (other) {return;}\r\n' \
+  '          if (document.getElementById("graph").style.display != "none") {refresh_graph(true);}\r\n' \
+  '          switch_mediapreview(true);\r\n' \
+  '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '          mspanel.style.display = "block";\r\n' \
+  '          rescale();\r\n' \
+  '        } else {\r\n' \
+  '          mspanel.style.display = "none";\r\n' \
+  '          document.getElementById("places").reset();\r\n' \
+  '          set_target();\r\n' \
+  '          if (! other) {\r\n' \
+  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '            rescale();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function error_gcb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '      }\r\n' \
+  '      function load_gcb(t) {\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '        if (t.status != 200) {\r\n' \
+  '          return null;\r\n' \
+  '        }\r\n' \
+  '        let places = document.getElementById("places");\r\n' \
+  '        let pls = Array.from(places.getElementsByTagName("div"));\r\n' \
+  '        for (let p=1; p<pls.length; p++) {places.removeChild(pls[p]);}\r\n' \
+  '        set_target();\r\n' \
+  '        let plcs = JSON.parse(t.response);\r\n' \
+  '        if (plcs.length == 0) {\r\n' \
+  '          return 0;\r\n' \
+  '        }\r\n' \
+  '        pls = [];\r\n' \
+  '        for (let p=0; p<plcs.length; p++) {\r\n' \
+  '          let pl = places.firstElementChild.cloneNode(true);\r\n' \
+  '          pls.push(pl);\r\n' \
+  '          pl.style.display = "block";\r\n' \
+  '          let ps = p.toString();\r\n' \
+  '          let elt = pl.firstElementChild;\r\n' \
+  '          elt.id += ps;\r\n' \
+  '          elt.value = ps;\r\n' \
+  '          elt.title = plcs[p][0].toFixed(6) + ", " + plcs[p][1].toFixed(6);\r\n' \
+  '          elt = elt.nextElementSibling;\r\n' \
+  '          elt.htmlFor += ps;\r\n' \
+  '          elt.innerHTML = plcs[p][2];\r\n' \
+  '        }\r\n' \
+  '        places.append(...pls);\r\n' \
+  '        return plcs.length;\r\n' \
+  '      }\r\n' \
+  '      function search_place() {\r\n' \
+  '        let gset = document.getElementById("gset");\r\n' \
+  '        gset = gset.options.length>0?gset.selectedIndex:-1;\r\n' \
+  '        if (gset < 0) {show_msg("{#jmsearchno#}", 10); return;}\r\n' \
+  '        let squery = document.getElementById("squery").value;\r\n' \
+  '        if (squery.length < 2) {show_msg("{#jmsearchshort#}", 10); return;}\r\n' \
+  '        let xhrg = new XMLHttpRequest();\r\n' \
+  '        let msgn = show_msg("{#jmsearch1#}", 0);\r\n' \
+  '        xhrg.onerror = (e) => {error_gcb; show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
+  '        xhrg.onload = (e) => {let np = load_gcb(e.target); np!=null?show_msg("{#jmsearch2#}".replace("%s", np), 2, msgn):show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
+  '        xhrg.open("POST", "/geocoding?gset=" + encodeURIComponent(gset.toString()));\r\n' \
+  '        xhrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '        let [lat2, lon1] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)));\r\n' \
+  '        let [lat1, lon2] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.parentNode.offsetWidth - hpx) * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.parentNode.offsetHeight) * tscale / zoom)));\r\n' \
+  '        xhr_ongoing++;\r\n' \
+  '        xhrg.send(JSON.stringify([squery, lat1, lat2, lon1, lon2]));\r\n' \
+  '      }\r\n' \
+  '      function target_place(place) {\r\n' \
+  '        let wm = WGS84toWebMercator(...place.title.split(", ").map(Number));\r\n' \
+  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
+  '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
+  '        set_target(xy);\r\n' \
+  '        scroll_to_target(true, xy);\r\n' \
   '      }\r\n' \
   '      function load_cb(t, prop) {\r\n' \
   '        if (t.status != 204) {\r\n' \
@@ -16870,12 +17069,12 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
   '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
-  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" oninput="tracks_filter()" onchange="tracks_filter_history()">\r\n' \
+  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" oninput="tracks_filter()" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="position:relative;font-size:80%;"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
   '           </form>\r\n' \
-  '           <span style="display:inline-block;position:absolute;margin-left:1em;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button></span>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:1em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jtrackdetach#}" style="margin-left:1em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackedit#}" id="edit" style="margin-left:1em;" onclick="track_edit()">&#9998;</button><button title="{#jwebmapping#}" style="margin-left:1em;" onclick="open_webmapping()">&#10146;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?2:(event.shiftKey?1:0))">&target;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:0.25em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -16909,11 +17108,24 @@ class GPXTweakerWebInterfaceServer():
   '                </svg>\r\n' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null, 1):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    </div>\r\n' \
   '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
+  '    </div>\r\n' \
+  '    <div id="searchpanel" style="display:none" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '    <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();search_place();return false;">\r\n' \
+  '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 18em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onchange="input_history(this)">\r\n' \
+  '      <datalist id="searchqueryhistory"></datalist>\r\n' \
+  '      <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
+  '    </form>\r\n' \
+  '    <select id="gset" name="gset" title="{#jgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
+  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.4em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;);" onsubmit="return false" onchange="target_place(event.target)">\r\n' \
+  '      <div style="display:none;">\r\n' \
+  '        <input type="radio" id="place" name="place" value="" title=""><label for="place"></label>\r\n' \
+  '      </div>\r\n' \
+  '    </form>\r\n' \
   '    </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -17172,7 +17384,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (prev_state != null) {\r\n' \
   '          prev_state = prev_state.split("|");\r\n' \
   '          document.getElementById("tracksfilter").value = prev_state[0].replace(/\\&;/g, "|").replace(/&amp;/g, "&");\r\n' \
-  '          tracks_filter_history();\r\n' \
+  '          input_history(document.getElementById("tracksfilter"));\r\n' \
   '          no_sort = prev_state[1].split("-").map(Number);\r\n' \
   '          document.getElementById("sortup").style.display = prev_state[2]=="true"?"":"none";\r\n' \
   '          document.getElementById("sortdown").style.display = prev_state[2]=="true"?"none":"";\r\n' \
@@ -17357,6 +17569,10 @@ class GPXTweakerWebInterfaceServer():
           hcur = hcur[:20].lower() + hcur[20:]
           self.ReverseGeocodingsProviders.append([hcur[20:].strip(), {}, {}])
           s = self.ReverseGeocodingsProviders[-1]
+        elif hcur[:13].lower() == 'geocodingapi ':
+          hcur = hcur[:13].lower() + hcur[13:]
+          self.GeocodingsProviders.append([hcur[13:].strip(), {}, {}])
+          s = self.GeocodingsProviders[-1]
         elif hcur.lower() in ('global', 'explorer'):
           hcur = hcur.lower()
         else:
@@ -17386,7 +17602,7 @@ class GPXTweakerWebInterfaceServer():
           elif scur not in ('layers', 'display'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
-        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
+        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ' or hcur[:13] == 'geocodingapi ':
           if not scur in ('infos', 'handling') and (hcur[:4] != 'map ' or scur != 'legend'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
@@ -17863,20 +18079,25 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
-      elif hcur[:13] in ('elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ':
+      elif hcur[:13] in ('elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ' or hcur[:13] == 'geocodingapi ':
         if scur == 'infos':
           if field == 'alias':
             if hcur[:13] == 'elevationapi ':
               s[1] = WGS84Elevation.ASAlias(value)
             elif hcur[:13] == 'itineraryapi ':
               s[1] = WGS84Itinerary.ASAlias(value)
-            else:
+            elif hcur[:20] == 'reversegeocodingapi ':
               s[1] = WGS84ReverseGeocoding.ASAlias(value)
+            else:
+              s[1] = WGS84Geocoding.ASAlias(value)
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
           elif field == 'json_key':
-            s[1]['key'] = tuple(map(str.strip, value.split(',')))
+            if hcur[:13] == 'geocodingapi ':
+              s[1]['key'] = tuple(tuple(map(str.strip, val.split(','))) for val in value.split(';'))
+            else:
+              s[1]['key'] = tuple(map(str.strip, value.split(',')))
           elif field == 'html_regex' and hcur[:20] == 'reversegeocodingapi ':
             s[1]['regex'] = value
           elif field == 'source' or (field in ('separator', 'limit', 'parallel', 'nodata') and hcur[:13] == 'elevationapi '):
@@ -17965,6 +18186,7 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationMapSets = []
     self.ItinerariesProviders = []
     self.ReverseGeocodingsProviders = []
+    self.GeocodingsProviders = []
     self.Tracks = []
     self.Uri = None
     self.Track = None
@@ -17975,6 +18197,7 @@ class GPXTweakerWebInterfaceServer():
     self.ElevationProviderSel = None
     self.ItineraryProviderSel = None
     self.ReverseGeocodingProviderSel = None
+    self.GeocodingProviderSel = None
     self.WebMappingServices = []
     self.GPXTweakerInterfaceServerInstances = []
     self.HTML = None
@@ -18304,6 +18527,24 @@ class GPXTweakerWebInterfaceServer():
         self.log(1, 'reversegeocoding', self.ReverseGeocodingsProviders[0][0])
       else:
         self.ReverseGeocodingProvider = None
+      self.Geocoding = WGS84Geocoding()
+      if len(self.GeocodingsProviders) > 0:
+        self.GeocodingProviderSel = 0
+        self.GeocodingProviderConnection = [[None]]
+        def GeocodingProvider(query, minlat, maxlat, minlon, maxlon):
+          psel = self.GeocodingProviderSel
+          try:
+            pcon = self.GeocodingProviderConnection.pop()
+          except:
+            pcon = None
+          places = self.Geocoding.RequestPlaces(self.GeocodingsProviders[psel][1], query, minlat, maxlat, minlon, maxlon, **self.GeocodingsProviders[psel][2], pconnection=pcon)
+          if pcon:
+            self.GeocodingProviderConnection.append(pcon)
+          return places
+        self.GeocodingProvider = GeocodingProvider
+        self.log(1, 'geocoding', self.GeocodingsProviders[0][0])
+      else:
+        self.GeocodingProvider = None
       self.Media = GeotaggedMedia(self.MediaFolders, self.MediaPhotos, self.MediaVideos, (self.VMinx, self.VMiny, self.VMaxx, self.VMaxy))
       self.Legend = MapLegend()
       self.Map.LinkLegend(self.Legend)
@@ -18589,6 +18830,9 @@ class GPXTweakerWebInterfaceServer():
   def _build_wmsets(self):
     return ''.join('<option value="%s">%s</option>' % (escape(wmpro[1].get('source', '')), escape(wmpro[0])) for wmpro in self.WebMappingServices)
 
+  def _build_gsets(self):
+    return ''.join('<option value="%s">%s</option>' % (*([escape(gpro[0])] * 2),) for gpro in self.GeocodingsProviders)
+
   def BuildHTMLExp(self):
     if self.HTMLExp is None:
       return False
@@ -18601,7 +18845,8 @@ class GPXTweakerWebInterfaceServer():
     tsets = self._build_tsets()
     esets = self._build_esets()
     wmsets = self._build_wmsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    gsets = self._build_gsets()
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
