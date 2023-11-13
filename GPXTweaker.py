@@ -4663,11 +4663,10 @@ class WGS84ReverseGeocoding():
 
 class WGS84Geocoding():
 
-  AS_IGN_GEOCODAGE = {'alias': 'IGN_GEOCODAGE', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'))}
-  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'))}
-  AS_OPENROUTE = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=venue{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'name'))}
-  # AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
-  # AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}', 'key': ('items', 'title')}
+  AS_IGN_GEOCODAGE = {'alias': 'IGN_GEOCODAGE', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'), ('features', '*', 'properties', 'category', '|'))}
+  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=natural,poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
+  AS_OPENROUTE = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=venue{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
+  AS_HERE = {'alias': 'HERE', 'source': 'https://geocode.search.hereapi.com/v1/discover?q={query}&limit=40{location}&apikey={key}', 'location': ('&at={lat},{lon}','&in=bbox:{lon1},{lat1},{lon2},{lat2}'), 'key': (('items', '*', 'position', 'lat'), ('items', '*', 'position', 'lng'), ('items', '*', 'address', 'label'), ('items', '*', 'resultType'), ('items', '*', 'categories', '|', 'name'))}
 
   @classmethod
   def ASAlias(cls, name):
@@ -4677,20 +4676,26 @@ class WGS84Geocoding():
       return None
 
   @staticmethod
-  def _parse_json(j, k, f=0):
+  def _parse_json(j, k, o=False, f=0):
     if f < len(k):
       if k[f] == '*':
-        return tuple(r for e in j for r in WGS84Geocoding._parse_json(e, k, f+1))
+        return tuple(r for e in j for r in WGS84Geocoding._parse_json(e, k, o, f+1))
       if k[f] == '|':
-        ar = tuple(WGS84Geocoding._parse_json(e, k, f+1) for e in j)
-        return tuple(' | '.join((str(r[i]) if i < len(r) else '') for r in ar) for i in range(max((len(r) for r in ar), default=0)))
+        ar = tuple(WGS84Geocoding._parse_json(e, k, o, f+1) for e in j)
+        return tuple(' | '.join((r[i] if i < len(r) else '') for r in ar) for i in range(max((len(r) for r in ar), default=0)))
       try:
         e = j[k[f]]
       except:
-        e = j[int(k[f])]
-      return WGS84Geocoding._parse_json(e, k, f+1)
+        try:
+          e = j[int(k[f])]
+        except:
+          if o:
+            return ('',)
+          else:
+            raise
+      return WGS84Geocoding._parse_json(e, k, o, f+1)
     else:
-      return (j, )
+      return (str(j), )
 
   def RequestPlaces(self, infos, query, lat='', lon='', minlat='', maxlat='', minlon='', maxlon='', key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
     if not query:
@@ -4712,18 +4717,14 @@ class WGS84Geocoding():
         break
     try:
       uri = infos['source'].format_map({'key': key or '', 'query': urllib.parse.quote_plus(query), 'location': loc})
+      print(uri)
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
       if not rep.body:
         return None
-      if 'key' in infos:
-        jplaces = json.loads(rep.body)
-        return tuple(zip(map(float, WGS84Geocoding._parse_json(jplaces, infos['key'][0])), map(float, WGS84Geocoding._parse_json(jplaces, infos['key'][1])), map(escape, WGS84Geocoding._parse_json(jplaces, infos['key'][2]))))
-      elif 'regex' in infos:
-        return re.search(infos['regex'],rep.body.decode('utf-8')).group(1)
-      else:
-        return None
+      jplaces = json.loads(rep.body)
+      return tuple(zip(map(float, WGS84Geocoding._parse_json(jplaces, infos['key'][0])), map(float, WGS84Geocoding._parse_json(jplaces, infos['key'][1])), map('  —  '.join, zip(*(map(escape, WGS84Geocoding._parse_json(jplaces, infos['key'][k], True)) for k in range(2, len(infos['key'])))))))
     except:
       return None
 
@@ -18134,9 +18135,7 @@ class GPXTweakerWebInterfaceServer():
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
           elif field == 'location' and hcur[:13] == 'geocodingapi ':
-            if isinstance(s[1].setdefault('location', []), tuple):
-              s[1]['location'] = list(s[1]['location'])
-            s[1]['location'].append(value)
+            s[1]['location'] = tuple(map(str.strip, value.split(';')))
           elif field == 'json_key':
             if hcur[:13] == 'geocodingapi ':
               s[1]['key'] = tuple(tuple(map(str.strip, val.split(','))) for val in value.split(';'))
