@@ -248,7 +248,7 @@ FR_STRINGS = {
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
-    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
+    'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+alt: télécharger une carte des traces cochées cadrée sur la zone affichée&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+shift+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
     'jsearch': 'ouvrir / fermer le panneau de recherche de lieu',
@@ -281,7 +281,8 @@ FR_STRINGS = {
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)&#13;&#10;+alt: centrer sur le pointeur',
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
-    'jgset': 'sélectionner le fournisseur de géocodages',
+    'jexpgset': 'sélectionner le fournisseur de géocodages',
+    'jexpgloc': 'privilégier la zone affichée',
     'jhelp3d': 'survol souris de la mini-carte pour afficher sa légende&#13;&#10;clic sur la vue 3d puis :&#13;&#10;flèche haut / bas ou roulette souris pour avancer / reculer&#13;&#10;flèche gauche / droite ou clic-glisse horizontal pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante  ou clic-glisse vertical pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression ou clic roulette pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -639,7 +640,7 @@ EN_STRINGS = {
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
-    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+shift: download the list of tracks&#13;&#10;+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
+    'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+alt: download a map of the ticked tracks framed on the displayed area&#13;&#10;+shift: download the list of tracks&#13;&#10;+shift+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jwebmapping': 'display the starting point in the online mapping service',
     'jsearch': 'open / close the place search panel',
@@ -672,7 +673,8 @@ EN_STRINGS = {
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexpscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)&#13;&#10;+alt: center on the pointer',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;mouse over a button to display its legend',
-    'jgset': 'select the geocodings provider',
+    'jexpgset': 'select the geocodings provider',
+    'jexpgloc': 'favor the displayed area',
     'jhelp3d': 'mouse over the mini-map to display its legend&#13;&#10;click on the 3d view then :&#13;&#10;arrow up / down or mouse wheel to move forward / backward&#13;&#10;arrow left / right or horizontal click-drag to rotate left / right&#13;&#10;page up / down or vertical click-drag to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete or wheel click to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -4602,13 +4604,13 @@ class WGS84Itinerary():
 
 class WGS84ReverseGeocoding():
 
-  AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}','key': ('features', 'properties', 'extrafields', 'names')}
-  AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}','key': ('features', 'properties', 'extrafields', 'names')}
-  AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}','key': ('features', 'properties', 'extrafields', 'names')}
-  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2','key': ('display_name',)}
-  AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
+  AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2', 'key': ('display_name',)}
+  AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15', 'key': ('features', 'properties', 'name')}
   AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
-  AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}','key': ('items', 'title')}
+  AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}', 'key': ('items', 'title')}
 
   @classmethod
   def ASAlias(cls, name):
@@ -4661,11 +4663,11 @@ class WGS84ReverseGeocoding():
 
 class WGS84Geocoding():
 
-  AS_IGN_GEOCODAGE = {'alias': 'IGN_GEOCODAGE', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20&lat={lat}&lon={lon}','key': (('features', '*', 'geometry', 'coordinates', '1'), ('features', '*', 'geometry', 'coordinates', '0'), ('features', '*', 'properties', 'extrafields', 'names', 0))}
-  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=poi&viewbox={lon1},{lat1},{lon2},{lat2}','key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'))}
-  # AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15','key': ('features', 'properties', 'name')}
+  AS_IGN_GEOCODAGE = {'alias': 'IGN_GEOCODAGE', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'))}
+  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'))}
+  AS_OPENROUTE = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=venue{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'name'))}
   # AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· (.*?). itemprop="name">'}
-  # AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}','key': ('items', 'title')}
+  # AS_HERE_150 = {'alias': 'HERE_150', 'source': 'https://revgeocode.search.hereapi.com/v1/revgeocode?in=circle:{lat},{lon};r=150&limit=10&apikey={key}', 'key': ('items', 'title')}
 
   @classmethod
   def ASAlias(cls, name):
@@ -4679,19 +4681,19 @@ class WGS84Geocoding():
     if f < len(k):
       if k[f] == '*':
         return tuple(r for e in j for r in WGS84Geocoding._parse_json(e, k, f+1))
-      else:
-        try:
-          e = j[k[f]]
-        except:
-          e = j[int(k[f])]
-        return WGS84Geocoding._parse_json(e, k, f+1)
+      if k[f] == '|':
+        ar = tuple(WGS84Geocoding._parse_json(e, k, f+1) for e in j)
+        return tuple(' | '.join((str(r[i]) if i < len(r) else '') for r in ar) for i in range(max((len(r) for r in ar), default=0)))
+      try:
+        e = j[k[f]]
+      except:
+        e = j[int(k[f])]
+      return WGS84Geocoding._parse_json(e, k, f+1)
     else:
       return (j, )
 
-  def RequestPlaces(self, infos, query, minlat, maxlat, minlon, maxlon, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
-    if len(query) < 2:
-      return None
-    if not isinstance(minlat, (float, int)) or not isinstance(maxlat, (float, int)) or not isinstance(minlon, (float, int)) or not isinstance(maxlon, (float, int)):
+  def RequestPlaces(self, infos, query, lat='', lon='', minlat='', maxlat='', minlon='', maxlon='', key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, pconnection=None):
+    if not query:
       return None
     headers = {}
     if referer:
@@ -4700,8 +4702,16 @@ class WGS84Geocoding():
       headers['User-Agent'] = user_agent
     if not infos.get('source'):
       return None
+    loc = ''
+    for loca in infos.get('location', ()):
+      for k in ('lat', 'lon', 'minlat', 'maxlat', 'minlon', 'maxlon'):
+        if '{%s}' % k in loca and locals()[k] == '':
+          break
+      else:
+        loc = loca.format_map({'lat': lat, 'lon': lon, 'lat1': minlat, 'lat2': maxlat, 'lon1': minlon, 'lon2': maxlon})
+        break
     try:
-      uri = infos['source'].format_map({'key': key or '', 'query': urllib.parse.quote_plus(query), 'lat1': minlat, 'lat2': maxlat, 'lon1': minlon, 'lon2': maxlon, 'lat': (minlat + maxlat) / 2, 'lon': (minlon + maxlon) / 2})
+      uri = infos['source'].format_map({'key': key or '', 'query': urllib.parse.quote_plus(query), 'location': loc})
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
@@ -7548,7 +7558,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               continue
             try:
-              places = self.server.Interface.GeocodingProvider(*json.loads(req.body))
+              places = self.server.Interface.GeocodingProvider(**json.loads(req.body))
               if places is None:
                 raise
               resp_body = json.dumps(places).encode('utf-8')
@@ -9546,7 +9556,7 @@ class GPXTweakerWebInterfaceServer():
   '            graph_ip = null;\r\n' \
   '            graph_px = null;\r\n' \
   '            graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
-  '            if (document.getElementById("target_mark") != null) {\r\n' \
+  '            if (targetmark != null) {\r\n' \
   '              if (focused_targeted != null) {set_target();}\r\n' \
   '            }\r\n' \
   '            rescale();\r\n' \
@@ -9805,16 +9815,14 @@ class GPXTweakerWebInterfaceServer():
   '              scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
   '            } else if (focused.indexOf("track") >= 0){\r\n' \
   '              scroll_to_track(document.getElementById(focused), scrollmode == 2);\r\n' \
-  '              if (document.getElementById("target_mark").style.display != "none") {\r\n' \
+  '              if (targetmark.style.display != "none") {\r\n' \
   '                scroll_to_target(scrollmode == 2);\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
   '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
   '            }\r\n' \
-  '          } else if (document.getElementById("target_mark") != null) {\r\n' \
-  '            if (document.getElementById("target_mark").style.display != "none") {\r\n' \
+  '          } else if (targetmark != null && targetmark.style.display != "none") {\r\n' \
   '              scroll_to_target(scrollmode == 2);\r\n' \
-  '            }\r\n' \
   '          } else {\r\n' \
   '            reframe();\r\n' \
   '          }\r\n' \
@@ -9926,7 +9934,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n' \
   '        } else {\r\n' \
   '          if (target) {\r\n' \
-  '            if (document.getElementById("target_mark").style.display != "none") {scroll_to_target(true);}\r\n' \
+  '            if (targetmark.style.display != "none") {scroll_to_target(true);}\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          if (! focused) {return;}\r\n' \
@@ -12773,6 +12781,7 @@ class GPXTweakerWebInterfaceServer():
   '      var mousey = null;\r\n' \
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
+  '      var targetmark = null;\r\n' \
   '      var hand = null;\r\n' \
   '      var hand_m = false;\r\n' \
   '      var mouse_out = null;\r\n' \
@@ -15826,8 +15835,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '      function scroll_to_target(center=true, xy=null) {\r\n' \
   '        if (xy == null) {\r\n' \
-  '          let tm = document.getElementById("target_mark");\r\n' \
-  '          xy = [prop_to_wmvalue(tm.style.left), prop_to_wmvalue(tm.style.top)];\r\n' \
+  '          xy = [prop_to_wmvalue(targetmark.style.left), prop_to_wmvalue(targetmark.style.top)];\r\n' \
   '        }\r\n' \
   '        if (center) {\r\n' \
   '          hpx = viewpane.offsetWidth / 2 - xy[0] * zoom / tscale;\r\n' \
@@ -15840,14 +15848,13 @@ class GPXTweakerWebInterfaceServer():
   '        reframe();\r\n' \
   '      }\r\n' \
   '      function set_target(xy=null) {\r\n' \
-  '        let tm = document.getElementById("target_mark");\r\n' \
   '        if (xy == null) {\r\n' \
   '          focused_targeted = null;\r\n' \
-  '          tm.style.display = "none";\r\n' \
+  '          targetmark.style.display = "none";\r\n' \
   '        } else {\r\n' \
-  '          tm.style.left = wmvalue_to_prop(xy[0], 0);\r\n' \
-  '          tm.style.top = wmvalue_to_prop(xy[1], 0);\r\n' \
-  '          tm.style.display = "";\r\n' \
+  '          targetmark.style.left = wmvalue_to_prop(xy[0], 0);\r\n' \
+  '          targetmark.style.top = wmvalue_to_prop(xy[1], 0);\r\n' \
+  '          targetmark.style.display = "";\r\n' \
   '          if (scrollmode_ex > 0) {scroll_to_target(scrollmode_ex == 2, xy);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -16255,11 +16262,11 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
   '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            let w = document.getElementById("waydots0");\r\n' \
-  '            document.getElementById("handle").insertBefore(e, w==null?document.getElementById("target_mark"):w);\r\n' \
+  '            document.getElementById("handle").insertBefore(e, w==null?targetmark:w);\r\n' \
   '            e.outerHTML = msg[n].substring(2) + "  ";\r\n' \
   '          } else {\r\n' \
   '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
-  '            document.getElementById("handle").insertBefore(e, document.getElementById("target_mark"));\r\n' \
+  '            document.getElementById("handle").insertBefore(e, targetmark);\r\n' \
   '            e.outerHTML = msg[n].substring(2) + "  ";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -16579,10 +16586,13 @@ class GPXTweakerWebInterfaceServer():
   '        e.stopPropagation();\r\n' \
   '        e.preventDefault();\r\n' \
   '      }\r\n' \
-  '      async function download_map() {\r\n' \
+  '      async function download_map(displayed=false) {\r\n' \
   '        if (document.getElementById("tset").disabled || document.getElementById("edit").disabled) {return;}\r\n' \
   '        let b = track_boundaries();\r\n' \
   '        if (b == null) {return;}\r\n' \
+  '        if (displayed) {\r\n' \
+  '          b = [Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)) - htopx, Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.parentNode.offsetWidth - hpx) * tscale / zoom)) - htopx, -Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)) + htopy, -Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.parentNode.offsetHeight) * tscale / zoom)) + htopy];\r\n' \
+  '        }\r\n' \
   '        let cwidth = Math.ceil((b[1] - b[0]) / tscale * zoom);\r\n' \
   '        let cheight = Math.ceil((b[3] - b[2]) / tscale * zoom);\r\n' \
   '        if (cwidth > 11000 || cheight > 11000) {\r\n' \
@@ -16692,14 +16702,34 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (tlayers.has(tset)) {ctx.globalAlpha = 1;}\r\n' \
   '        }\r\n' \
-  '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
   '        let xs = new XMLSerializer;\r\n' \
+  '        ctx.globalCompositeOperation = "source-over";\r\n' \
+  '        let scb = document.getElementById("scalebox");\r\n' \
+  '        let scl = document.getElementById("scaleline");\r\n' \
+  '        let scv = document.getElementById("scalevalue");\r\n' \
+  '        ctx.fillStyle = "rgba(255,255,255,0.7)";\r\n' \
+  '        ctx.fillRect(3, cheight - scb.offsetHeight - 3, scb.offsetWidth, scb.offsetHeight);\r\n' \
+  '        let scli = new Image;\r\n' \
+  '        let scliu = URL.createObjectURL(new Blob([xs.serializeToString(scl)], {type: "image/svg+xml"}));\r\n' \
+  '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        scli.onload = function (e) {URL.revokeObjectURL(scliu); ctx.drawImage(scli, 5, cheight - scl.getBoundingClientRect().height - 5); prom_res();};\r\n' \
+  '        scli.onerror = function (e) {URL.revokeObjectURL(scliu); prom_res();};\r\n' \
+  '        scli.src = scliu;\r\n' \
+  '        await prom;\r\n' \
+  '        ctx.font = getComputedStyle(scalevalue).getPropertyValue("font-size") + " " + getComputedStyle(scalevalue).getPropertyValue("font-family");\r\n' \
+  '        ctx.fillStyle = "rgba(0,0,0,1)";\r\n' \
+  '        ctx.fillText(scv.innerText, 9 + scl.getBoundingClientRect().width, cheight - 5);\r\n' \
+  '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
   '        let trks = document.getElementById("tracksform").children;\r\n' \
   '        let trdata = [];\r\n' \
   '        for (let t=0; t<trks.length; t++) {\r\n' \
   '          if (trks[t].firstElementChild.checked) {\r\n' \
   '            let trkid = trks[t].id.slice(5,-4);\r\n' \
   '            let trck = document.getElementById("track" + trkid);\r\n' \
+  '            if (displayed) {\r\n' \
+  '              let trb = track_boundaries(trck);\r\n' \
+  '              if (trb == null || trb[0] > b[1] || trb[1] < b[0] || trb[2] > b[3] || trb[3] < b[2]) {console.log(t);continue;}\r\n' \
+  '            }\r\n' \
   '            let wpt = document.getElementById("waydots" + trkid);\r\n' \
   '            let tcs = getComputedStyle(trck);\r\n' \
   '            let pcs = getComputedStyle(document.getElementById("path" + trkid));\r\n' \
@@ -16721,7 +16751,7 @@ class GPXTweakerWebInterfaceServer():
   '          trck.onerror = function (e) {URL.revokeObjectURL(tdata[2]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          trck.src = tdata[2];\r\n' \
   '        }\r\n' \
-  '        await prom;\r\n' \
+  '        if (prom_c > 0) {await prom;}\r\n' \
   '        prom_c = trdata.length;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        for (const tdata of trdata) {\r\n' \
@@ -16730,7 +16760,7 @@ class GPXTweakerWebInterfaceServer():
   '          waypt.onerror = function (e) {URL.revokeObjectURL(tdata[5]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          waypt.src = tdata[5];\r\n' \
   '        }\r\n' \
-  '        await prom;\r\n' \
+  '        if (prom_c > 0) {await prom;}\r\n' \
   '        ctx.globalCompositeOperation = "lighten";\r\n' \
   '        prom_c = trdata.length;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
@@ -16740,7 +16770,7 @@ class GPXTweakerWebInterfaceServer():
   '          waypt.onerror = function (e) {URL.revokeObjectURL(tdata[6]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          waypt.src = tdata[6];\r\n' \
   '        }\r\n' \
-  '        await prom;\r\n' \
+  '        if (prom_c > 0) {await prom;}\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '        msgn = show_msg("{#jmdownmap3#}", 0, msgn);\r\n' \
@@ -16911,20 +16941,21 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        pls = [];\r\n' \
   '        for (let p=0; p<plcs.length; p++) {\r\n' \
+  '          let wm = WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
+  '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {continue;}\r\n' \
   '          let pl = places.firstElementChild.cloneNode(true);\r\n' \
   '          pls.push(pl);\r\n' \
   '          pl.style.display = "block";\r\n' \
   '          let ps = p.toString();\r\n' \
   '          let elt = pl.firstElementChild;\r\n' \
   '          elt.id += ps;\r\n' \
-  '          elt.value = ps;\r\n' \
-  '          elt.title = plcs[p][0].toFixed(6) + ", " + plcs[p][1].toFixed(6);\r\n' \
+  '          elt.value = (wm[0] - htopx).toFixed(2) + "," + (htopy - wm[1]).toFixed(2);\r\n' \
   '          elt = elt.nextElementSibling;\r\n' \
   '          elt.htmlFor += ps;\r\n' \
   '          elt.innerHTML = plcs[p][2];\r\n' \
   '        }\r\n' \
   '        places.append(...pls);\r\n' \
-  '        return plcs.length;\r\n' \
+  '        return pls.length;\r\n' \
   '      }\r\n' \
   '      function search_place() {\r\n' \
   '        let gset = document.getElementById("gset");\r\n' \
@@ -16932,21 +16963,28 @@ class GPXTweakerWebInterfaceServer():
   '        if (gset < 0) {show_msg("{#jmsearchno#}", 10); return;}\r\n' \
   '        let squery = document.getElementById("squery").value;\r\n' \
   '        if (squery.length < 2) {show_msg("{#jmsearchshort#}", 10); return;}\r\n' \
+  '        let b = {"query": squery};\r\n' \
+  '        if (document.getElementById("gloc").checked) {\r\n' \
+  '          [b.maxlat, b.minlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)));\r\n' \
+  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.parentNode.offsetWidth - hpx) * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.parentNode.offsetHeight) * tscale / zoom)));\r\n' \
+  '          b.lat = (b.minlat + b.maxlat) / 2;\r\n' \
+  '          b.lon = (b.minlon + b.maxlon) / 2;\r\n' \
+  '        } else {\r\n' \
+  '          [b.maxlat, b.minlon] = WebMercatortoWGS84(vminx, vmaxy);\r\n' \
+  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(vmaxx, vminy);\r\n' \
+  '          b.lat = b.lon = "";\r\n' \
+  '        }\r\n' \
   '        let xhrg = new XMLHttpRequest();\r\n' \
   '        let msgn = show_msg("{#jmsearch1#}", 0);\r\n' \
   '        xhrg.onerror = (e) => {error_gcb; show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
   '        xhrg.onload = (e) => {let np = load_gcb(e.target); np!=null?show_msg("{#jmsearch2#}".replace("%s", np), 2, msgn):show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
   '        xhrg.open("POST", "/geocoding?gset=" + encodeURIComponent(gset.toString()));\r\n' \
   '        xhrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
-  '        let [lat2, lon1] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)));\r\n' \
-  '        let [lat1, lon2] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.parentNode.offsetWidth - hpx) * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.parentNode.offsetHeight) * tscale / zoom)));\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        xhrg.send(JSON.stringify([squery, lat1, lat2, lon1, lon2]));\r\n' \
+  '        xhrg.send(JSON.stringify(b));\r\n' \
   '      }\r\n' \
   '      function target_place(place) {\r\n' \
-  '        let wm = WGS84toWebMercator(...place.title.split(", ").map(Number));\r\n' \
-  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
-  '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
+  '        let xy = place.value.split(",").map(Number);\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
   '      }\r\n' \
@@ -17069,12 +17107,12 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
   '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
-  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" oninput="tracks_filter()" onchange="input_history(this)">\r\n' \
+  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" onfocus="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '             <button style="position:relative;font-size:80%;"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
   '           </form>\r\n' \
   '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="(event.shiftKey||event.altKey)?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map())">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
   '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
@@ -17115,15 +17153,16 @@ class GPXTweakerWebInterfaceServer():
   '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
   '    </div>\r\n' \
   '    <div id="searchpanel" style="display:none" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
-  '    <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();search_place();return false;">\r\n' \
-  '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 18em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onchange="input_history(this)">\r\n' \
+  '    <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
+  '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 24em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'\'):null">\r\n' \
   '      <datalist id="searchqueryhistory"></datalist>\r\n' \
-  '      <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
+  '      <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
   '    </form>\r\n' \
-  '    <select id="gset" name="gset" title="{#jgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
-  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.4em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;);" onsubmit="return false" onchange="target_place(event.target)">\r\n' \
+  '    <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
+  '    <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
+  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;);" onsubmit="return false" onchange="target_place(event.target)">\r\n' \
   '      <div style="display:none;">\r\n' \
-  '        <input type="radio" id="place" name="place" value="" title=""><label for="place"></label>\r\n' \
+  '        <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
   '      </div>\r\n' \
   '    </form>\r\n' \
   '    </div>\r\n' \
@@ -17132,6 +17171,7 @@ class GPXTweakerWebInterfaceServer():
   '      var mousey = null;\r\n' \
   '      var viewpane = document.getElementById("view");\r\n' \
   '      var handle = document.getElementById("handle");\r\n' \
+  '      var targetmark = document.getElementById("target_mark");\r\n' \
   '      var hand = null;\r\n' \
   '      var mouse_out = null;\r\n' \
   '      var pointer_e = null;\r\n' \
@@ -18093,6 +18133,10 @@ class GPXTweakerWebInterfaceServer():
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
+          elif field == 'location' and hcur[:13] == 'geocodingapi ':
+            if isinstance(s[1].setdefault('location', []), tuple):
+              s[1]['location'] = list(s[1]['location'])
+            s[1]['location'].append(value)
           elif field == 'json_key':
             if hcur[:13] == 'geocodingapi ':
               s[1]['key'] = tuple(tuple(map(str.strip, val.split(','))) for val in value.split(';'))
@@ -18531,13 +18575,13 @@ class GPXTweakerWebInterfaceServer():
       if len(self.GeocodingsProviders) > 0:
         self.GeocodingProviderSel = 0
         self.GeocodingProviderConnection = [[None]]
-        def GeocodingProvider(query, minlat, maxlat, minlon, maxlon):
+        def GeocodingProvider(query, lat='', lon='', minlat='', maxlat='', minlon='', maxlon=''):
           psel = self.GeocodingProviderSel
           try:
             pcon = self.GeocodingProviderConnection.pop()
           except:
             pcon = None
-          places = self.Geocoding.RequestPlaces(self.GeocodingsProviders[psel][1], query, minlat, maxlat, minlon, maxlon, **self.GeocodingsProviders[psel][2], pconnection=pcon)
+          places = self.Geocoding.RequestPlaces(self.GeocodingsProviders[psel][1], query, lat=lat, lon=lon, minlat=minlat, maxlat=maxlat, minlon=minlon, maxlon=maxlon, **self.GeocodingsProviders[psel][2], pconnection=pcon)
           if pcon:
             self.GeocodingProviderConnection.append(pcon)
           return places
