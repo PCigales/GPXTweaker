@@ -4717,7 +4717,6 @@ class WGS84Geocoding():
         break
     try:
       uri = infos['source'].format_map({'key': key or '', 'query': urllib.parse.quote_plus(query), 'location': loc})
-      print(uri)
       rep = HTTPRequest(uri, 'GET', headers, pconnection=pconnection, basic_auth=basic_auth)
       if rep.code != '200':
         return None
