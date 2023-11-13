@@ -16678,9 +16678,6 @@ class GPXTweakerWebInterfaceServer():
   '              } catch(error) {\r\n' \
   '                continue;\r\n' \
   '              }\r\n' \
-  '              jmap.once("load", (e) => {ctx.drawImage(jmap.getCanvas(), 0, 0, cwidth, cheight); prom_res();});\r\n' \
-  '              await prom;\r\n' \
-  '              prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '              jmap.once("idle", (e) => {ctx.drawImage(jmap.getCanvas(), 0, 0, cwidth, cheight); prom_res();});\r\n' \
   '              await prom;\r\n' \
   '              jmap.remove();\r\n' \
