@@ -1,4 +1,4 @@
-# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -239,7 +239,8 @@ FR_STRINGS = {
     'jsortaltgain': 'Dénivelé altitude',
     'jsortdate': 'Date',
     'jsortproximity': 'Proximité',
-    'jcfilter': 'filtrer les traces selon leur nom&#13;&#10;+shift: afficher / masquer le panneau de filtre avancé',
+    'jfilterplaceholder': 'filtrer sur le nom contient...',
+    'jcfilter': 'afficher / masquer le panneau de filtre avancé&#13;&#10;+ctrl: réinitialiser les filtres&#13;&#10;+shift: restaurer les filtres tels qu\'avant réinitialisation',
     'jto': 'à',
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
@@ -633,7 +634,8 @@ EN_STRINGS = {
     'jsortaltgain': 'Altitude gain',
     'jsortdate': 'Date',
     'jsortproximity': 'Proximity',
-    'jcfilter': 'filter traces according to their name&#13;&#10;+shift: ashow / hide the panel of advanced filter',
+    'jfilterplaceholder': 'filter on the name contains...',
+    'jcfilter': 'show / hide the panel of advanced filter&#13;&#10;+ctrl: reset the filters&#13;&#10;+shift: restore the filters as before reset',
     'jto': 'to',
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
@@ -15195,6 +15197,9 @@ class GPXTweakerWebInterfaceServer():
   '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
   '        pointer-events:all;\r\n' \
   '      }\r\n' \
+  '      #tracksfilter:not(:placeholder-shown) {\r\n' \
+  '        background-color:rgb(50,95,130);\r\n' \
+  '      }\r\n' \
   '      div [id=geomedia] {\r\n' \
   '        position:absolute;\r\n' \
   '        pointer-events:none;\r\n' \
@@ -15289,10 +15294,39 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      form[id=cfilterform] input {\r\n' \
   '        width:9em;\r\n' \
+  '        height:1.8em;\r\n' \
   '        text-align:right;\r\n' \
   '        box-sizing:border-box;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] input+span {\r\n' \
+  '      form[id=cfilterform] input[type=text] {\r\n' \
+  '        padding-right:2em;\r\n' \
+  '      }\r\n' \
+  '      input[type=date] {\r\n' \
+  '        border-width:0.5px;\r\n' \
+  '      }\r\n' \
+  '      input[type=date]::-webkit-calendar-picker-indicator {\r\n' \
+  '       filter: invert(0.7);\r\n' \
+  '       padding-right:0.3em;\r\n' \
+  '      }\r\n' \
+  '      form[id=cfilterform] button {\r\n' \
+  '        position:relative;\r\n' \
+  '        width:1.3em;\r\n' \
+  '        height:0.9em;\r\n' \
+  '        margin:0px 0px 0px -1.3em;\r\n' \
+  '        padding:0;\r\n' \
+  '        border:none;\r\n' \
+  '        color:rgb(150,150,150);\r\n' \
+  '        background-color:transparent;\r\n' \
+  '        line-height:0;\r\n' \
+  '        text-align:left;\r\n' \
+  '      }\r\n' \
+  '      form[id=cfilterform] input+button {\r\n' \
+  '        vertical-align:top;\r\n' \
+  '      }\r\n' \
+  '      form[id=cfilterform] button+button {\r\n' \
+  '        vertical-align:bottom;\r\n' \
+  '      }\r\n' \
+  '      form[id=cfilterform] span span {\r\n' \
   '        display:inline-block;\r\n' \
   '        width:2em;\r\n' \
   '        text-align:left;\r\n' \
@@ -15404,7 +15438,7 @@ class GPXTweakerWebInterfaceServer():
   '        update_tiles();\r\n' \
   '        if (mvis) {show_media();}\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
-  '        if ((document.getElementById("cfproxmin").checkValidity() && document.getElementById("cfproxmin").value) || (document.getElementById("cfproxmax").checkValidity() && document.getElementById("cfproxmax").value)) {tracks_cfilter();}\r\n' \
+  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {tracks_cfilter();}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(tracks=null) {\r\n' \
   '        if (tracks_pts.length == 0) {return null;}\r\n' \
@@ -15494,7 +15528,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
-  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfdistmin").checkValidity() && document.getElementById("cfdistmin").value) && ! (document.getElementById("cfdistmax").checkValidity() && document.getElementById("cfdistmax").value)) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
+  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) && ! (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity())) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
   '      }\r\n' \
   '      function track_outside(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
@@ -15802,7 +15836,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex) && (fpan == 1 || fpan == 2)) {tracks_sort();}\r\n' \
-  '        if (((document.getElementById("cfdistmin").checkValidity() && document.getElementById("cfdistmin").value) || (document.getElementById("cfdistmax").checkValidity() && document.getElementById("cfdistmax").value) || (document.getElementById("cfegmin").checkValidity() && document.getElementById("cfegmin").value) || (document.getElementById("cfegmax").checkValidity() && document.getElementById("cfegmax").value) || (document.getElementById("cfagmin").checkValidity() && document.getElementById("cfagmin").value) || (document.getElementById("cfagmax").checkValidity() && document.getElementById("cfagmax").value)) && (fpan == 1 || fpan == 2)) {tracks_cfilter();}\r\n' \
+  '        if (((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) && (fpan == 1 || fpan == 2)) {tracks_cfilter();}\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
@@ -15880,9 +15914,7 @@ class GPXTweakerWebInterfaceServer():
   '      function pointed3d_target(lat, lon, track) {\r\n' \
   '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
-  '        if (focused) {\r\n' \
-  '          track_click(null, document.getElementById(focused + "desc"), false);\r\n' \
-  '        }\r\n' \
+  '        if (focused) {track_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
   '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
@@ -15912,98 +15944,97 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function tracks_filter() {\r\n' \
   '        let filt = document.getElementById("tracksfilter").value.toLowerCase();\r\n' \
-  '        let trks = document.getElementById("tracksform").children;\r\n' \
   '        let trv = 0;\r\n' \
-  '        for (let t=0; t<trks.length; t++) {\r\n' \
-  '          let tname = document.getElementById(trks[t].id.replace("cont", "name"));\r\n' \
+  '        for (let t=0; t<tracks_pts.length; t++) {\r\n' \
+  '          let tname = document.getElementById("track" + t.toString() + "name");\r\n' \
   '          if (tname.value.toLowerCase().indexOf(filt) >= 0) {\r\n' \
-  '            if (document.getElementById(trks[t].id.replace("cont", "folder")).style.display == "none" || document.getElementById(trks[t].id.replace("cont", "content")).style.display == "none") {\r\n' \
-  '              trks[t].style.display = "none";\r\n' \
+  '            if (document.getElementById("track" + t.toString() + "folder").style.display == "none" || document.getElementById("track" + t.toString() + "content").style.display == "none") {\r\n' \
+  '              document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
   '            } else {\r\n' \
-  '              trks[t].style.display = "";\r\n' \
+  '              document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
   '              trv++;\r\n' \
   '            }\r\n' \
   '            tname.style.display = "";\r\n' \
   '          } else {\r\n' \
-  '            trks[t].style.display = "none";\r\n' \
+  '            document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
   '            tname.style.display = "none";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<trks.length?(trv.toString() + "/"):"") + trks.length.toString() + ")");\r\n' \
+  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
   '        if (focused) {\r\n' \
-  '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
+  '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
+  '            track_click(null, document.getElementById(focused + "desc"));\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function tracks_cfilter() {\r\n' \
   '        let cfilters = document.getElementById("cfilterform").getElementsByTagName("input");\r\n' \
-  '        let trks = document.getElementById("tracksform").children;\r\n' \
-  '        for (let t=0; t<trks.length; t++) {document.getElementById(trks[t].id.replace("cont", "content")).style.display = "";}\r\n' \
+  '        let trkcss = Array.from(tracks_pts, function (tr, t) {let s = document.getElementById("track" + t.toString() + "content").style; s.display=""; return s;});\r\n' \
   '        let conv = [3600, 1000, 1, 1];\r\n' \
   '        let cfc = null;\r\n' \
   '        for (let cf=0, cfd=0; cf<=3; cfd=2*++cf) {\r\n' \
-  '          if (cfilters[cfd].checkValidity() && cfilters[cfd].value) {\r\n' \
+  '          if (cfilters[cfd].value && cfilters[cfd].checkValidity()) {\r\n' \
   '            let cfvmin = parseFloat(cfilters[cfd].value) * conv[cf];\r\n' \
-  '            if (cfilters[cfd+1].checkValidity() && cfilters[cfd+1].value) {\r\n' \
+  '            if (cfilters[cfd+1].value && cfilters[cfd+1].checkValidity()) {\r\n' \
   '              let cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
   '              cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p >= cfvmin && p <= cfvmax;};\r\n' \
   '            } else {\r\n' \
   '              cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p >= cfvmin;};\r\n' \
   '            }\r\n' \
-  '          } else if (cfilters[cfd+1].checkValidity() && cfilters[cfd+1].value) {\r\n' \
+  '          } else if (cfilters[cfd+1].value && cfilters[cfd+1].checkValidity()) {\r\n' \
   '            let cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
   '            cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p <= cfvmax;};\r\n' \
   '          } else {continue;}\r\n' \
-  '          for (let t=0; t<trks.length; t++) {\r\n' \
-  '            if (document.getElementById(trks[t].id.replace("cont", "content")).style.display != "none" && ! cfc(t)) {document.getElementById(trks[t].id.replace("cont", "content")).style.display = "none";}\r\n' \
-  '          }\r\n' \
+  '          trkcss.forEach(function (s, t) {if (s.display != "none" && ! cfc(t)) {s.display = "none";};});\r\n' \
   '        }\r\n' \
-  '        if (cfilters[8].checkValidity() && cfilters[8].value) {\r\n' \
-  '          let cfvmin = (new Date(cfilters[8].value)).getTime();\r\n' \
-  '          if (cfilters[9].checkValidity() && cfilters[9].value) {\r\n' \
-  '            let cfvmax = (new Date(cfilters[9].value)).getTime() + 86400000;\r\n' \
+  '        if (cfilters[8].value && cfilters[8].checkValidity()) {\r\n' \
+  '          let cfvmin = cfilters[8].valueAsNumber;\r\n' \
+  '          if (cfilters[9].value && cfilters[9].checkValidity()) {\r\n' \
+  '            let cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
   '            cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p >= cfvmin && p < cfvmax;};\r\n' \
   '          } else {\r\n' \
   '            cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p >= cfvmin;};\r\n' \
   '          }\r\n' \
-  '        } else if (cfilters[9].checkValidity() && cfilters[9].value) {\r\n' \
-  '          let cfvmax = (new Date(cfilters[9].value)).getTime() + 86400000;\r\n' \
+  '        } else if (cfilters[9].value && cfilters[9].checkValidity()) {\r\n' \
+  '          let cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
   '          cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p < cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
-  '        if (cfc != null) {\r\n' \
-  '          for (let t=0; t<trks.length; t++) {\r\n' \
-  '            if (document.getElementById(trks[t].id.replace("cont", "content")).style.display != "none" && ! cfc(t)) {document.getElementById(trks[t].id.replace("cont", "content")).style.display = "none";}\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (cfilters[10].checkValidity() && cfilters[10].value) {\r\n' \
+  '        if (cfc != null) {trkcss.forEach(function (s, t) {if (s.display != "none" && ! cfc(t)) {s.display = "none";};});}\r\n' \
+  '        if (cfilters[10].value && cfilters[10].checkValidity()) {\r\n' \
   '          let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
   '          let cfvmin = parseFloat(cfilters[10].value) * 1000;\r\n' \
-  '          if (cfilters[11].checkValidity() && cfilters[11].value) {\r\n' \
+  '          if (cfilters[11].value && cfilters[11].checkValidity()) {\r\n' \
   '            let cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
-  '            cfc = function (t) {let d = distance(clat, clon, 0, tracks_props[t][5][0], tracks_props[t][5][1], 0); return ! isNaN(d) && d >= cfvmin && d <= cfvmax;};\r\n' \
+  '            cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d >= cfvmin && d <= cfvmax;};\r\n' \
   '          } else {\r\n' \
-  '            cfc = function (t) {let d = distance(clat, clon, 0, tracks_props[t][5][0], tracks_props[t][5][1], 0); return ! isNaN(d) && d >= cfvmin;};\r\n' \
+  '            cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d >= cfvmin;};\r\n' \
   '          }\r\n' \
-  '        } else if (cfilters[11].checkValidity() && cfilters[11].value) {\r\n' \
+  '        } else if (cfilters[11].value && cfilters[11].checkValidity()) {\r\n' \
+  '          let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
   '          let cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
-  '          cfc = function (t) {let d = distance(clat, clon, 0, tracks_props[t][5][0], tracks_props[t][5][1], 0); return ! isNaN(d) && d <= cfvmax;};\r\n' \
+  '          cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d <= cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
-  '        if (cfc != null) {\r\n' \
-  '          for (let t=0; t<trks.length; t++) {\r\n' \
-  '            if (document.getElementById(trks[t].id.replace("cont", "content")).style.display != "none" && ! cfc(t)) {document.getElementById(trks[t].id.replace("cont", "content")).style.display = "none";}\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
+  '        if (cfc != null) {trkcss.forEach(function (s, t) {if (s.display != "none" && ! cfc(t)) {s.display = "none";};});}\r\n' \
   '        let trv = 0;\r\n' \
-  '        for (let t=0; t<trks.length; t++) {\r\n' \
-  '          if (document.getElementById(trks[t].id.replace("cont", "name")).style.display == "none" || document.getElementById(trks[t].id.replace("cont", "folder")).style.display == "none" || document.getElementById(trks[t].id.replace("cont", "content")).style.display == "none") {\r\n' \
-  '            trks[t].style.display = "none";\r\n' \
+  '        for (let t=0; t<trkcss.length; t++) {\r\n' \
+  '          if (trkcss[t].display == "none" || document.getElementById("track" + t.toString() + "folder").style.display == "none" || document.getElementById("track" + t.toString() + "name").style.display == "none") {\r\n' \
+  '            document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
   '          } else {\r\n' \
-  '            trks[t].style.display = "";\r\n' \
+  '            document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
   '            trv++;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<trks.length?(trv.toString() + "/"):"") + trks.length.toString() + ")");\r\n' \
+  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
   '        if (focused) {\r\n' \
-  '          if (document.getElementById(focused + "cont").style.display == "none") {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
+  '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
+  '            track_click(null, document.getElementById(focused + "desc"));\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function input_history(input) {\r\n' \
@@ -16025,7 +16056,7 @@ class GPXTweakerWebInterfaceServer():
   '      function tracks_sort() {\r\n' \
   '        let crit = document.getElementById("oset").selectedIndex;\r\n' \
   '        let asc = document.getElementById("sortup").style.display != "none";\r\n' \
-  '        let trks = Array.from({length:tracks_pts.length}).map((v,k)=>k);\r\n' \
+  '        let trks = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
   '        let n = function (a, b) {return no_sort[a] - no_sort[b]};\r\n' \
   '        let c = n;\r\n' \
   '        let vals = [];\r\n' \
@@ -16083,49 +16114,72 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_sort();\r\n' \
   '      }\r\n' \
   '      function switch_cfilterpanel() {\r\n' \
-  '        let cfp = document.getElementById("cfilterpanel");\r\n' \
-  '        if (cfp.style.display == "none") {\r\n' \
+  '        let cfps = document.getElementById("cfilterpanel").style;\r\n' \
+  '        if (cfps.display == "none") {\r\n' \
   '          document.getElementById("folderspanel").style.display = "none";\r\n' \
-  '          cfp.style.display = "";\r\n' \
+  '          cfps.display = "";\r\n' \
   '        } else {\r\n' \
-  '          cfp.style.display = "none";\r\n' \
+  '          cfps.display = "none";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function switch_folderspanel() {\r\n' \
-  '        let fp = document.getElementById("folderspanel");\r\n' \
-  '        if (fp.style.display == "none") {\r\n' \
-  '          document.getElementById("cfilterpanel").style.display = "none";\r\n' \
-  '          fp.style.display = "";\r\n' \
+  '      function cfilter_updown(button, step) {\r\n' \
+  '        let input = button.previousElementSibling;\r\n' \
+  '        if (input.tagName.toUpperCase() == "INPUT") {\r\n' \
+  '          if (! input.checkValidity()) {\r\n' \
+  '            input.value = "";\r\n' \
+  '          } else if (! input.value) {\r\n' \
+  '            input.value = "0";\r\n' \
+  '          } else {\r\n' \
+  '            input.value = (parseFloat(input.value) + step).toFixed(3).match(/^\\d*(?=.000)|^\\d*.\\d*?(?=0*$)/);\r\n' \
+  '          }\r\n' \
   '        } else {\r\n' \
-  '          fp.style.display = "none";\r\n' \
+  '          input = input.previousElementSibling;\r\n' \
+  '          if (! input.checkValidity() || input.value == "0") {\r\n' \
+  '            input.value = "";\r\n' \
+  '          } else if (! input.value) {\r\n' \
+  '            input.value = "0";\r\n' \
+  '          } else {\r\n' \
+  '            input.value = Math.max(0, parseFloat(input.value) - step).toFixed(3).match(/^\\d*(?=.000)|^\\d*.\\d*?(?=0*$)/);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        document.getElementById("cfilterform").dispatchEvent(new Event("change"));\r\n' \
+  '      }\r\n' \
+  '      function cfilter_reset() {\r\n' \
+  '        document.getElementById("cfilterform").dataset.backup = Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#");\r\n' \
+  '        document.getElementById("cfilterform").reset();\r\n' \
+  '        tracks_cfilter();\r\n' \
+  '      }\r\n' \
+  '      function cfilter_restore() {\r\n' \
+  '        document.getElementById("cfilterform").dataset.backup.split("#").forEach((c, i) => document.getElementById("cfilterform").getElementsByTagName("input")[i].value = c);\r\n' \
+  '        document.getElementById("cfilterform").dispatchEvent(new Event("change"));\r\n' \
+  '      }\r\n' \
+  '      function switch_folderspanel() {\r\n' \
+  '        let fps = document.getElementById("folderspanel").style;\r\n' \
+  '        if (fps.display == "none") {\r\n' \
+  '          document.getElementById("cfilterpanel").style.display = "none";\r\n' \
+  '          fps.display = "";\r\n' \
+  '        } else {\r\n' \
+  '          fps.display = "none";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function folders_select() {\r\n' \
-  '        let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
-  '        let t = 0;\r\n' \
+  '        let folders = Array.from(document.getElementById("foldersform").getElementsByTagName("input"));\r\n' \
   '        let trv = 0;\r\n' \
-  '        let f = 0;\r\n' \
-  '        while(t < tracks_pts.length) {\r\n' \
-  '          while (t < tracks_pts.length) {\r\n' \
-  '            if (document.getElementById("track" + t.toString() + "folder" ).value.toLowerCase().indexOf(folders[f].value.toLowerCase()) >= 0) {\r\n' \
-  '              if (folders[f].checked) {\r\n' \
-  '                if (document.getElementById("track" + t.toString() + "name").style.display == "none" || document.getElementById("track" + t.toString() + "content").style.display == "none") {\r\n' \
-  '                  document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '                } else {\r\n'\
-  '                  document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
-  '                  trv++;\r\n' \
-  '                }\r\n' \
-  '                document.getElementById("track" + t.toString() + "folder").style.display = "";\r\n' \
-  '              } else {\r\n' \
-  '                document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '                document.getElementById("track" + t.toString() + "folder").style.display = "none";\r\n' \
-  '              }\r\n' \
-  '              t++;\r\n' \
-  '            } else {\r\n' \
-  '              break;\r\n' \
+  '        for (let t=0, f=0; t<tracks_pts.length; t++) {\r\n' \
+  '          let tf = document.getElementById("track" + t.toString() + "folder").value.toLowerCase();\r\n' \
+  '          while (tf.indexOf(folders[f].value.toLowerCase()) < 0) {if (++f == folders.length) {f = 0;};}\r\n' \
+  '          if (folders[f].checked) {\r\n' \
+  '            if (document.getElementById("track" + t.toString() + "name").style.display == "none" || document.getElementById("track" + t.toString() + "content").style.display == "none") {\r\n' \
+  '              document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
+  '            } else {\r\n'\
+  '              document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
+  '              trv++;\r\n' \
   '            }\r\n' \
+  '            document.getElementById("track" + t.toString() + "folder").style.display = "";\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
+  '            document.getElementById("track" + t.toString() + "folder").style.display = "none";\r\n' \
   '          }\r\n' \
-  '          if (++f == folders.length) {f = 0;}\r\n' \
   '        }\r\n' \
   '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
   '        if (focused) {\r\n' \
@@ -16264,7 +16318,6 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        tracks_sort();\r\n' \
-  '        tracks_cfilter();\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function track_detach() {\r\n' \
@@ -16399,7 +16452,8 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
-  '        document.getElementById("tracksfilter").value = "";\r\n' \
+  '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
+  '        cfilter_reset();\r\n' \
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
   '        tracks_cfilter();\r\n' \
@@ -16421,7 +16475,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmnew1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -17023,17 +17077,17 @@ class GPXTweakerWebInterfaceServer():
   '        xhrex.send();\r\n' \
   '      }\r\n' \
   '      function switch_spanel(other=false) {\r\n' \
-  '        let mspanel = document.getElementById("searchpanel");\r\n' \
-  '        if (mspanel.style.display == "none") {\r\n' \
+  '        let spanel = document.getElementById("searchpanel");\r\n' \
+  '        if (spanel.style.display == "none") {\r\n' \
   '          if (other) {return;}\r\n' \
   '          if (document.getElementById("graph").style.display != "none") {refresh_graph(true);}\r\n' \
   '          switch_mediapreview(true);\r\n' \
   '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          mspanel.style.display = "block";\r\n' \
+  '          spanel.style.display = "block";\r\n' \
   '          rescale();\r\n' \
   '        } else {\r\n' \
-  '          mspanel.style.display = "none";\r\n' \
+  '          spanel.style.display = "none";\r\n' \
   '          document.getElementById("places").reset();\r\n' \
   '          set_target();\r\n' \
   '          if (! other) {\r\n' \
@@ -17226,15 +17280,15 @@ class GPXTweakerWebInterfaceServer():
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
-  '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
-  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" value="" onfocus="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
+  '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;" onreset="this.firstElementChild.style.color=\'\'">\r\n' \
+  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '           </form>\r\n' \
-  '           <button id="fbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.shiftKey?switch_cfilterpanel():null;"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
+  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?cfilter_reset():(event.shiftKey?cfilter_restore():switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
   '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
   '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="cfilterform" autocomplete="off" onsubmit="return(false);" onchange="document.getElementById(\'fbutton\').style.color=(this.checkValidity() && Array.from(this.getElementsByTagName(\'input\')).some((i) => Boolean(i.value)))?\'rgb(200,250,240)\':\'inherit\';tracks_cfilter();">\r\n' \
+  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';tracks_cfilter();" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
   '                <div style="display:inline-block;padding-right:1em;">\r\n' \
   '                  <span>{#jsortduration#} :&nbsp;</span>\r\n' \
   '                  <span>{#jsortdistance#} :&nbsp;</span>\r\n' \
@@ -17244,12 +17298,12 @@ class GPXTweakerWebInterfaceServer():
   '                  <span>{#jsortproximity#} :&nbsp;</span>\r\n' \
   '                </div>\r\n' \
   '                <div style="display:inline-block;text-align:right;">\r\n' \
-  '                  <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;h</span></span> \r\n' \
-  '                  <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;km</span></span> \r\n' \
-  '                  <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;m</span></span> \r\n' \
+  '                  <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span> \r\n' \
+  '                  <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
+  '                  <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
+  '                  <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
   '                  <span><input type="date" id="cfdatemin" name="cfdatemin"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax"><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><span>&nbsp;km</span></span> \r\n' \
+  '                  <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
   '                </div>\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
@@ -17541,7 +17595,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input")).map((c) => c.checkValidity()?c.value:"").join("#"));\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#"));\r\n' \
   '      }\r\n' \
   '      function error_dcb() {\r\n' \
   '        window.alert("{#jexpfail#}");\r\n' \
@@ -17593,10 +17647,10 @@ class GPXTweakerWebInterfaceServer():
   '          smoothed = prev_state[9] == "true";\r\n' \
   '          magnify = parseInt(prev_state[10]);\r\n' \
   '          document.documentElement.style.setProperty("--magnify", prev_state[10]);\r\n' \
-  '          let cfs = prev_state[11].split("#");\r\n' \
-  '          Array.from(document.getElementById("cfilterform").getElementsByTagName("input")).forEach((c, i) => c.value = cfs[i]);\r\n' \
+  '          document.getElementById("cfilterform").dataset.backup = prev_state[11];\r\n' \
+  '          cfilter_restore();\r\n' \
   '        } else {\r\n' \
-  '          no_sort = Array.from({length:tracks_pts.length}).map((v,k)=>k);\r\n' \
+  '          no_sort = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
   '          magnify_inc();\r\n' \
   '        }\r\n' \
   '        if (smoothed) {document.getElementById("swsm").innerHTML = "&divide;&divide;"};\r\n' \
