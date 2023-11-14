@@ -633,8 +633,8 @@ EN_STRINGS = {
     'jsortaltgain': 'Altitude gain',
     'jsortdate': 'Date',
     'jsortproximity': 'Proximity',
-    'jto': 'to',
     'jcfilter': 'filter traces according to their name&#13;&#10;+shift: ashow / hide the panel of advanced filter',
+    'jto': 'to',
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
@@ -15922,8 +15922,8 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              trks[t].style.display = "";\r\n' \
   '              trv++;\r\n' \
-  '              tname.style.display = "";\r\n' \
   '            }\r\n' \
+  '            tname.style.display = "";\r\n' \
   '          } else {\r\n' \
   '            trks[t].style.display = "none";\r\n' \
   '            tname.style.display = "none";\r\n' \
