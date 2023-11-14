@@ -16454,10 +16454,9 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
+  '        tracks_filter();\r\n' \
   '        cfilter_reset();\r\n' \
   '        tracks_sort();\r\n' \
-  '        tracks_filter();\r\n' \
-  '        tracks_cfilter();\r\n' \
   '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
