@@ -240,7 +240,7 @@ FR_STRINGS = {
     'jsortdate': 'Date',
     'jsortproximity': 'Proximité',
     'jfilterplaceholder': 'filtrer sur le nom contient...',
-    'jcfilter': 'afficher / masquer le panneau de filtre avancé&#13;&#10;+ctrl: réinitialiser le filtre avancé&#13;&#10;+shift: restaure le filtre avancé tel qu\'avant réinitialisation',
+    'jcfilter': 'afficher / masquer le panneau de filtre avancé&#13;&#10;+ctrl: réinitialiser le filtre avancé&#13;&#10;+shift: restaurer le filtre avancé tel qu\'avant réinitialisation',
     'jto': 'à',
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
