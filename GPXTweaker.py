@@ -16150,6 +16150,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_cfilter();\r\n' \
   '      }\r\n' \
   '      function cfilter_restore() {\r\n' \
+  '        if (! document.getElementById("cfilterform").dataset.backup) {return;}\r\n' \
   '        document.getElementById("cfilterform").dataset.backup.split("#").forEach((c, i) => document.getElementById("cfilterform").getElementsByTagName("input")[i].value = c);\r\n' \
   '        document.getElementById("cfilterform").dispatchEvent(new Event("change"));\r\n' \
   '      }\r\n' \
