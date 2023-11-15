@@ -17648,7 +17648,6 @@ class GPXTweakerWebInterfaceServer():
   '          magnify = parseInt(prev_state[10]);\r\n' \
   '          document.documentElement.style.setProperty("--magnify", prev_state[10]);\r\n' \
   '          document.getElementById("cfilterform").dataset.backup = prev_state[11];\r\n' \
-  '          cfilter_restore();\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
   '          magnify_inc();\r\n' \
@@ -17657,7 +17656,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_calc();\r\n' \
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
-  '        tracks_cfilter();\r\n' \
+  '        cfilter_restore();\r\n' \
   '        folders_select();\r\n' \
   '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
   '        document.getElementById("mediapreview").dataset.sl = "0";\r\n' \
