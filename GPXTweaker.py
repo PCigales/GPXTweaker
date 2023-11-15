@@ -4669,9 +4669,12 @@ class WGS84ReverseGeocoding():
 
 class WGS84Geocoding():
 
-  AS_IGN_GEOCODAGE = {'alias': 'IGN_GEOCODAGE', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'), ('features', '*', 'properties', 'category', '|'))}
-  AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=natural,poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
-  AS_OPENROUTE = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=venue{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
+  AS_IGN_GEOCODAGE_POI = {'alias': 'IGN_GEOCODAGE_POI', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'), ('features', '*', 'properties', 'city', '|'), ('features', '*', 'properties', 'category', '|'))}
+  AS_IGN_GEOCODAGE_ADDRESS = {'alias': 'IGN_GEOCODAGE_ADDRESS', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=address&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
+  AS_OSM_NOMINATIM_POI = {'alias': 'OSM_NOMINATIM_POI', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=natural,poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
+  AS_OSM_NOMINATIM_ADDRESS = {'alias': 'OSM_NOMINATIM_ADDRESS', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=address{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
+  AS_OPENROUTE_POI = {'alias': 'OPENROUTE_POI', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=venue{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
+  AS_OPENROUTE_ADDRESS = {'alias': 'OPENROUTE_ADDRESS', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=street{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
   AS_HERE = {'alias': 'HERE', 'source': 'https://geocode.search.hereapi.com/v1/discover?q={query}&limit=40{location}&apikey={key}', 'location': ('&at={lat},{lon}','&in=bbox:{lon1},{lat1},{lon2},{lat2}'), 'key': (('items', '*', 'position', 'lat'), ('items', '*', 'position', 'lng'), ('items', '*', 'address', 'label'), ('items', '*', 'resultType'), ('items', '*', 'categories', '|', 'name'))}
 
   @classmethod
@@ -15296,6 +15299,15 @@ class GPXTweakerWebInterfaceServer():
   '      input[type=radio]:checked+label[for^=place] {\r\n' \
   '        color:dodgerblue\r\n' \
   '      }\r\n' \
+  '      #plcont div {\r\n' \
+  '        width:100%;\r\n' \
+  '      }\r\n' \
+  '      #plcont div:first-of-type {\r\n' \
+  '        display:none;\r\n' \
+  '      }\r\n' \
+  '      #plcont div:hover {\r\n' \
+  '        background-color:green;\r\n' \
+  '      }\r\n' \
   '      form[id=cfilterform] span {\r\n' \
   '        display:block;\r\n' \
   '        line-height:2em;\r\n' \
@@ -15527,7 +15539,6 @@ class GPXTweakerWebInterfaceServer():
   '            if (scrollmode > 0) {scroll_to_track(document.getElementById(focused), scrollmode == 2)};\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        set_target();\r\n' \
   '        document.getElementById("places").reset();\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
@@ -17100,7 +17111,6 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          spanel.style.display = "none";\r\n' \
   '          document.getElementById("places").reset();\r\n' \
-  '          set_target();\r\n' \
   '          if (! other) {\r\n' \
   '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
@@ -17116,7 +17126,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          return null;\r\n' \
   '        }\r\n' \
-  '        let places = document.getElementById("places");\r\n' \
+  '        let places = document.getElementById("plcont");\r\n' \
   '        let pls = Array.from(places.getElementsByTagName("div"));\r\n' \
   '        for (let p=1; p<pls.length; p++) {places.removeChild(pls[p]);}\r\n' \
   '        set_target();\r\n' \
@@ -17130,7 +17140,6 @@ class GPXTweakerWebInterfaceServer():
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {continue;}\r\n' \
   '          let pl = places.firstElementChild.cloneNode(true);\r\n' \
   '          pls.push(pl);\r\n' \
-  '          pl.style.display = "block";\r\n' \
   '          let ps = p.toString();\r\n' \
   '          let elt = pl.firstElementChild;\r\n' \
   '          elt.id += ps;\r\n' \
@@ -17357,7 +17366,7 @@ class GPXTweakerWebInterfaceServer():
   '    </div>\r\n' \
   '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
   '    </div>\r\n' \
-  '    <div id="searchpanel" style="display:none" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '    <div id="searchpanel" style="display:none;user-select:none;" onclick="event.target.id==\'searchpanel\'?document.getElementById(\'places\').reset():null" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
   '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 24em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null">\r\n' \
   '      <datalist id="searchqueryhistory"></datalist>\r\n' \
@@ -17365,9 +17374,11 @@ class GPXTweakerWebInterfaceServer():
   '    </form>\r\n' \
   '    <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
   '    <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
-  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;" onsubmit="return false" onchange="target_place(event.target)">\r\n' \
-  '      <div style="display:none;">\r\n' \
-  '        <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
+  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;user-select:text" onsubmit="return false" onchange="target_place(event.target)" onreset="set_target()">\r\n' \
+  '      <div id="plcont" style="min-width:fit-content">\r\n' \
+  '        <div onclick="this.firstElementChild.click()">\r\n' \
+  '          <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
+  '        </div>\r\n' \
   '      </div>\r\n' \
   '    </form>\r\n' \
   '    </div>\r\n' \
