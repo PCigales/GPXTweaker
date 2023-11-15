@@ -7914,6 +7914,7 @@ class GPXTweakerWebInterfaceServer():
   '        --wsp:6em;\r\n' \
   '        --filter:none;\r\n' \
   '        --magnify:1;\r\n' \
+  '        --tprend:auto;\r\n' \
   '      }\r\n' \
   '      input:focus-visible, select:focus-visible, button:focus-visible {\r\n' \
   '        outline:rgb(200,250,240) solid 1px;\r\n' \
@@ -7966,6 +7967,7 @@ class GPXTweakerWebInterfaceServer():
   '        position:absolute;\r\n' \
   '        stroke-linecap:round;\r\n' \
   '        stroke-linejoin:round;\r\n' \
+  '        shape-rendering:var(--tprend);\r\n' \
   '      }\r\n' \
   '      svg[id^=track] text {\r\n' \
   '        stroke-width:calc(1px * var(--magnify));\r\n' \
@@ -17410,6 +17412,7 @@ class GPXTweakerWebInterfaceServer():
   '            hand = e.target;\r\n' \
   '            viewpane.style.cursor = "all-scroll";\r\n' \
   '            viewpane.setPointerCapture(pointer_e);\r\n' \
+  '            if (! navigator_firefox) {document.documentElement.style.setProperty("--tprend", "optimizeSpeed");};\r\n' \
   '            media_ex_visible = media_visible;\r\n' \
   '            hide_media("m");\r\n' \
   '          } else if (e.target.id == "gbarc") {\r\n' \
@@ -17441,6 +17444,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (hand.id == "view") {\r\n' \
   '            viewpane.style.cursor = "";\r\n' \
   '            viewpane.releasePointerCapture(pointer_e);\r\n' \
+  '            if (! navigator_firefox) {document.documentElement.style.setProperty("--tprend", "auto");};\r\n' \
   '          } else {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
