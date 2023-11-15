@@ -8140,8 +8140,9 @@ class GPXTweakerWebInterfaceServer():
   '      var scrollmode = 2;\r\n' \
   '      var scrollmode_ex = scrollmode;\r\n' \
   '      var focused = "";\r\n' \
+  '      var navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      var tiles_hold = null;\r\n' \
-  '      if (tholdsize > 0 && navigator.userAgent.toLowerCase().indexOf("firefox") < 0) {var tiles_hold = new Map();}\r\n' \
+  '      if (tholdsize > 0 && ! navigator_firefox) {var tiles_hold = new Map();}\r\n' \
   '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
   '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
   '      var xhr_ongoing = 0;\r\n' \
@@ -9926,9 +9927,14 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          if (window[adj] < 0.91) {window[adj] += 0.1;} else {return;}\r\n' \
   '        }\r\n' \
-  '        Array.from(document.getElementById("attenuate").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
+  '        let filt = document.getElementById("attenuate").firstElementChild;\r\n' \
+  '        Array.from(filt.firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
   '        if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
-  '          if ((document.documentElement.style.getPropertyValue("--filter") || "").length <= 4) {document.documentElement.style.setProperty("--filter", "url(#attenuate)");}\r\n' \
+  '          if (! navigator_firefox) {\r\n' \
+  '            let nid = "attenuate" + (parseInt(filt.id.substring(9)) + 1).toString();\r\n' \
+  '            filt.id = nid;\r\n' \
+  '            document.documentElement.style.setProperty("--filter", "url(#" + nid + ")");\r\n' \
+  '          } else if ((document.documentElement.style.getPropertyValue("--filter") || "").length <= 4) {document.documentElement.style.setProperty("--filter", "url(#attenuate0)");}\r\n' \
   '        } else {\r\n' \
   '          document.documentElement.style.setProperty("--filter", "none");\r\n' \
   '        }\r\n' \
@@ -10034,8 +10040,8 @@ class GPXTweakerWebInterfaceServer():
   '        xhrep.send();\r\n' \
   '      }\r\n'
   HTML_ATTENUATE_TEMPLATE = \
-  '            <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;top:0px;left:0px;">\r\n' \
-  '              <filter id="attenuate">\r\n' \
+  '            <svg id="attenuate" xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;top:0px;left:0px;">\r\n' \
+  '              <filter id="attenuate0">\r\n' \
   '                <feComponentTransfer color-interpolation-filters="sRGB">\r\n' \
   '                  <feFuncR type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
   '                  <feFuncG type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
@@ -10183,8 +10189,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (prev_state != null) {\r\n' \
   '          [adjustment_a, adjustment_e] = prev_state[5].split("-").map(Number);\r\n' \
   '          if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
-  '            Array.from(document.getElementById("attenuate").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
-  '            document.documentElement.style.setProperty("--filter", "url(#attenuate)");\r\n' \
+  '            Array.from(document.getElementById("attenuate0").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
+  '            document.documentElement.style.setProperty("--filter", "url(#attenuate0)");\r\n' \
   '          }\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
   '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {document.getElementById("eset").selectedIndex = eset;}\r\n' \
@@ -13060,7 +13066,7 @@ class GPXTweakerWebInterfaceServer():
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
   '      function page_load() {\r\n' \
-  '        if (navigator.userAgent.toLowerCase().indexOf("firefox") > 0) {\r\n' \
+  '        if (navigator_firefox) {\r\n' \
   '          if (! document.getElementById("waypoint0cont")) {\r\n' \
   '            document.getElementById("waypoints").style.overflowY = "auto";\r\n' \
   '            document.getElementById("waypoints").style.borderRight = "solid rgb(34,37,42) 17px";\r\n' \
@@ -17281,7 +17287,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
   '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
-  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
+  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '           </form>\r\n' \
   '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?cfilter_reset():(event.shiftKey?cfilter_restore():switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
@@ -17348,7 +17354,7 @@ class GPXTweakerWebInterfaceServer():
   '    </div>\r\n' \
   '    <div id="searchpanel" style="display:none" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
-  '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 24em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="navigator.userAgent.toLowerCase().indexOf(\'firefox\')<0?this.setAttribute(\'list\', \'\'):null">\r\n' \
+  '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 24em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null">\r\n' \
   '      <datalist id="searchqueryhistory"></datalist>\r\n' \
   '      <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
   '    </form>\r\n' \
