@@ -16126,6 +16126,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (cfps.display == "none") {\r\n' \
   '          document.getElementById("folderspanel").style.display = "none";\r\n' \
   '          cfps.display = "";\r\n' \
+  '          document.getElementById("cfdurmin").focus();\r\n' \
   '        } else {\r\n' \
   '          cfps.display = "none";\r\n' \
   '        }\r\n' \
@@ -16150,6 +16151,7 @@ class GPXTweakerWebInterfaceServer():
   '            input.value = Math.max(0, parseFloat(input.value) - step).toFixed(3).match(/^\\d*(?=.000)|^\\d*.\\d*?(?=0*$)/);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        input.focus();\r\n' \
   '        document.getElementById("cfilterform").dispatchEvent(new Event("change"));\r\n' \
   '      }\r\n' \
   '      function cfilter_reset() {\r\n' \
@@ -17093,6 +17095,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          spanel.style.display = "block";\r\n' \
+  '          document.getElementById("squery").select();\r\n' \
   '          rescale();\r\n' \
   '        } else {\r\n' \
   '          spanel.style.display = "none";\r\n' \
@@ -17306,12 +17309,12 @@ class GPXTweakerWebInterfaceServer():
   '                  <span>{#jsortproximity#} :&nbsp;</span>\r\n' \
   '                </div>\r\n' \
   '                <div style="display:inline-block;text-align:right;">\r\n' \
-  '                  <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span> \r\n' \
+  '                  <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfproxmax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span> \r\n' \
   '                  <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
   '                  <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
   '                  <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="date" id="cfdatemin" name="cfdatemin"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax"><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
+  '                  <span><input type="date" id="cfdatemin" name="cfdatemin" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfagmax\':\'cfdatemax\').focus();return false;}"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfdatemin\':\'cfproxmin\').focus();return false;}"><span>&nbsp;m</span></span> \r\n' \
+  '                  <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfdatemax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && ! event.shiftKey) {document.getElementById(\'cfdurmin\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
   '                </div>\r\n' \
   '              </form>\r\n' \
   '            </div>\r\n' \
@@ -17362,7 +17365,7 @@ class GPXTweakerWebInterfaceServer():
   '    </form>\r\n' \
   '    <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
   '    <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
-  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;);" onsubmit="return false" onchange="target_place(event.target)">\r\n' \
+  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;" onsubmit="return false" onchange="target_place(event.target)">\r\n' \
   '      <div style="display:none;">\r\n' \
   '        <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
   '      </div>\r\n' \
