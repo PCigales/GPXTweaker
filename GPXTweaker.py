@@ -15626,7 +15626,7 @@ class GPXTweakerWebInterfaceServer():
   '        let teahs = null;\r\n' \
   '        let nbtracks = tracks_pts.length;\r\n' \
   '        if (fpan == 0) {\r\n' \
-  '          tracks_xy_offsets = tracks_pts.reduce((p,c,i) => p.push(p[i] + c.reduce((p,c) => p + c.length, 0)) && p, [0]);\r\n' \
+  '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
   '          let nbpt = tracks_xy_offsets[nbtracks];\r\n' \
   '          tracks_xys = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
   '          tracks_pts_smoothed = null;\r\n' \
@@ -15639,7 +15639,7 @@ class GPXTweakerWebInterfaceServer():
   '            lls = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
   '            teahs = new Float32Array(GPUStats.pad(nbpt) * 4);\r\n' \
   '          }\r\n' \
-  '          let ind = 0;\r\n' \
+  '          let cseg = gpucomp==0?tracks_xys:lls;\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
   '            tracks_stats.push([]);\r\n' \
@@ -15649,18 +15649,14 @@ class GPXTweakerWebInterfaceServer():
   '              if (nbp != 0) {\r\n' \
   '                if (gpucomp == 0) {\r\n' \
   '                  let tl = [htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top), htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left)];\r\n' \
-  '                  let g = [];\r\n' \
-  '                  seg.forEach((c) => {let [x, y] = WGS84toWebMercator(c[0], c[1]); g.push(x - tl[1], tl[0] - y)});\r\n' \
-  '                  tracks_xys.set(g, 2 * ind);\r\n' \
+  '                  seg.forEach((c, p) => {let [x, y] = WGS84toWebMercator(c[0], c[1]); cseg[2 * p] = x - tl[1]; cseg[2 * p + 1] = tl[0] - y;});\r\n' \
   '                } else {\r\n' \
   '                  starts.push(starts[starts.length - 1] + nbp);\r\n' \
   '                  let tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top));\r\n' \
   '                  tls.push(tl);\r\n' \
-  '                  let g = [];\r\n' \
-  '                  seg.forEach((c) => g.push(tl[0] - c[0], c[1] - tl[1]));\r\n' \
-  '                  lls.set(g, 2 * ind);\r\n' \
+  '                  seg.forEach((c, p) => {cseg[2 * p] = tl[0] - c[0]; cseg[2 * p + 1] = c[1] - tl[1];});\r\n' \
   '                }\r\n' \
-  '                ind += nbp;\r\n' \
+  '                  cseg = cseg.subarray(2 * nbp);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -15682,8 +15678,7 @@ class GPXTweakerWebInterfaceServer():
   '          tracks_pts_smoothed = [];\r\n' \
   '          smoothed_ch = true;\r\n' \
   '          if (gpucomp == 0) {\r\n' \
-  '            let ind = 0;\r\n' \
-  '            for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
   '              let segs = tracks_pts[t];\r\n' \
   '              let nbsegs = segs.length;\r\n' \
   '              let track_pts_smoothed = [];\r\n' \
@@ -15692,13 +15687,11 @@ class GPXTweakerWebInterfaceServer():
   '              for (const seg of segs) {\r\n' \
   '                let nbp = seg.length;\r\n' \
   '                if (nbp != 0) {\r\n' \
-  '                  let nind = ind + nbp;\r\n' \
   '                  let seg_pts_smoothed = [];\r\n' \
   '                  track_pts_smoothed.push(seg_pts_smoothed);\r\n' \
-  '                  for (let p=ind; p<nind; p++) {\r\n' \
-  '                    seg_pts_smoothed.push(WebMercatortoWGS84(tracks_xys_smoothed[2 * p] + tl[1], tl[0] - tracks_xys_smoothed[2 * p + 1]));\r\n' \
+  '                  for (let nind=ind+2*nbp; ind<nind; ind+=2) {\r\n' \
+  '                    seg_pts_smoothed.push(WebMercatortoWGS84(tracks_xys_smoothed[ind] + tl[1], tl[0] - tracks_xys_smoothed[ind + 1]));\r\n' \
   '                  }\r\n' \
-  '                  ind = nind;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -15709,16 +15702,13 @@ class GPXTweakerWebInterfaceServer():
   '        if (! smoothed && tracks_pts_smoothed != null) {\r\n' \
   '          tracks_pts_smoothed = null;\r\n' \
   '          smoothed_ch = true;\r\n' \
-  '          if (gpucomp >=1) {gpustats.lls = gpustats.lls;}\r\n' \
+  '          if (gpucomp >= 1) {gpustats.lls = gpustats.lls;}\r\n' \
   '        }\r\n' \
   '        if (fpan <= 1 || gpucomp == 0) {\r\n' \
-  '          let ind = 0;\r\n' \
-  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '          for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
-  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '            for (let s=0; s<segs.length; ind+=segs[s].length, s++) {\r\n' \
   '              segment_calc(segs[s], (smoothed && gpucomp==0)?tracks_pts_smoothed[t][s]:null, smoothed_ch, s, tracks_stats[t], fpan, ind, teahs);\r\n' \
-  '              let nbp = segs[s].length;\r\n' \
-  '              ind += nbp;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -15737,12 +15727,11 @@ class GPXTweakerWebInterfaceServer():
   '          let gs = gpustats.gs;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let ss = gpustats.ss;\r\n' \
-  '          let i = 0;\r\n' \
-  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '          for (let t=0, i=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
   '            let stats = tracks_stats[t];\r\n' \
   '            for (let s=0; s<segs.length; s++) {\r\n' \
-  '              for (let p=0; p<segs[s].length; p++) {\r\n' \
+  '              for (let p=0; p<segs[s].length; p++, i++) {\r\n' \
   '                let stat = stats[s][p];\r\n' \
   '                if (fpan == 0 || smoothed_ch) {stat[1] = stats[s][p>0?p-1:0][1] + gs[i];}\r\n' \
   '                stat[7] = ss[i];\r\n' \
@@ -15758,21 +15747,18 @@ class GPXTweakerWebInterfaceServer():
   '                    stat[3] = stats[s][p - 1][3] + Math.max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
-  '                i++;\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan == 0 || smoothed_ch) {\r\n' \
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
-  '          let ind = 0;\r\n' \
-  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '          for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
   '            let d = "M0 0";\r\n' \
   '            for (let s=0; s<segs.length; s++) {\r\n' \
-  '              for (let p=0; p<segs[s].length; p++) {\r\n' \
-  '                d += (p==0?" M":" L") + xys[2 * ind].toFixed(1) + " " + xys[2 * ind + 1].toFixed(1);\r\n' \
-  '                ind++;\r\n' \
+  '              for (let p=0; p<segs[s].length; p++, ind+=2) {\r\n' \
+  '                d += (p==0?" M":" L") + xys[ind].toFixed(1) + " " + xys[ind + 1].toFixed(1);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
@@ -16150,7 +16136,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (! input.value) {\r\n' \
   '            input.value = "0";\r\n' \
   '          } else {\r\n' \
-  '            input.value = (parseFloat(input.value) + step).toFixed(3).match(/^\\d*(?=.000)|^\\d*.\\d*?(?=0*$)/);\r\n' \
+  '            input.value = (parseFloat(input.value) + step).toFixed(3).replace(/\\.?0+$/,"");\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          input = input.previousElementSibling;\r\n' \
@@ -16159,7 +16145,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (! input.value) {\r\n' \
   '            input.value = "0";\r\n' \
   '          } else {\r\n' \
-  '            input.value = Math.max(0, parseFloat(input.value) - step).toFixed(3).match(/^\\d*(?=.000)|^\\d*.\\d*?(?=0*$)/);\r\n' \
+  '            input.value = Math.max(0, parseFloat(input.value) - step).toFixed(3).replace(/\\.?0+$/,"");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        input.focus();\r\n' \
