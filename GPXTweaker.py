@@ -15981,7 +15981,6 @@ class GPXTweakerWebInterfaceServer():
   '      function tracks_filter() {\r\n' \
   '        let filt = norm_trackname(document.getElementById("tracksfilter").value);\r\n' \
   '        let trv = 0;\r\n' \
-  '        let ti=performance.now();\r\n' \
   '        for (let t=0; t<tracks_normnames.length; t++) {\r\n' \
   '          if (tracks_normnames[t].indexOf(filt) >= 0) {\r\n' \
   '            if (document.getElementById("track" + t.toString() + "folder").style.display == "none" || document.getElementById("track" + t.toString() + "content").style.display == "none") {\r\n' \
@@ -15996,7 +15995,6 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("track" + t.toString() + "name").style.display = "none";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        console.log (performance.now()-ti);\r\n' \
   '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
   '        if (focused) {\r\n' \
   '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
@@ -16078,7 +16076,7 @@ class GPXTweakerWebInterfaceServer():
   '        let val = input.value;\r\n' \
   '        if (! val) {return;}\r\n' \
   '        let hist = input.nextElementSibling;\r\n' \
-  '        let opts = hist.getElementsByTagName("option");\r\n' \
+  '        let opts = Array.from(hist.getElementsByTagName("option"));\r\n' \
   '        let opt = null;\r\n' \
   '        for (let o=0; o<opts.length; o++) {\r\n' \
   '          if (opts[o].value.toLowerCase() == val.toLowerCase()) {\r\n' \
@@ -16086,7 +16084,10 @@ class GPXTweakerWebInterfaceServer():
   '            break;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (opt == null) {opt = document.createElement("option");}\r\n' \
+  '        if (opt == null) {\r\n' \
+  '          opt = document.createElement("option");\r\n' \
+  '          if (opts.length >= 25) {hist.removeChild(opts.at(-1));}\r\n' \
+  '        }\r\n' \
   '        opt.value = val;\r\n' \
   '        hist.insertBefore(opt, hist.firstElementChild);\r\n' \
   '      }\r\n' \
@@ -16942,7 +16943,7 @@ class GPXTweakerWebInterfaceServer():
   '            let trck = document.getElementById("track" + trkid);\r\n' \
   '            if (displayed) {\r\n' \
   '              let trb = track_boundaries(trck);\r\n' \
-  '              if (trb == null || trb[0] > b[1] || trb[1] < b[0] || trb[2] > b[3] || trb[3] < b[2]) {console.log(t);continue;}\r\n' \
+  '              if (trb == null || trb[0] > b[1] || trb[1] < b[0] || trb[2] > b[3] || trb[3] < b[2]) {continue;}\r\n' \
   '            }\r\n' \
   '            let wpt = document.getElementById("waydots" + trkid);\r\n' \
   '            let tcs = getComputedStyle(trck);\r\n' \
