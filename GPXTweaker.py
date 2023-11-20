@@ -3172,10 +3172,10 @@ class WebMercatorMap(BaseMap):
   TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
   TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/standard.json', 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
-  TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
+  TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x-80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', 'x-80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TC_OSM_SHADED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
   TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -8736,7 +8736,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (tlayers.has(tset)) {\r\n' \
   '          let tlays = tlayers.get(tset);\r\n' \
   '          if (! opacities.has(tset)) {\r\n' \
-  '            opacities.set(tset, tlays.map((l)=>l[1].replace("x", "")));\r\n' \
+  '            opacities.set(tset, tlays.map((l)=>l[1].replace("x", "").replace("-", "")));\r\n' \
   '          }\r\n' \
   '          let opcts = opacities.get(tset);\r\n' \
   '          let tiset = document.getElementById("tset");\r\n' \
@@ -8750,7 +8750,7 @@ class GPXTweakerWebInterfaceServer():
   '            e.htmlFor = "opacityl" + ls;\r\n' \
   '            e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
   '            e.title = "{#jopacityreset#}";\r\n' \
-  '            e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1].replace("x", "");inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1].replace("x", "");inp.dispatchEvent(new Event("input"));};};\r\n' \
+  '            e.ondblclick = (e) => {if (e.shiftKey) {let inp=e.target.parentNode.getElementsByTagName("input");tlays.forEach((o, i) => {inp[i].value=tlays[i][1].replace("x", "").replace("-", "");inp[i].dispatchEvent(new Event("input"));})} else {let inp=e.target.nextElementSibling;inp.value=tlays[l][1].replace("x", "").replace("-", "");inp.dispatchEvent(new Event("input"));};};\r\n' \
   '            oform.appendChild(e);\r\n' \
   '            e = document.createElement("input");\r\n' \
   '            e.type = "range";\r\n' \
@@ -8769,7 +8769,7 @@ class GPXTweakerWebInterfaceServer():
   '            oform.appendChild(e);\r\n' \
   '            document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
   '            if (layers[l].ext != ".json") {\r\n' \
-  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + ";}", nrule++);\r\n' \
+  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + (tlays[l][1].indexOf("-")>=0?";filter:invert(1)":"") + ";}", nrule++);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        } else if (layers[0].ext != ".json") {\r\n' \
@@ -8794,6 +8794,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (tlays != null) {\r\n' \
   '            jdiv.style.opacity = "var(--opacity" + l.toString() + ")";\r\n' \
   '            if (tlays[l][1].indexOf("x")>=0) {jdiv.style.mixBlendMode = "multiply";}\r\n' \
+  '            if (tlays[l][1].indexOf("-")>=0) {jdiv.style.filter = "invert(1)";}\r\n' \
   '          }\r\n' \
   '          viewpane.insertBefore(jdiv, handle);\r\n' \
   '          try {\r\n' \
@@ -16871,6 +16872,9 @@ class GPXTweakerWebInterfaceServer():
   '              } else {\r\n' \
   '                ctx.globalCompositeOperation = "source-over";\r\n' \
   '              }\r\n' \
+  '              if (tlayers.get(tset)[l][1].indexOf("-") >= 0) {\r\n' \
+  '                ctx.filter = "invert(1)";\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '            if (text == ".json") {\r\n' \
@@ -16915,7 +16919,10 @@ class GPXTweakerWebInterfaceServer():
   '              await prom;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (tlayers.has(tset)) {ctx.globalAlpha = 1;}\r\n' \
+  '          if (tlayers.has(tset)) {\r\n' \
+  '            ctx.globalAlpha = 1;\r\n' \
+  '            ctx.filter = "";\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        let xs = new XMLSerializer;\r\n' \
   '        ctx.globalCompositeOperation = "source-over";\r\n' \
@@ -18270,7 +18277,7 @@ class GPXTweakerWebInterfaceServer():
         if scur == 'layers':
           if field == 'alias':
             try:
-              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1].get('alias') == layer[0]), ('x%.2f' if layer[1].startswith(('x', 'X')) else '%.2f') % max(0, min(1, (float(layer[1].lstrip('xX')[:-1]) / 100 if layer[1].endswith('%') else float(layer[1].lstrip('xX'))))), layer[2] if len(layer) >= 3 else {}] for layer in WebMercatorMap.TCAlias(value))
+              s[1].extend([next(i for i in range(len(self.TilesSets) - 1) if isinstance(self.TilesSets[i][1], dict) and self.TilesSets[i][1].get('alias') == layer[0]), (('x' if layer[1].startswith(('x', 'X')) else '') + ('-' if layer[1].startswith(('-', 'x-', 'X-')) else '') + '%.2f') % max(0, min(1, (float(layer[1].lstrip('xX-')[:-1]) / 100 if layer[1].endswith('%') else float(layer[1].lstrip('xX-'))))), layer[2] if len(layer) >= 3 else {}] for layer in WebMercatorMap.TCAlias(value))
             except:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
@@ -18297,7 +18304,7 @@ class GPXTweakerWebInterfaceServer():
               return False
           elif field == 'opacity':
             try:
-              s[1][-1][1] = ('x%.2f' if value.startswith(('x', 'X')) else '%.2f') % max(0, min(1, (float(value[:-1].lstrip('xX')) / 100 if value.endswith('%') else float(value.ltrip('xX')))))
+              s[1][-1][1] = (('x' if value.startswith(('x', 'X')) else '') + ('-' if value.startswith(('-', 'x-', 'X-')) else '') + '%.2f') % max(0, min(1, (float(value[:-1].lstrip('xX-')) / 100 if value.endswith('%') else float(value.ltrip('xX-')))))
             except:
               pass
           elif field == 'substitution':
