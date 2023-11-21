@@ -3099,8 +3099,8 @@ class BaseMap(WGS84WebMercator):
       lock = threading.Lock()
       finished = threading.Event()
       tot = len(boxl)
-      box = iter(boxl)
       if tot:
+        box = iter(boxl)
         def retriever():
           nonlocal tot
           while True:
