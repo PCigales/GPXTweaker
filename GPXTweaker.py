@@ -48,6 +48,7 @@ FR_STRINGS = {
     '_id': 'Cache de tuiles',
     'init': 'initialisation (taille: %s, fils: %s)',
     'get': 'tuile (%s, %s) demandée',
+    'getp': 'tuile (%s, %s) demandée si présente',
     'cancel': 'abandon de la fourniture de la tuile (%s, %s)',
     'found': 'tuile (%s, %s) trouvée dans le cache',
     'del': 'réduction du cache',
@@ -443,6 +444,7 @@ EN_STRINGS = {
     '_id': 'Tiles cache',
     'init': 'initialization (size: %s, threads: %s)',
     'get': 'tile (%s, %s) requested',
+    'getp': 'tile (%s, %s) requested if present',
     'cancel': 'tile (%s, %s) providing cancelled',
     'found': 'tile (%s, %s) found in the cache',
     'del': 'reduction of the cache',
@@ -1827,6 +1829,27 @@ class TilesCache():
         del self.Buffer[next(iter(self.Buffer))]
         self.log(2, 'del')
 
+  def GetPresentTile(self, id_pos):
+    try:
+      rid, pos = id_pos
+      row, col = pos
+    except:
+      return False
+    self.log(2, 'getp', row, col)
+    with self.BLock:
+      if self.Id is None or self.Closed:
+        self.log(2, 'cancel', row, col)
+        return None
+      if (ptile := self.Buffer.pop((rid, pos), None)) is not None and (ptile[0] is not None or ptile[1] == self.Seq):
+        self[(rid, pos)] = ptile
+        self.log(2, 'found', row, col)
+        if isinstance((tile := ptile[0]), threading.Event):
+          return False
+        else:
+          return tile
+      else:
+        return False
+
   def Configure(self, rid, tile_generator_builder):
     if self.Closed or not rid:
       return False
@@ -3061,31 +3084,43 @@ class BaseMap(WGS84WebMercator):
         return False
       if minrow > maxrow or mincol > maxcol:
         return False
-      box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
+      boxl = []
+      t=time.time()
+      tot = 0
       for col in range(mincol, maxcol + 1):
-        tiles.append([None] * (maxrow + 1 - minrow))
+        ctiles = []
+        tiles.append(ctiles)
+        for row in range(minrow, maxrow + 1):
+          tile = tiles_cache.GetPresentTile((rid, (row, col)))
+          if tile is False:
+            boxl.append((row, col))
+            tot += 1
+            ctiles.append(None)
+          else:
+            ctiles.append(tile)
       lock = threading.Lock()
-      tot = (maxcol + 1 - mincol) * (maxrow +1 - minrow)
       finished = threading.Event()
-      def retriever():
-        nonlocal tot
-        while True:
-          try:
+      box = iter(boxl)
+      if tot:
+        def retriever():
+          nonlocal tot
+          while True:
+            try:
+              with lock:
+                row, col = next(box)
+              tiles[col - mincol][row - minrow] = tiles_cache[rid, (row, col)](30)
+            except StopIteration:
+              break
+            except:
+              tiles[col - mincol][row - minrow] = None
             with lock:
-              row, col = next(box)
-            tiles[col - mincol][row - minrow] = tiles_cache[rid, (row, col)](30)
-          except StopIteration:
-            break
-          except:
-            tiles[col - mincol][row - minrow] = None
-          with lock:
-            tot -= 1
-            if tot == 0:
-              finished.set()
-      retrievers = [threading.Thread(target=retriever, daemon=True) for t in range(tiles_cache.Threads)]
-      for retriever in retrievers:
-        retriever.start()
-      finished.wait()
+              tot -= 1
+              if tot == 0:
+                finished.set()
+        retrievers = [threading.Thread(target=retriever, daemon=True) for t in range(tiles_cache.Threads)]
+        for retriever in retrievers:
+          retriever.start()
+        finished.wait()
     else:
       progress = self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, memory_store=tiles, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, only_local=only_local, threads=threads)
       if not progress:
@@ -4116,7 +4151,6 @@ class ElevationTilesCache(TilesCache):
     if size is not None:
       super().__init__(size, threads, False)
       self.Weights = {}
-      self.Length = 0
       self.Buffer = ElevationTilesCache._dict()
       self.Buffer.init(self.Weights)
 
@@ -4331,7 +4365,7 @@ class WGS84Elevation(WGS84Map):
       _w = infos['width'] * 2
       _mw = mw * 2
       _mw_r = infos['height'] * _mw
-      _nd = struct.pack('>h', infos.get('nodata', 0)) * infos['width'] * infos['height']
+      _nd = struct.pack('>h', infos.get('nodata', 0)) * (infos['width'] + 1) * (infos['height'] + 1)
       _tiles = [[memoryview(tiles[c][r] or _nd) for r in _r_l] for c in _c_l]
       _l = [(l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height'])]
       for r in _r_l:
@@ -4344,11 +4378,11 @@ class WGS84Elevation(WGS84Map):
           if c < tw - 1:
             for _l_p, _l_0, _l_1 in _l:
               pos = _r + _l_p + _c
-              m[pos: pos + _w] = tiles[c][r][_l_0: _l_1]
+              m[pos: pos + _w] = _tiles[c][r][_l_0: _l_1]
           else:
             for _l_p, _l_0, _l_1 in _l:
               pos = _r + _l_p + _c
-              m[pos: pos + _w + 2] = tiles[c][r][_l_0: _l_1 + 2]
+              m[pos: pos + _w + 2] = _tiles[c][r][_l_0: _l_1 + 2]
     return m
 
   def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=10):
