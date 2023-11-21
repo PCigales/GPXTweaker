@@ -16178,6 +16178,10 @@ class GPXTweakerWebInterfaceServer():
   '        let frag = document.createDocumentFragment();\r\n' \
   '        for (let t of trks) {frag.appendChild(document.getElementById("track" + t.toString() + "cont"));}\r\n' \
   '        document.getElementById("tracksform").appendChild(frag);\r\n' \
+  '        if (focused) {\r\n' \
+  '          document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '          document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function switch_sortorder() {\r\n' \
   '        let g = document.getElementById("sortup").style.display;\r\n' \
