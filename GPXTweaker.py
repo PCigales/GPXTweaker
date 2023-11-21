@@ -51,6 +51,7 @@ FR_STRINGS = {
     'getp': 'tuile (%s, %s) demandée si présente',
     'cancel': 'abandon de la fourniture de la tuile (%s, %s)',
     'found': 'tuile (%s, %s) trouvée dans le cache',
+    'nfoundp': 'tuile (%s, %s) absente du cache',
     'del': 'réduction du cache',
     'add': 'ajout de la tuile (%s, %s) dans le cache portant sa longueur à %s',
     'error': 'échec du chargement de la tuile (%s, %s)',
@@ -447,6 +448,7 @@ EN_STRINGS = {
     'getp': 'tile (%s, %s) requested if present',
     'cancel': 'tile (%s, %s) providing cancelled',
     'found': 'tile (%s, %s) found in the cache',
+    'nfoundp': 'tile (%s, %s) missing from the cache',
     'del': 'reduction of the cache',
     'add': 'addition of the tile (%s, %s) to the cache bringing its length to %s',
     'error': 'failure of tile (%s, %s) loading',
@@ -1839,16 +1841,14 @@ class TilesCache():
     with self.BLock:
       if self.Id is None or self.Closed:
         self.log(2, 'cancel', row, col)
-        return None
+        return False
       if (ptile := self.Buffer.pop((rid, pos), None)) is not None and (ptile[0] is not None or ptile[1] == self.Seq):
         self[(rid, pos)] = ptile
-        self.log(2, 'found', row, col)
-        if isinstance((tile := ptile[0]), threading.Event):
-          return False
-        else:
+        if not isinstance((tile := ptile[0]), threading.Event):
+          self.log(2, 'found', row, col)
           return tile
-      else:
-        return False
+      self.log(2, 'nfoundp', row, col)
+      return False
 
   def Configure(self, rid, tile_generator_builder):
     if self.Closed or not rid:
@@ -3086,7 +3086,6 @@ class BaseMap(WGS84WebMercator):
         return False
       boxl = []
       t=time.time()
-      tot = 0
       for col in range(mincol, maxcol + 1):
         ctiles = []
         tiles.append(ctiles)
@@ -3094,12 +3093,12 @@ class BaseMap(WGS84WebMercator):
           tile = tiles_cache.GetPresentTile((rid, (row, col)))
           if tile is False:
             boxl.append((row, col))
-            tot += 1
             ctiles.append(None)
           else:
             ctiles.append(tile)
       lock = threading.Lock()
       finished = threading.Event()
+      tot = len(boxl)
       box = iter(boxl)
       if tot:
         def retriever():
