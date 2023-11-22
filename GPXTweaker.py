@@ -59,7 +59,7 @@ FR_STRINGS = {
     'configure': 'configuration (jeu de tuile: %s, matrice: %s)',
     'ifound': 'informations trouvées dans le cache (jeu de tuiles: %s, matrice: %s)',
     'fail': 'échec de la configuration (jeu de tuile: %s, matrice: %s)',
-    'cancel': 'annulation de la configuration (jeu de tuile: %s, matrice: %s)',
+    'cancelled': 'annulation de la configuration (jeu de tuile: %s, matrice: %s)',
     'close': 'fermeture'
   },
   'map': {
@@ -458,6 +458,7 @@ EN_STRINGS = {
     'configure': 'configuration (tiles set: %s, matrix: %s)',
     'ifound': 'informations found in cache (tiles set: %s, matrix: %s)',
     'fail': 'failure of configuration (tiles set: %s, matrix: %s)',
+    'cancelled': 'cancelling of configuration (jeu de tuile: %s, matrice: %s)',
     'close': 'shutdown'
   },
   'map': {
@@ -1855,7 +1856,7 @@ class TilesCache():
       return False
 
   def Configure(self, rid, tile_generator_builder):
-    if self.Closed or not rid:
+    if self.Closed or self.Cancel or not rid:
       return False
     self.log(1, 'configure', *rid)
     pconnections = [[None] for i in range(self.Threads)]
@@ -1913,7 +1914,7 @@ class TilesCache():
         self.Infos = None
         self.GAvailable = []
         if rid[0] != -1:
-          self.log(0, 'cancel' if self.Cancel else 'fail', *rid)
+          self.log(0, 'cancelled' if self.Cancel else 'fail', *rid)
         return False
       finally:
         with self.BLock:
@@ -2169,7 +2170,7 @@ class TilesMixCache(TilesCache):
       self.Infos = {}
       self.Generators = {}
       self.GAvailable = {}
-      self.log(0, 'cancel' if self.Cancel else 'fail', *rid)
+      self.log(0, 'cancelled' if self.Cancel else 'fail', *rid)
       return False
     finally:
       with self.BLock:
