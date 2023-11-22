@@ -265,7 +265,7 @@ FR_STRINGS = {
     'jexptset': 'sélectionner le jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations&#13;&#10;+ctrl: sélection du service de cartographie en ligne&#13;&#10;en mode superposition de jeux de tuiles, clic droit: afficher / masquer les contrôles de transparence de couche&#13;&#10;alt + clic droit: afficher la légende si disponible',
     'jexpeset': 'sélectionner le fournisseur d\'élévations&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+ctrl: sélection du service de cartographie en ligne',
     'jexpiset': 'sélectionner le service de cartographie en ligne&#13;&#10;+alt: sélection du jeu de tuiles&#13;&#10;+shift: sélection du fournisseur d\'élévations',
-    'jctset': '+alt: annuler la demande de changement de jeu de tuiles',
+    'jctset': '+alt: stopper la configuration du jeu de tuiles',
     'jminus': 'dézoomer&#13;&#10;+ctrl: atténuer&#13;&#10;+shift: éclaircir',
     'jexpminus': 'dézoomer&#13;&#10;+ctrl: atténuer&#13;&#10;+shift: éclaircir&#13;&#10;+alt: affiner',
     'jlock': 'verrouiller / déverrouiller le jeu de tuiles',
@@ -664,7 +664,7 @@ EN_STRINGS = {
     'jexptset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the online mapping service&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency&#13;&#10;alt + right click: display the legend if available',
     'jexpeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the online mapping service',
     'jexpiset': 'select the online mapping service&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
-    'jctset': '+alt: cancel the request of tileset change',
+    'jctset': '+alt: stop the configuration of the tileset',
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+shift: lighten',
     'jexpminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+shift: lighten&#13;&#10;+alt: thin',
     'jlock': 'lock / unlock the set of tiles',
@@ -1893,7 +1893,7 @@ class TilesCache():
         while th.is_alive():
           if self.Closed or self.Cancel:
             raise
-          th.join(1)
+          th.join(0.5)
         if not gens:
           raise
         if self.Threads == 1:
@@ -1914,7 +1914,7 @@ class TilesCache():
         self.Infos = None
         self.GAvailable = []
         if rid[0] != -1:
-          self.log(0, 'cancelled' if self.Cancel else 'fail', *rid)
+          self.log(0, 'cancelled' if self.Cancel or self.Closed else 'fail', *rid)
         return False
       finally:
         with self.BLock:
@@ -2148,7 +2148,7 @@ class TilesMixCache(TilesCache):
         while t.is_alive():
           if self.Closed or self.Cancel:
             raise
-          t.join(1)
+          t.join(0.5)
       if [] in gens.values():
         raise
       for rid in rids:
@@ -2170,7 +2170,7 @@ class TilesMixCache(TilesCache):
       self.Infos = {}
       self.Generators = {}
       self.GAvailable = {}
-      self.log(0, 'cancelled' if self.Cancel else 'fail', *rid)
+      self.log(0, 'cancelled' if self.Cancel or self.Closed else 'fail', *rid)
       return False
     finally:
       with self.BLock:
