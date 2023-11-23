@@ -13972,13 +13972,12 @@ class GPXTweakerWebInterfaceServer():
   '          uniform float zfactmax;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
-  '          uniform vec3 ldirection;\r\n' \
   '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec2 pcoord;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
-  '          out float cinc;\r\n' \
+  '          out vec3 pnormal;\r\n' \
   '          out float isov;\r\n' \
   '          void main() {\r\n' \
   '            float nz = zfactmax * (tvposition.z + 1.0) - 1.0;\r\n' \
@@ -13986,7 +13985,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = (tvposition.xy + 1.0) / 2.0;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * nz + 0.5, 0.7) : 0.7;\r\n' \
   '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode >= 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
+  '            pnormal = tvnormal;\r\n' \
   '            isov = pmode == 0 ? pcoord.y * 100.0 : (1.0 + nz) * 25.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -13996,19 +13995,18 @@ class GPXTweakerWebInterfaceServer():
   '          uniform float zfactmax;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
-  '          uniform vec3 ldirection;\r\n' \
   '          uniform int dmode;\r\n' \
   '          uniform vec4 mpos;\r\n' \
   '          out vec4 pcoord;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
-  '          out float cinc;\r\n' \
+  '          out vec3 pnormal;\r\n' \
   '          void main() {\r\n' \
   '            gl_Position = vmatrix * tvposition;\r\n' \
   '            pcoord = vec4(vec2(0.5), mpos.st) * vec4(tvposition.xy, tvposition.xy) + vec4(vec2(0.5), mpos.pq);\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
   '            lposition = dmode >= 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode >= 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
+  '            pnormal = tvnormal;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_lshader_s = `#version 300 es\r\n' \
@@ -14041,13 +14039,15 @@ class GPXTweakerWebInterfaceServer():
   '          in vec2 pcoord;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
-  '          in float cinc;\r\n' \
+  '          in vec3 pnormal;\r\n' \
   '          in float isov;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
+  '            float cinc = dmode >= 2 ? dot(normalize(pnormal), ldirection) : 0.0;\r\n' \
   '            float color = fract(isov) <= 0.15 ? 0.0 : 1.0;\r\n' \
   '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
@@ -14062,13 +14062,15 @@ class GPXTweakerWebInterfaceServer():
   '          in vec4 pcoord;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
-  '          in float cinc;\r\n' \
+  '          in vec3 pnormal;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
   '          uniform sampler2D mtex;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
+  '            float cinc = dmode >= 2 ? dot(normalize(pnormal), ldirection) : 0.0;\r\n' \
   '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * abs(cinc))) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : dmode == 2 ? mix(0.7 + 0.3 * clamp(mix(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8, 0.0, 1.0), 0.3, gl_FrontFacing) : ((cinc <= 0.0) ^^ gl_FrontFacing) ? 0.2 : mix(0.2 , 0.2 + 0.8 * abs(cinc), texture(dtex, pos));\r\n' \
   '            pcolor = gl_FrontFacing ? vec4(pdim * vec3(0.47, 0.42, 0.35), 1) : mix(texture(mtex, pcoord.pq) * vec4(vec3(pdim), 1.0), vec4(pdim, 0, 0, 1), texture(trtex, pcoord.st).r);\r\n' \
@@ -14614,14 +14616,13 @@ class GPXTweakerWebInterfaceServer():
   '          uniform float radius;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
-  '          uniform vec3 ldirection;\r\n' \
   '          uniform int pmode;\r\n' \
   '          uniform int dmode;\r\n' \
   '          uniform vec4 trpos;\r\n' \
   '          out vec2 pcoord;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
-  '          out float cinc;\r\n' \
+  '          out vec3 pnormal;\r\n' \
   '          out float isov;\r\n' \
   '          void main() {\r\n' \
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
@@ -14630,7 +14631,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = trpos.st * tvposition.xy + trpos.pq;\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 0.7;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
+  '            pnormal = tvnormal;\r\n' \
   '            isov = ((pmode == 0 ? tvposition.y : tvposition.z) + 1.0) * scale / 50.0;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
@@ -14642,14 +14643,13 @@ class GPXTweakerWebInterfaceServer():
   '          uniform float radius;\r\n' \
   '          uniform mat4 vmatrix;\r\n' \
   '          uniform mat4 lmatrix;\r\n' \
-  '          uniform vec3 ldirection;\r\n' \
   '          uniform int dmode;\r\n' \
   '          uniform vec4 trpos;\r\n' \
   '          uniform vec4 mpos;\r\n' \
   '          out vec4 pcoord;\r\n' \
   '          out float dim;\r\n' \
   '          out vec4 lposition;\r\n' \
-  '          out float cinc;\r\n' \
+  '          out vec3 pnormal;\r\n' \
   '          void main() {\r\n' \
   '            float zcor = - pow(distance(eposition, tvposition.xy) / radius, 2.0) / 2.0;\r\n' \
   '            gl_Position = vmatrix * (tvposition + vec4(0.0, 0.0, zcor * radius, 0.0));\r\n' \
@@ -14657,7 +14657,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcoord = vec4(trpos.st, mpos.st) * vec4(tvposition.xy, tvposition.xy) + vec4(trpos.pq, mpos.pq);\r\n' \
   '            dim = dmode == 1 ? pow(0.5 * zfactmax * (tvposition.z + 1.0), 0.7) : 1.0;\r\n' \
   '            lposition = dmode == 2 ? lmatrix * tvposition : vec4(vec3(0), 1);\r\n' \
-  '            cinc = dmode == 2 ? dot(tvnormal, ldirection) : 0.0;\r\n' \
+  '            pnormal = tvnormal;\r\n' \
   '          }\r\n' \
   '        `;\r\n' \
   '        let vertex_sshader_s = `#version 300 es\r\n' \
@@ -14696,13 +14696,15 @@ class GPXTweakerWebInterfaceServer():
   '          in vec2 pcoord;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
-  '          in float cinc;\r\n' \
+  '          in vec3 pnormal;\r\n' \
   '          in float isov;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
+  '            float cinc = dmode >= 2 ? dot(normalize(pnormal), ldirection) : 0.0;\r\n' \
   '            float color = fract(isov) <= 0.15 ? 0.0 : 1.0;\r\n' \
   '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, texture(dtex, pos));\r\n' \
@@ -14718,13 +14720,15 @@ class GPXTweakerWebInterfaceServer():
   '          in vec4 pcoord;\r\n' \
   '          in float dim;\r\n' \
   '          in vec4 lposition;\r\n' \
-  '          in float cinc;\r\n' \
+  '          in vec3 pnormal;\r\n' \
+  '          uniform vec3 ldirection;\r\n' \
   '          uniform sampler2D mtex;\r\n' \
   '          uniform sampler2D trtex;\r\n' \
   '          uniform sampler2DShadow dtex;\r\n' \
   '          uniform int dmode;\r\n' \
   '          out vec4 pcolor;\r\n' \
   '          void main() {\r\n' \
+  '            float cinc = dmode >= 2 ? dot(normalize(pnormal), ldirection) : 0.0;\r\n' \
   '            vec3 pos = (lposition.xyz / lposition.w + vec3(1.0, 1.0, 0.996 + 0.003 * cinc)) / 2.0;\r\n' \
   '            float pdim = dmode < 2 ? dim : cinc <= 0.0 ? 0.2 : mix(0.2 , 0.2 + 0.8 * cinc, texture(dtex, pos));\r\n' \
   '            pcolor = texture(trtex, pcoord.st).r < 0.3 ? texture(mtex, pcoord.pq) * vec4(vec3(pdim), 1.0) : vec4(1, 0, 0, 1);\r\n' \
