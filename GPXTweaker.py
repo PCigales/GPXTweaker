@@ -16367,7 +16367,6 @@ class GPXTweakerWebInterfaceServer():
   '                let pdiry = tracks_xys_smoothed[p + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
   '                let pdirl = Math.sqrt(pdirx ** 2 + pdiry ** 2);\r\n' \
   '                if (pdirl > 0) {\r\n' \
-  '                  let pmod = false;\r\n' \
   '                  pdirx /= pdirl;\r\n' \
   '                  pdiry /= pdirl;\r\n' \
   '                  let nsin = dirx * ndiry - diry * ndirx;\r\n' \
@@ -16386,12 +16385,10 @@ class GPXTweakerWebInterfaceServer():
   '                    }\r\n' \
   '                    tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * dirx;\r\n' \
   '                    tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * diry;\r\n' \
-  '                    pmod = true;\r\n' \
   '                  } else if (ncos > pcos) {\r\n' \
   '                    pdirl = Math.max(0, pdirl * (pdirx * ndirx + pdiry * ndiry));\r\n' \
   '                    tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * ndirx;\r\n' \
   '                    tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * ndiry;\r\n' \
-  '                    pmod = true;\r\n' \
   '                    dirx = ndirx;\r\n' \
   '                    diry = ndiry;\r\n' \
   '                  } else {\r\n' \
