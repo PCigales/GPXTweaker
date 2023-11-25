@@ -17751,7 +17751,7 @@ class GPXTweakerWebInterfaceServer():
   '      function load_dcb(t) {\r\n' \
   '        if (t.status != 200) {error_dcb();return;}\r\n' \
   '        tracks_pts = JSON.parse(t.response);\r\n' \
-  '        tracks_pts.forEach((c) => {c.forEach((c) => {c.forEach((c) => {if (c[2] == "") {c[2] = NaN}; if (c[3] == "") {c[3] = NaN}; c[4] = Date.parse(c[4])})})});\r\n' \
+  '        tracks_pts.forEach((c) => {c.forEach((c) => {c.forEach((c) => {if (c[2] === "") {c[2] = NaN}; if (c[3] === "") {c[3] = NaN}; c[4] = Date.parse(c[4])})})});\r\n' \
   '        page_load(true);\r\n' \
   '      }\r\n' \
   '      function page_load(fol=false) {\r\n' \
