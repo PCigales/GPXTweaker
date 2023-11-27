@@ -8289,7 +8289,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.trange = 60 / 2;\r\n' \
   '          this.spmax = 8 / 3.6;\r\n' \
   '          this.drange = 80 / 2;\r\n' \
-  '          this.slmax = 50 / 100;\r\n' \
+  '          this.slmax = 100 / 100;\r\n' \
   '          this.vxy = null;\r\n' \
   '          this.vg = null;\r\n' \
   '          this.vsss = null;\r\n' \
@@ -8771,6 +8771,538 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        get ss() {\r\n' \
   '          return this._ss;\r\n' \
+  '        }\r\n' \
+  '      }\r\n'
+  HTML_WEBGPUSTATS_TEMPLATE = \
+  '      class WGPUStats {\r\n' \
+  '        static get ws() {return 64;}\r\n' \
+  '        static get maxsbs() {return 1 << 27;}\r\n' \
+  '        constructor (mode="explorer") {\r\n' \
+  '          this.mode = mode;\r\n' \
+  '          this.adapter = null;\r\n' \
+  '          this.device = null;\r\n' \
+  '          this.lock = Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init();}));\r\n' \
+  '        }\r\n' \
+  '        init() {\r\n' \
+  '          this.chunks = [[0, 0]];\r\n' \
+  '          this.nbsegs = [];\r\n' \
+  '          this.nbpts = [];\r\n' \
+  '          this.segswc = [];\r\n' \
+  '          this.ptswc = [];\r\n' \
+  '          this.bstarts = [];\r\n' \
+  '          this.bsegs = [];\r\n' \
+  '          this.btrlats = [];\r\n' \
+  '          this.blls = [];\r\n' \
+  '          this.bxys = [];\r\n' \
+  '          this.bsxys = [];\r\n' \
+  '          this.bgdists = [];\r\n' \
+  '          this.bteahs = [];\r\n' \
+  '          this.beags = [];\r\n' \
+  '          this.bslsps = [];\r\n' \
+  '          this.bslopestdistspeeds = [];\r\n' \
+  '          this.mpos = this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> lls: array<vec2f>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> xys: array<vec2f>;\r\n' \
+  '            override ws: u32 = 64;\r\n' \
+  '            @compute @workgroup_size(ws) fn pos(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              let pt: u32 = p + starts[0];\r\n' \
+  '              var s: u32 = 0;\r\n' \
+  '              var s2: u32 = arrayLength(&starts) - 1;\r\n' \
+  '              if (pt >= starts[s2]) {return;};\r\n' \
+  '              var sm : u32 = (s + s2) >> 1;\r\n' \
+  '              while (sm > s) {\r\n' \
+  '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
+  '                sm = (s + s2) >> 1;\r\n' \
+  '              }\r\n' \
+  '              segs[p] = s;          \r\n' \
+  '              let ll = lls[p] * 0.00872664626;\r\n' \
+  '              let t: f32 = ll.x + pow(ll.x, 3.0) / 3.0;\r\n' \
+  '              let t2: f32 = t * (pow(trlats[s], 2.0) + 1.0) / (trlats[s] - t);\r\n' \
+  '              xys[p] = vec2f(ll.y * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bglpos = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ppos = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bgpos = [];\r\n' \
+  '          this.mtsmooth = this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(2) var<uniform> smdrange: f32;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> sxys: array<vec2f>;\r\n' \
+  '            override ws: u32 = 64;\r\n' \
+  '            @compute @workgroup_size(ws) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let s = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
+  '              let sdrange = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
+  '              let pmin: u32 = starts[s] - starts[0];\r\n' \
+  '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
+  '              var dir: vec2f;\r\n' \
+  '              var dirn: bool = true;\r\n' \
+  '              var pp: u32 = pmin;\r\n' \
+  '              for (var p:u32=pmin+1; p<pmax; p++) {\r\n' \
+  '                var ndir: vec2f = vec2f(0.0);\r\n' \
+  '                var dist: f32 = 0.0;\r\n' \
+  '                var pr: u32 = pp;\r\n' \
+  '                for (var pn:u32=p; pn<pmax; pn++) {\r\n' \
+  '                  dist += distance(sxys[pn], sxys[pr]);\r\n' \
+  '                  pr = pn;\r\n' \
+  '                  if (dist > sdrange) {break;};\r\n' \
+  '                  ndir += sxys[pn] - sxys[pp];\r\n' \
+  '                }\r\n' \
+  '                let ndirl: f32 = length(ndir);\r\n' \
+  '                if (ndirl > 0.0) {\r\n' \
+  '                  ndir /= ndirl;\r\n' \
+  '                  if (dirn) {\r\n' \
+  '                    dirn = false;\r\n' \
+  '                    dir = ndir;\r\n' \
+  '                  }\r\n' \
+  '                  var pdir: vec2f = sxys[p] - sxys[pp];\r\n' \
+  '                  var pdirl: f32 = length(pdir);\r\n' \
+  '                  if (pdirl > 0.0) {\r\n' \
+  '                    pdir /= pdirl;\r\n' \
+  '                    let nsin: f32 = determinant(mat2x2(dir, ndir));\r\n' \
+  '                    let ncos: f32 = dot(dir, ndir);\r\n' \
+  '                    let psin: f32 = determinant(mat2x2(dir, pdir));\r\n' \
+  '                    let pcos: f32 = dot(dir, pdir);\r\n' \
+  '                    if (nsin * psin < 0.0) {\r\n' \
+  '                      if (pcos < 0.0) {\r\n' \
+  '                        if (ncos < 0.0) {\r\n' \
+  '                          pdirl = min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                          dir = -dir;\r\n' \
+  '                        } else {\r\n' \
+  '                          pdirl = 0.0;\r\n' \
+  '                        }\r\n' \
+  '                      }\r\n' \
+  '                      sxys[p] = sxys[pp] + pdirl * dir;\r\n' \
+  '                    } else if (ncos > pcos) {\r\n' \
+  '                      pdirl = max(0.0, pdirl * dot(pdir, ndir));\r\n' \
+  '                      sxys[p] = sxys[pp] + pdirl * ndir;\r\n' \
+  '                      dir = ndir;\r\n' \
+  '                    } else {\r\n' \
+  '                      dir = pdir;\r\n' \
+  '                    }\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                pp = p;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bgltsmooth = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ptsmooth = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bsmdrange = this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgtsmooth = [];\r\n' \
+  '          this.mgdist = this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
+  '            override ws: u32 = 64;\r\n' \
+  '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let sxye: vec2f = xys[p];\r\n' \
+  '              let xys: vec2f = select(xys[p - 1], sxye, p == starts[segs[p]]);\r\n' \
+  '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, sxye.y) / 6378137.0);\r\n' \
+  '              let c: vec2f = 1.0 / (e + 1.0 / e);\r\n' \
+  '              gdists[p] = distance(xys, sxye) * (c.x + c.y);\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bglgdist = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bggdist = [];\r\n' \
+  '          this.bgsgdist = [];\r\n' \
+  '          this.meagain = this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
+  '            @group(0) @binding(2) var<uniform> eagainf: vec2f;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> eags: array<array<f32,2>>;\r\n' \
+  '            override ws: u32 = 64;\r\n' \
+  '            @compute @workgroup_size(ws) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let s = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
+  '              let eaf: f32 = eagainf[id.z] ;\r\n' \
+  '              let pmin: u32 = starts[s] - starts[0];\r\n' \
+  '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
+  '              var eap: f32 = teahs[pmin][id.z + 1];\r\n' \
+  '              var ear: f32 = eap;\r\n' \
+  '              var eab: f32 = eap;\r\n' \
+  '              var eag: i32 = 0;\r\n' \
+  '              var eaic: i32 = -1;\r\n' \
+  '              var eagp: f32 = 0.0;\r\n' \
+  '              for (var p:u32=pmin; p<pmax; p++) {\r\n' \
+  '                let ea: f32 = teahs[p][id.z + 1];\r\n' \
+  '                eags[p][id.z] = eagp + max(0.0, ea - eab);\r\n' \
+  '                eagp = eags[p][id.z];\r\n' \
+  '                if (ea >= ear && eag > 0) {\r\n' \
+  '                  ear = ea;\r\n' \
+  '                  eab = ea;\r\n' \
+  '                } else if (ea > ear + eaf) {\r\n' \
+  '                  ear = ea;\r\n' \
+  '                  eab = ea;\r\n' \
+  '                  eag = 1;\r\n' \
+  '                  eaic = -1;\r\n' \
+  '                } else if ((ea <= ear && eag < 0) || ea < ear - eaf) {\r\n' \
+  '                  if (eaic >= 0) {\r\n' \
+  '                    eagp = eags[eaic][id.z];\r\n' \
+  '                    for (var pi:u32=u32(eaic)+1; pi<=p; pi++) {\r\n' \
+  '                      eags[pi][id.z] = eagp;\r\n' \
+  '                    }\r\n' \
+  '                    eaic = -1;\r\n' \
+  '                  }\r\n' \
+  '                  ear = ea;\r\n' \
+  '                  eab = ea;\r\n' \
+  '                  eag = -1;\r\n' \
+  '                } else if (ea > eab) {\r\n' \
+  '                  eab = ea;\r\n' \
+  '                  if (eaic < 0) {\r\n' \
+  '                    eaic = i32(p) - 1;\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (eaic >= 0) {\r\n' \
+  '                eagp = eags[eaic][id.z];\r\n' \
+  '                for (var pi:u32=u32(eaic)+1; pi<pmax; pi++) {\r\n' \
+  '                  eags[pi][id.z] = eagp;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgeagain = [];\r\n' \
+  '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
+  '            struct sfilters {sldrange: f32, slmax: f32, sptrange: f32, spmax: f32};\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> teahs: array<vec4f>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read> gdists: array<f32>;\r\n' \
+  '            @group(0) @binding(4) var<uniform> slopesspeedf: sfilters;\r\n' \
+  '            @group(0) @binding(5) var<storage, read_write> slsps: array<vec4f>;\r\n' \
+  '            @group(0) @binding(6) var<storage, read_write> slopestdistspeeds: array<vec4f>;\r\n' \
+  '            override ws: u32 = 64;\r\n' \
+  '            fn slope(d: f32, z: vec3f, m: vec3f) -> vec3f {\r\n' \
+  '              return select(z / d, m * sign(z), d == 0.0);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn slopes1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1];\r\n' \
+  '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
+  '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
+  '              var geahs: vec4f = vec4f(0.0, teahs[p].yzw);\r\n' \
+  '              var vsss: vec3f = vec3f(0.0);\r\n' \
+  '              var geahe: vec4f = geahs;\r\n' \
+  '              var geahp: vec4f = geahe;\r\n' \
+  '              var b: bool = false;\r\n' \
+  '              for (var pi:u32=p+1; pi<pmax; pi++) {\r\n' \
+  '                geahe = vec4f(gdists[pi] + geahe.x, teahs[pi].yzw);\r\n' \
+  '                if (geahe.x > drange && b) {break;}\r\n' \
+  '                if (geahe.x == 0.0) {continue;}\r\n' \
+  '                b = true;\r\n' \
+  '                vsss += slope(geahe.x, geahe.yzw - geahs.yzw, slmax) * (geahe.x - geahp.x);\r\n' \
+  '                geahp = geahe;\r\n' \
+  '              }\r\n' \
+  '              if (p < pmax - 1) {\r\n' \
+  '                vsss = (vsss + slope(geahp.x, geahp.yzw - geahs.yzw, slmax) * (drange - geahp.x)) / drange;\r\n' \
+  '              }\r\n' \
+  '              slsps[p] = vec4f(clamp(vsss, -slmax, slmax), 0.0);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn slopestdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmin: u32 = starts[segs[p]];\r\n' \
+  '              slopestdistspeeds[p] = slsps[p];\r\n' \
+  '              if (p == starts[segs[p] + 1] - 1) {return;};\r\n' \
+  '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
+  '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
+  '              var gsssc: vec4f = vec4f(0.0, slsps[p].xyz);\r\n' \
+  '              var gsssf: vec4f = gsssc;\r\n' \
+  '              var gsssn: vec4f = gsssc;\r\n' \
+  '              var vsss: vec3f = gsssc.yzw;\r\n' \
+  '              var c: f32;\r\n' \
+  '              var su: f32 = 0.0;\r\n' \
+  '              var csss: vec3f = vec3f(0.0);\r\n' \
+  '              if (gdists[p + 1] <= drange) {\r\n' \
+  '                for (var pi:i32=i32(p)-1; pi>=i32(pmin); pi--) {\r\n' \
+  '                  gsssf = vec4(gsssf.x - gdists[pi + 1], slsps[pi].xyz);\r\n' \
+  '                  if (gsssf.x < - drange) {break;}\r\n' \
+  '                  c = (gsssn.x - gsssf.x) / (1.0 - gsssf.x);\r\n' \
+  '                  csss += gsssf.yzw * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  gsssn = gsssf;\r\n' \
+  '                }\r\n' \
+  '                if (gsssn.x != 0.0) {\r\n' \
+  '                  slopestdistspeeds[p] = vec4f(clamp((vsss + csss / 2.0) / (1.0 + su / 2.0), -slmax, slmax), 0.0);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              slopestdistspeeds[p].z = gdists[p + 1] * sqrt(1.0 + pow(slopestdistspeeds[p].z, 2.0));\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn speed1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1];\r\n' \
+  '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
+  '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
+  '              var tds: vec2f = vec2f(teahs[p].x, 0.0);\r\n' \
+  '              var vs: f32 = 0.0;\r\n' \
+  '              var tde: vec2f = tds;\r\n' \
+  '              var tdp: vec2f = tde;\r\n' \
+  '              for (var pi:u32=p+1; pi<pmax; pi++) {\r\n' \
+  '                tde = vec2f(teahs[pi].x, slopestdistspeeds[pi - 1].z + tde.y);\r\n' \
+  '                if (tde.x > tds.x + trange) {break;}\r\n' \
+  '                if (tde.x == tds.x) {continue;}\r\n' \
+  '                vs += tde.y / (tde.x - tds.x) * (tde.x - tdp.x);\r\n' \
+  '                  tdp = tde;\r\n' \
+  '                }\r\n' \
+  '              if (tdp.x != tds.x) {\r\n' \
+  '                vs = (vs + tdp.y / (tdp.x - tds.x) * (trange + tds.x - tdp.x)) / trange;\r\n' \
+  '              }\r\n' \
+  '              slsps[p].w = min(vs, spmax);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn speed(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmin: u32 = starts[segs[p]];\r\n' \
+  '              slopestdistspeeds[p].w = slsps[p].w;\r\n' \
+  '              if (p == starts[segs[p] + 1] - 1) {return;};\r\n' \
+  '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
+  '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
+  '              var tsc: vec2f = vec2f(teahs[p].x, slsps[p].w);\r\n' \
+  '              var tsf: vec2f = tsc;\r\n' \
+  '              var tsn: vec2f = tsc;\r\n' \
+  '              var vs: f32 = tsc.y;\r\n' \
+  '              var c: f32;\r\n' \
+  '              var su: f32 = 0.0;\r\n' \
+  '              var cs: f32 = 0;\r\n' \
+  '              var b: bool = false;\r\n' \
+  '              if (teahs[p + 1].x - tsc.x <= trange) {\r\n' \
+  '                for (var pi:i32=i32(p)-1; pi>=i32(pmin); pi--) {\r\n' \
+  '                  tsf = vec2(teahs[pi].x, slsps[pi].w);\r\n' \
+  '                  if (tsf.x < tsc.x - trange) {break;}\r\n' \
+  '                  b = true;\r\n' \
+  '                  c = (tsn.x - tsf.x) / (1.0 + tsc.x - tsf.x);\r\n' \
+  '                  cs += tsf.y * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  tsn = tsf;\r\n' \
+  '                }\r\n' \
+  '                if (b) {\r\n' \
+  '                  if (tsn.x != tsc.x) {\r\n' \
+  '                    slopestdistspeeds[p].w = min((vs + cs / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
+  '                  }\r\n' \
+  '                } else if (p > pmin){\r\n' \
+  '                  slopestdistspeeds[p].w = min(slopestdistspeeds[p - 1].z / (tsc.x - tsf.x), spmax);\r\n' \
+  '                }\r\n' \
+  '              } else if (teahs[p].x - teahs[max(pmin, p - 1)].x <= trange) {\r\n' \
+  '                slopestdistspeeds[p].w = min(slopestdistspeeds[p].z / (teahs[p + 1].x - teahs[p].x), spmax);\r\n' \
+  '              } else {\r\n' \
+  '                slopestdistspeeds[p].w = min((slopestdistspeeds[p - 1].z + slopestdistspeeds[p].z)/ (teahs[p + 1].x - teahs[p - 1].x), spmax);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgslopestdistspeed = [];\r\n' \
+  '        }\r\n' \
+  '        set starts(a) {\r\n' \
+  '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
+  '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WGPUStats.maxsbs) / 16) | 0;\r\n' \
+  '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
+  '          const nbtsegs = _starts.length - 1;\r\n' \
+  '          const nbtpts = _starts[nbtsegs];\r\n' \
+  '          ["bstarts", "bsegs", "btrlats", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {this[bn].forEach((b) => b.destroy()); this[bn] = [];});\r\n' \
+  '          this.chunks = [[0, 0]];\r\n' \
+  '          this.nbsegs = [];\r\n' \
+  '          this.nbpts = [];\r\n' \
+  '          this.segswc = [];\r\n' \
+  '          this.ptswc = [];\r\n' \
+  '          this.bgpos= [];\r\n' \
+  '          this.bgtsmooth = [];\r\n' \
+  '          this.bggdist = [];\r\n' \
+  '          this.bgsgdist = [];\r\n' \
+  '          this.bgeagain = [];\r\n' \
+  '          this.bgslopestdistspeed = [];\r\n' \
+  '          if (nbtpts == 0) {return;}\r\n' \
+  '          let cofs = 0;\r\n' \
+  '          if (nbtpts > maxp) {\r\n' \
+  '            for (let s=1; s<=nbtsegs; s++) {\r\n' \
+  '              if (_starts[s] - cofs > maxp) {\r\n' \
+  '                this.chunks.push([s - 1, _starts[s - 1]]);\r\n' \
+  '                this.nbsegs.push(s - 1 - this.chunks.at(-2)[0]);\r\n' \
+  '                this.nbpts.push(_starts[s - 1] - cofs);\r\n' \
+  '                cofs = _starts[s - 1];\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          this.chunks.push([nbtsegs, nbtpts]);\r\n' \
+  '          this.nbsegs.push(nbtsegs - this.chunks.at(-2)[0]);\r\n' \
+  '          this.nbpts.push(_starts[nbtsegs] - cofs);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            let wcx = Math.ceil(this.nbsegs[c] / WGPUStats.ws);\r\n' \
+  '            let wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.segswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            wcx = Math.ceil(this.nbpts[c] / WGPUStats.ws);\r\n' \
+  '            wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.ptswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            this.bstarts.push(this.device.createBuffer({size: (this.nbsegs[c] + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.device.queue.writeBuffer(this.bstarts[c], 0, _starts.subarray(this.chunks[c][0], this.chunks[c + 1][0] + 1));\r\n' \
+  '            this.bsegs.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '            this.btrlats.push(this.device.createBuffer({size: this.nbsegs[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.blls.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.bxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.bgdists.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bteahs.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.beags.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bslsps.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '            this.bslopestdistspeeds.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
+  '            this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.bsmdrange},}, {binding: 3, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
+  '            this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '            this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '            this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bteahs[c]},}, {binding: 2, resource: {buffer: this.beagainf},}, {binding: 3, resource: {buffer: this.beags[c]},}]}));\r\n' \
+  '            this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set trlats(a) {\r\n' \
+  '          const _trlats = (a instanceof Float32Array) ? Float32Array.from({length: (a.length / 2) | 0}, (e, i) => Math.tan((a[2 * i] / 360 + 0.25) * Math.PI)) : Float32Array.from(a, (ll) => Math.tan((ll[0] / 360 + 0.25) * Math.PI));\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.btrlats[c], 0, _trlats.subarray(this.chunks[c][0], this.chunks[c + 1][0]));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set lls(a) {\r\n' \
+  '          const _lls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.blls[c], 0, _lls.subarray(this.chunks[c][1] * 2, this.chunks[c + 1][1] * 2));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set teahs(a) {\r\n' \
+  '          const _teahs = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.bteahs[c], 0, _teahs.subarray(this.chunks[c][1] * 4, this.chunks[c + 1][1] * 4));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set smdrange(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.bsmdrange, 0, new Float32Array([v]));\r\n' \
+  '        }\r\n' \
+  '        set eagainf(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.beagainf, 0, new Float32Array([v.egf, v.agf]));\r\n' \
+  '        }\r\n' \
+  '        set slopesspeedf(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.bslopesspeedf, 0, new Float32Array([v.sldrange, v.slmax, v.sptrange, v.spmax]));\r\n' \
+  '        }\r\n' \
+  '        calc(...tasks) {\r\n' \
+  '          tasks = new Set(tasks);\r\n' \
+  '          const encoder = this.device.createCommandEncoder();\r\n' \
+  '          let pass = null;\r\n' \
+  '          if (tasks.has("pos")) {\r\n' \
+  '            pass = encoder.beginComputePass();\r\n' \
+  '            pass.setPipeline(this.ppos);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgpos[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '            pass.end();\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("smooth")) {\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              encoder.copyBufferToBuffer(this.bxys[c], 0, this.bsxys[c], 0, this.bsxys[c].size);\r\n' \
+  '            }\r\n' \
+  '            pass = encoder.beginComputePass();\r\n' \
+  '            pass.setPipeline(this.ptsmooth);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.segswc[c]);\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            pass = encoder.beginComputePass();\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("gdist") || tasks.has("sgdist")) {\r\n' \
+  '            pass.setPipeline(this.pgdist);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, (tasks.has("sgdist") ? this.bgsgdist : this.bggdist)[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("eagain")) {\r\n' \
+  '            pass.setPipeline(this.peagain);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgeagain[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.segswc[c], 2);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("slopedist") || tasks.has("speed")) {\r\n' \
+  '            if (tasks.has("slopedist")) {\r\n' \
+  '              pass.setPipeline(this.pslopes1);\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '                pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '              }\r\n' \
+  '              pass.setPipeline(this.pslopestdist);\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '                pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            if (tasks.has("speed")) {\r\n' \
+  '              pass.setPipeline(this.pspeed1);\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '                pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '              }\r\n' \
+  '              pass.setPipeline(this.pspeed);\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '                pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          pass.end();\r\n' \
+  '          const commands = encoder.finish();\r\n' \
+  '          this.device.queue.submit([commands]);\r\n' \
+  '        }\r\n' \
+  '        _get_result(rn, ru) {\r\n' \
+  '          const b = this["b" + rn];\r\n' \
+  '          const mb = Array.from({length: this.chunks.length - 1}, (s, c) => this.device.createBuffer({size: b[c].size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST}));\r\n' \
+  '          const encoder = this.device.createCommandEncoder();\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            encoder.copyBufferToBuffer(b[c], 0, mb[c], 0, mb[c].size);\r\n' \
+  '          }\r\n' \
+  '          const commands = encoder.finish();\r\n' \
+  '          this.device.queue.submit([commands]);\r\n' \
+  '          const r = new Float32Array(this.chunks.at(-1)[1] * ru);\r\n' \
+  '          const prom = Promise.all(mb.map((m, c) => m.mapAsync(GPUMapMode.READ).then(() => {r.set(new Float32Array(m.getMappedRange()), this.chunks[c][1] * ru); m.unmap(); m.destroy()}))).then(() => r);\r\n' \
+  '          return prom\r\n' \
+  '        }\r\n' \
+  '        get xys() {\r\n' \
+  '          return this._get_result("xys", 2);\r\n' \
+  '        }\r\n' \
+  '        get sxys() {\r\n' \
+  '          return this._get_result("sxys", 2);\r\n' \
+  '        }\r\n' \
+  '        get gdists() {\r\n' \
+  '          return this._get_result("gdists", 1);\r\n' \
+  '        }\r\n' \
+  '        get eags() {\r\n' \
+  '          return this._get_result("eags", 2);\r\n' \
+  '        }\r\n' \
+  '        get slopestdistspeeds() {\r\n' \
+  '          return this._get_result("slopestdistspeeds", 4);\r\n' \
+  '        }\r\n' \
+  '        \r\n' \
+  '        fence(func, ...args) {\r\n' \
+  '          this.lock = this.lock.then(() => func(...args));\r\n' \
+  '          return this.lock;\r\n' \
   '        }\r\n' \
   '      }\r\n'
   HTML_MSG_TEMPLATE = \
@@ -10167,7 +10699,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_DFMTPANEL_TEMPLATE = \
   '            <div id="dfpanel">\r\n' \
   '              <span>{#jdfpanel#}</span>\r\n' \
-  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="smoothed?tracks_smooth(true):null;">\r\n' \
+  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="if(smoothed) {tracks_pts_smoothed=null;webgpu?wgpustats.fence(tracks_calc_wgpu,2):tracks_calc(2);}">\r\n' \
   '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
   '                <span id="dfdist" style="left:4.5em;">##SMRANGE##</span>\r\n' \
   '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="##SMRANGE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
@@ -13214,6 +13746,7 @@ class GPXTweakerWebInterfaceServer():
   '      var portmin = ##PORTMIN##;\r\n' \
   '      var portmax = ##PORTMAX##;\r\n' \
   '      var gpucomp = ##GPUCOMP##;\r\n' \
+  '      var webgpu = ##WEBGPU##;\r\n' \
   '      var sessionid = "##SESSIONID##";\r\n' \
   '      var mode = "##MODE##";\r\n' \
   '      var vminx = ##VMINX##;\r\n' \
@@ -15477,8 +16010,15 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_xy_offsets = null;\r\n' \
   '      var tracks_normnames = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
-  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
+  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + \
+  '      if (gpucomp > 0) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          var wgpustats = new WGPUStats("explorer");\r\n' \
+  '          wgpustats.fence(() => {if (wgpustats.device == null) {webgpu = false; window["gpustats"] = new GPUStats("explorer")};});\r\n' \
+  '        } else {\r\n' \
+  '          var gpustats = new GPUStats("explorer");\r\n' \
+  '        }\r\n' \
+  '      } else {webgpu = false;}\r\n' \
   '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
   '      var media_ex_visible = false;\r\n' \
@@ -15570,8 +16110,8 @@ class GPXTweakerWebInterfaceServer():
   '        hide_media("m");\r\n' \
   '        update_tiles();\r\n' \
   '        if (mvis) {show_media();}\r\n' \
-  '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
-  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {tracks_cfilter();}\r\n' \
+  '        if (document.getElementById("oset").selectedIndex == 8) {webgpu?wgpustats.fence(tracks_sort):tracks_sort();}\r\n' \
+  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {webgpu?wgpustats.fence(tracks_cfilter):tracks_cfilter();}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(tracks=null) {\r\n' \
   '        if (tracks_pts.length == 0) {return null;}\r\n' \
@@ -15732,7 +16272,28 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' + HTML_SEGCALC_4_TEMPLATE + \
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
+  '      function tracks_desc() {\r\n' \
+  '        let nbtracks = tracks_pts.length;\r\n' \
+  '        for (let t=0; t<nbtracks; t++) {\r\n' \
+  '          let track_props = tracks_props[t];\r\n' \
+  '          let dur_c = "--h--mn--s";\r\n' \
+  '          if (! isNaN(track_props[0])) {\r\n' \
+  '            let dur = Math.round(track_props[0]);\r\n' \
+  '            let dur_s = dur % 60;\r\n' \
+  '            let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '            let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '            dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '          }\r\n' \
+  '          let dist_c = isNaN(track_props[1]) ? "-km" : ((track_props[1] / 1000).toFixed(2) + "km");\r\n' \
+  '          let ele_c = isNaN(track_props[2]) ? "-m" : (track_props[2].toFixed(0) + "m");\r\n' \
+  '          let alt_c = isNaN(track_props[3]) ? "-m" : (track_props[3].toFixed(0) + "m");\r\n' \
+  '          document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
+  '        }\r\n' \
+  '        if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex) && (fpan == 1 || fpan == 2)) {tracks_sort();}\r\n' \
+  '        if ((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) {tracks_cfilter();}\r\n' \
+  '      }\r\n' \
   '      function tracks_calc(fpan=0) {\r\n' \
+  '        console.log(ti=performance.now());\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
@@ -15781,7 +16342,6 @@ class GPXTweakerWebInterfaceServer():
   '            gpustats.calc("pos");\r\n' \
   '            tracks_xys.set(gpustats.xys);\r\n' \
   '          }\r\n' \
-  '          if (smoothed) {tracks_smooth();}\r\n' \
   '        }\r\n' \
   '        if (tracks_stats.length == 0) {\r\n' \
   '          return;\r\n' \
@@ -15789,6 +16349,7 @@ class GPXTweakerWebInterfaceServer():
   '        let smoothed_ch = false;\r\n' \
   '        if (smoothed && tracks_pts_smoothed == null) {\r\n' \
   '          tracks_pts_smoothed = [];\r\n' \
+  '          tracks_smooth();\r\n' \
   '          smoothed_ch = true;\r\n' \
   '          if (gpucomp == 0) {\r\n' \
   '            for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
@@ -15937,24 +16498,274 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
-  '            if (! isNaN(tracks_props[t][0])) {\r\n' \
-  '              dur = Math.round(dur);\r\n' \
-  '              let dur_s = dur % 60;\r\n' \
-  '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '          }\r\n' \
+  '          tracks_desc();\r\n' \
+  '        }\r\n' \
+  '        console.log(performance.now()-ti);\r\n' \
+  '        refresh_graph();\r\n' \
+  '      }\r\n' \
+  '      async function tracks_calc_wgpu(fpan=0) {\r\n' \
+  '        console.log(ti=performance.now());\r\n' \
+  '        if (wgpustats.device == null || tracks_pts == null) {return;}\r\n' \
+  '        let starts = null;\r\n' \
+  '        let tls = null;\r\n' \
+  '        let lls = null;\r\n' \
+  '        let teahs = null;\r\n' \
+  '        const nbtracks = tracks_pts.length;\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
+  '          const nbpt = tracks_xy_offsets[nbtracks];\r\n' \
+  '          tracks_xys = new Float32Array(nbpt * 2);\r\n' \
+  '          tracks_pts_smoothed = null;\r\n' \
+  '          tracks_xys_smoothed = null;\r\n' \
+  '          tracks_stats = [];\r\n' \
+  '          tracks_props = [];\r\n' \
+  '          starts = [0]\r\n' \
+  '          tls = [];\r\n' \
+  '          lls = new Float32Array(nbpt * 2);\r\n' \
+  '          teahs = new Float32Array(nbpt * 4);\r\n' \
+  '          let clls = lls;\r\n' \
+  '          let cteahs = teahs;\r\n' \
+  '          const min = Math.min;\r\n' \
+  '          const max = Math.max;\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            let track_stats = [];\r\n' \
+  '            tracks_stats.push(track_stats);\r\n' \
+  '            let track_props = [NaN, NaN, NaN, NaN, NaN, [NaN, NaN]];\r\n' \
+  '            tracks_props.push(track_props);\r\n' \
+  '            let ts = null;\r\n' \
+  '            let te = null;\r\n' \
+  '            let st = true;\r\n' \
+  '            for (const seg of segs) {\r\n' \
+  '              const nbp = seg.length;\r\n' \
+  '              let seg_stats = [];\r\n' \
+  '              track_stats.push(seg_stats);\r\n' \
+  '              if (nbp == 0) {continue;}\r\n' \
+  '              if (st) {\r\n' \
+  '                st = false;\r\n' \
+  '                track_props[5][0] = seg[0][0];\r\n' \
+  '                track_props[5][1] = seg[0][1];\r\n' \
+  '              }\r\n' \
+  '              starts.push(starts[starts.length - 1] + nbp);\r\n' \
+  '              const tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top));\r\n' \
+  '              tls.push(tl);\r\n' \
+  '              seg.forEach((c, p) => {clls[2 * p] = tl[0] - c[0]; clls[2 * p + 1] = c[1] - tl[1];});\r\n' \
+  '              clls = clls.subarray(2 * nbp);\r\n' \
+  '              track_props[1] = 0;\r\n' \
+  '              let tb = null;\r\n' \
+  '              let ed = seg.findIndex((c) => ! isNaN(c[2]));\r\n' \
+  '              let ad = seg.findIndex((c) => ! isNaN(c[3]));\r\n' \
+  '              let hd = ed < 0 ? (ad < 0 ? 0 : seg[ad][3]): (ad < 0 ? seg[ed][2] : (ad <= ed ? seg[ad][3] : seg[ed][2]));\r\n' \
+  '              if (ed < 0) {\r\n' \
+  '                ed = 0;\r\n' \
+  '              } else {\r\n' \
+  '                ed = seg[ed][2];\r\n' \
+  '                track_props[2] = 0;\r\n' \
+  '              }\r\n' \
+  '              if (ad < 0) {\r\n' \
+  '                ad = 0;\r\n' \
+  '              } else {\r\n' \
+  '                ad = seg[ad][3];\r\n' \
+  '                track_props[3] = 0;\r\n' \
+  '              }\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                let pt = seg[p];\r\n' \
+  '                let t = pt[4];\r\n' \
+  '                if (isNaN(t)) {\r\n' \
+  '                  cteahs[4 * p] = p == 0 ? 0 : cteahs[4 * p - 4];\r\n' \
+  '                } else {\r\n' \
+  '                  if (tb == null) {tb = t;}\r\n' \
+  '                  cteahs[4 * p] = p == 0 ? 0 : max((t - tb) / 1000, cteahs[4 * p - 4]);\r\n' \
+  '                  ts = (ts == null) ? t : min(t, ts);\r\n' \
+  '                  te = (te == null) ? t : max(t, te);\r\n' \
+  '                }\r\n' \
+  '                let e = pt[2];\r\n' \
+  '                let a = pt[3];\r\n' \
+  '                cteahs[4 * p + 1] = isNaN(e) ? (p == 0 ? ed : cteahs[4 * p - 3]) : e;\r\n' \
+  '                cteahs[4 * p + 2] = isNaN(a) ? (p == 0 ? ad : cteahs[4 * p - 2]) : a;\r\n' \
+  '                cteahs[4 * p + 3] = isNaN(a) ? (isNaN(e) ? (p == 0 ? hd : cteahs[4 * p - 1]): e) : a;\r\n' \
+  '              }\r\n' \
+  '              if (tb != null) {track_props[0] = (isNaN(track_props[0]) ? 0 : track_props[0]) + cteahs[4 * nbp - 4];}\r\n' \
+  '              cteahs = cteahs.subarray(4 * nbp);\r\n' \
   '            }\r\n' \
-  '            let dist_c = "-km";\r\n' \
-  '            if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
-  '            let ele_c = "-m";\r\n' \
-  '            if (! noe) {ele_c = ele.toFixed(0) + "m";}\r\n' \
-  '            let alt_c = "-m";\r\n' \
-  '            if (! noa) {alt_c = alt.toFixed(0) + "m";}\r\n' \
-  '            document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
+  '            if (ts != null) {\r\n' \
+  '              track_props[4] = ts;\r\n' \
+  '              document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          wgpustats.starts = starts;\r\n' \
+  '          if (nbpt == 0) {return;}\r\n' \
+  '          wgpustats.trlats = tls;\r\n' \
+  '          wgpustats.lls = lls;\r\n' \
+  '          wgpustats.teahs = teahs;\r\n' \
+  '          if (smoothed) {\r\n' \
+  '            wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '            wgpustats.calc("pos", "smooth");\r\n' \
+  '            tracks_xys = await wgpustats.xys;\r\n' \
+  '            tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
+  '          } else {\r\n' \
+  '            wgpustats.calc("pos");\r\n' \
+  '            tracks_xys = await wgpustats.xys;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex) && (fpan == 1 || fpan == 2)) {tracks_sort();}\r\n' \
-  '        if (((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) && (fpan == 1 || fpan == 2)) {tracks_cfilter();}\r\n' \
+  '        if (tracks_stats.length == 0) {return;}\r\n' \
+  '        let smoothed_ch = false;\r\n' \
+  '        if (smoothed && tracks_pts_smoothed == null) {\r\n' \
+  '          tracks_pts_smoothed = [];\r\n' \
+  '          smoothed_ch = true;\r\n' \
+  '        }\r\n' \
+  '        if (! smoothed && tracks_pts_smoothed != null) {\r\n' \
+  '          tracks_pts_smoothed = null;\r\n' \
+  '          smoothed_ch = true;\r\n' \
+  '        }\r\n' \
+  '        if (wgpustats.chunks.length == 1) {return;}\r\n' \
+  '        let gdists = null;\r\n' \
+  '        let eags = null;\r\n' \
+  '        let slopestdistspeeds  = null;\r\n' \
+  '        if (fpan == 0 || smoothed_ch) {\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          if (fpan == 0) {\r\n' \
+  '            wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '            wgpustats.calc("eagain", (smoothed ? "sgdist" : "gdist"), "slopedist", "speed");\r\n' \
+  '          } else if (smoothed) {\r\n' \
+  '            wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '            wgpustats.calc("smooth", "sgdist", "slopedist", "speed");\r\n' \
+  '            tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
+  '          } else {\r\n' \
+  '            wgpustats.calc("gdist", "slopedist", "speed");\r\n' \
+  '          }\r\n' \
+  '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let d = "M0 0";\r\n' \
+  '            for (const seg of segs) {\r\n' \
+  '              const nbp = seg.length;\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                d += (p == 0 ? " M" : " L") + xys[2 * p].toFixed(1) + " " + xys[2 * p + 1].toFixed(1);\r\n' \
+  '              }\r\n' \
+  '              document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
+  '              xys = xys.subarray(2 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (fpan == 0) {eags = await wgpustats.eags;}\r\n' \
+  '          gdists = await wgpustats.gdists;\r\n' \
+  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '        } else if (fpan == 1) {\r\n' \
+  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          wgpustats.calc("eagain");\r\n' \
+  '          eags = await wgpustats.eags;\r\n' \
+  '        } else {\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          if (fpan == 2) {\r\n' \
+  '            wgpustats.calc("slopedist", "speed");\r\n' \
+  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '          } else {\r\n' \
+  '            wgpustats.calc("speed");\r\n' \
+  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let track_props = tracks_props[t];\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              let stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
+  '                stats.push(stat);\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[1])) {track_props[1] += stat[6];}\r\n' \
+  '              if (! isNaN(track_props[2])) {track_props[2] += stat[2];}\r\n' \
+  '              if (! isNaN(track_props[3])) {track_props[3] += stat[3];}\r\n' \
+  '              teahs = teahs.subarray(4 * nbp);\r\n' \
+  '              gdists = gdists.subarray(nbp);\r\n' \
+  '              eags = eags.subarray(2 * nbp);\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (fpan == 1) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let track_props = tracks_props[t];\r\n' \
+  '            if (! isNaN(track_props[2])) {track_props[2] = 0;}\r\n' \
+  '            if (! isNaN(track_props[3])) {track_props[3] = 0;}\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              let stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = stats[p];\r\n' \
+  '                stat[2] = eags[2 * p]\r\n' \
+  '                stat[3] = eags[2 * p + 1];\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[2])) {track_props[2] += stat[2];}\r\n' \
+  '              if (! isNaN(track_props[3])) {track_props[3] += stat[3];}\r\n' \
+  '              eags = eags.subarray(2 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (smoothed_ch) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let track_props = tracks_props[t];\r\n' \
+  '            if (! isNaN(track_props[1])) {track_props[1] = 0;}\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              let stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                let stat_ = stats[p];\r\n' \
+  '                stat_[1] = stat[1] + gdists[p];\r\n' \
+  '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
+  '                stat_[5] = slopestdistspeeds[4 * p + 1];\r\n' \
+  '                stat_[6] = (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2]));\r\n' \
+  '                stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '                stat = stat_;\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[1])) {track_props[1] += stat[6];}\r\n' \
+  '              gdists = gdists.subarray(nbp);\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (fpan == 2) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let track_props = tracks_props[t];\r\n' \
+  '            if (! isNaN(track_props[1])) {track_props[1] = 0;}\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              let stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                let stat_ = stats[p];\r\n' \
+  '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
+  '                stat_[5] = slopestdistspeeds[4 * p + 1];\r\n' \
+  '                stat_[6] = (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2]));\r\n' \
+  '                stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '                stat = stat_;\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[1])) {track_props[1] += stat[6];}\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            let segs = tracks_pts[t];\r\n' \
+  '            let track_props = tracks_props[t];\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              let stats = tracks_stats[t][s];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stats[p][7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '              }\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan != 3) {tracks_desc();}\r\n' \
+  '        console.log(performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
@@ -16235,7 +17046,7 @@ class GPXTweakerWebInterfaceServer():
   '        let g = document.getElementById("sortup").style.display;\r\n' \
   '        document.getElementById("sortup").style.display = document.getElementById("sortdown").style.display;\r\n' \
   '        document.getElementById("sortdown").style.display = g;\r\n' \
-  '        tracks_sort();\r\n' \
+  '        webgpu?wgpustats.fence(tracks_sort):tracks_sort();\r\n' \
   '      }\r\n' \
   '      function switch_cfilterpanel() {\r\n' \
   '        let cfps = document.getElementById("cfilterpanel").style;\r\n' \
@@ -16325,9 +17136,8 @@ class GPXTweakerWebInterfaceServer():
   '       }\r\n' \
   '       folders_select();\r\n' \
   '      }\r\n' \
-  '      function tracks_smooth(recalc=false) {\r\n' \
+  '      function tracks_smooth() {\r\n' \
   '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '        tracks_pts_smoothed = null;\r\n' \
   '        tracks_xys_smoothed = tracks_xys.slice();\r\n' \
   '        let ind = 0;\r\n' \
   '        for (let t=0; t<tracks_pts.length; t++) {\r\n' \
@@ -16402,7 +17212,6 @@ class GPXTweakerWebInterfaceServer():
   '            ind = nind;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (recalc) {tracks_calc(2);}\r\n' \
   '      }\r\n' \
   '      function switch_smooth() {\r\n' \
   '        if (smoothed) {\r\n' \
@@ -16411,9 +17220,9 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          smoothed = true;\r\n' \
   '          document.getElementById("swsm").innerHTML = "&divide;&divide;"\r\n' \
-  '          tracks_smooth();\r\n' \
+  '          tracks_pts_smoothed = null;\r\n' \
   '        }\r\n' \
-  '        tracks_calc(2);\r\n' \
+  '        return webgpu ? tracks_calc_wgpu(2) : tracks_calc(2);\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
@@ -17414,12 +18223,12 @@ class GPXTweakerWebInterfaceServer():
   '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '           </form>\r\n' \
-  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?cfilter_reset():(event.shiftKey?cfilter_restore():switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?(webgpu?wgpustats.fence(cfilter_reset):cfilter_reset()):(event.shiftKey?(webgpu?wgpustats.fence(cfilter_restore):cfilter_restore()):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
+  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="webgpu?wgpustats.fence(tracks_sort):tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="webgpu?wgpustats.fence(open_webmapping):open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():(webgpu?wgpustats.fence(switch_smooth):switch_smooth())">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';tracks_cfilter();" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
+  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';webgpu?wgpustats.fence(tracks_cfilter):tracks_cfilter();" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
   '                <div style="display:inline-block;padding-right:1em;">\r\n' \
   '                  <span>{#jsortduration#} :&nbsp;</span>\r\n' \
   '                  <span>{#jsortdistance#} :&nbsp;</span>\r\n' \
@@ -17444,7 +18253,7 @@ class GPXTweakerWebInterfaceServer():
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', '(function (fp) {webgpu?wgpustats.fence(tracks_calc_wgpu, fp):tracks_calc(fp)})') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -17741,28 +18550,21 @@ class GPXTweakerWebInterfaceServer():
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#"));\r\n' \
   '      }\r\n' \
-  '      function error_dcb() {\r\n' \
-  '        window.alert("{#jexpfail#}");\r\n' \
-  '        document.body.innerHTML = "";\r\n' \
-  '        document.head.innerHTML = "";\r\n' \
-  '        window.close();\r\n' \
-  '        throw "{#jexpfail#}";\r\n' \
-  '      }\r\n' \
-  '      function load_dcb(t) {\r\n' \
-  '        if (t.status != 200) {error_dcb();return;}\r\n' \
-  '        tracks_pts = JSON.parse(t.response);\r\n' \
+  '      async function data_load() {\r\n' \
+  '        tracks_pts = await fetch("/GPXExplorer/data").then((r) => r.ok ? r.json() : null, () => null);\r\n' \
+  '        if (tracks_pts == null) {\r\n' \
+  '          window.alert("{#jexpfail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jexpfail#}";\r\n' \
+  '          return false;\r\n' \
+  '        }\r\n' \
   '        tracks_pts.forEach((c) => {c.forEach((c) => {c.forEach((c) => {if (c[2] === "") {c[2] = NaN}; if (c[3] === "") {c[3] = NaN}; c[4] = Date.parse(c[4])})})});\r\n' \
-  '        page_load(true);\r\n' \
+  '        return true;\r\n' \
   '      }\r\n' \
-  '      function page_load(fol=false) {\r\n' \
-  '        if (! fol) {\r\n' \
-  '          let xhrd = new XMLHttpRequest();\r\n' \
-  '          xhrd.onerror = (e) => error_dcb(e.target);\r\n' \
-  '          xhrd.onload = (e) => load_dcb(e.target);\r\n' \
-  '          xhrd.open("GET", "/GPXExplorer/data");\r\n' \
-  '          xhrd.send();\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
+  '      async function page_load() {\r\n' \
+  '        if (! await (webgpu ? wgpustats.fence((lp) => lp, data_load()) : data_load())) {return;}\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
   '        if (prev_state != null) {\r\n' \
   '          dots_visible = prev_state[4] == "true";\r\n' \
   '        }\r\n' \
@@ -17797,10 +18599,17 @@ class GPXTweakerWebInterfaceServer():
   '          magnify_inc();\r\n' \
   '        }\r\n' \
   '        if (smoothed) {document.getElementById("swsm").innerHTML = "&divide;&divide;"};\r\n' \
-  '        tracks_calc();\r\n' \
-  '        tracks_sort();\r\n' \
-  '        tracks_filter();\r\n' \
-  '        cfilter_restore();\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpustats.fence(tracks_calc_wgpu);\r\n' \
+  '          wgpustats.fence(tracks_sort);\r\n' \
+  '          wgpustats.fence(tracks_filter);\r\n' \
+  '          wgpustats.fence(cfilter_restore);\r\n' \
+  '        } else {\r\n' \
+  '          tracks_calc();\r\n' \
+  '          tracks_sort();\r\n' \
+  '          tracks_filter();\r\n' \
+  '          cfilter_restore();\r\n' \
+  '        }\r\n' \
   '        folders_select();\r\n' \
   '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
   '        document.getElementById("mediapreview").dataset.sl = "0";\r\n' \
@@ -18157,6 +18966,8 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'statistics':
           if field == 'gpu_comp':
             self.GpuComp = 0 if value is None else value
+          elif field == 'prefer_webgpu':
+            self.PreferWebGpu = value
           elif field == 'ele_gain_threshold':
             if value is not None:
               self.EleGainThreshold = int(value)
@@ -18576,6 +19387,7 @@ class GPXTweakerWebInterfaceServer():
     self.MediaVideos = True
     self.MediaThumbSize = 64
     self.GpuComp = 0
+    self.PreferWebGpu = False
     self.EleGainThreshold = 10
     self.AltGainThreshold = 5
     self.SlopeRange = 80
@@ -19039,7 +19851,7 @@ class GPXTweakerWebInterfaceServer():
       return False
     if defx is None or defy is None:
       defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -19251,7 +20063,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
