@@ -204,6 +204,7 @@ FR_STRINGS = {
     '3dbuilt': 'page de visionnage 3D générée',
     'jsession': 'Une session est déjà active !',
     'jexpfail': 'Le chargement des données a échoué !',
+    'jwebgpuno': 'API WebGPU pas prise en charge par le navigateur, repli sur l\'API WebGL 2',
     'jserror': 'La sauvegarde a échoué: ',
     'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
     'jeconfirm': 'Remplacer toutes les données d\'élévation de la trace ?',
@@ -603,6 +604,7 @@ EN_STRINGS = {
     '3dbuilt': '3D viewer page generated',
     'jsession': 'A session is already active !',
     'jexpfail': 'The loading of the data has failed !',
+    'jwebgpuno': 'WebGPU API not supported by the browser, fallback on the WebGL 2 API',
     'jserror': 'The backup has failed: ',
     'jesconfirm': 'Replace all elevation data of the segment ?',
     'jeconfirm': 'Replace all elevation data of the track ?',
@@ -8777,13 +8779,14 @@ class GPXTweakerWebInterfaceServer():
   '      class WGPUStats {\r\n' \
   '        static get ws() {return 64;}\r\n' \
   '        static get maxsbs() {return 1 << 27;}\r\n' \
-  '        constructor (mode="explorer") {\r\n' \
+  '        constructor (mode) {\r\n' \
   '          this.mode = mode;\r\n' \
   '          this.adapter = null;\r\n' \
   '          this.device = null;\r\n' \
-  '          this.lock = Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init();}));\r\n' \
+  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init();}));\r\n' \
   '        }\r\n' \
   '        init() {\r\n' \
+  '          const twmode = this.mode == "tweaker";\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -8791,16 +8794,17 @@ class GPXTweakerWebInterfaceServer():
   '          this.ptswc = [];\r\n' \
   '          this.bstarts = [];\r\n' \
   '          this.bsegs = [];\r\n' \
-  '          this.btrlats = [];\r\n' \
-  '          this.blls = [];\r\n' \
-  '          this.bxys = [];\r\n' \
-  '          this.bsxys = [];\r\n' \
+  '          this.btrlats = twmode ? null : [];\r\n' \
+  '          this.bmmls = twmode ? [] : null;\r\n' \
+  '          this.blls = twmode ? null : [];\r\n' \
+  '          this.bxys = twmode ? null : [];\r\n' \
+  '          this.bsxys = twmode ? null : [];\r\n' \
   '          this.bgdists = [];\r\n' \
   '          this.bteahs = [];\r\n' \
   '          this.beags = [];\r\n' \
   '          this.bslsps = [];\r\n' \
   '          this.bslopestdistspeeds = [];\r\n' \
-  '          this.mpos = this.device.createShaderModule({code: `\r\n' \
+  '          this.mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> lls: array<vec2f>;\r\n' \
@@ -8818,17 +8822,17 @@ class GPXTweakerWebInterfaceServer():
   '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
   '                sm = (s + s2) >> 1;\r\n' \
   '              }\r\n' \
-  '              segs[p] = s;          \r\n' \
+  '              segs[p] = s;\r\n' \
   '              let ll = lls[p] * 0.00872664626;\r\n' \
   '              let t: f32 = ll.x + pow(ll.x, 3.0) / 3.0;\r\n' \
   '              let t2: f32 = t * (pow(trlats[s], 2.0) + 1.0) / (trlats[s] - t);\r\n' \
   '              xys[p] = vec2f(ll.y * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          this.bglpos = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ppos = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WGPUStats.ws},},});\r\n' \
-  '          this.bgpos = [];\r\n' \
-  '          this.mtsmooth = this.device.createShaderModule({code: `\r\n' \
+  '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bgpos = twmode ? null : [];\r\n' \
+  '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(2) var<uniform> smdrange: f32;\r\n' \
@@ -8891,11 +8895,34 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          this.bgltsmooth = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptsmooth = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WGPUStats.ws},},});\r\n' \
-  '          this.bsmdrange = this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
-  '          this.bgtsmooth = [];\r\n' \
-  '          this.mgdist = this.device.createShaderModule({code: `\r\n' \
+  '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgtsmooth = twmode ? null : [];\r\n' \
+  '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> mmls: array<vec3f>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read_write> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> gdists: array<f32>;\r\n' \
+  '            override ws: u32 = 64;\r\n' \
+  '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              let pt: u32 = p + starts[0];\r\n' \
+  '              var s: u32 = 0;\r\n' \
+  '              var s2: u32 = arrayLength(&starts) - 1;\r\n' \
+  '              if (pt >= starts[s2]) {return;};\r\n' \
+  '              var sm : u32 = (s + s2) >> 1;\r\n' \
+  '              while (sm > s) {\r\n' \
+  '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
+  '                sm = (s + s2) >> 1;\r\n' \
+  '              }\r\n' \
+  '              segs[p] = s;\r\n' \
+  '              let mmle: vec3f = mmls[p] * vec3f(0.00872664626, 0.00872664626, 0.0174532925);\r\n' \
+  '              let ls: f32 = select(mmls[p - 1].z * 0.0174532925, mmle.z, p == starts[segs[p]]);\r\n' \
+  '              let a: f32 = sqrt(pow(mmle.x, 2.0) - pow(mmle.x, 4.0) / 3.0 + cos(ls) * cos(mmle.z) * (pow(mmle.y, 2.0) - pow(mmle.y, 4.0) / 3.0));\r\n' \
+  '              gdists[p] = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
+  '            }\r\n' \
+  '          ` : `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
@@ -8912,10 +8939,10 @@ class GPXTweakerWebInterfaceServer():
   '              gdists[p] = distance(xys, sxye) * (c.x + c.y);\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          this.bglgdist = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WGPUStats.ws},},});\r\n' \
   '          this.bggdist = [];\r\n' \
-  '          this.bgsgdist = [];\r\n' \
+  '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.meagain = this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
@@ -9115,21 +9142,22 @@ class GPXTweakerWebInterfaceServer():
   '          this.bgslopestdistspeed = [];\r\n' \
   '        }\r\n' \
   '        set starts(a) {\r\n' \
+  '          const twmode = this.mode == "tweaker";\r\n' \
   '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
   '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WGPUStats.maxsbs) / 16) | 0;\r\n' \
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
-  '          ["bstarts", "bsegs", "btrlats", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {this[bn].forEach((b) => b.destroy()); this[bn] = [];});\r\n' \
+  '          ["bstarts", "bsegs", "btrlats", "bmmls", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
   '          this.segswc = [];\r\n' \
   '          this.ptswc = [];\r\n' \
-  '          this.bgpos= [];\r\n' \
-  '          this.bgtsmooth = [];\r\n' \
+  '          this.bgpos = twmode ? null : [];\r\n' \
+  '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.bggdist = [];\r\n' \
-  '          this.bgsgdist = [];\r\n' \
+  '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '          if (nbtpts == 0) {return;}\r\n' \
@@ -9157,19 +9185,27 @@ class GPXTweakerWebInterfaceServer():
   '            this.bstarts.push(this.device.createBuffer({size: (this.nbsegs[c] + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            this.device.queue.writeBuffer(this.bstarts[c], 0, _starts.subarray(this.chunks[c][0], this.chunks[c + 1][0] + 1));\r\n' \
   '            this.bsegs.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
-  '            this.btrlats.push(this.device.createBuffer({size: this.nbsegs[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
-  '            this.blls.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
-  '            this.bxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '            this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            if (twmode) {\r\n' \
+  '              this.bmmls.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            } else {\r\n' \
+  '              this.btrlats.push(this.device.createBuffer({size: this.nbsegs[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.blls.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.bxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '              this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            }\r\n' \
   '            this.bgdists.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            this.bteahs.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            this.beags.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            this.bslsps.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '            this.bslopestdistspeeds.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '            this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
-  '            this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.bsmdrange},}, {binding: 3, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
-  '            this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
-  '            this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '            if (twmode) {\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmmls[c]},}, {binding: 2, resource: {buffer: this.bsegs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '            } else {\r\n' \
+  '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
+  '              this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.bsmdrange},}, {binding: 3, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '              this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '            }\r\n' \
   '            this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bteahs[c]},}, {binding: 2, resource: {buffer: this.beagainf},}, {binding: 3, resource: {buffer: this.beags[c]},}]}));\r\n' \
   '            this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
   '          }\r\n' \
@@ -9178,6 +9214,12 @@ class GPXTweakerWebInterfaceServer():
   '          const _trlats = (a instanceof Float32Array) ? Float32Array.from({length: (a.length / 2) | 0}, (e, i) => Math.tan((a[2 * i] / 360 + 0.25) * Math.PI)) : Float32Array.from(a, (ll) => Math.tan((ll[0] / 360 + 0.25) * Math.PI));\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '            this.device.queue.writeBuffer(this.btrlats[c], 0, _trlats.subarray(this.chunks[c][0], this.chunks[c + 1][0]));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set mmls(a) {\r\n' \
+  '          const _mmls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.bmmls[c], 0, _mmls.subarray(this.chunks[c][1] * 4, this.chunks[c + 1][1] * 4));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        set lls(a) {\r\n' \
@@ -9299,9 +9341,8 @@ class GPXTweakerWebInterfaceServer():
   '        get slopestdistspeeds() {\r\n' \
   '          return this._get_result("slopestdistspeeds", 4);\r\n' \
   '        }\r\n' \
-  '        \r\n' \
   '        fence(func, ...args) {\r\n' \
-  '          this.lock = this.lock.then(() => func(...args));\r\n' \
+  '          this.lock = this.lock.then(() => func(...args)).catch((e) => console.error(e));\r\n' \
   '          return this.lock;\r\n' \
   '        }\r\n' \
   '      }\r\n'
@@ -9317,6 +9358,7 @@ class GPXTweakerWebInterfaceServer():
   '          m = document.getElementById("message" + msgn.toString());\r\n' \
   '        }\r\n' \
   '        m.innerHTML = msg;\r\n' \
+  '        console.log(document.getElementById("message"));\r\n' \
   '        document.getElementById("message").insertBefore(m, document.getElementById("message").firstElementChild);\r\n' \
   '        if (dur) {setTimeout(function() {document.getElementById("message").removeChild(m);}, dur * 1000);}\r\n' \
   '        return msgn;\r\n' \
@@ -10182,8 +10224,6 @@ class GPXTweakerWebInterfaceServer():
   '      function refresh_graph(sw=false) {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
   '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let gwidth = null;\r\n' \
-  '        let gheight = null;\r\n' \
   '        let gctx = graphc.getContext("2d");\r\n' \
   '        if (sw) {\r\n' \
   '          if (graph.style.display == "none") {\r\n' \
@@ -10214,8 +10254,8 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          if (graph.style.display == "none") {return;}\r\n' \
   '        }\r\n' \
-  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
-  '        gheight = graph.offsetHeight;\r\n' \
+  '        let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '        let gheight = graph.offsetHeight;\r\n' \
   '        graphc.setAttribute("width", gwidth.toString());\r\n' \
   '        graphc.setAttribute("height", gheight.toString());\r\n' \
   '        let gbar = document.getElementById("gbar");\r\n' \
@@ -10699,7 +10739,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_DFMTPANEL_TEMPLATE = \
   '            <div id="dfpanel">\r\n' \
   '              <span>{#jdfpanel#}</span>\r\n' \
-  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="if(smoothed) {tracks_pts_smoothed=null;webgpu?wgpustats.fence(tracks_calc_wgpu,2):tracks_calc(2);}">\r\n' \
+  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="if(smoothed) {tracks_pts_smoothed=null;webgpu?fence(tracks_calc_wgpu,2):tracks_calc(2);}">\r\n' \
   '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
   '                <span id="dfdist" style="left:4.5em;">##SMRANGE##</span>\r\n' \
   '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="##SMRANGE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
@@ -10716,7 +10756,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_FILTERPANEL_TEMPLATE = \
   '            <div id="filterpanel1">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
-  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(1)">\r\n' \
+  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="webgpu?fence(segments_calc_wgpu, 1):segments_calc(1)">\r\n' \
   '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
   '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
   '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
@@ -10727,7 +10767,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '            <div id="filterpanel2">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
-  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(2)">\r\n' \
+  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="webgpu?fence(segments_calc_wgpu, 2):segments_calc(2)">\r\n' \
   '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
   '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
@@ -10738,7 +10778,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '            <div id="filterpanel3">\r\n' \
   '              <span>{#jfilterpanel3#}</span>\r\n' \
-  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(3)">\r\n' \
+  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="webgpu?fence(segments_calc_wgpu, 3):segments_calc(3)">\r\n' \
   '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
   '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
@@ -10783,8 +10823,8 @@ class GPXTweakerWebInterfaceServer():
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;overflow:hidden;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="fence(refresh_graph)"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="fence(refresh_graph)"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
@@ -10937,10 +10977,23 @@ class GPXTweakerWebInterfaceServer():
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
   '      var stats = [];\r\n' \
-  '      var gpu_part = gpucomp >=1?true:false;\r\n' \
+  '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
+  '      var wgpu_modified = new Set();\r\n' \
   '      var smoothed = false;\r\n' \
-  '      var point_stat = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats("tweaker");}\r\n' + HTML_MSG_TEMPLATE + \
+  '      var point_stat = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + \
+  '      if (gpucomp > 0) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          var wgpustats = new WGPUStats("tweaker");\r\n' \
+  '          var fence = wgpustats.fence.bind(wgpustats);\r\n' \
+  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.alert("{#jwebgpuno#}"); window["gpustats"] = new GPUStats("tweaker")} else {gpucomp = 1;};});\r\n' \
+  '        } else {\r\n' \
+  '          var gpustats = new GPUStats("tweaker");\r\n' \
+  '          var fence = (func, ...args) => func(...args);\r\n' \
+  '        }\r\n' \
+  '      } else {\r\n' \
+  '        webgpu = false;\r\n' \
+  '        var fence = (func, ...args) => func(...args);\r\n' \
+  '      }\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        if (mode == "map") {\r\n' \
   '          if (nset == null && nlevel == null) {\r\n' \
@@ -11206,7 +11259,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        graph_point();\r\n' \
+  '        fence(graph_point);\r\n' \
   '      }\r\n' \
   '      function point_to_position(pt) {\r\n' \
   '        let lat = parseFloat(document.getElementById(pt.htmlFor + "lat").value);\r\n' \
@@ -11378,7 +11431,15 @@ class GPXTweakerWebInterfaceServer():
   '            pt.style.textDecoration = "line-through red";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (recalc && focused.substring(0, 3) != "way") {segments_calc(pt.parentNode.parentNode);}\r\n' \
+  '        if (recalc && focused.substring(0, 3) != "way") {\r\n' \
+  '          let seg = pt.parentNode.parentNode;\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, seg);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(seg);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function point_edit_oc(point, recalc=true, coord=true) {\r\n' \
   '        let ex_foc = focused;\r\n' \
@@ -11534,7 +11595,14 @@ class GPXTweakerWebInterfaceServer():
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (histb != 0) {segments_calc();}\r\n' \
+  '        if (histb != 0) {\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            Array.from(document.getElementById("pointsform").children).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '            fence(segments_calc_wgpu);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        let ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
   '        if (ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
@@ -11724,7 +11792,12 @@ class GPXTweakerWebInterfaceServer():
   '        if (! coord) {\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(el_dot, scrollmode == 2);}\r\n' \
   '          if (seg) {\r\n' \
-  '            segments_calc(seg);\r\n' \
+  '            if (webgpu) {\r\n' \
+  '              wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '              fence(segments_calc_wgpu, seg);\r\n' \
+  '            } else {\r\n' \
+  '              segments_calc(seg);\r\n' \
+  '            }\r\n' \
   '          } else {\r\n' \
   '            wpt_calc();\r\n' \
   '          }\r\n' \
@@ -11753,7 +11826,12 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
-  '          segments_calc(pt.parentNode.parentNode);\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, seg);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(seg);\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
@@ -11781,7 +11859,12 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
-  '          segments_calc(pt.parentNode.parentNode);\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, seg);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(seg);\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
@@ -12071,6 +12154,240 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        whole_calc();\r\n' \
   '      }\r\n' \
+  '      async function segments_calc_wgpu(...args) {\r\n' \
+  '        if (wgpustats.device == null) {return;}\r\n' \
+  '        let fpan = 0;\r\n' \
+  '        let segs = [];\r\n' \
+  '        if (args.length == 1) {\r\n' \
+  '          if ((typeof args[0]).toLowerCase() != "object") {fpan = args[0];}\r\n' \
+  '        }\r\n' \
+  '        segs = (args.length == 0 || fpan != 0) ? Array.from(document.getElementById("pointsform").children) : args;\r\n' \
+  '        segs.sort((s1, s2) => parseInt(s1.id.slice(7, -4)) - parseInt(s2.id.slice(7, -4)));\r\n' \
+  '        let starts = null;\r\n' \
+  '        let nbpt = null;\r\n' \
+  '        let mmls = null;\r\n' \
+  '        let teahs = null;\r\n' \
+  '        if (fpan == 0 || gpu_part) {\r\n' \
+  '          starts = [0];\r\n' \
+  '          for (let s=0; s<segs.length; s++) {\r\n' \
+  '            const seg = segs[s];\r\n' \
+  '            if (! seg.firstElementChild.checked) {continue;};\r\n' \
+  '            let nbp = 0;\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              let spans = seg.getElementsByTagName("span");\r\n' \
+  '              for (let p=0; p<spans.length; p++) {\r\n' \
+  '                if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {\r\n' \
+  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = null;\r\n' \
+  '                } else {\r\n' \
+  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = nbp;\r\n' \
+  '                  nbp++;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              if (wgpu_modified.has(s)) {\r\n' \
+  '                stats[s] = [];\r\n' \
+  '                continue;\r\n' \
+  '              }\r\n' \
+  '              nbp = stats[s].length;\r\n' \
+  '            }\r\n' \
+  '            if (nbp != 0) {starts.push(starts.at(-1) + nbp);}\r\n' \
+  '          }\r\n' \
+  '          nbpt = starts.at(-1);\r\n' \
+  '          mmls = new Float32Array(nbpt * 4);\r\n' \
+  '          teahs = new Float32Array(nbpt * 4);\r\n' \
+  '          wgpustats.starts = starts;\r\n' \
+  '          let cmmls = mmls;\r\n' \
+  '          let cteahs = teahs;\r\n' \
+  '          for (let s=0; s<segs.length; s++) {\r\n' \
+  '            const seg = segs[s];\r\n' \
+  '            const seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
+  '            const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              wgpu_modified.delete(seg_ind);\r\n' \
+  '              const pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
+  '              if (pos_d > 0) {\r\n' \
+  '                seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(1, pos_d) + "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;";\r\n' \
+  '              }\r\n' \
+  '              while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
+  '              stats[seg_ind] = [];\r\n' \
+  '              if (! seg.firstElementChild.checked) {\r\n' \
+  '                segs[s] = null;\r\n' \
+  '                continue;\r\n' \
+  '              }\r\n' \
+  '            } else if (stats[s].length == 0) {\r\n' \
+  '              continue;\r\n' \
+  '            }\r\n' \
+  '            let spans = seg.getElementsByTagName("span");\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let latp = null;\r\n' \
+  '            let lonp = null;\r\n' \
+  '            let tp = 0;\r\n' \
+  '            let ed = null;\r\n' \
+  '            let ad = null;\r\n' \
+  '            let hd = null;\r\n' \
+  '            let tb = null;\r\n' \
+  '            for (let p=0; p<spans.length; p++) {\r\n' \
+  '              if (point_stat[parseInt(spans[p].id.slice(5, -5))] == null) {continue;}\r\n' \
+  '              const pc = spans[p].children;\r\n' \
+  '              const lat = parseFloat(pc[1].value);\r\n' \
+  '              const lon = parseFloat(pc[4].value);\r\n' \
+  '              let e = parseFloat(pc[7].value);\r\n' \
+  '              let a = parseFloat(pc[10].value);\r\n' \
+  '              let t = Date.parse(pc[13].value);\r\n' \
+  '              let h = null;\r\n' \
+  '              if (isNaN(a)) {\r\n' \
+  '                a = ad == null ? 0 : ad;\r\n' \
+  '              } else {\r\n' \
+  '                if (ad == null) {\r\n' \
+  '                  ad = a;\r\n' \
+  '                  for (let i=0; i<ind; i+=4) {teahs[i + 2] = ad;}\r\n' \
+  '                }\r\n' \
+  '                h = a;\r\n' \
+  '              }\r\n' \
+  '              if (isNaN(e)) {\r\n' \
+  '                e = ed == null ? 0 : ed;\r\n' \
+  '              } else {\r\n' \
+  '                if (ed == null) {\r\n' \
+  '                  ed = e;\r\n' \
+  '                  for (let i=0; i<ind; i+=4) {teahs[i + 1] = ed;}\r\n' \
+  '                }\r\n' \
+  '                if (h == null) {h = e;}\r\n' \
+  '              }\r\n' \
+  '              if (h == null) {\r\n' \
+  '                h = hd == null ? 0 : hd;\r\n' \
+  '              } else if (hd == null) {\r\n' \
+  '                hd = h;\r\n' \
+  '                for (let i=0; i<ind; i+=4) {teahs[i + 3] = hd;}\r\n' \
+  '              }\r\n' \
+  '              if (isNaN(t)) {\r\n' \
+  '                t = tp;\r\n' \
+  '              } else {\r\n' \
+  '                if (tb == null) {tb = t;}\r\n' \
+  '                t = Math.max((t - tb) / 1000, tp);\r\n' \
+  '              }\r\n' \
+  '              if (ind == 0) {\r\n' \
+  '                cmmls.set([0,  0 , lat, 0], 0);\r\n' \
+  '              } else {\r\n' \
+  '                cmmls.set([lat - latp,  lon - lonp , lat, 0], ind);\r\n' \
+  '              }\r\n' \
+  '              cteahs.set([t, e, a, h], ind);\r\n' \
+  '              latp = lat;\r\n' \
+  '              lonp = lon;\r\n' \
+  '              tp = t;\r\n' \
+  '              ind += 4;\r\n' \
+  '            }\r\n' \
+  '            cmmls = cmmls.subarray(ind);\r\n' \
+  '            cteahs = cteahs.subarray(ind);\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              stats[seg_ind] = ind / 4;\r\n' \
+  '              if (ind > 0) {\r\n' \
+  '                let dur_c = "--h--mn--s";\r\n' \
+  '                if (tp != null) {\r\n' \
+  '                  const dur_s = tp % 60;\r\n' \
+  '                  const dur_m = ((tp - dur_s) / 60) % 60;\r\n' \
+  '                  const dur_h = (tp - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '                  dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
+  '                }\r\n' \
+  '                seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|0km|" + (ed == null ? "-" : "0") + "m|" + (ad == null ? "-" : "0") + "m) &ndash;";\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (nbpt == 0) {\r\n' \
+  '            gpu_part = true;\r\n' \
+  '            whole_calc();\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '          wgpustats.mmls = mmls;\r\n' \
+  '          wgpustats.teahs = teahs;\r\n' \
+  '        } else {\r\n' \
+  '          for (let s=0; s<segs.length; s++) {\r\n' \
+  '            if (! segs[s].firstElementChild.checked) {segs[s] = null;}\r\n' \
+  '          }\r\n' \
+  '          if (segs.every((seg) => stats[parseInt(seg.id.slice(7, -4))].length == 0)) {\r\n' \
+  '            gpu_part = true;\r\n' \
+  '            return;\r\n' \
+  '          }\r\n '\
+  '        }\r\n' \
+  '        let gdists = null;\r\n' \
+  '        let eags = null;\r\n' \
+  '        let slopestdistspeeds  = null;\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          wgpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
+  '          eags = await wgpustats.eags;\r\n' \
+  '          gdists = await wgpustats.gdists;\r\n' \
+  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '        } else if (fpan == 1) {\r\n' \
+  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          if (gpu_part) {wgpustats.calc("gdist", "eagain");} else {wgpustats.calc("eagain");}\r\n' \
+  '          eags = await wgpustats.eags;\r\n' \
+  '        } else {\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          if (fpan == 2) {\r\n' \
+  '            if (gpu_part) {wgpustats.calc("gdist", "slopedist", "speed");} else {wgpustats.calc("slopedist", "speed");}\r\n' \
+  '          } else {\r\n' \
+  '            if (gpu_part) {wgpustats.calc("gdist", "speed");} else {wgpustats.calc("speed");}\r\n' \
+  '          }\r\n' \
+  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '        }\r\n' \
+  '        for (let s=0; s<segs.length; s++) {\r\n' \
+  '          const seg = segs[s];\r\n' \
+  '          const seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
+  '          const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '          let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
+  '          let nbp = null;\r\n' \
+  '          if (fpan == 0) {\r\n' \
+  '            if (seg == null) {continue;}\r\n' \
+  '            const cstats = [];\r\n' \
+  '            nbp = stats[seg_ind];\r\n' \
+  '            stats[seg_ind] = cstats;\r\n' \
+  '            for (let p=0; p<nbp; p++) {\r\n' \
+  '              stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
+  '              cstats.push(stat);\r\n' \
+  '            }\r\n' \
+  '            teahs = teahs.subarray(4 * nbp);\r\n' \
+  '            gdists = gdists.subarray(nbp);\r\n' \
+  '            eags = eags.subarray(2 * nbp);\r\n' \
+  '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '          } else if (fpan == 1) {\r\n' \
+  '            const cstats = stats[seg_ind];\r\n' \
+  '            nbp = cstats.length;\r\n' \
+  '            for (let p=0; p<nbp; p++) {\r\n' \
+  '              stat = cstats[p];\r\n' \
+  '              stat[2] = eags[2 * p];\r\n' \
+  '              stat[3] = eags[2 * p + 1];\r\n' \
+  '            }\r\n' \
+  '            eags = eags.subarray(2 * nbp);\r\n' \
+  '          } else if (fpan == 2) {\r\n' \
+  '            const stats = stats[seg_ind];\r\n' \
+  '            nbp = cstats.length;\r\n' \
+  '            for (let p=0; p<nbp; p++) {\r\n' \
+  '              let stat_ = cstats[p];\r\n' \
+  '              stat_[1] = stat[1] + gdists[p];\r\n' \
+  '              stat_[4] = slopestdistspeeds[4 * p];\r\n' \
+  '              stat_[5] = slopestdistspeeds[4 * p + 1];\r\n' \
+  '              stat_[6] = (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2]));\r\n' \
+  '              stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '              stat = stat_;\r\n' \
+  '            }\r\n' \
+  '            gdists = gdists.subarray(nbp);\r\n' \
+  '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '          } else if (fpan == 3) {\r\n' \
+  '            const cstats = stats[seg_ind];\r\n' \
+  '            nbp = cstats.length;\r\n' \
+  '            for (let p=0; p<nbp; p++) {\r\n' \
+  '              cstats[p][7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '            }\r\n' \
+  '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '          }\r\n' \
+  '          if (fpan != 3 && nbp > 0) {\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\d+m\\|/, stat[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        gpu_part = fpan == 0 && nbpt != stats.reduce((p,c) => p + c.length, 0);\r\n' \
+  '        whole_calc();\r\n' \
+  '      }\r\n' \
   '      function segment_checkbox(seg) {\r\n' \
   '        if (seg.checked) {\r\n' \
   '          document.getElementById("track" + seg.id.substring(7)).style.display = "";\r\n' \
@@ -12083,7 +12400,13 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        let spans = seg.parentNode.getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length;i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
-  '        segments_calc(seg.parentNode);\r\n' \
+  '        seg = seg.parentNode;\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '          fence(segments_calc_wgpu, seg);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(seg);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function segment_renum() {\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
@@ -12174,7 +12497,12 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("pointsform").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          segment_renum();\r\n' \
   '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
-  '          segments_calc(seg);\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, seg);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(seg);\r\n' \
+  '          }\r\n' \
   '          element_click(null, document.getElementById(seg.id.replace("cont", "desc")));\r\n' \
   '          show_msg("{#jmsegmentcut1#}", 2);\r\n' \
   '          return;\r\n' \
@@ -12211,7 +12539,13 @@ class GPXTweakerWebInterfaceServer():
   '        path.setAttribute("d", d_left[0]);\r\n' \
   '        handle.insertBefore(track, track_foc);\r\n' \
   '        if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), scrollmode == 2);}\r\n' \
-  '        segments_calc(seg_foc, seg);\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(parseInt(seg_foc.id.slice(7, -4)));\r\n' \
+  '          wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '          fence(segments_calc_wgpu, seg_foc, seg);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(seg_foc, seg);\r\n' \
+  '        }\r\n' \
   '        show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '      }\r\n' \
   '      function segment_absorb() {\r\n' \
@@ -12261,7 +12595,13 @@ class GPXTweakerWebInterfaceServer():
   '        seg_foc.firstElementChild.scrollIntoView({block:"start"});\r\n' \
   '        document.getElementById("track" + seg.id.slice(7, -4)).style.display = "none";\r\n' \
   '        seg.style.textDecoration="line-through";\r\n' \
-  '        segments_calc(seg_foc, seg);\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(parseInt(seg_foc.id.slice(7, -4)));\r\n' \
+  '          wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '          fence(segments_calc_wgpu, seg_foc, seg);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(seg_foc, seg);\r\n' \
+  '        }\r\n' \
   '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_up() {\r\n' \
@@ -12344,7 +12684,13 @@ class GPXTweakerWebInterfaceServer():
   '        handle.insertBefore(document.getElementById("track" + seg_foc.id.slice(7, -4)), document.getElementById("track" + seg.id.slice(7, -4)));\r\n' \
   '        if (focused != seg_foc.id.slice(0, -4)) {element_click(null, seg_foc.firstElementChild.nextElementSibling);}\r\n' \
   '        segment_renum();\r\n' \
-  '        segments_calc(seg, seg_foc);\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(parseInt(seg_foc.id.slice(7, -4)));\r\n' \
+  '          wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '          fence(segments_calc_wgpu, seg_foc, seg);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(seg_foc, seg);\r\n' \
+  '        }\r\n' \
   '        show_msg("{#jmelementup2#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_down() {\r\n' \
@@ -12445,7 +12791,12 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (! whole) {\r\n' \
-  '          segments_calc(segs[0]);\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(segs[0].id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, segs[0]);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(segs[0]);\r\n' \
+  '          }\r\n' \
   '          show_msg("{#jmsegmentreverse1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
@@ -12503,7 +12854,12 @@ class GPXTweakerWebInterfaceServer():
   '            dot_r = dot;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        segments_calc();\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          segs.forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '          fence(segments_calc_wgpu);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc();\r\n' \
+  '        }\r\n' \
   '        segment_renum();\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
@@ -12639,7 +12995,12 @@ class GPXTweakerWebInterfaceServer():
   '          path.setAttribute("d", d_f);\r\n' \
   '        }\r\n' \
   '        if (seg_foc != null) {focused = seg_foc.id.slice(0, -4);} else {focused = "";}\r\n' \
-  '        segments_calc(...segs);\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          segs.forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '          fence(segments_calc_wgpu, ...segs);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(...segs);\r\n' \
+  '        }\r\n' \
   '        show_msg((seg_foc!=null?"{#jmsegmentfilter1#}":"{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
@@ -12693,7 +13054,14 @@ class GPXTweakerWebInterfaceServer():
   '          p++;\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
-  '        if (segs.length > 0) {segments_calc(...segs);}\r\n' \
+  '        if (segs.length > 0) {\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            segs.forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '            fence(segments_calc_wgpu, ...segs);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(...segs);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        return np;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
@@ -12799,7 +13167,21 @@ class GPXTweakerWebInterfaceServer():
   '          point_edit(false, false, false, false);\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
-  '        if (seg != null) {segments_calc(seg);} else {segments_calc();}\r\n' \
+  '        if (seg != null) {\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, seg);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(seg);\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            Array.from(document.getElementById("pointsform").children).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '            fence(segments_calc_wgpu);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '        show_msg(msg, 2);\r\n' \
   '      }\r\n' \
   '      function alt_join() {\r\n' \
@@ -12895,7 +13277,12 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (pt_foc) {focused = pt_foc.id.slice(0, -4);}\r\n' \
   '        if (! pt_foc) {focused = seg_foc.id.slice(0, -4);}\r\n' \
-  '        segments_calc(seg_foc);\r\n' \
+  '          if (webgpu) {\r\n' \
+  '            wgpu_modified.add(parseInt(seg_foc.id.slice(7, -4)));\r\n' \
+  '            fence(segments_calc_wgpu, seg_foc);\r\n' \
+  '          } else {\r\n' \
+  '            segments_calc(seg_foc);\r\n' \
+  '          }\r\n' \
   '        show_msg(((pt_foc==null)?"{#jmaltitudesjoin1#}":"{#jmaltitudesjoin2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function datetime_interpolate(remove=false) {\r\n' \
@@ -12951,7 +13338,12 @@ class GPXTweakerWebInterfaceServer():
   '            msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
   '            if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '            if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '            segments_calc(...segs);\r\n' \
+  '            if (webgpu) {\r\n' \
+  '              segs.forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '              fence(segments_calc_wgpu, ...segs);\r\n' \
+  '            } else {\r\n' \
+  '              segments_calc(...segs);\r\n' \
+  '            }\r\n' \
   '            show_msg(msg, 2);\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
@@ -13028,7 +13420,12 @@ class GPXTweakerWebInterfaceServer():
   '                  }\r\n' \
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
-  '                    segments_calc(segs[s]);\r\n' \
+  '                    if (webgpu) {\r\n' \
+  '                      wgpu_modified.add(parseInt(segs[s].id.slice(7, -4)));\r\n' \
+  '                      fence(segments_calc_wgpu, segs[s]);\r\n' \
+  '                    } else {\r\n' \
+  '                      segments_calc(segs[s]);\r\n' \
+  '                    }\r\n' \
   '                    show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
@@ -13048,7 +13445,12 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
   '                  save_old();\r\n' \
-  '                  segments_calc(segs[s]);\r\n' \
+  '                  if (webgpu) {\r\n' \
+  '                    wgpu_modified.add(parseInt(segs[s].id.slice(7, -4)));\r\n' \
+  '                    fence(segments_calc_wgpu, segs[s]);\r\n' \
+  '                  } else {\r\n' \
+  '                    segments_calc(segs[s]);\r\n' \
+  '                  }\r\n' \
   '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
@@ -13062,14 +13464,24 @@ class GPXTweakerWebInterfaceServer():
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          if (pt_foc != null) {\r\n' \
-  '            segments_calc(segs[s]);\r\n' \
+  '            if (webgpu) {\r\n' \
+  '              wgpu_modified.add(parseInt(segs[s].id.slice(7, -4)));\r\n' \
+  '              fence(segments_calc_wgpu, segs[s]);\r\n' \
+  '            } else {\r\n' \
+  '              segments_calc(segs[s]);\r\n' \
+  '            }\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"{#jmdatetime2#}":"{#jmdatetime3#}");\r\n' \
   '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '        segments_calc(...segs);\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          segs.forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '          fence(segments_calc_wgpu, ...segs);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(...segs);\r\n' \
+  '        }\r\n' \
   '        if (msg) {show_msg(msg, 2);}\r\n' \
   '      }\r\n' \
   '      function switch_dots() {\r\n' \
@@ -13210,7 +13622,12 @@ class GPXTweakerWebInterfaceServer():
   '        if (d_left.indexOf("M", 1) < 0) {d_right =  d_right.replace("L", "M");}\r\n' \
   '        d = d_left.trimEnd() + d_right;\r\n' \
   '        path.setAttribute("d", d);\r\n' \
-  '        segments_calc(document.getElementById(foc).parentNode.parentNode);\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '          fence(segments_calc_wgpu, seg);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(seg);\r\n' \
+  '        }\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        return true;\r\n'\
@@ -13391,7 +13808,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):fence(refresh_graph, true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
   '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
@@ -13483,13 +13900,13 @@ class GPXTweakerWebInterfaceServer():
   '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
   '            hand = elt;\r\n' \
-  '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
+  '            fence(graph_point, parseFloat(document.getElementById("gbarc").style.left));\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "graphc") {\r\n' \
   '            hand = document.getElementById("gbarc");\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
-  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
+  '            fence(graph_point, document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
@@ -13545,7 +13962,13 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            if (hand.id.indexOf("way") < 0) {\r\n' \
-  '              segments_calc(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '              const seg = document.getElementById(focused).parentNode.parentNode;\r\n' \
+  '              if (webgpu) {\r\n' \
+  '                wgpu_modified.add(parseInt(seg.id.slice(7, -4)));\r\n' \
+  '                fence(segments_calc_wgpu, seg);\r\n' \
+  '              } else {\r\n' \
+  '                segments_calc(seg);\r\n' \
+  '              }\r\n' \
   '              if (e.ctrlKey) {build_path();}\r\n' \
   '            } else {\r\n' \
   '              wpt_calc();\r\n' \
@@ -13553,7 +13976,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (hand.id == "gbarc") {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
-  '            graph_point();\r\n' \
+  '            fence(graph_point);\r\n' \
   '          } else {\r\n' \
   '            viewpane.style.cursor = "";\r\n' \
   '            viewpane.releasePointerCapture(pointer_e);\r\n' \
@@ -13629,7 +14052,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            fence(graph_point, e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
@@ -13706,6 +14129,21 @@ class GPXTweakerWebInterfaceServer():
   '          if (scrollmode > 0) {scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function window_resize() {\r\n' \
+  '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
+  '        rescale();\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          let graph = document.getElementById("graph");\r\n' \
+  '          let graphc = document.getElementById("graphc");\r\n' \
+  '          let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '          let gheight = graph.offsetHeight;\r\n' \
+  '          graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '          graphc.setAttribute("height", gheight.toString());\r\n' \
+  '          fence(refresh_graph);\r\n' \
+  '        } else {\r\n' \
+  '          refresh_graph();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
@@ -13720,11 +14158,11 @@ class GPXTweakerWebInterfaceServer():
   '          if (prev_state[4] == "true") {switch_dots();}\r\n' \
   '        }\r\n' \
   '        point_desc();\r\n' \
-  '        window.onresize = (e) => {document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";rescale();refresh_graph()};\r\n' \
+  '        window.onresize = window_resize;\r\n' \
   '        document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
   '        document.getElementById("waypoints").style.height = "";\r\n' \
   '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '        segments_calc();\r\n' \
+  '        if (webgpu) {fence(segments_calc_wgpu);} else {segments_calc();}\r\n' \
   '        wpt_calc();\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
   '//        window.onunload = function () {window.history.replaceState({}, "", "/GPXExplorer.html")};\r\n' \
@@ -16014,11 +16452,16 @@ class GPXTweakerWebInterfaceServer():
   '      if (gpucomp > 0) {\r\n' \
   '        if (webgpu) {\r\n' \
   '          var wgpustats = new WGPUStats("explorer");\r\n' \
-  '          wgpustats.fence(() => {if (wgpustats.device == null) {webgpu = false; window["gpustats"] = new GPUStats("explorer")};});\r\n' \
+  '          var fence = wgpustats.fence.bind(wgpustats);\r\n' \
+  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.alert("{#jwebgpuno#}"); window["gpustats"] = new GPUStats("explorer")} else {gpucomp = 1;};});\r\n' \
   '        } else {\r\n' \
   '          var gpustats = new GPUStats("explorer");\r\n' \
+  '          var fence = (func, ...args) => func(...args);\r\n' \
   '        }\r\n' \
-  '      } else {webgpu = false;}\r\n' \
+  '      } else {\r\n' \
+  '        webgpu = false;\r\n' \
+  '        var fence = (func, ...args) => func(...args);\r\n' \
+  '      }\r\n' \
   '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
   '      var media_ex_visible = false;\r\n' \
@@ -16110,8 +16553,8 @@ class GPXTweakerWebInterfaceServer():
   '        hide_media("m");\r\n' \
   '        update_tiles();\r\n' \
   '        if (mvis) {show_media();}\r\n' \
-  '        if (document.getElementById("oset").selectedIndex == 8) {webgpu?wgpustats.fence(tracks_sort):tracks_sort();}\r\n' \
-  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {webgpu?wgpustats.fence(tracks_cfilter):tracks_cfilter();}\r\n' \
+  '        if (document.getElementById("oset").selectedIndex == 8) {fence(tracks_sort);}\r\n' \
+  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {fence(tracks_cfilter);}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(tracks=null) {\r\n' \
   '        if (tracks_pts.length == 0) {return null;}\r\n' \
@@ -16193,7 +16636,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("places").reset();\r\n' \
-  '        refresh_graph();\r\n' \
+  '        fence(refresh_graph);\r\n' \
   '      }\r\n' \
   '      function track_over(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
@@ -16630,8 +17073,9 @@ class GPXTweakerWebInterfaceServer():
   '            wgpustats.calc("eagain", (smoothed ? "sgdist" : "gdist"), "slopedist", "speed");\r\n' \
   '          } else if (smoothed) {\r\n' \
   '            wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '            wgpustats.calc("smooth", "sgdist", "slopedist", "speed");\r\n' \
+  '            wgpustats.calc("smooth");\r\n' \
   '            tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
+  '            wgpustats.calc("sgdist", "slopedist", "speed");\r\n' \
   '          } else {\r\n' \
   '            wgpustats.calc("gdist", "slopedist", "speed");\r\n' \
   '          }\r\n' \
@@ -16659,11 +17103,10 @@ class GPXTweakerWebInterfaceServer():
   '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          if (fpan == 2) {\r\n' \
   '            wgpustats.calc("slopedist", "speed");\r\n' \
-  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
   '          } else {\r\n' \
   '            wgpustats.calc("speed");\r\n' \
-  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
   '          }\r\n' \
+  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
   '        }\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
@@ -16672,7 +17115,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (let s=0; s<segs.length; s++) {\r\n' \
   '              const nbp = segs[s].length;\r\n' \
   '              let stats = tracks_stats[t][s];\r\n' \
-  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
   '                stats.push(stat);\r\n' \
@@ -16695,7 +17138,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (let s=0; s<segs.length; s++) {\r\n' \
   '              const nbp = segs[s].length;\r\n' \
   '              let stats = tracks_stats[t][s];\r\n' \
-  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                stat = stats[p];\r\n' \
   '                stat[2] = eags[2 * p]\r\n' \
@@ -16714,7 +17157,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (let s=0; s<segs.length; s++) {\r\n' \
   '              const nbp = segs[s].length;\r\n' \
   '              let stats = tracks_stats[t][s];\r\n' \
-  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                let stat_ = stats[p];\r\n' \
   '                stat_[1] = stat[1] + gdists[p];\r\n' \
@@ -16737,7 +17180,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (let s=0; s<segs.length; s++) {\r\n' \
   '              const nbp = segs[s].length;\r\n' \
   '              let stats = tracks_stats[t][s];\r\n' \
-  '              let stat = [0, 0, 0, 0, 0, 0];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                let stat_ = stats[p];\r\n' \
   '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
@@ -17046,7 +17489,7 @@ class GPXTweakerWebInterfaceServer():
   '        let g = document.getElementById("sortup").style.display;\r\n' \
   '        document.getElementById("sortup").style.display = document.getElementById("sortdown").style.display;\r\n' \
   '        document.getElementById("sortdown").style.display = g;\r\n' \
-  '        webgpu?wgpustats.fence(tracks_sort):tracks_sort();\r\n' \
+  '        fence(tracks_sort);\r\n' \
   '      }\r\n' \
   '      function switch_cfilterpanel() {\r\n' \
   '        let cfps = document.getElementById("cfilterpanel").style;\r\n' \
@@ -17267,7 +17710,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmdetach1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_tdcb(e.target, foc)?show_msg("{#jmdetach2#}", 5, msgn):show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => fence((e) => {load_tdcb(e.target, foc) ? show_msg("{#jmdetach2#}", 5, msgn) : show_msg("{#jmdetach3#}", 10, msgn);}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/detach?" + encodeURIComponent(foc.substring(5)));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -17319,12 +17762,16 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        track_click(null, document.getElementById("track" + ind1.toString() + "desc"));\r\n' \
-  '        tracks_calc(0);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
-  '        tracks_sort();\r\n' \
-  '        tracks_cfilter();\r\n' \
-  '        return true;\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          return tracks_calc_wgpu(0).then(tracks_sort).then(tracks_cfilter);\r\n' \
+  '        } else {\r\n' \
+  '          tracks_calc(0);\r\n' \
+  '          tracks_sort();\r\n' \
+  '          tracks_cfilter();\r\n' \
+  '          return true;\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function track_incorporate_integrate(after=null) {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
@@ -17350,7 +17797,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)?show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn):show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => fence((e) => {let r = load_ticb(e.target, ind1, ind2); if (r) {show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn);} else {show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);}; return r;}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + encodeURIComponent(ind1.toString()) + "," + encodeURIComponent(ind2.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -17408,7 +17855,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmnew1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => fence((e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -18223,12 +18670,12 @@ class GPXTweakerWebInterfaceServer():
   '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '           </form>\r\n' \
-  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?(webgpu?wgpustats.fence(cfilter_reset):cfilter_reset()):(event.shiftKey?(webgpu?wgpustats.fence(cfilter_restore):cfilter_restore()):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="webgpu?wgpustats.fence(tracks_sort):tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="webgpu?wgpustats.fence(open_webmapping):open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():(webgpu?wgpustats.fence(switch_smooth):switch_smooth())">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?fence(cfilter_reset):(event.shiftKey?fence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
+  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="fence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():fence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);fence(refresh_graph, true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';webgpu?wgpustats.fence(tracks_cfilter):tracks_cfilter();" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
+  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';fence(tracks_cfilter);" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
   '                <div style="display:inline-block;padding-right:1em;">\r\n' \
   '                  <span>{#jsortduration#} :&nbsp;</span>\r\n' \
   '                  <span>{#jsortdistance#} :&nbsp;</span>\r\n' \
@@ -18253,7 +18700,7 @@ class GPXTweakerWebInterfaceServer():
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', '(function (fp) {webgpu?wgpustats.fence(tracks_calc_wgpu, fp):tracks_calc(fp)})') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -18351,13 +18798,13 @@ class GPXTweakerWebInterfaceServer():
   '            hide_media("m");\r\n' \
   '          } else if (e.target.id == "gbarc") {\r\n' \
   '            hand = e.target;\r\n' \
-  '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
+  '            fence(graph_point, parseFloat(document.getElementById("gbarc").style.left));\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          } else if (e.target.id == "graphc") {\r\n' \
   '            hand = document.getElementById("gbarc");\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
-  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
+  '            fence(graph_point, document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -18382,7 +18829,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
-  '            graph_point();\r\n' \
+  '            fence(graph_point);\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
   '          pointer_e = null;\r\n' \
@@ -18455,7 +18902,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            fence(graph_point, e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
@@ -18501,12 +18948,12 @@ class GPXTweakerWebInterfaceServer():
   '          if (e.deltaY > 0) {\r\n' \
   '            if (focused_targeted < graph_ip.length - 1) {\r\n' \
   '              focused_targeted++;\r\n' \
-  '              graph_point();\r\n' \
+  '              fence(graph_point);\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (focused_targeted > 0) {\r\n' \
   '              focused_targeted--;\r\n' \
-  '              graph_point();\r\n' \
+  '              fence(graph_point);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
@@ -18534,7 +18981,17 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          } else {\r\n' \
   '            rescale();\r\n' \
-  '            refresh_graph();\r\n' \
+  '            if (webgpu) {\r\n' \
+  '              let graph = document.getElementById("graph");\r\n' \
+  '              let graphc = document.getElementById("graphc");\r\n' \
+  '              let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '              let gheight = graph.offsetHeight;\r\n' \
+  '              graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '              graphc.setAttribute("height", gheight.toString());\r\n' \
+  '              fence(refresh_graph);\r\n' \
+  '            } else {\r\n' \
+  '              refresh_graph();\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -18564,7 +19021,7 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n' \
   '      }\r\n' \
   '      async function page_load() {\r\n' \
-  '        if (! await (webgpu ? wgpustats.fence((lp) => lp, data_load()) : data_load())) {return;}\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
+  '        if (! await data_load()) {return;}\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
   '        if (prev_state != null) {\r\n' \
   '          dots_visible = prev_state[4] == "true";\r\n' \
   '        }\r\n' \
@@ -18599,17 +19056,10 @@ class GPXTweakerWebInterfaceServer():
   '          magnify_inc();\r\n' \
   '        }\r\n' \
   '        if (smoothed) {document.getElementById("swsm").innerHTML = "&divide;&divide;"};\r\n' \
-  '        if (webgpu) {\r\n' \
-  '          wgpustats.fence(tracks_calc_wgpu);\r\n' \
-  '          wgpustats.fence(tracks_sort);\r\n' \
-  '          wgpustats.fence(tracks_filter);\r\n' \
-  '          wgpustats.fence(cfilter_restore);\r\n' \
-  '        } else {\r\n' \
-  '          tracks_calc();\r\n' \
-  '          tracks_sort();\r\n' \
-  '          tracks_filter();\r\n' \
-  '          cfilter_restore();\r\n' \
-  '        }\r\n' \
+  '        if (webgpu) {await tracks_calc_wgpu();} else {tracks_calc();}\r\n' \
+  '        tracks_sort();\r\n' \
+  '        tracks_filter();\r\n' \
+  '        cfilter_restore();\r\n' \
   '        folders_select();\r\n' \
   '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
   '        document.getElementById("mediapreview").dataset.sl = "0";\r\n' \
@@ -18630,7 +19080,7 @@ class GPXTweakerWebInterfaceServer():
   '        throw "{#jsession#}";\r\n' \
   '      }\r\n' \
   '      norm_trackname();\r\n' \
-  '      page_load();\r\n' \
+  '      fence(page_load);\r\n' \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
