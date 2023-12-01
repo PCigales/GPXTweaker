@@ -1,4 +1,4 @@
-# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -8777,13 +8777,14 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n'
   HTML_WEBGPUSTATS_TEMPLATE = \
   '      class WGPUStats {\r\n' \
-  '        static get ws() {return 64;}\r\n' \
+  '        static get ptsws() {return 64;}\r\n' \
+  '        static get segsws() {return 8;}\r\n' \
   '        static get maxsbs() {return 1 << 27;}\r\n' \
   '        constructor (mode) {\r\n' \
   '          this.mode = mode;\r\n' \
   '          this.adapter = null;\r\n' \
   '          this.device = null;\r\n' \
-  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init();}));\r\n' \
+  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init();this.calc();}));\r\n' \
   '        }\r\n' \
   '        init() {\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
@@ -8795,7 +8796,8 @@ class GPXTweakerWebInterfaceServer():
   '          this.bstarts = [];\r\n' \
   '          this.bsegs = [];\r\n' \
   '          this.btrlats = twmode ? null : [];\r\n' \
-  '          this.bmmls = twmode ? [] : null;\r\n' \
+  '          this.bmms = twmode ? [] : null;\r\n' \
+  '          this.blats = twmode ? [] : null;\r\n' \
   '          this.blls = twmode ? null : [];\r\n' \
   '          this.bxys = twmode ? null : [];\r\n' \
   '          this.bsxys = twmode ? null : [];\r\n' \
@@ -8804,6 +8806,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.beags = [];\r\n' \
   '          this.bslsps = [];\r\n' \
   '          this.bslopestdistspeeds = [];\r\n' \
+  '          this.bresult = null;\r\n' \
   '          this.mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
@@ -8830,14 +8833,15 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WGPUStats.ptsws},},});\r\n' \
   '          this.bgpos = twmode ? null : [];\r\n' \
   '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
-  '            @group(0) @binding(2) var<uniform> smdrange: f32;\r\n' \
-  '            @group(0) @binding(3) var<storage, read_write> sxys: array<vec2f>;\r\n' \
-  '            override ws: u32 = 64;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> xys: array<vec2f>;\r\n' \
+  '            @group(0) @binding(3) var<uniform> smdrange: f32;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> sxys: array<vec2f>;\r\n' \
+  '            override ws: u32 = 8;\r\n' \
   '            @compute @workgroup_size(ws) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let s = id.x + id.y * nw.x * ws;\r\n' \
   '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
@@ -8846,16 +8850,19 @@ class GPXTweakerWebInterfaceServer():
   '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
   '              var dir: vec2f;\r\n' \
   '              var dirn: bool = true;\r\n' \
-  '              var pp: u32 = pmin;\r\n' \
+  '              var psxy: vec2f = xys[pmin];\r\n' \
+  '              sxys[pmin] = psxy;\r\n' \
   '              for (var p:u32=pmin+1; p<pmax; p++) {\r\n' \
+  '                var sxy: vec2f = xys[p];\r\n' \
   '                var ndir: vec2f = vec2f(0.0);\r\n' \
   '                var dist: f32 = 0.0;\r\n' \
-  '                var pr: u32 = pp;\r\n' \
+  '                var pxy: vec2f = psxy;\r\n' \
   '                for (var pn:u32=p; pn<pmax; pn++) {\r\n' \
-  '                  dist += distance(sxys[pn], sxys[pr]);\r\n' \
-  '                  pr = pn;\r\n' \
+  '                  let nxy = xys[pn];\r\n' \
+  '                  dist += distance(nxy, pxy);\r\n' \
   '                  if (dist > sdrange) {break;};\r\n' \
-  '                  ndir += sxys[pn] - sxys[pp];\r\n' \
+  '                  ndir += nxy - psxy;\r\n' \
+  '                  pxy = nxy;\r\n' \
   '                }\r\n' \
   '                let ndirl: f32 = length(ndir);\r\n' \
   '                if (ndirl > 0.0) {\r\n' \
@@ -8864,7 +8871,7 @@ class GPXTweakerWebInterfaceServer():
   '                    dirn = false;\r\n' \
   '                    dir = ndir;\r\n' \
   '                  }\r\n' \
-  '                  var pdir: vec2f = sxys[p] - sxys[pp];\r\n' \
+  '                  var pdir: vec2f = sxy - psxy;\r\n' \
   '                  var pdirl: f32 = length(pdir);\r\n' \
   '                  if (pdirl > 0.0) {\r\n' \
   '                    pdir /= pdirl;\r\n' \
@@ -8872,38 +8879,30 @@ class GPXTweakerWebInterfaceServer():
   '                    let ncos: f32 = dot(dir, ndir);\r\n' \
   '                    let psin: f32 = determinant(mat2x2(dir, pdir));\r\n' \
   '                    let pcos: f32 = dot(dir, pdir);\r\n' \
-  '                    if (nsin * psin < 0.0) {\r\n' \
-  '                      if (pcos < 0.0) {\r\n' \
-  '                        if (ncos < 0.0) {\r\n' \
-  '                          pdirl = min(-pdirl * pcos, -ndirl * ncos);\r\n' \
-  '                          dir = -dir;\r\n' \
-  '                        } else {\r\n' \
-  '                          pdirl = 0.0;\r\n' \
-  '                        }\r\n' \
-  '                      }\r\n' \
-  '                      sxys[p] = sxys[pp] + pdirl * dir;\r\n' \
-  '                    } else if (ncos > pcos) {\r\n' \
-  '                      pdirl = max(0.0, pdirl * dot(pdir, ndir));\r\n' \
-  '                      sxys[p] = sxys[pp] + pdirl * ndir;\r\n' \
-  '                      dir = ndir;\r\n' \
-  '                    } else {\r\n' \
-  '                      dir = pdir;\r\n' \
-  '                    }\r\n' \
+  '                    let b1: bool = nsin * psin < 0.0;\r\n' \
+  '                    let b2: bool = pcos < 0.0;\r\n' \
+  '                    let b3: bool = ncos < 0.0;\r\n' \
+  '                    let b4: bool = ncos > pcos;\r\n' \
+  '                    pdirl = select(select(pdirl, max(0.0, pdirl * dot(pdir, ndir)), b4), select(pdirl, select(0.0, min(-pdirl * pcos, -ndirl * ncos), b3), b2), b1);\r\n' \
+  '                    dir = select(select(pdir, ndir, b4), select(dir, -dir, b2 && b3), b1);\r\n' \
+  '                    sxy = select(sxy, psxy + pdirl * dir, b1 || b4);\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
-  '                pp = p;\r\n' \
+  '                psxy = sxy;\r\n' \
+  '                sxys[p] = sxy;\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WGPUStats.segsws},},});\r\n' \
   '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
-  '            @group(0) @binding(1) var<storage, read> mmls: array<vec3f>;\r\n' \
-  '            @group(0) @binding(2) var<storage, read_write> segs: array<u32>;\r\n' \
-  '            @group(0) @binding(3) var<storage, read_write> gdists: array<f32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> mms: array<vec2f>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> lats: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
   '            override ws: u32 = 64;\r\n' \
   '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
@@ -8917,9 +8916,10 @@ class GPXTweakerWebInterfaceServer():
   '                sm = (s + s2) >> 1;\r\n' \
   '              }\r\n' \
   '              segs[p] = s;\r\n' \
-  '              let mmle: vec3f = mmls[p] * vec3f(0.00872664626, 0.00872664626, 0.0174532925);\r\n' \
-  '              let ls: f32 = select(mmls[p - 1].z * 0.0174532925, mmle.z, p == starts[segs[p]]);\r\n' \
-  '              let a: f32 = sqrt(pow(mmle.x, 2.0) - pow(mmle.x, 4.0) / 3.0 + cos(ls) * cos(mmle.z) * (pow(mmle.y, 2.0) - pow(mmle.y, 4.0) / 3.0));\r\n' \
+  '              let mm: vec2f = mms[p] * 0.00872664626;\r\n' \
+  '              let le: f32 = lats[p] * 0.0174532925;\r\n' \
+  '              let ls: f32 = select(lats[p - 1] * 0.0174532925, le, p == starts[segs[p]]);\r\n' \
+  '              let a: f32 = sqrt(dot(pow(mm, vec2f(2.0)) - pow(mm, vec2f(4.0)) / 3.0, vec2f(1.0, cos(ls) * cos(le))));\r\n' \
   '              gdists[p] = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
   '            }\r\n' \
   '          ` : `\r\n' \
@@ -8932,15 +8932,15 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let sxye: vec2f = xys[p];\r\n' \
-  '              let xys: vec2f = select(xys[p - 1], sxye, p == starts[segs[p]]);\r\n' \
-  '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, sxye.y) / 6378137.0);\r\n' \
+  '              let xye: vec2f = xys[p];\r\n' \
+  '              let xys: vec2f = select(xys[p - 1], xye, p == starts[segs[p]]);\r\n' \
+  '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, xye.y) / 6378137.0);\r\n' \
   '              let c: vec2f = 1.0 / (e + 1.0 / e);\r\n' \
-  '              gdists[p] = distance(xys, sxye) * (c.x + c.y);\r\n' \
+  '              gdists[p] = distance(xys, xye) * (c.x + c.y);\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WGPUStats.ptsws},},});\r\n' \
   '          this.bggdist = [];\r\n' \
   '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.meagain = this.device.createShaderModule({code: `\r\n' \
@@ -9000,7 +9000,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WGPUStats.segsws},},});\r\n' \
   '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
@@ -9134,10 +9134,10 @@ class GPXTweakerWebInterfaceServer():
   '          `});\r\n' \
   '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
-  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WGPUStats.ws},},});\r\n' \
-  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WGPUStats.ws},},});\r\n' \
-  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: {ws: WGPUStats.ws},},});\r\n' \
-  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: {ws: WGPUStats.ws},},});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WGPUStats.ptsws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: {ws: WGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: {ws: WGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '        }\r\n' \
@@ -9148,7 +9148,7 @@ class GPXTweakerWebInterfaceServer():
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
-  '          ["bstarts", "bsegs", "btrlats", "bmmls", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          ["bstarts", "bsegs", "btrlats", "bmms", "blats", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds", "bresult"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -9176,22 +9176,23 @@ class GPXTweakerWebInterfaceServer():
   '          this.nbsegs.push(nbtsegs - this.chunks.at(-2)[0]);\r\n' \
   '          this.nbpts.push(_starts[nbtsegs] - cofs);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            let wcx = Math.ceil(this.nbsegs[c] / WGPUStats.ws);\r\n' \
+  '            let wcx = Math.ceil(this.nbsegs[c] / WGPUStats.segsws);\r\n' \
   '            let wcy = Math.ceil(wcx / maxcw);\r\n' \
   '            this.segswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
-  '            wcx = Math.ceil(this.nbpts[c] / WGPUStats.ws);\r\n' \
+  '            wcx = Math.ceil(this.nbpts[c] / WGPUStats.ptsws);\r\n' \
   '            wcy = Math.ceil(wcx / maxcw);\r\n' \
   '            this.ptswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
   '            this.bstarts.push(this.device.createBuffer({size: (this.nbsegs[c] + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            this.device.queue.writeBuffer(this.bstarts[c], 0, _starts.subarray(this.chunks[c][0], this.chunks[c + 1][0] + 1));\r\n' \
   '            this.bsegs.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '            if (twmode) {\r\n' \
-  '              this.bmmls.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.bmms.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.blats.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            } else {\r\n' \
   '              this.btrlats.push(this.device.createBuffer({size: this.nbsegs[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.blls.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.bxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '              this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            }\r\n' \
   '            this.bgdists.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            this.bteahs.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
@@ -9199,16 +9200,17 @@ class GPXTweakerWebInterfaceServer():
   '            this.bslsps.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '            this.bslopestdistspeeds.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            if (twmode) {\r\n' \
-  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmmls[c]},}, {binding: 2, resource: {buffer: this.bsegs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmms[c]},}, {binding: 2, resource: {buffer: this.blats[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '            } else {\r\n' \
   '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
-  '              this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.bsmdrange},}, {binding: 3, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
+  '              this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.bxys[c]},}, {binding: 3, resource: {buffer: this.bsmdrange},}, {binding: 4, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
   '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '              this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '            }\r\n' \
   '            this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bteahs[c]},}, {binding: 2, resource: {buffer: this.beagainf},}, {binding: 3, resource: {buffer: this.beags[c]},}]}));\r\n' \
   '            this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
   '          }\r\n' \
+  '          this.bresult = this.device.createBuffer({size: Math.max(...this.nbpts) * 16, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
   '        }\r\n' \
   '        set trlats(a) {\r\n' \
   '          const _trlats = (a instanceof Float32Array) ? Float32Array.from({length: (a.length / 2) | 0}, (e, i) => Math.tan((a[2 * i] / 360 + 0.25) * Math.PI)) : Float32Array.from(a, (ll) => Math.tan((ll[0] / 360 + 0.25) * Math.PI));\r\n' \
@@ -9216,10 +9218,16 @@ class GPXTweakerWebInterfaceServer():
   '            this.device.queue.writeBuffer(this.btrlats[c], 0, _trlats.subarray(this.chunks[c][0], this.chunks[c + 1][0]));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        set mmls(a) {\r\n' \
-  '          const _mmls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '        set mms(a) {\r\n' \
+  '          const _mms = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            this.device.queue.writeBuffer(this.bmmls[c], 0, _mmls.subarray(this.chunks[c][1] * 4, this.chunks[c + 1][1] * 4));\r\n' \
+  '            this.device.queue.writeBuffer(this.bmms[c], 0, _mms.subarray(this.chunks[c][1] * 2, this.chunks[c + 1][1] * 2));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set lats(a) {\r\n' \
+  '          const _lats = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.blats[c], 0, _lats.subarray(this.chunks[c][1], this.chunks[c + 1][1]));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        set lls(a) {\r\n' \
@@ -9246,28 +9254,20 @@ class GPXTweakerWebInterfaceServer():
   '        calc(...tasks) {\r\n' \
   '          tasks = new Set(tasks);\r\n' \
   '          const encoder = this.device.createCommandEncoder();\r\n' \
-  '          let pass = null;\r\n' \
+  '          const pass = encoder.beginComputePass();\r\n' \
   '          if (tasks.has("pos")) {\r\n' \
-  '            pass = encoder.beginComputePass();\r\n' \
   '            pass.setPipeline(this.ppos);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgpos[c]);\r\n' \
   '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
   '            }\r\n' \
-  '            pass.end();\r\n' \
   '          }\r\n' \
   '          if (tasks.has("smooth")) {\r\n' \
-  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '              encoder.copyBufferToBuffer(this.bxys[c], 0, this.bsxys[c], 0, this.bsxys[c].size);\r\n' \
-  '            }\r\n' \
-  '            pass = encoder.beginComputePass();\r\n' \
   '            pass.setPipeline(this.ptsmooth);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
   '              pass.dispatchWorkgroups(...this.segswc[c]);\r\n' \
   '            }\r\n' \
-  '          } else {\r\n' \
-  '            pass = encoder.beginComputePass();\r\n' \
   '          }\r\n' \
   '          if (tasks.has("gdist") || tasks.has("sgdist")) {\r\n' \
   '            pass.setPipeline(this.pgdist);\r\n' \
@@ -9315,16 +9315,13 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        _get_result(rn, ru) {\r\n' \
   '          const b = this["b" + rn];\r\n' \
-  '          const mb = Array.from({length: this.chunks.length - 1}, (s, c) => this.device.createBuffer({size: b[c].size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST}));\r\n' \
-  '          const encoder = this.device.createCommandEncoder();\r\n' \
-  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            encoder.copyBufferToBuffer(b[c], 0, mb[c], 0, mb[c].size);\r\n' \
-  '          }\r\n' \
-  '          const commands = encoder.finish();\r\n' \
-  '          this.device.queue.submit([commands]);\r\n' \
+  '          const m = this.bresult;\r\n' \
   '          const r = new Float32Array(this.chunks.at(-1)[1] * ru);\r\n' \
-  '          const prom = Promise.all(mb.map((m, c) => m.mapAsync(GPUMapMode.READ).then(() => {r.set(new Float32Array(m.getMappedRange()), this.chunks[c][1] * ru); m.unmap(); m.destroy()}))).then(() => r);\r\n' \
-  '          return prom\r\n' \
+  '          let prom = Promise.resolve(null);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            prom = prom.then(() => {const encoder = this.device.createCommandEncoder(); encoder.copyBufferToBuffer(b[c], 0, m, 0, this.nbpts[c] * ru * 4); this.device.queue.submit([encoder.finish()]); return m.mapAsync(GPUMapMode.READ)}).then(() => {const rc = r.subarray(this.chunks[c][1] * ru * 4, this.chunks[c + 1][1] * ru * 4); rc.set(new Float32Array(m.getMappedRange(0, this.nbpts[c] * ru * 4))); m.unmap();})\r\n' \
+  '          }\r\n' \
+  '          return prom.then(() => r);\r\n' \
   '        }\r\n' \
   '        get xys() {\r\n' \
   '          return this._get_result("xys", 2);\r\n' \
@@ -9825,7 +9822,7 @@ class GPXTweakerWebInterfaceServer():
   '                if (t_s == null) {\r\n' \
   '                  t_s = t;\r\n' \
   '                } else {\r\n' \
-  '                  stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
+  '                  stat[0] = max((t - t_s) / 1000, stat_p[0]);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              if (! isNaN(ea[1])) {\r\n' \
@@ -9909,7 +9906,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n'
   HTML_SEGCALC_4_TEMPLATE = \
   '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '            let drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '            let drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '            let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '              let ea = stats[seg_ind][p].slice(4,6);\r\n' \
@@ -9935,9 +9932,9 @@ class GPXTweakerWebInterfaceServer():
   '                stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(dt, stats[seg_ind][ps-1][5] - ea[1]) * (drange - dt)) / drange;\r\n' \
   '                stats[seg_ind][p][6] = (stats[seg_ind][p][6] + slope(dt, stats[seg_ind][ps-1][6] - el) * (drange - dt)) / drange;\r\n' \
   '              }\r\n' \
-  '              stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
-  '              stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
-  '              stats[seg_ind][p][6] = Math.max(Math.min(stats[seg_ind][p][6], slmax), -slmax);\r\n' \
+  '              stats[seg_ind][p][4] = max(min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
+  '              stats[seg_ind][p][5] = max(min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
+  '              stats[seg_ind][p][6] = max(min(stats[seg_ind][p][6], slmax), -slmax);\r\n' \
   '            }\r\n' \
   '            for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
   '              if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
@@ -9953,9 +9950,9 @@ class GPXTweakerWebInterfaceServer():
   '                  su += c;\r\n' \
   '                }\r\n' \
   '                if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
-  '                  stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2) / (1 + su/2)));\r\n' \
-  '                  stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2) / (1 + su/2)));\r\n' \
-  '                  stats[seg_ind][p][6] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][6] + s[2]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][4] = max(-slmax, min(slmax, (stats[seg_ind][p][4] + s[0]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][5] = max(-slmax, min(slmax, (stats[seg_ind][p][5] + s[1]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][6] = max(-slmax, min(slmax, (stats[seg_ind][p][6] + s[2]/2) / (1 + su/2)));\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -9983,7 +9980,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
   '              stats[seg_ind][p][7] = (stats[seg_ind][p][7] + (stats[seg_ind][ps-1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
   '            }\r\n' \
-  '            stats[seg_ind][p][7] = Math.min(stats[seg_ind][p][7], spmax);\r\n' \
+  '            stats[seg_ind][p][7] = min(stats[seg_ind][p][7], spmax);\r\n' \
   '          }\r\n' \
   '          for (let p=stats[seg_ind].length-2; p>=0; p--) {\r\n' \
   '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
@@ -10000,15 +9997,15 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              if (b) {\r\n' \
   '                if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
-  '                  stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][7] + s/2) / (1 + su/2));\r\n' \
+  '                  stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p][7] + s/2) / (1 + su/2));\r\n' \
   '                }\r\n' \
   '              } else if (p > 0) {\r\n' \
-  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p][0] - stats[seg_ind][p-1][0]));\r\n' \
+  '                stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p][0] - stats[seg_ind][p-1][0]));\r\n' \
   '              }\r\n' \
   '            } else if (p == 0 || stats[seg_ind][p][0] - stats[seg_ind][p-1][0] <= trange) {\r\n' \
-  '              stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
+  '              stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
   '            } else {\r\n' \
-  '              stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
+  '              stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n'
@@ -11879,6 +11876,9 @@ class GPXTweakerWebInterfaceServer():
   '      function segment_calc(seg, fpan=0, ind=null, mmls=null, teahs=null) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
   '          if (pos_d > 0) {\r\n' \
@@ -11918,8 +11918,8 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            } else {\r\n' \
   '              if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_b[0]));\r\n' \
-  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_b[1]));\r\n' \
+  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:max(0,ea[0]-ea_b[0]));\r\n' \
+  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:max(0,ea[1]-ea_b[1]));\r\n' \
   '              }\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0) {\r\n' \
@@ -11982,7 +11982,6 @@ class GPXTweakerWebInterfaceServer():
   '        let points = document.getElementById("points").firstChild;\r\n' \
   '        let pos_p =  points.data.indexOf("(");\r\n' \
   '        if (pos_p >= 0) {points.deleteData(pos_p, points.length - pos_p);}\r\n' \
-  '        let segs = document.getElementById("pointsform").children;\r\n' \
   '        let dur = null;\r\n' \
   '        let dist = null;\r\n' \
   '        let ele = null;\r\n' \
@@ -12029,6 +12028,7 @@ class GPXTweakerWebInterfaceServer():
   '        let starts = null;\r\n' \
   '        let mmls = null;\r\n' \
   '        let teahs = null;\r\n' \
+  '        let max = Math.max;\r\n' \
   '        if (fpan <= 1 || gpucomp == 0 || gpu_part) {\r\n' \
   '          starts = [0];\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
@@ -12083,7 +12083,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gpucomp >= 1 && fpan != 1) {\r\n' \
   '          gpustats.trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '          gpustats.drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '          gpustats.drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '          gpustats.calc("tweaker");\r\n' \
   '          let gs = gpustats.gs;\r\n' \
@@ -12104,8 +12104,8 @@ class GPXTweakerWebInterfaceServer():
   '                  stat[2] = 0;\r\n' \
   '                  stat[3] = 0;\r\n' \
   '                } else {\r\n' \
-  '                  stat[2] = stats[seg_ind][p - 1][2] + Math.max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
-  '                  stat[3] = stats[seg_ind][p - 1][3] + Math.max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
+  '                  stat[2] = stats[seg_ind][p - 1][2] + max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
+  '                  stat[3] = stats[seg_ind][p - 1][3] + max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              i++;\r\n' \
@@ -12133,8 +12133,11 @@ class GPXTweakerWebInterfaceServer():
   '        segs.sort((s1, s2) => parseInt(s1.id.slice(7, -4)) - parseInt(s2.id.slice(7, -4)));\r\n' \
   '        let starts = null;\r\n' \
   '        let nbpt = 0;\r\n' \
-  '        let mmls = null;\r\n' \
+  '        let mms = null;\r\n' \
+  '        let lats = null;\r\n' \
   '        let teahs = null;\r\n' \
+  '        const max = Math.max;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
   '        if (fpan == 0 || gpu_part) {\r\n' \
   '          starts = [0];\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
@@ -12183,12 +12186,14 @@ class GPXTweakerWebInterfaceServer():
   '          wgpustats.starts = starts;\r\n' \
   '          if (nbpt == 0) {\r\n' \
   '            gpu_part = fpan == 0 && stats.reduce((p, c, s) => wgpu_modified.has(s) ? p : p + c.length, 0) > 0;\r\n' \
-  '            whole_calc();\r\n' \
+  '            if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
-  '          mmls = new Float32Array(nbpt * 4);\r\n' \
+  '          mms = new Float32Array(nbpt * 2);\r\n' \
+  '          lats = new Float32Array(nbpt * 2);\r\n' \
   '          teahs = new Float32Array(nbpt * 4);\r\n' \
-  '          let cmmls = mmls;\r\n' \
+  '          let cmms = mms;\r\n' \
+  '          let clats = lats;\r\n' \
   '          let cteahs = teahs;\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            const seg = segs[s];\r\n' \
@@ -12208,20 +12213,20 @@ class GPXTweakerWebInterfaceServer():
   '              const lat = parseFloat(pc[1].value);\r\n' \
   '              const lon = parseFloat(pc[4].value);\r\n' \
   '              if (ind == 0) {\r\n' \
-  '                cmmls[0] = 0;\r\n' \
-  '                cmmls[1] = 0;\r\n' \
-  '                cmmls[2] = lat;\r\n' \
+  '                cmms[0] = 0;\r\n' \
+  '                cmms[1] = 0;\r\n' \
+  '                lats[2] = lat;\r\n' \
   '              } else {\r\n' \
-  '                cmmls[ind] = lat - latp;\r\n' \
-  '                cmmls[ind + 1] = lon - lonp;\r\n' \
-  '                cmmls[ind + 2] = lat;\r\n' \
+  '                cmms[ind] = lat - latp;\r\n' \
+  '                cmms[ind + 1] = lon - lonp;\r\n' \
+  '                lats[ind + 2] = lat;\r\n' \
   '              }\r\n' \
   '              latp = lat;\r\n' \
   '              lonp = lon;\r\n' \
   '              const t = Date.parse(pc[13].value);\r\n' \
   '              if (! isNaN(t)) {\r\n' \
   '                if (tb == null) {tb = t;}\r\n' \
-  '                tp = Math.max((t - tb) / 1000, tp);\r\n' \
+  '                tp = max((t - tb) / 1000, tp);\r\n' \
   '              }\r\n' \
   '              cteahs[ind] = tp;\r\n' \
   '              const e = parseFloat(pc[7].value);\r\n' \
@@ -12258,7 +12263,8 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              ind += 4;\r\n' \
   '            }\r\n' \
-  '            cmmls = cmmls.subarray(ind);\r\n' \
+  '            cmms = cmms.subarray(ind);\r\n' \
+  '            clats = clats.subarray(ind);\r\n' \
   '            cteahs = cteahs.subarray(ind);\r\n' \
   '            if (fpan == 0) {\r\n' \
   '              const seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
@@ -12276,23 +12282,21 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          wgpustats.mmls = mmls;\r\n' \
+  '          wgpustats.mms = mms;\r\n' \
+  '          wgpustats.lats = lats;\r\n' \
   '          wgpustats.teahs = teahs;\r\n' \
   '        } else {\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            nbp = wgpu_modified.has(s) ? 0 : stats[s].length;\r\n' \
   '            if (nbp == 0) {segs[s] = null;} else {nbpt += nbp;}\r\n' \
   '          }\r\n' \
-  '          if (nbpt == 0) {\r\n' \
-  '            whole_calc();\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
+  '          if (nbpt == 0) {return;}\r\n' \
   '        }\r\n' \
   '        let gdists = null;\r\n' \
   '        let eags = null;\r\n' \
   '        let slopestdistspeeds  = null;\r\n' \
   '        if (fpan == 0) {\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
   '          wgpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
   '          eags = await wgpustats.eags;\r\n' \
@@ -12303,7 +12307,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (gpu_part) {wgpustats.calc("gdist", "eagain");} else {wgpustats.calc("eagain");}\r\n' \
   '          eags = await wgpustats.eags;\r\n' \
   '        } else {\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          if (fpan == 2) {\r\n' \
   '            if (gpu_part) {wgpustats.calc("gdist", "slopedist", "speed");} else {wgpustats.calc("slopedist", "speed");}\r\n' \
   '          } else {\r\n' \
@@ -12364,7 +12368,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        gpu_part = fpan == 0 && stats.reduce((p, c, s) => wgpu_modified.has(s) ? p : p + c.length, 0) > nbpt;\r\n' \
-  '        whole_calc();\r\n' \
+  '        if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
   '      }\r\n' \
   '      function calc_modified(...segs) {\r\n' \
   '        if (webgpu) {\r\n' \
@@ -12411,6 +12415,7 @@ class GPXTweakerWebInterfaceServer():
   '        let path_foc = track_foc.firstElementChild;\r\n' \
   '        let track = track_foc.cloneNode(true);\r\n' \
   '        let path = track.firstElementChild;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        if (focused.substring(0, 3) == "seg") {\r\n' \
   '          seg.id = pref + "cont";\r\n' \
   '          seg.children[0].id = pref;\r\n' \
@@ -12593,6 +12598,7 @@ class GPXTweakerWebInterfaceServer():
   '        let maxtime = null;\r\n' \
   '        let spans_foc = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
   '        let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let p=0; p<spans_foc.length; p++) {\r\n' \
   '          if (! spans_foc[p].parentNode.firstElementChild.checked || spans_foc[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
   '          let t = Date.parse(document.getElementById(spans_foc[p].id.replace("focus", "time")).value);\r\n' \
@@ -12685,6 +12691,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {return;}\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = segs[s].getElementsByTagName("span");\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
@@ -13129,6 +13136,7 @@ class GPXTweakerWebInterfaceServer():
   '        let etime = null;\r\n' \
   '        let ralt = null;\r\n' \
   '        let sp = 0;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let p=0; p<spans.length; p++) {\r\n' \
   '          let pid = spans[p].id.slice(0, -5);\r\n' \
   '          if (pt_foc != null && pt_foc.id.slice(0, -4) != pid && stime == null) {continue;}\r\n' \
@@ -13265,6 +13273,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
   '          let lc = -1;\r\n' \
@@ -13395,6 +13404,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
   '          let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
@@ -14607,6 +14617,9 @@ class GPXTweakerWebInterfaceServer():
   '          vnormals = new Float32Array((lvy - 1) * (lvx + 1) * 6);\r\n' \
   '          let i = 0;\r\n' \
   '          let n = 0;\r\n' \
+  '          let min = Math.min;\r\n' \
+  '          let max = Math.max;\r\n' \
+  '          let sqrt = Math.sqrt;\r\n' \
   '          for (let iy=0; iy<lvy-1; iy++) {\r\n' \
   '            for (let ix=0; ix<lvx; ix++) {\r\n' \
   '              vpositions[i] = vx[ix];\r\n' \
@@ -14616,10 +14629,10 @@ class GPXTweakerWebInterfaceServer():
   '              vpositions[i + 4] = vy[iy + 1];\r\n' \
   '              vpositions[i + 5] = vz[(iy + 1) * lvx + ix];\r\n' \
   '              if (iy == 0) {\r\n' \
-  '                vnormals[i] = (vz[iy * lvx + Math.min(ix + 1, lvx - 1)] - vz[iy * lvx + Math.max(ix - 1, 0)]) / (vx[Math.min(ix + 1, lvx - 1)] - vx[Math.max(ix - 1, 0)]);\r\n' \
-  '                vnormals[i + 1] = (vz[(iy + 1) * lvx + ix] - vz[Math.max(iy - 1, 0) * lvx + ix]) / (vy[iy + 1] - vy[Math.max(iy - 1, 0)]);\r\n' \
+  '                vnormals[i] = (vz[iy * lvx + min(ix + 1, lvx - 1)] - vz[iy * lvx + max(ix - 1, 0)]) / (vx[min(ix + 1, lvx - 1)] - vx[max(ix - 1, 0)]);\r\n' \
+  '                vnormals[i + 1] = (vz[(iy + 1) * lvx + ix] - vz[max(iy - 1, 0) * lvx + ix]) / (vy[iy + 1] - vy[max(iy - 1, 0)]);\r\n' \
   '                vnormals[i + 2] = 1;\r\n' \
-  '                n = Math.sqrt(vnormals[i]**2 + vnormals[i + 1]**2 + 1);\r\n' \
+  '                n = sqrt(vnormals[i]**2 + vnormals[i + 1]**2 + 1);\r\n' \
   '                vnormals[i] /= -n;\r\n' \
   '                vnormals[i + 1] /= -n;\r\n' \
   '                vnormals[i + 2] /= n;\r\n' \
@@ -14628,10 +14641,10 @@ class GPXTweakerWebInterfaceServer():
   '                vnormals[i + 1] = vnormals[i + 4 - 6 * (lvx + 1)];\r\n' \
   '                vnormals[i + 2] = vnormals[i + 5 - 6 * (lvx + 1)];\r\n' \
   '              }\r\n' \
-  '              vnormals[i + 3] = (vz[(iy + 1) * lvx + Math.min(ix + 1, lvx - 1)] - vz[(iy + 1) * lvx + Math.max(ix - 1, 0)]) / (vx[Math.min(ix + 1, lvx - 1)] - vx[Math.max(ix - 1, 0)]);\r\n' \
-  '              vnormals[i + 4] = (vz[Math.min(iy + 2, lvy - 1) * lvx + ix] - vz[iy * lvx + ix]) / (vy[Math.min(iy + 2, lvy - 1)] - vy[iy]);\r\n' \
+  '              vnormals[i + 3] = (vz[(iy + 1) * lvx + min(ix + 1, lvx - 1)] - vz[(iy + 1) * lvx + max(ix - 1, 0)]) / (vx[min(ix + 1, lvx - 1)] - vx[max(ix - 1, 0)]);\r\n' \
+  '              vnormals[i + 4] = (vz[min(iy + 2, lvy - 1) * lvx + ix] - vz[iy * lvx + ix]) / (vy[min(iy + 2, lvy - 1)] - vy[iy]);\r\n' \
   '              vnormals[i + 5] = 1;\r\n' \
-  '              n = Math.sqrt(vnormals[i + 3]**2 + vnormals[i + 4]**2 + 1);\r\n' \
+  '              n = sqrt(vnormals[i + 3]**2 + vnormals[i + 4]**2 + 1);\r\n' \
   '              vnormals[i + 3] /= -n;\r\n' \
   '              vnormals[i + 4] /= -n;\r\n' \
   '              vnormals[i + 5] /= n;\r\n' \
@@ -16547,6 +16560,9 @@ class GPXTweakerWebInterfaceServer():
   '          stats[seg_ind] = [];\r\n' \
   '        }\r\n' \
   '        let seg_c = seg_smoothed?seg_smoothed:seg;\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0)) {\r\n' + HTML_SEGCALC_1_TEMPLATE + \
   '          for (let p=0; p<seg.length; p++) {\r\n' \
   '            let pt = seg[p];\r\n' \
@@ -16607,6 +16623,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function tracks_desc() {\r\n' \
   '        let nbtracks = tracks_pts.length;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let t=0; t<nbtracks; t++) {\r\n' \
   '          let track_props = tracks_props[t];\r\n' \
   '          let dur_c = "--h--mn--s";\r\n' \
@@ -16626,12 +16643,15 @@ class GPXTweakerWebInterfaceServer():
   '        if ((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) {tracks_cfilter();}\r\n' \
   '      }\r\n' \
   '      function tracks_calc(fpan=0) {\r\n' \
-  '        console.log(ti=performance.now());\r\n' \
+  '        console.log("start", ti=performance.now());\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
   '        let teahs = null;\r\n' \
   '        let nbtracks = tracks_pts.length;\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
   '          let nbpt = tracks_xy_offsets[nbtracks];\r\n' \
@@ -16722,18 +16742,20 @@ class GPXTweakerWebInterfaceServer():
   '        if (fpan == 0 && gpucomp >= 1) {\r\n' \
   '          gpustats.teahs = teahs;\r\n' \
   '        }\r\n' \
+  '        console.log("load",  performance.now()-ti);\r\n' \
   '        if (gpucomp >= 1 && fpan != 1) {\r\n' \
   '          if (gpustats.starts[gpustats.starts.length - 1] == 0) {\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          gpustats.trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '          gpustats.drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '          gpustats.drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '          gpustats.calc((fpan==0 || smoothed_ch)?(smoothed?"gwmdist":"gdist"):"");\r\n' \
   '          let gs = gpustats.gs;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let ss = gpustats.ss;\r\n' \
+  '        console.log("calc6",  performance.now()-ti);\r\n' \
   '          for (let t=0, i=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
   '            let stats = tracks_stats[t];\r\n' \
@@ -16750,14 +16772,15 @@ class GPXTweakerWebInterfaceServer():
   '                    stat[2] = 0;\r\n' \
   '                    stat[3] = 0;\r\n' \
   '                  } else {\r\n' \
-  '                    stat[2] = stats[s][p - 1][2] + Math.max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
-  '                    stat[3] = stats[s][p - 1][3] + Math.max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
+  '                    stat[2] = stats[s][p - 1][2] + max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
+  '                    stat[3] = stats[s][p - 1][3] + max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        console.log("calc7a",  performance.now()-ti);\r\n' \
   '        if (fpan == 0 || smoothed_ch) {\r\n' \
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
   '          for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
@@ -16771,6 +16794,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        console.log("calc7b",  performance.now()-ti);\r\n' \
   '        if (fpan != 3) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            let dur = null;\r\n' \
@@ -16798,8 +16822,8 @@ class GPXTweakerWebInterfaceServer():
   '                for (let p=0; p<seg.length; p++) {\r\n' \
   '                  let t = seg[p][4];\r\n' \
   '                  if (! isNaN(t)) {\r\n' \
-  '                    ts = Math.min(t, ts==null?t:ts);\r\n' \
-  '                    te = Math.max(t, te==null?t:te);\r\n' \
+  '                    ts = min(t, ts==null?t:ts);\r\n' \
+  '                    te = max(t, te==null?t:te);\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -16834,22 +16858,28 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          tracks_desc();\r\n' \
   '        }\r\n' \
-  '        console.log(performance.now()-ti);\r\n' \
+  '        console.log("end", performance.now(), performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      async function tracks_calc_wgpu(fpan=0) {\r\n' \
-  '        console.log(ti=performance.now());\r\n' \
+  '        console.log("start", ti=performance.now());\r\n' \
   '        if (wgpustats.device == null || tracks_pts == null) {return;}\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
   '        let teahs = null;\r\n' \
   '        const nbtracks = tracks_pts.length;\r\n' \
+  '        const min = Math.min;\r\n' \
+  '        const max = Math.max;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        let gdists = null;\r\n' \
+  '        let eags = null;\r\n' \
+  '        let slopestdistspeeds  = null;\r\n' \
+  '        let smoothed_ch = false;\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
   '          const nbpt = tracks_xy_offsets[nbtracks];\r\n' \
   '          tracks_xys = new Float32Array(nbpt * 2);\r\n' \
-  '          tracks_pts_smoothed = null;\r\n' \
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
   '          tracks_props = [];\r\n' \
@@ -16859,8 +16889,6 @@ class GPXTweakerWebInterfaceServer():
   '          teahs = new Float32Array(nbpt * 4);\r\n' \
   '          let clls = lls;\r\n' \
   '          let cteahs = teahs;\r\n' \
-  '          const min = Math.min;\r\n' \
-  '          const max = Math.max;\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
   '            const track_stats = [];\r\n' \
@@ -16886,41 +16914,60 @@ class GPXTweakerWebInterfaceServer():
   '              seg.forEach((c, p) => {clls[2 * p] = tl[0] - c[0]; clls[2 * p + 1] = c[1] - tl[1];});\r\n' \
   '              clls = clls.subarray(2 * nbp);\r\n' \
   '              track_props[1] = 0;\r\n' \
-   '              let tb = null;\r\n' \
-  '              let ed = seg.findIndex((c) => ! isNaN(c[2]));\r\n' \
-  '              let ad = seg.findIndex((c) => ! isNaN(c[3]));\r\n' \
-  '              let hd = ed < 0 ? (ad < 0 ? 0 : seg[ad][3]): (ad < 0 ? seg[ed][2] : (ad <= ed ? seg[ad][3] : seg[ed][2]));\r\n' \
-  '              if (ed < 0) {\r\n' \
-  '                ed = 0;\r\n' \
-  '              } else {\r\n' \
-  '                ed = seg[ed][2];\r\n' \
-  '                track_props[2] = 0;\r\n' \
-  '              }\r\n' \
-  '              if (ad < 0) {\r\n' \
-  '                ad = 0;\r\n' \
-  '              } else {\r\n' \
-  '                ad = seg[ad][3];\r\n' \
-  '                track_props[3] = 0;\r\n' \
-  '              }\r\n' \
+  '              let ind = 0;\r\n' \
+  '              let tb = null;\r\n' \
+  '              let tp = 0;\r\n' \
+  '              let ep = null;\r\n' \
+  '              let ap = null;\r\n' \
+  '              let hp = null;\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                const pt = seg[p];\r\n' \
   '                const t = pt[4];\r\n' \
-  '                if (isNaN(t)) {\r\n' \
-  '                  cteahs[4 * p] = p == 0 ? 0 : cteahs[4 * p - 4];\r\n' \
-  '                } else {\r\n' \
+  '                if (! isNaN(t)) {\r\n' \
   '                  if (tb == null) {tb = t;}\r\n' \
-  '                  cteahs[4 * p] = p == 0 ? 0 : max((t - tb) / 1000, cteahs[4 * p - 4]);\r\n' \
+  '                  tp = max((t - tb) / 1000, tp);\r\n' \
   '                  ts = (ts == null) ? t : min(t, ts);\r\n' \
   '                  te = (te == null) ? t : max(t, te);\r\n' \
   '                }\r\n' \
+  '                cteahs[ind] = tp;\r\n' \
   '                const e = pt[2];\r\n' \
   '                const a = pt[3];\r\n' \
-  '                cteahs[4 * p + 1] = isNaN(e) ? (p == 0 ? ed : cteahs[4 * p - 3]) : e;\r\n' \
-  '                cteahs[4 * p + 2] = isNaN(a) ? (p == 0 ? ad : cteahs[4 * p - 2]) : a;\r\n' \
-  '                cteahs[4 * p + 3] = isNaN(a) ? (isNaN(e) ? (p == 0 ? hd : cteahs[4 * p - 1]): e) : a;\r\n' \
+  '                let h = null;\r\n' \
+  '                if (isNaN(a)) {\r\n' \
+  '                  cteahs[ind + 2] = ap == null ? 0 : ap;\r\n' \
+  '                } else {\r\n' \
+  '                  if (ap == null) {\r\n' \
+  '                    for (let i=0; i<ind; i+=4) {cteahs[i + 2] = a;}\r\n' \
+  '                    track_props[3] = 0;\r\n' \
+  '                  }\r\n' \
+  '                  ap = a;\r\n' \
+  '                  cteahs[ind + 2] = a;\r\n' \
+  '                  h = a;\r\n' \
+  '                }\r\n' \
+  '                if (isNaN(e)) {\r\n' \
+  '                  cteahs[ind + 1] = ep == null ? 0 : ep;\r\n' \
+  '                } else {\r\n' \
+  '                  if (ep == null) {\r\n' \
+  '                    for (let i=0; i<ind; i+=4) {cteahs[i + 1] = e;}\r\n' \
+  '                    track_props[2] = 0;\r\n' \
+  '                  }\r\n' \
+  '                  ep = e;\r\n' \
+  '                  cteahs[ind + 1] = e;\r\n' \
+  '                  if (h == null) {h = e;}\r\n' \
+  '                }\r\n' \
+  '                if (h == null) {\r\n' \
+  '                  cteahs[ind + 3] = hp == null ? 0 : hp;\r\n' \
+  '                } else {\r\n' \
+  '                  if (hp == null) {\r\n' \
+  '                    for (let i=0; i<ind; i+=4) {cteahs[i + 3] = h;}\r\n' \
+  '                  }\r\n' \
+  '                  hp = h;\r\n' \
+  '                  cteahs[ind + 3] = h;\r\n' \
+  '                }\r\n' \
+  '                ind += 4;\r\n' \
   '              }\r\n' \
-  '              if (tb != null) {track_props[0] = (isNaN(track_props[0]) ? 0 : track_props[0]) + cteahs[4 * nbp - 4];}\r\n' \
-  '              cteahs = cteahs.subarray(4 * nbp);\r\n' \
+  '              if (tb != null) {track_props[0] = (isNaN(track_props[0]) ? 0 : track_props[0]) + cteahs[ind - 4];}\r\n' \
+  '              cteahs = cteahs.subarray(ind);\r\n' \
   '            }\r\n' \
   '            if (ts != null) {\r\n' \
   '              track_props[4] = ts;\r\n' \
@@ -16932,71 +16979,71 @@ class GPXTweakerWebInterfaceServer():
   '          wgpustats.trlats = tls;\r\n' \
   '          wgpustats.lls = lls;\r\n' \
   '          wgpustats.teahs = teahs;\r\n' \
+  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          if (smoothed) {\r\n' \
+  '            tracks_pts_smoothed = [];\r\n' \
   '            wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '            wgpustats.calc("pos", "smooth");\r\n' \
+  '            wgpustats.calc("pos", "smooth", "sgdist", "eagain", "slopedist", "speed");\r\n' \
   '            tracks_xys = await wgpustats.xys;\r\n' \
   '            tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
   '          } else {\r\n' \
-  '            wgpustats.calc("pos");\r\n' \
+  '            tracks_pts_smoothed = null;\r\n' \
+  '            wgpustats.calc("pos", "gdist", "eagain", "slopedist", "speed");\r\n' \
   '            tracks_xys = await wgpustats.xys;\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '        if (tracks_stats.length == 0) {return;}\r\n' \
-  '        let smoothed_ch = false;\r\n' \
-  '        if (smoothed && tracks_pts_smoothed == null) {\r\n' \
-  '          tracks_pts_smoothed = [];\r\n' \
-  '          smoothed_ch = true;\r\n' \
-  '        }\r\n' \
-  '        if (! smoothed && tracks_pts_smoothed != null) {\r\n' \
-  '          tracks_pts_smoothed = null;\r\n' \
-  '          smoothed_ch = true;\r\n' \
-  '        }\r\n' \
-  '        if (wgpustats.chunks.length == 1) {return;}\r\n' \
-  '        let gdists = null;\r\n' \
-  '        let eags = null;\r\n' \
-  '        let slopestdistspeeds  = null;\r\n' \
-  '        if (fpan == 0 || smoothed_ch) {\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
-  '          if (fpan == 0) {\r\n' \
+  '          gdists = await wgpustats.gdists;\r\n' \
+  '          eags = await wgpustats.eags;\r\n' \
+  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '        } else {\r\n' \
+  '          if (tracks_stats.length == 0 || wgpustats.chunks.length == 1) {return;}\r\n' \
+  '          if (smoothed && tracks_pts_smoothed == null) {\r\n' \
+  '            tracks_pts_smoothed = [];\r\n' \
+  '            smoothed_ch = true;\r\n' \
+  '          }\r\n' \
+  '          if (! smoothed && tracks_pts_smoothed != null) {\r\n' \
+  '            tracks_pts_smoothed = null;\r\n' \
+  '            smoothed_ch = true;\r\n' \
+  '          }\r\n' \
+  '          if (smoothed_ch) {\r\n' \
+  '            wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            if (smoothed) {\r\n' \
+  '              wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '              wgpustats.calc("smooth", "sgdist", "slopedist", "speed");\r\n' \
+  '              tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
+  '            } else {\r\n' \
+  '              wgpustats.calc("gdist", "slopedist", "speed");\r\n' \
+  '            }\r\n' \
+  '            gdists = await wgpustats.gdists;\r\n' \
+  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '          } else if (fpan == 1) {\r\n' \
   '            wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '            wgpustats.calc("eagain", (smoothed ? "sgdist" : "gdist"), "slopedist", "speed");\r\n' \
-  '          } else if (smoothed) {\r\n' \
-  '            wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '            wgpustats.calc("smooth");\r\n' \
-  '            tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
-  '            wgpustats.calc("sgdist", "slopedist", "speed");\r\n' \
+  '            wgpustats.calc("eagain");\r\n' \
+  '            eags = await wgpustats.eags;\r\n' \
   '          } else {\r\n' \
-  '            wgpustats.calc("gdist", "slopedist", "speed");\r\n' \
+  '            wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            if (fpan == 2) {\r\n' \
+  '              wgpustats.calc("slopedist", "speed");\r\n' \
+  '            } else {\r\n' \
+  '              wgpustats.calc("speed");\r\n' \
+  '            }\r\n' \
+  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
   '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan == 0 || smoothed_ch) {\r\n' \
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
   '            let d = "M0 0";\r\n' \
   '            for (const seg of segs) {\r\n' \
-  '              const nbp = seg.length;\r\n' \
-  '              for (let p=0; p<nbp; p++) {\r\n' \
-  '                d += (p == 0 ? " M" : " L") + xys[2 * p].toFixed(1) + " " + xys[2 * p + 1].toFixed(1);\r\n' \
+  '              const mind = 2 * seg.length;\r\n' \
+  '              for (let ind=0; ind<mind; ind+=2) {\r\n' \
+  '                d += (ind == 0 ? " M" : " L") + xys[ind].toFixed(1) + " " + xys[ind + 1].toFixed(1);\r\n' \
   '              }\r\n' \
   '              document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
-  '              xys = xys.subarray(2 * nbp);\r\n' \
+  '              xys = xys.subarray(mind);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (fpan == 0) {eags = await wgpustats.eags;}\r\n' \
-  '          gdists = await wgpustats.gdists;\r\n' \
-  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
-  '        } else if (fpan == 1) {\r\n' \
-  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '          wgpustats.calc("eagain");\r\n' \
-  '          eags = await wgpustats.eags;\r\n' \
-  '        } else {\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
-  '          if (fpan == 2) {\r\n' \
-  '            wgpustats.calc("slopedist", "speed");\r\n' \
-  '          } else {\r\n' \
-  '            wgpustats.calc("speed");\r\n' \
-  '          }\r\n' \
-  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
   '        }\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
@@ -17098,7 +17145,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc();}\r\n' \
-  '        console.log(performance.now()-ti);\r\n' \
+  '        console.log("end", performance.now(), performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
@@ -17236,6 +17283,7 @@ class GPXTweakerWebInterfaceServer():
   '        let trkcss = Array.from(tracks_pts, function (tr, t) {let s = document.getElementById("track" + t.toString() + "content").style; s.display=""; return s;});\r\n' \
   '        let conv = [3600, 1000, 1, 1];\r\n' \
   '        let cfc = null;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let cf=0, cfd=0; cf<=3; cfd=2*++cf) {\r\n' \
   '          if (cfilters[cfd].value && cfilters[cfd].checkValidity()) {\r\n' \
   '            let cfvmin = parseFloat(cfilters[cfd].value) * conv[cf];\r\n' \
@@ -17324,6 +17372,7 @@ class GPXTweakerWebInterfaceServer():
   '        let n = function (a, b) {return no_sort[a] - no_sort[b]};\r\n' \
   '        let c = n;\r\n' \
   '        let vals = [];\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        function comp_flt(a, b) {\r\n' \
   '          if (a == b || (isNaN(a) && isNaN(b))) {return 0;}\r\n' \
   '          if (isNaN(a)) {return 1;}\r\n' \
