@@ -9480,6 +9480,11 @@ class GPXTweakerWebInterfaceServer():
   '              return;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '          if (wgpu_first) {\r\n' \
+  '            wgpu_first = false;\r\n' \
+  '            fence(load_tcb, t, nset, nlevel, kzoom);\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          if (nlevel == null) {\r\n' \
   '            if (tlock) {switch_tlock(false);}\r\n' \
   '            tlevel = msg.level;\r\n' \
@@ -10909,7 +10914,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "{}" : JSON.stringify(Array.from(opacities))));\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "[]" : JSON.stringify(Array.from(opacities))));\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -10977,13 +10982,14 @@ class GPXTweakerWebInterfaceServer():
   '      var stats = [];\r\n' \
   '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
   '      var wgpu_modified = new Set();\r\n' \
+  '      var wgpu_first = false;\r\n' \
   '      var smoothed = false;\r\n' \
   '      var point_stat = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + \
   '      if (gpucomp > 0) {\r\n' \
   '        if (webgpu) {\r\n' \
   '          var wgpustats = new WGPUStats("tweaker");\r\n' \
   '          var fence = wgpustats.fence.bind(wgpustats);\r\n' \
-  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; window["gpustats"] = new GPUStats("tweaker")} else {gpucomp = 1;};});\r\n' \
+  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; window["gpustats"] = new GPUStats("tweaker")} else {gpucomp = 1; wgpu_first = true;};});\r\n' \
   '        } else {\r\n' \
   '          var gpustats = new GPUStats("tweaker");\r\n' \
   '          var fence = (func, ...args) => func(...args);\r\n' \
@@ -13759,7 +13765,7 @@ class GPXTweakerWebInterfaceServer():
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -16358,11 +16364,12 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_normnames = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + \
+  '      var wgpu_first = false;\r\n' \
   '      if (gpucomp > 0) {\r\n' \
   '        if (webgpu) {\r\n' \
   '          var wgpustats = new WGPUStats("explorer");\r\n' \
   '          var fence = wgpustats.fence.bind(wgpustats);\r\n' \
-  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; window["gpustats"] = new GPUStats("explorer")} else {gpucomp = 1;};});\r\n' \
+  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; window["gpustats"] = new GPUStats("explorer")} else {gpucomp = 1; wgpu_first = true;};});\r\n' \
   '        } else {\r\n' \
   '          var gpustats = new GPUStats("explorer");\r\n' \
   '          var fence = (func, ...args) => func(...args);\r\n' \
@@ -18653,7 +18660,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '          </td>\r\n' \
   '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="display:none;overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);pointer-events:none;"></div>\r\n' \
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
   '              #<#PATHES#>##<#WAYDOTS#>#  <svg id="target_mark" viewbox="-20 -20 40 40" pointer-events="none" style="display:none;position:absolute;top:0;left:0;width:10px;height:10px;z-index:2;transform:translate(-50%,-50%) scale(calc(1 + var(--magnify)))" stroke-width="2" stroke="blue" fill="yellow">\r\n' \
@@ -18664,7 +18671,7 @@ class GPXTweakerWebInterfaceServer():
   '                </svg>\r\n' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null, 1):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, 1)):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    </div>\r\n' \
@@ -18975,7 +18982,8 @@ class GPXTweakerWebInterfaceServer():
   '          let st = prev_state[4].split("-");\r\n' \
   '          for (let f=0; f<folders.length; f++) {folders[f].checked = st[f]=="t";}\r\n' \
   '          st = prev_state[5].split("-");\r\n' \
-  '          for (let t=0; t<st.length; t++) {\r\n' \
+  '          let nbt = Math.min(st.length, document.getElementById("tracksform").children.length);\r\n' \
+  '          for (let t=0; t<nbt; t++) {\r\n' \
   '            document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";\r\n' \
   '            track_checkbox(document.getElementById("track" + t.toString() + "visible"));\r\n' \
   '          }\r\n' \
@@ -18994,8 +19002,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (smoothed) {document.getElementById("swsm").innerHTML = "&divide;&divide;"};\r\n' \
   '        if (webgpu) {await tracks_calc_wgpu();} else {tracks_calc();}\r\n' \
-  '        viewpane.style.display = "block";\r\n' \
-  '        rescale();\r\n' \
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
   '        cfilter_restore();\r\n' \
@@ -19009,8 +19015,6 @@ class GPXTweakerWebInterfaceServer():
   '          focused = "";\r\n' \
   '          track_click(null, document.getElementById(foc + "desc"));\r\n' \
   '          scroll_to_track(document.getElementById(foc), true);\r\n' \
-  '        } else {\r\n' \
-  '          scroll_to_track(null, true);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      ##SESSIONSTORE##if (sessionStorage.getItem("active") != "##SESSIONSTOREVALUE##") {\r\n' \
