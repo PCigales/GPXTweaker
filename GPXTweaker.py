@@ -9148,7 +9148,7 @@ class GPXTweakerWebInterfaceServer():
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
-  '          ["bstarts", "bsegs", "btrlats", "bmms", "blats", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -9215,12 +9215,6 @@ class GPXTweakerWebInterfaceServer():
   '            this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        set trlats(a) {\r\n' \
-  '          const _trlats = (a instanceof Float32Array) ? Float32Array.from({length: (a.length / 2) | 0}, (e, i) => Math.tan((a[2 * i] / 360 + 0.25) * Math.PI)) : Float32Array.from(a, (ll) => Math.tan((ll[0] / 360 + 0.25) * Math.PI));\r\n' \
-  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            this.device.queue.writeBuffer(this.btrlats[c], 0, _trlats.subarray(this.chunks[c][0], this.chunks[c + 1][0]));\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
   '        set mms(a) {\r\n' \
   '          const _mms = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
@@ -9231,6 +9225,12 @@ class GPXTweakerWebInterfaceServer():
   '          const _lats = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '            this.device.queue.writeBuffer(this.blats[c], 0, _lats.subarray(this.chunks[c][1], this.chunks[c + 1][1]));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set trlats(a) {\r\n' \
+  '          const _trlats = (a instanceof Float32Array) ? Float32Array.from({length: (a.length / 2) | 0}, (e, i) => Math.tan((a[2 * i] / 360 + 0.25) * Math.PI)) : Float32Array.from(a, (ll) => Math.tan((ll[0] / 360 + 0.25) * Math.PI));\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.btrlats[c], 0, _trlats.subarray(this.chunks[c][0], this.chunks[c + 1][0]));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        set lls(a) {\r\n' \
@@ -11001,8 +11001,6 @@ class GPXTweakerWebInterfaceServer():
   '      var foc_old = null;\r\n' \
   '      var stats = [];\r\n' \
   '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
-  '      var wgpu_modified = new Set();\r\n' \
-  '      var wgpu_wait = [null, null];\r\n' \
   '      var smoothed = false;\r\n' \
   '      var point_stat = [];\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "tweaker") + \
   '      var wgpu_modified = new Set();\r\n' + HTML_MSG_TEMPLATE + \
@@ -11091,6 +11089,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
   '        let gminx = null;\r\n' \
   '        let gminy = null;\r\n' \
   '        let gmaxx = null;\r\n' \
@@ -11108,10 +11108,10 @@ class GPXTweakerWebInterfaceServer():
   '                [minx, miny] = pt;\r\n' \
   '                [maxx, maxy] = pt;\r\n' \
   '              } else {\r\n' \
-  '                minx = Math.min(minx, pt[0]);\r\n' \
-  '                miny = Math.min(miny, pt[1]);\r\n' \
-  '                maxx = Math.max(maxx, pt[0]);\r\n' \
-  '                maxy = Math.max(maxy, pt[1]);\r\n' \
+  '                minx = min(minx, pt[0]);\r\n' \
+  '                miny = min(miny, pt[1]);\r\n' \
+  '                maxx = max(maxx, pt[0]);\r\n' \
+  '                maxy = max(maxy, pt[1]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -11122,10 +11122,10 @@ class GPXTweakerWebInterfaceServer():
   '              gmaxx = prop_to_wmvalue(tracks[t].style.left) + maxx;\r\n' \
   '              gmaxy = prop_to_wmvalue(tracks[t].style.top) + maxy;\r\n' \
   '            } else {\r\n' \
-  '              gminx = Math.min(gminx, prop_to_wmvalue(tracks[t].style.left) + minx);\r\n' \
-  '              gminy = Math.min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
-  '              gmaxx = Math.max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
-  '              gmaxy = Math.max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
+  '              gminx = min(gminx, prop_to_wmvalue(tracks[t].style.left) + minx);\r\n' \
+  '              gminy = min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
+  '              gmaxx = max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
+  '              gmaxy = max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -11141,10 +11141,10 @@ class GPXTweakerWebInterfaceServer():
   '                gmaxx = gminx;\r\n' \
   '                gmaxy = gminy;\r\n' \
   '              } else {\r\n' \
-  '                gminx = Math.min(gminx, prop_to_wmvalue(wdot.style.left));\r\n' \
-  '                gminy = Math.min(gminy, prop_to_wmvalue(wdot.style.top));\r\n' \
-  '                gmaxx = Math.max(gmaxx, prop_to_wmvalue(wdot.style.left));\r\n' \
-  '                gmaxy = Math.max(gmaxy, prop_to_wmvalue(wdot.style.top));\r\n' \
+  '                gminx = min(gminx, prop_to_wmvalue(wdot.style.left));\r\n' \
+  '                gminy = min(gminy, prop_to_wmvalue(wdot.style.top));\r\n' \
+  '                gmaxx = max(gmaxx, prop_to_wmvalue(wdot.style.left));\r\n' \
+  '                gmaxy = max(gmaxy, prop_to_wmvalue(wdot.style.top));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -11152,7 +11152,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (gminx == null) {\r\n' \
   '          return null;\r\n' \
   '        } else {\r\n' \
-  '          let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '          let o = min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '          return [gminx - o, gmaxx + o, gminy - o, gmaxy + o];\r\n' \
   '        }\r\n' \
   '      }\r\n' + HTML_SCROLL_TEMPLATE + \
@@ -16483,6 +16483,8 @@ class GPXTweakerWebInterfaceServer():
   '        } else if (! Array.isArray(tracks)) {\r\n' \
   '          tracks = [tracks];\r\n' \
   '        }\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
   '        let gminx = null;\r\n' \
   '        let gminy = null;\r\n' \
   '        let gmaxx = null;\r\n' \
@@ -16506,10 +16508,10 @@ class GPXTweakerWebInterfaceServer():
   '            gmaxx = maxx;\r\n' \
   '            gmaxy = maxy;\r\n' \
   '          } else {\r\n' \
-  '            gminx = Math.min(gminx, minx);\r\n' \
-  '            gminy = Math.min(gminy, miny);\r\n' \
-  '            gmaxx = Math.max(gmaxx, maxx);\r\n' \
-  '            gmaxy = Math.max(gmaxy, maxy);\r\n' \
+  '            gminx = min(gminx, minx);\r\n' \
+  '            gminy = min(gminy, miny);\r\n' \
+  '            gmaxx = max(gmaxx, maxx);\r\n' \
+  '            gmaxy = max(gmaxy, maxy);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (gminx == null) {\r\n' \
