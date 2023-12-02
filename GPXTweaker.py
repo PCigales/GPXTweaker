@@ -17008,10 +17008,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          } else if (fpan == 1) {\r\n' \
   '            gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  'let ti=performance.now();\r\n' \
   '            gpustats.calc("eagain");\r\n' \
   '            eags = await gpustats.eags;\r\n' \
-  'console.log(performance.now()-ti);\r\n' \
   '          } else {\r\n' \
   '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '            if (fpan == 2) {\r\n' \
@@ -17147,7 +17145,6 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc();}\r\n' \
-    'console.log(performance.now());\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
