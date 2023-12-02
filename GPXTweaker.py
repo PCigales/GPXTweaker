@@ -1,4 +1,4 @@
-# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -8784,20 +8784,21 @@ class GPXTweakerWebInterfaceServer():
   '          this.mode = mode;\r\n' \
   '          this.adapter = null;\r\n' \
   '          this.device = null;\r\n' \
-  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init();this.calc();}));\r\n' \
+  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init(); this.calc();}));\r\n' \
   '        }\r\n' \
   '        init() {\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
-  '          this.segswc = [];\r\n' \
   '          this.ptswc = [];\r\n' \
+  '          this.segswc = [];\r\n' \
+  '          this.segsdwc = [];\r\n' \
   '          this.bstarts = [];\r\n' \
   '          this.bsegs = [];\r\n' \
-  '          this.btrlats = twmode ? null : [];\r\n' \
   '          this.bmms = twmode ? [] : null;\r\n' \
   '          this.blats = twmode ? [] : null;\r\n' \
+  '          this.btrlats = twmode ? null : [];\r\n' \
   '          this.blls = twmode ? null : [];\r\n' \
   '          this.bxys = twmode ? null : [];\r\n' \
   '          this.bsxys = twmode ? null : [];\r\n' \
@@ -8844,7 +8845,7 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let s = id.x + id.y * nw.x * ws;\r\n' \
   '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
-  '              let sdrange = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
+  '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
   '              let pmin: u32 = starts[s] - starts[0];\r\n' \
   '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
   '              var dir: vec2f;\r\n' \
@@ -8917,7 +8918,7 @@ class GPXTweakerWebInterfaceServer():
   '              segs[p] = s;\r\n' \
   '              let mm: vec2f = mms[p] * 0.00872664626;\r\n' \
   '              let le: f32 = lats[p] * 0.0174532925;\r\n' \
-  '              let ls: f32 = select(lats[p - 1] * 0.0174532925, le, p == starts[segs[p]]);\r\n' \
+  '              let ls: f32 = select(lats[p - 1] * 0.0174532925, le, pt == starts[segs[p]]);\r\n' \
   '              let a: f32 = sqrt(dot(pow(mm, vec2f(2.0)) - pow(mm, vec2f(4.0)) / 3.0, vec2f(1.0, cos(ls) * cos(le))));\r\n' \
   '              gdists[p] = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
   '            }\r\n' \
@@ -8932,7 +8933,7 @@ class GPXTweakerWebInterfaceServer():
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
   '              let xye: vec2f = xys[p];\r\n' \
-  '              let xys: vec2f = select(xys[p - 1], xye, p == starts[segs[p]]);\r\n' \
+  '              let xys: vec2f = select(xys[p - 1], xye, p == starts[segs[p]] - starts[0]);\r\n' \
   '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, xye.y) / 6378137.0);\r\n' \
   '              let c: vec2f = 1.0 / (e + 1.0 / e);\r\n' \
   '              gdists[p] = distance(xys, xye) * (c.x + c.y);\r\n' \
@@ -8947,8 +8948,8 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
   '            @group(0) @binding(2) var<uniform> eagainf: vec2f;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> eags: array<array<f32,2>>;\r\n' \
-  '            override ws: u32 = 64;\r\n' \
-  '            @compute @workgroup_size(ws) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '            override ws: u32 = 4;\r\n' \
+  '            @compute @workgroup_size(ws, 1, 2) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let s = id.x + id.y * nw.x * ws;\r\n' \
   '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
   '              let eaf: f32 = eagainf[id.z] ;\r\n' \
@@ -8999,7 +9000,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WebGPUStats.segsws},},});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WebGPUStats.segsws / 2},},});\r\n' \
   '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
@@ -9018,7 +9019,7 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn slopes1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmax: u32 = starts[segs[p] + 1];\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1] - starts[0];\r\n' \
   '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
   '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
   '              var geahs: vec4f = vec4f(0.0, teahs[p].yzw);\r\n' \
@@ -9042,9 +9043,9 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn slopestdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmin: u32 = starts[segs[p]];\r\n' \
+  '              let pmin: u32 = starts[segs[p]] - starts[0];\r\n' \
   '              slopestdistspeeds[p] = slsps[p];\r\n' \
-  '              if (p == starts[segs[p] + 1] - 1) {return;};\r\n' \
+  '              if (p == starts[segs[p] + 1] - starts[0] - 1) {return;};\r\n' \
   '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
   '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
   '              var gsssc: vec4f = vec4f(0.0, slsps[p].xyz);\r\n' \
@@ -9072,7 +9073,7 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn speed1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmax: u32 = starts[segs[p] + 1];\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1] - starts[0];\r\n' \
   '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
   '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
   '              var tds: vec2f = vec2f(teahs[p].x, 0.0);\r\n' \
@@ -9094,9 +9095,9 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn speed(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmin: u32 = starts[segs[p]];\r\n' \
+  '              let pmin: u32 = starts[segs[p]] - starts[0];\r\n' \
   '              slopestdistspeeds[p].w = slsps[p].w;\r\n' \
-  '              if (p == starts[segs[p] + 1] - 1) {return;};\r\n' \
+  '              if (p == starts[segs[p] + 1] - starts[0] - 1) {return;};\r\n' \
   '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
   '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
   '              var tsc: vec2f = vec2f(teahs[p].x, slsps[p].w);\r\n' \
@@ -9151,8 +9152,9 @@ class GPXTweakerWebInterfaceServer():
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
-  '          this.segswc = [];\r\n' \
   '          this.ptswc = [];\r\n' \
+  '          this.segswc = [];\r\n' \
+  '          this.segsdwc = [];\r\n' \
   '          this.bgpos = twmode ? null : [];\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.bggdist = [];\r\n' \
@@ -9175,12 +9177,15 @@ class GPXTweakerWebInterfaceServer():
   '          this.nbsegs.push(nbtsegs - this.chunks.at(-2)[0]);\r\n' \
   '          this.nbpts.push(_starts[nbtsegs] - cofs);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            let wcx = Math.ceil(this.nbsegs[c] / WebGPUStats.segsws);\r\n' \
+  '            let wcx = Math.ceil(this.nbpts[c] / WebGPUStats.ptsws);\r\n' \
   '            let wcy = Math.ceil(wcx / maxcw);\r\n' \
-  '            this.segswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
-  '            wcx = Math.ceil(this.nbpts[c] / WebGPUStats.ptsws);\r\n' \
-  '            wcy = Math.ceil(wcx / maxcw);\r\n' \
   '            this.ptswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            wcx = Math.ceil(this.nbsegs[c] / WebGPUStats.segsws);\r\n' \
+  '            wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.segswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            wcx = Math.ceil(this.nbsegs[c] / WebGPUStats.segsws * 2);\r\n' \
+  '            wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.segsdwc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
   '            this.bstarts.push(this.device.createBuffer({size: (this.nbsegs[c] + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            this.device.queue.writeBuffer(this.bstarts[c], 0, _starts.subarray(this.chunks[c][0], this.chunks[c + 1][0] + 1));\r\n' \
   '            this.bsegs.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
@@ -9278,7 +9283,7 @@ class GPXTweakerWebInterfaceServer():
   '            pass.setPipeline(this.peagain);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgeagain[c]);\r\n' \
-  '              pass.dispatchWorkgroups(...this.segswc[c], 2);\r\n' \
+  '              pass.dispatchWorkgroups(...this.segsdwc[c]);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (tasks.has("slopedist") || tasks.has("speed")) {\r\n' \
@@ -17003,8 +17008,10 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          } else if (fpan == 1) {\r\n' \
   '            gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  'let ti=performance.now();\r\n' \
   '            gpustats.calc("eagain");\r\n' \
   '            eags = await gpustats.eags;\r\n' \
+  'console.log(performance.now()-ti);\r\n' \
   '          } else {\r\n' \
   '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '            if (fpan == 2) {\r\n' \
@@ -17140,6 +17147,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc();}\r\n' \
+    'console.log(performance.now());\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
@@ -20613,7 +20621,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
