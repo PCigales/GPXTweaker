@@ -8251,8 +8251,8 @@ class GPXTweakerWebInterfaceServer():
   '      var xhr_ongoing = 0;\r\n' \
   '      var graph_ip = null;\r\n' \
   '      var graph_px = null;\r\n'
-  HTML_GPUSTATS_TEMPLATE = \
-  '      class GPUStats {\r\n' \
+  HTML_WEBGLSTATS_TEMPLATE = \
+  '      class WebGLStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
   '        constructor (mode) {\r\n' \
   '          this.mode = mode;\r\n' \
@@ -8308,7 +8308,7 @@ class GPXTweakerWebInterfaceServer():
   '            out vec2 vxy;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 ll = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
+  '              vec2 ll = texelFetch(lltex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
   '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
   '              float t2 = t * (pow(trlat, 2.0) + 1.0) / (trlat - t);\r\n' \
   '              vxy = vec2(ll.t * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
@@ -8320,8 +8320,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec3 mmle = texelFetch(mmltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 0.0174532925);\r\n' \
-  '              float ls = gl_InstanceID > 0 ? texelFetch(mmltex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p * 0.0174532925 : mmle.p;\r\n' \
+  '              vec3 mmle = texelFetch(mmltex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 0.0174532925);\r\n' \
+  '              float ls = gl_InstanceID > 0 ? texelFetch(mmltex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).p * 0.0174532925 : mmle.p;\r\n' \
   '              float a = sqrt(pow(mmle.s, 2.0) - pow(mmle.s, 4.0) / 3.0 + cos(ls) * cos(mmle.p) * (pow(mmle.t, 2.0) - pow(mmle.t, 4.0) / 3.0));\r\n' \
   '              vg = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
   '            }\r\n' \
@@ -8333,8 +8333,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 lle = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
-  '              vec2 lls = gl_InstanceID > 0 ? texelFetch(lltex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st * vec2(0.00872664626) : lle;\r\n' \
+  '              vec2 lle = texelFetch(lltex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
+  '              vec2 lls = gl_InstanceID > 0 ? texelFetch(lltex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).st * vec2(0.00872664626) : lle;\r\n' \
   '              vec2 dll = lle - lls;\r\n' \
   '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - lls.s * 2.0) * cos(rlat - lle.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
   '              vg = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
@@ -8347,8 +8347,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 xye = texelFetch(xytex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st;\r\n' \
-  '              vec2 xys = gl_InstanceID > 0 ? texelFetch(xytex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st : xye;\r\n' \
+  '              vec2 xye = texelFetch(xytex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).st;\r\n' \
+  '              vec2 xys = gl_InstanceID > 0 ? texelFetch(xytex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).st : xye;\r\n' \
   '              vec2 e = trlat * exp(- vec2(xys.t, xye.t) / 6378137.0);\r\n' \
   '              vec2 c = 1.0 / (e + 1.0 / e);\r\n' \
   '              vg = distance(xys, xye) * (c.s + c.t);\r\n' \
@@ -8367,13 +8367,13 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec4 geahs = vec4(0.0, texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).tpq);\r\n' \
+  '              vec4 geahs = vec4(0.0, texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).tpq);\r\n' \
   '              vsss = vec3(0.0);\r\n' \
   '              vec4 geahe = geahs;\r\n' \
   '              vec4 geahp = geahe;\r\n' \
   '              bool b = false;\r\n' \
   '              for (int p = pc + 1; p < vend; p++) {\r\n' \
-  '                geahe = vec4(texelFetch(gtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + geahe.s, texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tpq);\r\n' \
+  '                geahe = vec4(texelFetch(gtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s + geahe.s, texelFetch(teahtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).tpq);\r\n' \
   '                if (geahe.s > drange && b) {break;}\r\n' \
   '                if (geahe.s == 0.0) {continue;}\r\n' \
   '                b = true;\r\n' \
@@ -8396,12 +8396,12 @@ class GPXTweakerWebInterfaceServer():
   '            out float vs;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 tds = vec2(texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, 0.0);\r\n' \
+  '              vec2 tds = vec2(texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s, 0.0);\r\n' \
   '              vs = 0.0;\r\n' \
   '              vec2 tde = tds;\r\n' \
   '              vec2 tdp = tde;\r\n' \
   '              for (int p = pc + 1; p < vend; p++) {\r\n' \
-  '                tde = vec2(texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2((p - 1) % ${GPUStats.tw}, (p - 1) / ${GPUStats.tw}), 0).p + tde.t);\r\n' \
+  '                tde = vec2(texelFetch(teahtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s, texelFetch(ssstex, ivec2((p - 1) % ${WebGLStats.tw}, (p - 1) / ${WebGLStats.tw}), 0).p + tde.t);\r\n' \
   '                if (tde.s > tds.s + trange) {break;}\r\n' \
   '                if (tde.s == tds.s) {continue;}\r\n' \
   '                vs += tde.t / (tde.s - tds.s) * (tde.s - tdp.s);\r\n' \
@@ -8422,16 +8422,16 @@ class GPXTweakerWebInterfaceServer():
   '            out vec3 vsss;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec4 gsssc = vec4(0.0, texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp);\r\n' \
+  '              vec4 gsssc = vec4(0.0, texelFetch(ssstex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).stp);\r\n' \
   '              vec4 gsssf = gsssc;\r\n' \
   '              vec4 gsssn = gsssc;\r\n' \
   '              vsss = gsssc.tpq;\r\n' \
   '              float c;\r\n' \
   '              float su = 0.0;\r\n' \
   '              vec3 sss = vec3(0.0);\r\n' \
-  '              if (texelFetch(gtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s <= drange) {\r\n' \
+  '              if (texelFetch(gtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s <= drange) {\r\n' \
   '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                  gsssf = vec4(gsssf.s - texelFetch(gtex, ivec2((p + 1) % ${GPUStats.tw}, (p + 1) / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).stp);\r\n' \
+  '                  gsssf = vec4(gsssf.s - texelFetch(gtex, ivec2((p + 1) % ${WebGLStats.tw}, (p + 1) / ${WebGLStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).stp);\r\n' \
   '                  if (gsssf.s < - drange) {break;}\r\n' \
   '                  c = (gsssn.s - gsssf.s) / (1.0 - gsssf.s);\r\n' \
   '                  sss += gsssf.tpq * c;\r\n' \
@@ -8442,7 +8442,7 @@ class GPXTweakerWebInterfaceServer():
   '                  vsss = clamp((vsss + sss / 2.0) / (1.0 + su / 2.0), vec3(-slmax), vec3(slmax));\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              vsss.p = texelFetch(gtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s * sqrt(1.0 + pow(vsss.p, 2.0));\r\n' \
+  '              vsss.p = texelFetch(gtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s * sqrt(1.0 + pow(vsss.p, 2.0));\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
   '          let vertex_s2bshader_s = `#version 300 es\r\n' \
@@ -8455,7 +8455,7 @@ class GPXTweakerWebInterfaceServer():
   '            out float vs;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 tsc = vec2(texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, texelFetch(stex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s);\r\n' \
+  '              vec2 tsc = vec2(texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s, texelFetch(stex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s);\r\n' \
   '              vec2 tsf = tsc;\r\n' \
   '              vec2 tsn = tsc;\r\n' \
   '              vs = tsc.t;\r\n' \
@@ -8463,9 +8463,9 @@ class GPXTweakerWebInterfaceServer():
   '              float su = 0.0;\r\n' \
   '              float s = 0.0;\r\n' \
   '              bool b = false;\r\n' \
-  '              if (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
+  '              if (texelFetch(teahtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
   '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                  tsf = vec2(texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(stex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s);\r\n' \
+  '                  tsf = vec2(texelFetch(teahtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s, texelFetch(stex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s);\r\n' \
   '                  if (tsf.s < tsc.s - trange) {break;}\r\n' \
   '                  b = true;\r\n' \
   '                  c = (tsn.s - tsf.s) / (1.0 + tsc.s - tsf.s);\r\n' \
@@ -8478,12 +8478,12 @@ class GPXTweakerWebInterfaceServer():
   '                    vs = min((vs + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
   '                  }\r\n' \
   '                } else if (gl_InstanceID > 0){\r\n' \
-  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p / (tsc.s - tsf.s), spmax);\r\n' \
+  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).p / (tsc.s - tsf.s), spmax);\r\n' \
   '                }\r\n' \
-  '              } else if (gl_InstanceID > 0 ? (texelFetch(teahtex, ivec2((pc) % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s <= trange): true){\r\n' \
-  '                vs = min(texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p / (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s), spmax);\r\n' \
+  '              } else if (gl_InstanceID > 0 ? (texelFetch(teahtex, ivec2((pc) % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).s <= trange): true){\r\n' \
+  '                vs = min(texelFetch(ssstex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).p / (texelFetch(teahtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s - texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s), spmax);\r\n' \
   '              } else {\r\n' \
-  '                vs = min((texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p + texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p)/ (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s), spmax);\r\n' \
+  '                vs = min((texelFetch(ssstex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).p + texelFetch(ssstex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).p)/ (texelFetch(teahtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).s), spmax);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
@@ -8600,7 +8600,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        static pad(s) {\r\n' \
-  '          return (Math.floor((s - 1) / GPUStats.tw) + 1) * GPUStats.tw;\r\n' \
+  '          return (Math.floor((s - 1) / WebGLStats.tw) + 1) * WebGLStats.tw;\r\n' \
   '        }\r\n' \
   '        texture_load(unit, ncomp, src, tex=null) {\r\n' \
   '          let gl_texture = tex;\r\n' \
@@ -8612,15 +8612,15 @@ class GPXTweakerWebInterfaceServer():
   '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);\r\n' \
   '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);\r\n' \
   '          if (Array.isArray(src)) {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, new Float32Array(src));\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, src.length / ncomp / WebGLStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, new Float32Array(src));\r\n' \
   '          } else if (src instanceof Float32Array) {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, src);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, src.length / ncomp / WebGLStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, src);\r\n' \
   '          } else if (src instanceof WebGLBuffer) {\r\n' \
   '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, src);\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, this.gl.getBufferParameter(this.gl.PIXEL_UNPACK_BUFFER, this.gl.BUFFER_SIZE) / ncomp / 4 / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, this.gl.getBufferParameter(this.gl.PIXEL_UNPACK_BUFFER, this.gl.BUFFER_SIZE) / ncomp / 4 / WebGLStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
   '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, null);\r\n' \
   '          } else {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, src / WebGLStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
   '          }\r\n' \
   '          return gl_texture;\r\n' \
   '        }\r\n' \
@@ -8647,13 +8647,13 @@ class GPXTweakerWebInterfaceServer():
   '        set mmls(a) {\r\n' \
   '          this._mmls = a;\r\n' \
   '          this.mml_texture = this.texture_load(this.gl.TEXTURE0 + this.mmltex, 3, this._mmls, this.mml_texture);\r\n' \
-  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
+  '          this.vg = this.buffer_load(4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
   '         }\r\n' \
   '        set lls(a) {\r\n' \
   '          this._lls = a;\r\n' \
   '          this.ll_texture = this.texture_load(this.gl.TEXTURE0 + this.lltex, 2, this._lls, this.ll_texture);\r\n' \
-  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vxy);\r\n' \
-  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
+  '          this.vxy = this.buffer_load(2 * 4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vxy);\r\n' \
+  '          this.vg = this.buffer_load(4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
   '         }\r\n' \
   '        set xys(a) {\r\n' \
   '          this._xys = a;\r\n' \
@@ -8662,8 +8662,8 @@ class GPXTweakerWebInterfaceServer():
   '        set teahs(a) {\r\n' \
   '          this._teahs = a;\r\n' \
   '          this.teah_texture = this.texture_load(this.gl.TEXTURE0 + this.teahtex, 4, this._teahs, this.teah_texture);\r\n' \
-  '          this.vsss = this.buffer_load(3 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vsss);\r\n' \
-  '          this.vs = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vs);\r\n' \
+  '          this.vsss = this.buffer_load(3 * 4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vsss);\r\n' \
+  '          this.vs = this.buffer_load(4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vs);\r\n' \
   '        }\r\n' \
   '        _calc() {\r\n' \
   '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
@@ -8776,7 +8776,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n'
   HTML_WEBGPUSTATS_TEMPLATE = \
-  '      class WGPUStats {\r\n' \
+  '      class WebGPUStats {\r\n' \
   '        static get ptsws() {return 64;}\r\n' \
   '        static get segsws() {return 8;}\r\n' \
   '        static get maxsbs() {return 1 << 27;}\r\n' \
@@ -8832,7 +8832,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WGPUStats.ptsws},},});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bgpos = twmode ? null : [];\r\n' \
   '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
@@ -8893,7 +8893,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WGPUStats.segsws},},});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WebGPUStats.segsws},},});\r\n' \
   '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
@@ -8939,7 +8939,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WGPUStats.ptsws},},});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bggdist = [];\r\n' \
   '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.meagain = this.device.createShaderModule({code: `\r\n' \
@@ -8999,7 +8999,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WGPUStats.segsws},},});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WebGPUStats.segsws},},});\r\n' \
   '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
@@ -9133,17 +9133,17 @@ class GPXTweakerWebInterfaceServer():
   '          `});\r\n' \
   '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
-  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WGPUStats.ptsws},},});\r\n' \
-  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: {ws: WGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: {ws: WGPUStats.ptsws},},});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '        }\r\n' \
   '        set starts(a) {\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
-  '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WGPUStats.maxsbs) / 16) | 0;\r\n' \
+  '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WebGPUStats.maxsbs) / 16) | 0;\r\n' \
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
@@ -9175,10 +9175,10 @@ class GPXTweakerWebInterfaceServer():
   '          this.nbsegs.push(nbtsegs - this.chunks.at(-2)[0]);\r\n' \
   '          this.nbpts.push(_starts[nbtsegs] - cofs);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            let wcx = Math.ceil(this.nbsegs[c] / WGPUStats.segsws);\r\n' \
+  '            let wcx = Math.ceil(this.nbsegs[c] / WebGPUStats.segsws);\r\n' \
   '            let wcy = Math.ceil(wcx / maxcw);\r\n' \
   '            this.segswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
-  '            wcx = Math.ceil(this.nbpts[c] / WGPUStats.ptsws);\r\n' \
+  '            wcx = Math.ceil(this.nbpts[c] / WebGPUStats.ptsws);\r\n' \
   '            wcy = Math.ceil(wcx / maxcw);\r\n' \
   '            this.ptswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
   '            this.bstarts.push(this.device.createBuffer({size: (this.nbsegs[c] + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
@@ -9345,6 +9345,22 @@ class GPXTweakerWebInterfaceServer():
   '          return this.lock;\r\n' \
   '        }\r\n' \
   '      }\r\n'
+  HTML_GPUSTATS_TEMPLATE = \
+  '      var wgpu_wait = [null, null];\r\n' \
+  '      if (gpucomp > 0) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          var gpustats = new WebGPUStats("##MODE##");\r\n' \
+  '          wgpu_wait[0] = new Promise((res, rej) => {wgpu_wait[1] = res;});\r\n' \
+  '          var fence = gpustats.fence.bind(gpustats);\r\n' \
+  '          fence(() => {if (gpustats.device == null) {webgpu = false;  wgpu_wait[0] = null; wgpu_wait[1](); fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; gpustats = new WebGLStats("##MODE##")} else {gpucomp = 1;};});\r\n' \
+  '        } else {\r\n' \
+  '          var gpustats = new WebGLStats("##MODE##");\r\n' \
+  '          var fence = (func, ...args) => func(...args);\r\n' \
+  '        }\r\n' \
+  '      } else {\r\n' \
+  '        webgpu = false;\r\n' \
+  '        var fence = (func, ...args) => func(...args);\r\n' \
+  '      }\r\n'
   HTML_MSG_TEMPLATE = \
   '      var msg_n = 0;\r\n' \
   '      function show_msg(msg, dur, msgn=null) {\r\n' \
@@ -9480,9 +9496,8 @@ class GPXTweakerWebInterfaceServer():
   '              return;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (wgpu_first) {\r\n' \
-  '            wgpu_first = false;\r\n' \
-  '            fence(load_tcb, t, nset, nlevel, kzoom);\r\n' \
+  '          if (wgpu_wait[0] != null) {\r\n' \
+  '            wgpu_wait[0].then(() => load_tcb(t, nset, nlevel, kzoom));\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          if (nlevel == null) {\r\n' \
@@ -10982,22 +10997,10 @@ class GPXTweakerWebInterfaceServer():
   '      var stats = [];\r\n' \
   '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
   '      var wgpu_modified = new Set();\r\n' \
-  '      var wgpu_first = false;\r\n' \
+  '      var wgpu_wait = [null, null];\r\n' \
   '      var smoothed = false;\r\n' \
-  '      var point_stat = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {\r\n' \
-  '        if (webgpu) {\r\n' \
-  '          var wgpustats = new WGPUStats("tweaker");\r\n' \
-  '          var fence = wgpustats.fence.bind(wgpustats);\r\n' \
-  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; window["gpustats"] = new GPUStats("tweaker")} else {gpucomp = 1; wgpu_first = true;};});\r\n' \
-  '        } else {\r\n' \
-  '          var gpustats = new GPUStats("tweaker");\r\n' \
-  '          var fence = (func, ...args) => func(...args);\r\n' \
-  '        }\r\n' \
-  '      } else {\r\n' \
-  '        webgpu = false;\r\n' \
-  '        var fence = (func, ...args) => func(...args);\r\n' \
-  '      }\r\n' + HTML_MSG_TEMPLATE + \
+  '      var point_stat = [];\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "tweaker") + \
+  '      var wgpu_modified = new Set();\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        if (mode == "map") {\r\n' \
   '          if (nset == null && nlevel == null) {\r\n' \
@@ -12058,8 +12061,8 @@ class GPXTweakerWebInterfaceServer():
   '            if (nbp != 0) {starts.push(starts[starts.length - 1] + nbp);}\r\n' \
   '          }\r\n' \
   '          if (gpucomp >= 1 && (fpan == 0 || gpu_part) && fpan != 1) {\r\n' \
-  '            mmls = new Float32Array(GPUStats.pad(starts[starts.length - 1]) * 3);\r\n' \
-  '            teahs = new Float32Array(GPUStats.pad(starts[starts.length - 1]) * 4);\r\n' \
+  '            mmls = new Float32Array(WebGLStats.pad(starts[starts.length - 1]) * 3);\r\n' \
+  '            teahs = new Float32Array(WebGLStats.pad(starts[starts.length - 1]) * 4);\r\n' \
   '          }\r\n' \
   '          let ind = 0;\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
@@ -12132,7 +12135,7 @@ class GPXTweakerWebInterfaceServer():
   '        whole_calc();\r\n' \
   '      }\r\n' \
   '      async function segments_calc_wgpu(...args) {\r\n' \
-  '        if (wgpustats.device == null) {return;}\r\n' \
+  '        if (gpustats.device == null) {return;}\r\n' \
   '        let fpan = 0;\r\n' \
   '        if (args.length == 1) {\r\n' \
   '          if ((typeof args[0]).toLowerCase() != "object") {fpan = args[0];}\r\n' \
@@ -12191,7 +12194,7 @@ class GPXTweakerWebInterfaceServer():
   '              starts.push(nbpt);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          wgpustats.starts = starts;\r\n' \
+  '          gpustats.starts = starts;\r\n' \
   '          if (nbpt == 0) {\r\n' \
   '            gpu_part = fpan == 0 && stats.reduce((p, c, s) => wgpu_modified.has(s) ? p : p + c.length, 0) > 0;\r\n' \
   '            if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
@@ -12290,9 +12293,9 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          wgpustats.mms = mms;\r\n' \
-  '          wgpustats.lats = lats;\r\n' \
-  '          wgpustats.teahs = teahs;\r\n' \
+  '          gpustats.mms = mms;\r\n' \
+  '          gpustats.lats = lats;\r\n' \
+  '          gpustats.teahs = teahs;\r\n' \
   '        } else {\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            nbp = wgpu_modified.has(s) ? 0 : stats[s].length;\r\n' \
@@ -12304,24 +12307,28 @@ class GPXTweakerWebInterfaceServer():
   '        let eags = null;\r\n' \
   '        let slopestdistspeeds  = null;\r\n' \
   '        if (fpan == 0) {\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
-  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '          wgpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
-  '          eags = await wgpustats.eags;\r\n' \
-  '          gdists = await wgpustats.gdists;\r\n' \
-  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
-  '        } else if (fpan == 1) {\r\n' \
-  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '          if (gpu_part) {wgpustats.calc("gdist", "eagain");} else {wgpustats.calc("eagain");}\r\n' \
-  '          eags = await wgpustats.eags;\r\n' \
-  '        } else {\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
-  '          if (fpan == 2) {\r\n' \
-  '            if (gpu_part) {wgpustats.calc("gdist", "slopedist", "speed");} else {wgpustats.calc("slopedist", "speed");}\r\n' \
-  '          } else {\r\n' \
-  '            if (gpu_part) {wgpustats.calc("gdist", "speed");} else {wgpustats.calc("speed");}\r\n' \
+  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          gpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
+  '          eags = await gpustats.eags;\r\n' \
+  '          gdists = await gpustats.gdists;\r\n' \
+  '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
+  '          if (wgpu_wait[0] != null) {\r\n' \
+  '            wgpu_wait[1]();\r\n' \
+  '            wgpu_wait[0] = null;\r\n' \
   '          }\r\n' \
-  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '        } else if (fpan == 1) {\r\n' \
+  '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          if (gpu_part) {gpustats.calc("gdist", "eagain");} else {gpustats.calc("eagain");}\r\n' \
+  '          eags = await gpustats.eags;\r\n' \
+  '        } else {\r\n' \
+  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          if (fpan == 2) {\r\n' \
+  '            if (gpu_part) {gpustats.calc("gdist", "slopedist", "speed");} else {gpustats.calc("slopedist", "speed");}\r\n' \
+  '          } else {\r\n' \
+  '            if (gpu_part) {gpustats.calc("gdist", "speed");} else {gpustats.calc("speed");}\r\n' \
+  '          }\r\n' \
+  '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
   '        }\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          const seg = segs[s];\r\n' \
@@ -16363,21 +16370,7 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_xy_offsets = null;\r\n' \
   '      var tracks_normnames = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
-  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + \
-  '      var wgpu_first = false;\r\n' \
-  '      if (gpucomp > 0) {\r\n' \
-  '        if (webgpu) {\r\n' \
-  '          var wgpustats = new WGPUStats("explorer");\r\n' \
-  '          var fence = wgpustats.fence.bind(wgpustats);\r\n' \
-  '          fence(() => {if (wgpustats.device == null) {webgpu = false; fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; window["gpustats"] = new GPUStats("explorer")} else {gpucomp = 1; wgpu_first = true;};});\r\n' \
-  '        } else {\r\n' \
-  '          var gpustats = new GPUStats("explorer");\r\n' \
-  '          var fence = (func, ...args) => func(...args);\r\n' \
-  '        }\r\n' \
-  '      } else {\r\n' \
-  '        webgpu = false;\r\n' \
-  '        var fence = (func, ...args) => func(...args);\r\n' \
-  '      }\r\n' \
+  '      var tracks_props = [];\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "explorer") + \
   '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
   '      var media_ex_visible = false;\r\n' \
@@ -16656,7 +16649,6 @@ class GPXTweakerWebInterfaceServer():
   '        if ((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) {tracks_cfilter();}\r\n' \
   '      }\r\n' \
   '      function tracks_calc(fpan=0) {\r\n' \
-  '        console.log("start", ti=performance.now());\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
@@ -16668,7 +16660,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (fpan == 0) {\r\n' \
   '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
   '          let nbpt = tracks_xy_offsets[nbtracks];\r\n' \
-  '          tracks_xys = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
+  '          tracks_xys = new Float32Array(WebGLStats.pad(nbpt) * 2);\r\n' \
   '          tracks_pts_smoothed = null;\r\n' \
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
@@ -16676,8 +16668,8 @@ class GPXTweakerWebInterfaceServer():
   '          tls = [];\r\n' \
   '          if (gpucomp >= 1) {\r\n' \
   '            starts = [0];\r\n' \
-  '            lls = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
-  '            teahs = new Float32Array(GPUStats.pad(nbpt) * 4);\r\n' \
+  '            lls = new Float32Array(WebGLStats.pad(nbpt) * 2);\r\n' \
+  '            teahs = new Float32Array(WebGLStats.pad(nbpt) * 4);\r\n' \
   '          }\r\n' \
   '          let cseg = gpucomp==0?tracks_xys:lls;\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
@@ -16755,7 +16747,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (fpan == 0 && gpucomp >= 1) {\r\n' \
   '          gpustats.teahs = teahs;\r\n' \
   '        }\r\n' \
-  '        console.log("load",  performance.now()-ti);\r\n' \
   '        if (gpucomp >= 1 && fpan != 1) {\r\n' \
   '          if (gpustats.starts[gpustats.starts.length - 1] == 0) {\r\n' \
   '            return;\r\n' \
@@ -16768,7 +16759,6 @@ class GPXTweakerWebInterfaceServer():
   '          let gs = gpustats.gs;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let ss = gpustats.ss;\r\n' \
-  '        console.log("calc6",  performance.now()-ti);\r\n' \
   '          for (let t=0, i=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
   '            let stats = tracks_stats[t];\r\n' \
@@ -16793,7 +16783,6 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        console.log("calc7a",  performance.now()-ti);\r\n' \
   '        if (fpan == 0 || smoothed_ch) {\r\n' \
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
   '          for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
@@ -16807,7 +16796,6 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        console.log("calc7b",  performance.now()-ti);\r\n' \
   '        if (fpan != 3) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            let dur = null;\r\n' \
@@ -16871,12 +16859,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          tracks_desc();\r\n' \
   '        }\r\n' \
-  '        console.log("end", performance.now(), performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      async function tracks_calc_wgpu(fpan=0) {\r\n' \
-  '        console.log("start", ti=performance.now());\r\n' \
-  '        if (wgpustats.device == null || tracks_pts == null) {return;}\r\n' \
+  '        if (gpustats.device == null || tracks_pts == null) {return;}\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
@@ -16987,55 +16973,60 @@ class GPXTweakerWebInterfaceServer():
   '              document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          wgpustats.starts = starts;\r\n' \
+  '          gpustats.starts = starts;\r\n' \
   '          if (nbpt == 0) {return;}\r\n' \
-  '          wgpustats.trlats = tls;\r\n' \
-  '          wgpustats.lls = lls;\r\n' \
-  '          wgpustats.teahs = teahs;\r\n' \
-  '          wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '          wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          gpustats.trlats = tls;\r\n' \
+  '          gpustats.lls = lls;\r\n' \
+  '          gpustats.teahs = teahs;\r\n' \
+  '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          if (smoothed) {\r\n' \
-  '            wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '            wgpustats.calc("pos", "smooth", "sgdist", "eagain", "slopedist", "speed");\r\n' \
-  '            tracks_xys = await wgpustats.xys;\r\n' \
-  '            tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
+  '            gpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '            gpustats.calc("pos", "smooth", "sgdist", "eagain", "slopedist", "speed");\r\n' \
+  '            tracks_xys = await gpustats.xys;\r\n' \
+  '            tracks_xys_smoothed = await gpustats.sxys;\r\n' \
   '          } else {\r\n' \
-  '            wgpustats.calc("pos", "gdist", "eagain", "slopedist", "speed");\r\n' \
-  '            tracks_xys = await wgpustats.xys;\r\n' \
+  '            gpustats.calc("pos", "gdist", "eagain", "slopedist", "speed");\r\n' \
+  '            tracks_xys = await gpustats.xys;\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          if (tracks_stats.length == 0 || wgpustats.chunks.length == 1) {return;}\r\n' \
+  '          if (tracks_stats.length == 0 || gpustats.chunks.length == 1) {return;}\r\n' \
   '          smoothed_ch = (smoothed && tracks_pts_smoothed == null) || (! smoothed && tracks_pts_smoothed != null);\r\n' \
   '          if (smoothed_ch) {\r\n' \
-  '            wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '            if (smoothed) {\r\n' \
-  '              wgpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '              wgpustats.calc("smooth", "sgdist", "slopedist", "speed");\r\n' \
-  '              tracks_xys_smoothed = await wgpustats.sxys;\r\n' \
+  '              gpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '              gpustats.calc("smooth", "sgdist", "slopedist", "speed");\r\n' \
+  '              tracks_xys_smoothed = await gpustats.sxys;\r\n' \
   '            } else {\r\n' \
-  '              wgpustats.calc("gdist", "slopedist", "speed");\r\n' \
+  '              gpustats.calc("gdist", "slopedist", "speed");\r\n' \
   '            }\r\n' \
   '          } else if (fpan == 1) {\r\n' \
-  '            wgpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '            wgpustats.calc("eagain");\r\n' \
-  '            eags = await wgpustats.eags;\r\n' \
+  '            gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '            gpustats.calc("eagain");\r\n' \
+  '            eags = await gpustats.eags;\r\n' \
   '          } else {\r\n' \
-  '            wgpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '            if (fpan == 2) {\r\n' \
-  '              wgpustats.calc("slopedist", "speed");\r\n' \
+  '              gpustats.calc("slopedist", "speed");\r\n' \
   '            } else {\r\n' \
-  '              wgpustats.calc("speed");\r\n' \
+  '              gpustats.calc("speed");\r\n' \
   '            }\r\n' \
-  '            slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '            slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan == 0 || smoothed_ch) {\r\n' \
   '          tracks_pts_smoothed = smoothed ? [] : null;\r\n' \
-  '          gdists = await wgpustats.gdists;\r\n' \
-  '          if (fpan ==0) {eags = await wgpustats.eags;}\r\n' \
-  '          slopestdistspeeds = await wgpustats.slopestdistspeeds;\r\n' \
+  '          gdists = await gpustats.gdists;\r\n' \
+  '          if (fpan ==0) {eags = await gpustats.eags;}\r\n' \
+  '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
+  '          if (fpan == 0 && wgpu_wait[0] != null) {\r\n' \
+  '            const prom = wgpu_wait[0];\r\n' \
+  '            wgpu_wait[0] = null;\r\n' \
+  '            wgpu_wait[1]();\r\n' \
+  '            await prom;\r\n' \
+  '          }\r\n' \
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
-  '        console.log("1", performance.now(), performance.now()-ti);\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
   '            let d = "M0 0";\r\n' \
@@ -17049,7 +17040,6 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        console.log("1", performance.now(), performance.now()-ti);\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
@@ -17150,7 +17140,6 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc();}\r\n' \
-  '        console.log("end", performance.now(), performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
