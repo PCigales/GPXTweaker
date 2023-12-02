@@ -18648,7 +18648,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
   '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
-  '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%">\r\n' \
+  '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%" onmouseenter="!navigator_firefox?document.documentElement.style.setProperty(\'--tprend\',\'optimizeSpeed\'):null" onmouseleave="!navigator_firefox?document.documentElement.style.setProperty(\'--tprend\',\'auto\'):null">\r\n' \
   '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
   '                <form id="tracksform" autocomplete="off" onchange="track_change(event)" onsubmit="return(false);">\r\n                  #<#TRACKS#>#\r\n' \
   '                </form>\r\n' \
