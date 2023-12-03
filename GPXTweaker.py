@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
+	# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -10876,6 +10876,10 @@ class GPXTweakerWebInterfaceServer():
   '          add_tile();\r\n' \
   '          rescale();\r\n' \
   '        } else {\r\n' \
+  '          let b = track_boundaries();\r\n' \
+  '          if (b != null) {\r\n' \
+  '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '          }\r\n' \
   '          if (prev_state == null) {\r\n' \
   '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o)=>o.style.display!="none");\r\n' \
   '            switch_tiles(-1, 0);\r\n' \
@@ -10887,7 +10891,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
   '          document.getElementById("tlock").style.display = "";\r\n' \
-  '          if (tlevel == 0) {rescale();}\r\n' \
+  '          rescale();\r\n' \
   '        }\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        scroll_to_track();\r\n' \
@@ -16883,6 +16887,7 @@ class GPXTweakerWebInterfaceServer():
   '        let slopestdistspeeds  = null;\r\n' \
   '        let smoothed_ch = false;\r\n' \
   '        if (fpan == 0) {\r\n' \
+  '          if (wgpu_wait[0] != null) {await new Promise((res, rej) => setTimeout(res, 1));}\r\n' \
   '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
   '          const nbpt = tracks_xy_offsets[nbtracks];\r\n' \
   '          tracks_xys = new Float32Array(nbpt * 2);\r\n' \
@@ -16980,6 +16985,7 @@ class GPXTweakerWebInterfaceServer():
   '              document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
+  '          if (wgpu_wait[0] != null) {await new Promise((res, rej) => setTimeout(res, 1));}\r\n' \
   '          gpustats.starts = starts;\r\n' \
   '          if (nbpt == 0) {return;}\r\n' \
   '          gpustats.trlats = tls;\r\n' \
