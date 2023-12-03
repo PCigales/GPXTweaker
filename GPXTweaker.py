@@ -9466,6 +9466,10 @@ class GPXTweakerWebInterfaceServer():
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (nset == null) {document.getElementById("ctset").style.display = "none";}\r\n' \
   '        if (t.status != 200) {\r\n' \
+  '          if (tset < 0) {\r\n' \
+  '            tset = 0;\r\n' \
+  '            if (! tlock) {switch_tlock(false);}\r\n' \
+  '          }\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
   '            tlevel = nlevel || 1;\r\n' \
@@ -9598,6 +9602,10 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function error_tcb() {\r\n' \
   '        document.getElementById("ctset").style.display = "none";\r\n' \
+  '        if (tset < 0) {\r\n' \
+  '          tset = 0;\r\n' \
+  '          if (! tlock) {switch_tlock(false);}\r\n' \
+  '        }\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
@@ -10500,7 +10508,7 @@ class GPXTweakerWebInterfaceServer():
   '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
   '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
   '        } else {\r\n' \
-  '          zoom = eval(zoom_s);\r\n' \
+  '          zoom = tset == -1 ? 1 : eval(zoom_s);\r\n' \
   '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
   '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
   '        }\r\n' \
@@ -10878,7 +10886,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          let b = track_boundaries();\r\n' \
   '          if (b != null) {\r\n' \
-  '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight) * eval(zoom_s);\r\n' \
+  '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
   '          }\r\n' \
   '          if (prev_state == null) {\r\n' \
   '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o)=>o.style.display!="none");\r\n' \
