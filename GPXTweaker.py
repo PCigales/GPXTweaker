@@ -12413,7 +12413,6 @@ class GPXTweakerWebInterfaceServer():
   '      function calc_modified(...segs) {\r\n' \
   '        if (webgpu) {\r\n' \
   '          (segs.length > 0 ? segs : Array.from(document.getElementById("pointsform").children)).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
-  '       //   refresh_graph();\r\n' \
   '          fence(segments_calc_wgpu, ...segs);\r\n' \
   '        } else {\r\n' \
   '          segments_calc(...segs);\r\n' \
