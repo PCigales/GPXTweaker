@@ -253,7 +253,7 @@ FR_STRINGS = {
     'jtrackedit': 'éditer la trace',
     'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
-    'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
+    'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt: intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
     'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+alt: télécharger une carte des traces cochées cadrée sur la zone affichée&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+shift+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
@@ -653,7 +653,7 @@ EN_STRINGS = {
     'jtrackedit': 'edit the track',
     'jtracknew': 'create a new empty track in the first ticked folder',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
-    'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
+    'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt: integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
     'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+alt: download a map of the ticked tracks framed on the displayed area&#13;&#10;+shift: download the list of tracks&#13;&#10;+shift+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
@@ -12215,6 +12215,10 @@ class GPXTweakerWebInterfaceServer():
   '          if (nbpt == 0) {\r\n' \
   '            gpu_part = fpan == 0 && stats.reduce((p, c, s) => wgpu_modified.has(s) ? p : p + c.length, 0) > 0;\r\n' \
   '            if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
+  '            if (fpan == 0 && wgpu_wait[0] != null) {\r\n' \
+  '              wgpu_wait[0] = null;\r\n' \
+  '              wgpu_wait[1]();\r\n' \
+  '            }\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          mms = new Float32Array(nbpt * 2);\r\n' \
@@ -16997,7 +17001,13 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (wgpu_wait[0] != null) {await new Promise((res, rej) => setTimeout(res, 1));}\r\n' \
   '          gpustats.starts = starts;\r\n' \
-  '          if (nbpt == 0) {return;}\r\n' \
+  '          if (nbpt == 0) {\r\n' \
+  '            if (wgpu_wait[0] != null) {\r\n' \
+  '              wgpu_wait[0] = null;\r\n' \
+  '              wgpu_wait[1]();\r\n' \
+  '            }\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
   '          gpustats.trlats = tls;\r\n' \
   '          gpustats.lls = lls;\r\n' \
   '          gpustats.teahs = teahs;\r\n' \
@@ -17787,6 +17797,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_normnames.push("");\r\n' \
   '        tracks_stats.push([]);\r\n' \
   '        tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
+  '        tracks_xy_offsets.push(tracks_xy_offsets.at(-1));\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
