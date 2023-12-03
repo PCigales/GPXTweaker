@@ -16571,7 +16571,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
-  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) && ! (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity())) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
+  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) && ! (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
   '      }\r\n' \
   '      function track_outside(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
@@ -16646,7 +16646,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' + HTML_SEGCALC_4_TEMPLATE + \
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
-  '      function tracks_desc() {\r\n' \
+  '      function tracks_desc(fpan) {\r\n' \
   '        let nbtracks = tracks_pts.length;\r\n' \
   '        let isNaN = Number.isNaN;\r\n' \
   '        for (let t=0; t<nbtracks; t++) {\r\n' \
@@ -16664,8 +16664,10 @@ class GPXTweakerWebInterfaceServer():
   '          let alt_c = isNaN(track_props[3]) ? "-m" : (track_props[3].toFixed(0) + "m");\r\n' \
   '          document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
   '        }\r\n' \
-  '        if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex) && (fpan == 1 || fpan == 2)) {tracks_sort();}\r\n' \
-  '        if ((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) {tracks_cfilter();}\r\n' \
+  '        if (fpan == 1 || fpan == 2) {\r\n' \
+  '          if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex)) {tracks_sort();}\r\n' \
+  '          if ((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) {tracks_cfilter();}\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function tracks_calc(fpan=0) {\r\n' \
   '        let starts = null;\r\n' \
@@ -16876,7 +16878,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
   '          }\r\n' \
-  '          tracks_desc();\r\n' \
+  '          tracks_desc(fpan);\r\n' \
   '        }\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
@@ -17160,7 +17162,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (fpan != 3) {tracks_desc();}\r\n' \
+  '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
