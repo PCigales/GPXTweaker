@@ -10878,7 +10878,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          let b = track_boundaries();\r\n' \
   '          if (b != null) {\r\n' \
-  '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight) * eval(zoom_s);\r\n' \
   '          }\r\n' \
   '          if (prev_state == null) {\r\n' \
   '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o)=>o.style.display!="none");\r\n' \
@@ -10938,7 +10938,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "[]" : JSON.stringify(Array.from(opacities))));\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + Math.max(0, Math.min(tlevel, tlevels.length - 1)).toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "[]" : JSON.stringify(Array.from(opacities))));\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -18967,6 +18967,10 @@ class GPXTweakerWebInterfaceServer():
   '        return true;\r\n' \
   '      }\r\n' \
   '      async function page_load() {\r\n' \
+  '        if (mode != "map") {\r\n' \
+  '          document.getElementById("tset").disabled = true;\r\n' \
+  '          document.getElementById("tset").style.pointerEvents = "none";\r\n' \
+  '        }\r\n' \
   '        if (! await data_load()) {return;}\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
   '        if (prev_state != null) {\r\n' \
   '          dots_visible = prev_state[4] == "true";\r\n' \
