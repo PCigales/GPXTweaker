@@ -10093,6 +10093,7 @@ class GPXTweakerWebInterfaceServer():
   '        let tr_ind = null;\r\n' \
   '        if (bx == null) {\r\n' \
   '          if (focused.substring(0, 5) == "point") {\r\n' \
+  '            if (wgpu_modified.size > 0) {return;}\r\n' \
   '            segf = document.getElementById(focused + "cont").parentNode;\r\n' \
   '            if (! segf.firstElementChild.checked) {return;}\r\n' \
   '            foc_ind = parseInt(focused.substring(5));\r\n' \
@@ -11068,6 +11069,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrt.send();\r\n' \
   '      }\r\n' + HTML_TILES_TEMPLATE + HTML_UTIL_TEMPLATE + \
   '      function scroll_to_dot(dot, center=true) {\r\n' \
+  '        if (dot == null) {return;}\r\n' \
   '        let dl = prop_to_wmvalue(dot.style.left);\r\n' \
   '        let dt = prop_to_wmvalue(dot.style.top);\r\n' \
   '        let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
@@ -11171,6 +11173,7 @@ class GPXTweakerWebInterfaceServer():
   '      function dot_style(pt, over) {\r\n' \
   '        if (pt.indexOf("point") < 0) {return;}\r\n' \
   '        let dot = document.getElementById(pt.replace("point", "dot"))\r\n' \
+  '        if (dot == null) {return;}\r\n' \
   '        if (document.getElementById(pt).value == "error") {\r\n' \
   '          dot.style.stroke = "";\r\n' \
   '          dot.style.display = "none";\r\n' \
@@ -11283,7 +11286,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        fence(() => {if (wgpu_modified.size == 0) {graph_point();};});\r\n' \
+  '        fence(graph_point);\r\n' \
   '      }\r\n' \
   '      function point_to_position(pt) {\r\n' \
   '        let lat = parseFloat(document.getElementById(pt.htmlFor + "lat").value);\r\n' \
@@ -12339,7 +12342,6 @@ class GPXTweakerWebInterfaceServer():
   '            wgpu_wait[0] = null;\r\n' \
   '          }\r\n' \
   '        } else if (fpan == 1) {\r\n' \
-  'await new Promise((res,rej)=>setTimeout(res, 5000));\r\n' \
   '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
   '          if (gpu_part) {gpustats.calc("gdist", "eagain");} else {gpustats.calc("eagain");}\r\n' \
   '          eags = await gpustats.eags;\r\n' \
@@ -12411,6 +12413,7 @@ class GPXTweakerWebInterfaceServer():
   '      function calc_modified(...segs) {\r\n' \
   '        if (webgpu) {\r\n' \
   '          (segs.length > 0 ? segs : Array.from(document.getElementById("pointsform").children)).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '       //   refresh_graph();\r\n' \
   '          fence(segments_calc_wgpu, ...segs);\r\n' \
   '        } else {\r\n' \
   '          segments_calc(...segs);\r\n' \
