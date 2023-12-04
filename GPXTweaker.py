@@ -10245,9 +10245,7 @@ class GPXTweakerWebInterfaceServer():
   '              let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
   '              element_click(null, pt);\r\n' \
   '            } else {\r\n' \
-  '              gbar.style.display = "";\r\n' \
-  '              graphpx.innerHTML = gpx;\r\n' \
-  '              graphpy.innerHTML = gpy;\r\n' \
+  '              fence(() => {if (wgpu_modified.size == 0) {gbar.style.display = ""; graphpx.innerHTML = gpx; graphpy.innerHTML = gpy;};});\r\n' \
   '            }\r\n' \
   '            if (scrollmode_ex > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode_ex == 2);}\r\n' \
   '          }\r\n' \
@@ -12330,6 +12328,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gdists = null;\r\n' \
   '        let eags = null;\r\n' \
   '        let slopestdistspeeds  = null;\r\n' \
+  'await new Promise((res,rej) => setTimeout(res, 5000));\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
@@ -12338,8 +12337,8 @@ class GPXTweakerWebInterfaceServer():
   '          gdists = await gpustats.gdists;\r\n' \
   '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
   '          if (wgpu_wait[0] != null) {\r\n' \
-  '            wgpu_wait[1]();\r\n' \
   '            wgpu_wait[0] = null;\r\n' \
+  '            wgpu_wait[1]();\r\n' \
   '          }\r\n' \
   '        } else if (fpan == 1) {\r\n' \
   '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
@@ -13846,13 +13845,13 @@ class GPXTweakerWebInterfaceServer():
   '            viewpane.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
   '            hand = elt;\r\n' \
-  '            fence(graph_point, parseFloat(document.getElementById("gbarc").style.left));\r\n' \
+  '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "graphc") {\r\n' \
   '            hand = document.getElementById("gbarc");\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
-  '            fence(graph_point, document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
+  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
@@ -13992,7 +13991,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            fence(graph_point, e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
