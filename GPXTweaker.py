@@ -12244,7 +12244,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (ind == 0) {\r\n' \
   '                cmms[0] = 0;\r\n' \
   '                cmms[1] = 0;\r\n' \
-  '                lats[2] = lat;\r\n' \
+  '                lats[0] = lat;\r\n' \
   '              } else {\r\n' \
   '                cmms[2 * ind] = lat - latp;\r\n' \
   '                cmms[2 * ind + 1] = lon - lonp;\r\n' \
@@ -12265,7 +12265,7 @@ class GPXTweakerWebInterfaceServer():
   '                cteahs[4 * ind + 2] = ap == null ? 0 : ap;\r\n' \
   '              } else {\r\n' \
   '                if (ap == null) {\r\n' \
-  '                  for (let i=0; i<4 * ind; i+=4) {cteahs[i + 2] = a;}\r\n' \
+  '                  for (let i=0; i<ind; i+=1) {cteahs[4 * i + 2] = a;}\r\n' \
   '                }\r\n' \
   '                ap = a;\r\n' \
   '                cteahs[4 * ind + 2] = a;\r\n' \
@@ -12275,7 +12275,7 @@ class GPXTweakerWebInterfaceServer():
   '                cteahs[4 * ind + 1] = ep == null ? 0 : ep;\r\n' \
   '              } else {\r\n' \
   '                if (ep == null) {\r\n' \
-  '                  for (let i=0; i<4 * ind; i+=4) {cteahs[i + 1] = e;}\r\n' \
+  '                  for (let i=0; i<ind; i+=1) {cteahs[4 * i + 1] = e;}\r\n' \
   '                }\r\n' \
   '                ep = e;\r\n' \
   '                cteahs[4 * ind + 1] = e;\r\n' \
@@ -12285,7 +12285,7 @@ class GPXTweakerWebInterfaceServer():
   '                cteahs[4 * ind + 3] = hp == null ? 0 : hp;\r\n' \
   '              } else {\r\n' \
   '                if (hp == null) {\r\n' \
-  '                  for (let i=0; i<4 * ind; i+=4) {cteahs[i + 3] = h;}\r\n' \
+  '                  for (let i=0; i<ind; i+=1) {cteahs[4 * i + 3] = h;}\r\n' \
   '                }\r\n' \
   '                hp = h;\r\n' \
   '                cteahs[4 * ind + 3] = h;\r\n' \
@@ -12324,8 +12324,8 @@ class GPXTweakerWebInterfaceServer():
   '        let slopestdistspeeds  = null;\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          if (! gpu_part) {wgpu_modified.clear();}\r\n' \
-  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          gpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
   '          eags = await gpustats.eags;\r\n' \
   '          gdists = await gpustats.gdists;\r\n' \
@@ -12353,7 +12353,6 @@ class GPXTweakerWebInterfaceServer():
   '          if (f1) {eags = await gpustats.eags;}\r\n' \
   '          if (f2 || f3) {slopestdistspeeds = await gpustats.slopestdistspeeds;}\r\n' \
   '        }\r\n' \
-  '//await new Promise((res,rej) => setTimeout(res, 5000));\r\n' \
   '        for (const seg_ind of seg_inds) {\r\n' \
   '          const nbp = seg_nbps.get(seg_ind);\r\n' \
   '          if (nbp == 0) {continue;}\r\n' \
