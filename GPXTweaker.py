@@ -10786,7 +10786,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_FILTERPANEL_TEMPLATE = \
   '            <div id="filterpanel1">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
-  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="webgpu?fence(segments_calc_wgpu, 1):segments_calc(1)">\r\n' \
+  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(1)">\r\n' \
   '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
   '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
   '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
@@ -10797,7 +10797,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '            <div id="filterpanel2">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
-  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="webgpu?fence(segments_calc_wgpu, 2):segments_calc(2)">\r\n' \
+  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(2)">\r\n' \
   '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
   '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
@@ -10808,7 +10808,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '            <div id="filterpanel3">\r\n' \
   '              <span>{#jfilterpanel3#}</span>\r\n' \
-  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="webgpu?fence(segments_calc_wgpu, 3):segments_calc(3)">\r\n' \
+  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(3)">\r\n' \
   '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
   '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
@@ -12152,13 +12152,14 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        whole_calc();\r\n' \
   '      }\r\n' \
-  '      async function segments_calc_wgpu(...args) {\r\n' \
+  '      async function segments_calc_wgpu(fpan=0) {\r\n' \
   '        if (gpustats.device == null) {return;}\r\n' \
-  '        let fpan = 0;\r\n' \
-  '        if (args.length == 1) {\r\n' \
-  '          if ((typeof args[0]).toLowerCase() != "object") {fpan = args[0];}\r\n' \
-  '        }\r\n' \
-  '        const seg_inds = (fpan != 0) ? Array.from(stats.keys()) : (args.length == 0 ? Array.from(document.getElementById("pointsform").children) : args).map((seg) => parseInt(seg.id.slice(7, -4))).sort((s1, s2) => s1 - s2);\r\n' \
+  '        const isInteger = Number.isInteger;\r\n' \
+  '        const seg_inds = fpan == 0 ? Array.from(wgpu_modified).filter(isInteger).sort((s1, s2) => s1 - s2) : Array.from(stats.keys());\r\n' \
+  '        const f1 = wgpu_modified.has("1");\r\n' \
+  '        const f2 = wgpu_modified.has("2");\r\n' \
+  '        const f3 = wgpu_modified.has("3");\r\n' \
+  '        if ((fpan == 0 && seg_inds.length == 0) || (fpan != 0 && ! f1 && ! f2 && ! f3)) {return;}\r\n' \
   '        const seg_nbps = new Map();\r\n' \
   '        let starts = null;\r\n' \
   '        let nbpt = 0;\r\n' \
@@ -12168,15 +12169,13 @@ class GPXTweakerWebInterfaceServer():
   '        const max = Math.max;\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
   '        if (fpan == 0 || gpu_part) {\r\n' \
+  '          if (fpan == 0) {gpu_part = stats.some((st, s) => st.length > 0 && ! wgpu_modified.has(s));}\r\n' \
   '          starts = [0];\r\n' \
   '          for (const seg_ind of seg_inds) {\r\n' \
   '            const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
   '            let nbp = 0;\r\n' \
   '            if (fpan == 0) {\r\n' \
-  '              if (! wgpu_modified.delete(seg_ind)) {\r\n' \
-  '                seg_nbps.set(seg_ind, 0);\r\n' \
-  '                continue;\r\n' \
-  '              };\r\n' \
+  '              wgpu_modified.delete(seg_ind);\r\n' \
   '              const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
   '              const pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
   '              if (pos_d > 0) {\r\n' \
@@ -12212,7 +12211,6 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          gpustats.starts = starts;\r\n' \
   '          if (nbpt == 0) {\r\n' \
-  '            gpu_part = fpan == 0 && stats.reduce((p, c) => p + c.length, 0) > 0;\r\n' \
   '            if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
   '            if (fpan == 0 && wgpu_wait[0] != null) {\r\n' \
   '              wgpu_wait[0] = null;\r\n' \
@@ -12248,9 +12246,9 @@ class GPXTweakerWebInterfaceServer():
   '                cmms[1] = 0;\r\n' \
   '                lats[2] = lat;\r\n' \
   '              } else {\r\n' \
-  '                cmms[ind] = lat - latp;\r\n' \
-  '                cmms[ind + 1] = lon - lonp;\r\n' \
-  '                lats[ind + 2] = lat;\r\n' \
+  '                cmms[2 * ind] = lat - latp;\r\n' \
+  '                cmms[2 * ind + 1] = lon - lonp;\r\n' \
+  '                lats[ind] = lat;\r\n' \
   '              }\r\n' \
   '              latp = lat;\r\n' \
   '              lonp = lon;\r\n' \
@@ -12259,44 +12257,44 @@ class GPXTweakerWebInterfaceServer():
   '                if (tb == null) {tb = t;}\r\n' \
   '                tp = max((t - tb) / 1000, tp);\r\n' \
   '              }\r\n' \
-  '              cteahs[ind] = tp;\r\n' \
+  '              cteahs[4 * ind] = tp;\r\n' \
   '              const e = parseFloat(pc[7].value);\r\n' \
   '              const a = parseFloat(pc[10].value);\r\n' \
   '              let h = null;\r\n' \
   '              if (isNaN(a)) {\r\n' \
-  '                cteahs[ind + 2] = ap == null ? 0 : ap;\r\n' \
+  '                cteahs[4 * ind + 2] = ap == null ? 0 : ap;\r\n' \
   '              } else {\r\n' \
   '                if (ap == null) {\r\n' \
-  '                  for (let i=0; i<ind; i+=4) {cteahs[i + 2] = a;}\r\n' \
+  '                  for (let i=0; i<4 * ind; i+=4) {cteahs[i + 2] = a;}\r\n' \
   '                }\r\n' \
   '                ap = a;\r\n' \
-  '                cteahs[ind + 2] = a;\r\n' \
+  '                cteahs[4 * ind + 2] = a;\r\n' \
   '                h = a;\r\n' \
   '              }\r\n' \
   '              if (isNaN(e)) {\r\n' \
-  '                cteahs[ind + 1] = ep == null ? 0 : ep;\r\n' \
+  '                cteahs[4 * ind + 1] = ep == null ? 0 : ep;\r\n' \
   '              } else {\r\n' \
   '                if (ep == null) {\r\n' \
-  '                  for (let i=0; i<ind; i+=4) {cteahs[i + 1] = e;}\r\n' \
+  '                  for (let i=0; i<4 * ind; i+=4) {cteahs[i + 1] = e;}\r\n' \
   '                }\r\n' \
   '                ep = e;\r\n' \
-  '                cteahs[ind + 1] = e;\r\n' \
+  '                cteahs[4 * ind + 1] = e;\r\n' \
   '                if (h == null) {h = e;}\r\n' \
   '              }\r\n' \
   '              if (h == null) {\r\n' \
-  '                cteahs[ind + 3] = hp == null ? 0 : hp;\r\n' \
+  '                cteahs[4 * ind + 3] = hp == null ? 0 : hp;\r\n' \
   '              } else {\r\n' \
   '                if (hp == null) {\r\n' \
-  '                  for (let i=0; i<ind; i+=4) {cteahs[i + 3] = h;}\r\n' \
+  '                  for (let i=0; i<4 * ind; i+=4) {cteahs[i + 3] = h;}\r\n' \
   '                }\r\n' \
   '                hp = h;\r\n' \
-  '                cteahs[ind + 3] = h;\r\n' \
+  '                cteahs[4 * ind + 3] = h;\r\n' \
   '              }\r\n' \
-  '              ind += 4;\r\n' \
+  '              ind += 1;\r\n' \
   '            }\r\n' \
-  '            cmms = cmms.subarray(ind);\r\n' \
+  '            cmms = cmms.subarray(2 * ind);\r\n' \
   '            clats = clats.subarray(ind);\r\n' \
-  '            cteahs = cteahs.subarray(ind);\r\n' \
+  '            cteahs = cteahs.subarray(4 * ind);\r\n' \
   '            if (fpan == 0) {\r\n' \
   '              if (ind > 0) {\r\n' \
   '                const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
@@ -12316,20 +12314,16 @@ class GPXTweakerWebInterfaceServer():
   '          gpustats.teahs = teahs;\r\n' \
   '        } else {\r\n' \
   '          for (const seg_ind of seg_inds) {\r\n' \
-  '            if (wgpu_modified.has(seg_ind)) {\r\n' \
-  '              seg_nbps.set(seg_ind, 0);\r\n' \
-  '            } else {\r\n' \
-  '              seg_nbps.set(seg_ind, stats[seg_ind].length);\r\n' \
-  '              nbpt += stats[seg_ind].length;\r\n' \
-  '            }\r\n' \
+  '            seg_nbps.set(seg_ind, stats[seg_ind].length);\r\n' \
+  '            nbpt += stats[seg_ind].length;\r\n' \
   '          }\r\n' \
   '          if (nbpt == 0) {return;}\r\n' \
   '        }\r\n' \
   '        let gdists = null;\r\n' \
   '        let eags = null;\r\n' \
   '        let slopestdistspeeds  = null;\r\n' \
-  'await new Promise((res,rej) => setTimeout(res, 5000));\r\n' \
   '        if (fpan == 0) {\r\n' \
+  '          if (! gpu_part) {wgpu_modified.clear();}\r\n' \
   '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
   '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
   '          gpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
@@ -12340,26 +12334,33 @@ class GPXTweakerWebInterfaceServer():
   '            wgpu_wait[0] = null;\r\n' \
   '            wgpu_wait[1]();\r\n' \
   '          }\r\n' \
-  '        } else if (fpan == 1) {\r\n' \
-  '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
-  '          if (gpu_part) {gpustats.calc("gdist", "eagain");} else {gpustats.calc("eagain");}\r\n' \
-  '          eags = await gpustats.eags;\r\n' \
   '        } else {\r\n' \
-  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
-  '          if (fpan == 2) {\r\n' \
-  '            if (gpu_part) {gpustats.calc("gdist", "slopedist", "speed");} else {gpustats.calc("slopedist", "speed");}\r\n' \
-  '          } else {\r\n' \
-  '            if (gpu_part) {gpustats.calc("gdist", "speed");} else {gpustats.calc("speed");}\r\n' \
+  '          const comm = gpu_part ? ["gdist"] : [];\r\n' \
+  '          if (f1) {\r\n' \
+  '            gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '            comm.push("eagain");\r\n' \
+  '            wgpu_modified.delete("1");\r\n' \
   '          }\r\n' \
-  '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
+  '          if (f2 || f3) {\r\n' \
+  '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            if (f2 || gpu_part) {comm.push("slopedist");}\r\n' \
+  '            comm.push("speed");\r\n' \
+  '            wgpu_modified.delete("2");\r\n' \
+  '            wgpu_modified.delete("3");\r\n' \
+  '          }\r\n' \
+  '          gpu_part &= stats.reduce((p, c) => p + c.length, 0) > nbpt;\r\n' \
+  '          gpustats.calc(...comm);\r\n' \
+  '          if (f1) {eags = await gpustats.eags;}\r\n' \
+  '          if (f2 || f3) {slopestdistspeeds = await gpustats.slopestdistspeeds;}\r\n' \
   '        }\r\n' \
+  '//await new Promise((res,rej) => setTimeout(res, 5000));\r\n' \
   '        for (const seg_ind of seg_inds) {\r\n' \
   '          const nbp = seg_nbps.get(seg_ind);\r\n' \
   '          if (nbp == 0) {continue;}\r\n' \
   '          const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
   '          let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
   '          const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
-  '          const cstats = stats[seg_ind];\r\n' \
+  '          let cstats = stats[seg_ind];\r\n' \
   '          if (fpan == 0) {\r\n' \
   '            if (wgpu_modified.has(seg_ind)) {\r\n' \
   '              cstats = Array(stats[seg_ind]).fill(stat);\r\n' \
@@ -12373,17 +12374,8 @@ class GPXTweakerWebInterfaceServer():
   '            gdists = gdists.subarray(nbp);\r\n' \
   '            eags = eags.subarray(2 * nbp);\r\n' \
   '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
-  '          } else if (fpan == 1) {\r\n' \
-  '            if (! wgpu_modified.has(seg_ind)) {\r\n' \
-  '              for (let p=0; p<nbp; p++) {\r\n' \
-  '                stat = cstats[p];\r\n' \
-  '                stat[2] = eags[2 * p];\r\n' \
-  '                stat[3] = eags[2 * p + 1];\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            eags = eags.subarray(2 * nbp);\r\n' \
-  '          } else if (fpan == 2) {\r\n' \
-  '            if (! wgpu_modified.has(seg_ind)) {\r\n' \
+  '          } else if (! wgpu_modified.has(seg_ind)) {\r\n' \
+  '            if (f2) {\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                let stat_ = cstats[p];\r\n' \
   '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
@@ -12392,29 +12384,45 @@ class GPXTweakerWebInterfaceServer():
   '                stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
   '                stat = stat_;\r\n' \
   '              }\r\n' \
-  '            }\r\n' \
-  '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
-  '          } else if (fpan == 3) {\r\n' \
-  '            if (! wgpu_modified.has(seg_ind)) {\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            } else if (f3) {\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                cstats[p][7] = slopestdistspeeds[4 * p + 3];\r\n' \
   '              }\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
   '            }\r\n' \
-  '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            if (f1) {\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = cstats[p];\r\n' \
+  '                stat[2] = eags[2 * p];\r\n' \
+  '                stat[3] = eags[2 * p + 1];\r\n' \
+  '              }\r\n' \
+  '              eags = eags.subarray(2 * nbp);\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            if (f2 || f3) {slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);}\r\n' \
+  '            if (f1) {eags = eags.subarray(2 * nbp);}\r\n' \
   '          }\r\n' \
-  '          if (fpan != 3) {\r\n' \
+  '          if (fpan == 0 || f1 || f2) {\r\n' \
   '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\d+m\\|/, stat[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        gpu_part = fpan == 0 && stats.reduce((p, c) => p + c.length, 0) > nbpt;\r\n' \
   '        if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
   '      }\r\n' \
   '      function calc_modified(...segs) {\r\n' \
   '        if (webgpu) {\r\n' \
   '          (segs.length > 0 ? segs : Array.from(document.getElementById("pointsform").children)).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
-  '          fence(segments_calc_wgpu, ...segs);\r\n' \
+  '          fence(segments_calc_wgpu);\r\n' \
   '        } else {\r\n' \
   '          segments_calc(...segs);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function calc_changed(fpan) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(fpan.toString());\r\n' \
+  '          fence(segments_calc_wgpu, fpan);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(fpan);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function segment_checkbox(seg) {\r\n' \
