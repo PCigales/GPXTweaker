@@ -16585,7 +16585,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (scrollmode > 0) {scroll_to_track(document.getElementById(focused), scrollmode == 2)};\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        document.getElementById("places").reset();\r\n' \
+  '        if (! document.getElementById("places").elements.place.value) {set_target();}\r\n' \
   '        fence(refresh_graph);\r\n' \
   '      }\r\n' \
   '      function track_over(trk) {\r\n' \
@@ -17277,6 +17277,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
+  '        document.getElementById("places").reset();\r\n' \
   '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
