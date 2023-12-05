@@ -9709,6 +9709,10 @@ class GPXTweakerWebInterfaceServer():
   '                      tiles_hold.delete(tk);\r\n' \
   '                      if (tile.naturalWidth) {\r\n' \
   '                        tile.id = pref + tpos;\r\n' \
+  '                        tile.style.width = iwidth;\r\n' \
+  '                        tile.style.height = iheight;\r\n' \
+  '                        tile.style.left = "calc(var(--zoom) * " + (ioleft + col * twidth).toString() + "px)";\r\n' \
+  '                        tile.style.top = "calc(var(--zoom) * " + (iotop + row * theight).toString() + "px)";\r\n' \
   '                        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
   '                      } else {\r\n' \
   '                        tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
