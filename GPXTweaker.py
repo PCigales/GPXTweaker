@@ -10970,8 +10970,12 @@ class GPXTweakerWebInterfaceServer():
   '        margin-left:3px;\r\n' \
   '        margin-right:2px;\r\n' \
   '      }\r\n' \
-  '      label[id^=segment], label[id^=point], div[id^=point][id$=cont] {\r\n' \
-  '        text-decoration:inherit;\r\n' \
+  '      div[id$=cont] {\r\n' \
+  '        text-decoration-line:inherit;\r\n' \
+  '        text-decoration-color:rgb(40,45,50);\r\n' \
+  '      }\r\n' \
+  '      label[id^=segment], label[id^=point] {\r\n' \
+  '        text-decoration-line:inherit;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
@@ -10980,10 +10984,6 @@ class GPXTweakerWebInterfaceServer():
   '        white-space:nowrap;\r\n' \
   '        width:calc(24em - 22px);\r\n' \
   '        min-height:1.35em;\r\n' \
-  '      }\r\n' \
-  '      span[id^=point][id$=focus] {\r\n' \
-  '        text-decoration-line:inherit;\r\n' \
-  '        text-decoration-color:rgb(40,45,50);\r\n' \
   '      }\r\n' \
   '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name] {\r\n' \
   '        display:inline-block;\r\n' \
@@ -11425,10 +11425,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (valid) {\r\n' \
   '          if (pt_cb.checked) {\r\n' \
-  '            pt.style.textDecoration = "inherit";\r\n' \
+  '            pt.style.textDecorationLine = "inherit";\r\n' \
   '          } else {\r\n' \
-  '            pt.style.textDecoration = "line-through";\r\n' \
+  '            pt.style.textDecorationLine = "line-through";\r\n' \
   '          }\r\n' \
+  '          pt.style.textDecorationColor = "";\r\n' \
   '          document.getElementById(focused + "desc").innerHTML = point_desc(document.getElementById(focused + "focus"));\r\n' \
   '          if (pt_cb.value != "error") {pt_cb.value = "edited";}\r\n' \
   '          if (coord || pt_cb.value == "error") {\r\n' \
@@ -11709,7 +11710,7 @@ class GPXTweakerWebInterfaceServer():
   '        let el_label = el_input.nextElementSibling;\r\n' \
   '        el_label.htmlFor = pref;\r\n' \
   '        el_label.id = pref + "desc";\r\n' \
-  '        el_label.style.textDecoration = "inherit";\r\n' \
+  '        el_label.style.textDecorationLine = "inherit";\r\n' \
   '        let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
   '        el_span.id = pref + "focus";\r\n' \
   '        let el_span_children = el_span.children;\r\n' \
@@ -11820,8 +11821,8 @@ class GPXTweakerWebInterfaceServer():
   '        show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function point_delete(pt, batch=false) {\r\n' \
-  '        if (document.getElementById(pt.id + "desc").style.textDecoration.indexOf("red") < 0) {\r\n' \
-  '          document.getElementById(pt.id + "desc").style.textDecoration = "line-through";\r\n' \
+  '        if (document.getElementById(pt.id + "desc").style.textDecorationColor != "red") {\r\n' \
+  '          document.getElementById(pt.id + "desc").style.textDecorationLine = "line-through";\r\n' \
   '        }\r\n' \
   '        if (pt.id.substring(0, 3) == "way") {\r\n' \
   '          wpt_calc();\r\n' \
@@ -11846,8 +11847,8 @@ class GPXTweakerWebInterfaceServer():
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
   '      function point_undelete(pt, batch=false) {\r\n' \
-  '        if (document.getElementById(pt.id + "desc").style.textDecoration.indexOf("red") < 0) {\r\n' \
-  '          document.getElementById(pt.id + "desc").style.textDecoration = "inherit";\r\n' \
+  '        if (document.getElementById(pt.id + "desc").style.textDecorationColor != "red") {\r\n' \
+  '          document.getElementById(pt.id + "desc").style.textDecorationLine = "inherit";\r\n' \
   '        }\r\n' \
   '        if (pt.id.substring(0, 3) == "way") {\r\n' \
   '          wpt_calc();\r\n' \
@@ -12435,12 +12436,12 @@ class GPXTweakerWebInterfaceServer():
   '      function segment_checkbox(seg) {\r\n' \
   '        if (seg.checked) {\r\n' \
   '          document.getElementById("track" + seg.id.substring(7)).style.display = "";\r\n' \
-  '          seg.parentNode.style.textDecoration="inherit";\r\n' \
+  '          seg.parentNode.style.textDecorationLine = "";\r\n' \
   '        } else {\r\n' \
   '          if (seg.id != focused) {\r\n' \
   '            document.getElementById("track" + seg.id.substring(7)).style.display = "none";\r\n' \
   '          }\r\n' \
-  '          seg.parentNode.style.textDecoration="line-through";\r\n' \
+  '          seg.parentNode.style.textDecorationLine = "line-through";\r\n' \
   '        }\r\n' \
   '        let spans = seg.parentNode.getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length;i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
@@ -12622,7 +12623,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
   '        seg_foc.firstElementChild.scrollIntoView({block:"start"});\r\n' \
   '        document.getElementById("track" + seg.id.slice(7, -4)).style.display = "none";\r\n' \
-  '        seg.style.textDecoration="line-through";\r\n' \
+  '        seg.style.textDecorationLine = "line-through";\r\n' \
   '        calc_modified(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
@@ -13513,7 +13514,7 @@ class GPXTweakerWebInterfaceServer():
   '          let el_label = el_input.nextElementSibling;\r\n' \
   '          el_label.htmlFor = pref;\r\n' \
   '          el_label.id = pref + "desc";\r\n' \
-  '          el_label.style.textDecoration = "inherit";\r\n' \
+  '          el_label.style.textDecorationLine = "inherit";\r\n' \
   '          let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
   '          el_span.id = pref + "focus";\r\n' \
   '          el_span.style="";\r\n' \
@@ -14200,7 +14201,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_SEGMENT_TEMPLATE = \
   '<div id="segment%scont">\r\n' \
   '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment">\r\n' \
-  '                    <label for="segment%s" id="segment%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
+  '                    <label for="segment%s" id="segment%sdesc" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
   '                    <br>'
   HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_PATH_TEMPLATE = \
