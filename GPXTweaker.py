@@ -8826,7 +8826,7 @@ class GPXTweakerWebInterfaceServer():
   '                sm = (s + s2) >> 1;\r\n' \
   '              }\r\n' \
   '              segs[p] = s;\r\n' \
-  '              let ll = lls[p] * 0.00872664626;\r\n' \
+  '              let ll: vec2f = lls[p] * 0.00872664626;\r\n' \
   '              let t: f32 = ll.x + pow(ll.x, 3.0) / 3.0;\r\n' \
   '              let t2: f32 = t * (pow(trlats[s], 2.0) + 1.0) / (trlats[s] - t);\r\n' \
   '              xys[p] = vec2f(ll.y * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
@@ -8843,7 +8843,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(4) var<storage, read_write> sxys: array<vec2f>;\r\n' \
   '            override ws: u32 = 8;\r\n' \
   '            @compute @workgroup_size(ws) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
-  '              let s = id.x + id.y * nw.x * ws;\r\n' \
+  '              let s: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
   '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
   '              let pmin: u32 = starts[s] - starts[0];\r\n' \
@@ -8858,7 +8858,7 @@ class GPXTweakerWebInterfaceServer():
   '                var dist: f32 = 0.0;\r\n' \
   '                var pxy: vec2f = psxy;\r\n' \
   '                for (var pn:u32=p; pn<pmax; pn++) {\r\n' \
-  '                  let nxy = xys[pn];\r\n' \
+  '                  let nxy: vec2f = xys[pn];\r\n' \
   '                  dist += distance(nxy, pxy);\r\n' \
   '                  if (dist > sdrange) {break;};\r\n' \
   '                  ndir += nxy - psxy;\r\n' \
@@ -8950,7 +8950,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(3) var<storage, read_write> eags: array<array<f32,2>>;\r\n' \
   '            override ws: u32 = 4;\r\n' \
   '            @compute @workgroup_size(ws, 1, 2) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
-  '              let s = id.x + id.y * nw.x * ws;\r\n' \
+  '              let s: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
   '              let eaf: f32 = eagainf[id.z] ;\r\n' \
   '              let pmin: u32 = starts[s] - starts[0];\r\n' \
