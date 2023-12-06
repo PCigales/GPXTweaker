@@ -8875,9 +8875,9 @@ class GPXTweakerWebInterfaceServer():
   '                  var pdirl: f32 = length(pdir);\r\n' \
   '                  if (pdirl > 0.0) {\r\n' \
   '                    pdir /= pdirl;\r\n' \
-  '                    let nsin: f32 = determinant(mat2x2(dir, ndir));\r\n' \
+  '                    let nsin: f32 = determinant(mat2x2f(dir, ndir));\r\n' \
   '                    let ncos: f32 = dot(dir, ndir);\r\n' \
-  '                    let psin: f32 = determinant(mat2x2(dir, pdir));\r\n' \
+  '                    let psin: f32 = determinant(mat2x2f(dir, pdir));\r\n' \
   '                    let pcos: f32 = dot(dir, pdir);\r\n' \
   '                    let b1: bool = nsin * psin < 0.0;\r\n' \
   '                    let b2: bool = pcos < 0.0;\r\n' \
@@ -9109,7 +9109,7 @@ class GPXTweakerWebInterfaceServer():
   '              var tn: f32 = tc;\r\n' \
   '              var c: f32;\r\n' \
   '              var su: f32 = 0.0;\r\n' \
-  '              var cs: f32 = 0;\r\n' \
+  '              var cs: f32 = 0.0;\r\n' \
   '              var b: bool = false;\r\n' \
   '              if (teahs[p + 1].x - tc <= trange) {\r\n' \
   '                for (var pi:i32=i32(p)-1; pi>=i32(pmin); pi--) {\r\n' \
@@ -12318,7 +12318,7 @@ class GPXTweakerWebInterfaceServer():
   '                  const dur_h = (tp - dur_m * 60 - dur_s) / 3600;\r\n' \
   '                  dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
   '                }\r\n' \
-  '                seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|0km|" + (ep == null ? "-" : "0") + "m|" + (ap == null ? "-" : "0") + "m) &ndash;";\r\n' \
+  '                seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|.km|" + (ep == null ? "-" : ".") + "m|" + (ap == null ? "-" : ".") + "m) &ndash;";\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -12381,7 +12381,7 @@ class GPXTweakerWebInterfaceServer():
   '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
   '                cstats.push(stat);\r\n' \
   '              }\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\d+m\\|/, stat[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|\\.?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\.m\\|/, stat[2].toFixed(0) + "m|").replace(/\\.m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
   '            }\r\n' \
   '            teahs = teahs.subarray(4 * nbp);\r\n' \
   '            gdists = gdists.subarray(nbp);\r\n' \
