@@ -12381,7 +12381,7 @@ class GPXTweakerWebInterfaceServer():
   '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
   '                cstats.push(stat);\r\n' \
   '              }\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|\\.?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\.m\\|/, stat[2].toFixed(0) + "m|").replace(/\\.m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|\\.km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\.m\\|/, stat[2].toFixed(0) + "m|").replace(/\\.m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
   '            }\r\n' \
   '            teahs = teahs.subarray(4 * nbp);\r\n' \
   '            gdists = gdists.subarray(nbp);\r\n' \
