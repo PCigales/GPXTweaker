@@ -8809,23 +8809,24 @@ class GPXTweakerWebInterfaceServer():
   '          this.beags = [];\r\n' \
   '          this.bslsps = [];\r\n' \
   '          this.bslopestdistspeeds = [];\r\n' \
+  '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          this.mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> lls: array<vec2f>;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
   '            @group(0) @binding(4) var<storage, read_write> xys: array<vec2f>;\r\n' \
-  '            override ws: u32 = 64;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
   '            @compute @workgroup_size(ws) fn pos(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
-  '              let pt: u32 = p + starts[0];\r\n' \
-  '              var s: u32 = 0;\r\n' \
-  '              var s2: u32 = arrayLength(&starts) - 1;\r\n' \
+  '              let pt: u32 = p + starts[0u];\r\n' \
+  '              var s: u32 = 0u;\r\n' \
+  '              var s2: u32 = arrayLength(&starts) - 1u;\r\n' \
   '              if (pt >= starts[s2]) {return;};\r\n' \
-  '              var sm : u32 = (s + s2) >> 1;\r\n' \
+  '              var sm : u32 = (s + s2) >> 1u;\r\n' \
   '              while (sm > s) {\r\n' \
   '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
-  '                sm = (s + s2) >> 1;\r\n' \
+  '                sm = (s + s2) >> 1u;\r\n' \
   '              }\r\n' \
   '              segs[p] = s;\r\n' \
   '              let ll: vec2f = lls[p] * 0.00872664626;\r\n' \
@@ -8846,20 +8847,20 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(5) var<storage, read_write> wns: array<u32>;\r\n' \
   '            @group(0) @binding(6) var<storage, read_write> wds: array<vec2f>;\r\n' \
   '            @group(0) @binding(7) var<storage, read_write> sxys: array<vec2f>;\r\n' \
-  '            override ws1: u32 = 64;\r\n' \
-  '            override ws2: u32 = 8;\r\n' \
+  '            ${override} ws1: u32 = 64u;\r\n' \
+  '            ${override} ws2: u32 = 8u;\r\n' \
   '            @compute @workgroup_size(ws1) fn tdir(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws1;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
   '              let s = segs[p];\r\n' \
   '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
-  '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
+  '              let pmax: u32 = starts[s + 1u] - starts[0u];\r\n' \
   '              let xy: vec2f = xys[p];\r\n' \
   '              var dir: vec2f = vec2f(0.0);\r\n' \
   '              var dist: f32 = 0.0;\r\n' \
   '              var pxy: vec2f = xy;\r\n' \
   '              var pn: u32;\r\n' \
-  '              for (pn = p + 1; pn < pmax; pn++) {\r\n' \
+  '              for (pn = p + 1u; pn < pmax; pn++) {\r\n' \
   '                let nxy: vec2f = xys[pn];\r\n' \
   '                dist += distance(nxy, pxy);\r\n' \
   '                if (dist > sdrange) {break;};\r\n' \
@@ -8871,15 +8872,15 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            @compute @workgroup_size(ws2) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let s: u32 = id.x + id.y * nw.x * ws2;\r\n' \
-  '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
+  '              if (s >= arrayLength(&starts) - 1u) {return;}\r\n' \
   '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
-  '              let pmin: u32 = starts[s] - starts[0];\r\n' \
-  '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
+  '              let pmin: u32 = starts[s] - starts[0u];\r\n' \
+  '              let pmax: u32 = starts[s + 1u] - starts[0u];\r\n' \
   '              var dir: vec2f;\r\n' \
   '              var dirn: bool = true;\r\n' \
   '              var psxy: vec2f = xys[pmin];\r\n' \
   '              sxys[pmin] = psxy;\r\n' \
-  '              for (var p: u32 = pmin + 1; p < pmax; p++) {\r\n' \
+  '              for (var p: u32 = pmin + 1u; p < pmax; p++) {\r\n' \
   '                var sxy: vec2f = xys[p];\r\n' \
   '                var pdir: vec2f = sxy - psxy;\r\n' \
   '                var pdirl: f32 = length(pdir);\r\n' \
@@ -8923,22 +8924,22 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(2) var<storage, read> lats: array<f32>;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
   '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
-  '            override ws: u32 = 64;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
   '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
-  '              let pt: u32 = p + starts[0];\r\n' \
-  '              var s: u32 = 0;\r\n' \
-  '              var s2: u32 = arrayLength(&starts) - 1;\r\n' \
+  '              let pt: u32 = p + starts[0u];\r\n' \
+  '              var s: u32 = 0u;\r\n' \
+  '              var s2: u32 = arrayLength(&starts) - 1u;\r\n' \
   '              if (pt >= starts[s2]) {return;};\r\n' \
-  '              var sm : u32 = (s + s2) >> 1;\r\n' \
+  '              var sm : u32 = (s + s2) >> 1u;\r\n' \
   '              while (sm > s) {\r\n' \
   '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
-  '                sm = (s + s2) >> 1;\r\n' \
+  '                sm = (s + s2) >> 1u;\r\n' \
   '              }\r\n' \
   '              segs[p] = s;\r\n' \
   '              let mm: vec2f = mms[p] * 0.00872664626;\r\n' \
   '              let le: f32 = lats[p] * 0.0174532925;\r\n' \
-  '              let ls: f32 = select(lats[p - 1] * 0.0174532925, le, pt == starts[segs[p]]);\r\n' \
+  '              let ls: f32 = select(lats[p - 1u] * 0.0174532925, le, pt == starts[segs[p]]);\r\n' \
   '              let a: f32 = sqrt(dot(pow(mm, vec2f(2.0)) - pow(mm, vec2f(4.0)) / 3.0, vec2f(1.0, cos(ls) * cos(le))));\r\n' \
   '              gdists[p] = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
   '            }\r\n' \
@@ -8948,12 +8949,12 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
   '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
-  '            override ws: u32 = 64;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
   '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
   '              let xye: vec2f = xys[p];\r\n' \
-  '              let xys: vec2f = select(xys[p - 1], xye, p == starts[segs[p]] - starts[0]);\r\n' \
+  '              let xys: vec2f = select(xys[p - 1u], xye, p == starts[segs[p]] - starts[0u]);\r\n' \
   '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, xye.y) / 6378137.0);\r\n' \
   '              let c: vec2f = 1.0 / (e + 1.0 / e);\r\n' \
   '              gdists[p] = distance(xys, xye) * (c.x + c.y);\r\n' \
@@ -8968,52 +8969,52 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
   '            @group(0) @binding(2) var<uniform> eagainf: vec2f;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> eags: array<array<f32,2>>;\r\n' \
-  '            override ws: u32 = 4;\r\n' \
-  '            @compute @workgroup_size(ws, 1, 2) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '            ${override} ws: u32 = 4u;\r\n' \
+  '            @compute @workgroup_size(ws, 1u, 2u) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let s: u32 = id.x + id.y * nw.x * ws;\r\n' \
-  '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
+  '              if (s >= arrayLength(&starts) - 1u) {return;}\r\n' \
   '              let eaf: f32 = eagainf[id.z] ;\r\n' \
-  '              let pmin: u32 = starts[s] - starts[0];\r\n' \
-  '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
-  '              var eap: f32 = teahs[pmin][id.z + 1];\r\n' \
+  '              let pmin: u32 = starts[s] - starts[0u];\r\n' \
+  '              let pmax: u32 = starts[s + 1u] - starts[0u];\r\n' \
+  '              var eap: f32 = teahs[pmin][id.z + 1u];\r\n' \
   '              var ear: f32 = eap;\r\n' \
   '              var eab: f32 = eap;\r\n' \
-  '              var eag: i32 = 0;\r\n' \
-  '              var eaic: i32 = -1;\r\n' \
+  '              var eag: i32 = 0i;\r\n' \
+  '              var eaic: i32 = -1i;\r\n' \
   '              var eagp: f32 = 0.0;\r\n' \
   '              for (var p: u32 = pmin; p < pmax; p++) {\r\n' \
-  '                let ea: f32 = teahs[p][id.z + 1];\r\n' \
+  '                let ea: f32 = teahs[p][id.z + 1u];\r\n' \
   '                eagp += max(0.0, ea - eab);\r\n' \
   '                eags[p][id.z] = eagp;\r\n' \
-  '                if (ea >= ear && eag > 0) {\r\n' \
+  '                if (ea >= ear && eag > 0i) {\r\n' \
   '                  ear = ea;\r\n' \
   '                  eab = ea;\r\n' \
   '                } else if (ea > ear + eaf) {\r\n' \
   '                  ear = ea;\r\n' \
   '                  eab = ea;\r\n' \
-  '                  eag = 1;\r\n' \
-  '                  eaic = -1;\r\n' \
-  '                } else if ((ea <= ear && eag < 0) || ea < ear - eaf) {\r\n' \
-  '                  if (eaic >= 0) {\r\n' \
+  '                  eag = 1i;\r\n' \
+  '                  eaic = -1i;\r\n' \
+  '                } else if ((ea <= ear && eag < 0i) || ea < ear - eaf) {\r\n' \
+  '                  if (eaic >= 0i) {\r\n' \
   '                    eagp = eags[eaic][id.z];\r\n' \
-  '                    for (var pi: u32 = u32(eaic) + 1; pi <= p; pi++) {\r\n' \
+  '                    for (var pi: u32 = u32(eaic) + 1u; pi <= p; pi++) {\r\n' \
   '                      eags[pi][id.z] = eagp;\r\n' \
   '                    }\r\n' \
-  '                    eaic = -1;\r\n' \
+  '                    eaic = -1i;\r\n' \
   '                  }\r\n' \
   '                  ear = ea;\r\n' \
   '                  eab = ea;\r\n' \
-  '                  eag = -1;\r\n' \
+  '                  eag = -1i;\r\n' \
   '                } else if (ea > eab) {\r\n' \
   '                  eab = ea;\r\n' \
-  '                  if (eaic < 0) {\r\n' \
-  '                    eaic = i32(p) - 1;\r\n' \
+  '                  if (eaic < 0i) {\r\n' \
+  '                    eaic = i32(p) - 1i;\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              if (eaic >= 0) {\r\n' \
+  '              if (eaic >= 0i) {\r\n' \
   '                eagp = eags[eaic][id.z];\r\n' \
-  '                for (var pi: u32 = u32(eaic) + 1; pi < pmax; pi++) {\r\n' \
+  '                for (var pi: u32 = u32(eaic) + 1u; pi < pmax; pi++) {\r\n' \
   '                  eags[pi][id.z] = eagp;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -9032,14 +9033,14 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(4) var<uniform> slopesspeedf: sfilters;\r\n' \
   '            @group(0) @binding(5) var<storage, read_write> slsps: array<vec4f>;\r\n' \
   '            @group(0) @binding(6) var<storage, read_write> slopestdistspeeds: array<vec4f>;\r\n' \
-  '            override ws: u32 = 64;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
   '            fn slope(d: f32, z: vec3f, m: vec3f) -> vec3f {\r\n' \
   '              return select(z / d, m * sign(z), d == 0.0);\r\n' \
   '            }\r\n' \
   '            @compute @workgroup_size(ws) fn slopes1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmax: u32 = starts[segs[p] + 1] - starts[0];\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1u] - starts[0u];\r\n' \
   '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
   '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
   '              var gs: f32 = 0.0;\r\n' \
@@ -9049,7 +9050,7 @@ class GPXTweakerWebInterfaceServer():
   '              var gp: f32 = 0.0;\r\n' \
   '              var eah: vec3f = eahs;\r\n' \
   '              var b: bool = false;\r\n' \
-  '              for (var pi: u32 = p + 1; pi < pmax; pi++) {\r\n' \
+  '              for (var pi: u32 = p + 1u; pi < pmax; pi++) {\r\n' \
   '                ge += gdists[pi];\r\n' \
   '                if (ge > drange && b) {break;}\r\n' \
   '                if (ge == 0.0) {continue;}\r\n' \
@@ -9058,7 +9059,7 @@ class GPXTweakerWebInterfaceServer():
   '                sss += slope(ge, eah - eahs, slmax) * (ge - gp);\r\n' \
   '                gp = ge;\r\n' \
   '              }\r\n' \
-  '              if (p < pmax - 1) {\r\n' \
+  '              if (p < pmax - 1u) {\r\n' \
   '                sss = (sss + slope(gp, eah - eahs, slmax) * (drange - gp)) / drange;\r\n' \
   '              }\r\n' \
   '              slsps[p] = vec4f(clamp(sss, -slmax, slmax), 0.0);\r\n' \
@@ -9066,9 +9067,9 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn slopestdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmin: u32 = starts[segs[p]] - starts[0];\r\n' \
+  '              let pmin: u32 = starts[segs[p]] - starts[0u];\r\n' \
   '              slopestdistspeeds[p] = slsps[p];\r\n' \
-  '              if (p == starts[segs[p] + 1] - starts[0] - 1) {return;};\r\n' \
+  '              if (p == starts[segs[p] + 1u] - starts[0u] - 1u) {return;};\r\n' \
   '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
   '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
   '              var gf: f32 = 0.0;\r\n' \
@@ -9076,9 +9077,9 @@ class GPXTweakerWebInterfaceServer():
   '              var c: f32;\r\n' \
   '              var su: f32 = 0.0;\r\n' \
   '              var csss: vec3f = vec3f(0.0);\r\n' \
-  '              if (gdists[p + 1] <= drange) {\r\n' \
-  '                for (var pi: i32 = i32(p) - 1; pi >= i32(pmin); pi--) {\r\n' \
-  '                  gf -= gdists[pi + 1];\r\n' \
+  '              if (gdists[p + 1u] <= drange) {\r\n' \
+  '                for (var pi: i32 = i32(p) - 1i; pi >= i32(pmin); pi--) {\r\n' \
+  '                  gf -= gdists[pi + 1i];\r\n' \
   '                  if (gf < - drange) {break;}\r\n' \
   '                  c = (gn - gf) / (1.0 - gf);\r\n' \
   '                  csss += slsps[pi].xyz * c;\r\n' \
@@ -9089,12 +9090,12 @@ class GPXTweakerWebInterfaceServer():
   '                  slopestdistspeeds[p] = vec4f(clamp((slsps[p].xyz + csss / 2.0) / (1.0 + su / 2.0), -slmax, slmax), 0.0);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              slopestdistspeeds[p].z = gdists[p + 1] * sqrt(1.0 + pow(slopestdistspeeds[p].z, 2.0));\r\n' \
+  '              slopestdistspeeds[p].z = gdists[p + 1u] * sqrt(1.0 + pow(slopestdistspeeds[p].z, 2.0));\r\n' \
   '            }\r\n' \
   '            @compute @workgroup_size(ws) fn speed1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmax: u32 = starts[segs[p] + 1] - starts[0];\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1u] - starts[0u];\r\n' \
   '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
   '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
   '              var ts: f32 = teahs[p].x;\r\n' \
@@ -9103,11 +9104,11 @@ class GPXTweakerWebInterfaceServer():
   '              var te: f32 = ts;\r\n' \
   '              var tp: f32 = te;\r\n' \
   '              var d: f32 = 0.0;\r\n' \
-  '              for (var pi: u32 = p + 1; pi < pmax; pi++) {\r\n' \
+  '              for (var pi: u32 = p + 1u; pi < pmax; pi++) {\r\n' \
   '                te = teahs[pi].x;\r\n' \
   '                if (te > ts + trange) {break;}\r\n' \
   '                if (te == ts) {continue;}\r\n' \
-  '                d += slopestdistspeeds[pi - 1].z;\r\n' \
+  '                d += slopestdistspeeds[pi - 1u].z;\r\n' \
   '                s += d / (te - ts) * (te - tp);\r\n' \
   '                tp = te;\r\n' \
   '              }\r\n' \
@@ -9119,9 +9120,9 @@ class GPXTweakerWebInterfaceServer():
   '            @compute @workgroup_size(ws) fn speed(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '              let pmin: u32 = starts[segs[p]] - starts[0];\r\n' \
+  '              let pmin: u32 = starts[segs[p]] - starts[0u];\r\n' \
   '              slopestdistspeeds[p].w = slsps[p].w;\r\n' \
-  '              if (p == starts[segs[p] + 1] - starts[0] - 1) {return;};\r\n' \
+  '              if (p == starts[segs[p] + 1u] - starts[0u] - 1u) {return;};\r\n' \
   '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
   '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
   '              var tc: f32 = teahs[p].x;\r\n' \
@@ -9131,8 +9132,8 @@ class GPXTweakerWebInterfaceServer():
   '              var su: f32 = 0.0;\r\n' \
   '              var cs: f32 = 0.0;\r\n' \
   '              var b: bool = false;\r\n' \
-  '              if (teahs[p + 1].x - tc <= trange) {\r\n' \
-  '                for (var pi: i32 = i32(p) - 1; pi >= i32(pmin); pi--) {\r\n' \
+  '              if (teahs[p + 1u].x - tc <= trange) {\r\n' \
+  '                for (var pi: i32 = i32(p) - 1i; pi >= i32(pmin); pi--) {\r\n' \
   '                  tf = teahs[pi].x;\r\n' \
   '                  if (tf < tc - trange) {break;}\r\n' \
   '                  b = true;\r\n' \
@@ -9146,12 +9147,12 @@ class GPXTweakerWebInterfaceServer():
   '                    slopestdistspeeds[p].w = min((slsps[p].w + cs / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
   '                  }\r\n' \
   '                } else if (p > pmin){\r\n' \
-  '                  slopestdistspeeds[p].w = min(slopestdistspeeds[p - 1].z / (tc - tf), spmax);\r\n' \
+  '                  slopestdistspeeds[p].w = min(slopestdistspeeds[p - 1u].z / (tc - tf), spmax);\r\n' \
   '                }\r\n' \
-  '              } else if (teahs[p].x - teahs[max(pmin, p - 1)].x <= trange) {\r\n' \
-  '                slopestdistspeeds[p].w = min(slopestdistspeeds[p].z / (teahs[p + 1].x - teahs[p].x), spmax);\r\n' \
+  '              } else if (teahs[p].x - teahs[max(pmin, p - 1u)].x <= trange) {\r\n' \
+  '                slopestdistspeeds[p].w = min(slopestdistspeeds[p].z / (teahs[p + 1u].x - teahs[p].x), spmax);\r\n' \
   '              } else {\r\n' \
-  '                slopestdistspeeds[p].w = min((slopestdistspeeds[p - 1].z + slopestdistspeeds[p].z)/ (teahs[p + 1].x - teahs[p - 1].x), spmax);\r\n' \
+  '                slopestdistspeeds[p].w = min((slopestdistspeeds[p - 1u].z + slopestdistspeeds[p].z)/ (teahs[p + 1u].x - teahs[p - 1u].x), spmax);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
