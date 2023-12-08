@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
+﻿# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -8801,6 +8801,8 @@ class GPXTweakerWebInterfaceServer():
   '          this.btrlats = twmode ? null : [];\r\n' \
   '          this.blls = twmode ? null : [];\r\n' \
   '          this.bxys = twmode ? null : [];\r\n' \
+  '          this.bwns = twmode ? null : [];\r\n' \
+  '          this.bwds = twmode ? null : [];\r\n' \
   '          this.bsxys = twmode ? null : [];\r\n' \
   '          this.bgdists = [];\r\n' \
   '          this.bteahs = [];\r\n' \
@@ -8837,13 +8839,38 @@ class GPXTweakerWebInterfaceServer():
   '          this.bgpos = twmode ? null : [];\r\n' \
   '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
-  '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
-  '            @group(0) @binding(2) var<storage, read> xys: array<vec2f>;\r\n' \
-  '            @group(0) @binding(3) var<uniform> smdrange: f32;\r\n' \
-  '            @group(0) @binding(4) var<storage, read_write> sxys: array<vec2f>;\r\n' \
-  '            override ws: u32 = 8;\r\n' \
-  '            @compute @workgroup_size(ws) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
-  '              let s: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
+  '            @group(0) @binding(4) var<uniform> smdrange: f32;\r\n' \
+  '            @group(0) @binding(5) var<storage, read_write> wns: array<u32>;\r\n' \
+  '            @group(0) @binding(6) var<storage, read_write> wds: array<vec2f>;\r\n' \
+  '            @group(0) @binding(7) var<storage, read_write> sxys: array<vec2f>;\r\n' \
+  '            override ws1: u32 = 64;\r\n' \
+  '            override ws2: u32 = 8;\r\n' \
+  '            @compute @workgroup_size(ws1) fn tdir(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws1;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let s = segs[p];\r\n' \
+  '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
+  '              let pmax: u32 = starts[s + 1] - starts[0];\r\n' \
+  '              let xy: vec2f = xys[p];\r\n' \
+  '              var dir: vec2f = vec2f(0.0);\r\n' \
+  '              var dist: f32 = 0.0;\r\n' \
+  '              var pxy: vec2f = xy;\r\n' \
+  '              var pn: u32;\r\n' \
+  '              for (pn = p + 1; pn < pmax; pn++) {\r\n' \
+  '                let nxy: vec2f = xys[pn];\r\n' \
+  '                dist += distance(nxy, pxy);\r\n' \
+  '                if (dist > sdrange) {break;};\r\n' \
+  '                dir += nxy - xy;\r\n' \
+  '                pxy = nxy;\r\n' \
+  '              }\r\n' \
+  '              wns[p] = pn - p;\r\n' \
+  '              wds[p] = dir;\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws2) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let s: u32 = id.x + id.y * nw.x * ws2;\r\n' \
   '              if (s >= arrayLength(&starts) - 1) {return;}\r\n' \
   '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
   '              let pmin: u32 = starts[s] - starts[0];\r\n' \
@@ -8852,49 +8879,42 @@ class GPXTweakerWebInterfaceServer():
   '              var dirn: bool = true;\r\n' \
   '              var psxy: vec2f = xys[pmin];\r\n' \
   '              sxys[pmin] = psxy;\r\n' \
-  '              for (var p:u32=pmin+1; p<pmax; p++) {\r\n' \
+  '              for (var p: u32 = pmin + 1; p < pmax; p++) {\r\n' \
   '                var sxy: vec2f = xys[p];\r\n' \
-  '                var ndir: vec2f = vec2f(0.0);\r\n' \
-  '                var dist: f32 = 0.0;\r\n' \
-  '                var pxy: vec2f = psxy;\r\n' \
-  '                for (var pn:u32=p; pn<pmax; pn++) {\r\n' \
-  '                  let nxy: vec2f = xys[pn];\r\n' \
-  '                  dist += distance(nxy, pxy);\r\n' \
-  '                  if (dist > sdrange) {break;};\r\n' \
-  '                  ndir += nxy - psxy;\r\n' \
-  '                  pxy = nxy;\r\n' \
-  '                }\r\n' \
+  '                var pdir: vec2f = sxy - psxy;\r\n' \
+  '                var pdirl: f32 = length(pdir);\r\n' \
+  '                var ndir: vec2f = wds[p] + pdir * f32(wns[p]);\r\n' \
   '                let ndirl: f32 = length(ndir);\r\n' \
-  '                if (ndirl > 0.0) {\r\n' \
+  '                if (pdirl <= sdrange && ndirl > 0.0) {\r\n' \
   '                  ndir /= ndirl;\r\n' \
   '                  if (dirn) {\r\n' \
   '                    dirn = false;\r\n' \
   '                    dir = ndir;\r\n' \
   '                  }\r\n' \
-  '                  var pdir: vec2f = sxy - psxy;\r\n' \
-  '                  var pdirl: f32 = length(pdir);\r\n' \
   '                  if (pdirl > 0.0) {\r\n' \
   '                    pdir /= pdirl;\r\n' \
-  '                    let nsin: f32 = determinant(mat2x2f(dir, ndir));\r\n' \
   '                    let ncos: f32 = dot(dir, ndir);\r\n' \
-  '                    let psin: f32 = determinant(mat2x2f(dir, pdir));\r\n' \
   '                    let pcos: f32 = dot(dir, pdir);\r\n' \
-  '                    let b1: bool = nsin * psin < 0.0;\r\n' \
+  '                    let npcos: f32 = dot(ndir, pdir);\r\n' \
+  '                    let b1: bool = npcos < ncos * pcos;\r\n' \
   '                    let b2: bool = pcos < 0.0;\r\n' \
   '                    let b3: bool = ncos < 0.0;\r\n' \
   '                    let b4: bool = ncos > pcos;\r\n' \
-  '                    pdirl = select(select(pdirl, max(0.0, pdirl * dot(pdir, ndir)), b4), select(pdirl, select(0.0, min(-pdirl * pcos, -ndirl * ncos), b3), b2), b1);\r\n' \
+  '                    pdirl = select(select(pdirl, max(0.0, pdirl * npcos), b4), select(pdirl * pcos, select(0.0, min(-pdirl * pcos, -ndirl * ncos), b3), b2), b1);\r\n' \
   '                    dir = select(select(pdir, ndir, b4), select(dir, -dir, b2 && b3), b1);\r\n' \
   '                    sxy = select(sxy, psxy + pdirl * dir, b1 || b4);\r\n' \
   '                  }\r\n' \
+  '                } else {\r\n' \
+  '                  dir = select(dir, pdir / pdirl, pdirl > sdrange);\r\n' \
   '                }\r\n' \
   '                psxy = sxy;\r\n' \
   '                sxys[p] = sxy;\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws: WebGPUStats.segsws},},});\r\n' \
+  '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 7, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tdir", constants: {ws1: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws2: WebGPUStats.segsws},},});\r\n' \
   '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
@@ -8961,7 +8981,7 @@ class GPXTweakerWebInterfaceServer():
   '              var eag: i32 = 0;\r\n' \
   '              var eaic: i32 = -1;\r\n' \
   '              var eagp: f32 = 0.0;\r\n' \
-  '              for (var p:u32=pmin; p<pmax; p++) {\r\n' \
+  '              for (var p: u32 = pmin; p < pmax; p++) {\r\n' \
   '                let ea: f32 = teahs[p][id.z + 1];\r\n' \
   '                eagp += max(0.0, ea - eab);\r\n' \
   '                eags[p][id.z] = eagp;\r\n' \
@@ -8976,7 +8996,7 @@ class GPXTweakerWebInterfaceServer():
   '                } else if ((ea <= ear && eag < 0) || ea < ear - eaf) {\r\n' \
   '                  if (eaic >= 0) {\r\n' \
   '                    eagp = eags[eaic][id.z];\r\n' \
-  '                    for (var pi:u32=u32(eaic)+1; pi<=p; pi++) {\r\n' \
+  '                    for (var pi: u32 = u32(eaic) + 1; pi <= p; pi++) {\r\n' \
   '                      eags[pi][id.z] = eagp;\r\n' \
   '                    }\r\n' \
   '                    eaic = -1;\r\n' \
@@ -8993,7 +9013,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              if (eaic >= 0) {\r\n' \
   '                eagp = eags[eaic][id.z];\r\n' \
-  '                for (var pi:u32=u32(eaic)+1; pi<pmax; pi++) {\r\n' \
+  '                for (var pi: u32 = u32(eaic) + 1; pi < pmax; pi++) {\r\n' \
   '                  eags[pi][id.z] = eagp;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -9029,7 +9049,7 @@ class GPXTweakerWebInterfaceServer():
   '              var gp: f32 = 0.0;\r\n' \
   '              var eah: vec3f = eahs;\r\n' \
   '              var b: bool = false;\r\n' \
-  '              for (var pi:u32=p+1; pi<pmax; pi++) {\r\n' \
+  '              for (var pi: u32 = p + 1; pi < pmax; pi++) {\r\n' \
   '                ge += gdists[pi];\r\n' \
   '                if (ge > drange && b) {break;}\r\n' \
   '                if (ge == 0.0) {continue;}\r\n' \
@@ -9057,7 +9077,7 @@ class GPXTweakerWebInterfaceServer():
   '              var su: f32 = 0.0;\r\n' \
   '              var csss: vec3f = vec3f(0.0);\r\n' \
   '              if (gdists[p + 1] <= drange) {\r\n' \
-  '                for (var pi:i32=i32(p)-1; pi>=i32(pmin); pi--) {\r\n' \
+  '                for (var pi: i32 = i32(p) - 1; pi >= i32(pmin); pi--) {\r\n' \
   '                  gf -= gdists[pi + 1];\r\n' \
   '                  if (gf < - drange) {break;}\r\n' \
   '                  c = (gn - gf) / (1.0 - gf);\r\n' \
@@ -9083,7 +9103,7 @@ class GPXTweakerWebInterfaceServer():
   '              var te: f32 = ts;\r\n' \
   '              var tp: f32 = te;\r\n' \
   '              var d: f32 = 0.0;\r\n' \
-  '              for (var pi:u32=p+1; pi<pmax; pi++) {\r\n' \
+  '              for (var pi: u32 = p + 1; pi < pmax; pi++) {\r\n' \
   '                te = teahs[pi].x;\r\n' \
   '                if (te > ts + trange) {break;}\r\n' \
   '                if (te == ts) {continue;}\r\n' \
@@ -9112,7 +9132,7 @@ class GPXTweakerWebInterfaceServer():
   '              var cs: f32 = 0.0;\r\n' \
   '              var b: bool = false;\r\n' \
   '              if (teahs[p + 1].x - tc <= trange) {\r\n' \
-  '                for (var pi:i32=i32(p)-1; pi>=i32(pmin); pi--) {\r\n' \
+  '                for (var pi: i32 = i32(p) - 1; pi >= i32(pmin); pi--) {\r\n' \
   '                  tf = teahs[pi].x;\r\n' \
   '                  if (tf < tc - trange) {break;}\r\n' \
   '                  b = true;\r\n' \
@@ -9151,7 +9171,7 @@ class GPXTweakerWebInterfaceServer():
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
-  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -9201,6 +9221,8 @@ class GPXTweakerWebInterfaceServer():
   '              this.btrlats.push(this.device.createBuffer({size: nbsegs * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.blls.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.bxys.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '              this.bwns.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '              this.bwds.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '              this.bsxys.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            }\r\n' \
   '            this.bgdists.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
@@ -9212,7 +9234,7 @@ class GPXTweakerWebInterfaceServer():
   '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmms[c]},}, {binding: 2, resource: {buffer: this.blats[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '            } else {\r\n' \
   '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
-  '              this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.bxys[c]},}, {binding: 3, resource: {buffer: this.bsmdrange},}, {binding: 4, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
+  '              this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bsmdrange},}, {binding: 5, resource: {buffer: this.bwns[c]},}, {binding: 6, resource: {buffer: this.bwds[c]},}, {binding: 7, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
   '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '              this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '            }\r\n' \
@@ -9271,6 +9293,11 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (tasks.has("smooth")) {\r\n' \
+  '            pass.setPipeline(this.ptdir);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
   '            pass.setPipeline(this.ptsmooth);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
@@ -11923,6 +11950,8 @@ class GPXTweakerWebInterfaceServer():
   '        let isNaN = Number.isNaN;\r\n' \
   '        let min = Math.min;\r\n' \
   '        let max = Math.max;\r\n' \
+  '        let round = Math.round;\r\n' \
+  '        let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
   '          if (pos_d > 0) {\r\n' \
@@ -11995,16 +12024,16 @@ class GPXTweakerWebInterfaceServer():
   '              dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
   '            }\r\n' \
   '            let dist_c = "-km";\r\n' \
-  '            if (gpucomp == 0) {dist_c = (stat_p[6] / 1000).toFixed(2) + "km";}\r\n' \
+  '            if (gpucomp == 0) {dist_c = ftos(stat_p[6] / 1000, 2) + "km";}\r\n' \
   '            let ele_c = "-m";\r\n' \
-  '            if (! isNaN(ea_p[0])) {ele_c = (gpucomp<=1?stat_p[2].toFixed(0):"[eg]") + "m";}\r\n' \
+  '            if (! isNaN(ea_p[0])) {ele_c = (gpucomp<=1?ftos(stat_p[2]):"[eg]") + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
-  '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?stat_p[3].toFixed(0):"[ag]") + "m";}\r\n' \
+  '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?ftos(stat_p[3]):"[ag]") + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
   '          } else if (fpan == 1) {\r\n' \
-  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, stat_p[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat_p[3].toFixed(0) + "m)");\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, ftos(stat_p[2]) + "m|").replace(/\\d+m\\)/, ftos(stat_p[3]) + "m)");\r\n' \
   '          } else if (fpan == 2 && gpucomp == 0) {\r\n' \
-  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat_p[6] / 1000).toFixed(2) + "km|");\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + ftos(stat_p[6] / 1000, 2) + "km|");\r\n' \
   '          }\r\n' \
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
@@ -12023,6 +12052,8 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function whole_calc() {\r\n' \
+  '        let round = Math.round;\r\n' \
+  '        let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        let points = document.getElementById("points").firstChild;\r\n' \
   '        let pos_p =  points.data.indexOf("(");\r\n' \
   '        if (pos_p >= 0) {points.deleteData(pos_p, points.length - pos_p);}\r\n' \
@@ -12049,11 +12080,11 @@ class GPXTweakerWebInterfaceServer():
   '          dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
   '        }\r\n' \
   '        let dist_c = "-km";\r\n' \
-  '        if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
+  '        if (dist != null) {dist_c = ftos(dist / 1000, 2) + "km";}\r\n' \
   '        let ele_c = "-m";\r\n' \
-  '        if (ele != null) {ele_c = ele.toFixed(0) + "m";}\r\n' \
+  '        if (ele != null) {ele_c = ftos(ele) + "m";}\r\n' \
   '        let alt_c = "-m";\r\n' \
-  '        if (alt != null) {alt_c = alt.toFixed(0) + "m";}\r\n' \
+  '        if (alt != null) {alt_c = ftos(alt) + "m";}\r\n' \
   '        points.appendData("(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + "|" + nbpt.toString() + ") ");\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
@@ -12073,6 +12104,7 @@ class GPXTweakerWebInterfaceServer():
   '        let mmls = null;\r\n' \
   '        let teahs = null;\r\n' \
   '        let max = Math.max;\r\n' \
+  '        let round = Math.round;\r\n' \
   '        if (fpan <= 1 || gpucomp == 0 || gpu_part) {\r\n' \
   '          starts = [0];\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
@@ -12134,6 +12166,7 @@ class GPXTweakerWebInterfaceServer():
   '          let ssss = gpustats.ssss;\r\n' \
   '          let ss = gpustats.ss;\r\n' \
   '          let i = 0;\r\n' \
+  '          let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
   '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
@@ -12160,7 +12193,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (gpucomp == 2 && fpan == 2) {\r\n' \
   '                seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, "[eg]m|").replace(/\\d+m\\)/, "[ag]m)");\r\n' \
   '              }\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace("[eg]", stat[2].toFixed(0)).replace("[ag]", stat[3].toFixed(0));\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + ftos(stat[6] / 1000, 2) + "km|").replace("[eg]", ftos(stat[2])).replace("[ag]", ftos(stat[3]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          gpu_part = fpan == 0 && i != stats.reduce((p,c) => p + c.length, 0);\r\n' \
@@ -12183,6 +12216,7 @@ class GPXTweakerWebInterfaceServer():
   '        let teahs = null;\r\n' \
   '        const max = Math.max;\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
   '        if (fpan == 0 || gpu_part) {\r\n' \
   '          if (fpan == 0) {gpu_part = stats.some((st, s) => st.length > 0 && ! wgpu_modified.has(s));}\r\n' \
   '          starts = [0];\r\n' \
@@ -12366,6 +12400,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (f1) {eags = await gpustats.eags;}\r\n' \
   '          if (f2 || f3) {slopestdistspeeds = await gpustats.slopestdistspeeds;}\r\n' \
   '        }\r\n' \
+  '        const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        for (const seg_ind of seg_inds) {\r\n' \
   '          const nbp = seg_nbps.get(seg_ind);\r\n' \
   '          if (nbp == 0) {continue;}\r\n' \
@@ -12381,7 +12416,7 @@ class GPXTweakerWebInterfaceServer():
   '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
   '                cstats.push(stat);\r\n' \
   '              }\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|\\.km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace(/\\.m\\|/, stat[2].toFixed(0) + "m|").replace(/\\.m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|\\.km\\|/, "|" + ftos(stat[6] / 1000, 2) + "km|").replace(/\\.m\\|/, ftos(stat[2]) + "m|").replace(/\\.m\\)/, ftos(stat[3]) + "m)");\r\n' \
   '            }\r\n' \
   '            teahs = teahs.subarray(4 * nbp);\r\n' \
   '            gdists = gdists.subarray(nbp);\r\n' \
@@ -12398,7 +12433,7 @@ class GPXTweakerWebInterfaceServer():
   '                stat = stat_;\r\n' \
   '              }\r\n' \
   '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|");\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + ftos(stat[6] / 1000, 2) + "km|");\r\n' \
   '            } else if (f3) {\r\n' \
   '              for (let p=0; p<nbp; p++) {\r\n' \
   '                cstats[p][7] = slopestdistspeeds[4 * p + 3];\r\n' \
@@ -12412,7 +12447,7 @@ class GPXTweakerWebInterfaceServer():
   '                stat[3] = eags[2 * p + 1];\r\n' \
   '              }\r\n' \
   '              eags = eags.subarray(2 * nbp);\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, stat[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat[3].toFixed(0) + "m)");\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, ftos(stat[2]) + "m|").replace(/\\d+m\\)/, ftos(stat[3]) + "m)");\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (f2 || f3) {slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);}\r\n' \
@@ -12933,75 +12968,76 @@ class GPXTweakerWebInterfaceServer():
   '              d_f = d_f + " " + dots[p];\r\n' \
   '              continue;\r\n' \
   '            }\r\n' \
-  '            let ndir = [0, 0];\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let pr = pp;\r\n' \
-  '            for (let pn=p; pn<positions.length; pn++) {\r\n' \
-  '              if (positions[pn] == null) {continue;}\r\n' \
-  '              dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
-  '              pr = pn;\r\n' \
-  '              if (dist > sdrange) {break;}\r\n' \
-  '              ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
-  '              ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
-  '            }\r\n' \
-  '            let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
-  '            if (ndirl > 0) {\r\n' \
-  '              ndir[0] /= ndirl;\r\n' \
-  '              ndir[1] /= ndirl;\r\n' \
-  '              if (dir == null) {dir = ndir;}\r\n' \
-  '              let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
-  '              let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
-  '              if (pdirl > 0) {\r\n' \
-  '                let pmod = false;\r\n' \
-  '                pdir[0] /= pdirl;\r\n' \
-  '                pdir[1] /= pdirl;\r\n' \
-  '                let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
-  '                let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
-  '                let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
-  '                let pcos = dir[0] * pdir[0] + dir[1] * pdir[1];\r\n' \
-  '                if (nsin * psin < 0) {\r\n' \
-  '                  if (pcos < 0) {\r\n' \
-  '                    if (ncos < 0) {\r\n' \
-  '                      pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
-  '                      dir[0] = -dir[0];\r\n' \
-  '                      dir[1] = -dir[1];\r\n' \
+  '            let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
+  '            let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
+  '            let pmod = false;\r\n' \
+  '            if (pdirl <= sdrange) {\r\n' \
+  '              let ndir = [pdir[0], pdir[1]];\r\n' \
+  '              let dist = 0;\r\n' \
+  '              let pr = p;\r\n' \
+  '              for (let pn=p+1; pn<positions.length; pn++) {\r\n' \
+  '                if (positions[pn] == null) {continue;}\r\n' \
+  '                dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
+  '                if (dist > sdrange) {break;}\r\n' \
+  '                pr = pn;\r\n' \
+  '                ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
+  '                ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
+  '              }\r\n' \
+  '              let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
+  '              if (ndirl > 0) {\r\n' \
+  '                ndir[0] /= ndirl;\r\n' \
+  '                ndir[1] /= ndirl;\r\n' \
+  '                if (dir == null) {dir = ndir;}\r\n' \
+  '                if (pdirl > 0) {\r\n' \
+  '                  pdir[0] /= pdirl;\r\n' \
+  '                  pdir[1] /= pdirl;\r\n' \
+  '                  let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
+  '                  let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
+  '                  let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
+  '                  let pcos = dir[0] * pdir[0] + dir[1] * pdir[1];\r\n' \
+  '                  if (nsin * psin < 0) {\r\n' \
+  '                    if (pcos < 0) {\r\n' \
+  '                      if (ncos < 0) {\r\n' \
+  '                        pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                        dir[0] = -dir[0];\r\n' \
+  '                        dir[1] = -dir[1];\r\n' \
+  '                      } else {\r\n' \
+  '                        pdirl = 0;\r\n' \
+  '                      }\r\n' \
   '                    } else {\r\n' \
-  '                      pdirl = 0;\r\n' \
+  '                      pdirl *= pcos;\r\n' \
   '                    }\r\n' \
+  '                    positions[p][0] = positions[pp][0] + pdirl * dir[0];\r\n' \
+  '                    positions[p][1] = positions[pp][1] + pdirl * dir[1];\r\n' \
+  '                    pmod = true;\r\n' \
+  '                  } else if (ncos > pcos) {\r\n' \
+  '                    pdirl = Math.max(0, pdirl * (pdir[0] * ndir[0] + pdir[1] * ndir[1]));\r\n' \
+  '                    positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
+  '                    positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
+  '                    pmod = true;\r\n' \
+  '                    dir = ndir;\r\n' \
+  '                  } else {\r\n' \
+  '                    dir = pdir;\r\n' \
   '                  }\r\n' \
-  '                  positions[p][0] = positions[pp][0] + pdirl * dir[0];\r\n' \
-  '                  positions[p][1] = positions[pp][1] + pdirl * dir[1];\r\n' \
-  '                  pmod = true;\r\n' \
-  '                } else if (ncos > pcos) {\r\n' \
-  '                  pdirl = Math.max(0, pdirl * (pdir[0] * ndir[0] + pdir[1] * ndir[1]));\r\n' \
-  '                  positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
-  '                  positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
-  '                  pmod = true;\r\n' \
-  '                  dir = ndir;\r\n' \
-  '                } else {\r\n' \
-  '                  dir = pdir;\r\n' \
+  '                  if (pmod) {\r\n' \
+  '                    focused = foc;\r\n' \
+  '                    save_old();\r\n' \
+  '                    [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
+  '                    hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                    save_old();\r\n' \
+  '                    point_edit(false, false, false, false);\r\n' \
+  '                    let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '                    dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
+  '                    dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
+  '                    d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
+  '                    nmod++;\r\n' \
+  '                  }\r\n' \
   '                }\r\n' \
-  '                if (pmod) {\r\n' \
-  '                  focused = foc;\r\n' \
-  '                  save_old();\r\n' \
-  '                  [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  save_old();\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
-  '                  let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
-  '                  dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
-  '                  dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
-  '                  d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
-  '                  nmod++;\r\n' \
-  '                } else {\r\n' \
-  '                  d_f = d_f + " " + dots[p];\r\n' \
-  '                }\r\n' \
-  '              } else {\r\n' \
-  '                d_f = d_f + " " + dots[p];\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              dir = [pdir[0] / pdirl, pdir[1] / pdirl];\r\n' \
   '            }\r\n' \
+  '            if (! pmod) {d_f = d_f + " " + dots[p];}\r\n' \
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          if (d_f.substring(1).indexOf("M") < 0) {d_f = d_f.replace("L", "M");}\r\n' \
@@ -16673,21 +16709,23 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
   '      function tracks_desc(fpan) {\r\n' \
-  '        let nbtracks = tracks_pts.length;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
+  '        const nbtracks = tracks_pts.length;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        for (let t=0; t<nbtracks; t++) {\r\n' \
-  '          let track_props = tracks_props[t];\r\n' \
+  '          const track_props = tracks_props[t];\r\n' \
   '          let dur_c = "--h--mn--s";\r\n' \
   '          if (! isNaN(track_props[0])) {\r\n' \
-  '            let dur = Math.round(track_props[0]);\r\n' \
-  '            let dur_s = dur % 60;\r\n' \
-  '            let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '            let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '            const dur = Math.round(track_props[0]);\r\n' \
+  '            const dur_s = dur % 60;\r\n' \
+  '            const dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '            const dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
   '            dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
   '          }\r\n' \
-  '          let dist_c = isNaN(track_props[1]) ? "-km" : ((track_props[1] / 1000).toFixed(2) + "km");\r\n' \
-  '          let ele_c = isNaN(track_props[2]) ? "-m" : (track_props[2].toFixed(0) + "m");\r\n' \
-  '          let alt_c = isNaN(track_props[3]) ? "-m" : (track_props[3].toFixed(0) + "m");\r\n' \
+  '          const dist_c = isNaN(track_props[1]) ? "-km" : (ftos(track_props[1] / 1000, 2) + "km");\r\n' \
+  '          const ele_c = isNaN(track_props[2]) ? "-m" : (ftos(track_props[2]) + "m");\r\n' \
+  '          const alt_c = isNaN(track_props[3]) ? "-m" : (ftos(track_props[3]) + "m");\r\n' \
   '          document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
   '        }\r\n' \
   '        if (fpan == 1 || fpan == 2) {\r\n' \
@@ -16918,6 +16956,7 @@ class GPXTweakerWebInterfaceServer():
   '        const min = Math.min;\r\n' \
   '        const max = Math.max;\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
   '        let gdists = null;\r\n' \
   '        let eags = null;\r\n' \
   '        let slopestdistspeeds  = null;\r\n' \
@@ -16956,7 +16995,7 @@ class GPXTweakerWebInterfaceServer():
   '                track_props[5][1] = seg[0][1];\r\n' \
   '              }\r\n' \
   '              starts.push(starts.at(-1) + nbp);\r\n' \
-  '              const tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top));\r\n' \
+  '              const tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top)).map((l) => round(l * 1000000) / 1000000);\r\n' \
   '              tls.push(tl);\r\n' \
   '              seg.forEach((c, p) => {clls[2 * p] = tl[0] - c[0]; clls[2 * p + 1] = c[1] - tl[1];});\r\n' \
   '              clls = clls.subarray(2 * nbp);\r\n' \
@@ -17088,7 +17127,9 @@ class GPXTweakerWebInterfaceServer():
   '            for (const seg of segs) {\r\n' \
   '              const mind = 2 * seg.length;\r\n' \
   '              for (let ind=0; ind<mind; ind+=2) {\r\n' \
-  '                d += (ind == 0 ? " M" : " L") + xys[ind].toFixed(1) + " " + xys[ind + 1].toFixed(1);\r\n' \
+  '                const sx = round(10 * xys[ind]).toString();\r\n' \
+  '                const sy = round(10 * xys[ind+1]).toString();\r\n' \
+  '                d += (ind == 0 ? " M" : " L") + (sx.slice(0, -1) || "0" ) + "." + sx.slice(-1) + " " + (sy.slice(0, -1) || "0" ) + "." + sy.slice(-1);\r\n' \
   '              }\r\n' \
   '              xys = xys.subarray(mind);\r\n' \
   '            }\r\n' \
@@ -17593,58 +17634,65 @@ class GPXTweakerWebInterfaceServer():
   '                pp = p;\r\n' \
   '                continue;\r\n' \
   '              }\r\n' \
-  '              let ndirx = 0;\r\n' \
-  '              let ndiry = 0;\r\n' \
-  '              let dist = 0;\r\n' \
-  '              let pr = pp;\r\n' \
-  '              for (let pn=p; pn<2*nind; pn+=2) {\r\n' \
-  '                dist += Math.sqrt((tracks_xys_smoothed[pn] - tracks_xys_smoothed[pr]) ** 2 + (tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pr + 1]) ** 2);\r\n' \
-  '                pr = pn;\r\n' \
-  '                if (dist > tdrange) {break;}\r\n' \
-  '                ndirx += tracks_xys_smoothed[pn] - tracks_xys_smoothed[pp];\r\n' \
-  '                ndiry += tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
-  '              }\r\n' \
-  '              let ndirl = Math.sqrt(ndirx ** 2 + ndiry ** 2);\r\n' \
-  '              if (ndirl > 0) {\r\n' \
-  '                ndirx /= ndirl;\r\n' \
-  '                ndiry /= ndirl;\r\n' \
-  '                if (dirx == null) {\r\n' \
-  '                  dirx = ndirx;\r\n' \
-  '                  diry = ndiry;\r\n' \
+  '              let pdirx = tracks_xys_smoothed[p] - tracks_xys_smoothed[pp];\r\n' \
+  '              let pdiry = tracks_xys_smoothed[p + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
+  '              let pdirl = Math.sqrt(pdirx ** 2 + pdiry ** 2);\r\n' \
+  '              if (pdirl <= tdrange) {\r\n' \
+  '                let ndirx = pdirx;\r\n' \
+  '                let ndiry = pdiry;\r\n' \
+  '                let dist = 0;\r\n' \
+  '                let pr = p;\r\n' \
+  '                for (let pn=p+2; pn<2*nind; pn+=2) {\r\n' \
+  '                  dist += Math.sqrt((tracks_xys_smoothed[pn] - tracks_xys_smoothed[pr]) ** 2 + (tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pr + 1]) ** 2);\r\n' \
+  '                  if (dist > tdrange) {break;}\r\n' \
+  '                  pr = pn;\r\n' \
+  '                  ndirx += tracks_xys_smoothed[pn] - tracks_xys_smoothed[pp];\r\n' \
+  '                  ndiry += tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
   '                }\r\n' \
-  '                let pdirx = tracks_xys_smoothed[p] - tracks_xys_smoothed[pp];\r\n' \
-  '                let pdiry = tracks_xys_smoothed[p + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
-  '                let pdirl = Math.sqrt(pdirx ** 2 + pdiry ** 2);\r\n' \
-  '                if (pdirl > 0) {\r\n' \
-  '                  pdirx /= pdirl;\r\n' \
-  '                  pdiry /= pdirl;\r\n' \
-  '                  let nsin = dirx * ndiry - diry * ndirx;\r\n' \
-  '                  let ncos = dirx * ndirx + diry * ndiry;\r\n' \
-  '                  let psin = dirx * pdiry - diry * pdirx;\r\n' \
-  '                  let pcos = dirx * pdirx + diry * pdiry;\r\n' \
-  '                  if (nsin * psin < 0) {\r\n' \
-  '                    if (pcos < 0) {\r\n' \
-  '                      if (ncos < 0) {\r\n' \
-  '                        pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
-  '                        dirx = -dirx;\r\n' \
-  '                        diry = -diry;\r\n' \
-  '                      } else {\r\n' \
-  '                        pdirl = 0;\r\n' \
-  '                      }\r\n' \
-  '                    }\r\n' \
-  '                    tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * dirx;\r\n' \
-  '                    tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * diry;\r\n' \
-  '                  } else if (ncos > pcos) {\r\n' \
-  '                    pdirl = Math.max(0, pdirl * (pdirx * ndirx + pdiry * ndiry));\r\n' \
-  '                    tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * ndirx;\r\n' \
-  '                    tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * ndiry;\r\n' \
+  '                let ndirl = Math.sqrt(ndirx ** 2 + ndiry ** 2);\r\n' \
+  '                if (ndirl > 0) {\r\n' \
+  '                  ndirx /= ndirl;\r\n' \
+  '                  ndiry /= ndirl;\r\n' \
+  '                  if (dirx == null) {\r\n' \
   '                    dirx = ndirx;\r\n' \
   '                    diry = ndiry;\r\n' \
-  '                  } else {\r\n' \
-  '                    dirx = pdirx;\r\n' \
-  '                    diry = pdiry;\r\n' \
   '                  }\r\n' \
+  '                  if (pdirl > 0) {\r\n' \
+  '                    pdirx /= pdirl;\r\n' \
+  '                    pdiry /= pdirl;\r\n' \
+  '                    let nsin = dirx * ndiry - diry * ndirx;\r\n' \
+  '                    let ncos = dirx * ndirx + diry * ndiry;\r\n' \
+  '                    let psin = dirx * pdiry - diry * pdirx;\r\n' \
+  '                    let pcos = dirx * pdirx + diry * pdiry;\r\n' \
+  '                    if (nsin * psin < 0) {\r\n' \
+  '                      if (pcos < 0) {\r\n' \
+  '                        if (ncos < 0) {\r\n' \
+  '                          pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                          dirx = -dirx;\r\n' \
+  '                          diry = -diry;\r\n' \
+  '                        } else {\r\n' \
+  '                          pdirl = 0;\r\n' \
+  '                        }\r\n' \
+  '                      } else {\r\n' \
+  '                        pdirl *= pcos;\r\n' \
+  '                      }\r\n' \
+  '                      tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * dirx;\r\n' \
+  '                      tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * diry;\r\n' \
+  '                    } else if (ncos > pcos) {\r\n' \
+  '                      pdirl = Math.max(0, pdirl * (pdirx * ndirx + pdiry * ndiry));\r\n' \
+  '                      tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * ndirx;\r\n' \
+  '                      tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * ndiry;\r\n' \
+  '                      dirx = ndirx;\r\n' \
+  '                      diry = ndiry;\r\n' \
+  '                    } else {\r\n' \
+  '                      dirx = pdirx;\r\n' \
+  '                      diry = pdiry;\r\n' \
+  '                    }\r\n' \
+      '                  }\r\n' \
   '                }\r\n' \
+  '              } else {\r\n' \
+  '                dirx = pdirx / pdirl;\r\n' \
+  '                diry = pdiry / pdirl;\r\n' \
   '              }\r\n' \
   '              pp = p;\r\n' \
   '            }\r\n' \
@@ -19854,7 +19902,7 @@ class GPXTweakerWebInterfaceServer():
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
     self.SmoothTracks = False
-    self.SmoothRange = 15
+    self.SmoothRange = 10
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
