@@ -8780,14 +8780,16 @@ class GPXTweakerWebInterfaceServer():
   '        static get ptsws() {return 64;}\r\n' \
   '        static get segsws() {return 8;}\r\n' \
   '        static get maxsbs() {return 1 << 27;}\r\n' \
-  '        constructor (mode) {\r\n' \
+  '        constructor (mode, persistence) {\r\n' \
   '          this.mode = mode;\r\n' \
+  '          this.persistence = persistence * 1000;\r\n' \
   '          this.adapter = null;\r\n' \
   '          this.device = null;\r\n' \
   '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init(); this.calc();}));\r\n' \
   '        }\r\n' \
   '        init() {\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
+  '          this.timer = null;\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -9166,6 +9168,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.bgslopestdistspeed = [];\r\n' \
   '        }\r\n' \
   '        set starts(a) {\r\n' \
+  '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
   '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WebGPUStats.maxsbs) / 16) | 0;\r\n' \
@@ -9222,25 +9225,15 @@ class GPXTweakerWebInterfaceServer():
   '              this.btrlats.push(this.device.createBuffer({size: nbsegs * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.blls.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.bxys.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '              this.bwns.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
-  '              this.bwds.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE}));\r\n' \
-  '              this.bsxys.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            }\r\n' \
-  '            this.bgdists.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bgdists.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            this.bteahs.push(this.device.createBuffer({size: nbpts * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
-  '            this.beags.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '            this.bslsps.push(this.device.createBuffer({size: nbpts * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
-  '            this.bslopestdistspeeds.push(this.device.createBuffer({size: nbpts * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            if (twmode) {\r\n' \
   '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmms[c]},}, {binding: 2, resource: {buffer: this.blats[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '            } else {\r\n' \
   '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
-  '              this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bsmdrange},}, {binding: 5, resource: {buffer: this.bwns[c]},}, {binding: 6, resource: {buffer: this.bwds[c]},}, {binding: 7, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
   '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
-  '              this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
   '            }\r\n' \
-  '            this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bteahs[c]},}, {binding: 2, resource: {buffer: this.beagainf},}, {binding: 3, resource: {buffer: this.beags[c]},}]}));\r\n' \
-  '            this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        set mms(a) {\r\n' \
@@ -9283,7 +9276,9 @@ class GPXTweakerWebInterfaceServer():
   '          this.device.queue.writeBuffer(this.bslopesspeedf, 0, new Float32Array([v.sldrange, v.slmax, v.sptrange, v.spmax]));\r\n' \
   '        }\r\n' \
   '        calc(...tasks) {\r\n' \
+  '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
   '          tasks = new Set(tasks);\r\n' \
+  '          if (tasks.has("speed") && this.bgslopestdistspeed.length == 0) {tasks.add("slopedist");}\r\n' \
   '          const encoder = this.device.createCommandEncoder();\r\n' \
   '          const pass = encoder.beginComputePass();\r\n' \
   '          if (tasks.has("pos")) {\r\n' \
@@ -9294,6 +9289,15 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (tasks.has("smooth")) {\r\n' \
+  '            if (this.bgtsmooth.length == 0) {\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                this.bwns.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '                this.bwds.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '                this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bsmdrange},}, {binding: 5, resource: {buffer: this.bwns[c]},}, {binding: 6, resource: {buffer: this.bwds[c]},}, {binding: 7, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
+  '                this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            pass.setPipeline(this.ptdir);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
@@ -9313,6 +9317,12 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (tasks.has("eagain")) {\r\n' \
+  '            if (this.bgeagain.length == 0) {\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                this.beags.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bteahs[c]},}, {binding: 2, resource: {buffer: this.beagainf},}, {binding: 3, resource: {buffer: this.beags[c]},}]}));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            pass.setPipeline(this.peagain);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgeagain[c]);\r\n' \
@@ -9320,6 +9330,13 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (tasks.has("slopedist")) {\r\n' \
+  '            if (this.bgslopestdistspeed.length == 0) {\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                this.bslsps.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '                this.bslopestdistspeeds.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            pass.setPipeline(this.pslopes1);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '              pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
@@ -9362,19 +9379,30 @@ class GPXTweakerWebInterfaceServer():
   '          return prom\r\n' \
   '        }\r\n' \
   '        get xys() {\r\n' \
-  '          return this._get_result("xys");\r\n' \
+  '          return this._get_result("xys").then((r) => {this.blls.forEach((b) => b.destroy()); this.blls = []; this.bgpos = []; return r;});\r\n' \
   '        }\r\n' \
   '        get sxys() {\r\n' \
   '          return this._get_result("sxys");\r\n' \
   '        }\r\n' \
   '        get gdists() {\r\n' \
-  '          return this._get_result("gdists");\r\n' \
+  '          return this.mode == "tweaker" ? this._get_result("gdists").then((r) => {this.bmms.forEach((b) => b.destroy()); this.bmms = []; this.blats.forEach((b) => b.destroy()); this.blats = []; this.bgdist = []; return r;}) : this._get_result("gdists");\r\n' \
   '        }\r\n' \
   '        get eags() {\r\n' \
   '          return this._get_result("eags");\r\n' \
   '        }\r\n' \
   '        get slopestdistspeeds() {\r\n' \
   '          return this._get_result("slopestdistspeeds");\r\n' \
+  '        }\r\n' \
+  '        _free() {\r\n' \
+  '          const twmode = this.mode == "tweaker";\r\n' \
+  '          ["bwns", "bwds", "bsxys", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          this.bgtsmooth = twmode ? null : [];\r\n' \
+  '          this.bgsgdist = twmode ? null : [];\r\n' \
+  '          this.bgeagain = [];\r\n' \
+  '          this.bgslopestdistspeed = [];\r\n' \
+  '        }\r\n' \
+  '        free () {\r\n' \
+  '          if (this.persistence >= 0) {this.timer = setTimeout(this._free.bind(this), this.persistence);}\r\n' \
   '        }\r\n' \
   '        fence(func, ...args) {\r\n' \
   '          this.lock = this.lock.then(() => func(...args)).catch((e) => console.error(e));\r\n' \
@@ -9385,7 +9413,7 @@ class GPXTweakerWebInterfaceServer():
   '      var wgpu_wait = [null, null];\r\n' \
   '      if (gpucomp > 0) {\r\n' \
   '        if (webgpu) {\r\n' \
-  '          var gpustats = new WebGPUStats("##MODE##");\r\n' \
+  '          var gpustats = new WebGPUStats("##MODE##", "##MODE##" == "explorer" ? wgpu_persistence : -1);\r\n' \
   '          wgpu_wait[0] = new Promise((res, rej) => {wgpu_wait[1] = res;});\r\n' \
   '          var fence = gpustats.fence.bind(gpustats);\r\n' \
   '          fence(() => {if (gpustats.device == null) {webgpu = false;  wgpu_wait[0] = null; wgpu_wait[1](); fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; gpustats = new WebGLStats("##MODE##")} else {gpucomp = 1;};});\r\n' \
@@ -16450,7 +16478,8 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_xy_offsets = null;\r\n' \
   '      var tracks_normnames = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
-  '      var tracks_props = [];\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "explorer") + \
+  '      var tracks_props = [];\r\n' \
+  '      var wgpu_persistence = ##WEBGPUPERS##;\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "explorer") + \
   '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
   '      var media_ex_visible = false;\r\n' \
@@ -16949,7 +16978,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      async function tracks_calc_wgpu(fpan=0) {\r\n' \
   '        if (gpustats.device == null || tracks_pts == null) {return;}\r\n' \
-  'let ti=performance.now();\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
@@ -17138,6 +17166,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        gpustats.free();\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
@@ -17238,7 +17267,6 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
-  'console.log(performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function calc_changed(fpan) {\r\n' \
@@ -19895,6 +19923,7 @@ class GPXTweakerWebInterfaceServer():
     self.MediaThumbSize = 64
     self.GpuComp = 0
     self.PreferWebGpu = False
+    self.WebGpuPersistence = 5
     self.EleGainThreshold = 10
     self.AltGainThreshold = 5
     self.SlopeRange = 80
@@ -20579,7 +20608,7 @@ class GPXTweakerWebInterfaceServer():
     esets = self._build_esets()
     wmsets = self._build_wmsets()
     gsets = self._build_gsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
