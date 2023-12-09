@@ -9226,7 +9226,7 @@ class GPXTweakerWebInterfaceServer():
   '              this.blls.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '              this.bxys.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            }\r\n' \
-  '            this.bgdists.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bgdists.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            this.bteahs.push(this.device.createBuffer({size: nbpts * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            if (twmode) {\r\n' \
   '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmms[c]},}, {binding: 2, resource: {buffer: this.blats[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
@@ -9413,7 +9413,7 @@ class GPXTweakerWebInterfaceServer():
   '      var wgpu_wait = [null, null];\r\n' \
   '      if (gpucomp > 0) {\r\n' \
   '        if (webgpu) {\r\n' \
-  '          var gpustats = new WebGPUStats("##MODE##", "##MODE##" == "explorer" ? wgpu_persistence : -1);\r\n' \
+  '          var gpustats = new WebGPUStats("##MODE##", wgpu_persistence);\r\n' \
   '          wgpu_wait[0] = new Promise((res, rej) => {wgpu_wait[1] = res;});\r\n' \
   '          var fence = gpustats.fence.bind(gpustats);\r\n' \
   '          fence(() => {if (gpustats.device == null) {webgpu = false;  wgpu_wait[0] = null; wgpu_wait[1](); fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; gpustats = new WebGLStats("##MODE##")} else {gpucomp = 1;};});\r\n' \
@@ -11081,9 +11081,10 @@ class GPXTweakerWebInterfaceServer():
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
   '      var stats = [];\r\n' \
-  '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
   '      var smoothed = false;\r\n' \
-  '      var point_stat = [];\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "tweaker") + \
+  '      var point_stat = [];\r\n' \
+  '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
+  '      var wgpu_persistence = -1;\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "tweaker") + \
   '      var wgpu_modified = new Set();\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        if (mode == "map") {\r\n' \
@@ -19505,22 +19506,22 @@ class GPXTweakerWebInterfaceServer():
             self.PreferWebGpu = value
           elif field == 'ele_gain_threshold':
             if value is not None:
-              self.EleGainThreshold = int(value)
+              self.EleGainThreshold = min(max(0, round(float(value))), 25)
           elif field == 'alt_gain_threshold':
             if value is not None:
-              self.AltGainThreshold = int(value)
+              self.AltGainThreshold = min(max(0, round(float(value))), 25)
           elif field == 'slope_range':
             if value is not None:
-              self.SlopeRange = int(value)
+              self.SlopeRange = min(max(0, round(float(value) / 2) * 2), 500)
           elif field == 'slope_max':
             if value is not None:
-              self.SlopeMax = int(value)
+              self.SlopeMax = min(max(0, round(float(value))), 200)
           elif field == 'speed_range':
             if value is not None:
-              self.SpeedRange = int(value)
+              self.SpeedRange = min(max(0, round(float(value) / 2) * 2), 300)
           elif field == 'speed_max':
             if value is not None:
-              self.SpeedMax = int(value)
+              self.SpeedMax = min(max(0, round(float(value))), 90)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -19566,7 +19567,10 @@ class GPXTweakerWebInterfaceServer():
             self.SmoothTracks = bool(value)
           elif field == 'smooth_range':
             if value is not None:
-              self.SmoothRange = int(value)
+              self.SmoothRange = min(max(5, round(float(value))), 50)
+          elif field == 'webgpu_persistence':
+            if value is not None:
+              self.WebGpuPersistence = round(float(value)) if float(value) >= 0 else -1
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -19606,7 +19610,7 @@ class GPXTweakerWebInterfaceServer():
             self.MediaVideos = value
           elif field == 'size':
             try:
-              self.MediaThumbSize = max(min(int(value), 512), 16)
+              self.MediaThumbSize = max(min(round(float(value)), 512), 16)
             except:
               pass
           else:
@@ -19923,7 +19927,7 @@ class GPXTweakerWebInterfaceServer():
     self.MediaThumbSize = 64
     self.GpuComp = 0
     self.PreferWebGpu = False
-    self.WebGpuPersistence = 5
+    self.WebGpuPersistence = 30
     self.EleGainThreshold = 10
     self.AltGainThreshold = 5
     self.SlopeRange = 80
