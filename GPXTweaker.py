@@ -8836,7 +8836,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bgpos = twmode ? null : [];\r\n' \
   '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
@@ -8914,8 +8914,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 7, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tdir", constants: {ws1: WebGPUStats.ptsws},},});\r\n' \
-  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: {ws2: WebGPUStats.segsws},},});\r\n' \
+  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tdir", constants: navigator_firefox ? {} : {ws1: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: navigator_firefox ? {} : {ws2: WebGPUStats.segsws},},});\r\n' \
   '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
@@ -8961,7 +8961,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bggdist = [];\r\n' \
   '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.meagain = this.device.createShaderModule({code: `\r\n' \
@@ -9021,7 +9021,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: {ws: WebGPUStats.segsws / 2},},});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: navigator_firefox ? {} : {ws: WebGPUStats.segsws / 2},},});\r\n' \
   '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
@@ -9158,10 +9158,10 @@ class GPXTweakerWebInterfaceServer():
   '          `});\r\n' \
   '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
-  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '        }\r\n' \
@@ -16949,6 +16949,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      async function tracks_calc_wgpu(fpan=0) {\r\n' \
   '        if (gpustats.device == null || tracks_pts == null) {return;}\r\n' \
+  'let ti=performance.now();\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
@@ -17237,6 +17238,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
+  'console.log(performance.now()-ti);\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function calc_changed(fpan) {\r\n' \
