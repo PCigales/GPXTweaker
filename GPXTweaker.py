@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -203,7 +203,7 @@ FR_STRINGS = {
     '3dmodeled': 'modélisation du terrain achevée (%s = %s x %s points, source: "%s")',
     '3dbuilt': 'page de visionnage 3D générée',
     'jsession': 'Une session est déjà active !',
-    'jexpfail': 'Le chargement des données a échoué !',
+    'jdatafail': 'Le chargement des données a échoué !',
     'jwebgpuno': 'API WebGPU pas prise en charge par le navigateur, repli sur l\'API WebGL 2...',
     'jserror': 'La sauvegarde a échoué: ',
     'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
@@ -603,7 +603,7 @@ EN_STRINGS = {
     '3dmodeled': 'modelization of the ground achieved (%s = %s x %s dots, source: "%s")',
     '3dbuilt': '3D viewer page generated',
     'jsession': 'A session is already active !',
-    'jexpfail': 'The loading of the data has failed !',
+    'jdatafail': 'The loading of the data has failed !',
     'jwebgpuno': 'WebGPU API not supported by the browser, fallback on the WebGL 2 API...',
     'jserror': 'The backup has failed: ',
     'jesconfirm': 'Replace all elevation data of the segment ?',
@@ -7244,12 +7244,13 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               continue
             _send_resp_nc()
-          elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
+          elif req.path.lower()[:10] == '/3D/viewer'.lower():
             try:
               mode3d = req.path.split('?3d=')[1][0].lower()
               if mode3d != 'p' and mode3d != 's':
                 raise
               margin = float(req.path.split('?3d=')[1][1:].split(',')[0])
+              wgpu = req.path.lower()[10:14].lower() == 'wgpu'
             except:
               _send_err_nf()
               continue
@@ -7260,7 +7261,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if self.server.Interface.Track.WebMercatorPts is None:
                 self.server.Interface.Track.BuildWebMercator()
             try:
-              if self.server.Interface.Build3DHTML(mode3d, margin):
+              if self.server.Interface.Build3DHTML(mode3d, margin, wgpu):
                 resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
                 _send_resp('text/html; charset=utf-8')
               else:
@@ -9203,6 +9204,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.chunks.push([nbtsegs, nbtpts]);\r\n' \
   '          this.nbsegs.push(nbtsegs - this.chunks.at(-2)[0]);\r\n' \
   '          this.nbpts.push(_starts[nbtsegs] - cofs);\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '            const nbpts = this.nbpts[c];\r\n' \
   '            const nbsegs = this.nbsegs[c];\r\n' \
@@ -9229,10 +9231,10 @@ class GPXTweakerWebInterfaceServer():
   '            this.bgdists.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
   '            this.bteahs.push(this.device.createBuffer({size: nbpts * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            if (twmode) {\r\n' \
-  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bmms[c]},}, {binding: 2, resource: {buffer: this.blats[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bmms[c], this.blats[c], this.bsegs[c], this.bgdists[c])}));\r\n' \
   '            } else {\r\n' \
-  '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.btrlats[c]},}, {binding: 2, resource: {buffer: this.blls[c]},}, {binding: 3, resource: {buffer: this.bsegs[c]},}, {binding: 4, resource: {buffer: this.bxys[c]},}]}));\r\n' \
-  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: bgentries(this.bstarts[c], this.btrlats[c], this.blls[c], this.bsegs[c], this.bxys[c])}));\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bxys[c], this.bgdists[c])}));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -9281,6 +9283,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (tasks.has("speed") && this.bgslopestdistspeed.length == 0) {tasks.add("slopedist");}\r\n' \
   '          const encoder = this.device.createCommandEncoder();\r\n' \
   '          const pass = encoder.beginComputePass();\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
   '          if (tasks.has("pos")) {\r\n' \
   '            pass.setPipeline(this.ppos);\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
@@ -9294,8 +9297,8 @@ class GPXTweakerWebInterfaceServer():
   '                this.bwns.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '                this.bwds.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '                this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '                this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bxys[c]},}, {binding: 4, resource: {buffer: this.bsmdrange},}, {binding: 5, resource: {buffer: this.bwns[c]},}, {binding: 6, resource: {buffer: this.bwds[c]},}, {binding: 7, resource: {buffer: this.bsxys[c]},}]}));\r\n' \
-  '                this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.btrlats[c]},}, {binding: 3, resource: {buffer: this.bsxys[c]},}, {binding: 4, resource: {buffer: this.bgdists[c]},}]}));\r\n' \
+  '                this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bxys[c], this.bsmdrange, this.bwns[c], this.bwds[c], this.bsxys[c])}));\r\n' \
+  '                this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bsxys[c], this.bgdists[c])}));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            pass.setPipeline(this.ptdir);\r\n' \
@@ -9320,7 +9323,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (this.bgeagain.length == 0) {\r\n' \
   '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '                this.beags.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '                this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bteahs[c]},}, {binding: 2, resource: {buffer: this.beagainf},}, {binding: 3, resource: {buffer: this.beags[c]},}]}));\r\n' \
+  '                this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: bgentries(this.bstarts[c], this.bteahs[c], this.beagainf, this.beags[c])}));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            pass.setPipeline(this.peagain);\r\n' \
@@ -9334,7 +9337,7 @@ class GPXTweakerWebInterfaceServer():
   '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '                this.bslsps.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '                this.bslopestdistspeeds.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
-  '                this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: [{binding: 0, resource: {buffer: this.bstarts[c]},}, {binding: 1, resource: {buffer: this.bsegs[c]},}, {binding: 2, resource: {buffer: this.bteahs[c]},}, {binding: 3, resource: {buffer: this.bgdists[c]},}, {binding: 4, resource: {buffer: this.bslopesspeedf},}, {binding: 5, resource: {buffer: this.bslsps[c]},}, {binding: 6, resource: {buffer: this.bslopestdistspeeds[c]},}]}));\r\n' \
+  '                this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: bgentries(this.bstarts[c], this.bsegs[c], this.bteahs[c], this.bgdists[c], this.bslopesspeedf, this.bslsps[c], this.bslopestdistspeeds[c])}));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            pass.setPipeline(this.pslopes1);\r\n' \
@@ -14307,6 +14310,8 @@ class GPXTweakerWebInterfaceServer():
   '        border:none;\r\n' \
   '        background-color:transparent;\r\n' \
   '        vertical-align:top;\r\n' \
+  '        padding-left: 4px;\r\n' \
+  '        padding-right: 4px;\r\n' \
   '        color:inherit;\r\n' \
   '        font-size:inherit;\r\n' \
   '      }\r\n' \
@@ -14624,7 +14629,7 @@ class GPXTweakerWebInterfaceServer():
   '        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, gl_texture, 0);\r\n' \
   '        return gl_texture;\r\n' \
   '      }\r\n'
-  HTML_3D_MAP_TEMPLATE = \
+  HTML_3D_CMAP_TEMPLATE = \
   '        function create_map() {\r\n' \
   '          r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", "0");\r\n' \
   '          let nrow = tmaxrow + 1 - tminrow;\r\n' \
@@ -14642,14 +14647,6 @@ class GPXTweakerWebInterfaceServer():
   '          mwidth = cnv2d.width;\r\n' \
   '          ctx.fillStyle = "RGB(0,127,0)";\r\n' \
   '          ctx.fillRect(0, 0, mwidth, mheight);\r\n' \
-  '          function map_complete() {\r\n' \
-  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
-  '            map_texture = texture_load(gl.TEXTURE0, cnv2d);\r\n' \
-  '            gl.flush();\r\n' \
-  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
-  '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
-  '            r_map.disabled = false;\r\n' \
-  '          }\r\n' \
   '          let crow = tminrow;\r\n' \
   '          let prom_res = null;\r\n' \
   '          function terr_cb() {\r\n' \
@@ -14686,9 +14683,99 @@ class GPXTweakerWebInterfaceServer():
   '              crow++;\r\n' \
   '              add_row_tile();\r\n' \
   '            }\r\n' \
-  '          }\r\n' \
+  '          }\r\n'
+  HTML_3D_MAP_TEMPLATE = HTML_3D_CMAP_TEMPLATE + \
   '          setTimeout(add_row_tile, 1);\r\n' \
+  '          function map_complete() {\r\n' \
+  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
+  '            map_texture = texture_load(gl.TEXTURE0, cnv2d);\r\n' \
+  '            gl.flush();\r\n' \
+  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
+  '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
+  '            r_map.disabled = false;\r\n' \
+  '          }\r\n' \
   '        }\r\n'
+  HTML_3DP_TRACK_TEMPLATE = \
+  '        function create_track() {\r\n' \
+  '          function move_to(x, y, d=true) {\r\n' \
+  '            if (d) {\r\n' \
+  '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '            } else {\r\n' \
+  '              ctx.moveTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          const ar_f = 0.1;\r\n' \
+  '          const ar_s = 0.2;\r\n' \
+  '          let cnv2d = document.createElement("canvas");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          ctx.lineWidth = Math.max(1, tr_size / 256);\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dr = false;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let ar_d = ar_f;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ar = false;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (! dr) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10 * tr_size / 2048, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                move_to(px, py, false);\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                }\r\n' \
+  '                if (dist < ar_d) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
+  '                  ar = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {\r\n' \
+  '                    ar = true;\r\n' \
+  '                  } else if (trpositions[s][ind] == null || trpositions[s][ind + 1] == null) {\r\n' \
+  '                    ar = true;\r\n' \
+  '                  }\r\n' \
+  '                } else {\r\n' \
+  '                  ar = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - ar_d) * tx;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - ar_d) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                  ar_d = ar_s;\r\n' \
+  '                }\r\n' \
+  '                move_to(px, py);\r\n' \
+  '                if (ar && tx != null && ty != null) {\r\n' \
+  '                  move_to(px - 0.025 * tx - 0.015 * ty, py - 0.025 * ty + 0.015 * tx);\r\n' \
+  '                  move_to(px - 0.025 * tx + 0.015 * ty, py - 0.025 * ty - 0.015 * tx, false);\r\n' \
+  '                  move_to(px, py);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              dr = true;\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '          }\r\n'
   HTML_3D_ROT_TEMPLATE = \
   '      function canvas_rotate(number=null) {\r\n' \
   '        if (number != null) {\r\n' \
@@ -14834,7 +14921,7 @@ class GPXTweakerWebInterfaceServer():
   '        fillmode = mode;\r\n' \
   '        canvas_redraw();\r\n' \
   '      }\r\n'
-  HTML_3DP_TEMPLATE = \
+  HTML_3DP_DOC_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
@@ -14872,7 +14959,8 @@ class GPXTweakerWebInterfaceServer():
   '        </td>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
-  '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
+  '    <script>\r\n'
+  HTML_3DP_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_GLOBALVARS_TEMPLATE + \
   '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["lvposition1", ["vec4", 3, 24, 0, 1]], ["lvposition2", ["vec4", 3, 24, 12, 1]], ["lvoffset", ["vec2", 2]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"], ["hwidth", "float"]]);\r\n' \
@@ -15090,87 +15178,7 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp float;\r\n' \
   '          void main() {\r\n' \
   '          }\r\n' \
-  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
-  '        function create_track() {\r\n' \
-  '          function move_to(x, y, d=true) {\r\n' \
-  '            if (d) {\r\n' \
-  '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
-  '            } else {\r\n' \
-  '              ctx.moveTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          const ar_f = 0.1;\r\n' \
-  '          const ar_s = 0.2;\r\n' \
-  '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
-  '          cnv2d.height = tr_size;\r\n' \
-  '          cnv2d.width = tr_size;\r\n' \
-  '          ctx.strokeStyle = "red";\r\n' \
-  '          ctx.lineWidth = Math.max(1, tr_size / 256);\r\n' \
-  '          ctx.lineJoin = "round";\r\n' \
-  '          ctx.lineCap = "round";\r\n' \
-  '          ctx.fillStyle = "red";\r\n' \
-  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
-  '            let ind = 0;\r\n' \
-  '            let dr = false;\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let ar_d = ar_f;\r\n' \
-  '            let px = null;\r\n' \
-  '            let py = null;\r\n' \
-  '            let tx = null;\r\n' \
-  '            let ty = null;\r\n' \
-  '            let td = null;\r\n' \
-  '            let tdx = null;\r\n' \
-  '            let tdy = null;\r\n' \
-  '            let ar = false;\r\n' \
-  '            while (ind < trpositions[s].length - 1) {\r\n' \
-  '              if (! dr) {\r\n' \
-  '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind + 1];\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10 * tr_size / 2048, 0, 2 * Math.PI);\r\n' \
-  '                ctx.stroke()\r\n' \
-  '                ctx.fill();\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                move_to(px, py, false);\r\n' \
-  '                ind += 2;\r\n' \
-  '              } else {\r\n' \
-  '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
-  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
-  '                if (td > 0) {\r\n' \
-  '                  tx = tdx / td;\r\n' \
-  '                  ty = tdy / td;\r\n' \
-  '                  dist += td;\r\n' \
-  '                }\r\n' \
-  '                if (dist < ar_d) {\r\n' \
-  '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind + 1];\r\n' \
-  '                  ar = false;\r\n' \
-  '                  ind += 2;\r\n' \
-  '                  if (ind >= trpositions[s].length - 1) {\r\n' \
-  '                    ar = true;\r\n' \
-  '                  } else if (trpositions[s][ind] == null || trpositions[s][ind + 1] == null) {\r\n' \
-  '                    ar = true;\r\n' \
-  '                  }\r\n' \
-  '                } else {\r\n' \
-  '                  ar = true;\r\n' \
-  '                  px = trpositions[s][ind] - (dist - ar_d) * tx;\r\n' \
-  '                  py = trpositions[s][ind + 1] - (dist - ar_d) * ty;\r\n' \
-  '                  dist = 0;\r\n' \
-  '                  ar_d = ar_s;\r\n' \
-  '                }\r\n' \
-  '                move_to(px, py);\r\n' \
-  '                if (ar && tx != null && ty != null) {\r\n' \
-  '                  move_to(px - 0.025 * tx - 0.015 * ty, py - 0.025 * ty + 0.015 * tx);\r\n' \
-  '                  move_to(px - 0.025 * tx + 0.015 * ty, py - 0.025 * ty - 0.015 * tx, false);\r\n' \
-  '                  move_to(px, py);\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              dr = true;\r\n' \
-  '            }\r\n' \
-  '            ctx.stroke();\r\n' \
-  '          }\r\n' \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
@@ -15361,6 +15369,665 @@ class GPXTweakerWebInterfaceServer():
   '      var tmincol = ##TMINCOL##;\r\n' \
   '      var tmaxrow = ##TMAXROW##;\r\n' \
   '      var tmaxcol = ##TMAXCOL##;'
+  HTML_3DP_WGPU_TEMPLATE = HTML_3DP_DOC_TEMPLATE + \
+  '      const host = location.hostname + ":";\r\n' \
+  '      const canvas = document.getElementById("canvas");\r\n' \
+  '      var context = null;\r\n' \
+  '      var adapter = null;\r\n' \
+  '      var device = null;\r\n' \
+  '      const wgs = 8;\r\n' \
+  '      var pcolorformat = null;\r\n' \
+  '      var color_texture = null;\r\n' \
+  '      var depth_texture = null;\r\n' \
+  '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
+  '      var cv_tangle = document.getElementById("cursorv_tangle");\r\n' \
+  '      var c_rangle = document.getElementById("cursor_rangle");\r\n' \
+  '      var cv_rangle = document.getElementById("cursorv_rangle");\r\n' \
+  '      var b_rangle = document.getElementById("button_rangle");\r\n' \
+  '      var r_yiso = document.getElementById("radio_yiso");\r\n' \
+  '      var r_ziso = document.getElementById("radio_ziso");\r\n' \
+  '      var r_map = document.getElementById("radio_map");\r\n' \
+  '      var r_dimn = document.getElementById("radio_dimn");\r\n' \
+  '      var r_dimz = document.getElementById("radio_dimz");\r\n' \
+  '      var r_dims = document.getElementById("radio_dims");\r\n' \
+  '      var c_ltangle = document.getElementById("cursor_ltangle");\r\n' \
+  '      var cv_ltangle = document.getElementById("cursorv_ltangle");\r\n' \
+  '      var c_lrangle = document.getElementById("cursor_lrangle");\r\n' \
+  '      var cv_lrangle = document.getElementById("cursorv_lrangle");\r\n' \
+  '      var b_lrangle = document.getElementById("button_lrangle");\r\n' \
+  '      var bviewmatrix = null;\r\n' \
+  '      var blightmatrix = null;\r\n' \
+  '      var rpdview = null;\r\n' \
+  '      var rpdshadow = null;\r\n' \
+  '      var blinematrix = null;\r\n' \
+  '      var blinewidth = null;\r\n' \
+  '      var rbshadow = null;\r\n' \
+  '      var rbview = null;\r\n' \
+  '      var rbaxis = null;\r\n' \
+  '      var rblightrays1 = null;\r\n' \
+  '      var rblightrays2 = null;\r\n' \
+  '      var tex_mode = 0;\r\n' \
+  '      var dim_mode = 2;\r\n' \
+  '      var ctangle = null;\r\n' \
+  '      var stangle = null;\r\n' \
+  '      var crangle = null;\r\n' \
+  '      var srangle = null;\r\n' \
+  '      var nrot = 0;\r\n' \
+  '      var nlrot = 0;\r\n' \
+  '      var rep_rot = null;\r\n' \
+  '      var rep_lrot = null;\r\n' \
+  '      var ltangle_rotmax = null;\r\n' \
+  '      var cltangle = null;\r\n' \
+  '      var sltangle = null;\r\n' \
+  '      var clrangle = null;\r\n' \
+  '      var slrangle = null;\r\n' \
+  '      var zfact = 1;\r\n' \
+  '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
+  '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
+  '      var c_zoom = document.getElementById("cursor_zoom");\r\n' \
+  '      var zoom = 1;\r\n' \
+  '      const ssampling = 2;\r\n' \
+  '      var c_msize = null;\r\n' \
+  '      var modified = new Set();\r\n' \
+  '      var queue = [Promise.resolve(null), null];\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "zs") {\r\n' \
+  '          if (v != null) {c_zfact.value = v.toString();}\r\n' \
+  '          zfact = parseFloat(c_zfact.value);\r\n' \
+  '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
+  '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '          cltangle = Math.cos(angle);\r\n' \
+  '          sltangle = Math.sin(angle);\r\n' \
+  '          modified.add("v");\r\n' \
+  '        } else if (p == "zo") {\r\n' \
+  '          if (v != null) {c_zoom.value = (v <= 2 ? ((v - 1) * 2) : v).toString();}\r\n' \
+  '          zoom = parseFloat(c_zoom.value);\r\n' \
+  '          zoom = zoom <= 1 ? (1 + zoom / 2) : zoom;\r\n' \
+  '          if (v == null) {canvas_resize();}\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          let angle0 = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 - parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (dim_mode == 2) {modified.add("light");}\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle0 = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              clt0angle = Math.cos(angle0);\r\n' \
+  '              slt0angle = Math.sin(angle0);\r\n' \
+  '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          if (p == "t") {\r\n' \
+  '            angle0 = Math.atan(stangle / ctangle * zfact);\r\n' \
+  '            cv_tangle.innerHTML = Math.round(90 - angle0 * 180 / Math.PI).toString();\r\n' \
+  '          } else if (p == "lt") {\r\n' \
+  '            cv_ltangle.innerHTML = Math.round(angle0 * 180 / Math.PI + 90).toString();\r\n' \
+  '          } else {\r\n' \
+  '            window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      var clt0angle = null;\r\n' \
+  '      var slt0angle = null;\r\n' \
+  '      set_param("t", 30);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 35);\r\n' \
+  '      set_param("lr", 315);\r\n' \
+  '      set_param("zs", 1);\r\n' \
+  '      set_param("zo", 1);\r\n##DECLARATIONS##\r\n' \
+  '      function mat4_mult(p, m) {\r\n' \
+  '        const q = m.slice();\r\n' \
+  '        for (let r=0; r<4; r++) {\r\n' \
+  '          for (let c=0; c<4; c++) {\r\n' \
+  '            let v = 0;\r\n' \
+  '            for (let i=0; i<4; i++) {v += p[4 * r + i] * q[4 * i + c];}\r\n' \
+  '            m[4 * r + c] = v;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mat4_flip(m) {\r\n' \
+  '        const q = m.slice();\r\n' \
+  '        for (let r=0; r<4; r++) {\r\n' \
+  '          for (let c=0; c<4; c++) {\r\n' \
+  '            m[4 * r + c] = q[4 * c + r];\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mat4_zscale(zf) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, 1, 0, 0,\r\n' \
+  '          0, 0, -zf, 1 - zf,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_scale(w) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, 1, 0, 0,\r\n' \
+  '          0, 0, 0.5, 0.5 * w,\r\n' \
+  '          0, 0, 0, w\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_yscale(ymag, ymax) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, ymag, 0, 1 - ymax * ymag / 1.733,\r\n' \
+  '          0, 0, 1, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_tilt(c, s) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, c, -s, 0,\r\n' \
+  '          0, s, c, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_rotation(c, s) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          c, s, 0, 0,\r\n' \
+  '          -s, c, 0, 0,\r\n' \
+  '          0, 0, 1, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function canvas_resize() {\r\n' \
+  '        const cpn = canvas.parentNode;\r\n' \
+  '        let size = Math.floor(Math.min(cpn.offsetWidth, cpn.offsetHeight) * zoom);\r\n' \
+  '        canvas.style.width = size.toString() + "px";\r\n' \
+  '        canvas.style.height = size.toString() + "px";\r\n' \
+  '        size = size * Math.max(Math.floor(Math.min(c_msize / size, ssampling)), 1.0);\r\n' \
+  '        canvas.setAttribute("width", size.toString());\r\n' \
+  '        canvas.setAttribute("height", size.toString());\r\n' \
+  '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) - cpn.clientHeight) / 2);\r\n' \
+  '        device.queue.writeBuffer(blinewidth, 0, new Float32Array([2.5 / size]));\r\n' \
+  '        if (color_texture != null) {color_texture.destroy();}\r\n' \
+  '        color_texture = device.createTexture({size: [size, size], format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '        if (depth_texture != null) {depth_texture.destroy();}\r\n' \
+  '        depth_texture = device.createTexture({size: [size, size], format: "depth16unorm", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '      }\r\n' \
+  '      async function init() {\r\n' \
+  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
+  '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
+  '        device = await adapter?.requestDevice();\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_CMAP_TEMPLATE + \
+  '          const mlevels = Math.floor(Math.log2(Math.max(mwidth, mheight))) + 1;\r\n' \
+  '          function map_complete() {\r\n' \
+  '            device.queue.copyExternalImageToTexture({source: cnv2d, flipY: true}, {texture: map_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: mwidth, height: mheight, depthOrArrayLayers: 1});\r\n' \
+  '            if (queue[1] == null) {\r\n' \
+  '              queue[0] = queue[0].then(gmipmap.next.bind(gmipmap));\r\n' \
+  '            } else {\r\n' \
+  '              queue[1] = queue[1].then(gmipmap.next.bind(gmipmap));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          function* gen_mipmap() {\r\n' \
+  '            const mmipmap = device.createShaderModule({code: `\r\n' \
+  '              struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
+  '              @vertex fn vmipmap(@builtin(vertex_index) vi: u32) -> vout  {\r\n' \
+  '                var out: vout;\r\n' \
+  '                out.vcoord = vec2f(f32(vi & 2u), f32((vi << 1u) & 2u));\r\n' \
+  '                out.vposition = vec4f(fma(vec2f(2.0, -2.0), out.vcoord, vec2f(-1.0, 1.0)), 0.5, 1.0);\r\n' \
+  '                return out;\r\n' \
+  '              }\r\n' \
+  '              @group(0) @binding(0) var samp: sampler;\r\n' \
+  '              @group(0) @binding(1) var tex: texture_2d<f32>;\r\n' \
+  '              @fragment fn fmipmap(@location(0) pcoord: vec2f) -> @location(0) vec4f {\r\n' \
+  '                return textureSample(tex, samp, pcoord);\r\n' \
+  '              }\r\n' \
+  '            `});\r\n' \
+  '            const bglmipmap = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}]});\r\n' \
+  '            const pmipmap = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglmipmap]}), vertex: {module: mmipmap, entryPoint: "vmipmap", buffers: []}, fragment: {module: mmipmap, entryPoint: "fmipmap", targets: [{format: map_texture.format}]}, primitive: {topology: "triangle-list"},});\r\n' \
+  '            const rbmipmap = [];\r\n' \
+  '            for (l=0; l< mlevels - 1; l++) {\r\n' \
+  '              const bgmipmap = device.createBindGroup({layout: bglmipmap, entries: [{binding: 0, resource: image_sampler,}, {binding: 1, resource: map_texture.createView({baseMipLevel: l, mipLevelCount: 1}),}]});\r\n' \
+  '              const bencoder = device.createRenderBundleEncoder({colorFormats: [map_texture.format]});\r\n' \
+  '              bencoder.setPipeline(pmipmap);\r\n' \
+  '              bencoder.setBindGroup(0, bgmipmap);\r\n' \
+  '              bencoder.draw(3);\r\n' \
+  '              rbmipmap.push(bencoder.finish());\r\n' \
+  '            }\r\n' \
+  '            yield;\r\n' \
+  '            const encoder = device.createCommandEncoder();\r\n' \
+  '            for (l=0; l<mlevels-1; l++) {\r\n' \
+  '              const rpdmipmap = {colorAttachments: [{view: map_texture.createView({baseMipLevel: l + 1, mipLevelCount: 1}), clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}]};\r\n' \
+  '              const pass = encoder.beginRenderPass(rpdmipmap);\r\n' \
+  '              pass.executeBundles([rbmipmap[l]]);\r\n' \
+  '              pass.end();\r\n' \
+  '            }\r\n' \
+  '            const commands = encoder.finish();\r\n' \
+  '            device.queue.submit([commands]);\r\n' \
+  '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "Carte"; r_map.disabled = false;});\r\n' \
+  '          }\r\n' \
+  '          let gmipmap = null;\r\n' \
+  '          data_wait.then(function (r) {if (r) {setTimeout(function () {add_row_tile(); gmipmap = gen_mipmap(); gmipmap.next();}, 1);};});\r\n' \
+  '          return {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
+  '        }\r\n' \
+  '        async function data_load() {\r\n' \
+  '          const data = await fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
+  '          if (data == null) {return false;}\r\n' \
+  '          const override = navigator_firefox ? "const" : "override";\r\n' \
+  '          const mground = device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> gxs: array<f32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> gys: array<f32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> gzs: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> grznorms: array<vec4f>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> grinds: array<u32>;\r\n' \
+  '            ${override} ws: u32 = 8u;\r\n' \
+  '            @compute @workgroup_size(ws, ws) fn ground(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let nc: u32 = arrayLength(&gxs);\r\n' \
+  '              let nr: u32 = arrayLength(&gys);\r\n' \
+  '              let px: u32 = id.x;\r\n' \
+  '              let py: u32 = id.y;\r\n' \
+  '              if (px >= nc || py >= nr) {return;}\r\n' \
+  '              let pxl: u32 = max(px, 1u) - 1u;\r\n' \
+  '              let pxr: u32 = min(px + 1u, nc - 1u);\r\n' \
+  '              let pyb: u32 = max(py, 1u) - 1u;\r\n' \
+  '              let pyt: u32 = min(py + 1u, nr - 1u);\r\n' \
+  '              let p: u32 = nc * py + px;\r\n' \
+  '              let pl: u32 = nc * py + pxl;\r\n' \
+  '              let pr: u32 = nc * py + pxr;\r\n' \
+  '              let pb: u32 = nc * pyb + px;\r\n' \
+  '              let pt: u32 = nc * pyt + px;\r\n' \
+  '              //grznorms[p] = vec4f(gzs[p], normalize(cross(vec3f(gxs[pxr] - gxs[pxl], 0.0, gzs[pr] - gzs[pl]), vec3f(0.0, gys[pyt] - gys[pyb], gzs[pt] - gzs[pb]))));\r\n' \
+  '              grznorms[p] = vec4f(gzs[p], normalize(cross(normalize(vec3f(gxs[pxr] - gxs[pxr - 1u], 0.0, gzs[pr] - gzs[pr - 1u])) + normalize(vec3f(gxs[pxl + 1u] - gxs[pxl], 0.0, gzs[pl + 1u] - gzs[pl])), normalize(vec3f(0.0, gys[pyt] - gys[pyt - 1u], gzs[pt] - gzs[pt - nc])) + normalize(vec3f(0.0, gys[pyb + 1u] - gys[pyb], gzs[pb + nc] - gzs[pb])))));\r\n' \
+  '              grinds[2u * (pt - nc) + py] = p;\r\n' \
+  '              grinds[2u * pb + py] = p;\r\n' \
+  '              grinds[2u * (nc * pyb + nc) + pyb] = 0xffffffffu;\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const lvx = (new Uint32Array(data, 0, 1))[0];\r\n' \
+  '          bgxs = device.createBuffer({size: 4 * lvx, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '          new Float32Array(bgxs.getMappedRange()).set(new Float32Array(data, 4, lvx));\r\n' \
+  '          bgxs.unmap();\r\n' \
+  '          const lvy = (new Uint32Array(data, 4 * (1 + lvx), 1))[0];\r\n' \
+  '          bgys = device.createBuffer({size: 4 * lvy, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '          new Float32Array(bgys.getMappedRange()).set(new Float32Array(data, 4 * (2 + lvx) , lvy));\r\n' \
+  '          bgys.unmap();\r\n' \
+  '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
+  '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE, mappedAtCreation: true});\r\n' \
+  '          new Float32Array(bgzs.getMappedRange()).set(new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
+  '          bgzs.unmap();\r\n' \
+  '          bgrznorms = device.createBuffer({size: lvz * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX});\r\n' \
+  '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bgrznorms, bgrinds)});\r\n' \
+  '          const encoder = device.createCommandEncoder();\r\n' \
+  '          const pass = encoder.beginComputePass();\r\n' \
+  '          pass.setPipeline(pground);\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
+  '          pass.end();\r\n' \
+  '          const commands = encoder.finish();\r\n' \
+  '          device.queue.submit([commands]);\r\n' \
+  '          const ns = (new Uint32Array(data, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
+  '          trpositions = [];\r\n' \
+  '          for (let s=0, i=0; s<ns; s++) {\r\n' \
+  '            const nspts = (new Uint32Array(data, 4 * (4 + lvx + lvy + lvz + s + 2 * i), 1))[0];\r\n' \
+  '            trpositions.push(new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts));\r\n' \
+  '            i += nspts;\r\n' \
+  '          }\r\n' \
+  '          return device.queue.onSubmittedWorkDone().then(() => {bgzs.destroy(); return true;});\r\n' \
+  '        }\r\n' + HTML_3DP_TRACK_TEMPLATE + \
+  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
+  '        }\r\n' \
+  '        let bgxs = null;\r\n' \
+  '        let bgys = null;\r\n' \
+  '        let bgrznorms = null;\r\n' \
+  '        let bgrinds = null;\r\n' \
+  '        let trpositions = null;\r\n' \
+  '        const data_wait = data_load();\r\n' \
+  '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
+  '        c_msize = Math.min(4096, max_size);\r\n' \
+  '        const m_size = Math.min(2048, max_size);\r\n' \
+  '        const tr_size = Math.min(2048, max_size);\r\n' \
+  '        const d_size = Math.min(2048, max_size);\r\n' \
+  '        context = canvas.getContext("webgpu");\r\n' \
+  '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
+  '        context.configure({alphaMode: "premultiplied", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
+  '        const mview = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> zfactmax: f32;\r\n' \
+  '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(2) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(3) var<uniform> mappos: mat4x4f;\r\n' \
+  '          @group(0) @binding(4) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(5) var<storage, read> gys: array<f32>;\r\n' \
+  '          struct vout0 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f};\r\n' \
+  '          struct vout1 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vmz: f32};\r\n' \
+  '          struct vout2 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f};\r\n' \
+  '          struct vout3 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f, @location(2) vlcoord: vec2f, @location(3) vldepth: f32};\r\n' \
+  '          @vertex fn vview0(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout0 {\r\n' \
+  '            var out: vout0;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview1(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout1 {\r\n' \
+  '            var out: vout1;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vmz = 0.5 * zfactmax * (grposition.z + 1.0);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview2(@builtin(vertex_index) vi: u32, @location(0) gz: f32, @location(1) grnormal: vec3f) -> vout2 {\r\n' \
+  '            var out: vout2;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vnormal = grnormal;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview3(@builtin(vertex_index) vi: u32, @location(0) gz: f32, @location(1) grnormal: vec3f) -> vout3 {\r\n' \
+  '            var out: vout3;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vnormal = grnormal;\r\n' \
+  '            let vlposition: vec4f = lightmatrix * grposition;\r\n' \
+  '            out.vlcoord = fma(vlposition.xy / vlposition.w, vec2f(0.5, -0.5), vec2f(0.5));\r\n' \
+  '            out.vldepth = vlposition.z / vlposition.w - 0.002;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @group(0) @binding(6) var colorsampler: sampler;\r\n' \
+  '          @group(0) @binding(7) var tracktex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(8) var grtex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(9) var grfftex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(10) var depthsampler: sampler_comparison;\r\n' \
+  '          @group(0) @binding(11) var ldepthtex: texture_depth_2d;\r\n' \
+  '          @fragment fn fview0(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f) -> @location(0) vec4f {\r\n' \
+  '            let pdim: f32 = 0.7;\r\n' \
+  '            return select(mix(textureSample(grtex, colorsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(tracktex, colorsampler, pcoords.xy).r), textureSample(grfftex, colorsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview1(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f, @location(1) pmz: f32) -> @location(0) vec4f {\r\n' \
+  '            let pdim: f32 = pow(pmz, 0.7);\r\n' \
+  '            return select(mix(textureSample(grtex, colorsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(tracktex, colorsampler, pcoords.xy).r), textureSample(grfftex, colorsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview2(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f) -> @location(0) vec4f {\r\n' \
+  '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
+  '            let pdim: f32 = select(0.7 + 0.3 * saturate(select(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8), 0.3, ffacing);\r\n' \
+  '            return select(mix(textureSample(grtex, colorsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(tracktex, colorsampler, pcoords.xy).r), textureSample(grfftex, colorsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview3(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f, @location(2) plcoord: vec2f, @location(3) pldepth: f32) -> @location(0) vec4f {\r\n' \
+  '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
+  '            let pdim: f32 = select(0.2, mix(0.2 , fma(0.8, abs(cinc), 0.2), textureSampleCompare(ldepthtex, depthsampler, plcoord, fma(0.0015, abs(cinc), pldepth))), (cinc <= 0.0) == ffacing);\r\n' \
+  '            return select(mix(textureSample(grtex, colorsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(tracktex, colorsampler, pcoords.xy).r), textureSample(grfftex, colorsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 6, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 7, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
+  '        const pview = ["0", "1", "2", "3"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, }));\r\n' \
+  '        const bzfactmax = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(bzfactmax.getMappedRange())[0] = zfactmax;\r\n' \
+  '        bzfactmax.unmap();\r\n' \
+  '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        new Float32Array(bmappos[0].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 50, 0, 0, 0, 0, 0.5, 0.5, 0.5, 50]);\r\n' \
+  '        new Float32Array(bmappos[1].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 25 * zfactmax, 0.5, 0.5, 0.5, 25 * zfactmax]);\r\n' \
+  '        new Float32Array(bmappos[2].getMappedRange()).set([0.5, 0, mpos[0], 0, 0, 0.5, 0, mpos[1], 0, 0, 0, 0, 0.5, 0.5, mpos[2], mpos[3]]);\r\n' \
+  '        bmappos.forEach((b) => b.unmap());\r\n' \
+  '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
+  '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
+  '        const depth_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8, compare: "less"});\r\n' \
+  '        const ptex = new Uint8Array(32);\r\n' \
+  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        const pattern_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        ptex.set([0, 0, 255, 255, 210, 255, 190, 255]);\r\n' \
+  '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
+  '        device.queue.writeTexture({texture: pattern_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
+  '        const patternff_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        ptex.set([120, 110, 90, 255], 4);\r\n' \
+  '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
+  '        device.queue.writeTexture({texture: patternff_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
+  '        const map_texture = device.createTexture({...create_map(), format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        const mapff_texture = device.createTexture({size: [1, 1], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        device.queue.writeTexture({texture: mapff_texture, mipLevel: 0}, new Uint8Array([120, 110, 90, 255]), {}, {width: 1, height: 1});\r\n' \
+  '        const ldepth_texture = device.createTexture({size: [d_size, d_size], format: "depth16unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bzfactmax, bviewmatrix, blightmatrix, bmappos[tm], bgxs, bgys), {binding: 6, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 7, resource: track_texture.createView(),}, {binding: 8, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 9, resource: (tm <= 1 ? patternff_texture : mapff_texture).createView(),}, {binding: 10, resource: depth_sampler,}, {binding: 11, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const mshadow = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(1) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(2) var<storage, read> gys: array<f32>;\r\n' \
+  '          @vertex fn vshadow(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> @builtin(position) vec4f {\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            return lightmatrix * grposition;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fshadow() {\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
+  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mshadow, entryPoint: "fshadow", targets: []}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
+  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
+  '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const mline = device.createShaderModule({code: `\r\n' \
+  '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcolor: vec4f};\r\n' \
+  '          @group(0) @binding(0) var<uniform> linematrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> linewidth: f32;\r\n' \
+  '          @group(0) @binding(2) var<uniform> linetype: u32;\r\n' \
+  '          @vertex fn vline(@builtin(vertex_index) vi: u32, @location(0) lposition1: vec4f, @location(1) lposition2: vec4f, @location(2) loffset: vec2f) -> vout  {\r\n' \
+  '            let lpos1: vec4f = linematrix * lposition1;\r\n' \
+  '            let lpos2: vec4f = linematrix * lposition2;\r\n' \
+  '            var out: vout;\r\n' \
+  '            out.vposition = select(lpos1, lpos2, vi > 2u) + vec4f(mat2x2f(loffset.x, -loffset.y, loffset.y, loffset.x) * normalize(lpos2.xy - lpos1.xy) * linewidth, 0.0, 0.0);\r\n' \
+  '            out.vcolor = select(vec4f(vec3f(fma(0.35, select(lpos1.z, lpos2.z, vi > 2u), 0.65)), 1.0) , vec4f(1.0, 1.0, 0.0, 1.0), linetype == 1u);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fline(@location(0) pcolor: vec4f) -> @location(0) vec4f {\r\n' \
+  '            return pcolor;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglline = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]});\r\n' \
+  '        const pline = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglline]}), vertex: {module: mline, entryPoint: "vline", buffers: [{attributes: [{shaderLocation: 0, format: "float32x3", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 12}], arrayStride: 24, stepMode: "instance"}, {attributes: [{shaderLocation: 2, format: "float32x2", offset: 0}], arrayStride: 8, stepMode: "vertex"}]}, fragment: {module: mline, entryPoint: "fline", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
+  '        const baxispositions = device.createBuffer({size: 120, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(baxispositions.getMappedRange()).set([0, 0, -1, 1.225, 0, -1, 0, 0, -1, 0, 1.225, -1, 0, 1.225, -1, -0.05, 1.125, -1, 0, 1.225, -1, 0.05, 1.125, -1, 0, 0, -1, 0, 0, 1.225]);\r\n' \
+  '        baxispositions.unmap();\r\n' \
+  '        const blightrayspositions = device.createBuffer({size: 216, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(blightrayspositions.getMappedRange()).set([0, 0, 1.65, 0, 0, 1.5, 0, 0, 1.5, 0, -0.02, 1.55, 0, 0, 1.5, 0, 0.02, 1.55, -0.5, 0, 1.65, -0.5, 0, 1.5, -0.5, 0, 1.5, -0.5, -0.02, 1.55, -0.5, 0, 1.5, -0.5, 0.02, 1.55, 0.5, 0, 1.65, 0.5, 0, 1.5, 0.5, 0, 1.5, 0.5, -0.02, 1.55, 0.5, 0, 1.5, 0.5, 0.02, 1.55]);\r\n' \
+  '        blightrayspositions.unmap();\r\n' \
+  '        const blineoffsets = device.createBuffer({size: 48, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(blineoffsets.getMappedRange()).set([0.5, 0, 0, -1, 0, 1, 0, -1, 0, 1, 0.5, 0]);\r\n' \
+  '        blineoffsets.unmap();\r\n' \
+  '        const blstride = Math.ceil(64 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
+  '        blinematrix = device.createBuffer({size: 64 + 2 * blstride, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        blinewidth = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const blinetype = device.createBuffer({size: 4 + 2 * blstride, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, mappedAtCreation: true});\r\n' \
+  '        const blt = new Uint8Array(blinetype.getMappedRange());\r\n' \
+  '        blt[0] = 0;\r\n' \
+  '        blt[blstride] = 1;\r\n' \
+  '        blt[2 * blstride] = 1;\r\n' \
+  '        blinetype.unmap();\r\n' \
+  '        const bgline = device.createBindGroup({layout: bglline, entries: [{binding: 0, resource: {buffer: blinematrix, size: 64}, }, {binding: 1, resource: {buffer: blinewidth}, }, {binding: 2, resource: {buffer: blinetype, size: 4},}]});\r\n' \
+  '        create_track();\r\n' \
+  '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth16unorm"});\r\n' \
+  '        bencoder.setPipeline(pshadow);\r\n' \
+  '        bencoder.setBindGroup(0, bgshadow);\r\n' \
+  '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '        rbshadow = bencoder.finish();\r\n' \
+  '        rbview = [];\r\n' \
+  '        for (let dm=0; dm<4; dm++) {\r\n' \
+  '          for (let tm=0; tm<3; tm++) {\r\n' \
+  '            bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth16unorm"});\r\n' \
+  '            bencoder.setPipeline(pview[dm]);\r\n' \
+  '            bencoder.setBindGroup(0, bgview[tm]);\r\n' \
+  '            bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '            bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '            bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '            rbview.push(bencoder.finish());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        [rbaxis, rblightrays1, rblightrays2] = [baxispositions, blightrayspositions, blightrayspositions].map(function (b, l) {\r\n' \
+  '          bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth16unorm"});\r\n' \
+  '          bencoder.setPipeline(pline);\r\n' \
+  '          bencoder.setBindGroup(0, bgline, [l * blstride, l * blstride]);\r\n' \
+  '          bencoder.setVertexBuffer(0, b);\r\n' \
+  '          bencoder.setVertexBuffer(1, blineoffsets);\r\n' \
+  '          bencoder.draw(blineoffsets.size / 8, b.size / 24);\r\n' \
+  '          return bencoder.finish();\r\n' \
+  '        });\r\n' \
+  '        window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
+  '        canvas_resize();\r\n' \
+  '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
+  '        canvas_redraw();\r\n' \
+  '        c_zoom.disabled = false;\r\n' \
+  '        c_zoom.previousElementSibling.onclick = function () {set_param("zo");}\r\n' \
+  '        c_tangle.disabled = false;\r\n' \
+  '        c_rangle.disabled = false;\r\n' \
+  '        b_rangle.disabled = false;\r\n' \
+  '        if (zfactmax > 1) {\r\n' \
+  '          c_zfact.max = zfactmax.toString();\r\n' \
+  '          c_zfact.disabled = false;\r\n' \
+  '        }\r\n' \
+  '        r_yiso.disabled = false;\r\n' \
+  '        r_ziso.disabled = false;\r\n' \
+  '        r_dimn.disabled = false;\r\n' \
+  '        r_dimz.disabled = false\r\n' \
+  '        r_dimd.disabled = false\r\n' \
+  '        r_dims.disabled = false;\r\n' \
+  '         <!-- toggle_rotation(1); -->\r\n' \
+  '         <!-- toggle_lrotation(1); -->\r\n' \
+  '      }\r\n' \
+  '      function _canvas_redraw() {\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        let pass = null;\r\n' \
+  '        if (modified.has("l") && dim_mode >= 2) {\r\n' \
+  '          const lmatrix = mat4_zscale(1);\r\n' \
+  '          if (dim_mode == 2) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
+  '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '          if (dim_mode == 3) {\r\n' \
+  '            mat4_mult(mat4_yscale(1.732 / (1.415 * clt0angle - slt0angle / zfactmax), 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '          }\r\n' \
+  '          mat4_flip(lmatrix);\r\n' \
+  '          device.queue.writeBuffer(blightmatrix, 0, lmatrix);\r\n' \
+  '          if (dim_mode == 3) {\r\n' \
+  '            pass = encoder.beginRenderPass(rpdshadow);\r\n' \
+  '            pass.executeBundles([rbshadow]);\r\n' \
+  '            pass.end();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        const rbs = [rbview[3 * dim_mode + tex_mode], rbaxis];\r\n' \
+  '        if (modified.has("v")) {\r\n' \
+  '          const vmatrix = mat4_zscale(zfact);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
+  '          mat4_flip(vmatrix);\r\n' \
+  '          device.queue.writeBuffer(bviewmatrix, 0, vmatrix);\r\n' \
+  '          const amatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), amatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), amatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), amatrix);\r\n' \
+  '          mat4_flip(amatrix);\r\n' \
+  '          device.queue.writeBuffer(blinematrix, 0, amatrix);\r\n' \
+  '        }\r\n' \
+  '        rpdview.colorAttachments[0].resolveTarget = context.getCurrentTexture().createView();\r\n' \
+  '        pass = encoder.beginRenderPass(rpdview);\r\n' \
+  '        if (dim_mode >= 2) {\r\n' \
+  '          if (modified.has("l") || modified.has("v")) {\r\n' \
+  '            const lmatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_tilt(clt0angle, -slt0angle), lmatrix);\r\n' \
+  '            if (dim_mode == 3) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, -slrangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '            mat4_flip(lmatrix);\r\n' \
+  '            device.queue.writeBuffer(blinematrix, (blinematrix.size - 64) >> 1, lmatrix);\r\n' \
+  '          }\r\n' \
+  '          rbs.push(rblightrays1);\r\n' \
+  '        }\r\n' \
+  '        if (dim_mode == 3) {\r\n' \
+  '          if (modified.has("l") || modified.has("v")) {\r\n' \
+  '            const lmatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_tilt(cltangle, -sltangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(crangle, srangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, -slrangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '            mat4_flip(lmatrix);\r\n' \
+  '            device.queue.writeBuffer(blinematrix, blinematrix.size - 64, lmatrix);\r\n' \
+  '          }\r\n' \
+  '          rbs.push(rblightrays2);\r\n' \
+  '        }\r\n' \
+  '        pass.executeBundles(rbs);\r\n' \
+  '        pass.end();\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        modified.clear();\r\n' \
+  '        queue[0] = queue[1];\r\n' \
+  '        queue[1] = null;\r\n' \
+  '        return device.queue.onSubmittedWorkDone();\r\n' \
+  '      }\r\n' \
+  '      function canvas_redraw() {\r\n' \
+  '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
+  '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
+  '      init();\r\n' + HTML_3D_TOGGLE_TEMPLATE.replace("fillmode", "tex_mode") + \
+  '      function toggle_dimming(mode) {\r\n' \
+  '        if (mode == dim_mode) {return;};\r\n' \
+  '        if (dim_mode == 3 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
+  '        dim_mode = mode;\r\n' \
+  '        if (dim_mode == 3) {\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          b_lrangle.disabled = false;\r\n' \
+  '        } else {\r\n' \
+  '          c_ltangle.disabled = true;\r\n' \
+  '          c_lrangle.disabled = true;\r\n' \
+  '          b_lrangle.disabled = true;\r\n' \
+  '          if (dim_mode == 2) {\r\n' \
+  '            set_param("lt", 35);\r\n' \
+  '            set_param("lr", 315);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        modified.add("l");\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '    </script>\r\n' \
+  '  </body>\r\n' \
+  '</html>\r\n'
+  HTML_3DP_WGPU_TEMPLATE = HTML_3DP_WGPU_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTML_3DS_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -17367,7 +18034,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '        window.open("http://" + host + location.port + "/3D/viewer" + (webgpu ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function magnify_dec() {\r\n' \
   '        if (magnify > 1) {\r\n' \
@@ -19091,11 +19758,11 @@ class GPXTweakerWebInterfaceServer():
   '      async function data_load() {\r\n' \
   '        tracks_pts = await fetch("/GPXExplorer/data").then((r) => r.ok ? r.json() : null, () => null);\r\n' \
   '        if (tracks_pts == null) {\r\n' \
-  '          window.alert("{#jexpfail#}");\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
   '          document.body.innerHTML = "";\r\n' \
   '          document.head.innerHTML = "";\r\n' \
   '          window.close();\r\n' \
-  '          throw "{#jexpfail#}";\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
   '          return false;\r\n' \
   '        }\r\n' \
   '        tracks_pts.forEach((c) => {c.forEach((c) => {c.forEach((c) => {if (c[2] === "") {c[2] = NaN}; if (c[3] === "") {c[3] = NaN}; c[4] = Date.parse(c[4])})})});\r\n' \
@@ -20407,7 +21074,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(2, 'built')
     return True
 
-  def Build3DHTML(self, mode3d, margin=0.5):
+  def Build3DHTML(self, mode3d, margin=0.5, wgpu=False):
     self.HTML3D = None
     self.HTML3DData = None
     if next((p for seg in self.Track.Pts for p in seg), None) is None:
@@ -20566,7 +21233,7 @@ class GPXTweakerWebInterfaceServer():
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
     declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
-    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+    self.HTML3D = ((GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE if wgpu else GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE) if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
     self.log(0, '3dbuilt')
     return True
 
@@ -20769,7 +21436,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
