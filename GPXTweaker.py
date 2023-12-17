@@ -15369,7 +15369,7 @@ class GPXTweakerWebInterfaceServer():
   '      var tmincol = ##TMINCOL##;\r\n' \
   '      var tmaxrow = ##TMAXROW##;\r\n' \
   '      var tmaxcol = ##TMAXCOL##;'
-  HTML_3DP_WGPU_TEMPLATE = HTML_3DP_DOC_TEMPLATE + \
+  HTML_3D_WGPU_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      const canvas = document.getElementById("canvas");\r\n' \
   '      var context = null;\r\n' \
@@ -15399,13 +15399,8 @@ class GPXTweakerWebInterfaceServer():
   '      var blightmatrix = null;\r\n' \
   '      var rpdview = null;\r\n' \
   '      var rpdshadow = null;\r\n' \
-  '      var blinematrix = null;\r\n' \
-  '      var blinewidth = null;\r\n' \
   '      var rbshadow = null;\r\n' \
   '      var rbview = null;\r\n' \
-  '      var rbaxis = null;\r\n' \
-  '      var rblightrays1 = null;\r\n' \
-  '      var rblightrays2 = null;\r\n' \
   '      var tex_mode = 0;\r\n' \
   '      var dim_mode = 2;\r\n' \
   '      var ctangle = null;\r\n' \
@@ -15421,80 +15416,11 @@ class GPXTweakerWebInterfaceServer():
   '      var sltangle = null;\r\n' \
   '      var clrangle = null;\r\n' \
   '      var slrangle = null;\r\n' \
-  '      var zfact = 1;\r\n' \
-  '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
-  '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
-  '      var c_zoom = document.getElementById("cursor_zoom");\r\n' \
-  '      var zoom = 1;\r\n' \
   '      const ssampling = 2;\r\n' \
   '      var c_msize = null;\r\n' \
   '      var modified = new Set();\r\n' \
-  '      var queue = [Promise.resolve(null), null];\r\n' \
-  '      function set_param(p, v=null) {\r\n' \
-  '        if (p == "zs") {\r\n' \
-  '          if (v != null) {c_zfact.value = v.toString();}\r\n' \
-  '          zfact = parseFloat(c_zfact.value);\r\n' \
-  '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
-  '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
-  '          cltangle = Math.cos(angle);\r\n' \
-  '          sltangle = Math.sin(angle);\r\n' \
-  '          modified.add("v");\r\n' \
-  '        } else if (p == "zo") {\r\n' \
-  '          if (v != null) {c_zoom.value = (v <= 2 ? ((v - 1) * 2) : v).toString();}\r\n' \
-  '          zoom = parseFloat(c_zoom.value);\r\n' \
-  '          zoom = zoom <= 1 ? (1 + zoom / 2) : zoom;\r\n' \
-  '          if (v == null) {canvas_resize();}\r\n' \
-  '        } else {\r\n' \
-  '          let angle = null;\r\n' \
-  '          let angle0 = null;\r\n' \
-  '          switch (p) {\r\n' \
-  '            case "t":\r\n' \
-  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
-  '              angle = (90 - parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
-  '              modified.add("v");\r\n' \
-  '              break;\r\n' \
-  '            case "r":\r\n' \
-  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
-  '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
-  '              modified.add("l");\r\n' \
-  '              modified.add("v");\r\n' \
-  '              if (dim_mode == 2) {modified.add("light");}\r\n' \
-  '              break;\r\n' \
-  '            case "lt":\r\n' \
-  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
-  '              angle0 = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
-  '              clt0angle = Math.cos(angle0);\r\n' \
-  '              slt0angle = Math.sin(angle0);\r\n' \
-  '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
-  '              modified.add("l");\r\n' \
-  '              break;\r\n' \
-  '            case "lr":\r\n' \
-  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
-  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
-  '              modified.add("l");\r\n' \
-  '              break;\r\n' \
-  '          }\r\n' \
-  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
-  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
-  '          if (p == "t") {\r\n' \
-  '            angle0 = Math.atan(stangle / ctangle * zfact);\r\n' \
-  '            cv_tangle.innerHTML = Math.round(90 - angle0 * 180 / Math.PI).toString();\r\n' \
-  '          } else if (p == "lt") {\r\n' \
-  '            cv_ltangle.innerHTML = Math.round(angle0 * 180 / Math.PI + 90).toString();\r\n' \
-  '          } else {\r\n' \
-  '            window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (v == null) {canvas_redraw();}\r\n' \
-  '      }\r\n' \
-  '      var clt0angle = null;\r\n' \
-  '      var slt0angle = null;\r\n' \
-  '      set_param("t", 30);\r\n' \
-  '      set_param("r", 0);\r\n' \
-  '      set_param("lt", 35);\r\n' \
-  '      set_param("lr", 315);\r\n' \
-  '      set_param("zs", 1);\r\n' \
-  '      set_param("zo", 1);\r\n##DECLARATIONS##\r\n' \
+  '      var queue = [Promise.resolve(null), null];\r\n'
+  HTML_3D_WGPU_MAT_TEMPLATE = \
   '      function mat4_mult(p, m) {\r\n' \
   '        const q = m.slice();\r\n' \
   '        for (let r=0; r<4; r++) {\r\n' \
@@ -15552,29 +15478,8 @@ class GPXTweakerWebInterfaceServer():
   '          0, 0, 1, 0,\r\n' \
   '          0, 0, 0, 1\r\n' \
   '        ]);\r\n' \
-  '      }\r\n' \
-  '      function canvas_resize() {\r\n' \
-  '        const cpn = canvas.parentNode;\r\n' \
-  '        let size = Math.floor(Math.min(cpn.offsetWidth, cpn.offsetHeight) * zoom);\r\n' \
-  '        canvas.style.width = size.toString() + "px";\r\n' \
-  '        canvas.style.height = size.toString() + "px";\r\n' \
-  '        size = size * Math.max(Math.floor(Math.min(c_msize / size, ssampling)), 1.0);\r\n' \
-  '        canvas.setAttribute("width", size.toString());\r\n' \
-  '        canvas.setAttribute("height", size.toString());\r\n' \
-  '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) - cpn.clientHeight) / 2);\r\n' \
-  '        device.queue.writeBuffer(blinewidth, 0, new Float32Array([2.5 / size]));\r\n' \
-  '        if (color_texture != null) {color_texture.destroy();}\r\n' \
-  '        color_texture = device.createTexture({size: [size, size], format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
-  '        if (depth_texture != null) {depth_texture.destroy();}\r\n' \
-  '        depth_texture = device.createTexture({size: [size, size], format: "depth16unorm", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
-  '      }\r\n' \
-  '      async function init() {\r\n' \
-  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
-  '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
-  '        device = await adapter?.requestDevice();\r\n' \
-  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_CMAP_TEMPLATE + \
+  '      }\r\n'
+  HTML_3D_WGPU_CMAP_TEMPLATE = HTML_3D_CMAP_TEMPLATE + \
   '          const mlevels = Math.floor(Math.log2(Math.max(mwidth, mheight))) + 1;\r\n' \
   '          function map_complete() {\r\n' \
   '            device.queue.copyExternalImageToTexture({source: cnv2d, flipY: true}, {texture: map_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: mwidth, height: mheight, depthOrArrayLayers: 1});\r\n' \
@@ -15602,7 +15507,7 @@ class GPXTweakerWebInterfaceServer():
   '            const bglmipmap = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}]});\r\n' \
   '            const pmipmap = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglmipmap]}), vertex: {module: mmipmap, entryPoint: "vmipmap", buffers: []}, fragment: {module: mmipmap, entryPoint: "fmipmap", targets: [{format: map_texture.format}]}, primitive: {topology: "triangle-list"},});\r\n' \
   '            const rbmipmap = [];\r\n' \
-  '            for (l=0; l< mlevels - 1; l++) {\r\n' \
+  '            for (let l=0; l< mlevels - 1; l++) {\r\n' \
   '              const bgmipmap = device.createBindGroup({layout: bglmipmap, entries: [{binding: 0, resource: image_sampler,}, {binding: 1, resource: map_texture.createView({baseMipLevel: l, mipLevelCount: 1}),}]});\r\n' \
   '              const bencoder = device.createRenderBundleEncoder({colorFormats: [map_texture.format]});\r\n' \
   '              bencoder.setPipeline(pmipmap);\r\n' \
@@ -15612,7 +15517,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            yield;\r\n' \
   '            const encoder = device.createCommandEncoder();\r\n' \
-  '            for (l=0; l<mlevels-1; l++) {\r\n' \
+  '            for (let l=0; l<mlevels-1; l++) {\r\n' \
   '              const rpdmipmap = {colorAttachments: [{view: map_texture.createView({baseMipLevel: l + 1, mipLevelCount: 1}), clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}]};\r\n' \
   '              const pass = encoder.beginRenderPass(rpdmipmap);\r\n' \
   '              pass.executeBundles([rbmipmap[l]]);\r\n' \
@@ -15625,7 +15530,8 @@ class GPXTweakerWebInterfaceServer():
   '          let gmipmap = null;\r\n' \
   '          data_wait.then(function (r) {if (r) {setTimeout(function () {add_row_tile(); gmipmap = gen_mipmap(); gmipmap.next();}, 1);};});\r\n' \
   '          return {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
-  '        }\r\n' \
+  '        }\r\n'
+  HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
   '        async function data_load() {\r\n' \
   '          const data = await fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
   '          if (data == null) {return false;}\r\n' \
@@ -15662,17 +15568,17 @@ class GPXTweakerWebInterfaceServer():
   '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
   '          const lvx = (new Uint32Array(data, 0, 1))[0];\r\n' \
-  '          bgxs = device.createBuffer({size: 4 * lvx, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
-  '          new Float32Array(bgxs.getMappedRange()).set(new Float32Array(data, 4, lvx));\r\n' \
-  '          bgxs.unmap();\r\n' \
+  '          gxs = new Float32Array(data, 4, lvx);\r\n' \
+  '          bgxs = device.createBuffer({size: 4 * lvx, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          device.queue.writeBuffer(bgxs, 0, gxs);\r\n' \
   '          const lvy = (new Uint32Array(data, 4 * (1 + lvx), 1))[0];\r\n' \
-  '          bgys = device.createBuffer({size: 4 * lvy, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
-  '          new Float32Array(bgys.getMappedRange()).set(new Float32Array(data, 4 * (2 + lvx) , lvy));\r\n' \
-  '          bgys.unmap();\r\n' \
+  '          gys = new Float32Array(data, 4 * (2 + lvx) , lvy);\r\n' \
+  '          bgys = device.createBuffer({size: 4 * lvy, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          device.queue.writeBuffer(bgys, 0, gys);\r\n' \
   '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
-  '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE, mappedAtCreation: true});\r\n' \
-  '          new Float32Array(bgzs.getMappedRange()).set(new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
-  '          bgzs.unmap();\r\n' \
+  '          gzs = new Float32Array(data, 4 * (3 + lvx + lvy), lvz);\r\n' \
+  '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST});\r\n' \
+  '          device.queue.writeBuffer(bgzs, 0, gzs);\r\n' \
   '          bgrznorms = device.createBuffer({size: lvz * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX});\r\n' \
   '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
   '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
@@ -15693,7 +15599,107 @@ class GPXTweakerWebInterfaceServer():
   '            i += nspts;\r\n' \
   '          }\r\n' \
   '          return device.queue.onSubmittedWorkDone().then(() => {bgzs.destroy(); return true;});\r\n' \
-  '        }\r\n' + HTML_3DP_TRACK_TEMPLATE + \
+  '        }\r\n'
+  HTML_3DP_WGPU_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + \
+  '      var blinematrix = null;\r\n' \
+  '      var blinewidth = null;\r\n' \
+  '      var rbaxis = null;\r\n' \
+  '      var rblightrays1 = null;\r\n' \
+  '      var rblightrays2 = null;\r\n' \
+  '      var zfact = 1;\r\n' \
+  '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
+  '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
+  '      var c_zoom = document.getElementById("cursor_zoom");\r\n' \
+  '      var zoom = 1;\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "zs") {\r\n' \
+  '          if (v != null) {c_zfact.value = v.toString();}\r\n' \
+  '          zfact = parseFloat(c_zfact.value);\r\n' \
+  '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
+  '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '          cltangle = Math.cos(angle);\r\n' \
+  '          sltangle = Math.sin(angle);\r\n' \
+  '          modified.add("v");\r\n' \
+  '        } else if (p == "zo") {\r\n' \
+  '          if (v != null) {c_zoom.value = (v <= 2 ? ((v - 1) * 2) : v).toString();}\r\n' \
+  '          zoom = parseFloat(c_zoom.value);\r\n' \
+  '          zoom = zoom <= 1 ? (1 + zoom / 2) : zoom;\r\n' \
+  '          if (v == null) {canvas_resize();}\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          let angle0 = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 - parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (dim_mode == 2) {modified.add("l");}\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle0 = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              clt0angle = Math.cos(angle0);\r\n' \
+  '              slt0angle = Math.sin(angle0);\r\n' \
+  '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          if (p == "t") {\r\n' \
+  '            angle0 = Math.atan(stangle / ctangle * zfact);\r\n' \
+  '            cv_tangle.innerHTML = Math.round(90 - angle0 * 180 / Math.PI).toString();\r\n' \
+  '          } else if (p == "lt") {\r\n' \
+  '            cv_ltangle.innerHTML = Math.round(angle0 * 180 / Math.PI + 90).toString();\r\n' \
+  '          } else {\r\n' \
+  '            window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      var clt0angle = null;\r\n' \
+  '      var slt0angle = null;\r\n' \
+  '      set_param("t", 30);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 35);\r\n' \
+  '      set_param("lr", 315);\r\n' \
+  '      set_param("zs", 1);\r\n' \
+  '      set_param("zo", 1);\r\n##DECLARATIONS##\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
+  '      function canvas_resize() {\r\n' \
+  '        const cpn = canvas.parentNode;\r\n' \
+  '        let size = Math.floor(Math.min(cpn.offsetWidth, cpn.offsetHeight) * zoom);\r\n' \
+  '        canvas.style.width = size.toString() + "px";\r\n' \
+  '        canvas.style.height = size.toString() + "px";\r\n' \
+  '        size = size * Math.max(Math.floor(Math.min(c_msize / size, ssampling)), 1.0);\r\n' \
+  '        canvas.setAttribute("width", size.toString());\r\n' \
+  '        canvas.setAttribute("height", size.toString());\r\n' \
+  '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) - cpn.clientHeight) / 2);\r\n' \
+  '        device.queue.writeBuffer(blinewidth, 0, new Float32Array([2.5 / size]));\r\n' \
+  '        if (color_texture != null) {color_texture.destroy();}\r\n' \
+  '        color_texture = device.createTexture({size: [size, size], format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '        if (depth_texture != null) {depth_texture.destroy();}\r\n' \
+  '        depth_texture = device.createTexture({size: [size, size], format: "depth16unorm", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '      }\r\n' \
+  '      async function init() {\r\n' \
+  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
+  '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
+  '        device = await adapter?.requestDevice();\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + \
+  '        let gxs = null;\r\n' \
+  '        let gys = null;\r\n' \
+  '        let gzs = null;\r\n' + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + \
   '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
   '        }\r\n' \
   '        let bgxs = null;\r\n' \
@@ -16028,7 +16034,7 @@ class GPXTweakerWebInterfaceServer():
   '  </body>\r\n' \
   '</html>\r\n'
   HTML_3DP_WGPU_TEMPLATE = HTML_3DP_WGPU_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
-  HTML_3DS_TEMPLATE = \
+  HTML_3DS_DOC_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
@@ -16093,7 +16099,283 @@ class GPXTweakerWebInterfaceServer():
   '        </td>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
-  '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
+  '    <script>\r\n'
+  HTML_3DS_TRACK_TEMPLATE = \
+  '        function create_track() {\r\n' \
+  '          function move_to(x, y, d=true) {\r\n' \
+  '            if (d) {\r\n' \
+  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
+  '            } else {\r\n' \
+  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let cnv2d = document.createElement("canvas");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
+  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
+  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
+  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale / trscale);\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          trpaces = [];\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dr = false;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ptg = false;\r\n' \
+  '            let pac = true;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (! dr) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                move_to(px, py, false);\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                  if (! ptg) {\r\n' \
+  '                    ptg = true;\r\n' \
+  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (dist < pace_length) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
+  '                  pac = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
+  '                  move_to(px, py);\r\n' \
+  '                } else {\r\n' \
+  '                  pac = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              dr = true;\r\n' \
+  '              if (pac) {\r\n' \
+  '                let pz = get_pz(px, py);\r\n' \
+  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '          }\r\n' \
+  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n'
+  HTML_3DS_KEY_MINIMAP_TEMPLATE = \
+  '      function process_key(e) {\r\n' \
+  '        let rd = false;\r\n' \
+  '        let alt = false;\r\n' \
+  '        switch (e.key.toLowerCase()) {\r\n' \
+  '          case "end":\r\n' \
+  '            alt = true;\r\n' \
+  '          case "arrowup":\r\n' \
+  '            if (pace < parseInt(c_pace.max)) {\r\n' \
+  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.shiftKey?10:(e.repeat?2:1)),parseInt(c_pace.max)));\r\n' \
+  '              rd = true;\r\n' \
+  '            } else {return;}\r\n' \
+  '            break;\r\n' \
+  '          case "home":\r\n' \
+  '            alt = true;\r\n' \
+  '          case "arrowdown":\r\n' \
+  '            if (pace > 0) {\r\n' \
+  '              set_param("p", alt?0:Math.max(pace-(e.shiftKey?10:(e.repeat?2:1)),0));\r\n' \
+  '              rd = true;\r\n' \
+  '            } else {return;}\r\n' \
+  '            break;\r\n' \
+  '          case "arrowleft":\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?350:(e.repeat?358:359))) % 360);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "arrowright":\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?10:(e.repeat?2:1))) % 360);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "pageup":\r\n' \
+  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "pagedown":\r\n' \
+  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "delete":\r\n' \
+  '            cb_pace.checked = ! cb_pace.checked;\r\n' \
+  '            toggle_auto_rotation();\r\n' \
+  '            break;\r\n' \
+  '          case "insert":\r\n' \
+  '            set_param("t", 0);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "-":\r\n' \
+  '            c_height.value = Math.max(parseFloat(c_height.value) - 1, 0).toString();\r\n' \
+  '            set_param("h");\r\n' \
+  '            break;\r\n' \
+  '          case "+":\r\n' \
+  '            c_height.value = Math.min(parseFloat(c_height.value) + 1, 100).toString();\r\n' \
+  '            set_param("h");\r\n' \
+  '            break;\r\n' \
+  '          case "enter":\r\n' \
+  '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
+  '            break;\r\n' \
+  '          default:\r\n' \
+  '            return;\r\n' \
+  '        }\r\n' \
+  '        if (e instanceof KeyboardEvent) {\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          e.preventDefault();\r\n' \
+  '        }\r\n' \
+  '        if (rd) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      function toggle_minimap_magnification() {\r\n' \
+  '        mzoom = (mzoom==1)?5:1;\r\n' \
+  '        mini_map.style.width = (mzoom * 10).toString() + "vh";\r\n' \
+  '        mini_map.style.height = (mzoom * 10).toString() + "vh";\r\n' \
+  '        eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
+  '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
+  '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
+  '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
+  '        mini_map.style.cursor = (mzoom==1)?"zoom-in":"zoom-out";\r\n' \
+  '      }\r\n'
+  HTML_3DS_INF_MOUSE_TEMPLATE = \
+  '      function update_pointer(e) {\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (! window.opener) {return;}\r\n' \
+  '        let c = null;\r\n' \
+  '        if (e.target.htmlFor == "eye_info") {\r\n' \
+  '          c = e_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        } else if (e.target.htmlFor == "target_info") {\r\n' \
+  '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        }\r\n' \
+  '        if (! c || c.length != 3) {return;}\r\n' \
+  '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
+  '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
+  '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
+  '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_reversegeocodingswitch() {\r\n' \
+  '        if (s_rg.options.length > 0) {\r\n' \
+  '          if (p_rg.style.display == "none") {\r\n' \
+  '            p_rg.style.display = "block";\r\n' \
+  '          } else {\r\n' \
+  '            p_rg.style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function load_rgcb(t, f, c) {\r\n' \
+  '        if (t.status != 200) {\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        if (! c_) {return;}\r\n' \
+  '        if (c_.length != 3) {return;}\r\n' \
+  '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
+  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
+  '        f.value = f.value + " | " + t.response;\r\n' \
+  '      }\r\n' \
+  '      function error_rgcb() {\r\n' \
+  '      }\r\n' \
+  '      function complete_infos(e=null) {\r\n' \
+  '        let f = null;\r\n' \
+  '        if (e) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (e.target.htmlFor != "eye_info" && e.target.htmlFor != "target_info") {return;}\r\n' \
+  '          f = e.target.nextElementSibling;\r\n' \
+  '        } else {\r\n' \
+  '          f = t_info;\r\n' \
+  '        }\r\n' \
+  '        if (rgset < 0) {return;}\r\n' \
+  '        let c = null;\r\n' \
+  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
+  '        c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        if (c) {\r\n' \
+  '          if (c.length == 3) {\r\n' \
+  '            let plat = parseFloat(c[1]);\r\n' \
+  '            let plon = parseFloat(c[2]);\r\n' \
+  '            let xhrrg = new XMLHttpRequest();\r\n' \
+  '            xhrrg.onerror = error_rgcb;\r\n' \
+  '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
+  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
+  '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '       function mouse_down(e) {\r\n' \
+  '        if (e.button == 1) {process_key({key:"delete"});return;} else if (e.button != 0) {return;}\r\n' \
+  '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
+  '        document.onmouseup = mouse_up;\r\n' \
+  '        mini_map.setAttribute("pointer-events", "none");\r\n' \
+  '        p_infos.style.pointerEvents = "none";\r\n' \
+  '        canvas.parentNode.style.cursor = "all-scroll";\r\n' \
+  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '        click_cr = parseFloat(c_rangle.value);\r\n' \
+  '        click_ct = parseFloat(c_tangle.value);\r\n' \
+  '        var click_c = 0;\r\n' \
+  '        click_id += 0.5;\r\n' \
+  '        var click_lid = click_id;\r\n' \
+  '        function loop_redraw(c) {\r\n' \
+  '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
+  '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '          canvas_redraw();\r\n' \
+  '        }\r\n' \
+  '        window.requestAnimationFrame(loop_redraw);\r\n' \
+  '      }\r\n' \
+  '      function mouse_up(e) {\r\n' \
+  '        click_id += 0.5;\r\n' \
+  '        canvas.parentNode.onmousemove = null;\r\n' \
+  '        document.onmouseup = null;\r\n' \
+  '        mini_map.removeAttribute("pointer-events");\r\n' \
+  '        canvas.parentNode.style.cursor = "";\r\n' \
+  '        p_infos.style.pointerEvents = "";\r\n' \
+  '      }\r\n' \
+  '      function mouse_move(e) {\r\n' \
+  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
+  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '      }\r\n' \
+  '      function mouse_wheel(e) {\r\n' \
+  '        if (e.deltaY > 0) {;\r\n' \
+  '          if (pace < parseInt(c_pace.max)) {\r\n' \
+  '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
+  '            canvas_redraw();\r\n' \
+  '          }\r\n' \
+  '        } else if (e.deltaY < 0) {;\r\n' \
+  '          if (pace > 0) {\r\n' \
+  '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
+  '            canvas_redraw();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n'
+  HTML_3DS_TEMPLATE = HTML_3DS_DOC_TEMPLATE + HTML_3D_GLOBALVARS_TEMPLATE + \
   '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["scale", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trpos", "vec4"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
@@ -16426,91 +16708,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcolor = ivec2(round(32767.0 * pcoord));\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
-  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
-  '        function create_track() {\r\n' \
-  '          function move_to(x, y, d=true) {\r\n' \
-  '            if (d) {\r\n' \
-  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
-  '            } else {\r\n' \
-  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
-  '          cnv2d.height = tr_size;\r\n' \
-  '          cnv2d.width = tr_size;\r\n' \
-  '          ctx.strokeStyle = "red";\r\n' \
-  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
-  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
-  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
-  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale / trscale);\r\n' \
-  '          ctx.lineJoin = "round";\r\n' \
-  '          ctx.lineCap = "round";\r\n' \
-  '          ctx.fillStyle = "red";\r\n' \
-  '          trpaces = [];\r\n' \
-  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
-  '            let ind = 0;\r\n' \
-  '            let dr = false;\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let px = null;\r\n' \
-  '            let py = null;\r\n' \
-  '            let tx = null;\r\n' \
-  '            let ty = null;\r\n' \
-  '            let td = null;\r\n' \
-  '            let tdx = null;\r\n' \
-  '            let tdy = null;\r\n' \
-  '            let ptg = false;\r\n' \
-  '            let pac = true;\r\n' \
-  '            while (ind < trpositions[s].length - 1) {\r\n' \
-  '              if (! dr) {\r\n' \
-  '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind + 1];\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
-  '                ctx.stroke()\r\n' \
-  '                ctx.fill();\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                move_to(px, py, false);\r\n' \
-  '                ind += 2;\r\n' \
-  '              } else {\r\n' \
-  '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
-  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
-  '                if (td > 0) {\r\n' \
-  '                  tx = tdx / td;\r\n' \
-  '                  ty = tdy / td;\r\n' \
-  '                  dist += td;\r\n' \
-  '                  if (! ptg) {\r\n' \
-  '                    ptg = true;\r\n' \
-  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
-  '                  }\r\n' \
-  '                }\r\n' \
-  '                if (dist < pace_length) {\r\n' \
-  '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind + 1];\r\n' \
-  '                  pac = false;\r\n' \
-  '                  ind += 2;\r\n' \
-  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
-  '                  move_to(px, py);\r\n' \
-  '                } else {\r\n' \
-  '                  pac = true;\r\n' \
-  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
-  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
-  '                  dist = 0;\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              dr = true;\r\n' \
-  '              if (pac) {\r\n' \
-  '                let pz = get_pz(px, py);\r\n' \
-  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            ctx.stroke();\r\n' \
-  '          }\r\n' \
-  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
-  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
-  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
-  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
@@ -16603,7 +16801,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_pace.max = (trpaces.length - 1).toString();\r\n' \
   '          cv_pace.nextElementSibling.innerHTML = (trpaces.length - 1).toString();\r\n' \
   '          c_pace.disabled = false;\r\n' \
-  '          cb_pace.disabled = false\r\n' \
+  '          cb_pace.disabled = false;\r\n' \
   '          r_yiso.disabled = false;\r\n' \
   '          r_ziso.disabled = false;\r\n' \
   '          r_dimn.disabled = false;\r\n' \
@@ -16615,7 +16813,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_vfov.disabled = false;\r\n' \
   '          c_height.disabled = false;\r\n' \
   '          canvas.focus();\r\n' \
-  '          canvas.style.outline="none";\r\n' \
+  '          canvas.style.outline = "none";\r\n' \
   '        }\r\n' \
   '        let xhr = new XMLHttpRequest();\r\n' \
   '        xhr.onerror = (e) => derror_cb(e.target);\r\n' \
@@ -16646,81 +16844,7 @@ class GPXTweakerWebInterfaceServer():
   '          b_lrangle.disabled = true;\r\n' \
   '        }\r\n' \
   '        canvas_redraw();\r\n' \
-  '      }\r\n' \
-  '      function process_key(e) {\r\n' \
-  '        let rd = false;\r\n' \
-  '        let alt = false;\r\n' \
-  '        switch (e.key.toLowerCase()) {\r\n' \
-  '          case "end":\r\n' \
-  '            alt = true;\r\n' \
-  '          case "arrowup":\r\n' \
-  '            if (pace < parseInt(c_pace.max)) {\r\n' \
-  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.shiftKey?10:(e.repeat?2:1)),parseInt(c_pace.max)));\r\n' \
-  '              rd = true;\r\n' \
-  '            } else {return;}\r\n' \
-  '            break;\r\n' \
-  '          case "home":\r\n' \
-  '            alt = true;\r\n' \
-  '          case "arrowdown":\r\n' \
-  '            if (pace > 0) {\r\n' \
-  '              set_param("p", alt?0:Math.max(pace-(e.shiftKey?10:(e.repeat?2:1)),0));\r\n' \
-  '              rd = true;\r\n' \
-  '            } else {return;}\r\n' \
-  '            break;\r\n' \
-  '          case "arrowleft":\r\n' \
-  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?350:(e.repeat?358:359))) % 360);\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "arrowright":\r\n' \
-  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?10:(e.repeat?2:1))) % 360);\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "pageup":\r\n' \
-  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "pagedown":\r\n' \
-  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "delete":\r\n' \
-  '            cb_pace.checked = ! cb_pace.checked;\r\n' \
-  '            toggle_auto_rotation();\r\n' \
-  '            break;\r\n' \
-  '          case "insert":\r\n' \
-  '            set_param("t", 0);\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "-":\r\n' \
-  '            c_height.value = Math.max(parseFloat(c_height.value) - 1, 0).toString();\r\n' \
-  '            set_param("h");\r\n' \
-  '            break;\r\n' \
-  '          case "+":\r\n' \
-  '            c_height.value = Math.min(parseFloat(c_height.value) + 1, 100).toString();\r\n' \
-  '            set_param("h");\r\n' \
-  '            break;\r\n' \
-  '          case "enter":\r\n' \
-  '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
-  '            break;\r\n' \
-  '          default:\r\n' \
-  '            return;\r\n' \
-  '        }\r\n' \
-  '        if (e instanceof KeyboardEvent) {\r\n' \
-  '          e.stopPropagation();\r\n' \
-  '          e.preventDefault();\r\n' \
-  '        }\r\n' \
-  '        if (rd) {canvas_redraw();}\r\n' \
-  '      }\r\n' \
-  '      function toggle_minimap_magnification() {\r\n' \
-  '        mzoom = (mzoom==1)?5:1;\r\n' \
-  '        mini_map.style.width = (mzoom * 10).toString() + "vh";\r\n' \
-  '        mini_map.style.height = (mzoom * 10).toString() + "vh";\r\n' \
-  '        eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
-  '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
-  '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
-  '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
-  '        mini_map.style.cursor = (mzoom==1)?"zoom-in":"zoom-out";\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
   '          show_infos = false;\r\n' \
@@ -16781,121 +16905,7 @@ class GPXTweakerWebInterfaceServer():
   '          clear_tinfos();\r\n '\
   '          predraw = true;\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function update_pointer(e) {\r\n' \
-  '        e.preventDefault();\r\n' \
-  '        e.stopPropagation();\r\n' \
-  '        if (! window.opener) {return;}\r\n' \
-  '        let c = null;\r\n' \
-  '        if (e.target.htmlFor == "eye_info") {\r\n' \
-  '          c = e_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        } else if (e.target.htmlFor == "target_info") {\r\n' \
-  '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        }\r\n' \
-  '        if (! c || c.length != 3) {return;}\r\n' \
-  '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
-  '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
-  '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
-  '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function toggle_reversegeocodingswitch() {\r\n' \
-  '        if (s_rg.options.length > 0) {\r\n' \
-  '          if (p_rg.style.display == "none") {\r\n' \
-  '            p_rg.style.display = "block";\r\n' \
-  '          } else {\r\n' \
-  '            p_rg.style.display = "none";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function load_rgcb(t, f, c) {\r\n' \
-  '        if (t.status != 200) {\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        let c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        if (! c_) {return;}\r\n' \
-  '        if (c_.length != 3) {return;}\r\n' \
-  '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
-  '        let dpos = f.value.indexOf(" | ");\r\n' \
-  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
-  '        f.value = f.value + " | " + t.response;\r\n' \
-  '      }\r\n' \
-  '      function error_rgcb() {\r\n' \
-  '      }\r\n' \
-  '      function complete_infos(e=null) {\r\n' \
-  '        let f = null;\r\n' \
-  '        if (e) {\r\n' \
-  '          e.preventDefault();\r\n' \
-  '          e.stopPropagation();\r\n' \
-  '          if (e.target.htmlFor != "eye_info" && e.target.htmlFor != "target_info") {return;}\r\n' \
-  '          f = e.target.nextElementSibling;\r\n' \
-  '        } else {\r\n' \
-  '          f = t_info;\r\n' \
-  '        }\r\n' \
-  '        if (rgset < 0) {return;}\r\n' \
-  '        let c = null;\r\n' \
-  '        let dpos = f.value.indexOf(" | ");\r\n' \
-  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
-  '        c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        if (c) {\r\n' \
-  '          if (c.length == 3) {\r\n' \
-  '            let plat = parseFloat(c[1]);\r\n' \
-  '            let plon = parseFloat(c[2]);\r\n' \
-  '            let xhrrg = new XMLHttpRequest();\r\n' \
-  '            xhrrg.onerror = error_rgcb;\r\n' \
-  '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
-  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
-  '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
-  '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '       function mouse_down(e) {\r\n' \
-  '        if (e.button == 1) {process_key({key:"delete"});return;} else if (e.button != 0) {return;}\r\n' \
-  '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
-  '        document.onmouseup = mouse_up;\r\n' \
-  '        mini_map.setAttribute("pointer-events", "none");\r\n' \
-  '        p_infos.style.pointerEvents = "none";\r\n' \
-  '        canvas.parentNode.style.cursor = "all-scroll";\r\n' \
-  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '        click_cr = parseFloat(c_rangle.value);\r\n' \
-  '        click_ct = parseFloat(c_tangle.value);\r\n' \
-  '        var click_c = 0;\r\n' \
-  '        click_id += 0.5;\r\n' \
-  '        var click_lid = click_id;\r\n' \
-  '        function loop_redraw(c) {\r\n' \
-  '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
-  '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
-  '          canvas_redraw();\r\n' \
-  '        }\r\n' \
-  '        window.requestAnimationFrame(loop_redraw);\r\n' \
-  '      }\r\n' \
-  '      function mouse_up(e) {\r\n' \
-  '        click_id += 0.5;\r\n' \
-  '        canvas.parentNode.onmousemove = null;\r\n' \
-  '        document.onmouseup = null;\r\n' \
-  '        mini_map.removeAttribute("pointer-events");\r\n' \
-  '        canvas.parentNode.style.cursor = "";\r\n' \
-  '        p_infos.style.pointerEvents = "";\r\n' \
-  '      }\r\n' \
-  '      function mouse_move(e) {\r\n' \
-  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
-  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
-  '      }\r\n' \
-  '      function mouse_wheel(e) {\r\n' \
-  '        if (e.deltaY > 0) {;\r\n' \
-  '          if (pace < parseInt(c_pace.max)) {\r\n' \
-  '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
-  '            canvas_redraw();\r\n' \
-  '          }\r\n' \
-  '        } else if (e.deltaY < 0) {;\r\n' \
-  '          if (pace > 0) {\r\n' \
-  '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
-  '            canvas_redraw();\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_3DS_INF_MOUSE_TEMPLATE + \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
@@ -16903,6 +16913,657 @@ class GPXTweakerWebInterfaceServer():
   HTML_3DS_DECLARATIONS_TEMPLATE = HTML_3DP_DECLARATIONS_TEMPLATE + '\r\n' + \
   '      var scale = ##SCALE##;\r\n' \
   '      var ppos = [##PPOS##];'
+  HTML_3DS_WGPU_TEMPLATE = HTML_3DS_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + \
+  '      var gxs = null;\r\n' \
+  '      var gys = null;\r\n' \
+  '      var gzs = null;\r\n' \
+  '      var eposition = null;\r\n' \
+  '      var beposition = null;\r\n' \
+  '      var bsunratio = null;\r\n' \
+  '      var bsunmatrix = null;\r\n' \
+  '      var rpdposition = null;\r\n' \
+  '      var rbsun = null;\r\n' \
+  '      var rbposition = null;\r\n' \
+  '      var track = document.getElementById("track");\r\n' \
+  '      var eye = document.getElementById("eye");\r\n' \
+  '      var c_pace = document.getElementById("cursor_pace");\r\n' \
+  '      var cv_pace = document.getElementById("cursorv_pace");\r\n' \
+  '      var cb_pace = document.getElementById("checkbox_pace");\r\n' \
+  '      var c_vfov = document.getElementById("cursor_vfov");\r\n' \
+  '      var cv_vfov = document.getElementById("cursorv_vfov");\r\n' \
+  '      var c_height = document.getElementById("cursor_height");\r\n' \
+  '      var cv_height = document.getElementById("cursorv_height");\r\n' \
+  '      var p_infos = document.getElementById("panel_infos");\r\n' \
+  '      var e_info = document.getElementById("eye_info");\r\n' \
+  '      var t_info = document.getElementById("target_info");\r\n' \
+  '      var t_mark = document.getElementById("target_mark");\r\n' \
+  '      var p_rg = document.getElementById("panel_rg");\r\n' \
+  '      var s_rg = document.getElementById("select_rg");\r\n' \
+  '      var minimap = document.getElementById("mini_map");\r\n' \
+  '      var trpaces = null;\r\n' \
+  '      var trscale = null;\r\n' \
+  '      const snt = 36;\r\n' \
+  '      var position_texture = null;\r\n' \
+  '      var pdepth_texture = null;\r\n' \
+  '      var mzoom = 1;\r\n' \
+  '      var show_infos = false;\r\n' \
+  '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
+  '      var click_r = null;\r\n' \
+  '      var click_t = null;\r\n' \
+  '      var click_cr = null;\r\n' \
+  '      var click_ct = null;\r\n' \
+  '      var click_id = 0.0;\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "p") {\r\n' \
+  '          if (v != null) {c_pace.value = v.toString();}\r\n' \
+  '          cv_pace.innerHTML = c_pace.value;\r\n' \
+  '          pace = parseInt(c_pace.value);\r\n' \
+  '          eposition[0] = trpaces[pace][0];\r\n' \
+  '          eposition[1] = trpaces[pace][1];\r\n' \
+  '          if (cb_pace.checked) {\r\n' \
+  '            if (c_rangle.disabled) {toggle_rotation();}\r\n' \
+  '            set_param("r", (450 - trpaces[pace][3] / Math.PI * 180) % 360);\r\n' \
+  '          } else if (eposition != null) {\r\n' \
+  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
+  '          }\r\n' \
+  '          device.queue.writeBuffer(beposition, 0, eposition);\r\n' \
+  '          modified.add("v");\r\n' \
+  '          if (show_infos) {update_infos();}\r\n' \
+  '        } else if (p == "f") {\r\n' \
+  '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
+  '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
+  '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
+  '          modified.add("v");\r\n' \
+  '          if (show_infos) {clear_tinfos(true);}\r\n' \
+  '        } else if (p == "h") {\r\n' \
+  '          if (v != null) {\r\n' \
+  '            c_height.value = (Math.min(v, 10) * 2 + Math.min(Math.max(v - 10, 0), 40) / 2 + Math.min(Math.max(v - 50, 0), 150) / 7.5 + Math.min(Math.max(v - 200, 0), 300) / 15 + Math.max(v - 500, 0) / 25).toString();\r\n' \
+  '            cv_height.innerHTML = (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10).toString();\r\n' \
+  '            zoff = v / scale;\r\n' \
+  '          } else {\r\n' \
+  '            let hv = parseFloat(c_height.value);\r\n' \
+  '            let height = Math.max(Math.min(hv, 20) / 2, 0.2) + Math.min(Math.max(hv - 20, 0), 20) * 2 + Math.min(Math.max(hv - 40, 0), 20) * 7.5 + Math.min(Math.max(hv - 60, 0), 20) * 15 + Math.max(hv - 80, 0) * 25;\r\n' \
+  '            cv_height.innerHTML = (height >= 10 ? Math.round(height) : Math.round(height * 10) / 10).toString();\r\n' \
+  '            zoff = height / scale;\r\n' \
+  '          }\r\n' \
+  '          modified.add("v");\r\n' \
+  '          if (show_infos) {update_infos();}\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 + parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (show_infos) {clear_tinfos(true);}\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / -180;\r\n' \
+  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);}\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (show_infos) {clear_tinfos(true);}\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      set_param("t", 0);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 25);\r\n' \
+  '      set_param("lr", 90);\r\n' \
+  '      var pace = 0;\r\n' \
+  '      var vfov = null;\r\n' \
+  '      set_param("f", 55);\r\n##DECLARATIONS##\r\n' \
+  '      var radius = 6378137 / scale;\r\n' \
+  '      var pace_length = 10 / scale;\r\n' \
+  '      var zoff = null;\r\n' \
+  '      set_param("h", 2);\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
+  '        function mat4_translation(xt, yt, zt) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, xt,\r\n' \
+  '          0, 1, 0, yt,\r\n' \
+  '          0, 0, 1, zt,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_perspective() {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          vfov / 4 / canvas.clientWidth * canvas.clientHeight, 0, 0, 0,\r\n' \
+  '          0, vfov / 4, 0, 0,\r\n' \
+  '          0, 0, 1/4, 0,\r\n' \
+  '          0, 0, 1/4, 0,\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function canvas_resize() {\r\n' \
+  '        const cpn = canvas.parentNode;\r\n' \
+  '        const ss = Math.min(ssampling, Math.max(1, Math.floor(c_msize / Math.max(cpn.offsetWidth, cpn.offsetHeight))));\r\n' \
+  '        const osize = [cpn.offsetWidth, cpn.offsetHeight];\r\n' \
+  '        const size = [osize[0] * ss, osize[1] * ss];\r\n' \
+  '        canvas.setAttribute("width", size[0].toString());\r\n' \
+  '        canvas.setAttribute("height", size[1].toString());\r\n' \
+  '        canvas.style.width = osize[0].toString() + "px";;\r\n' \
+  '        canvas.style.height = osize[1].toString() + "px";\r\n' \
+  '        if (show_infos) {clear_tinfos(true);}\r\n' \
+  '        if (color_texture != null) {color_texture.destroy();}\r\n' \
+  '        color_texture = device.createTexture({size: size, format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '        if (depth_texture != null) {depth_texture.destroy();}\r\n' \
+  '        depth_texture = device.createTexture({size: size, format: "depth32float", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '        device.queue.writeBuffer(bsunratio, 0, new Float32Array([canvas.clientHeight / canvas.clientWidth]));\r\n' \
+  '        if (position_texture != null) {\r\n' \
+  '          position_texture.destroy();\r\n' \
+  '          position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '          rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '          if (pdepth_texture != null) {pdepth_texture.destroy();}\r\n' \
+  '          pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '          rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function get_pz(px, py) {\r\n' \
+  '        const lvx = gxs.length;\r\n' \
+  '        const lvy = gys.length;\r\n' \
+  '        let ix = 0;\r\n' \
+  '        let iy = 0;\r\n' \
+  '        while (ix < lvx - 1 && gxs[ix] <= px) {ix++;}\r\n' \
+  '        while (iy < lvy - 1 && gys[iy] <= py) {iy++;}\r\n' \
+  '        const cx = (px - gxs[ix - 1]) / (gxs[ix] - gxs[ix - 1]);\r\n' \
+  '        const cy = (py - gys[iy - 1]) / (gys[iy] - gys[iy - 1]);\r\n' \
+  '        return cx + cy <= 1 ? (1 - cx - cy) * gzs[ix - 1 + (iy - 1) * lvx] + cx * gzs[ix + (iy - 1) * lvx] + cy  * gzs[ix - 1 + iy * lvx] : (1 - cy) * gzs[ix + (iy - 1) * lvx] + (1 - cx) * gzs[ix - 1 + iy * lvx] + (cx + cy - 1) * gzs[ix + iy * lvx];\r\n' \
+  '      }\r\n' \
+  '      async function init() {\r\n' \
+  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
+  '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
+  '        device = await adapter?.requestDevice();\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + \
+  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
+  '        let bgxs = null;\r\n' \
+  '        let bgys = null;\r\n' \
+  '        let bgrznorms = null;\r\n' \
+  '        let bgrinds = null;\r\n' \
+  '        let trpositions = null;\r\n' \
+  '        const data_wait = data_load();\r\n' \
+  '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
+  '        c_msize = Math.min(4096, max_size);\r\n' \
+  '        const m_size = Math.min(11008, max_size);\r\n' \
+  '        const tr_size = Math.min(8192, max_size);\r\n' \
+  '        const d_size = max_size;\r\n' \
+  '        context = canvas.getContext("webgpu");\r\n' \
+  '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
+  '        context.configure({alphaMode: "opaque", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
+  '        const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '        const mview = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> radius: f32;\r\n' \
+  '          @group(0) @binding(2) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(3) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(4) var<uniform> eposition: vec2f;\r\n' \
+  '          @group(0) @binding(5) var<uniform> mappos: mat4x4f;\r\n' \
+  '          @group(0) @binding(6) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(7) var<storage, read> gys: array<f32>;\r\n' \
+  '          struct vout0 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f};\r\n' \
+  '          struct vout1 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vmz: f32};\r\n' \
+  '          struct vout2 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f, @location(2) vlcoord: vec2f, @location(3) vldepth: f32};\r\n' \
+  '          @vertex fn vview0(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout0 {\r\n' \
+  '            var out: vout0;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * radius, 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview1(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout1 {\r\n' \
+  '            var out: vout1;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * radius, 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vmz = 0.5 * dimfact.y * (grposition.z + 1.0);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview2(@builtin(vertex_index) vi: u32, @location(0) gz: f32, @location(1) grnormal: vec3f) -> vout2 {\r\n' \
+  '            var out: vout2;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * radius, 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vnormal = grnormal;\r\n' \
+  '            let vlposition: vec4f = lightmatrix * grposition;\r\n' \
+  '            out.vlcoord = fma(vlposition.xy / vlposition.w, vec2f(0.5, -0.5), vec2f(0.5));\r\n' \
+  '            out.vldepth = vlposition.z / vlposition.w - 0.002;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @group(0) @binding(8) var trcksampler: sampler;\r\n' \
+  '          @group(0) @binding(9) var trcktex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(10) var grsampler: sampler;\r\n' \
+  '          @group(0) @binding(11) var grtex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(12) var depthsampler: sampler_comparison;\r\n' \
+  '          @group(0) @binding(13) var ldepthtex: texture_depth_2d;\r\n' \
+  '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pcolor: vec4f};\r\n' \
+  '          @fragment fn fview0(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            let pdim: f32 = dimfact.x;\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview1(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pmz: f32) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            let pdim: f32 = pow(pmz, 0.7);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview2(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f, @location(2) plcoord: vec2f, @location(3) pldepth: f32) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
+  '            let pdim: f32 = select(0.2, mix(0.2 , fma(0.8, abs(cinc), 0.2), textureSampleCompare(ldepthtex, depthsampler, plcoord, fma(0.0015, cinc, pldepth))), cinc > 0.0);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 6, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 7, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 13, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
+  '        const pview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, }));\r\n' \
+  '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
+  '        bdimfact.forEach((b) => b.unmap());\r\n' \
+  '        const bradius = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(bradius.getMappedRange())[0] = 6378137 / scale;\r\n' \
+  '        bradius.unmap();\r\n' \
+  '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        beposition = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        const trpos = new Float32Array(4);\r\n' \
+  '        create_track();\r\n' \
+  '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        new Float32Array(bmappos[0].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, scale / 50, 0, 0, 0, 0, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
+  '        new Float32Array(bmappos[1].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, 0, 0, 0, 0, scale / 50, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
+  '        new Float32Array(bmappos[2].getMappedRange()).set([trpos[0], 0, mpos[0], 0, 0, trpos[1], 0, mpos[1], 0, 0, 0, 0, trpos[2], trpos[3], mpos[2], mpos[3]]);\r\n' \
+  '        bmappos.forEach((b) => b.unmap());\r\n' \
+  '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
+  '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
+  '        const depth_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8, compare: "less"});\r\n' \
+  '        const ptex = new Uint8Array(32);\r\n' \
+  '        const pattern_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        ptex.set([0, 0, 255, 255, 210, 255, 190, 255]);\r\n' \
+  '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
+  '        device.queue.writeTexture({texture: pattern_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
+  '        const map_texture = device.createTexture({...create_map(), format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        const ldepth_texture = device.createTexture({size: [d_size, d_size], format: "depth32float", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bradius, bviewmatrix, blightmatrix, beposition, bmappos[tm], bgxs, bgys), {binding: 8, resource:image_sampler,}, {binding: 9, resource: track_texture.createView(),}, {binding: 10, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 11, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 12, resource: depth_sampler,}, {binding: 13, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 1], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const mshadow = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(1) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(2) var<storage, read> gys: array<f32>;\r\n' \
+  '          @vertex fn vshadow(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> @builtin(position) vec4f {\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            return lightmatrix * grposition;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
+  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
+  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
+  '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const override = navigator_firefox ? "const" : "override";\r\n' \
+  '        const msun = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> sratio: f32;\r\n' \
+  '          @group(0) @binding(1) var<uniform> smatrix: mat4x4f;\r\n' \
+  '          ${override} snt: u32 = 36;\r\n' \
+  '          ${override} sa: f32 = 2.0 * 3.1415926536 / f32(snt);\r\n' \
+  '          @vertex fn vsun(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> @builtin(position) vec4f {\r\n' \
+  '            var vposition = smatrix * vec4f(0.0, 0.0, 1.0, 1.0) + 0.01 * f32(1u - (vi >> 1u)) * vec4f(sratio * cos(f32(ii + vi) * sa), sin(f32(ii + vi) * sa), 0.0, 0.0);\r\n' \
+  '            vposition.z *= vposition.w;\r\n' \
+  '            return vposition;\r\n' \
+  '          }\r\n' \
+  '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pcolor: vec4f};\r\n' \
+  '          @fragment fn fsun() -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = 1.0;\r\n' \
+  '            out.pcolor = vec4f(1.0, 1.0, 0.0, 1.0);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglsun = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}]});\r\n' \
+  '        const psun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglsun]}), vertex: {module: msun, entryPoint: "vsun", buffers: []}, fragment: {module: msun, entryPoint: "fsun", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-list"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less-equal", format: "depth32float"}, });\r\n' \
+  '        bsunratio = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        bsunmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const bgsun = device.createBindGroup({layout: bglsun, entries: bgentries(bsunratio, bsunmatrix)});\r\n' \
+  '        const mposition = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> radius: f32;\r\n' \
+  '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(2) var<uniform> eposition: vec2f;\r\n' \
+  '          @group(0) @binding(3) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(4) var<storage, read> gys: array<f32>;\r\n' \
+  '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
+  '          @vertex fn vposition(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout {\r\n' \
+  '            var out: vout;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * (gz + radius), 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoord = grposition.xy;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pposition: vec2i};\r\n' \
+  '          @fragment fn fposition(@builtin(position) pposition: vec4f, @location(0) pcoord: vec2f) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            out.pposition = vec2i(round(32767.0 * pcoord));\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglposition = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
+  '        const pposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglposition]}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
+  '        const bgposition = device.createBindGroup({layout: bglposition, entries: bgentries(bradius, bviewmatrix, beposition, bgxs, bgys)});\r\n' \
+  '        rpdposition = {colorAttachments: [{view: null, clearValue: [-32768, -32768, 0, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth32float"});\r\n' \
+  '        bencoder.setPipeline(pshadow);\r\n' \
+  '        bencoder.setBindGroup(0, bgshadow);\r\n' \
+  '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '        rbshadow = bencoder.finish();\r\n' \
+  '        rbview = [];\r\n' \
+  '        for (let dm=0; dm<3; dm++) {\r\n' \
+  '          for (let tm=0; tm<3; tm++) {\r\n' \
+  '            bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth32float"});\r\n' \
+  '            bencoder.setPipeline(pview[dm]);\r\n' \
+  '            bencoder.setBindGroup(0, bgview[tm]);\r\n' \
+  '            bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '            bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '            bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '            rbview.push(bencoder.finish());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth32float"});\r\n' \
+  '        bencoder.setPipeline(psun);\r\n' \
+  '        bencoder.setBindGroup(0, bgsun);\r\n' \
+  '        bencoder.draw(3, snt);\r\n' \
+  '        rbsun = bencoder.finish();\r\n' \
+  '        bencoder = device.createRenderBundleEncoder({colorFormats: ["rg16sint"], depthStencilFormat: "depth32float"});\r\n' \
+  '        bencoder.setPipeline(pposition);\r\n' \
+  '        bencoder.setBindGroup(0, bgposition);\r\n' \
+  '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '        rbposition = bencoder.finish();\r\n' \
+  '        window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
+  '        canvas_resize();\r\n' \
+  '        eposition = new Float32Array(2);\r\n' \
+  '        set_param("p", 0);\r\n' \
+  '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
+  '        canvas_redraw();\r\n' \
+  '        c_tangle.disabled = false;\r\n' \
+  '        c_rangle.disabled = false;\r\n' \
+  '        b_rangle.disabled = false;\r\n' \
+  '        c_pace.max = (trpaces.length - 1).toString();\r\n' \
+  '        cv_pace.nextElementSibling.innerHTML = (trpaces.length - 1).toString();\r\n' \
+  '        c_pace.disabled = false;\r\n' \
+  '        cb_pace.disabled = false\r\n' \
+  '        r_yiso.disabled = false;\r\n' \
+  '        r_ziso.disabled = false;\r\n' \
+  '        r_dimn.disabled = false;\r\n' \
+  '        r_dimz.disabled = false\r\n' \
+  '        r_dims.disabled = false;\r\n' \
+  '        c_ltangle.disabled = false;\r\n' \
+  '        c_lrangle.disabled = false;\r\n' \
+  '        b_lrangle.disabled = false;\r\n' \
+  '        c_vfov.disabled = false;\r\n' \
+  '        c_height.disabled = false;\r\n' \
+  '        canvas.focus();\r\n' \
+  '        canvas.style.outline = "none";\r\n' \
+  '         <!-- toggle_rotation(1); -->\r\n' \
+  '         <!-- toggle_lrotation(1); -->\r\n' \
+  '      }\r\n' \
+  '      function _canvas_redraw() {\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        let pass = null;\r\n' \
+  '        if (modified.has("l") && dim_mode == 2) {\r\n' \
+  '          const lmatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(cltangle, sltangle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '          mat4_mult(mat4_yscale(1.732 / (1.415 * cltangle - sltangle / zfactmax), 1.415 * cltangle - sltangle), lmatrix);\r\n' \
+  '          mat4_flip(lmatrix);\r\n' \
+  '          device.queue.writeBuffer(blightmatrix, 0, lmatrix);\r\n' \
+  '          pass = encoder.beginRenderPass(rpdshadow);\r\n' \
+  '          pass.executeBundles([rbshadow]);\r\n' \
+  '          pass.end();\r\n' \
+  '        }\r\n' \
+  '        const rbs = [rbview[3 * dim_mode + tex_mode]];\r\n' \
+  '        if (modified.has("v")) {\r\n' \
+  '          const vmatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '          mat4_flip(vmatrix);\r\n' \
+  '          device.queue.writeBuffer(bviewmatrix, 0, vmatrix);\r\n' \
+  '        }\r\n' \
+  '        rpdview.colorAttachments[0].resolveTarget = context.getCurrentTexture().createView();\r\n' \
+  '        pass = encoder.beginRenderPass(rpdview);\r\n' \
+  '        if (dim_mode == 2) {\r\n' \
+  '          if (modified.has("l") || modified.has("v")) {\r\n' \
+  '            const smatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_tilt(cltangle, -sltangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(crangle, srangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, -slrangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_perspective(), smatrix);\r\n' \
+  '            mat4_flip(smatrix);\r\n' \
+  '            device.queue.writeBuffer(bsunmatrix, 0, smatrix);\r\n' \
+  '          }\r\n' \
+  '          rbs.push(rbsun);\r\n' \
+  '        }\r\n' \
+  '        pass.executeBundles(rbs);\r\n' \
+  '        pass.end();\r\n' \
+  '        if (modified.has("p")) {\r\n' \
+  '          pass = encoder.beginRenderPass(rpdposition);\r\n' \
+  '          pass.executeBundles([rbposition]);\r\n' \
+  '          pass.end();\r\n' \
+  '        }\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        modified.clear();\r\n' \
+  '        queue[0] = queue[1];\r\n' \
+  '        queue[1] = null;\r\n' \
+  '        return device.queue.onSubmittedWorkDone();\r\n' \
+  '      }\r\n' \
+  '      function canvas_redraw() {\r\n' \
+  '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
+  '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
+  '      init();\r\n' + HTML_3D_TOGGLE_TEMPLATE.replace("fillmode", "tex_mode") + \
+  '        function toggle_auto_rotation() {\r\n' \
+  '        if (cb_pace.checked) {\r\n' \
+  '          if (c_rangle.disabled) {toggle_rotation();}\r\n' \
+  '          set_param("p")\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_dimming(mode) {\r\n' \
+  '        if (mode == dim_mode) {return;};\r\n' \
+  '        if (dim_mode == 2 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
+  '        dim_mode = mode;\r\n' \
+  '        if (dim_mode == 2) {\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          b_lrangle.disabled = false;\r\n' \
+  '          modified.add("l");\r\n' \
+  '        } else {\r\n' \
+  '          c_ltangle.disabled = true;\r\n' \
+  '          c_lrangle.disabled = true;\r\n' \
+  '          b_lrangle.disabled = true;\r\n' \
+  '        }\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
+  '        function toggle_infos() {\r\n' \
+  '        if (show_infos) {\r\n' \
+  '          show_infos = false;\r\n' \
+  '          p_infos.style.display = "none";\r\n' \
+  '          e_info.value = "";\r\n' \
+  '          clear_tinfos();\r\n' \
+  '          if (position_texture != null) {\r\n' \
+  '            position_texture.destroy();\r\n' \
+  '            position_texture = null;\r\n' \
+  '            rpdposition.colorAttachments[0].view = null;\r\n' \
+  '          }\r\n' \
+  '          if (pdepth_texture != null) {\r\n' \
+  '            pdepth_texture.destroy();\r\n' \
+  '            pdepth_texture = null;\r\n' \
+  '            rpdposition.depthStencilAttachment.view =null;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          show_infos = true;\r\n' \
+  '          p_infos.style.display = "block";\r\n' \
+  '          const osize = [canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight];\r\n' \
+  '          if (position_texture == null) {\r\n' \
+  '            position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '            rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '          }\r\n' \
+  '          if (pdepth_texture == null) {\r\n' \
+  '            pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '            rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '          }\r\n' \
+  '          modified.add("p");\r\n' \
+  '          canvas_redraw();\r\n' \
+  '          update_infos();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function clear_tinfos(p=false) {\r\n' \
+  '        t_info.value = "";\r\n' \
+  '        t_mark.style.display = "none";\r\n' \
+  '        t_mark.style.left = "0%";\r\n' \
+  '        t_mark.style.top = "0%";\r\n' \
+  '        if (p) {modified.add("p");}\r\n' \
+  '      }\r\n' \
+  '      async function _update_infos(x, y, ci) {\r\n' \
+  '        const bpxy = device.createBuffer({size: 16, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        encoder.copyTextureToBuffer({texture: position_texture, origin: {x: x, y: y},}, {buffer: bpxy}, {width: 1, height: 1});\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        await bpxy.mapAsync(GPUMapMode.READ);\r\n' \
+  '        const pxy = new Int16Array(bpxy.getMappedRange());\r\n' \
+  '      function toggle_infos() {\r\n' \
+  '        if (show_infos) {\r\n' \
+  '          show_infos = false;\r\n' \
+  '          p_infos.style.display = "none";\r\n' \
+  '          e_info.value = "";\r\n' \
+  '          clear_tinfos();\r\n' \
+  '          if (position_texture != null) {\r\n' \
+  '            position_texture.destroy();\r\n' \
+  '            position_texture = null;\r\n' \
+  '            rpdposition.colorAttachments[0].view = null;\r\n' \
+  '          }\r\n' \
+  '          if (pdepth_texture != null) {\r\n' \
+  '            pdepth_texture.destroy();\r\n' \
+  '            pdepth_texture = null;\r\n' \
+  '            rpdposition.depthStencilAttachment.view =null;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          show_infos = true;\r\n' \
+  '          p_infos.style.display = "block";\r\n' \
+  '          const osize = [canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight];\r\n' \
+  '          if (position_texture == null) {\r\n' \
+  '            position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '            rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '          }\r\n' \
+  '          if (pdepth_texture == null) {\r\n' \
+  '            pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '            rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '          }\r\n' \
+  '          modified.add("p");\r\n' \
+  '          canvas_redraw();\r\n' \
+  '          update_infos();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function clear_tinfos(p=false) {\r\n' \
+  '        t_info.value = "";\r\n' \
+  '        t_mark.style.display = "none";\r\n' \
+  '        t_mark.style.left = "0%";\r\n' \
+  '        t_mark.style.top = "0%";\r\n' \
+  '        if (p) {modified.add("p");}\r\n' \
+  '      }\r\n' \
+  '      async function _update_infos(x, y, ci) {\r\n' \
+  '        const bpxy = device.createBuffer({size: 16, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        encoder.copyTextureToBuffer({texture: position_texture, origin: {x: x, y: y},}, {buffer: bpxy}, {width: 1, height: 1});\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        await bpxy.mapAsync(GPUMapMode.READ);\r\n' \
+  '        const pxy = new Int16Array(bpxy.getMappedRange());\r\n' \
+  '        if (pxy[0] != -32768 && pxy[1] != -32768) {\r\n' \
+  '          let px = pxy[0] / 32767;\r\n' \
+  '          let py = pxy[1] / 32767;\r\n' \
+  '          let pz = get_pz(px, py);\r\n' \
+  '          let plat = (2 * Math.atan(Math.exp((py * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          let plon = (px * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          let pele = (pz + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          let pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
+  '          t_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m dist: " + pdist.toFixed(0) + "m";\r\n' \
+  '          t_mark.style.left = `calc(${x * 100 / canvas.parentNode.offsetWidth}% - 1vh)`;\r\n' \
+  '          t_mark.style.top = `calc(${y * 100 / canvas.parentNode.offsetHeight}% - 1vh)`;\r\n' \
+  '          t_mark.style.display = "block";\r\n' \
+  '          if (ci) {complete_infos();}\r\n' \
+  '        } else {\r\n' \
+  '          clear_tinfos();\r\n' \
+  '        }\r\n' \
+  '        bpxy.unmap();\r\n' \
+  '        bpxy.destroy();\r\n' \
+  '      }\r\n' \
+  '      function update_infos(e=null) {\r\n' \
+  '        if (e) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (queue[1] == null) {\r\n' \
+  '            queue[0] = queue[0].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
+  '          } else {\r\n' \
+  '            queue[1] = queue[1].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          let plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          let plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          let pele = (trpaces[pace][2] + zoff + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          e_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m";\r\n' \
+  '          clear_tinfos(true);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' + HTML_3DS_INF_MOUSE_TEMPLATE + \
+  '    </script>\r\n' \
+  '  </body>\r\n' \
+  '</html>'
   HTMLExp_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
