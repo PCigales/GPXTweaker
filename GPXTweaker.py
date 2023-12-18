@@ -15599,7 +15599,6 @@ class GPXTweakerWebInterfaceServer():
   '          pass.setBindGroup(0, bgground);\r\n' \
   '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.setPipeline(pground);\r\n' \
-  '          pass.setBindGroup(0, bgground);\r\n' \
   '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.end();\r\n' \
   '          let mb = null;\r\n' \
