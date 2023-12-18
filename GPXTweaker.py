@@ -14955,6 +14955,17 @@ class GPXTweakerWebInterfaceServer():
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n'
+  HTML_3D_DECLARATIONS_TEMPLATE = \
+  '      var portmin = ##PORTMIN##;\r\n' \
+  '      var portmax = ##PORTMAX##;\r\n' \
+  '      var zfactmax = ##ZFACTMAX##;\r\n' \
+  '      var mpos = [##MPOS##];\r\n' \
+  '      var tminrow = ##TMINROW##;\r\n' \
+  '      var tmincol = ##TMINCOL##;\r\n' \
+  '      var tmaxrow = ##TMAXROW##;\r\n' \
+  '      var tmaxcol = ##TMAXCOL##;' \
+  '      var scale = ##SCALE##;\r\n' \
+  '      var ppos = [##PPOS##];'
   HTML_3DP_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_GLOBALVARS_TEMPLATE + \
   '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["lvposition1", ["vec4", 3, 24, 0, 1]], ["lvposition2", ["vec4", 3, 24, 12, 1]], ["lvoffset", ["vec2", 2]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
@@ -15360,15 +15371,6 @@ class GPXTweakerWebInterfaceServer():
   '  </body>\r\n' \
   '</html>'
   HTML_3DP_TEMPLATE = HTML_3DP_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
-  HTML_3DP_DECLARATIONS_TEMPLATE = \
-  '      var portmin = ##PORTMIN##;\r\n' \
-  '      var portmax = ##PORTMAX##;\r\n' \
-  '      var zfactmax = ##ZFACTMAX##;\r\n' \
-  '      var mpos = [##MPOS##];\r\n' \
-  '      var tminrow = ##TMINROW##;\r\n' \
-  '      var tmincol = ##TMINCOL##;\r\n' \
-  '      var tmaxrow = ##TMAXROW##;\r\n' \
-  '      var tmaxcol = ##TMAXCOL##;'
   HTML_3D_WGPU_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      const canvas = document.getElementById("canvas");\r\n' \
@@ -15532,17 +15534,22 @@ class GPXTweakerWebInterfaceServer():
   '          return {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
   '        }\r\n'
   HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
-  '        async function data_load() {\r\n' \
+  '        async function data_load(z=false) {\r\n' \
   '          const data = await fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
   '          if (data == null) {return false;}\r\n' \
   '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          const mground = device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> gxs: array<f32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> gys: array<f32>;\r\n' \
-  '            @group(0) @binding(2) var<storage, read> gzs: array<f32>;\r\n' \
-  '            @group(0) @binding(3) var<storage, read_write> grznorms: array<vec4f>;\r\n' \
-  '            @group(0) @binding(4) var<storage, read_write> grinds: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read_write> gzs: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<uniform> ztransf: vec2f;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> grznorms: array<vec4f>;\r\n' \
+  '            @group(0) @binding(5) var<storage, read_write> grinds: array<u32>;\r\n' \
   '            ${override} ws: u32 = 8u;\r\n' \
+  '            @compute @workgroup_size(ws, ws) fn gz(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = arrayLength(&gxs) * id.y + id.x;\r\n' \
+  '              gzs[p] = fma(ztransf.x, gzs[p], ztransf.y);\r\n' \
+  '            }\r\n' \
   '            @compute @workgroup_size(ws, ws) fn ground(@builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let nc: u32 = arrayLength(&gxs);\r\n' \
   '              let nr: u32 = arrayLength(&gys);\r\n' \
@@ -15565,7 +15572,8 @@ class GPXTweakerWebInterfaceServer():
   '              grinds[2u * (nc * pyb + nc) + pyb] = 0xffffffffu;\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const pgz = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "gz", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
   '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
   '          const lvx = (new Uint32Array(data, 0, 1))[0];\r\n' \
   '          gxs = new Float32Array(data, 4, lvx);\r\n' \
@@ -15576,19 +15584,29 @@ class GPXTweakerWebInterfaceServer():
   '          bgys = device.createBuffer({size: 4 * lvy, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          device.queue.writeBuffer(bgys, 0, gys);\r\n' \
   '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
-  '          gzs = new Float32Array(data, 4 * (3 + lvx + lvy), lvz);\r\n' \
-  '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST});\r\n' \
-  '          device.queue.writeBuffer(bgzs, 0, gzs);\r\n' \
+  '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
+  '          device.queue.writeBuffer(bgzs, 0, new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
+  '          const bztransf = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '          new Float32Array(bztransf.getMappedRange()).set([ppos[4] / ppos[0], - ppos[3] * ppos[4] / ppos[0] - 1]);\r\n' \
+  '          bztransf.unmap();\r\n' \
   '          bgrznorms = device.createBuffer({size: lvz * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX});\r\n' \
   '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
   '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
-  '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bgrznorms, bgrinds)});\r\n' \
+  '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bztransf, bgrznorms, bgrinds)});\r\n' \
   '          const encoder = device.createCommandEncoder();\r\n' \
   '          const pass = encoder.beginComputePass();\r\n' \
+  '          pass.setPipeline(pgz);\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.setPipeline(pground);\r\n' \
   '          pass.setBindGroup(0, bgground);\r\n' \
   '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.end();\r\n' \
+  '          let mb = null;\r\n' \
+  '          if (z) {\r\n' \
+  '            mb = this.device.createBuffer({size: bgzs.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '            encoder.copyBufferToBuffer(bgzs, 0, mb, 0, bgzs.size);\r\n' \
+  '          }\r\n' \
   '          const commands = encoder.finish();\r\n' \
   '          device.queue.submit([commands]);\r\n' \
   '          const ns = (new Uint32Array(data, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
@@ -15598,7 +15616,7 @@ class GPXTweakerWebInterfaceServer():
   '            trpositions.push(new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts));\r\n' \
   '            i += nspts;\r\n' \
   '          }\r\n' \
-  '          return device.queue.onSubmittedWorkDone().then(() => {bgzs.destroy(); return true;});\r\n' \
+  '          return z ? mb.mapAsync(GPUMapMode.READ).then(() => {gzs = new Float32Array(mb.getMappedRange()).slice(); mb.unmap(); bgzs.destroy(); return true;}) : device.queue.onSubmittedWorkDone().then(() => {bgzs.destroy(); return true;});\r\n' \
   '        }\r\n'
   HTML_3DP_WGPU_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + \
   '      var linewidth = null;\r\n' \
@@ -16927,9 +16945,6 @@ class GPXTweakerWebInterfaceServer():
   '  </body>\r\n' \
   '</html>'
   HTML_3DS_TEMPLATE = HTML_3DS_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
-  HTML_3DS_DECLARATIONS_TEMPLATE = HTML_3DP_DECLARATIONS_TEMPLATE + '\r\n' + \
-  '      var scale = ##SCALE##;\r\n' \
-  '      var ppos = [##PPOS##];'
   HTML_3DS_WGPU_TEMPLATE = HTML_3DS_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + HTML_3DS_GLOBALVARS_TEMPLATE + \
   '      var gxs = null;\r\n' \
   '      var gys = null;\r\n' \
@@ -17091,7 +17106,7 @@ class GPXTweakerWebInterfaceServer():
   '        let bgrznorms = null;\r\n' \
   '        let bgrinds = null;\r\n' \
   '        let trpositions = null;\r\n' \
-  '        const data_wait = data_load();\r\n' \
+  '        const data_wait = data_load(true);\r\n' \
   '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(11008, max_size);\r\n' \
@@ -21822,9 +21837,9 @@ class GPXTweakerWebInterfaceServer():
     _cor = cor / den
     _minele =  minele * _cor + 1
     if accel:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles)), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(eles if wgpu else (ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
     else:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *((eles[r][c] for r in range(nrow) for c in range(ncol)) if wgpu else (eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
     if self.Mode == 'map':
       minrow, mincol = 1, 1
@@ -21852,7 +21867,7 @@ class GPXTweakerWebInterfaceServer():
     bx = (moyx - tminx) / (tmaxx - tminx)
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
-    declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
+    declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
     self.HTML3D = getattr(GPXTweakerWebInterfaceServer, "HTML_3D%s%s_TEMPLATE" % (mode3d.upper(), ("_WGPU" if wgpu else ""))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
     self.log(0, '3dbuilt')
     return True
