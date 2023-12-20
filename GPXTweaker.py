@@ -7271,8 +7271,13 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_nf()
             try:
               next(gen)
-            except:
+            except StopIteration:
               pass
+            except:
+              resp_body = self.server.Interface.HTML3DData
+              if isinstance(resp_body, threading.Event):
+                resp_body.set()
+                self.server.Interface.HTML3DData = None
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
@@ -21975,9 +21980,13 @@ class GPXTweakerWebInterfaceServer():
     else:
       _e_f = e_f[0] + str(ncol) + e_f[1]
       _e_m_ = self.Elevation.Map
-      eles = tuple(tuple(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
-      minele = min(min(eles[row]) for row in range(nrow))
-      maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
+      if wgpu:
+        eles = struct.pack('=%df' % (nrow * ncol), *(e for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,) for e in struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx))))
+        no_data_ele = self.Elevation.MapInfos.get('nodata')
+      else:
+        eles = tuple(tuple(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
+        minele = min(min(eles[row]) for row in range(nrow))
+        maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
     msource = self.Elevation.MapInfos.get('source', '')
     if self.EMode == 'tiles':
       self.Elevation.Map = None
@@ -22036,7 +22045,7 @@ class GPXTweakerWebInterfaceServer():
     if accel:
       self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     else:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *((eles[r][c] for r in range(nrow) for c in range(ncol)) if wgpu else (eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
     if wgpu:
       wgpu_event.set()
