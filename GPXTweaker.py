@@ -7261,20 +7261,29 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if self.server.Interface.Track.WebMercatorPts is None:
                 self.server.Interface.Track.BuildWebMercator()
             try:
-              if self.server.Interface.Build3DHTML(mode3d, margin, wgpu):
+              gen = self.server.Interface.Build3DHTML(mode3d, margin, wgpu)
+              if next(gen):
                 resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
                 _send_resp('text/html; charset=utf-8')
               else:
                 _send_err_nf()
             except:
               _send_err_nf()
+            try:
+              next(gen)
+            except:
+              pass
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
             self.server.Interface.SLock.release()
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
-              resp_body = self.server.Interface.HTML3DData or b''
+              resp_body = self.server.Interface.HTML3DData
+              if isinstance(resp_body, threading.Event):
+                resp_body.wait()
+                resp_body = self.server.Interface.HTML3DData
+              resp_body = resp_body or b''
               _send_resp('application/octet-stream')
             else:
               _send_err_nf()
@@ -14318,6 +14327,9 @@ class GPXTweakerWebInterfaceServer():
   '      button:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
   '      }\r\n' \
+  '      button:disabled {\r\n' \
+  '        cursor:inherit;\r\n' \
+  '      }\r\n' \
   '      input {\r\n' \
   '        background-color:rgb(30,30,35);\r\n' \
   '        color:inherit;\r\n' \
@@ -14326,6 +14338,12 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      input:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      input:disabled {\r\n' \
+  '        cursor:inherit;\r\n' \
+  '      }\r\n' \
+  '      label {\r\n' \
+  '        cursor:inherit;\r\n' \
   '      }\r\n' \
   '      input[type=range] {\r\n' \
   '        width:9em;\r\n' \
@@ -14367,6 +14385,12 @@ class GPXTweakerWebInterfaceServer():
   '        width:100%;\r\n' \
   '        font-size:90%;\r\n' \
   '        font-weight:bold;\r\n' \
+  '      }\r\n' \
+  '      label[for$=cursor_zoom] {\r\n' \
+  '        font-size:120%;\r\n' \
+  '      }\r\n' \
+  '      #cursor_zoom:enabled+label {\r\n' \
+  '        cursor:all-scroll;\r\n' \
   '      }\r\n' \
   '      input[id$=_info] {\r\n' \
   '        position:absolute;\r\n' \
@@ -14630,7 +14654,6 @@ class GPXTweakerWebInterfaceServer():
   '        return gl_texture;\r\n' \
   '      }\r\n'
   HTML_3D_CMAP_TEMPLATE = \
-  '        function create_map() {\r\n' \
   '          r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", "0");\r\n' \
   '          let nrow = tmaxrow + 1 - tminrow;\r\n' \
   '          let ncol = tmaxcol + 1 - tmincol;\r\n' \
@@ -14684,7 +14707,8 @@ class GPXTweakerWebInterfaceServer():
   '              add_row_tile();\r\n' \
   '            }\r\n' \
   '          }\r\n'
-  HTML_3D_MAP_TEMPLATE = HTML_3D_CMAP_TEMPLATE + \
+  HTML_3D_MAP_TEMPLATE = \
+  '        function create_map() {\r\n' + HTML_3D_CMAP_TEMPLATE + \
   '          setTimeout(add_row_tile, 1);\r\n' \
   '          function map_complete() {\r\n' \
   '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
@@ -14936,8 +14960,8 @@ class GPXTweakerWebInterfaceServer():
   '            <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;"></canvas>\r\n' \
   '          </div>\r\n' \
   '          <div style="position:absolute;top:4px;right:calc(1.5em + 24px);width:calc(4.5em + 2px);height:calc(1.5em + 6px);overflow:hidden;transform:rotate(-90deg);transform-origin:top right;background-color:rgba(40,45,50,0.5)">\r\n' \
-  '            <label for="cursor_zoom" style="font-size:120%;cursor:all-scroll;">&#128270;&#xfe0e;</label>\r\n' \
   '            <input type="range" id="cursor_zoom" min="0" max="4" step="1" value="0" disabled style="position:absolute;top:0;right:0;width:3em;height:1.5em;" oninput="set_param(\'zo\')">\r\n' \
+  '            <label for="cursor_zoom">&#128270;&#xfe0e;</label>\r\n' \
   '          </div>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
@@ -15323,7 +15347,7 @@ class GPXTweakerWebInterfaceServer():
   '            c_zfact.disabled = false;\r\n' \
   '          }\r\n' \
   '          c_zoom.disabled = false;\r\n' \
-  '          c_zoom.previousElementSibling.onclick = function () {set_param("zo");}\r\n' \
+  '          c_zoom.nextElementSibling.onclick = function () {set_param("zo");}\r\n' \
   '          r_yiso.disabled = false;\r\n' \
   '          r_ziso.disabled = false;\r\n' \
   '          r_dimn.disabled = false;\r\n' \
@@ -15371,6 +15395,9 @@ class GPXTweakerWebInterfaceServer():
   '  </body>\r\n' \
   '</html>'
   HTML_3DP_TEMPLATE = HTML_3DP_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
+  HTML_3D_WGPU_DECLARATIONS_TEMPLATE = \
+  '      var portmin = ##PORTMIN##;\r\n' \
+  '      var portmax = ##PORTMAX##;\r\n'
   HTML_3D_WGPU_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      const canvas = document.getElementById("canvas");\r\n' \
@@ -15405,6 +15432,9 @@ class GPXTweakerWebInterfaceServer():
   '      var rbview = null;\r\n' \
   '      var tex_mode = 0;\r\n' \
   '      var dim_mode = 2;\r\n' \
+  '      var zfactmax = null;\r\n' \
+  '      var scale = null;\r\n' \
+  '      var ppos = null;\r\n' \
   '      var ctangle = null;\r\n' \
   '      var stangle = null;\r\n' \
   '      var crangle = null;\r\n' \
@@ -15481,33 +15511,35 @@ class GPXTweakerWebInterfaceServer():
   '          0, 0, 0, 1\r\n' \
   '        ]);\r\n' \
   '      }\r\n'
-  HTML_3D_WGPU_CMAP_TEMPLATE = HTML_3D_CMAP_TEMPLATE + \
+  HTML_3D_WGPU_CMAP_TEMPLATE = \
+  '        function* create_map() {\r\n' \
+  '          const mmipmap = device.createShaderModule({code: `\r\n' \
+  '            struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
+  '            @vertex fn vmipmap(@builtin(vertex_index) vi: u32) -> vout  {\r\n' \
+  '              var out: vout;\r\n' \
+  '              out.vcoord = vec2f(f32(vi & 2u), f32((vi << 1u) & 2u));\r\n' \
+  '              out.vposition = vec4f(fma(vec2f(2.0, -2.0), out.vcoord, vec2f(-1.0, 1.0)), 0.5, 1.0);\r\n' \
+  '              return out;\r\n' \
+  '            }\r\n' \
+  '            @group(0) @binding(0) var samp: sampler;\r\n' \
+  '            @group(0) @binding(1) var tex: texture_2d<f32>;\r\n' \
+  '            @fragment fn fmipmap(@location(0) pcoord: vec2f) -> @location(0) vec4f {\r\n' \
+  '              return textureSample(tex, samp, pcoord);\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          const bglmipmap = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}]});\r\n' \
+  '          const pmipmap = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglmipmap]}), vertex: {module: mmipmap, entryPoint: "vmipmap", buffers: []}, fragment: {module: mmipmap, entryPoint: "fmipmap", targets: [{format: "rgba8unorm"}]}, primitive: {topology: "triangle-list"},});\r\n' \
+  '          yield;\r\n' + HTML_3D_CMAP_TEMPLATE + \
   '          const mlevels = Math.floor(Math.log2(Math.max(mwidth, mheight))) + 1;\r\n' \
   '          function map_complete() {\r\n' \
   '            device.queue.copyExternalImageToTexture({source: cnv2d, flipY: true}, {texture: map_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: mwidth, height: mheight, depthOrArrayLayers: 1});\r\n' \
   '            if (queue[1] == null) {\r\n' \
-  '              queue[0] = queue[0].then(gmipmap.next.bind(gmipmap));\r\n' \
+  '              queue[0] = queue[0].then(gen_mipmap);\r\n' \
   '            } else {\r\n' \
-  '              queue[1] = queue[1].then(gmipmap.next.bind(gmipmap));\r\n' \
+  '              queue[1] = queue[1].then(gen_mipmap);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          function* gen_mipmap() {\r\n' \
-  '            const mmipmap = device.createShaderModule({code: `\r\n' \
-  '              struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
-  '              @vertex fn vmipmap(@builtin(vertex_index) vi: u32) -> vout  {\r\n' \
-  '                var out: vout;\r\n' \
-  '                out.vcoord = vec2f(f32(vi & 2u), f32((vi << 1u) & 2u));\r\n' \
-  '                out.vposition = vec4f(fma(vec2f(2.0, -2.0), out.vcoord, vec2f(-1.0, 1.0)), 0.5, 1.0);\r\n' \
-  '                return out;\r\n' \
-  '              }\r\n' \
-  '              @group(0) @binding(0) var samp: sampler;\r\n' \
-  '              @group(0) @binding(1) var tex: texture_2d<f32>;\r\n' \
-  '              @fragment fn fmipmap(@location(0) pcoord: vec2f) -> @location(0) vec4f {\r\n' \
-  '                return textureSample(tex, samp, pcoord);\r\n' \
-  '              }\r\n' \
-  '            `});\r\n' \
-  '            const bglmipmap = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}]});\r\n' \
-  '            const pmipmap = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglmipmap]}), vertex: {module: mmipmap, entryPoint: "vmipmap", buffers: []}, fragment: {module: mmipmap, entryPoint: "fmipmap", targets: [{format: map_texture.format}]}, primitive: {topology: "triangle-list"},});\r\n' \
+  '          function gen_mipmap() {\r\n' \
   '            const rbmipmap = [];\r\n' \
   '            for (let l=0; l< mlevels - 1; l++) {\r\n' \
   '              const bgmipmap = device.createBindGroup({layout: bglmipmap, entries: [{binding: 0, resource: image_sampler,}, {binding: 1, resource: map_texture.createView({baseMipLevel: l, mipLevelCount: 1}),}]});\r\n' \
@@ -15517,7 +15549,6 @@ class GPXTweakerWebInterfaceServer():
   '              bencoder.draw(3);\r\n' \
   '              rbmipmap.push(bencoder.finish());\r\n' \
   '            }\r\n' \
-  '            yield;\r\n' \
   '            const encoder = device.createCommandEncoder();\r\n' \
   '            for (let l=0; l<mlevels-1; l++) {\r\n' \
   '              const rpdmipmap = {colorAttachments: [{view: map_texture.createView({baseMipLevel: l + 1, mipLevelCount: 1}), clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}]};\r\n' \
@@ -15529,26 +15560,45 @@ class GPXTweakerWebInterfaceServer():
   '            device.queue.submit([commands]);\r\n' \
   '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "Carte"; r_map.disabled = false;});\r\n' \
   '          }\r\n' \
-  '          let gmipmap = null;\r\n' \
-  '          data_wait.then(function (r) {if (r) {setTimeout(function () {add_row_tile(); gmipmap = gen_mipmap(); gmipmap.next();}, 1);};});\r\n' \
+  '          data_wait.then(function (r) {if (r) {setTimeout(add_row_tile, 1);};});\r\n' \
   '          return {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
   '        }\r\n'
   HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
   '        async function data_load(z=false) {\r\n' \
-  '          const data = await fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
-  '          if (data == null) {return false;}\r\n' \
+  '          let data = fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
   '          const override = navigator_firefox ? "const" : "override";\r\n' \
+  '          const bdynunifstride = Math.ceil(4 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
   '          const mground = device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> gxs: array<f32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> gys: array<f32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read_write> gzs: array<f32>;\r\n' \
-  '            @group(0) @binding(3) var<uniform> ztransf: vec2f;\r\n' \
-  '            @group(0) @binding(4) var<storage, read_write> grznorms: array<vec4f>;\r\n' \
-  '            @group(0) @binding(5) var<storage, read_write> grinds: array<u32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> grznorms: array<vec4f>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> grinds: array<u32>;\r\n' \
+  '            @group(1) @binding(0) var<uniform> vals: vec2f;\r\n' \
+  '            @group(1) @binding(1) var<uniform> stride: u32;\r\n' \
+  '            @group(1) @binding(2) var<storage, read_write> zmins: array<f32>;\r\n' \
+  '            @group(1) @binding(3) var<storage, read_write> zmaxs: array<f32>;\r\n' \
   '            ${override} ws: u32 = 8u;\r\n' \
-  '            @compute @workgroup_size(ws, ws) fn gz(@builtin(global_invocation_id) id: vec3u) {\r\n' \
-  '              let p: u32 = arrayLength(&gxs) * id.y + id.x;\r\n' \
-  '              gzs[p] = fma(ztransf.x, gzs[p], ztransf.y);\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zvalid(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x;\r\n' \
+  '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
+  '              let z = gzs[p];\r\n' \
+  '              gzs[p] = select(0.0, z, z != vals.x && z >= vals.y);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zminmax(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let pmax: u32 = arrayLength(&zmins);\r\n' \
+  '              let p1: u32 = id.x * stride * 2u;\r\n' \
+  '              if (p1 >= pmax) {return;}\r\n' \
+  '              let p2: u32 = p1 + stride;\r\n' \
+  '              if (p2 >= pmax) {return;}\r\n' \
+  '              zmins[p1] = min(zmins[p1], zmins[p2]);\r\n' \
+  '              zmaxs[p1] = max(zmaxs[p1], zmaxs[p2]);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zrel(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x;\r\n' \
+  '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
+  '              gzs[p] = fma(vals.x, gzs[p], vals.y);\r\n' \
   '            }\r\n' \
   '            @compute @workgroup_size(ws, ws) fn ground(@builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let nc: u32 = arrayLength(&gxs);\r\n' \
@@ -15572,51 +15622,154 @@ class GPXTweakerWebInterfaceServer():
   '              grinds[2u * (nc * pyb + nc) + pyb] = 0xffffffffu;\r\n' \
   '            }\r\n' \
   '          `});\r\n' \
-  '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          const pgz = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "gz", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const bglz = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform", hasDynamicOffset: true},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const pzvalid = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zvalid", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const pzminmax = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zminmax", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const pzrel = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zrel", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
   '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          data = await data;\r\n' \
+  '          if (data == null || ! data?.byteLength) {return false;}\r\n' \
   '          const lvx = (new Uint32Array(data, 0, 1))[0];\r\n' \
   '          gxs = new Float32Array(data, 4, lvx);\r\n' \
   '          bgxs = device.createBuffer({size: 4 * lvx, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
-  '          device.queue.writeBuffer(bgxs, 0, gxs);\r\n' \
   '          const lvy = (new Uint32Array(data, 4 * (1 + lvx), 1))[0];\r\n' \
   '          gys = new Float32Array(data, 4 * (2 + lvx) , lvy);\r\n' \
   '          bgys = device.createBuffer({size: 4 * lvy, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
-  '          device.queue.writeBuffer(bgys, 0, gys);\r\n' \
   '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
   '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
   '          device.queue.writeBuffer(bgzs, 0, new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
-  '          const bztransf = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
-  '          new Float32Array(bztransf.getMappedRange()).set([ppos[4] / ppos[0], - ppos[3] * ppos[4] / ppos[0] - 1]);\r\n' \
-  '          bztransf.unmap();\r\n' \
+  '          const params = new Float32Array(data, data.byteLength - 24, 6);\r\n' \
+  '          const bvals = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, mappedAtCreation: true});\r\n' \
+  '          new Float32Array(bvals.getMappedRange()).set([params[4], params[3]]);\r\n' \
+  '          bvals.unmap();\r\n' \
+  '          const mexp = Math.ceil(Math.log2(lvz));\r\n' \
+  '          const bstride = device.createBuffer({size: 4 + mexp * bdynunifstride, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '          const strides = new Uint32Array(bstride.getMappedRange());\r\n' \
+  '          for (let s=0; s<=mexp; s+=1) {strides[s * bdynunifstride / 4] = 2 ** s;}\r\n' \
+  '          bstride.unmap();\r\n' \
+  '          const bzmins = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
+  '          const bzmaxs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
   '          bgrznorms = device.createBuffer({size: lvz * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX});\r\n' \
   '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
-  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
-  '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bztransf, bgrznorms, bgrinds)});\r\n' \
-  '          const encoder = device.createCommandEncoder();\r\n' \
-  '          const pass = encoder.beginComputePass();\r\n' \
-  '          pass.setPipeline(pgz);\r\n' \
+  '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bgrznorms, bgrinds)});\r\n' \
+  '          const bgz = device.createBindGroup({layout: bglz, entries: [{binding: 0, resource: {buffer: bvals, size: bvals.size},}, {binding: 1, resource: {buffer: bstride, size: 4},}, {binding: 2, resource: {buffer: bzmins, size: bzmins.size},}, {binding: 3, resource: {buffer: bzmaxs, size: bzmaxs.size},}]});\r\n' \
+  '          let encoder = device.createCommandEncoder();\r\n' \
+  '          let pass = encoder.beginComputePass();\r\n' \
+  '          pass.setPipeline(pzvalid);\r\n' \
   '          pass.setBindGroup(0, bgground);\r\n' \
-  '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
+  '          pass.setBindGroup(1, bgz, [0]);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvz / (wgs * wgs)));\r\n' \
+  '          pass.end();\r\n' \
+  '          encoder.copyBufferToBuffer(bgzs, 0, bzmins, 0, bgzs.size);\r\n' \
+  '          encoder.copyBufferToBuffer(bgzs, 0, bzmaxs, 0, bgzs.size);\r\n' \
+  '          pass = encoder.beginComputePass();\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.setPipeline(pzminmax);\r\n' \
+  '          for (let s=0; s<=mexp; s++) {\r\n' \
+  '            pass.setBindGroup(1, bgz, [s * bdynunifstride]);\r\n' \
+  '            pass.dispatchWorkgroups(Math.ceil(Math.ceil(lvz / (2 ** (s + 1))) / (wgs * wgs)));\r\n' \
+  '          }\r\n' \
+  '          pass.end();\r\n' \
+  '          let mb = device.createBuffer({size: 8, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '          encoder.copyBufferToBuffer(bzmins, 0, mb, 0, 4);\r\n' \
+  '          encoder.copyBufferToBuffer(bzmaxs, 0, mb, 4 , 4);\r\n' \
+  '          let commands = encoder.finish();\r\n' \
+  '          device.queue.submit([commands]);\r\n' \
+  '          await mb.mapAsync(GPUMapMode.READ);\r\n' \
+  '          let [minz, maxz] = new Float32Array(mb.getMappedRange());\r\n' \
+  '          maxz = Math.max(maxz, minz + 1);\r\n' \
+  '          mb.unmap();\r\n' \
+  '          mb.destroy();\r\n' \
+  '          ppos = new Float32Array(5);\r\n' \
+  '          let zden = (maxz - minz) / 2 * params[5];\r\n' \
+  '          if (params[0] > zden) {\r\n' \
+  '            zfactmax = params[0] / zden;\r\n' \
+  '            ppos[0] = params[0];\r\n' \
+  '          } else {\r\n' \
+  '            zfactmax = 1.0;\r\n' \
+  '            ppos[0] = zden;\r\n' \
+  '          }\r\n' \
+  '          ppos[1] = params[1];\r\n' \
+  '          ppos[2] = params[2];\r\n' \
+  '          ppos[3] = minz;\r\n' \
+  '          const cor = params[5];\r\n' \
+  '          ppos[4] = cor;\r\n' \
+  '          const den = ppos[0];\r\n' \
+  '          scale = den / cor;\r\n' \
+  '          radius = 6378137 / scale;\r\n' \
+  '          pace_length = 10 / scale;\r\n' \
+  '          if (z) {\r\n' \
+  '            gxs = gxs.slice();\r\n' \
+  '            gys = gys.slice();\r\n' \
+  '          }\r\n' \
+  '          for (let px=0; px<gxs.length; px++) {gxs[px] /= den;}\r\n' \
+  '          device.queue.writeBuffer(bgxs, 0, gxs);\r\n' \
+  '          for (let py=0; py<gys.length; py++) {gys[py] /= den;}\r\n' \
+  '          device.queue.writeBuffer(bgys, 0, gys);\r\n' \
+  '          device.queue.writeBuffer(bvals, 0, new Float32Array([cor / den, - minz * cor / den - 1]));\r\n' \
+  '          encoder = device.createCommandEncoder();\r\n' \
+  '          pass = encoder.beginComputePass();\r\n' \
+  '          pass.setPipeline(pzrel);\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.setBindGroup(1, bgz, [0]);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvz / (wgs * wgs)));\r\n' \
   '          pass.setPipeline(pground);\r\n' \
   '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.end();\r\n' \
-  '          let mb = null;\r\n' \
   '          if (z) {\r\n' \
-  '            mb = this.device.createBuffer({size: bgzs.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '            mb = device.createBuffer({size: bgzs.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
   '            encoder.copyBufferToBuffer(bgzs, 0, mb, 0, bgzs.size);\r\n' \
   '          }\r\n' \
-  '          const commands = encoder.finish();\r\n' \
+  '          commands = encoder.finish();\r\n' \
   '          device.queue.submit([commands]);\r\n' \
   '          const ns = (new Uint32Array(data, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
   '          trpositions = [];\r\n' \
-  '          for (let s=0, i=0; s<ns; s++) {\r\n' \
+  '          let i = 0;\r\n' \
+  '          for (let s=0; s<ns; s++) {\r\n' \
   '            const nspts = (new Uint32Array(data, 4 * (4 + lvx + lvy + lvz + s + 2 * i), 1))[0];\r\n' \
-  '            trpositions.push(new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts));\r\n' \
+  '            const segpositions = new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts);\r\n' \
+  '            trpositions.push(segpositions);\r\n' \
+  '            for (let p=0; p<2*nspts; p++) {segpositions[p] /= den;}\r\n' \
   '            i += nspts;\r\n' \
   '          }\r\n' \
-  '          return z ? mb.mapAsync(GPUMapMode.READ).then(() => {gzs = new Float32Array(mb.getMappedRange()).slice(); mb.unmap(); bgzs.destroy(); return true;}) : device.queue.onSubmittedWorkDone().then(() => {bgzs.destroy(); return true;});\r\n' \
+  '          mpos = new Float32Array(data, data.byteLength - 56 , 4).slice();\r\n' \
+  '          mpos[0] *= den;\r\n' \
+  '          mpos[1] *= den;\r\n' \
+  '          [tminrow, tmincol, tmaxrow, tmaxcol] = new Uint32Array(data, data.byteLength - 40, 4);\r\n' \
+  '          if (z) {\r\n' \
+  '            await mb.mapAsync(GPUMapMode.READ);\r\n' \
+  '            gzs = new Float32Array(mb.getMappedRange()).slice()\r\n' \
+  '            mb.unmap();\r\n' \
+  '          } else {\r\n' \
+  '            await device.queue.onSubmittedWorkDone();\r\n' \
+  '          }\r\n' \
+  '          bgzs.destroy();\r\n' \
+  '          bvals.destroy();\r\n' \
+  '          bstride.destroy();\r\n' \
+  '          bzmins.destroy();\r\n' \
+  '          bzmaxs.destroy();\r\n' \
+  '          return true;\r\n' \
   '        }\r\n'
+  HTML_3D_WGPU_INIT0_TEMPLATE = \
+  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
+  '        }\r\n' \
+  '        let bgxs = null;\r\n' \
+  '        let bgys = null;\r\n' \
+  '        let bgrznorms = null;\r\n' \
+  '        let bgrinds = null;\r\n' \
+  '        let trpositions = null;\r\n' \
+  '        let mpos = null;\r\n' \
+  '        let tminrow = null;\r\n' \
+  '        let tmincol = null;\r\n' \
+  '        let tmaxrow = null;\r\n' \
+  '        let tmaxcol = null;\r\n' \
+  '        const data_wait = data_load(true);\r\n' \
+  '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
+  '        context = canvas.getContext("webgpu");\r\n' \
+  '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
+  '        context.configure({alphaMode: "opaque", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
+  '        const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n'
   HTML_3DP_WGPU_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + \
   '      var linewidth = null;\r\n' \
   '      var blinematrix = null;\r\n' \
@@ -15712,29 +15865,18 @@ class GPXTweakerWebInterfaceServer():
   '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
   '      }\r\n' \
   '      async function init() {\r\n' \
+  '        document.body.style.cursor = "wait";\r\n' \
   '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
   '        device = await adapter?.requestDevice();\r\n' \
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + \
   '        let gxs = null;\r\n' \
   '        let gys = null;\r\n' \
-  '        let gzs = null;\r\n' + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + \
-  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
-  '        }\r\n' \
-  '        let bgxs = null;\r\n' \
-  '        let bgys = null;\r\n' \
-  '        let bgrznorms = null;\r\n' \
-  '        let bgrinds = null;\r\n' \
-  '        let trpositions = null;\r\n' \
-  '        const data_wait = data_load();\r\n' \
-  '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
+  '        let gzs = null;\r\n' + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(2048, max_size);\r\n' \
   '        const tr_size = Math.min(2048, max_size);\r\n' \
   '        const d_size = Math.min(2048, max_size);\r\n' \
-  '        context = canvas.getContext("webgpu");\r\n' \
-  '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
-  '        context.configure({alphaMode: "premultiplied", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
   '        const mview = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
   '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
@@ -15813,22 +15955,14 @@ class GPXTweakerWebInterfaceServer():
   '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 6, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 7, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
   '        const pview = ["0", "1", "2", "3"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, }));\r\n' \
   '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
-  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
-  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
-  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
-  '        bdimfact.forEach((b) => b.unmap());\r\n' \
   '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
   '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
-  '        new Float32Array(bmappos[0].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 50, 0, 0, 0, 0, 0.5, 0.5, 0.5, 50]);\r\n' \
-  '        new Float32Array(bmappos[1].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 25 * zfactmax, 0.5, 0.5, 0.5, 25 * zfactmax]);\r\n' \
-  '        new Float32Array(bmappos[2].getMappedRange()).set([0.5, 0, mpos[0], 0, 0, 0.5, 0, mpos[1], 0, 0, 0, 0, 0.5, 0.5, mpos[2], mpos[3]]);\r\n' \
-  '        bmappos.forEach((b) => b.unmap());\r\n' \
   '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
   '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
   '        const depth_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8, compare: "less"});\r\n' \
   '        const ptex = new Uint8Array(32);\r\n' \
-  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
   '        const pattern_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
   '        ptex.set([0, 0, 255, 255, 210, 255, 190, 255]);\r\n' \
   '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
@@ -15837,20 +15971,10 @@ class GPXTweakerWebInterfaceServer():
   '        ptex.set([120, 110, 90, 255], 4);\r\n' \
   '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
   '        device.queue.writeTexture({texture: patternff_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
-  '        const map_texture = device.createTexture({...create_map(), format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
   '        const mapff_texture = device.createTexture({size: [1, 1], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
   '        device.queue.writeTexture({texture: mapff_texture, mipLevel: 0}, new Uint8Array([120, 110, 90, 255]), {}, {width: 1, height: 1});\r\n' \
   '        const ldepth_texture = device.createTexture({size: [d_size, d_size], format: "depth16unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        if (! await data_wait) {\r\n' \
-  '          window.alert("{#jdatafail#}");\r\n' \
-  '          document.body.innerHTML = "";\r\n' \
-  '          document.head.innerHTML = "";\r\n' \
-  '          window.close();\r\n' \
-  '          throw "{#jdatafail#}";\r\n' \
-  '        };\r\n' \
-  '        const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
-  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bviewmatrix, blightmatrix, bmappos[tm], bgxs, bgys), {binding: 6, resource: image_sampler,}, {binding: 7, resource: track_texture.createView(),}, {binding: 8, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 9, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 10, resource: (tm <= 1 ? patternff_texture : mapff_texture).createView(),}, {binding: 11, resource: depth_sampler,}, {binding: 12, resource: ldepth_texture.createView(),}]}));\r\n' \
-  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.1569, 0.1765, 0.1961, 1.0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const mshadow = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> lightmatrix: mat4x4f;\r\n' \
   '          @group(0) @binding(1) var<storage, read> gxs: array<f32>;\r\n' \
@@ -15863,7 +15987,6 @@ class GPXTweakerWebInterfaceServer():
   '        `});\r\n' \
   '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
   '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
-  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
   '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const mline = device.createShaderModule({code: `\r\n' \
   '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcolor: vec4f};\r\n' \
@@ -15902,8 +16025,28 @@ class GPXTweakerWebInterfaceServer():
   '        blt[blstride] = 1;\r\n' \
   '        blt[2 * blstride] = 1;\r\n' \
   '        blinetype.unmap();\r\n' \
-  '        const bgline = device.createBindGroup({layout: bglline, entries: [{binding: 0, resource: {buffer: blinematrix, size: 64}, }, {binding: 1, resource: {buffer: blinewidth}, }, {binding: 2, resource: {buffer: blinetype, size: 4},}]});\r\n' \
+  '        const cmap = create_map();\r\n' \
+  '        cmap.next();\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
+  '        bdimfact.forEach((b) => b.unmap());\r\n' \
   '        create_track();\r\n' \
+  '        const map_texture = device.createTexture({...cmap.next().value, format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        new Float32Array(bmappos[0].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 50, 0, 0, 0, 0, 0.5, 0.5, 0.5, 50]);\r\n' \
+  '        new Float32Array(bmappos[1].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 25 * zfactmax, 0.5, 0.5, 0.5, 25 * zfactmax]);\r\n' \
+  '        new Float32Array(bmappos[2].getMappedRange()).set([0.5, 0, mpos[0], 0, 0, 0.5, 0, mpos[1], 0, 0, 0, 0, 0.5, 0.5, mpos[2], mpos[3]]);\r\n' \
+  '        bmappos.forEach((b) => b.unmap());\r\n' \
+  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bviewmatrix, blightmatrix, bmappos[tm], bgxs, bgys), {binding: 6, resource: image_sampler,}, {binding: 7, resource: track_texture.createView(),}, {binding: 8, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 9, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 10, resource: (tm <= 1 ? patternff_texture : mapff_texture).createView(),}, {binding: 11, resource: depth_sampler,}, {binding: 12, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
+  '        const bgline = device.createBindGroup({layout: bglline, entries: [{binding: 0, resource: {buffer: blinematrix, size: 64}, }, {binding: 1, resource: {buffer: blinewidth}, }, {binding: 2, resource: {buffer: blinetype, size: 4},}]});\r\n' \
   '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth16unorm"});\r\n' \
   '        bencoder.setPipeline(pshadow);\r\n' \
   '        bencoder.setBindGroup(0, bgshadow);\r\n' \
@@ -15937,7 +16080,7 @@ class GPXTweakerWebInterfaceServer():
   '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
   '        canvas_redraw();\r\n' \
   '        c_zoom.disabled = false;\r\n' \
-  '        c_zoom.previousElementSibling.onclick = function () {set_param("zo");}\r\n' \
+  '        c_zoom.nextElementSibling.onclick = function () {set_param("zo");}\r\n' \
   '        c_tangle.disabled = false;\r\n' \
   '        c_rangle.disabled = false;\r\n' \
   '        b_rangle.disabled = false;\r\n' \
@@ -15951,6 +16094,7 @@ class GPXTweakerWebInterfaceServer():
   '        r_dimz.disabled = false\r\n' \
   '        r_dimd.disabled = false\r\n' \
   '        r_dims.disabled = false;\r\n' \
+  '        document.body.style.cursor = "";\r\n' \
   '         <!-- toggle_rotation(1); -->\r\n' \
   '         <!-- toggle_lrotation(1); -->\r\n' \
   '      }\r\n' \
@@ -16093,7 +16237,7 @@ class GPXTweakerWebInterfaceServer():
   '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
   '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
   '          </svg>\r\n' \
-  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
+  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="display:none;position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
   '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
   '            <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
   '              <textPath pointer-events="none" href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
@@ -16239,7 +16383,8 @@ class GPXTweakerWebInterfaceServer():
   '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
   '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
   '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
-  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n'
+  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
+  '          minimap.style.display = "";\r\n'
   HTML_3DS_KEY_MINIMAP_TEMPLATE = \
   '      function process_key(e) {\r\n' \
   '        let rd = false;\r\n' \
@@ -17033,10 +17178,9 @@ class GPXTweakerWebInterfaceServer():
   '      var pace = 0;\r\n' \
   '      var vfov = null;\r\n' \
   '      set_param("f", 55);\r\n##DECLARATIONS##\r\n' \
-  '      var radius = 6378137 / scale;\r\n' \
-  '      var pace_length = 10 / scale;\r\n' \
-  '      var zoff = null;\r\n' \
-  '      set_param("h", 2);\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
+  '      var radius = null;\r\n' \
+  '      var pace_length = null;\r\n' \
+  '      var zoff = null;\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
   '        function mat4_translation(xt, yt, zt) {\r\n' \
   '        return new Float32Array([\r\n' \
   '          1, 0, 0, xt,\r\n' \
@@ -17085,36 +17229,34 @@ class GPXTweakerWebInterfaceServer():
   '      function get_pz(px, py) {\r\n' \
   '        const lvx = gxs.length;\r\n' \
   '        const lvy = gys.length;\r\n' \
-  '        let ix = 0;\r\n' \
-  '        let iy = 0;\r\n' \
-  '        while (ix < lvx - 1 && gxs[ix] <= px) {ix++;}\r\n' \
-  '        while (iy < lvy - 1 && gys[iy] <= py) {iy++;}\r\n' \
+  '        let i1 = 0;\r\n' \
+  '        let ix = lvx - 1;\r\n' \
+  '        let im = (i1 + ix) >> 1;\r\n' \
+  '        while (im < ix) {\r\n' \
+  '          if (gxs[im] <= px) {i1 = im + 1;} else {ix = im;}\r\n' \
+  '          im = (i1 + ix) >> 1;\r\n' \
+  '        }\r\n' \
+  '        i1 = 0;\r\n' \
+  '        let iy = lvy - 1;\r\n' \
+  '        im = (i1 + iy) >> 1;\r\n' \
+  '        while (im < iy) {\r\n' \
+  '          if (gys[im] <= py) {i1 = im + 1;} else {iy = im;}\r\n' \
+  '          im = (i1 + iy) >> 1;\r\n' \
+  '        }\r\n' \
   '        const cx = (px - gxs[ix - 1]) / (gxs[ix] - gxs[ix - 1]);\r\n' \
   '        const cy = (py - gys[iy - 1]) / (gys[iy] - gys[iy - 1]);\r\n' \
   '        return cx + cy <= 1 ? (1 - cx - cy) * gzs[ix - 1 + (iy - 1) * lvx] + cx * gzs[ix + (iy - 1) * lvx] + cy  * gzs[ix - 1 + iy * lvx] : (1 - cy) * gzs[ix + (iy - 1) * lvx] + (1 - cx) * gzs[ix - 1 + iy * lvx] + (cx + cy - 1) * gzs[ix + iy * lvx];\r\n' \
   '      }\r\n' \
   '      async function init() {\r\n' \
+  '        document.body.style.cursor = "wait";\r\n' \
   '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
   '        device = await adapter?.requestDevice();\r\n' \
-  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + \
-  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
-  '        }\r\n' \
-  '        let bgxs = null;\r\n' \
-  '        let bgys = null;\r\n' \
-  '        let bgrznorms = null;\r\n' \
-  '        let bgrinds = null;\r\n' \
-  '        let trpositions = null;\r\n' \
-  '        const data_wait = data_load(true);\r\n' \
-  '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(11008, max_size);\r\n' \
   '        const tr_size = Math.min(8192, max_size);\r\n' \
   '        const d_size = max_size;\r\n' \
-  '        context = canvas.getContext("webgpu");\r\n' \
-  '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
-  '        context.configure({alphaMode: "opaque", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
-  '        const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
   '        const mview = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
   '          @group(0) @binding(1) var<uniform> radius: f32;\r\n' \
@@ -17195,31 +17337,12 @@ class GPXTweakerWebInterfaceServer():
   '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 6, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 7, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 13, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
   '        const pview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, }));\r\n' \
   '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
-  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
-  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
-  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
-  '        bdimfact.forEach((b) => b.unmap());\r\n' \
   '        const bradius = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
-  '        new Float32Array(bradius.getMappedRange())[0] = 6378137 / scale;\r\n' \
-  '        bradius.unmap();\r\n' \
   '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        beposition = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
-  '        if (! await data_wait) {\r\n' \
-  '          window.alert("{#jdatafail#}");\r\n' \
-  '          document.body.innerHTML = "";\r\n' \
-  '          document.head.innerHTML = "";\r\n' \
-  '          window.close();\r\n' \
-  '          throw "{#jdatafail#}";\r\n' \
-  '        };\r\n' \
-  '        const trpos = new Float32Array(4);\r\n' \
-  '        create_track();\r\n' \
   '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
-  '        new Float32Array(bmappos[0].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, scale / 50, 0, 0, 0, 0, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
-  '        new Float32Array(bmappos[1].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, 0, 0, 0, 0, scale / 50, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
-  '        new Float32Array(bmappos[2].getMappedRange()).set([trpos[0], 0, mpos[0], 0, 0, trpos[1], 0, mpos[1], 0, 0, 0, 0, trpos[2], trpos[3], mpos[2], mpos[3]]);\r\n' \
-  '        bmappos.forEach((b) => b.unmap());\r\n' \
   '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
   '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
   '        const depth_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8, compare: "less"});\r\n' \
@@ -17228,10 +17351,8 @@ class GPXTweakerWebInterfaceServer():
   '        ptex.set([0, 0, 255, 255, 210, 255, 190, 255]);\r\n' \
   '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
   '        device.queue.writeTexture({texture: pattern_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
-  '        const map_texture = device.createTexture({...create_map(), format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
   '        const ldepth_texture = device.createTexture({size: [d_size, d_size], format: "depth32float", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bradius, bviewmatrix, blightmatrix, beposition, bmappos[tm], bgxs, bgys), {binding: 8, resource:image_sampler,}, {binding: 9, resource: track_texture.createView(),}, {binding: 10, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 11, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 12, resource: depth_sampler,}, {binding: 13, resource: ldepth_texture.createView(),}]}));\r\n' \
-  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 1], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 1.0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const mshadow = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> lightmatrix: mat4x4f;\r\n' \
   '          @group(0) @binding(1) var<storage, read> gxs: array<f32>;\r\n' \
@@ -17244,7 +17365,6 @@ class GPXTweakerWebInterfaceServer():
   '        `});\r\n' \
   '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
   '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
-  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
   '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const override = navigator_firefox ? "const" : "override";\r\n' \
   '        const msun = device.createShaderModule({code: `\r\n' \
@@ -17269,7 +17389,6 @@ class GPXTweakerWebInterfaceServer():
   '        const psun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglsun]}), vertex: {module: msun, entryPoint: "vsun", buffers: []}, fragment: {module: msun, entryPoint: "fsun", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-list"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less-equal", format: "depth32float"}, });\r\n' \
   '        bsunratio = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        bsunmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
-  '        const bgsun = device.createBindGroup({layout: bglsun, entries: bgentries(bsunratio, bsunmatrix)});\r\n' \
   '        const mposition = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> radius: f32;\r\n' \
   '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
@@ -17297,8 +17416,33 @@ class GPXTweakerWebInterfaceServer():
   '        `});\r\n' \
   '        const bglposition = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
   '        const pposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglposition]}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
-  '        const bgposition = device.createBindGroup({layout: bglposition, entries: bgentries(bradius, bviewmatrix, beposition, bgxs, bgys)});\r\n' \
   '        rpdposition = {colorAttachments: [{view: null, clearValue: [-32768, -32768, 0, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const cmap = create_map();\r\n' \
+  '        cmap.next();\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
+  '        bdimfact.forEach((b) => b.unmap());\r\n' \
+  '        new Float32Array(bradius.getMappedRange())[0] = 6378137 / scale;\r\n' \
+  '        bradius.unmap();\r\n' \
+  '        const trpos = new Float32Array(4);\r\n' \
+  '        create_track();\r\n' \
+  '        const map_texture = device.createTexture({...cmap.next().value, format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        new Float32Array(bmappos[0].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, scale / 50, 0, 0, 0, 0, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
+  '        new Float32Array(bmappos[1].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, 0, 0, 0, 0, scale / 50, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
+  '        new Float32Array(bmappos[2].getMappedRange()).set([trpos[0], 0, mpos[0], 0, 0, trpos[1], 0, mpos[1], 0, 0, 0, 0, trpos[2], trpos[3], mpos[2], mpos[3]]);\r\n' \
+  '        bmappos.forEach((b) => b.unmap());\r\n' \
+  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bradius, bviewmatrix, blightmatrix, beposition, bmappos[tm], bgxs, bgys), {binding: 8, resource:image_sampler,}, {binding: 9, resource: track_texture.createView(),}, {binding: 10, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 11, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 12, resource: depth_sampler,}, {binding: 13, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
+  '        const bgsun = device.createBindGroup({layout: bglsun, entries: bgentries(bsunratio, bsunmatrix)});\r\n' \
+  '        const bgposition = device.createBindGroup({layout: bglposition, entries: bgentries(bradius, bviewmatrix, beposition, bgxs, bgys)});\r\n' \
   '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth32float"});\r\n' \
   '        bencoder.setPipeline(pshadow);\r\n' \
   '        bencoder.setBindGroup(0, bgshadow);\r\n' \
@@ -17334,6 +17478,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas_resize();\r\n' \
   '        eposition = new Float32Array(2);\r\n' \
   '        set_param("p", 0);\r\n' \
+  '        set_param("h", 2);\r\n' \
   '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
   '        canvas_redraw();\r\n' \
   '        c_tangle.disabled = false;\r\n' \
@@ -17353,6 +17498,7 @@ class GPXTweakerWebInterfaceServer():
   '        b_lrangle.disabled = false;\r\n' \
   '        c_vfov.disabled = false;\r\n' \
   '        c_height.disabled = false;\r\n' \
+  '        document.body.style.cursor = "";\r\n' \
   '        canvas.focus();\r\n' \
   '        canvas.style.outline = "none";\r\n' \
   '         <!-- toggle_rotation(1); -->\r\n' \
@@ -21736,6 +21882,12 @@ class GPXTweakerWebInterfaceServer():
       self.Elevation.Map = None
       self.Elevation.MapInfos = {}
       self.Elevation.MapResolution = None
+    tpath = '"/map/map"' if self.Mode == 'map' else '"/tiles/tile-" + row.toString() + "-" + col.toString() + ".?%s,%s"' % (str(self.TilesSet), str(self.Map.TilesInfos['matrix']))
+    if wgpu:
+      declarations = GPXTweakerWebInterfaceServer.HTML_3D_WGPU_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1]))
+      self.HTML3DData = wgpu_event = threading.Event()
+      self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      yield True
     if not self.Elevation.Map:
       try:
         if self.EMode == 'tiles':
@@ -21753,11 +21905,17 @@ class GPXTweakerWebInterfaceServer():
           return False
       except:
         self.log(0, '3derror1')
+        if wgpu:
+          self.HTML3DData = None
+          wgpu_event.set()
         return False
       tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
       self.HTML3DElevationProvider = self.ElevationProviderSel
     if self.Elevation.MapInfos.get('format') not in ('image/x-bil;bits=32', 'image/hgt'):
       self.log(0, '3derror1')
+      if wgpu:
+        self.HTML3DData = None
+        wgpu_event.set()
       return False
     scale = self.Elevation.MapResolution
     width = self.Elevation.MapInfos['width']
@@ -21798,7 +21956,8 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
+    if not wgpu:
+      ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
     accel = ctypes.sizeof(ctypes.c_float if e_f[1] == 'f' else ctypes.c_short) == e_s
     if accel:
       if sys.byteorder == ('little' if e_f[0] == '<' else 'big'):
@@ -21806,9 +21965,13 @@ class GPXTweakerWebInterfaceServer():
       else:
         _e_m = array.array(e_f[1], self.Elevation.Map)
         _e_m.byteswap()
-      eles = tuple(ef(_e_m[py + px]) for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx)
-      minele = min(eles)
-      maxele = max(max(eles), minele + 1)
+      if wgpu:
+        eles = struct.pack('=%df' % (nrow * ncol), *(_e_m[py + px] for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx))
+        no_data_ele = self.Elevation.MapInfos.get('nodata')
+      else:
+        eles = tuple(ef(_e_m[py + px]) for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx)
+        minele = min(eles)
+        maxele = max(max(eles), minele + 1)
     else:
       _e_f = e_f[0] + str(ncol) + e_f[1]
       _e_m_ = self.Elevation.Map
@@ -21826,48 +21989,61 @@ class GPXTweakerWebInterfaceServer():
     moyx = (minx + maxx) / 2
     moyy = (miny + maxy) / 2
     cor = math.cosh(moyy / WGS84WebMercator.R)
-    z_den = (maxele - minele) / 2 * cor
-    if xy_den > z_den:
-      den = xy_den
-      zfactor = xy_den / z_den
-    else:
-      den = z_den
+    if wgpu:
+      den = 1
       zfactor = 1
-    _cor = cor / den
-    _minele =  minele * _cor + 1
-    if accel:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(eles if wgpu else (ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+      minele = self.V3DMinValidEle
     else:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *((eles[r][c] for r in range(nrow) for c in range(ncol)) if wgpu else (eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
-    self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
+      z_den = (maxele - minele) / 2 * cor
+      if xy_den > z_den:
+        den = xy_den
+        zfactor = xy_den / z_den
+      else:
+        den = z_den
+        zfactor = 1
+      _cor = cor / den
+      _minele =  minele * _cor + 1
     if self.Mode == 'map':
       minrow, mincol = 1, 1
       maxrow, maxcol = 1, 1
       tminx, tminy = self.VMinx, self.VMiny
       tmaxx, tmaxy = self.VMaxx, self.VMaxy
-      tpath = '"/map/map"'
     elif self.Mode == 'tiles':
       try:
         infos = {**self.Map.TilesInfos}
         (minrow, mincol), (maxrow, maxcol) = WebMercatorMap.WGS84BoxtoTileBox(infos, minlat, maxlat, minlon, maxlon)
       except:
         self.log(0, '3derror2')
+        if wgpu:
+          self.HTML3DData = None
+          wgpu_event.set()
         return False
-      scale = infos['scale'] / WebMercatorMap.CRS_MPU
-      tminx = infos['topx'] + scale * infos['width'] * mincol
-      tminy = infos['topy'] - scale * infos['height'] * (maxrow + 1)
-      tmaxx = infos['topx'] + scale * infos['width'] * (maxcol + 1)
-      tmaxy = infos['topy'] - scale * infos['height'] * minrow
-      tpath = '"/tiles/tile-" + row.toString() + "-" + col.toString() + ".?%s,%s"' % (str(self.TilesSet), str(self.Map.TilesInfos['matrix']))
+      mscale = infos['scale'] / WebMercatorMap.CRS_MPU
+      tminx = infos['topx'] + mscale * infos['width'] * mincol
+      tminy = infos['topy'] - mscale * infos['height'] * (maxrow + 1)
+      tmaxx = infos['topx'] + mscale * infos['width'] * (maxcol + 1)
+      tmaxy = infos['topy'] - mscale * infos['height'] * minrow
     else:
       self.log(0, '3derror2')
+      if wgpu:
+        self.HTML3DData = None
+        wgpu_event.set()
       return False
     ax = den / (tmaxx - tminx)
     bx = (moyx - tminx) / (tmaxx - tminx)
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
-    declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
-    self.HTML3D = getattr(GPXTweakerWebInterfaceServer, "HTML_3D%s%s_TEMPLATE" % (mode3d.upper(), ("_WGPU" if wgpu else ""))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+    if accel:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+    else:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *((eles[r][c] for r in range(nrow) for c in range(ncol)) if wgpu else (eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+    self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
+    if wgpu:
+      wgpu_event.set()
+    else:
+      declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
+      self.HTML3D = getattr(GPXTweakerWebInterfaceServer, "HTML_3D%s%s_TEMPLATE" % (mode3d.upper(), ("_WGPU" if wgpu else ""))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      yield True
     self.log(0, '3dbuilt')
     return True
 
