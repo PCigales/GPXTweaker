@@ -15565,8 +15565,8 @@ class GPXTweakerWebInterfaceServer():
   '            device.queue.submit([commands]);\r\n' \
   '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "Carte"; r_map.disabled = false;});\r\n' \
   '          }\r\n' \
-  '          data_wait.then(function (r) {if (r) {setTimeout(add_row_tile, 1);};});\r\n' \
-  '          return {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
+  '          yield {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
+  '          setTimeout(add_row_tile, 1);\r\n' \
   '        }\r\n'
   HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
   '        async function data_load(z=false) {\r\n' \
@@ -16084,6 +16084,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas_resize();\r\n' \
   '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
   '        canvas_redraw();\r\n' \
+  '        queue[1].then(cmap.next.bind(cmap));\r\n' \
   '        c_zoom.disabled = false;\r\n' \
   '        c_zoom.nextElementSibling.onclick = function () {set_param("zo");}\r\n' \
   '        c_tangle.disabled = false;\r\n' \
@@ -17486,6 +17487,7 @@ class GPXTweakerWebInterfaceServer():
   '        set_param("h", 2);\r\n' \
   '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
   '        canvas_redraw();\r\n' \
+  '        queue[1].then(cmap.next.bind(cmap));\r\n' \
   '        c_tangle.disabled = false;\r\n' \
   '        c_rangle.disabled = false;\r\n' \
   '        b_rangle.disabled = false;\r\n' \
