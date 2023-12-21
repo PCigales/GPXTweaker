@@ -15569,8 +15569,9 @@ class GPXTweakerWebInterfaceServer():
   '          setTimeout(add_row_tile, 1);\r\n' \
   '        }\r\n'
   HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
-  '        async function data_load(z=false) {\r\n' \
+  '        async function data_load() {\r\n' \
   '          let data = fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
+  '          const kgxyzs = window.hasOwnProperty("gzs");\r\n' \
   '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          const bdynunifstride = Math.ceil(4 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
   '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
@@ -15704,7 +15705,7 @@ class GPXTweakerWebInterfaceServer():
   '          scale = den / cor;\r\n' \
   '          radius = 6378137 / scale;\r\n' \
   '          pace_length = 10 / scale;\r\n' \
-  '          if (z) {\r\n' \
+  '          if (kgxyzs) {\r\n' \
   '            gxs = gxs.slice();\r\n' \
   '            gys = gys.slice();\r\n' \
   '          }\r\n' \
@@ -15722,7 +15723,7 @@ class GPXTweakerWebInterfaceServer():
   '          pass.setPipeline(pground);\r\n' \
   '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.end();\r\n' \
-  '          if (z) {\r\n' \
+  '          if (kgxyzs) {\r\n' \
   '            mb = device.createBuffer({size: bgzs.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
   '            encoder.copyBufferToBuffer(bgzs, 0, mb, 0, bgzs.size);\r\n' \
   '          }\r\n' \
@@ -15730,21 +15731,20 @@ class GPXTweakerWebInterfaceServer():
   '          device.queue.submit([commands]);\r\n' \
   '          const ns = (new Uint32Array(data, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
   '          trpositions = [];\r\n' \
-  '          let i = 0;\r\n' \
-  '          for (let s=0; s<ns; s++) {\r\n' \
-  '            const nspts = (new Uint32Array(data, 4 * (4 + lvx + lvy + lvz + s + 2 * i), 1))[0];\r\n' \
-  '            const segpositions = new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + 2 * i), 2 * nspts);\r\n' \
+  '          for (let s=0,i=0; s<ns; s++) {\r\n' \
+  '            const nscs = 2 * (new Uint32Array(data, 4 * (4 + lvx + lvy + lvz + s + i), 1))[0];\r\n' \
+  '            const segpositions = new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + i), nscs);\r\n' \
   '            trpositions.push(segpositions);\r\n' \
-  '            for (let p=0; p<2*nspts; p++) {segpositions[p] /= den;}\r\n' \
-  '            i += nspts;\r\n' \
+  '            for (let c=0; c<nscs; c++) {segpositions[c] /= den;}\r\n' \
+  '            i += nscs;\r\n' \
   '          }\r\n' \
-  '          mpos = new Float32Array(data, data.byteLength - 56 , 4).slice();\r\n' \
+  '          mpos = new Float32Array(data, data.byteLength - 56, 4).slice();\r\n' \
   '          mpos[0] *= den;\r\n' \
   '          mpos[1] *= den;\r\n' \
   '          [tminrow, tmincol, tmaxrow, tmaxcol] = new Uint32Array(data, data.byteLength - 40, 4);\r\n' \
-  '          if (z) {\r\n' \
+  '          if (kgxyzs) {\r\n' \
   '            await mb.mapAsync(GPUMapMode.READ);\r\n' \
-  '            gzs = new Float32Array(mb.getMappedRange()).slice()\r\n' \
+  '            gzs = new Float32Array(mb.getMappedRange()).slice();\r\n' \
   '            mb.unmap();\r\n' \
   '          } else {\r\n' \
   '            await device.queue.onSubmittedWorkDone();\r\n' \
@@ -15769,7 +15769,7 @@ class GPXTweakerWebInterfaceServer():
   '        let tmincol = null;\r\n' \
   '        let tmaxrow = null;\r\n' \
   '        let tmaxcol = null;\r\n' \
-  '        const data_wait = data_load(true);\r\n' \
+  '        const data_wait = data_load();\r\n' \
   '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
   '        context = canvas.getContext("webgpu");\r\n' \
   '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
