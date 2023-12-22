@@ -10992,11 +10992,17 @@ class GPXTweakerWebInterfaceServer():
   '            document.documentElement.style.setProperty("--filter", "url(#attenuate0)");\r\n' \
   '          }\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
-  '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {document.getElementById("eset").selectedIndex = eset;}\r\n' \
+  '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {\r\n' \
+  '            document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '            switch_elevations(eset);\r\n' \
+  '          }\r\n' \
   '          iset = parseInt(prev_state[7]);\r\n' \
   '          if (document.getElementById("iset").name == "iset") {\r\n' \
   '            if (iset >= 0) {\r\n' \
-  '              if (document.getElementById("iset").options.length > iset) {document.getElementById("iset").selectedIndex = iset;}\r\n' \
+  '              if (document.getElementById("iset").options.length > iset) {\r\n' \
+  '                document.getElementById("iset").selectedIndex = iset;\r\n' \
+  '                switch_itineraries(iset);\r\n' \
+  '              }\r\n' \
   '            } else {\r\n' \
   '              iset = document.getElementById("iset").selectedIndex;\r\n' \
   '            }\r\n' \
@@ -13752,7 +13758,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
   '        } else if (mode3d) {\r\n' \
-  '          window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
+  '          window.open("http://" + host + location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
@@ -14230,6 +14236,7 @@ class GPXTweakerWebInterfaceServer():
   '      var portmax = ##PORTMAX##;\r\n' \
   '      var gpucomp = ##GPUCOMP##;\r\n' \
   '      var webgpu = ##WEBGPU##;\r\n' \
+  '      var webgpu3d = ##V3DWEBGPU##;\r\n' \
   '      var sessionid = "##SESSIONID##";\r\n' \
   '      var mode = "##MODE##";\r\n' \
   '      var vminx = ##VMINX##;\r\n' \
@@ -17257,7 +17264,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.body.style.cursor = "wait";\r\n' \
   '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
-  '        device = await adapter?.requestDevice();\r\n' \
+  '        device = await adapter?.requestDevice({requiredLimits:{maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(11008, max_size);\r\n' \
@@ -18821,7 +18828,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + host + location.port + "/3D/viewer" + (webgpu ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '        window.open("http://" + host + location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function magnify_dec() {\r\n' \
   '        if (magnify > 1) {\r\n' \
@@ -20980,7 +20987,9 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == '3dviewer':
-          if field == 'pano_margin':
+          if field == 'prefer_webgpu_also':
+            self.V3DPreferWebGpu = value
+          elif field == 'pano_margin':
             if value is not None:
               self.V3DPanoMargin = round(2 * float(value)) / 2
           elif field == 'subj_margin':
@@ -21346,6 +21355,7 @@ class GPXTweakerWebInterfaceServer():
         return False
     if not self.MediaPorts:
       self.MediaPorts = self.Ports
+    self.V3DPreferWebGpu &= self.PreferWebGpu
     self.log(1, 'cloaded')
     return True
 
@@ -21391,6 +21401,7 @@ class GPXTweakerWebInterfaceServer():
     self.V3DPanoMargin = 0.5
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
+    self.V3DPreferWebGpu = False
     self.SmoothTracks = False
     self.SmoothRange = 10
     self.Mode = None
@@ -21845,7 +21856,7 @@ class GPXTweakerWebInterfaceServer():
       return False
     if defx is None or defy is None:
       defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -22091,7 +22102,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
