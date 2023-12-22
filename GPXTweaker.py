@@ -203,7 +203,8 @@ FR_STRINGS = {
     '3dmodeled': 'modélisation du terrain achevée (%s = %s x %s points, source: "%s")',
     '3dbuilt': 'page de visionnage 3D générée',
     'jsession': 'Une session est déjà active !',
-    'jexpfail': 'Le chargement des données a échoué !',
+    'jdatafail': 'Le chargement des données a échoué !',
+    'jwebgpuno': 'API WebGPU pas prise en charge par le navigateur, repli sur l\'API WebGL 2...',
     'jserror': 'La sauvegarde a échoué: ',
     'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
     'jeconfirm': 'Remplacer toutes les données d\'élévation de la trace ?',
@@ -252,7 +253,7 @@ FR_STRINGS = {
     'jtrackedit': 'éditer la trace',
     'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
-    'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt:intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
+    'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt: intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
     'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+alt: télécharger une carte des traces cochées cadrée sur la zone affichée&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+shift+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
@@ -602,7 +603,8 @@ EN_STRINGS = {
     '3dmodeled': 'modelization of the ground achieved (%s = %s x %s dots, source: "%s")',
     '3dbuilt': '3D viewer page generated',
     'jsession': 'A session is already active !',
-    'jexpfail': 'The loading of the data has failed !',
+    'jdatafail': 'The loading of the data has failed !',
+    'jwebgpuno': 'WebGPU API not supported by the browser, fallback on the WebGL 2 API...',
     'jserror': 'The backup has failed: ',
     'jesconfirm': 'Replace all elevation data of the segment ?',
     'jeconfirm': 'Replace all elevation data of the track ?',
@@ -651,7 +653,7 @@ EN_STRINGS = {
     'jtrackedit': 'edit the track',
     'jtracknew': 'create a new empty track in the first ticked folder',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
-    'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt:integrate the track after (in a multi-tracks files)',
+    'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt: integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
     'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+alt: download a map of the ticked tracks framed on the displayed area&#13;&#10;+shift: download the list of tracks&#13;&#10;+shift+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
@@ -7242,12 +7244,13 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               continue
             _send_resp_nc()
-          elif req.path.lower()[:15] == '/3D/viewer.html'.lower():
+          elif req.path.lower()[:10] == '/3D/viewer'.lower():
             try:
               mode3d = req.path.split('?3d=')[1][0].lower()
               if mode3d != 'p' and mode3d != 's':
                 raise
               margin = float(req.path.split('?3d=')[1][1:].split(',')[0])
+              wgpu = req.path.lower()[10:14].lower() == 'wgpu'
             except:
               _send_err_nf()
               continue
@@ -7258,20 +7261,34 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if self.server.Interface.Track.WebMercatorPts is None:
                 self.server.Interface.Track.BuildWebMercator()
             try:
-              if self.server.Interface.Build3DHTML(mode3d, margin):
+              gen = self.server.Interface.Build3DHTML(mode3d, margin, wgpu)
+              if next(gen):
                 resp_body = (self.server.Interface.HTML3D or '').encode('utf-8')
                 _send_resp('text/html; charset=utf-8')
               else:
                 _send_err_nf()
             except:
               _send_err_nf()
+            try:
+              next(gen)
+            except StopIteration:
+              pass
+            except:
+              resp_body = self.server.Interface.HTML3DData
+              if isinstance(resp_body, threading.Event):
+                resp_body.set()
+                self.server.Interface.HTML3DData = None
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = None
               self.server.Interface.Uri, self.server.Interface.Track = None, None
             self.server.Interface.SLock.release()
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
-              resp_body = self.server.Interface.HTML3DData or b''
+              resp_body = self.server.Interface.HTML3DData
+              if isinstance(resp_body, threading.Event):
+                resp_body.wait()
+                resp_body = self.server.Interface.HTML3DData
+              resp_body = resp_body or b''
               _send_resp('application/octet-stream')
             else:
               _send_err_nf()
@@ -8249,8 +8266,8 @@ class GPXTweakerWebInterfaceServer():
   '      var xhr_ongoing = 0;\r\n' \
   '      var graph_ip = null;\r\n' \
   '      var graph_px = null;\r\n'
-  HTML_GPUSTATS_TEMPLATE = \
-  '      class GPUStats {\r\n' \
+  HTML_WEBGLSTATS_TEMPLATE = \
+  '      class WebGLStats {\r\n' \
   '        static get tw() {return 1024;}\r\n' \
   '        constructor (mode) {\r\n' \
   '          this.mode = mode;\r\n' \
@@ -8289,7 +8306,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.trange = 60 / 2;\r\n' \
   '          this.spmax = 8 / 3.6;\r\n' \
   '          this.drange = 80 / 2;\r\n' \
-  '          this.slmax = 50 / 100;\r\n' \
+  '          this.slmax = 100 / 100;\r\n' \
   '          this.vxy = null;\r\n' \
   '          this.vg = null;\r\n' \
   '          this.vsss = null;\r\n' \
@@ -8306,7 +8323,7 @@ class GPXTweakerWebInterfaceServer():
   '            out vec2 vxy;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 ll = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
+  '              vec2 ll = texelFetch(lltex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
   '              float t = ll.s + pow(ll.s, 3.0) / 3.0;\r\n' \
   '              float t2 = t * (pow(trlat, 2.0) + 1.0) / (trlat - t);\r\n' \
   '              vxy = vec2(ll.t * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
@@ -8318,8 +8335,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec3 mmle = texelFetch(mmltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 0.0174532925);\r\n' \
-  '              float ls = gl_InstanceID > 0 ? texelFetch(mmltex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p * 0.0174532925 : mmle.p;\r\n' \
+  '              vec3 mmle = texelFetch(mmltex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).stp * vec3(0.00872664626, 0.00872664626, 0.0174532925);\r\n' \
+  '              float ls = gl_InstanceID > 0 ? texelFetch(mmltex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).p * 0.0174532925 : mmle.p;\r\n' \
   '              float a = sqrt(pow(mmle.s, 2.0) - pow(mmle.s, 4.0) / 3.0 + cos(ls) * cos(mmle.p) * (pow(mmle.t, 2.0) - pow(mmle.t, 4.0) / 3.0));\r\n' \
   '              vg = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
   '            }\r\n' \
@@ -8331,8 +8348,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 lle = texelFetch(lltex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
-  '              vec2 lls = gl_InstanceID > 0 ? texelFetch(lltex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st * vec2(0.00872664626) : lle;\r\n' \
+  '              vec2 lle = texelFetch(lltex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).st * vec2(0.00872664626);\r\n' \
+  '              vec2 lls = gl_InstanceID > 0 ? texelFetch(lltex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).st * vec2(0.00872664626) : lle;\r\n' \
   '              vec2 dll = lle - lls;\r\n' \
   '              float a = sqrt(pow(dll.s, 2.0) - pow(dll.s, 4.0) / 3.0 + cos(rlat - lls.s * 2.0) * cos(rlat - lle.s * 2.0) * (pow(dll.t, 2.0) - pow(dll.t, 4.0) / 3.0));\r\n' \
   '              vg = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
@@ -8345,8 +8362,8 @@ class GPXTweakerWebInterfaceServer():
   '            out float vg;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 xye = texelFetch(xytex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).st;\r\n' \
-  '              vec2 xys = gl_InstanceID > 0 ? texelFetch(xytex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).st : xye;\r\n' \
+  '              vec2 xye = texelFetch(xytex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).st;\r\n' \
+  '              vec2 xys = gl_InstanceID > 0 ? texelFetch(xytex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).st : xye;\r\n' \
   '              vec2 e = trlat * exp(- vec2(xys.t, xye.t) / 6378137.0);\r\n' \
   '              vec2 c = 1.0 / (e + 1.0 / e);\r\n' \
   '              vg = distance(xys, xye) * (c.s + c.t);\r\n' \
@@ -8365,13 +8382,13 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec4 geahs = vec4(0.0, texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).tpq);\r\n' \
+  '              vec4 geahs = vec4(0.0, texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).tpq);\r\n' \
   '              vsss = vec3(0.0);\r\n' \
   '              vec4 geahe = geahs;\r\n' \
   '              vec4 geahp = geahe;\r\n' \
   '              bool b = false;\r\n' \
   '              for (int p = pc + 1; p < vend; p++) {\r\n' \
-  '                geahe = vec4(texelFetch(gtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s + geahe.s, texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).tpq);\r\n' \
+  '                geahe = vec4(texelFetch(gtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s + geahe.s, texelFetch(teahtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).tpq);\r\n' \
   '                if (geahe.s > drange && b) {break;}\r\n' \
   '                if (geahe.s == 0.0) {continue;}\r\n' \
   '                b = true;\r\n' \
@@ -8394,12 +8411,12 @@ class GPXTweakerWebInterfaceServer():
   '            out float vs;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 tds = vec2(texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, 0.0);\r\n' \
+  '              vec2 tds = vec2(texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s, 0.0);\r\n' \
   '              vs = 0.0;\r\n' \
   '              vec2 tde = tds;\r\n' \
   '              vec2 tdp = tde;\r\n' \
   '              for (int p = pc + 1; p < vend; p++) {\r\n' \
-  '                tde = vec2(texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2((p - 1) % ${GPUStats.tw}, (p - 1) / ${GPUStats.tw}), 0).p + tde.t);\r\n' \
+  '                tde = vec2(texelFetch(teahtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s, texelFetch(ssstex, ivec2((p - 1) % ${WebGLStats.tw}, (p - 1) / ${WebGLStats.tw}), 0).p + tde.t);\r\n' \
   '                if (tde.s > tds.s + trange) {break;}\r\n' \
   '                if (tde.s == tds.s) {continue;}\r\n' \
   '                vs += tde.t / (tde.s - tds.s) * (tde.s - tdp.s);\r\n' \
@@ -8420,16 +8437,16 @@ class GPXTweakerWebInterfaceServer():
   '            out vec3 vsss;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec4 gsssc = vec4(0.0, texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).stp);\r\n' \
+  '              vec4 gsssc = vec4(0.0, texelFetch(ssstex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).stp);\r\n' \
   '              vec4 gsssf = gsssc;\r\n' \
   '              vec4 gsssn = gsssc;\r\n' \
   '              vsss = gsssc.tpq;\r\n' \
   '              float c;\r\n' \
   '              float su = 0.0;\r\n' \
   '              vec3 sss = vec3(0.0);\r\n' \
-  '              if (texelFetch(gtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s <= drange) {\r\n' \
+  '              if (texelFetch(gtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s <= drange) {\r\n' \
   '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                  gsssf = vec4(gsssf.s - texelFetch(gtex, ivec2((p + 1) % ${GPUStats.tw}, (p + 1) / ${GPUStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).stp);\r\n' \
+  '                  gsssf = vec4(gsssf.s - texelFetch(gtex, ivec2((p + 1) % ${WebGLStats.tw}, (p + 1) / ${WebGLStats.tw}), 0).s, texelFetch(ssstex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).stp);\r\n' \
   '                  if (gsssf.s < - drange) {break;}\r\n' \
   '                  c = (gsssn.s - gsssf.s) / (1.0 - gsssf.s);\r\n' \
   '                  sss += gsssf.tpq * c;\r\n' \
@@ -8440,7 +8457,7 @@ class GPXTweakerWebInterfaceServer():
   '                  vsss = clamp((vsss + sss / 2.0) / (1.0 + su / 2.0), vec3(-slmax), vec3(slmax));\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              vsss.p = texelFetch(gtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s * sqrt(1.0 + pow(vsss.p, 2.0));\r\n' \
+  '              vsss.p = texelFetch(gtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s * sqrt(1.0 + pow(vsss.p, 2.0));\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
   '          let vertex_s2bshader_s = `#version 300 es\r\n' \
@@ -8453,7 +8470,7 @@ class GPXTweakerWebInterfaceServer():
   '            out float vs;\r\n' \
   '            void main() {\r\n' \
   '              int pc = vstart + gl_InstanceID;\r\n' \
-  '              vec2 tsc = vec2(texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s, texelFetch(stex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s);\r\n' \
+  '              vec2 tsc = vec2(texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s, texelFetch(stex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s);\r\n' \
   '              vec2 tsf = tsc;\r\n' \
   '              vec2 tsn = tsc;\r\n' \
   '              vs = tsc.t;\r\n' \
@@ -8461,9 +8478,9 @@ class GPXTweakerWebInterfaceServer():
   '              float su = 0.0;\r\n' \
   '              float s = 0.0;\r\n' \
   '              bool b = false;\r\n' \
-  '              if (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
+  '              if (texelFetch(teahtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s - tsc.s <= trange) {\r\n' \
   '                for (int p = pc - 1; p >= vstart; p--) {\r\n' \
-  '                  tsf = vec2(texelFetch(teahtex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s, texelFetch(stex, ivec2(p % ${GPUStats.tw}, p / ${GPUStats.tw}), 0).s);\r\n' \
+  '                  tsf = vec2(texelFetch(teahtex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s, texelFetch(stex, ivec2(p % ${WebGLStats.tw}, p / ${WebGLStats.tw}), 0).s);\r\n' \
   '                  if (tsf.s < tsc.s - trange) {break;}\r\n' \
   '                  b = true;\r\n' \
   '                  c = (tsn.s - tsf.s) / (1.0 + tsc.s - tsf.s);\r\n' \
@@ -8476,12 +8493,12 @@ class GPXTweakerWebInterfaceServer():
   '                    vs = min((vs + s / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
   '                  }\r\n' \
   '                } else if (gl_InstanceID > 0){\r\n' \
-  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p / (tsc.s - tsf.s), spmax);\r\n' \
+  '                  vs = min(texelFetch(ssstex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).p / (tsc.s - tsf.s), spmax);\r\n' \
   '                }\r\n' \
-  '              } else if (gl_InstanceID > 0 ? (texelFetch(teahtex, ivec2((pc) % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s <= trange): true){\r\n' \
-  '                vs = min(texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p / (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).s), spmax);\r\n' \
+  '              } else if (gl_InstanceID > 0 ? (texelFetch(teahtex, ivec2((pc) % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).s <= trange): true){\r\n' \
+  '                vs = min(texelFetch(ssstex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).p / (texelFetch(teahtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s - texelFetch(teahtex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).s), spmax);\r\n' \
   '              } else {\r\n' \
-  '                vs = min((texelFetch(ssstex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).p + texelFetch(ssstex, ivec2(pc % ${GPUStats.tw}, pc / ${GPUStats.tw}), 0).p)/ (texelFetch(teahtex, ivec2((pc + 1) % ${GPUStats.tw}, (pc + 1) / ${GPUStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${GPUStats.tw}, (pc - 1) / ${GPUStats.tw}), 0).s), spmax);\r\n' \
+  '                vs = min((texelFetch(ssstex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).p + texelFetch(ssstex, ivec2(pc % ${WebGLStats.tw}, pc / ${WebGLStats.tw}), 0).p)/ (texelFetch(teahtex, ivec2((pc + 1) % ${WebGLStats.tw}, (pc + 1) / ${WebGLStats.tw}), 0).s - texelFetch(teahtex, ivec2((pc - 1) % ${WebGLStats.tw}, (pc - 1) / ${WebGLStats.tw}), 0).s), spmax);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          `;\r\n' \
@@ -8598,7 +8615,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        static pad(s) {\r\n' \
-  '          return (Math.floor((s - 1) / GPUStats.tw) + 1) * GPUStats.tw;\r\n' \
+  '          return (Math.floor((s - 1) / WebGLStats.tw) + 1) * WebGLStats.tw;\r\n' \
   '        }\r\n' \
   '        texture_load(unit, ncomp, src, tex=null) {\r\n' \
   '          let gl_texture = tex;\r\n' \
@@ -8610,15 +8627,15 @@ class GPXTweakerWebInterfaceServer():
   '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);\r\n' \
   '          this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);\r\n' \
   '          if (Array.isArray(src)) {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, new Float32Array(src));\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, src.length / ncomp / WebGLStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, new Float32Array(src));\r\n' \
   '          } else if (src instanceof Float32Array) {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src.length / ncomp / GPUStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, src);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, src.length / ncomp / WebGLStats.tw, 0, [this.gl.R, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, src);\r\n' \
   '          } else if (src instanceof WebGLBuffer) {\r\n' \
   '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, src);\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, this.gl.getBufferParameter(this.gl.PIXEL_UNPACK_BUFFER, this.gl.BUFFER_SIZE) / ncomp / 4 / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, this.gl.getBufferParameter(this.gl.PIXEL_UNPACK_BUFFER, this.gl.BUFFER_SIZE) / ncomp / 4 / WebGLStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
   '            this.gl.bindBuffer(this.gl.PIXEL_UNPACK_BUFFER, null);\r\n' \
   '          } else {\r\n' \
-  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], GPUStats.tw, src / GPUStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
+  '            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, [this.gl.R32F, this.gl.RG32F, this.gl.RGB32F, this.gl.RGBA32F][ncomp - 1], WebGLStats.tw, src / WebGLStats.tw, 0, [this.gl.RED, this.gl.RG, this.gl.RGB, this.gl.RGBA] [ncomp - 1], this.gl.FLOAT, 0);\r\n' \
   '          }\r\n' \
   '          return gl_texture;\r\n' \
   '        }\r\n' \
@@ -8645,13 +8662,13 @@ class GPXTweakerWebInterfaceServer():
   '        set mmls(a) {\r\n' \
   '          this._mmls = a;\r\n' \
   '          this.mml_texture = this.texture_load(this.gl.TEXTURE0 + this.mmltex, 3, this._mmls, this.mml_texture);\r\n' \
-  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
+  '          this.vg = this.buffer_load(4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
   '         }\r\n' \
   '        set lls(a) {\r\n' \
   '          this._lls = a;\r\n' \
   '          this.ll_texture = this.texture_load(this.gl.TEXTURE0 + this.lltex, 2, this._lls, this.ll_texture);\r\n' \
-  '          this.vxy = this.buffer_load(2 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vxy);\r\n' \
-  '          this.vg = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
+  '          this.vxy = this.buffer_load(2 * 4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vxy);\r\n' \
+  '          this.vg = this.buffer_load(4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vg);\r\n' \
   '         }\r\n' \
   '        set xys(a) {\r\n' \
   '          this._xys = a;\r\n' \
@@ -8660,8 +8677,8 @@ class GPXTweakerWebInterfaceServer():
   '        set teahs(a) {\r\n' \
   '          this._teahs = a;\r\n' \
   '          this.teah_texture = this.texture_load(this.gl.TEXTURE0 + this.teahtex, 4, this._teahs, this.teah_texture);\r\n' \
-  '          this.vsss = this.buffer_load(3 * 4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vsss);\r\n' \
-  '          this.vs = this.buffer_load(4 * GPUStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vs);\r\n' \
+  '          this.vsss = this.buffer_load(3 * 4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vsss);\r\n' \
+  '          this.vs = this.buffer_load(4 * WebGLStats.pad(this.tlength), this.gl.DYNAMIC_READ, this.vs);\r\n' \
   '        }\r\n' \
   '        _calc() {\r\n' \
   '          for (let s=0; s<this._starts.length-1; s++) {\r\n' \
@@ -8773,6 +8790,658 @@ class GPXTweakerWebInterfaceServer():
   '          return this._ss;\r\n' \
   '        }\r\n' \
   '      }\r\n'
+  HTML_WEBGPUSTATS_TEMPLATE = \
+  '      class WebGPUStats {\r\n' \
+  '        static get ptsws() {return 64;}\r\n' \
+  '        static get segsws() {return 8;}\r\n' \
+  '        static get maxsbs() {return 1 << 27;}\r\n' \
+  '        constructor (mode, persistence) {\r\n' \
+  '          this.mode = mode;\r\n' \
+  '          this.persistence = persistence * 1000;\r\n' \
+  '          this.adapter = null;\r\n' \
+  '          this.device = null;\r\n' \
+  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init(); this.calc();}));\r\n' \
+  '        }\r\n' \
+  '        init() {\r\n' \
+  '          const twmode = this.mode == "tweaker";\r\n' \
+  '          this.timer = null;\r\n' \
+  '          this.chunks = [[0, 0]];\r\n' \
+  '          this.nbsegs = [];\r\n' \
+  '          this.nbpts = [];\r\n' \
+  '          this.ptswc = [];\r\n' \
+  '          this.segswc = [];\r\n' \
+  '          this.segsdwc = [];\r\n' \
+  '          this.bstarts = [];\r\n' \
+  '          this.bsegs = [];\r\n' \
+  '          this.bmms = twmode ? [] : null;\r\n' \
+  '          this.blats = twmode ? [] : null;\r\n' \
+  '          this.btrlats = twmode ? null : [];\r\n' \
+  '          this.blls = twmode ? null : [];\r\n' \
+  '          this.bxys = twmode ? null : [];\r\n' \
+  '          this.bwns = twmode ? null : [];\r\n' \
+  '          this.bwds = twmode ? null : [];\r\n' \
+  '          this.bsxys = twmode ? null : [];\r\n' \
+  '          this.bgdists = [];\r\n' \
+  '          this.bteahs = [];\r\n' \
+  '          this.beags = [];\r\n' \
+  '          this.bslsps = [];\r\n' \
+  '          this.bslopestdistspeeds = [];\r\n' \
+  '          const override = navigator_firefox ? "const" : "override";\r\n' \
+  '          this.mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> lls: array<vec2f>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> xys: array<vec2f>;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
+  '            @compute @workgroup_size(ws) fn pos(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              let pt: u32 = p + starts[0u];\r\n' \
+  '              var s: u32 = 0u;\r\n' \
+  '              var s2: u32 = arrayLength(&starts) - 1u;\r\n' \
+  '              if (pt >= starts[s2]) {return;};\r\n' \
+  '              var sm : u32 = (s + s2) >> 1u;\r\n' \
+  '              while (sm > s) {\r\n' \
+  '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
+  '                sm = (s + s2) >> 1u;\r\n' \
+  '              }\r\n' \
+  '              segs[p] = s;\r\n' \
+  '              let ll: vec2f = lls[p] * 0.00872664626;\r\n' \
+  '              let t: f32 = ll.x + pow(ll.x, 3.0) / 3.0;\r\n' \
+  '              let t2: f32 = t * (pow(trlats[s], 2.0) + 1.0) / (trlats[s] - t);\r\n' \
+  '              xys[p] = vec2f(ll.y * 12756274.0, (t2 - pow(t2, 2.0) / 2.0 + pow(t2, 3.0) / 3.0) * 6378137.0);\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.bgpos = twmode ? null : [];\r\n' \
+  '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
+  '            @group(0) @binding(4) var<uniform> smdrange: f32;\r\n' \
+  '            @group(0) @binding(5) var<storage, read_write> wns: array<u32>;\r\n' \
+  '            @group(0) @binding(6) var<storage, read_write> wds: array<vec2f>;\r\n' \
+  '            @group(0) @binding(7) var<storage, read_write> sxys: array<vec2f>;\r\n' \
+  '            ${override} ws1: u32 = 64u;\r\n' \
+  '            ${override} ws2: u32 = 8u;\r\n' \
+  '            @compute @workgroup_size(ws1) fn tdir(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws1;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let s = segs[p];\r\n' \
+  '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
+  '              let pmax: u32 = starts[s + 1u] - starts[0u];\r\n' \
+  '              let xy: vec2f = xys[p];\r\n' \
+  '              var dir: vec2f = vec2f(0.0);\r\n' \
+  '              var dist: f32 = 0.0;\r\n' \
+  '              var pxy: vec2f = xy;\r\n' \
+  '              var pn: u32;\r\n' \
+  '              for (pn = p + 1u; pn < pmax; pn++) {\r\n' \
+  '                let nxy: vec2f = xys[pn];\r\n' \
+  '                dist += distance(nxy, pxy);\r\n' \
+  '                if (dist > sdrange) {break;};\r\n' \
+  '                dir += nxy - xy;\r\n' \
+  '                pxy = nxy;\r\n' \
+  '              }\r\n' \
+  '              wns[p] = pn - p;\r\n' \
+  '              wds[p] = dir;\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws2) fn tsmooth(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let s: u32 = id.x + id.y * nw.x * ws2;\r\n' \
+  '              if (s >= arrayLength(&starts) - 1u) {return;}\r\n' \
+  '              let sdrange: f32 = smdrange / (2.0 * trlats[s]) * (pow(trlats[s], 2.0) + 1.0);\r\n' \
+  '              let pmin: u32 = starts[s] - starts[0u];\r\n' \
+  '              let pmax: u32 = starts[s + 1u] - starts[0u];\r\n' \
+  '              var dir: vec2f;\r\n' \
+  '              var dirn: bool = true;\r\n' \
+  '              var psxy: vec2f = xys[pmin];\r\n' \
+  '              sxys[pmin] = psxy;\r\n' \
+  '              for (var p: u32 = pmin + 1u; p < pmax; p++) {\r\n' \
+  '                var sxy: vec2f = xys[p];\r\n' \
+  '                var pdir: vec2f = sxy - psxy;\r\n' \
+  '                var pdirl: f32 = length(pdir);\r\n' \
+  '                var ndir: vec2f = wds[p] + pdir * f32(wns[p]);\r\n' \
+  '                let ndirl: f32 = length(ndir);\r\n' \
+  '                if (pdirl <= sdrange && ndirl > 0.0) {\r\n' \
+  '                  ndir /= ndirl;\r\n' \
+  '                  if (dirn) {\r\n' \
+  '                    dirn = false;\r\n' \
+  '                    dir = ndir;\r\n' \
+  '                  }\r\n' \
+  '                  if (pdirl > 0.0) {\r\n' \
+  '                    pdir /= pdirl;\r\n' \
+  '                    let ncos: f32 = dot(dir, ndir);\r\n' \
+  '                    let pcos: f32 = dot(dir, pdir);\r\n' \
+  '                    let npcos: f32 = dot(ndir, pdir);\r\n' \
+  '                    let b1: bool = npcos < ncos * pcos;\r\n' \
+  '                    let b2: bool = pcos < 0.0;\r\n' \
+  '                    let b3: bool = ncos < 0.0;\r\n' \
+  '                    let b4: bool = ncos > pcos;\r\n' \
+  '                    pdirl = select(select(pdirl, max(0.0, pdirl * npcos), b4), select(pdirl * pcos, select(0.0, min(-pdirl * pcos, -ndirl * ncos), b3), b2), b1);\r\n' \
+  '                    dir = select(select(pdir, ndir, b4), select(dir, -dir, b2 && b3), b1);\r\n' \
+  '                    sxy = select(sxy, psxy + pdirl * dir, b1 || b4);\r\n' \
+  '                  }\r\n' \
+  '                } else {\r\n' \
+  '                  dir = select(dir, pdir / pdirl, pdirl > sdrange);\r\n' \
+  '                }\r\n' \
+  '                psxy = sxy;\r\n' \
+  '                sxys[p] = sxy;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 7, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tdir", constants: navigator_firefox ? {} : {ws1: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: navigator_firefox ? {} : {ws2: WebGPUStats.segsws},},});\r\n' \
+  '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgtsmooth = twmode ? null : [];\r\n' \
+  '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> mms: array<vec2f>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> lats: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
+  '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              let pt: u32 = p + starts[0u];\r\n' \
+  '              var s: u32 = 0u;\r\n' \
+  '              var s2: u32 = arrayLength(&starts) - 1u;\r\n' \
+  '              if (pt >= starts[s2]) {return;};\r\n' \
+  '              var sm : u32 = (s + s2) >> 1u;\r\n' \
+  '              while (sm > s) {\r\n' \
+  '                if (starts[sm] <= pt) {s = sm;} else {s2 = sm;}\r\n' \
+  '                sm = (s + s2) >> 1u;\r\n' \
+  '              }\r\n' \
+  '              segs[p] = s;\r\n' \
+  '              let mm: vec2f = mms[p] * 0.00872664626;\r\n' \
+  '              let le: f32 = lats[p] * 0.0174532925;\r\n' \
+  '              let ls: f32 = select(lats[p - 1u] * 0.0174532925, le, pt == starts[segs[p]]);\r\n' \
+  '              let a: f32 = sqrt(dot(pow(mm, vec2f(2.0)) - pow(mm, vec2f(4.0)) / 3.0, vec2f(1.0, cos(ls) * cos(le))));\r\n' \
+  '              gdists[p] = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
+  '            }\r\n' \
+  '          ` : `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
+  '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let xye: vec2f = xys[p];\r\n' \
+  '              let xys: vec2f = select(xys[p - 1u], xye, p == starts[segs[p]] - starts[0u]);\r\n' \
+  '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, xye.y) / 6378137.0);\r\n' \
+  '              let c: vec2f = 1.0 / (e + 1.0 / e);\r\n' \
+  '              gdists[p] = distance(xys, xye) * (c.x + c.y);\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.bggdist = [];\r\n' \
+  '          this.bgsgdist = twmode ? null : [];\r\n' \
+  '          this.meagain = this.device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
+  '            @group(0) @binding(2) var<uniform> eagainf: vec2f;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> eags: array<array<f32,2>>;\r\n' \
+  '            ${override} ws: u32 = 4u;\r\n' \
+  '            @compute @workgroup_size(ws, 1u, 2u) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let s: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (s >= arrayLength(&starts) - 1u) {return;}\r\n' \
+  '              let eaf: f32 = eagainf[id.z] ;\r\n' \
+  '              let pmin: u32 = starts[s] - starts[0u];\r\n' \
+  '              let pmax: u32 = starts[s + 1u] - starts[0u];\r\n' \
+  '              var eap: f32 = teahs[pmin][id.z + 1u];\r\n' \
+  '              var ear: f32 = eap;\r\n' \
+  '              var eab: f32 = eap;\r\n' \
+  '              var eag: i32 = 0i;\r\n' \
+  '              var eaic: i32 = -1i;\r\n' \
+  '              var eagp: f32 = 0.0;\r\n' \
+  '              for (var p: u32 = pmin; p < pmax; p++) {\r\n' \
+  '                let ea: f32 = teahs[p][id.z + 1u];\r\n' \
+  '                eagp += max(0.0, ea - eab);\r\n' \
+  '                eags[p][id.z] = eagp;\r\n' \
+  '                if (ea >= ear && eag > 0i) {\r\n' \
+  '                  ear = ea;\r\n' \
+  '                  eab = ea;\r\n' \
+  '                } else if (ea > ear + eaf) {\r\n' \
+  '                  ear = ea;\r\n' \
+  '                  eab = ea;\r\n' \
+  '                  eag = 1i;\r\n' \
+  '                  eaic = -1i;\r\n' \
+  '                } else if ((ea <= ear && eag < 0i) || ea < ear - eaf) {\r\n' \
+  '                  if (eaic >= 0i) {\r\n' \
+  '                    eagp = eags[eaic][id.z];\r\n' \
+  '                    for (var pi: u32 = u32(eaic) + 1u; pi <= p; pi++) {\r\n' \
+  '                      eags[pi][id.z] = eagp;\r\n' \
+  '                    }\r\n' \
+  '                    eaic = -1i;\r\n' \
+  '                  }\r\n' \
+  '                  ear = ea;\r\n' \
+  '                  eab = ea;\r\n' \
+  '                  eag = -1i;\r\n' \
+  '                } else if (ea > eab) {\r\n' \
+  '                  eab = ea;\r\n' \
+  '                  if (eaic < 0i) {\r\n' \
+  '                    eaic = i32(p) - 1i;\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (eaic >= 0i) {\r\n' \
+  '                eagp = eags[eaic][id.z];\r\n' \
+  '                for (var pi: u32 = u32(eaic) + 1u; pi < pmax; pi++) {\r\n' \
+  '                  eags[pi][id.z] = eagp;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: navigator_firefox ? {} : {ws: WebGPUStats.segsws / 2},},});\r\n' \
+  '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgeagain = [];\r\n' \
+  '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
+  '            struct sfilters {sldrange: f32, slmax: f32, sptrange: f32, spmax: f32};\r\n' \
+  '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read> teahs: array<vec4f>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read> gdists: array<f32>;\r\n' \
+  '            @group(0) @binding(4) var<uniform> slopesspeedf: sfilters;\r\n' \
+  '            @group(0) @binding(5) var<storage, read_write> slsps: array<vec4f>;\r\n' \
+  '            @group(0) @binding(6) var<storage, read_write> slopestdistspeeds: array<vec4f>;\r\n' \
+  '            ${override} ws: u32 = 64u;\r\n' \
+  '            fn slope(d: f32, z: vec3f, m: vec3f) -> vec3f {\r\n' \
+  '              return select(z / d, m * sign(z), d == 0.0);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn slopes1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1u] - starts[0u];\r\n' \
+  '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
+  '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
+  '              var gs: f32 = 0.0;\r\n' \
+  '              var eahs: vec3f = teahs[p].yzw;\r\n' \
+  '              var sss: vec3f = vec3f(0.0);\r\n' \
+  '              var ge: f32 = 0.0;\r\n' \
+  '              var gp: f32 = 0.0;\r\n' \
+  '              var eah: vec3f = eahs;\r\n' \
+  '              var b: bool = false;\r\n' \
+  '              for (var pi: u32 = p + 1u; pi < pmax; pi++) {\r\n' \
+  '                ge += gdists[pi];\r\n' \
+  '                if (ge > drange && b) {break;}\r\n' \
+  '                if (ge == 0.0) {continue;}\r\n' \
+  '                b = true;\r\n' \
+  '                eah = teahs[pi].yzw;\r\n' \
+  '                sss += slope(ge, eah - eahs, slmax) * (ge - gp);\r\n' \
+  '                gp = ge;\r\n' \
+  '              }\r\n' \
+  '              if (p < pmax - 1u) {\r\n' \
+  '                sss = (sss + slope(gp, eah - eahs, slmax) * (drange - gp)) / drange;\r\n' \
+  '              }\r\n' \
+  '              slsps[p] = vec4f(clamp(sss, -slmax, slmax), 0.0);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn slopestdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmin: u32 = starts[segs[p]] - starts[0u];\r\n' \
+  '              slopestdistspeeds[p] = slsps[p];\r\n' \
+  '              if (p == starts[segs[p] + 1u] - starts[0u] - 1u) {return;};\r\n' \
+  '              let drange: f32 = slopesspeedf.sldrange;\r\n' \
+  '              let slmax: vec3f = vec3f(slopesspeedf.slmax);\r\n' \
+  '              var gf: f32 = 0.0;\r\n' \
+  '              var gn: f32 = 0.0;\r\n' \
+  '              var c: f32;\r\n' \
+  '              var su: f32 = 0.0;\r\n' \
+  '              var csss: vec3f = vec3f(0.0);\r\n' \
+  '              if (gdists[p + 1u] <= drange) {\r\n' \
+  '                for (var pi: i32 = i32(p) - 1i; pi >= i32(pmin); pi--) {\r\n' \
+  '                  gf -= gdists[pi + 1i];\r\n' \
+  '                  if (gf < - drange) {break;}\r\n' \
+  '                  c = (gn - gf) / (1.0 - gf);\r\n' \
+  '                  csss += slsps[pi].xyz * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  gn = gf;\r\n' \
+  '                }\r\n' \
+  '                if (gn != 0.0) {\r\n' \
+  '                  slopestdistspeeds[p] = vec4f(clamp((slsps[p].xyz + csss / 2.0) / (1.0 + su / 2.0), -slmax, slmax), 0.0);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              slopestdistspeeds[p].z = gdists[p + 1u] * sqrt(1.0 + pow(slopestdistspeeds[p].z, 2.0));\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn speed1(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmax: u32 = starts[segs[p] + 1u] - starts[0u];\r\n' \
+  '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
+  '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
+  '              var ts: f32 = teahs[p].x;\r\n' \
+  '              var ds: f32 = 0.0;\r\n' \
+  '              var s: f32 = 0.0;\r\n' \
+  '              var te: f32 = ts;\r\n' \
+  '              var tp: f32 = te;\r\n' \
+  '              var d: f32 = 0.0;\r\n' \
+  '              for (var pi: u32 = p + 1u; pi < pmax; pi++) {\r\n' \
+  '                te = teahs[pi].x;\r\n' \
+  '                if (te > ts + trange) {break;}\r\n' \
+  '                if (te == ts) {continue;}\r\n' \
+  '                d += slopestdistspeeds[pi - 1u].z;\r\n' \
+  '                s += d / (te - ts) * (te - tp);\r\n' \
+  '                tp = te;\r\n' \
+  '              }\r\n' \
+  '              if (tp != ts) {\r\n' \
+  '                s = (s + d / (tp - ts) * (trange + ts - tp)) / trange;\r\n' \
+  '              }\r\n' \
+  '              slsps[p].w = min(s, spmax);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws) fn speed(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '              if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '              let pmin: u32 = starts[segs[p]] - starts[0u];\r\n' \
+  '              slopestdistspeeds[p].w = slsps[p].w;\r\n' \
+  '              if (p == starts[segs[p] + 1u] - starts[0u] - 1u) {return;};\r\n' \
+  '              let trange: f32 = slopesspeedf.sptrange;\r\n' \
+  '              let spmax: f32 = slopesspeedf.spmax;\r\n' \
+  '              var tc: f32 = teahs[p].x;\r\n' \
+  '              var tf: f32 = tc;\r\n' \
+  '              var tn: f32 = tc;\r\n' \
+  '              var c: f32;\r\n' \
+  '              var su: f32 = 0.0;\r\n' \
+  '              var cs: f32 = 0.0;\r\n' \
+  '              var b: bool = false;\r\n' \
+  '              if (teahs[p + 1u].x - tc <= trange) {\r\n' \
+  '                for (var pi: i32 = i32(p) - 1i; pi >= i32(pmin); pi--) {\r\n' \
+  '                  tf = teahs[pi].x;\r\n' \
+  '                  if (tf < tc - trange) {break;}\r\n' \
+  '                  b = true;\r\n' \
+  '                  c = (tn - tf) / (1.0 + tc - tf);\r\n' \
+  '                  cs += slsps[pi].w * c;\r\n' \
+  '                  su += c;\r\n' \
+  '                  tn = tf;\r\n' \
+  '                }\r\n' \
+  '                if (b) {\r\n' \
+  '                  if (tn != tc) {\r\n' \
+  '                    slopestdistspeeds[p].w = min((slsps[p].w + cs / 2.0) / (1.0 + su / 2.0), spmax);\r\n' \
+  '                  }\r\n' \
+  '                } else if (p > pmin){\r\n' \
+  '                  slopestdistspeeds[p].w = min(slopestdistspeeds[p - 1u].z / (tc - tf), spmax);\r\n' \
+  '                }\r\n' \
+  '              } else if (teahs[p].x - teahs[max(pmin, p - 1u)].x <= trange) {\r\n' \
+  '                slopestdistspeeds[p].w = min(slopestdistspeeds[p].z / (teahs[p + 1u].x - teahs[p].x), spmax);\r\n' \
+  '              } else {\r\n' \
+  '                slopestdistspeeds[p].w = min((slopestdistspeeds[p - 1u].z + slopestdistspeeds[p].z)/ (teahs[p + 1u].x - teahs[p - 1u].x), spmax);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          this.bgslopestdistspeed = [];\r\n' \
+  '        }\r\n' \
+  '        set starts(a) {\r\n' \
+  '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
+  '          const twmode = this.mode == "tweaker";\r\n' \
+  '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
+  '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WebGPUStats.maxsbs) / 16) | 0;\r\n' \
+  '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
+  '          const nbtsegs = _starts.length - 1;\r\n' \
+  '          const nbtpts = _starts[nbtsegs];\r\n' \
+  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          this.chunks = [[0, 0]];\r\n' \
+  '          this.nbsegs = [];\r\n' \
+  '          this.nbpts = [];\r\n' \
+  '          this.ptswc = [];\r\n' \
+  '          this.segswc = [];\r\n' \
+  '          this.segsdwc = [];\r\n' \
+  '          this.bgpos = twmode ? null : [];\r\n' \
+  '          this.bgtsmooth = twmode ? null : [];\r\n' \
+  '          this.bggdist = [];\r\n' \
+  '          this.bgsgdist = twmode ? null : [];\r\n' \
+  '          this.bgeagain = [];\r\n' \
+  '          this.bgslopestdistspeed = [];\r\n' \
+  '          if (nbtpts == 0) {return;}\r\n' \
+  '          let cofs = 0;\r\n' \
+  '          if (nbtpts > maxp) {\r\n' \
+  '            for (let s=1; s<=nbtsegs; s++) {\r\n' \
+  '              if (_starts[s] - cofs > maxp) {\r\n' \
+  '                this.chunks.push([s - 1, _starts[s - 1]]);\r\n' \
+  '                this.nbsegs.push(s - 1 - this.chunks.at(-2)[0]);\r\n' \
+  '                this.nbpts.push(_starts[s - 1] - cofs);\r\n' \
+  '                cofs = _starts[s - 1];\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          this.chunks.push([nbtsegs, nbtpts]);\r\n' \
+  '          this.nbsegs.push(nbtsegs - this.chunks.at(-2)[0]);\r\n' \
+  '          this.nbpts.push(_starts[nbtsegs] - cofs);\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            const nbpts = this.nbpts[c];\r\n' \
+  '            const nbsegs = this.nbsegs[c];\r\n' \
+  '            let wcx = Math.ceil(nbpts / WebGPUStats.ptsws);\r\n' \
+  '            let wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.ptswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            wcx = Math.ceil(nbsegs / WebGPUStats.segsws);\r\n' \
+  '            wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.segswc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            wcx = Math.ceil(nbsegs / WebGPUStats.segsws * 2);\r\n' \
+  '            wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '            this.segsdwc.push([Math.ceil(wcx / wcy), wcy]);\r\n' \
+  '            this.bstarts.push(this.device.createBuffer({size: (nbsegs + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.device.queue.writeBuffer(this.bstarts[c], 0, _starts.subarray(this.chunks[c][0], this.chunks[c + 1][0] + 1));\r\n' \
+  '            this.bsegs.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '            if (twmode) {\r\n' \
+  '              this.bmms.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.blats.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            } else {\r\n' \
+  '              this.btrlats.push(this.device.createBuffer({size: nbsegs * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.blls.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '              this.bxys.push(this.device.createBuffer({size: nbpts * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            }\r\n' \
+  '            this.bgdists.push(this.device.createBuffer({size: nbpts * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            this.bteahs.push(this.device.createBuffer({size: nbpts * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            if (twmode) {\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bmms[c], this.blats[c], this.bsegs[c], this.bgdists[c])}));\r\n' \
+  '            } else {\r\n' \
+  '              this.bgpos.push(this.device.createBindGroup({layout: this.bglpos, entries: bgentries(this.bstarts[c], this.btrlats[c], this.blls[c], this.bsegs[c], this.bxys[c])}));\r\n' \
+  '              this.bggdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bxys[c], this.bgdists[c])}));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set mms(a) {\r\n' \
+  '          const _mms = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.bmms[c], 0, _mms.subarray(this.chunks[c][1] * 2, this.chunks[c + 1][1] * 2));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set lats(a) {\r\n' \
+  '          const _lats = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.blats[c], 0, _lats.subarray(this.chunks[c][1], this.chunks[c + 1][1]));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set trlats(a) {\r\n' \
+  '          const _trlats = (a instanceof Float32Array) ? Float32Array.from({length: (a.length / 2) | 0}, (e, i) => Math.tan((a[2 * i] / 360 + 0.25) * Math.PI)) : Float32Array.from(a, (ll) => Math.tan((ll[0] / 360 + 0.25) * Math.PI));\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.btrlats[c], 0, _trlats.subarray(this.chunks[c][0], this.chunks[c + 1][0]));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set lls(a) {\r\n' \
+  '          const _lls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.blls[c], 0, _lls.subarray(this.chunks[c][1] * 2, this.chunks[c + 1][1] * 2));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set teahs(a) {\r\n' \
+  '          const _teahs = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.bteahs[c], 0, _teahs.subarray(this.chunks[c][1] * 4, this.chunks[c + 1][1] * 4));\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        set smdrange(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.bsmdrange, 0, new Float32Array([v]));\r\n' \
+  '        }\r\n' \
+  '        set eagainf(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.beagainf, 0, new Float32Array([v.egf, v.agf]));\r\n' \
+  '        }\r\n' \
+  '        set slopesspeedf(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.bslopesspeedf, 0, new Float32Array([v.sldrange, v.slmax, v.sptrange, v.spmax]));\r\n' \
+  '        }\r\n' \
+  '        calc(...tasks) {\r\n' \
+  '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
+  '          tasks = new Set(tasks);\r\n' \
+  '          if (tasks.has("speed") && this.bgslopestdistspeed.length == 0) {tasks.add("slopedist");}\r\n' \
+  '          const encoder = this.device.createCommandEncoder();\r\n' \
+  '          const pass = encoder.beginComputePass();\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '          if (tasks.has("pos")) {\r\n' \
+  '            pass.setPipeline(this.ppos);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgpos[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("smooth")) {\r\n' \
+  '            if (this.bgtsmooth.length == 0) {\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                this.bwns.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '                this.bwds.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '                this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bxys[c], this.bsmdrange, this.bwns[c], this.bwds[c], this.bsxys[c])}));\r\n' \
+  '                this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bsxys[c], this.bgdists[c])}));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            pass.setPipeline(this.ptdir);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '            pass.setPipeline(this.ptsmooth);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgtsmooth[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.segswc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("gdist") || tasks.has("sgdist")) {\r\n' \
+  '            pass.setPipeline(this.pgdist);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, (tasks.has("sgdist") ? this.bgsgdist : this.bggdist)[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("eagain")) {\r\n' \
+  '            if (this.bgeagain.length == 0) {\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                this.beags.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                this.bgeagain.push(this.device.createBindGroup({layout: this.bgleagain, entries: bgentries(this.bstarts[c], this.bteahs[c], this.beagainf, this.beags[c])}));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            pass.setPipeline(this.peagain);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgeagain[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.segsdwc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("slopedist")) {\r\n' \
+  '            if (this.bgslopestdistspeed.length == 0) {\r\n' \
+  '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '                this.bslsps.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE}));\r\n' \
+  '                this.bslopestdistspeeds.push(this.device.createBuffer({size: this.nbpts[c] * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                this.bgslopestdistspeed.push(this.device.createBindGroup({layout: this.bglslopestdistspeed, entries: bgentries(this.bstarts[c], this.bsegs[c], this.bteahs[c], this.bgdists[c], this.bslopesspeedf, this.bslsps[c], this.bslopestdistspeeds[c])}));\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            pass.setPipeline(this.pslopes1);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '            pass.setPipeline(this.pslopestdist);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (tasks.has("speed")) {\r\n' \
+  '            pass.setPipeline(this.pspeed1);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '            pass.setPipeline(this.pspeed);\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              pass.setBindGroup(0, this.bgslopestdistspeed[c]);\r\n' \
+  '              pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          pass.end();\r\n' \
+  '          const commands = encoder.finish();\r\n' \
+  '          this.device.queue.submit([commands]);\r\n' \
+  '        }\r\n' \
+  '        _get_result(rn) {\r\n' \
+  '          const nbpts = this.chunks.at(-1)[1];\r\n' \
+  '          if (nbpts == 0) {return Promise.resolve(new Float32Array());}\r\n' \
+  '          const bs = this["b" + rn];\r\n' \
+  '          const mbs = Array.from(bs, (b) => this.device.createBuffer({size: b.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST}));\r\n' \
+  '          const encoder = this.device.createCommandEncoder();\r\n' \
+  '          bs.forEach((b, c) => encoder.copyBufferToBuffer(b, 0, mbs[c], 0, b.size));\r\n' \
+  '          const commands = encoder.finish();\r\n' \
+  '          this.device.queue.submit([commands]);\r\n' \
+  '          const ru = bs.reduce((a, b) => a + b.size, 0) / nbpts / 4;\r\n' \
+  '          const r = new Float32Array(nbpts * ru);\r\n' \
+  '          const prom = Promise.all(mbs.map((mb, c) => mb.mapAsync(GPUMapMode.READ).then(() => {r.set(new Float32Array(mb.getMappedRange()), this.chunks[c][1] * ru); mb.unmap(); mb.destroy()}))).then(() => r);\r\n' \
+  '          return prom\r\n' \
+  '        }\r\n' \
+  '        get xys() {\r\n' \
+  '          return this._get_result("xys").then((r) => {this.blls.forEach((b) => b.destroy()); this.blls = []; this.bgpos = []; return r;});\r\n' \
+  '        }\r\n' \
+  '        get sxys() {\r\n' \
+  '          return this._get_result("sxys");\r\n' \
+  '        }\r\n' \
+  '        get gdists() {\r\n' \
+  '          return this.mode == "tweaker" ? this._get_result("gdists").then((r) => {this.bmms.forEach((b) => b.destroy()); this.bmms = []; this.blats.forEach((b) => b.destroy()); this.blats = []; this.bgdist = []; return r;}) : this._get_result("gdists");\r\n' \
+  '        }\r\n' \
+  '        get eags() {\r\n' \
+  '          return this._get_result("eags");\r\n' \
+  '        }\r\n' \
+  '        get slopestdistspeeds() {\r\n' \
+  '          return this._get_result("slopestdistspeeds");\r\n' \
+  '        }\r\n' \
+  '        _free() {\r\n' \
+  '          const twmode = this.mode == "tweaker";\r\n' \
+  '          ["bwns", "bwds", "bsxys", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          this.bgtsmooth = twmode ? null : [];\r\n' \
+  '          this.bgsgdist = twmode ? null : [];\r\n' \
+  '          this.bgeagain = [];\r\n' \
+  '          this.bgslopestdistspeed = [];\r\n' \
+  '        }\r\n' \
+  '        free () {\r\n' \
+  '          if (this.persistence >= 0) {this.timer = setTimeout(this._free.bind(this), this.persistence);}\r\n' \
+  '        }\r\n' \
+  '        fence(func, ...args) {\r\n' \
+  '          this.lock = this.lock.then(() => func(...args)).catch((e) => console.error(e));\r\n' \
+  '          return this.lock;\r\n' \
+  '        }\r\n' \
+  '      }\r\n'
+  HTML_GPUSTATS_TEMPLATE = \
+  '      var wgpu_wait = [null, null];\r\n' \
+  '      if (gpucomp > 0) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          var gpustats = new WebGPUStats("##MODE##", wgpu_persistence);\r\n' \
+  '          wgpu_wait[0] = new Promise((res, rej) => {wgpu_wait[1] = res;});\r\n' \
+  '          var fence = gpustats.fence.bind(gpustats);\r\n' \
+  '          fence(() => {if (gpustats.device == null) {webgpu = false;  wgpu_wait[0] = null; wgpu_wait[1](); fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; gpustats = new WebGLStats("##MODE##")} else {gpucomp = 1;};});\r\n' \
+  '        } else {\r\n' \
+  '          var gpustats = new WebGLStats("##MODE##");\r\n' \
+  '          var fence = (func, ...args) => func(...args);\r\n' \
+  '        }\r\n' \
+  '      } else {\r\n' \
+  '        webgpu = false;\r\n' \
+  '        var fence = (func, ...args) => func(...args);\r\n' \
+  '      }\r\n'
   HTML_MSG_TEMPLATE = \
   '      var msg_n = 0;\r\n' \
   '      function show_msg(msg, dur, msgn=null) {\r\n' \
@@ -8873,6 +9542,10 @@ class GPXTweakerWebInterfaceServer():
   '      function load_tcb(t, nset, nlevel, kzoom=false) {\r\n' \
   '        if (nset == null) {document.getElementById("ctset").style.display = "none";}\r\n' \
   '        if (t.status != 200) {\r\n' \
+  '          if (tset < 0) {\r\n' \
+  '            tset = 0;\r\n' \
+  '            if (! tlock) {switch_tlock(false);}\r\n' \
+  '          }\r\n' \
   '          document.getElementById("tset").selectedIndex = tset;\r\n' \
   '          if (nset == null) {\r\n' \
   '            tlevel = nlevel || 1;\r\n' \
@@ -8907,6 +9580,10 @@ class GPXTweakerWebInterfaceServer():
   '              document.head.insertBefore(li, document.head.getElementsByTagName("script")[1]);\r\n' \
   '              return;\r\n' \
   '            }\r\n' \
+  '          }\r\n' \
+  '          if (wgpu_wait[0] != null) {\r\n' \
+  '            wgpu_wait[0].then(() => load_tcb(t, nset, nlevel, kzoom));\r\n' \
+  '            return;\r\n' \
   '          }\r\n' \
   '          if (nlevel == null) {\r\n' \
   '            if (tlock) {switch_tlock(false);}\r\n' \
@@ -9001,6 +9678,10 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function error_tcb() {\r\n' \
   '        document.getElementById("ctset").style.display = "none";\r\n' \
+  '        if (tset < 0) {\r\n' \
+  '          tset = 0;\r\n' \
+  '          if (! tlock) {switch_tlock(false);}\r\n' \
+  '        }\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
@@ -9101,6 +9782,10 @@ class GPXTweakerWebInterfaceServer():
   '                      tiles_hold.delete(tk);\r\n' \
   '                      if (tile.naturalWidth) {\r\n' \
   '                        tile.id = pref + tpos;\r\n' \
+  '                        tile.style.width = iwidth;\r\n' \
+  '                        tile.style.height = iheight;\r\n' \
+  '                        tile.style.left = "calc(var(--zoom) * " + (ioleft + col * twidth).toString() + "px)";\r\n' \
+  '                        tile.style.top = "calc(var(--zoom) * " + (iotop + row * theight).toString() + "px)";\r\n' \
   '                        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
   '                      } else {\r\n' \
   '                        tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
@@ -9252,7 +9937,7 @@ class GPXTweakerWebInterfaceServer():
   '                if (t_s == null) {\r\n' \
   '                  t_s = t;\r\n' \
   '                } else {\r\n' \
-  '                  stat[0] = Math.max((t - t_s) / 1000, stat_p[0]);\r\n' \
+  '                  stat[0] = max((t - t_s) / 1000, stat_p[0]);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              if (! isNaN(ea[1])) {\r\n' \
@@ -9336,7 +10021,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n'
   HTML_SEGCALC_4_TEMPLATE = \
   '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '            let drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '            let drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '            let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '              let ea = stats[seg_ind][p].slice(4,6);\r\n' \
@@ -9362,9 +10047,9 @@ class GPXTweakerWebInterfaceServer():
   '                stats[seg_ind][p][5] = (stats[seg_ind][p][5] + slope(dt, stats[seg_ind][ps-1][5] - ea[1]) * (drange - dt)) / drange;\r\n' \
   '                stats[seg_ind][p][6] = (stats[seg_ind][p][6] + slope(dt, stats[seg_ind][ps-1][6] - el) * (drange - dt)) / drange;\r\n' \
   '              }\r\n' \
-  '              stats[seg_ind][p][4] = Math.max(Math.min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
-  '              stats[seg_ind][p][5] = Math.max(Math.min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
-  '              stats[seg_ind][p][6] = Math.max(Math.min(stats[seg_ind][p][6], slmax), -slmax);\r\n' \
+  '              stats[seg_ind][p][4] = max(min(stats[seg_ind][p][4], slmax), -slmax);\r\n' \
+  '              stats[seg_ind][p][5] = max(min(stats[seg_ind][p][5], slmax), -slmax);\r\n' \
+  '              stats[seg_ind][p][6] = max(min(stats[seg_ind][p][6], slmax), -slmax);\r\n' \
   '            }\r\n' \
   '            for (let p=stats[seg_ind].length-2; p>0; p--) {\r\n' \
   '              if (stats[seg_ind][p+1][1] - stats[seg_ind][p][1] <= drange) {\r\n' \
@@ -9380,9 +10065,9 @@ class GPXTweakerWebInterfaceServer():
   '                  su += c;\r\n' \
   '                }\r\n' \
   '                if (stats[seg_ind][p][1] - stats[seg_ind][ps+1][1] != 0) {\r\n' \
-  '                  stats[seg_ind][p][4] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][4] + s[0]/2) / (1 + su/2)));\r\n' \
-  '                  stats[seg_ind][p][5] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][5] + s[1]/2) / (1 + su/2)));\r\n' \
-  '                  stats[seg_ind][p][6] = Math.max(-slmax, Math.min(slmax, (stats[seg_ind][p][6] + s[2]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][4] = max(-slmax, min(slmax, (stats[seg_ind][p][4] + s[0]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][5] = max(-slmax, min(slmax, (stats[seg_ind][p][5] + s[1]/2) / (1 + su/2)));\r\n' \
+  '                  stats[seg_ind][p][6] = max(-slmax, min(slmax, (stats[seg_ind][p][6] + s[2]/2) / (1 + su/2)));\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -9410,7 +10095,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0] != 0) {\r\n' \
   '              stats[seg_ind][p][7] = (stats[seg_ind][p][7] + (stats[seg_ind][ps-1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][ps-1][0] - stats[seg_ind][p][0]) * (trange + stats[seg_ind][p][0] - stats[seg_ind][ps-1][0])) / trange;\r\n' \
   '            }\r\n' \
-  '            stats[seg_ind][p][7] = Math.min(stats[seg_ind][p][7], spmax);\r\n' \
+  '            stats[seg_ind][p][7] = min(stats[seg_ind][p][7], spmax);\r\n' \
   '          }\r\n' \
   '          for (let p=stats[seg_ind].length-2; p>=0; p--) {\r\n' \
   '            if (stats[seg_ind][p+1][0] - stats[seg_ind][p][0] <= trange) {\r\n' \
@@ -9427,15 +10112,15 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              if (b) {\r\n' \
   '                if (stats[seg_ind][p][0] - stats[seg_ind][ps+1][0] != 0) {\r\n' \
-  '                  stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][7] + s/2) / (1 + su/2));\r\n' \
+  '                  stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p][7] + s/2) / (1 + su/2));\r\n' \
   '                }\r\n' \
   '              } else if (p > 0) {\r\n' \
-  '                stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p][0] - stats[seg_ind][p-1][0]));\r\n' \
+  '                stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p][0] - stats[seg_ind][p-1][0]));\r\n' \
   '              }\r\n' \
   '            } else if (p == 0 || stats[seg_ind][p][0] - stats[seg_ind][p-1][0] <= trange) {\r\n' \
-  '              stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
+  '              stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p][0]));\r\n' \
   '            } else {\r\n' \
-  '              stats[seg_ind][p][7] = Math.min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
+  '              stats[seg_ind][p][7] = min(spmax, (stats[seg_ind][p+1][6] - stats[seg_ind][p-1][6]) / (stats[seg_ind][p+1][0] - stats[seg_ind][p-1][0]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n'
@@ -9478,7 +10163,7 @@ class GPXTweakerWebInterfaceServer():
   '        let gpy = graphpy.innerHTML;\r\n' \
   '        graphpx.innerHTML = "";\r\n' \
   '        graphpy.innerHTML = "";\r\n' \
-  '        if (graph_ip.length < 2) {return;}\r\n' \
+  '        if (graph_ip.length < 2 || graph_px == null) {return;}\r\n' \
   '        let segs = null;\r\n' \
   '        let segf = null;\r\n' \
   '        let segf_ind = null;\r\n' \
@@ -9488,6 +10173,7 @@ class GPXTweakerWebInterfaceServer():
   '        let tr_ind = null;\r\n' \
   '        if (bx == null) {\r\n' \
   '          if (focused.substring(0, 5) == "point") {\r\n' \
+  '            if (wgpu_modified.size > 0) {return;}\r\n' \
   '            segf = document.getElementById(focused + "cont").parentNode;\r\n' \
   '            if (! segf.firstElementChild.checked) {return;}\r\n' \
   '            foc_ind = parseInt(focused.substring(5));\r\n' \
@@ -9639,51 +10325,46 @@ class GPXTweakerWebInterfaceServer():
   '              let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
   '              element_click(null, pt);\r\n' \
   '            } else {\r\n' \
-  '              gbar.style.display = "";\r\n' \
-  '              graphpx.innerHTML = gpx;\r\n' \
-  '              graphpy.innerHTML = gpy;\r\n' \
+  '              fence(() => {if (wgpu_modified.size == 0) {gbar.style.display = ""; graphpx.innerHTML = gpx; graphpy.innerHTML = gpy;};});\r\n' \
   '            }\r\n' \
   '            if (scrollmode_ex > 0) {scroll_to_dot(document.getElementById("dot" + graph_ip[ind1].toString()), scrollmode_ex == 2);}\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function refresh_graph(sw=false) {\r\n' \
+  '      function switch_graph() {\r\n' \
   '        let graph = document.getElementById("graph");\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let gwidth = null;\r\n' \
-  '        let gheight = null;\r\n' \
-  '        let gctx = graphc.getContext("2d");\r\n' \
-  '        if (sw) {\r\n' \
-  '          if (graph.style.display == "none") {\r\n' \
-  '            document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '            graph.style.display = "block";\r\n' \
-  '            gctx.lineWidth = 1;\r\n' \
-  '            gctx.lineJoin = "round";\r\n' \
-  '            gctx.lineCap = "square";\r\n' \
-  '            rescale();\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            graph.style.display = "none";\r\n' \
-  '            document.getElementById("gbar").style.display = "none";\r\n' \
-  '            document.getElementById("gbarc").style.display = "none";\r\n' \
-  '            document.getElementById("graphpx").innerHTML = "";\r\n' \
-  '            document.getElementById("graphpy").innerHTML = "";\r\n' \
-  '            graph_ip = null;\r\n' \
-  '            graph_px = null;\r\n' \
-  '            graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
-  '            if (targetmark != null) {\r\n' \
-  '              if (focused_targeted != null) {set_target();}\r\n' \
-  '            }\r\n' \
-  '            rescale();\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
+  '        if (graph.style.display == "none") {\r\n' \
+  '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
+  '          graph.style.display = "block";\r\n' \
+  '          rescale();\r\n' \
+  '          return true;\r\n' \
   '        } else {\r\n' \
-  '          if (graph.style.display == "none") {return;}\r\n' \
+  '          document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '          viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
+  '          graph.style.display = "none";\r\n' \
+  '          document.getElementById("gbar").style.display = "none";\r\n' \
+  '          document.getElementById("gbarc").style.display = "none";\r\n' \
+  '          document.getElementById("graphpx").innerHTML = "";\r\n' \
+  '          document.getElementById("graphpy").innerHTML = "";\r\n' \
+  '          graph_ip = null;\r\n' \
+  '          graph_px = null;\r\n' \
+  '          let graphc = document.getElementById("graphc");\r\n' \
+  '          graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
+  '          if (targetmark != null) {\r\n' \
+  '            if (focused_targeted != null) {set_target();}\r\n' \
+  '          }\r\n' \
+  '          rescale();\r\n' \
+  '          return false;\r\n' \
   '        }\r\n' \
-  '        gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
-  '        gheight = graph.offsetHeight;\r\n' \
+  '      }\r\n' \
+  '      function refresh_graph(sw=false) {\r\n' \
+  '        if (sw) {switch_graph();}\r\n' \
+  '        let graph = document.getElementById("graph");\r\n' \
+  '        if (graph.style.display == "none") {return;}\r\n' \
+  '        let graphc = document.getElementById("graphc");\r\n' \
+  '        let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '        let gheight = graph.offsetHeight;\r\n' \
   '        graphc.setAttribute("width", gwidth.toString());\r\n' \
   '        graphc.setAttribute("height", gheight.toString());\r\n' \
   '        let gbar = document.getElementById("gbar");\r\n' \
@@ -9692,6 +10373,10 @@ class GPXTweakerWebInterfaceServer():
   '        let gbarc = document.getElementById("gbarc");\r\n' \
   '        gbarc.style.top= "10px";\r\n' \
   '        gbarc.setAttribute("height", (gheight - 25).toString());\r\n' \
+  '        let gctx = graphc.getContext("2d");\r\n' \
+  '        gctx.lineWidth = 1;\r\n' \
+  '        gctx.lineJoin = "round";\r\n' \
+  '        gctx.lineCap = "square";\r\n' \
   '        gctx.globalCompositeOperation = "copy";\r\n' \
   '        gctx.fillStyle = "rgba(0,0,0,0)";\r\n' \
   '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
@@ -9905,7 +10590,7 @@ class GPXTweakerWebInterfaceServer():
   '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
   '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
   '        } else {\r\n' \
-  '          zoom = eval(zoom_s);\r\n' \
+  '          zoom = tset == -1 ? 1 : eval(zoom_s);\r\n' \
   '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
   '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
   '        }\r\n' \
@@ -10167,7 +10852,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_DFMTPANEL_TEMPLATE = \
   '            <div id="dfpanel">\r\n' \
   '              <span>{#jdfpanel#}</span>\r\n' \
-  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="smoothed?tracks_smooth(true):null;">\r\n' \
+  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="if(smoothed) {tracks_pts_smoothed=null;webgpu?fence(tracks_calc_wgpu,2):tracks_calc(2);}">\r\n' \
   '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
   '                <span id="dfdist" style="left:4.5em;">##SMRANGE##</span>\r\n' \
   '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="##SMRANGE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
@@ -10184,7 +10869,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_FILTERPANEL_TEMPLATE = \
   '            <div id="filterpanel1">\r\n' \
   '              <span>{#jfilterpanel1#}</span>\r\n' \
-  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(1)">\r\n' \
+  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(1)">\r\n' \
   '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
   '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
   '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
@@ -10195,7 +10880,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '            <div id="filterpanel2">\r\n' \
   '              <span>{#jfilterpanel2#}</span>\r\n' \
-  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(2)">\r\n' \
+  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(2)">\r\n' \
   '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
   '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
@@ -10206,7 +10891,7 @@ class GPXTweakerWebInterfaceServer():
   '            </div>\r\n' \
   '            <div id="filterpanel3">\r\n' \
   '              <span>{#jfilterpanel3#}</span>\r\n' \
-  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="segments_calc(3)">\r\n' \
+  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(3)">\r\n' \
   '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
   '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
   '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
@@ -10251,8 +10936,8 @@ class GPXTweakerWebInterfaceServer():
   '      </tfoot>\r\n' \
   '    </table>\r\n' \
   '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;overflow:hidden;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="refresh_graph()"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="refresh_graph()"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="fence(refresh_graph)"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="fence(refresh_graph)"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
   '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
   '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
   '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
@@ -10281,6 +10966,10 @@ class GPXTweakerWebInterfaceServer():
   '          add_tile();\r\n' \
   '          rescale();\r\n' \
   '        } else {\r\n' \
+  '          let b = track_boundaries();\r\n' \
+  '          if (b != null) {\r\n' \
+  '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '          }\r\n' \
   '          if (prev_state == null) {\r\n' \
   '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o)=>o.style.display!="none");\r\n' \
   '            switch_tiles(-1, 0);\r\n' \
@@ -10292,7 +10981,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
   '          document.getElementById("tlock").style.display = "";\r\n' \
-  '          if (tlevel == 0) {rescale();}\r\n' \
+  '          rescale();\r\n' \
   '        }\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        scroll_to_track();\r\n' \
@@ -10303,11 +10992,17 @@ class GPXTweakerWebInterfaceServer():
   '            document.documentElement.style.setProperty("--filter", "url(#attenuate0)");\r\n' \
   '          }\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
-  '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {document.getElementById("eset").selectedIndex = eset;}\r\n' \
+  '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {\r\n' \
+  '            document.getElementById("eset").selectedIndex = eset;\r\n' \
+  '            switch_elevations(eset);\r\n' \
+  '          }\r\n' \
   '          iset = parseInt(prev_state[7]);\r\n' \
   '          if (document.getElementById("iset").name == "iset") {\r\n' \
   '            if (iset >= 0) {\r\n' \
-  '              if (document.getElementById("iset").options.length > iset) {document.getElementById("iset").selectedIndex = iset;}\r\n' \
+  '              if (document.getElementById("iset").options.length > iset) {\r\n' \
+  '                document.getElementById("iset").selectedIndex = iset;\r\n' \
+  '                switch_itineraries(iset);\r\n' \
+  '              }\r\n' \
   '            } else {\r\n' \
   '              iset = document.getElementById("iset").selectedIndex;\r\n' \
   '            }\r\n' \
@@ -10339,7 +11034,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + tlevel.toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "{}" : JSON.stringify(Array.from(opacities))));\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + Math.max(0, Math.min(tlevel, tlevels.length - 1)).toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "[]" : JSON.stringify(Array.from(opacities))));\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -10358,8 +11053,12 @@ class GPXTweakerWebInterfaceServer():
   '        margin-left:3px;\r\n' \
   '        margin-right:2px;\r\n' \
   '      }\r\n' \
-  '      label[id^=segment], label[id^=point], div[id^=point][id$=cont] {\r\n' \
-  '        text-decoration:inherit;\r\n' \
+  '      div[id$=cont] {\r\n' \
+  '        text-decoration-line:inherit;\r\n' \
+  '        text-decoration-color:rgb(40,45,50);\r\n' \
+  '      }\r\n' \
+  '      label[id^=segment], label[id^=point] {\r\n' \
+  '        text-decoration-line:inherit;\r\n' \
   '      }\r\n' \
   '      label[id$=desc] {\r\n' \
   '        cursor:cell;\r\n' \
@@ -10405,10 +11104,11 @@ class GPXTweakerWebInterfaceServer():
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
   '      var stats = [];\r\n' \
-  '      var gpu_part = gpucomp >=1?true:false;\r\n' \
   '      var smoothed = false;\r\n' \
-  '      var point_stat = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats("tweaker");}\r\n' + HTML_MSG_TEMPLATE + \
+  '      var point_stat = [];\r\n' \
+  '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
+  '      var wgpu_persistence = -1;\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "tweaker") + \
+  '      var wgpu_modified = new Set();\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        if (mode == "map") {\r\n' \
   '          if (nset == null && nlevel == null) {\r\n' \
@@ -10461,6 +11161,7 @@ class GPXTweakerWebInterfaceServer():
   '        xhrt.send();\r\n' \
   '      }\r\n' + HTML_TILES_TEMPLATE + HTML_UTIL_TEMPLATE + \
   '      function scroll_to_dot(dot, center=true) {\r\n' \
+  '        if (dot == null) {return;}\r\n' \
   '        let dl = prop_to_wmvalue(dot.style.left);\r\n' \
   '        let dt = prop_to_wmvalue(dot.style.top);\r\n' \
   '        let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
@@ -10494,6 +11195,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
   '        let gminx = null;\r\n' \
   '        let gminy = null;\r\n' \
   '        let gmaxx = null;\r\n' \
@@ -10511,10 +11214,10 @@ class GPXTweakerWebInterfaceServer():
   '                [minx, miny] = pt;\r\n' \
   '                [maxx, maxy] = pt;\r\n' \
   '              } else {\r\n' \
-  '                minx = Math.min(minx, pt[0]);\r\n' \
-  '                miny = Math.min(miny, pt[1]);\r\n' \
-  '                maxx = Math.max(maxx, pt[0]);\r\n' \
-  '                maxy = Math.max(maxy, pt[1]);\r\n' \
+  '                minx = min(minx, pt[0]);\r\n' \
+  '                miny = min(miny, pt[1]);\r\n' \
+  '                maxx = max(maxx, pt[0]);\r\n' \
+  '                maxy = max(maxy, pt[1]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -10525,10 +11228,10 @@ class GPXTweakerWebInterfaceServer():
   '              gmaxx = prop_to_wmvalue(tracks[t].style.left) + maxx;\r\n' \
   '              gmaxy = prop_to_wmvalue(tracks[t].style.top) + maxy;\r\n' \
   '            } else {\r\n' \
-  '              gminx = Math.min(gminx, prop_to_wmvalue(tracks[t].style.left) + minx);\r\n' \
-  '              gminy = Math.min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
-  '              gmaxx = Math.max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
-  '              gmaxy = Math.max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
+  '              gminx = min(gminx, prop_to_wmvalue(tracks[t].style.left) + minx);\r\n' \
+  '              gminy = min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
+  '              gmaxx = max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
+  '              gmaxy = max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -10544,10 +11247,10 @@ class GPXTweakerWebInterfaceServer():
   '                gmaxx = gminx;\r\n' \
   '                gmaxy = gminy;\r\n' \
   '              } else {\r\n' \
-  '                gminx = Math.min(gminx, prop_to_wmvalue(wdot.style.left));\r\n' \
-  '                gminy = Math.min(gminy, prop_to_wmvalue(wdot.style.top));\r\n' \
-  '                gmaxx = Math.max(gmaxx, prop_to_wmvalue(wdot.style.left));\r\n' \
-  '                gmaxy = Math.max(gmaxy, prop_to_wmvalue(wdot.style.top));\r\n' \
+  '                gminx = min(gminx, prop_to_wmvalue(wdot.style.left));\r\n' \
+  '                gminy = min(gminy, prop_to_wmvalue(wdot.style.top));\r\n' \
+  '                gmaxx = max(gmaxx, prop_to_wmvalue(wdot.style.left));\r\n' \
+  '                gmaxy = max(gmaxy, prop_to_wmvalue(wdot.style.top));\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -10555,13 +11258,14 @@ class GPXTweakerWebInterfaceServer():
   '        if (gminx == null) {\r\n' \
   '          return null;\r\n' \
   '        } else {\r\n' \
-  '          let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '          let o = min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '          return [gminx - o, gmaxx + o, gminy - o, gmaxy + o];\r\n' \
   '        }\r\n' \
   '      }\r\n' + HTML_SCROLL_TEMPLATE + \
   '      function dot_style(pt, over) {\r\n' \
   '        if (pt.indexOf("point") < 0) {return;}\r\n' \
   '        let dot = document.getElementById(pt.replace("point", "dot"))\r\n' \
+  '        if (dot == null) {return;}\r\n' \
   '        if (document.getElementById(pt).value == "error") {\r\n' \
   '          dot.style.stroke = "";\r\n' \
   '          dot.style.display = "none";\r\n' \
@@ -10674,7 +11378,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        graph_point();\r\n' \
+  '        fence(graph_point);\r\n' \
   '      }\r\n' \
   '      function point_to_position(pt) {\r\n' \
   '        let lat = parseFloat(document.getElementById(pt.htmlFor + "lat").value);\r\n' \
@@ -10805,10 +11509,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (valid) {\r\n' \
   '          if (pt_cb.checked) {\r\n' \
-  '            pt.style.textDecoration = "inherit";\r\n' \
+  '            pt.style.textDecorationLine = "inherit";\r\n' \
   '          } else {\r\n' \
-  '            pt.style.textDecoration = "line-through";\r\n' \
+  '            pt.style.textDecorationLine = "line-through";\r\n' \
   '          }\r\n' \
+  '          pt.style.textDecorationColor = "";\r\n' \
   '          document.getElementById(focused + "desc").innerHTML = point_desc(document.getElementById(focused + "focus"));\r\n' \
   '          if (pt_cb.value != "error") {pt_cb.value = "edited";}\r\n' \
   '          if (coord || pt_cb.value == "error") {\r\n' \
@@ -10846,7 +11551,7 @@ class GPXTweakerWebInterfaceServer():
   '            pt.style.textDecoration = "line-through red";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (recalc && focused.substring(0, 3) != "way") {segments_calc(pt.parentNode.parentNode);}\r\n' \
+  '        if (recalc && focused.substring(0, 3) != "way") {calc_modified(pt.parentNode.parentNode);}\r\n' \
   '      }\r\n' \
   '      function point_edit_oc(point, recalc=true, coord=true) {\r\n' \
   '        let ex_foc = focused;\r\n' \
@@ -10918,7 +11623,7 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, document.getElementById(focused + "desc"), false);\r\n' \
   '        }\r\n' \
   '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
-  '        if (gr) {refresh_graph(true);}\r\n' \
+  '        if (gr) {switch_graph();}\r\n' \
   '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let segments = null;\r\n' \
   '        let points = null;\r\n' \
@@ -11002,7 +11707,7 @@ class GPXTweakerWebInterfaceServer():
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (histb != 0) {segments_calc();}\r\n' \
+  '        if (histb != 0) {calc_modified();}\r\n' \
   '        let ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
   '        if (ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
@@ -11089,7 +11794,7 @@ class GPXTweakerWebInterfaceServer():
   '        let el_label = el_input.nextElementSibling;\r\n' \
   '        el_label.htmlFor = pref;\r\n' \
   '        el_label.id = pref + "desc";\r\n' \
-  '        el_label.style.textDecoration = "inherit";\r\n' \
+  '        el_label.style.textDecorationLine = "inherit";\r\n' \
   '        let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
   '        el_span.id = pref + "focus";\r\n' \
   '        let el_span_children = el_span.children;\r\n' \
@@ -11192,7 +11897,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (! coord) {\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(el_dot, scrollmode == 2);}\r\n' \
   '          if (seg) {\r\n' \
-  '            segments_calc(seg);\r\n' \
+  '            calc_modified(seg);\r\n' \
   '          } else {\r\n' \
   '            wpt_calc();\r\n' \
   '          }\r\n' \
@@ -11200,8 +11905,8 @@ class GPXTweakerWebInterfaceServer():
   '        show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function point_delete(pt, batch=false) {\r\n' \
-  '        if (document.getElementById(pt.id + "desc").style.textDecoration.indexOf("red") < 0) {\r\n' \
-  '          document.getElementById(pt.id + "desc").style.textDecoration = "line-through";\r\n' \
+  '        if (document.getElementById(pt.id + "desc").style.textDecorationColor != "red") {\r\n' \
+  '          document.getElementById(pt.id + "desc").style.textDecorationLine = "line-through";\r\n' \
   '        }\r\n' \
   '        if (pt.id.substring(0, 3) == "way") {\r\n' \
   '          wpt_calc();\r\n' \
@@ -11221,13 +11926,13 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
-  '          segments_calc(pt.parentNode.parentNode);\r\n' \
+  '          calc_modified(seg);\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
   '      function point_undelete(pt, batch=false) {\r\n' \
-  '        if (document.getElementById(pt.id + "desc").style.textDecoration.indexOf("red") < 0) {\r\n' \
-  '          document.getElementById(pt.id + "desc").style.textDecoration = "inherit";\r\n' \
+  '        if (document.getElementById(pt.id + "desc").style.textDecorationColor != "red") {\r\n' \
+  '          document.getElementById(pt.id + "desc").style.textDecorationLine = "inherit";\r\n' \
   '        }\r\n' \
   '        if (pt.id.substring(0, 3) == "way") {\r\n' \
   '          wpt_calc();\r\n' \
@@ -11249,7 +11954,7 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
-  '          segments_calc(pt.parentNode.parentNode);\r\n' \
+  '          calc_modified(seg);\r\n' \
   '        }\r\n' \
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
@@ -11295,6 +12000,11 @@ class GPXTweakerWebInterfaceServer():
   '      function segment_calc(seg, fpan=0, ind=null, mmls=null, teahs=null) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
   '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
+  '        let round = Math.round;\r\n' \
+  '        let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
   '          if (pos_d > 0) {\r\n' \
@@ -11334,8 +12044,8 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            } else {\r\n' \
   '              if (gpucomp <= 1 && fpan <= 1) {\r\n' \
-  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:Math.max(0,ea[0]-ea_b[0]));\r\n' \
-  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:Math.max(0,ea[1]-ea_b[1]));\r\n' \
+  '                stat[2] = stat_p[2] + ((isNaN(ea_p[0])||isNaN(ea[0]))?0:max(0,ea[0]-ea_b[0]));\r\n' \
+  '                stat[3] = stat_p[3] + ((isNaN(ea_p[1])||isNaN(ea[1]))?0:max(0,ea[1]-ea_b[1]));\r\n' \
   '              }\r\n' \
   '              if (gpucomp == 0) {\r\n' \
   '                if (fpan == 0) {\r\n' \
@@ -11367,16 +12077,16 @@ class GPXTweakerWebInterfaceServer():
   '              dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
   '            }\r\n' \
   '            let dist_c = "-km";\r\n' \
-  '            if (gpucomp == 0) {dist_c = (stat_p[6] / 1000).toFixed(2) + "km";}\r\n' \
+  '            if (gpucomp == 0) {dist_c = ftos(stat_p[6] / 1000, 2) + "km";}\r\n' \
   '            let ele_c = "-m";\r\n' \
-  '            if (! isNaN(ea_p[0])) {ele_c = (gpucomp<=1?stat_p[2].toFixed(0):"[eg]") + "m";}\r\n' \
+  '            if (! isNaN(ea_p[0])) {ele_c = (gpucomp<=1?ftos(stat_p[2]):"[eg]") + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
-  '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?stat_p[3].toFixed(0):"[ag]") + "m";}\r\n' \
+  '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?ftos(stat_p[3]):"[ag]") + "m";}\r\n' \
   '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
   '          } else if (fpan == 1) {\r\n' \
-  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, stat_p[2].toFixed(0) + "m|").replace(/\\d+m\\)/, stat_p[3].toFixed(0) + "m)");\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, ftos(stat_p[2]) + "m|").replace(/\\d+m\\)/, ftos(stat_p[3]) + "m)");\r\n' \
   '          } else if (fpan == 2 && gpucomp == 0) {\r\n' \
-  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat_p[6] / 1000).toFixed(2) + "km|");\r\n' \
+  '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + ftos(stat_p[6] / 1000, 2) + "km|");\r\n' \
   '          }\r\n' \
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
@@ -11395,10 +12105,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function whole_calc() {\r\n' \
+  '        let round = Math.round;\r\n' \
+  '        let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        let points = document.getElementById("points").firstChild;\r\n' \
   '        let pos_p =  points.data.indexOf("(");\r\n' \
   '        if (pos_p >= 0) {points.deleteData(pos_p, points.length - pos_p);}\r\n' \
-  '        let segs = document.getElementById("pointsform").children;\r\n' \
   '        let dur = null;\r\n' \
   '        let dist = null;\r\n' \
   '        let ele = null;\r\n' \
@@ -11422,11 +12133,11 @@ class GPXTweakerWebInterfaceServer():
   '          dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
   '        }\r\n' \
   '        let dist_c = "-km";\r\n' \
-  '        if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
+  '        if (dist != null) {dist_c = ftos(dist / 1000, 2) + "km";}\r\n' \
   '        let ele_c = "-m";\r\n' \
-  '        if (ele != null) {ele_c = ele.toFixed(0) + "m";}\r\n' \
+  '        if (ele != null) {ele_c = ftos(ele) + "m";}\r\n' \
   '        let alt_c = "-m";\r\n' \
-  '        if (alt != null) {alt_c = alt.toFixed(0) + "m";}\r\n' \
+  '        if (alt != null) {alt_c = ftos(alt) + "m";}\r\n' \
   '        points.appendData("(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + "|" + nbpt.toString() + ") ");\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
@@ -11445,6 +12156,8 @@ class GPXTweakerWebInterfaceServer():
   '        let starts = null;\r\n' \
   '        let mmls = null;\r\n' \
   '        let teahs = null;\r\n' \
+  '        let max = Math.max;\r\n' \
+  '        let round = Math.round;\r\n' \
   '        if (fpan <= 1 || gpucomp == 0 || gpu_part) {\r\n' \
   '          starts = [0];\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
@@ -11466,8 +12179,8 @@ class GPXTweakerWebInterfaceServer():
   '            if (nbp != 0) {starts.push(starts[starts.length - 1] + nbp);}\r\n' \
   '          }\r\n' \
   '          if (gpucomp >= 1 && (fpan == 0 || gpu_part) && fpan != 1) {\r\n' \
-  '            mmls = new Float32Array(GPUStats.pad(starts[starts.length - 1]) * 3);\r\n' \
-  '            teahs = new Float32Array(GPUStats.pad(starts[starts.length - 1]) * 4);\r\n' \
+  '            mmls = new Float32Array(WebGLStats.pad(starts[starts.length - 1]) * 3);\r\n' \
+  '            teahs = new Float32Array(WebGLStats.pad(starts[starts.length - 1]) * 4);\r\n' \
   '          }\r\n' \
   '          let ind = 0;\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
@@ -11499,13 +12212,14 @@ class GPXTweakerWebInterfaceServer():
   '        if (gpucomp >= 1 && fpan != 1) {\r\n' \
   '          gpustats.trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '          gpustats.drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '          gpustats.drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '          gpustats.calc("tweaker");\r\n' \
   '          let gs = gpustats.gs;\r\n' \
   '          let ssss = gpustats.ssss;\r\n' \
   '          let ss = gpustats.ss;\r\n' \
   '          let i = 0;\r\n' \
+  '          let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
   '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
@@ -11520,8 +12234,8 @@ class GPXTweakerWebInterfaceServer():
   '                  stat[2] = 0;\r\n' \
   '                  stat[3] = 0;\r\n' \
   '                } else {\r\n' \
-  '                  stat[2] = stats[seg_ind][p - 1][2] + Math.max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
-  '                  stat[3] = stats[seg_ind][p - 1][3] + Math.max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
+  '                  stat[2] = stats[seg_ind][p - 1][2] + max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
+  '                  stat[3] = stats[seg_ind][p - 1][3] + max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              i++;\r\n' \
@@ -11532,26 +12246,298 @@ class GPXTweakerWebInterfaceServer():
   '              if (gpucomp == 2 && fpan == 2) {\r\n' \
   '                seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, "[eg]m|").replace(/\\d+m\\)/, "[ag]m)");\r\n' \
   '              }\r\n' \
-  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + (stat[6] / 1000).toFixed(2) + "km|").replace("[eg]", stat[2].toFixed(0)).replace("[ag]", stat[3].toFixed(0));\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + ftos(stat[6] / 1000, 2) + "km|").replace("[eg]", ftos(stat[2])).replace("[ag]", ftos(stat[3]));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          gpu_part = fpan == 0 && i != stats.reduce((p,c) => p + c.length, 0);\r\n' \
   '        }\r\n' \
   '        whole_calc();\r\n' \
   '      }\r\n' \
+  '      async function segments_calc_wgpu(fpan=0) {\r\n' \
+  '        if (gpustats.device == null) {return;}\r\n' \
+  '        const isInteger = Number.isInteger;\r\n' \
+  '        const seg_inds = fpan == 0 ? Array.from(wgpu_modified).filter(isInteger).sort((s1, s2) => s1 - s2) : Array.from(stats.keys());\r\n' \
+  '        const f1 = wgpu_modified.has("1");\r\n' \
+  '        const f2 = wgpu_modified.has("2");\r\n' \
+  '        const f3 = wgpu_modified.has("3");\r\n' \
+  '        if ((fpan == 0 && seg_inds.length == 0) || (fpan != 0 && ! f1 && ! f2 && ! f3)) {return;}\r\n' \
+  '        const seg_nbps = new Map();\r\n' \
+  '        let starts = null;\r\n' \
+  '        let nbpt = 0;\r\n' \
+  '        let mms = null;\r\n' \
+  '        let lats = null;\r\n' \
+  '        let teahs = null;\r\n' \
+  '        const max = Math.max;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        if (fpan == 0 || gpu_part) {\r\n' \
+  '          if (fpan == 0) {gpu_part = stats.some((st, s) => st.length > 0 && ! wgpu_modified.has(s));}\r\n' \
+  '          starts = [0];\r\n' \
+  '          for (const seg_ind of seg_inds) {\r\n' \
+  '            const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
+  '            let nbp = 0;\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              wgpu_modified.delete(seg_ind);\r\n' \
+  '              const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '              const pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
+  '              if (pos_d > 0) {\r\n' \
+  '                seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(1, pos_d) + "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;";\r\n' \
+  '              }\r\n' \
+  '              while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
+  '              stats[seg_ind] = [];\r\n' \
+  '              if (! seg.firstElementChild.checked) {\r\n' \
+  '                seg_nbps.set(seg_ind, 0);\r\n' \
+  '                continue;\r\n' \
+  '              };\r\n' \
+  '              const spans = seg.getElementsByTagName("span");\r\n' \
+  '              for (let p=0; p<spans.length; p++) {\r\n' \
+  '                if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {\r\n' \
+  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = null;\r\n' \
+  '                } else {\r\n' \
+  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = nbp;\r\n' \
+  '                  nbp++;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              nbp = wgpu_modified.has(seg_ind) ? 0 : stats[seg_ind].length;\r\n' \
+  '            }\r\n' \
+  '            seg_nbps.set(seg_ind, nbp);\r\n' \
+  '            if (nbp > 0) {\r\n' \
+  '              nbpt += nbp;\r\n' \
+  '              starts.push(nbpt);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          gpustats.starts = starts;\r\n' \
+  '          if (nbpt == 0) {\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
+  '              if (wgpu_wait[0] != null) {\r\n' \
+  '                wgpu_wait[0] = null;\r\n' \
+  '                wgpu_wait[1]();\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '          mms = new Float32Array(nbpt * 2);\r\n' \
+  '          lats = new Float32Array(nbpt);\r\n' \
+  '          teahs = new Float32Array(nbpt * 4);\r\n' \
+  '          let cmms = mms;\r\n' \
+  '          let clats = lats;\r\n' \
+  '          let cteahs = teahs;\r\n' \
+  '          for (const seg_ind of seg_inds) {\r\n' \
+  '            if (seg_nbps.get(seg_ind) == 0) {continue;}\r\n' \
+  '            const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
+  '            const spans = seg.getElementsByTagName("span");\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let latp = null;\r\n' \
+  '            let lonp = null;\r\n' \
+  '            let tb = null;\r\n' \
+  '            let tp = 0;\r\n' \
+  '            let ep = null;\r\n' \
+  '            let ap = null;\r\n' \
+  '            let hp = null;\r\n' \
+  '            for (let p=0; p<spans.length; p++) {\r\n' \
+  '              if (point_stat[parseInt(spans[p].id.slice(5, -5))] == null) {continue;}\r\n' \
+  '              const pc = spans[p].children;\r\n' \
+  '              const lat = parseFloat(pc[1].value);\r\n' \
+  '              const lon = parseFloat(pc[4].value);\r\n' \
+  '              if (ind == 0) {\r\n' \
+  '                cmms[0] = 0;\r\n' \
+  '                cmms[1] = 0;\r\n' \
+  '                lats[0] = lat;\r\n' \
+  '              } else {\r\n' \
+  '                cmms[2 * ind] = lat - latp;\r\n' \
+  '                cmms[2 * ind + 1] = lon - lonp;\r\n' \
+  '                lats[ind] = lat;\r\n' \
+  '              }\r\n' \
+  '              latp = lat;\r\n' \
+  '              lonp = lon;\r\n' \
+  '              const t = Date.parse(pc[13].value);\r\n' \
+  '              if (! isNaN(t)) {\r\n' \
+  '                if (tb == null) {tb = t;}\r\n' \
+  '                tp = max((t - tb) / 1000, tp);\r\n' \
+  '              }\r\n' \
+  '              cteahs[4 * ind] = tp;\r\n' \
+  '              const e = parseFloat(pc[7].value);\r\n' \
+  '              const a = parseFloat(pc[10].value);\r\n' \
+  '              let h = null;\r\n' \
+  '              if (isNaN(a)) {\r\n' \
+  '                cteahs[4 * ind + 2] = ap == null ? 0 : ap;\r\n' \
+  '              } else {\r\n' \
+  '                if (ap == null) {\r\n' \
+  '                  for (let i=0; i<ind; i+=1) {cteahs[4 * i + 2] = a;}\r\n' \
+  '                }\r\n' \
+  '                ap = a;\r\n' \
+  '                cteahs[4 * ind + 2] = a;\r\n' \
+  '                h = a;\r\n' \
+  '              }\r\n' \
+  '              if (isNaN(e)) {\r\n' \
+  '                cteahs[4 * ind + 1] = ep == null ? 0 : ep;\r\n' \
+  '              } else {\r\n' \
+  '                if (ep == null) {\r\n' \
+  '                  for (let i=0; i<ind; i+=1) {cteahs[4 * i + 1] = e;}\r\n' \
+  '                }\r\n' \
+  '                ep = e;\r\n' \
+  '                cteahs[4 * ind + 1] = e;\r\n' \
+  '                if (h == null) {h = e;}\r\n' \
+  '              }\r\n' \
+  '              if (h == null) {\r\n' \
+  '                cteahs[4 * ind + 3] = hp == null ? 0 : hp;\r\n' \
+  '              } else {\r\n' \
+  '                if (hp == null) {\r\n' \
+  '                  for (let i=0; i<ind; i+=1) {cteahs[4 * i + 3] = h;}\r\n' \
+  '                }\r\n' \
+  '                hp = h;\r\n' \
+  '                cteahs[4 * ind + 3] = h;\r\n' \
+  '              }\r\n' \
+  '              ind += 1;\r\n' \
+  '            }\r\n' \
+  '            cmms = cmms.subarray(2 * ind);\r\n' \
+  '            clats = clats.subarray(ind);\r\n' \
+  '            cteahs = cteahs.subarray(4 * ind);\r\n' \
+  '            if (fpan == 0) {\r\n' \
+  '              if (ind > 0) {\r\n' \
+  '                const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '                let dur_c = "--h--mn--s";\r\n' \
+  '                if (tp != null) {\r\n' \
+  '                  const dur_s = tp % 60;\r\n' \
+  '                  const dur_m = ((tp - dur_s) / 60) % 60;\r\n' \
+  '                  const dur_h = (tp - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '                  dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
+  '                }\r\n' \
+  '                seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|.km|" + (ep == null ? "-" : ".") + "m|" + (ap == null ? "-" : ".") + "m) &ndash;";\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          gpustats.mms = mms;\r\n' \
+  '          gpustats.lats = lats;\r\n' \
+  '          gpustats.teahs = teahs;\r\n' \
+  '        } else {\r\n' \
+  '          for (const seg_ind of seg_inds) {\r\n' \
+  '            seg_nbps.set(seg_ind, stats[seg_ind].length);\r\n' \
+  '            nbpt += stats[seg_ind].length;\r\n' \
+  '          }\r\n' \
+  '          if (nbpt == 0) {return;}\r\n' \
+  '        }\r\n' \
+  '        let gdists = null;\r\n' \
+  '        let eags = null;\r\n' \
+  '        let slopestdistspeeds  = null;\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          if (! gpu_part) {wgpu_modified.clear();}\r\n' \
+  '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          gpustats.calc("eagain", "gdist", "slopedist", "speed");\r\n' \
+  '          eags = await gpustats.eags;\r\n' \
+  '          gdists = await gpustats.gdists;\r\n' \
+  '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
+  '          if (wgpu_wait[0] != null) {\r\n' \
+  '            wgpu_wait[0] = null;\r\n' \
+  '            wgpu_wait[1]();\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          const comm = gpu_part ? ["gdist"] : [];\r\n' \
+  '          if (f1) {\r\n' \
+  '            gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '            comm.push("eagain");\r\n' \
+  '            wgpu_modified.delete("1");\r\n' \
+  '          }\r\n' \
+  '          if (f2 || f3) {\r\n' \
+  '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            if (f2 || gpu_part) {comm.push("slopedist");}\r\n' \
+  '            comm.push("speed");\r\n' \
+  '            wgpu_modified.delete("2");\r\n' \
+  '            wgpu_modified.delete("3");\r\n' \
+  '          }\r\n' \
+  '          gpu_part &= stats.reduce((p, c) => p + c.length, 0) > nbpt;\r\n' \
+  '          gpustats.calc(...comm);\r\n' \
+  '          if (f1) {eags = await gpustats.eags;}\r\n' \
+  '          if (f2 || f3) {slopestdistspeeds = await gpustats.slopestdistspeeds;}\r\n' \
+  '        }\r\n' \
+  '        const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
+  '        for (const seg_ind of seg_inds) {\r\n' \
+  '          const nbp = seg_nbps.get(seg_ind);\r\n' \
+  '          if (nbp == 0) {continue;}\r\n' \
+  '          const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
+  '          let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
+  '          const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '          const cstats = stats[seg_ind];\r\n' \
+  '          if (fpan == 0) {\r\n' \
+  '            if (wgpu_modified.has(seg_ind)) {\r\n' \
+  '              stats[seg_ind] = Array(nbp).fill(stat);\r\n' \
+  '            } else {\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
+  '                cstats.push(stat);\r\n' \
+  '              }\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|\\.km\\|/, "|" + ftos(stat[6] / 1000, 2) + "km|").replace(/\\.m\\|/, ftos(stat[2]) + "m|").replace(/\\.m\\)/, ftos(stat[3]) + "m)");\r\n' \
+  '            }\r\n' \
+  '            teahs = teahs.subarray(4 * nbp);\r\n' \
+  '            gdists = gdists.subarray(nbp);\r\n' \
+  '            eags = eags.subarray(2 * nbp);\r\n' \
+  '            slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '          } else if (! wgpu_modified.has(seg_ind)) {\r\n' \
+  '            if (f2) {\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                let stat_ = cstats[p];\r\n' \
+  '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
+  '                stat_[5] = slopestdistspeeds[4 * p + 1];\r\n' \
+  '                stat_[6] = (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2]));\r\n' \
+  '                stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '                stat = stat_;\r\n' \
+  '              }\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\|.*?km\\|/, "|" + ftos(stat[6] / 1000, 2) + "km|");\r\n' \
+  '            } else if (f3) {\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                cstats[p][7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '              }\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '            if (f1) {\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = cstats[p];\r\n' \
+  '                stat[2] = eags[2 * p];\r\n' \
+  '                stat[3] = eags[2 * p + 1];\r\n' \
+  '              }\r\n' \
+  '              eags = eags.subarray(2 * nbp);\r\n' \
+  '              seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, ftos(stat[2]) + "m|").replace(/\\d+m\\)/, ftos(stat[3]) + "m)");\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            if (f2 || f3) {slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);}\r\n' \
+  '            if (f1) {eags = eags.subarray(2 * nbp);}\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (wgpu_modified.size == 0) {whole_calc();}\r\n' \
+  '      }\r\n' \
+  '      function calc_modified(...segs) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          (segs.length > 0 ? segs : Array.from(document.getElementById("pointsform").children)).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '          fence(segments_calc_wgpu);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(...segs);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function calc_changed(fpan) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          wgpu_modified.add(fpan.toString());\r\n' \
+  '          fence(segments_calc_wgpu, fpan);\r\n' \
+  '        } else {\r\n' \
+  '          segments_calc(fpan);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function segment_checkbox(seg) {\r\n' \
   '        if (seg.checked) {\r\n' \
   '          document.getElementById("track" + seg.id.substring(7)).style.display = "";\r\n' \
-  '          seg.parentNode.style.textDecoration="inherit";\r\n' \
+  '          seg.parentNode.style.textDecorationLine = "";\r\n' \
   '        } else {\r\n' \
   '          if (seg.id != focused) {\r\n' \
   '            document.getElementById("track" + seg.id.substring(7)).style.display = "none";\r\n' \
   '          }\r\n' \
-  '          seg.parentNode.style.textDecoration="line-through";\r\n' \
+  '          seg.parentNode.style.textDecorationLine = "line-through";\r\n' \
   '        }\r\n' \
   '        let spans = seg.parentNode.getElementsByTagName("span");\r\n' \
   '        for (let i=0; i<spans.length;i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
-  '        segments_calc(seg.parentNode);\r\n' \
+  '        calc_modified(seg.parentNode);\r\n' \
   '      }\r\n' \
   '      function segment_renum() {\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
@@ -11576,6 +12562,7 @@ class GPXTweakerWebInterfaceServer():
   '        let path_foc = track_foc.firstElementChild;\r\n' \
   '        let track = track_foc.cloneNode(true);\r\n' \
   '        let path = track.firstElementChild;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        if (focused.substring(0, 3) == "seg") {\r\n' \
   '          seg.id = pref + "cont";\r\n' \
   '          seg.children[0].id = pref;\r\n' \
@@ -11642,7 +12629,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("pointsform").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          segment_renum();\r\n' \
   '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
-  '          segments_calc(seg);\r\n' \
+  '          calc_modified(seg);\r\n' \
   '          element_click(null, document.getElementById(seg.id.replace("cont", "desc")));\r\n' \
   '          show_msg("{#jmsegmentcut1#}", 2);\r\n' \
   '          return;\r\n' \
@@ -11679,7 +12666,7 @@ class GPXTweakerWebInterfaceServer():
   '        path.setAttribute("d", d_left[0]);\r\n' \
   '        handle.insertBefore(track, track_foc);\r\n' \
   '        if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), scrollmode == 2);}\r\n' \
-  '        segments_calc(seg_foc, seg);\r\n' \
+  '        calc_modified(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '      }\r\n' \
   '      function segment_absorb() {\r\n' \
@@ -11728,8 +12715,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
   '        seg_foc.firstElementChild.scrollIntoView({block:"start"});\r\n' \
   '        document.getElementById("track" + seg.id.slice(7, -4)).style.display = "none";\r\n' \
-  '        seg.style.textDecoration="line-through";\r\n' \
-  '        segments_calc(seg_foc, seg);\r\n' \
+  '        seg.style.textDecorationLine = "line-through";\r\n' \
+  '        calc_modified(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_up() {\r\n' \
@@ -11758,6 +12745,7 @@ class GPXTweakerWebInterfaceServer():
   '        let maxtime = null;\r\n' \
   '        let spans_foc = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
   '        let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let p=0; p<spans_foc.length; p++) {\r\n' \
   '          if (! spans_foc[p].parentNode.firstElementChild.checked || spans_foc[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
   '          let t = Date.parse(document.getElementById(spans_foc[p].id.replace("focus", "time")).value);\r\n' \
@@ -11812,7 +12800,7 @@ class GPXTweakerWebInterfaceServer():
   '        handle.insertBefore(document.getElementById("track" + seg_foc.id.slice(7, -4)), document.getElementById("track" + seg.id.slice(7, -4)));\r\n' \
   '        if (focused != seg_foc.id.slice(0, -4)) {element_click(null, seg_foc.firstElementChild.nextElementSibling);}\r\n' \
   '        segment_renum();\r\n' \
-  '        segments_calc(seg, seg_foc);\r\n' \
+  '        calc_modified(seg_foc, seg);\r\n' \
   '        show_msg("{#jmelementup2#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_down() {\r\n' \
@@ -11850,6 +12838,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {return;}\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = segs[s].getElementsByTagName("span");\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
@@ -11913,7 +12902,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (! whole) {\r\n' \
-  '          segments_calc(segs[0]);\r\n' \
+  '          calc_modified(segs[0]);\r\n' \
   '          show_msg("{#jmsegmentreverse1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
@@ -11971,7 +12960,7 @@ class GPXTweakerWebInterfaceServer():
   '            dot_r = dot;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        segments_calc();\r\n' \
+  '        calc_modified(...segs);\r\n' \
   '        segment_renum();\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
@@ -12032,82 +13021,83 @@ class GPXTweakerWebInterfaceServer():
   '              d_f = d_f + " " + dots[p];\r\n' \
   '              continue;\r\n' \
   '            }\r\n' \
-  '            let ndir = [0, 0];\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let pr = pp;\r\n' \
-  '            for (let pn=p; pn<positions.length; pn++) {\r\n' \
-  '              if (positions[pn] == null) {continue;}\r\n' \
-  '              dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
-  '              pr = pn;\r\n' \
-  '              if (dist > sdrange) {break;}\r\n' \
-  '              ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
-  '              ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
-  '            }\r\n' \
-  '            let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
-  '            if (ndirl > 0) {\r\n' \
-  '              ndir[0] /= ndirl;\r\n' \
-  '              ndir[1] /= ndirl;\r\n' \
-  '              if (dir == null) {dir = ndir;}\r\n' \
-  '              let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
-  '              let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
-  '              if (pdirl > 0) {\r\n' \
-  '                let pmod = false;\r\n' \
-  '                pdir[0] /= pdirl;\r\n' \
-  '                pdir[1] /= pdirl;\r\n' \
-  '                let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
-  '                let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
-  '                let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
-  '                let pcos = dir[0] * pdir[0] + dir[1] * pdir[1];\r\n' \
-  '                if (nsin * psin < 0) {\r\n' \
-  '                  if (pcos < 0) {\r\n' \
-  '                    if (ncos < 0) {\r\n' \
-  '                      pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
-  '                      dir[0] = -dir[0];\r\n' \
-  '                      dir[1] = -dir[1];\r\n' \
+  '            let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
+  '            let pdirl = Math.sqrt(pdir[0]**2 + pdir[1]**2);\r\n' \
+  '            let pmod = false;\r\n' \
+  '            if (pdirl <= sdrange) {\r\n' \
+  '              let ndir = [pdir[0], pdir[1]];\r\n' \
+  '              let dist = 0;\r\n' \
+  '              let pr = p;\r\n' \
+  '              for (let pn=p+1; pn<positions.length; pn++) {\r\n' \
+  '                if (positions[pn] == null) {continue;}\r\n' \
+  '                dist += Math.sqrt((positions[pn][0] - positions[pr][0]) ** 2 + (positions[pn][1] - positions[pr][1]) ** 2);\r\n' \
+  '                if (dist > sdrange) {break;}\r\n' \
+  '                pr = pn;\r\n' \
+  '                ndir[0] += positions[pn][0] - positions[pp][0];\r\n' \
+  '                ndir[1] += positions[pn][1] - positions[pp][1];\r\n' \
+  '              }\r\n' \
+  '              let ndirl = Math.sqrt(ndir[0] ** 2 + ndir[1] ** 2);\r\n' \
+  '              if (ndirl > 0) {\r\n' \
+  '                ndir[0] /= ndirl;\r\n' \
+  '                ndir[1] /= ndirl;\r\n' \
+  '                if (dir == null) {dir = ndir;}\r\n' \
+  '                if (pdirl > 0) {\r\n' \
+  '                  pdir[0] /= pdirl;\r\n' \
+  '                  pdir[1] /= pdirl;\r\n' \
+  '                  let nsin = dir[0] * ndir[1] - dir[1] * ndir[0];\r\n' \
+  '                  let ncos = dir[0] * ndir[0] + dir[1] * ndir[1];\r\n' \
+  '                  let psin = dir[0] * pdir[1] - dir[1] * pdir[0];\r\n' \
+  '                  let pcos = dir[0] * pdir[0] + dir[1] * pdir[1];\r\n' \
+  '                  if (nsin * psin < 0) {\r\n' \
+  '                    if (pcos < 0) {\r\n' \
+  '                      if (ncos < 0) {\r\n' \
+  '                        pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                        dir[0] = -dir[0];\r\n' \
+  '                        dir[1] = -dir[1];\r\n' \
+  '                      } else {\r\n' \
+  '                        pdirl = 0;\r\n' \
+  '                      }\r\n' \
   '                    } else {\r\n' \
-  '                      pdirl = 0;\r\n' \
+  '                      pdirl *= pcos;\r\n' \
   '                    }\r\n' \
+  '                    positions[p][0] = positions[pp][0] + pdirl * dir[0];\r\n' \
+  '                    positions[p][1] = positions[pp][1] + pdirl * dir[1];\r\n' \
+  '                    pmod = true;\r\n' \
+  '                  } else if (ncos > pcos) {\r\n' \
+  '                    pdirl = Math.max(0, pdirl * (pdir[0] * ndir[0] + pdir[1] * ndir[1]));\r\n' \
+  '                    positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
+  '                    positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
+  '                    pmod = true;\r\n' \
+  '                    dir = ndir;\r\n' \
+  '                  } else {\r\n' \
+  '                    dir = pdir;\r\n' \
   '                  }\r\n' \
-  '                  positions[p][0] = positions[pp][0] + pdirl * dir[0];\r\n' \
-  '                  positions[p][1] = positions[pp][1] + pdirl * dir[1];\r\n' \
-  '                  pmod = true;\r\n' \
-  '                } else if (ncos > pcos) {\r\n' \
-  '                  pdirl = Math.max(0, pdirl * (pdir[0] * ndir[0] + pdir[1] * ndir[1]));\r\n' \
-  '                  positions[p][0] = positions[pp][0] + pdirl * ndir[0];\r\n' \
-  '                  positions[p][1] = positions[pp][1] + pdirl * ndir[1];\r\n' \
-  '                  pmod = true;\r\n' \
-  '                  dir = ndir;\r\n' \
-  '                } else {\r\n' \
-  '                  dir = pdir;\r\n' \
+  '                  if (pmod) {\r\n' \
+  '                    focused = foc;\r\n' \
+  '                    save_old();\r\n' \
+  '                    [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
+  '                    hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                    save_old();\r\n' \
+  '                    point_edit(false, false, false, false);\r\n' \
+  '                    let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '                    dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
+  '                    dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
+  '                    d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
+  '                    nmod++;\r\n' \
+  '                  }\r\n' \
   '                }\r\n' \
-  '                if (pmod) {\r\n' \
-  '                  focused = foc;\r\n' \
-  '                  save_old();\r\n' \
-  '                  [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  save_old();\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
-  '                  let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
-  '                  dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
-  '                  dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
-  '                  d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
-  '                  nmod++;\r\n' \
-  '                } else {\r\n' \
-  '                  d_f = d_f + " " + dots[p];\r\n' \
-  '                }\r\n' \
-  '              } else {\r\n' \
-  '                d_f = d_f + " " + dots[p];\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              dir = [pdir[0] / pdirl, pdir[1] / pdirl];\r\n' \
   '            }\r\n' \
+  '            if (! pmod) {d_f = d_f + " " + dots[p];}\r\n' \
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          if (d_f.substring(1).indexOf("M") < 0) {d_f = d_f.replace("L", "M");}\r\n' \
   '          path.setAttribute("d", d_f);\r\n' \
   '        }\r\n' \
   '        if (seg_foc != null) {focused = seg_foc.id.slice(0, -4);} else {focused = "";}\r\n' \
-  '        segments_calc(...segs);\r\n' \
+  '        calc_modified(...segs);\r\n' \
   '        show_msg((seg_foc!=null?"{#jmsegmentfilter1#}":"{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
   '      }\r\n' \
   '      function error_ecb() {\r\n' \
@@ -12161,7 +13151,9 @@ class GPXTweakerWebInterfaceServer():
   '          p++;\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
-  '        if (segs.length > 0) {segments_calc(...segs);}\r\n' \
+  '        if (segs.length > 0) {\r\n' \
+  '          calc_modified(...segs);\r\n' \
+  '        }\r\n' \
   '        return np;\r\n'\
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
@@ -12267,7 +13259,11 @@ class GPXTweakerWebInterfaceServer():
   '          point_edit(false, false, false, false);\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
-  '        if (seg != null) {segments_calc(seg);} else {segments_calc();}\r\n' \
+  '        if (seg != null) {\r\n' \
+  '          calc_modified(seg);\r\n' \
+  '        } else {\r\n' \
+  '          calc_modified();\r\n' \
+  '        }\r\n' \
   '        show_msg(msg, 2);\r\n' \
   '      }\r\n' \
   '      function alt_join() {\r\n' \
@@ -12288,6 +13284,7 @@ class GPXTweakerWebInterfaceServer():
   '        let etime = null;\r\n' \
   '        let ralt = null;\r\n' \
   '        let sp = 0;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let p=0; p<spans.length; p++) {\r\n' \
   '          let pid = spans[p].id.slice(0, -5);\r\n' \
   '          if (pt_foc != null && pt_foc.id.slice(0, -4) != pid && stime == null) {continue;}\r\n' \
@@ -12363,7 +13360,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (pt_foc) {focused = pt_foc.id.slice(0, -4);}\r\n' \
   '        if (! pt_foc) {focused = seg_foc.id.slice(0, -4);}\r\n' \
-  '        segments_calc(seg_foc);\r\n' \
+  '        calc_modified(seg_foc);\r\n' \
   '        show_msg(((pt_foc==null)?"{#jmaltitudesjoin1#}":"{#jmaltitudesjoin2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function datetime_interpolate(remove=false) {\r\n' \
@@ -12419,11 +13416,12 @@ class GPXTweakerWebInterfaceServer():
   '            msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
   '            if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '            if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '            segments_calc(...segs);\r\n' \
+  '            calc_modified(...segs);\r\n' \
   '            show_msg(msg, 2);\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
   '          let lc = -1;\r\n' \
@@ -12496,7 +13494,7 @@ class GPXTweakerWebInterfaceServer():
   '                  }\r\n' \
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
-  '                    segments_calc(segs[s]);\r\n' \
+  '                    calc_modified(segs[s]);\r\n' \
   '                    show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
@@ -12516,7 +13514,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
   '                  save_old();\r\n' \
-  '                  segments_calc(segs[s]);\r\n' \
+  '                  calc_modified(segs[s]);\r\n' \
   '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
@@ -12530,14 +13528,14 @@ class GPXTweakerWebInterfaceServer():
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          if (pt_foc != null) {\r\n' \
-  '            segments_calc(segs[s]);\r\n' \
+  '            calc_modified(segs[s]);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"{#jmdatetime2#}":"{#jmdatetime3#}");\r\n' \
   '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '        segments_calc(...segs);\r\n' \
+  '        calc_modified(...segs);\r\n' \
   '        if (msg) {show_msg(msg, 2);}\r\n' \
   '      }\r\n' \
   '      function switch_dots() {\r\n' \
@@ -12548,8 +13546,13 @@ class GPXTweakerWebInterfaceServer():
   '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
   '        graph_ip = [];\r\n' \
+  '        if (wgpu_modified.size > 0) {\r\n' \
+  '          graph_point();\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
   '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
   '        let segs = document.getElementById("pointsform").children;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let s=0; s<segs.length; s++) {\r\n' \
   '          if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
   '          let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
@@ -12604,7 +13607,7 @@ class GPXTweakerWebInterfaceServer():
   '          let el_label = el_input.nextElementSibling;\r\n' \
   '          el_label.htmlFor = pref;\r\n' \
   '          el_label.id = pref + "desc";\r\n' \
-  '          el_label.style.textDecoration = "inherit";\r\n' \
+  '          el_label.style.textDecorationLine = "inherit";\r\n' \
   '          let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
   '          el_span.id = pref + "focus";\r\n' \
   '          el_span.style="";\r\n' \
@@ -12678,7 +13681,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (d_left.indexOf("M", 1) < 0) {d_right =  d_right.replace("L", "M");}\r\n' \
   '        d = d_left.trimEnd() + d_right;\r\n' \
   '        path.setAttribute("d", d);\r\n' \
-  '        segments_calc(document.getElementById(foc).parentNode.parentNode);\r\n' \
+  '        calc_modified(seg);\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
   '        return true;\r\n'\
@@ -12755,7 +13758,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
   '        } else if (mode3d) {\r\n' \
-  '          window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
+  '          window.open("http://" + host + location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
@@ -12859,7 +13862,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
   '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):refresh_graph(true)">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):switch_graph()?fence(refresh_graph):null">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
   '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
@@ -12898,7 +13901,7 @@ class GPXTweakerWebInterfaceServer():
   '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -12931,7 +13934,7 @@ class GPXTweakerWebInterfaceServer():
   '        let elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (document.activeElement) {\r\n' \
-  '          if (document.activeElement.nodeName != "BODY" && (e.button == 2 || elt.id.indexOf("dot") < 0 || (document.activeElement.id || "").slice(0, -2) != elt.id.replace("dot", "point") + "l")) {document.activeElement.blur();}\r\n' \
+  '          if (document.activeElement.nodeName.toUpperCase() != "BODY" && (e.button == 2 || elt.id.indexOf("dot") < 0 || (document.activeElement.id || "").slice(0, -2) != elt.id.replace("dot", "point") + "l")) {document.activeElement.blur();}\r\n' \
   '        }\r\n' \
   '        if (e.button == 0) {\r\n' \
   '          if (elt.id == "view") {\r\n' \
@@ -13013,7 +14016,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            if (hand.id.indexOf("way") < 0) {\r\n' \
-  '              segments_calc(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '              calc_modified(document.getElementById(focused).parentNode.parentNode);\r\n' \
   '              if (e.ctrlKey) {build_path();}\r\n' \
   '            } else {\r\n' \
   '              wpt_calc();\r\n' \
@@ -13021,7 +14024,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (hand.id == "gbarc") {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
-  '            graph_point();\r\n' \
+  '            fence(graph_point);\r\n' \
   '          } else {\r\n' \
   '            viewpane.style.cursor = "";\r\n' \
   '            viewpane.releasePointerCapture(pointer_e);\r\n' \
@@ -13174,6 +14177,24 @@ class GPXTweakerWebInterfaceServer():
   '          if (scrollmode > 0) {scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function window_resize() {\r\n' \
+  '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
+  '        rescale();\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          let graph = document.getElementById("graph");\r\n' \
+  '          if (graph.style.display == "none") {return;}\r\n' \
+  '          let graphc = document.getElementById("graphc");\r\n' \
+  '          let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '          let gheight = graph.offsetHeight;\r\n' \
+  '          graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '          graphc.setAttribute("height", gheight.toString());\r\n' \
+  '          graph_px = null;\r\n' \
+  '          graph_point();\r\n' \
+  '          fence(refresh_graph);\r\n' \
+  '        } else {\r\n' \
+  '          refresh_graph();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
@@ -13188,11 +14209,11 @@ class GPXTweakerWebInterfaceServer():
   '          if (prev_state[4] == "true") {switch_dots();}\r\n' \
   '        }\r\n' \
   '        point_desc();\r\n' \
-  '        window.onresize = (e) => {document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";rescale();refresh_graph()};\r\n' \
+  '        window.onresize = window_resize;\r\n' \
   '        document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
   '        document.getElementById("waypoints").style.height = "";\r\n' \
   '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '        segments_calc();\r\n' \
+  '        calc_modified();\r\n' \
   '        wpt_calc();\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
   '//        window.onunload = function () {window.history.replaceState({}, "", "/GPXExplorer.html")};\r\n' \
@@ -13214,6 +14235,8 @@ class GPXTweakerWebInterfaceServer():
   '      var portmin = ##PORTMIN##;\r\n' \
   '      var portmax = ##PORTMAX##;\r\n' \
   '      var gpucomp = ##GPUCOMP##;\r\n' \
+  '      var webgpu = ##WEBGPU##;\r\n' \
+  '      var webgpu3d = ##V3DWEBGPU##;\r\n' \
   '      var sessionid = "##SESSIONID##";\r\n' \
   '      var mode = "##MODE##";\r\n' \
   '      var vminx = ##VMINX##;\r\n' \
@@ -13272,7 +14295,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_SEGMENT_TEMPLATE = \
   '<div id="segment%scont">\r\n' \
   '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment">\r\n' \
-  '                    <label for="segment%s" id="segment%sdesc" style="text-decoration:inherit;" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
+  '                    <label for="segment%s" id="segment%sdesc" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
   '                    <br>'
   HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE.format_map(LSTRINGS['interface'])
   HTML_PATH_TEMPLATE = \
@@ -13308,11 +14331,16 @@ class GPXTweakerWebInterfaceServer():
   '        border:none;\r\n' \
   '        background-color:transparent;\r\n' \
   '        vertical-align:top;\r\n' \
+  '        padding-left: 4px;\r\n' \
+  '        padding-right: 4px;\r\n' \
   '        color:inherit;\r\n' \
   '        font-size:inherit;\r\n' \
   '      }\r\n' \
   '      button:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      button:disabled {\r\n' \
+  '        cursor:inherit;\r\n' \
   '      }\r\n' \
   '      input {\r\n' \
   '        background-color:rgb(30,30,35);\r\n' \
@@ -13322,6 +14350,12 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      input:enabled {\r\n' \
   '        cursor:pointer;\r\n' \
+  '      }\r\n' \
+  '      input:disabled {\r\n' \
+  '        cursor:inherit;\r\n' \
+  '      }\r\n' \
+  '      label {\r\n' \
+  '        cursor:inherit;\r\n' \
   '      }\r\n' \
   '      input[type=range] {\r\n' \
   '        width:9em;\r\n' \
@@ -13363,6 +14397,12 @@ class GPXTweakerWebInterfaceServer():
   '        width:100%;\r\n' \
   '        font-size:90%;\r\n' \
   '        font-weight:bold;\r\n' \
+  '      }\r\n' \
+  '      label[for$=cursor_zoom] {\r\n' \
+  '        font-size:120%;\r\n' \
+  '      }\r\n' \
+  '      #cursor_zoom:enabled+label {\r\n' \
+  '        cursor:all-scroll;\r\n' \
   '      }\r\n' \
   '      input[id$=_info] {\r\n' \
   '        position:absolute;\r\n' \
@@ -13625,8 +14665,7 @@ class GPXTweakerWebInterfaceServer():
   '        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, gl_texture, 0);\r\n' \
   '        return gl_texture;\r\n' \
   '      }\r\n'
-  HTML_3D_MAP_TEMPLATE = \
-  '        function create_map() {\r\n' \
+  HTML_3D_CMAP_TEMPLATE = \
   '          r_map.nextElementSibling.innerHTML = "{#jtexturemaploading#}".replace("%s", "0");\r\n' \
   '          let nrow = tmaxrow + 1 - tminrow;\r\n' \
   '          let ncol = tmaxcol + 1 - tmincol;\r\n' \
@@ -13643,14 +14682,6 @@ class GPXTweakerWebInterfaceServer():
   '          mwidth = cnv2d.width;\r\n' \
   '          ctx.fillStyle = "RGB(0,127,0)";\r\n' \
   '          ctx.fillRect(0, 0, mwidth, mheight);\r\n' \
-  '          function map_complete() {\r\n' \
-  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
-  '            map_texture = texture_load(gl.TEXTURE0, cnv2d);\r\n' \
-  '            gl.flush();\r\n' \
-  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
-  '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
-  '            r_map.disabled = false;\r\n' \
-  '          }\r\n' \
   '          let crow = tminrow;\r\n' \
   '          let prom_res = null;\r\n' \
   '          function terr_cb() {\r\n' \
@@ -13687,9 +14718,100 @@ class GPXTweakerWebInterfaceServer():
   '              crow++;\r\n' \
   '              add_row_tile();\r\n' \
   '            }\r\n' \
-  '          }\r\n' \
+  '          }\r\n'
+  HTML_3D_MAP_TEMPLATE = \
+  '        function create_map() {\r\n' + HTML_3D_CMAP_TEMPLATE + \
   '          setTimeout(add_row_tile, 1);\r\n' \
+  '          function map_complete() {\r\n' \
+  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);\r\n' \
+  '            map_texture = texture_load(gl.TEXTURE0, cnv2d);\r\n' \
+  '            gl.flush();\r\n' \
+  '            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);\r\n' \
+  '            r_map.nextElementSibling.innerHTML = "{#jtexturemap#}";\r\n' \
+  '            r_map.disabled = false;\r\n' \
+  '          }\r\n' \
   '        }\r\n'
+  HTML_3DP_TRACK_TEMPLATE = \
+  '        function create_track() {\r\n' \
+  '          function move_to(x, y, d=true) {\r\n' \
+  '            if (d) {\r\n' \
+  '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '            } else {\r\n' \
+  '              ctx.moveTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          const ar_f = 0.1;\r\n' \
+  '          const ar_s = 0.2;\r\n' \
+  '          let cnv2d = document.createElement("canvas");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          ctx.lineWidth = Math.max(1, tr_size / 256);\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dr = false;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let ar_d = ar_f;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ar = false;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (! dr) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10 * tr_size / 2048, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                move_to(px, py, false);\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                }\r\n' \
+  '                if (dist < ar_d) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
+  '                  ar = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {\r\n' \
+  '                    ar = true;\r\n' \
+  '                  } else if (trpositions[s][ind] == null || trpositions[s][ind + 1] == null) {\r\n' \
+  '                    ar = true;\r\n' \
+  '                  }\r\n' \
+  '                } else {\r\n' \
+  '                  ar = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - ar_d) * tx;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - ar_d) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                  ar_d = ar_s;\r\n' \
+  '                }\r\n' \
+  '                move_to(px, py);\r\n' \
+  '                if (ar && tx != null && ty != null) {\r\n' \
+  '                  move_to(px - 0.025 * tx - 0.015 * ty, py - 0.025 * ty + 0.015 * tx);\r\n' \
+  '                  move_to(px - 0.025 * tx + 0.015 * ty, py - 0.025 * ty - 0.015 * tx, false);\r\n' \
+  '                  move_to(px, py);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              dr = true;\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '          }\r\n'
   HTML_3D_ROT_TEMPLATE = \
   '      function canvas_rotate(number=null) {\r\n' \
   '        if (number != null) {\r\n' \
@@ -13746,6 +14868,9 @@ class GPXTweakerWebInterfaceServer():
   '          vnormals = new Float32Array((lvy - 1) * (lvx + 1) * 6);\r\n' \
   '          let i = 0;\r\n' \
   '          let n = 0;\r\n' \
+  '          let min = Math.min;\r\n' \
+  '          let max = Math.max;\r\n' \
+  '          let sqrt = Math.sqrt;\r\n' \
   '          for (let iy=0; iy<lvy-1; iy++) {\r\n' \
   '            for (let ix=0; ix<lvx; ix++) {\r\n' \
   '              vpositions[i] = vx[ix];\r\n' \
@@ -13755,10 +14880,10 @@ class GPXTweakerWebInterfaceServer():
   '              vpositions[i + 4] = vy[iy + 1];\r\n' \
   '              vpositions[i + 5] = vz[(iy + 1) * lvx + ix];\r\n' \
   '              if (iy == 0) {\r\n' \
-  '                vnormals[i] = (vz[iy * lvx + Math.min(ix + 1, lvx - 1)] - vz[iy * lvx + Math.max(ix - 1, 0)]) / (vx[Math.min(ix + 1, lvx - 1)] - vx[Math.max(ix - 1, 0)]);\r\n' \
-  '                vnormals[i + 1] = (vz[(iy + 1) * lvx + ix] - vz[Math.max(iy - 1, 0) * lvx + ix]) / (vy[iy + 1] - vy[Math.max(iy - 1, 0)]);\r\n' \
+  '                vnormals[i] = (vz[iy * lvx + min(ix + 1, lvx - 1)] - vz[iy * lvx + max(ix - 1, 0)]) / (vx[min(ix + 1, lvx - 1)] - vx[max(ix - 1, 0)]);\r\n' \
+  '                vnormals[i + 1] = (vz[(iy + 1) * lvx + ix] - vz[max(iy - 1, 0) * lvx + ix]) / (vy[iy + 1] - vy[max(iy - 1, 0)]);\r\n' \
   '                vnormals[i + 2] = 1;\r\n' \
-  '                n = Math.sqrt(vnormals[i]**2 + vnormals[i + 1]**2 + 1);\r\n' \
+  '                n = sqrt(vnormals[i]**2 + vnormals[i + 1]**2 + 1);\r\n' \
   '                vnormals[i] /= -n;\r\n' \
   '                vnormals[i + 1] /= -n;\r\n' \
   '                vnormals[i + 2] /= n;\r\n' \
@@ -13767,10 +14892,10 @@ class GPXTweakerWebInterfaceServer():
   '                vnormals[i + 1] = vnormals[i + 4 - 6 * (lvx + 1)];\r\n' \
   '                vnormals[i + 2] = vnormals[i + 5 - 6 * (lvx + 1)];\r\n' \
   '              }\r\n' \
-  '              vnormals[i + 3] = (vz[(iy + 1) * lvx + Math.min(ix + 1, lvx - 1)] - vz[(iy + 1) * lvx + Math.max(ix - 1, 0)]) / (vx[Math.min(ix + 1, lvx - 1)] - vx[Math.max(ix - 1, 0)]);\r\n' \
-  '              vnormals[i + 4] = (vz[Math.min(iy + 2, lvy - 1) * lvx + ix] - vz[iy * lvx + ix]) / (vy[Math.min(iy + 2, lvy - 1)] - vy[iy]);\r\n' \
+  '              vnormals[i + 3] = (vz[(iy + 1) * lvx + min(ix + 1, lvx - 1)] - vz[(iy + 1) * lvx + max(ix - 1, 0)]) / (vx[min(ix + 1, lvx - 1)] - vx[max(ix - 1, 0)]);\r\n' \
+  '              vnormals[i + 4] = (vz[min(iy + 2, lvy - 1) * lvx + ix] - vz[iy * lvx + ix]) / (vy[min(iy + 2, lvy - 1)] - vy[iy]);\r\n' \
   '              vnormals[i + 5] = 1;\r\n' \
-  '              n = Math.sqrt(vnormals[i + 3]**2 + vnormals[i + 4]**2 + 1);\r\n' \
+  '              n = sqrt(vnormals[i + 3]**2 + vnormals[i + 4]**2 + 1);\r\n' \
   '              vnormals[i + 3] /= -n;\r\n' \
   '              vnormals[i + 4] /= -n;\r\n' \
   '              vnormals[i + 5] /= n;\r\n' \
@@ -13799,7 +14924,7 @@ class GPXTweakerWebInterfaceServer():
   '            i += nspts;\r\n' \
   '          }\r\n' \
   '          canvas_init();\r\n'
-  HTML_3D_TOGGLE_TEMPLATE = \
+  HTML_3D_TOGGLE_ROT_TEMPLATE = \
     '      function toggle_rotation(number=null) {\r\n' \
   '        if (c_rangle.disabled) {\r\n' \
   '          window.clearInterval(rep_rot);\r\n' \
@@ -13826,13 +14951,8 @@ class GPXTweakerWebInterfaceServer():
   '          nlrot = 0;\r\n' \
   '          rep_lrot = window.setInterval(function() {canvas_lrotate(number);}, 100);\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function toggle_filling(mode) {\r\n' \
-  '        if (mode == fillmode) {return;};\r\n' \
-  '        fillmode = mode;\r\n' \
-  '        canvas_redraw();\r\n' \
   '      }\r\n'
-  HTML_3DP_TEMPLATE = \
+  HTML_3DP_DOC_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
@@ -13852,8 +14972,8 @@ class GPXTweakerWebInterfaceServer():
   '            <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;"></canvas>\r\n' \
   '          </div>\r\n' \
   '          <div style="position:absolute;top:4px;right:calc(1.5em + 24px);width:calc(4.5em + 2px);height:calc(1.5em + 6px);overflow:hidden;transform:rotate(-90deg);transform-origin:top right;background-color:rgba(40,45,50,0.5)">\r\n' \
-  '            <label for="cursor_zoom" style="font-size:120%;cursor:all-scroll;">&#128270;&#xfe0e;</label>\r\n' \
   '            <input type="range" id="cursor_zoom" min="0" max="4" step="1" value="0" disabled style="position:absolute;top:0;right:0;width:3em;height:1.5em;" oninput="set_param(\'zo\')">\r\n' \
+  '            <label for="cursor_zoom">&#128270;&#xfe0e;</label>\r\n' \
   '          </div>\r\n' \
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
@@ -13870,7 +14990,19 @@ class GPXTweakerWebInterfaceServer():
   '        </td>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
-  '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
+  '    <script>\r\n'
+  HTML_3D_DECLARATIONS_TEMPLATE = \
+  '      var portmin = ##PORTMIN##;\r\n' \
+  '      var portmax = ##PORTMAX##;\r\n' \
+  '      var zfactmax = ##ZFACTMAX##;\r\n' \
+  '      var mpos = [##MPOS##];\r\n' \
+  '      var tminrow = ##TMINROW##;\r\n' \
+  '      var tmincol = ##TMINCOL##;\r\n' \
+  '      var tmaxrow = ##TMAXROW##;\r\n' \
+  '      var tmaxcol = ##TMAXCOL##;' \
+  '      var scale = ##SCALE##;\r\n' \
+  '      var ppos = [##PPOS##];'
+  HTML_3DP_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_GLOBALVARS_TEMPLATE + \
   '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["lvposition1", ["vec4", 3, 24, 0, 1]], ["lvposition2", ["vec4", 3, 24, 12, 1]], ["lvoffset", ["vec2", 2]]]);\r\n' \
   '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
   '      var gl_dynamic_uniforms = new Map([["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"], ["ltype", "int"], ["hwidth", "float"]]);\r\n' \
@@ -14088,87 +15220,7 @@ class GPXTweakerWebInterfaceServer():
   '          precision highp float;\r\n' \
   '          void main() {\r\n' \
   '          }\r\n' \
-  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
-  '        function create_track() {\r\n' \
-  '          function move_to(x, y, d=true) {\r\n' \
-  '            if (d) {\r\n' \
-  '              ctx.lineTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
-  '            } else {\r\n' \
-  '              ctx.moveTo(tr_size * (x + 1) / 2, tr_size * (y + 1) / 2);\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          const ar_f = 0.1;\r\n' \
-  '          const ar_s = 0.2;\r\n' \
-  '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
-  '          cnv2d.height = tr_size;\r\n' \
-  '          cnv2d.width = tr_size;\r\n' \
-  '          ctx.strokeStyle = "red";\r\n' \
-  '          ctx.lineWidth = Math.max(1, tr_size / 256);\r\n' \
-  '          ctx.lineJoin = "round";\r\n' \
-  '          ctx.lineCap = "round";\r\n' \
-  '          ctx.fillStyle = "red";\r\n' \
-  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
-  '            let ind = 0;\r\n' \
-  '            let dr = false;\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let ar_d = ar_f;\r\n' \
-  '            let px = null;\r\n' \
-  '            let py = null;\r\n' \
-  '            let tx = null;\r\n' \
-  '            let ty = null;\r\n' \
-  '            let td = null;\r\n' \
-  '            let tdx = null;\r\n' \
-  '            let tdy = null;\r\n' \
-  '            let ar = false;\r\n' \
-  '            while (ind < trpositions[s].length - 1) {\r\n' \
-  '              if (! dr) {\r\n' \
-  '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind + 1];\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (px + 1) / 2, tr_size * (py + 1) / 2, 10 * tr_size / 2048, 0, 2 * Math.PI);\r\n' \
-  '                ctx.stroke()\r\n' \
-  '                ctx.fill();\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                move_to(px, py, false);\r\n' \
-  '                ind += 2;\r\n' \
-  '              } else {\r\n' \
-  '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
-  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
-  '                if (td > 0) {\r\n' \
-  '                  tx = tdx / td;\r\n' \
-  '                  ty = tdy / td;\r\n' \
-  '                  dist += td;\r\n' \
-  '                }\r\n' \
-  '                if (dist < ar_d) {\r\n' \
-  '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind + 1];\r\n' \
-  '                  ar = false;\r\n' \
-  '                  ind += 2;\r\n' \
-  '                  if (ind >= trpositions[s].length - 1) {\r\n' \
-  '                    ar = true;\r\n' \
-  '                  } else if (trpositions[s][ind] == null || trpositions[s][ind + 1] == null) {\r\n' \
-  '                    ar = true;\r\n' \
-  '                  }\r\n' \
-  '                } else {\r\n' \
-  '                  ar = true;\r\n' \
-  '                  px = trpositions[s][ind] - (dist - ar_d) * tx;\r\n' \
-  '                  py = trpositions[s][ind + 1] - (dist - ar_d) * ty;\r\n' \
-  '                  dist = 0;\r\n' \
-  '                  ar_d = ar_s;\r\n' \
-  '                }\r\n' \
-  '                move_to(px, py);\r\n' \
-  '                if (ar && tx != null && ty != null) {\r\n' \
-  '                  move_to(px - 0.025 * tx - 0.015 * ty, py - 0.025 * ty + 0.015 * tx);\r\n' \
-  '                  move_to(px - 0.025 * tx + 0.015 * ty, py - 0.025 * ty - 0.015 * tx, false);\r\n' \
-  '                  move_to(px, py);\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              dr = true;\r\n' \
-  '            }\r\n' \
-  '            ctx.stroke();\r\n' \
-  '          }\r\n' \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
@@ -14307,7 +15359,7 @@ class GPXTweakerWebInterfaceServer():
   '            c_zfact.disabled = false;\r\n' \
   '          }\r\n' \
   '          c_zoom.disabled = false;\r\n' \
-  '          c_zoom.previousElementSibling.onclick = function () {set_param("zo");}\r\n' \
+  '          c_zoom.nextElementSibling.onclick = function () {set_param("zo");}\r\n' \
   '          r_yiso.disabled = false;\r\n' \
   '          r_ziso.disabled = false;\r\n' \
   '          r_dimn.disabled = false;\r\n' \
@@ -14324,7 +15376,12 @@ class GPXTweakerWebInterfaceServer():
   '        xhr.responseType = "arraybuffer";\r\n' \
   '        xhr.send();\r\n' \
   '      }\r\n' \
-  '      data_load();\r\n' + HTML_3D_TOGGLE_TEMPLATE + \
+  '      data_load();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
+  '      function toggle_filling(mode) {\r\n' \
+  '        if (mode == fillmode) {return;};\r\n' \
+  '        fillmode = mode;\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
   '      function toggle_dimming(mode) {\r\n' \
   '        if (mode == dmode) {return;};\r\n' \
   '        if (dmode == 3 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
@@ -14350,16 +15407,819 @@ class GPXTweakerWebInterfaceServer():
   '  </body>\r\n' \
   '</html>'
   HTML_3DP_TEMPLATE = HTML_3DP_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
-  HTML_3DP_DECLARATIONS_TEMPLATE = \
+  HTML_3D_WGPU_DECLARATIONS_TEMPLATE = \
   '      var portmin = ##PORTMIN##;\r\n' \
-  '      var portmax = ##PORTMAX##;\r\n' \
-  '      var zfactmax = ##ZFACTMAX##;\r\n' \
-  '      var mpos = [##MPOS##];\r\n' \
-  '      var tminrow = ##TMINROW##;\r\n' \
-  '      var tmincol = ##TMINCOL##;\r\n' \
-  '      var tmaxrow = ##TMAXROW##;\r\n' \
-  '      var tmaxcol = ##TMAXCOL##;'
-  HTML_3DS_TEMPLATE = \
+  '      var portmax = ##PORTMAX##;\r\n'
+  HTML_3D_WGPU_GLOBALVARS_TEMPLATE = \
+  '      const host = location.hostname + ":";\r\n' \
+  '      const canvas = document.getElementById("canvas");\r\n' \
+  '      var context = null;\r\n' \
+  '      var adapter = null;\r\n' \
+  '      var device = null;\r\n' \
+  '      const wgs = 8;\r\n' \
+  '      var pcolorformat = null;\r\n' \
+  '      var color_texture = null;\r\n' \
+  '      var depth_texture = null;\r\n' \
+  '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
+  '      var cv_tangle = document.getElementById("cursorv_tangle");\r\n' \
+  '      var c_rangle = document.getElementById("cursor_rangle");\r\n' \
+  '      var cv_rangle = document.getElementById("cursorv_rangle");\r\n' \
+  '      var b_rangle = document.getElementById("button_rangle");\r\n' \
+  '      var r_yiso = document.getElementById("radio_yiso");\r\n' \
+  '      var r_ziso = document.getElementById("radio_ziso");\r\n' \
+  '      var r_map = document.getElementById("radio_map");\r\n' \
+  '      var r_dimn = document.getElementById("radio_dimn");\r\n' \
+  '      var r_dimz = document.getElementById("radio_dimz");\r\n' \
+  '      var r_dims = document.getElementById("radio_dims");\r\n' \
+  '      var c_ltangle = document.getElementById("cursor_ltangle");\r\n' \
+  '      var cv_ltangle = document.getElementById("cursorv_ltangle");\r\n' \
+  '      var c_lrangle = document.getElementById("cursor_lrangle");\r\n' \
+  '      var cv_lrangle = document.getElementById("cursorv_lrangle");\r\n' \
+  '      var b_lrangle = document.getElementById("button_lrangle");\r\n' \
+  '      var bviewmatrix = null;\r\n' \
+  '      var blightmatrix = null;\r\n' \
+  '      var rpdview = null;\r\n' \
+  '      var rpdshadow = null;\r\n' \
+  '      var rbshadow = null;\r\n' \
+  '      var rbview = null;\r\n' \
+  '      var tex_mode = 0;\r\n' \
+  '      var dim_mode = 2;\r\n' \
+  '      var zfactmax = null;\r\n' \
+  '      var scale = null;\r\n' \
+  '      var ppos = null;\r\n' \
+  '      var ctangle = null;\r\n' \
+  '      var stangle = null;\r\n' \
+  '      var crangle = null;\r\n' \
+  '      var srangle = null;\r\n' \
+  '      var nrot = 0;\r\n' \
+  '      var nlrot = 0;\r\n' \
+  '      var rep_rot = null;\r\n' \
+  '      var rep_lrot = null;\r\n' \
+  '      var ltangle_rotmax = null;\r\n' \
+  '      var cltangle = null;\r\n' \
+  '      var sltangle = null;\r\n' \
+  '      var clrangle = null;\r\n' \
+  '      var slrangle = null;\r\n' \
+  '      const ssampling = 2;\r\n' \
+  '      var c_msize = null;\r\n' \
+  '      var modified = new Set();\r\n' \
+  '      var queue = [Promise.resolve(null), null];\r\n'
+  HTML_3D_WGPU_MAT_TEMPLATE = \
+  '      function mat4_mult(p, m) {\r\n' \
+  '        const q = m.slice();\r\n' \
+  '        for (let r=0; r<4; r++) {\r\n' \
+  '          for (let c=0; c<4; c++) {\r\n' \
+  '            let v = 0;\r\n' \
+  '            for (let i=0; i<4; i++) {v += p[4 * r + i] * q[4 * i + c];}\r\n' \
+  '            m[4 * r + c] = v;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mat4_flip(m) {\r\n' \
+  '        const q = m.slice();\r\n' \
+  '        for (let r=0; r<4; r++) {\r\n' \
+  '          for (let c=0; c<4; c++) {\r\n' \
+  '            m[4 * r + c] = q[4 * c + r];\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function mat4_zscale(zf) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, 1, 0, 0,\r\n' \
+  '          0, 0, -zf, 1 - zf,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_scale(w) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, 1, 0, 0,\r\n' \
+  '          0, 0, 0.5, 0.5 * w,\r\n' \
+  '          0, 0, 0, w\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_yscale(ymag, ymax) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, ymag, 0, 1 - ymax * ymag / 1.733,\r\n' \
+  '          0, 0, 1, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_tilt(c, s) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, 0,\r\n' \
+  '          0, c, -s, 0,\r\n' \
+  '          0, s, c, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_rotation(c, s) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          c, s, 0, 0,\r\n' \
+  '          -s, c, 0, 0,\r\n' \
+  '          0, 0, 1, 0,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n'
+  HTML_3D_WGPU_CMAP_TEMPLATE = \
+  '        function* create_map() {\r\n' \
+  '          const mmipmap = device.createShaderModule({code: `\r\n' \
+  '            struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
+  '            @vertex fn vmipmap(@builtin(vertex_index) vi: u32) -> vout  {\r\n' \
+  '              var out: vout;\r\n' \
+  '              out.vcoord = vec2f(f32(vi & 2u), f32((vi << 1u) & 2u));\r\n' \
+  '              out.vposition = vec4f(fma(vec2f(2.0, -2.0), out.vcoord, vec2f(-1.0, 1.0)), 0.5, 1.0);\r\n' \
+  '              return out;\r\n' \
+  '            }\r\n' \
+  '            @group(0) @binding(0) var samp: sampler;\r\n' \
+  '            @group(0) @binding(1) var tex: texture_2d<f32>;\r\n' \
+  '            @fragment fn fmipmap(@location(0) pcoord: vec2f) -> @location(0) vec4f {\r\n' \
+  '              return textureSample(tex, samp, pcoord);\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          const bglmipmap = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}]});\r\n' \
+  '          const pmipmap = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglmipmap]}), vertex: {module: mmipmap, entryPoint: "vmipmap", buffers: []}, fragment: {module: mmipmap, entryPoint: "fmipmap", targets: [{format: "rgba8unorm"}]}, primitive: {topology: "triangle-list"},});\r\n' \
+  '          yield;\r\n' + HTML_3D_CMAP_TEMPLATE + \
+  '          const mlevels = Math.floor(Math.log2(Math.max(mwidth, mheight))) + 1;\r\n' \
+  '          function map_complete() {\r\n' \
+  '            device.queue.copyExternalImageToTexture({source: cnv2d, flipY: true}, {texture: map_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: mwidth, height: mheight, depthOrArrayLayers: 1});\r\n' \
+  '            if (queue[1] == null) {\r\n' \
+  '              queue[0] = queue[0].then(gen_mipmap);\r\n' \
+  '            } else {\r\n' \
+  '              queue[1] = queue[1].then(gen_mipmap);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          function gen_mipmap() {\r\n' \
+  '            const rbmipmap = [];\r\n' \
+  '            for (let l=0; l< mlevels - 1; l++) {\r\n' \
+  '              const bgmipmap = device.createBindGroup({layout: bglmipmap, entries: [{binding: 0, resource: image_sampler,}, {binding: 1, resource: map_texture.createView({baseMipLevel: l, mipLevelCount: 1}),}]});\r\n' \
+  '              const bencoder = device.createRenderBundleEncoder({colorFormats: [map_texture.format]});\r\n' \
+  '              bencoder.setPipeline(pmipmap);\r\n' \
+  '              bencoder.setBindGroup(0, bgmipmap);\r\n' \
+  '              bencoder.draw(3);\r\n' \
+  '              rbmipmap.push(bencoder.finish());\r\n' \
+  '            }\r\n' \
+  '            const encoder = device.createCommandEncoder();\r\n' \
+  '            for (let l=0; l<mlevels-1; l++) {\r\n' \
+  '              const rpdmipmap = {colorAttachments: [{view: map_texture.createView({baseMipLevel: l + 1, mipLevelCount: 1}), clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}]};\r\n' \
+  '              const pass = encoder.beginRenderPass(rpdmipmap);\r\n' \
+  '              pass.executeBundles([rbmipmap[l]]);\r\n' \
+  '              pass.end();\r\n' \
+  '            }\r\n' \
+  '            const commands = encoder.finish();\r\n' \
+  '            device.queue.submit([commands]);\r\n' \
+  '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "Carte"; r_map.disabled = false;});\r\n' \
+  '          }\r\n' \
+  '          yield {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
+  '          setTimeout(add_row_tile, 1);\r\n' \
+  '        }\r\n'
+  HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
+  '        async function data_load() {\r\n' \
+  '          let data = fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
+  '          const kgxyzs = window.hasOwnProperty("gzs");\r\n' \
+  '          const override = navigator_firefox ? "const" : "override";\r\n' \
+  '          const bdynunifstride = Math.ceil(4 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '          const mground = device.createShaderModule({code: `\r\n' \
+  '            @group(0) @binding(0) var<storage, read> gxs: array<f32>;\r\n' \
+  '            @group(0) @binding(1) var<storage, read> gys: array<f32>;\r\n' \
+  '            @group(0) @binding(2) var<storage, read_write> gzs: array<f32>;\r\n' \
+  '            @group(0) @binding(3) var<storage, read_write> grznorms: array<vec4f>;\r\n' \
+  '            @group(0) @binding(4) var<storage, read_write> grinds: array<u32>;\r\n' \
+  '            @group(1) @binding(0) var<uniform> vals: vec2f;\r\n' \
+  '            @group(1) @binding(1) var<uniform> stride: u32;\r\n' \
+  '            @group(1) @binding(2) var<storage, read_write> zmins: array<f32>;\r\n' \
+  '            @group(1) @binding(3) var<storage, read_write> zmaxs: array<f32>;\r\n' \
+  '            ${override} ws: u32 = 8u;\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zvalid(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x;\r\n' \
+  '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
+  '              let z = gzs[p];\r\n' \
+  '              gzs[p] = select(0.0, z, z != vals.x && z >= vals.y);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zminmax(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let pmax: u32 = arrayLength(&zmins);\r\n' \
+  '              let p1: u32 = id.x * stride * 2u;\r\n' \
+  '              if (p1 >= pmax) {return;}\r\n' \
+  '              let p2: u32 = p1 + stride;\r\n' \
+  '              if (p2 >= pmax) {return;}\r\n' \
+  '              zmins[p1] = min(zmins[p1], zmins[p2]);\r\n' \
+  '              zmaxs[p1] = max(zmaxs[p1], zmaxs[p2]);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zrel(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x;\r\n' \
+  '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
+  '              gzs[p] = fma(vals.x, gzs[p], vals.y);\r\n' \
+  '            }\r\n' \
+  '            @compute @workgroup_size(ws, ws) fn ground(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let nc: u32 = arrayLength(&gxs);\r\n' \
+  '              let nr: u32 = arrayLength(&gys);\r\n' \
+  '              let px: u32 = id.x;\r\n' \
+  '              let py: u32 = id.y;\r\n' \
+  '              if (px >= nc || py >= nr) {return;}\r\n' \
+  '              let pxl: u32 = max(px, 1u) - 1u;\r\n' \
+  '              let pxr: u32 = min(px + 1u, nc - 1u);\r\n' \
+  '              let pyb: u32 = max(py, 1u) - 1u;\r\n' \
+  '              let pyt: u32 = min(py + 1u, nr - 1u);\r\n' \
+  '              let p: u32 = nc * py + px;\r\n' \
+  '              let pl: u32 = nc * py + pxl;\r\n' \
+  '              let pr: u32 = nc * py + pxr;\r\n' \
+  '              let pb: u32 = nc * pyb + px;\r\n' \
+  '              let pt: u32 = nc * pyt + px;\r\n' \
+  '              //grznorms[p] = vec4f(gzs[p], normalize(cross(vec3f(gxs[pxr] - gxs[pxl], 0.0, gzs[pr] - gzs[pl]), vec3f(0.0, gys[pyt] - gys[pyb], gzs[pt] - gzs[pb]))));\r\n' \
+  '              grznorms[p] = vec4f(gzs[p], normalize(cross(normalize(vec3f(gxs[pxr] - gxs[pxr - 1u], 0.0, gzs[pr] - gzs[pr - 1u])) + normalize(vec3f(gxs[pxl + 1u] - gxs[pxl], 0.0, gzs[pl + 1u] - gzs[pl])), normalize(vec3f(0.0, gys[pyt] - gys[pyt - 1u], gzs[pt] - gzs[pt - nc])) + normalize(vec3f(0.0, gys[pyb + 1u] - gys[pyb], gzs[pb + nc] - gzs[pb])))));\r\n' \
+  '              grinds[2u * (pt - nc) + py] = p;\r\n' \
+  '              grinds[2u * pb + py] = p;\r\n' \
+  '              grinds[2u * (nc * pyb + nc) + pyb] = 0xffffffffu;\r\n' \
+  '            }\r\n' \
+  '          `});\r\n' \
+  '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const bglz = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform", hasDynamicOffset: true},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '          const pzvalid = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zvalid", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const pzminmax = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zminmax", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const pzrel = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zrel", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          data = await data;\r\n' \
+  '          if (data == null || ! data?.byteLength) {return false;}\r\n' \
+  '          const lvx = (new Uint32Array(data, 0, 1))[0];\r\n' \
+  '          gxs = new Float32Array(data, 4, lvx);\r\n' \
+  '          bgxs = device.createBuffer({size: 4 * lvx, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          const lvy = (new Uint32Array(data, 4 * (1 + lvx), 1))[0];\r\n' \
+  '          gys = new Float32Array(data, 4 * (2 + lvx) , lvy);\r\n' \
+  '          bgys = device.createBuffer({size: 4 * lvy, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
+  '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
+  '          device.queue.writeBuffer(bgzs, 0, new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
+  '          const params = new Float32Array(data, data.byteLength - 24, 6);\r\n' \
+  '          const bvals = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, mappedAtCreation: true});\r\n' \
+  '          new Float32Array(bvals.getMappedRange()).set([params[4], params[3]]);\r\n' \
+  '          bvals.unmap();\r\n' \
+  '          const mexp = Math.ceil(Math.log2(lvz));\r\n' \
+  '          const bstride = device.createBuffer({size: 4 + mexp * bdynunifstride, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '          const strides = new Uint32Array(bstride.getMappedRange());\r\n' \
+  '          for (let s=0; s<=mexp; s+=1) {strides[s * bdynunifstride / 4] = 2 ** s;}\r\n' \
+  '          bstride.unmap();\r\n' \
+  '          const bzmins = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
+  '          const bzmaxs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
+  '          bgrznorms = device.createBuffer({size: lvz * 16, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX});\r\n' \
+  '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
+  '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bgrznorms, bgrinds)});\r\n' \
+  '          const bgz = device.createBindGroup({layout: bglz, entries: [{binding: 0, resource: {buffer: bvals, size: bvals.size},}, {binding: 1, resource: {buffer: bstride, size: 4},}, {binding: 2, resource: {buffer: bzmins, size: bzmins.size},}, {binding: 3, resource: {buffer: bzmaxs, size: bzmaxs.size},}]});\r\n' \
+  '          let encoder = device.createCommandEncoder();\r\n' \
+  '          let pass = encoder.beginComputePass();\r\n' \
+  '          pass.setPipeline(pzvalid);\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.setBindGroup(1, bgz, [0]);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvz / (wgs * wgs)));\r\n' \
+  '          pass.end();\r\n' \
+  '          encoder.copyBufferToBuffer(bgzs, 0, bzmins, 0, bgzs.size);\r\n' \
+  '          encoder.copyBufferToBuffer(bgzs, 0, bzmaxs, 0, bgzs.size);\r\n' \
+  '          pass = encoder.beginComputePass();\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.setPipeline(pzminmax);\r\n' \
+  '          for (let s=0; s<=mexp; s++) {\r\n' \
+  '            pass.setBindGroup(1, bgz, [s * bdynunifstride]);\r\n' \
+  '            pass.dispatchWorkgroups(Math.ceil(Math.ceil(lvz / (2 ** (s + 1))) / (wgs * wgs)));\r\n' \
+  '          }\r\n' \
+  '          pass.end();\r\n' \
+  '          let mb = device.createBuffer({size: 8, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '          encoder.copyBufferToBuffer(bzmins, 0, mb, 0, 4);\r\n' \
+  '          encoder.copyBufferToBuffer(bzmaxs, 0, mb, 4 , 4);\r\n' \
+  '          let commands = encoder.finish();\r\n' \
+  '          device.queue.submit([commands]);\r\n' \
+  '          await mb.mapAsync(GPUMapMode.READ);\r\n' \
+  '          let [minz, maxz] = new Float32Array(mb.getMappedRange());\r\n' \
+  '          maxz = Math.max(maxz, minz + 1);\r\n' \
+  '          mb.unmap();\r\n' \
+  '          mb.destroy();\r\n' \
+  '          ppos = new Float32Array(5);\r\n' \
+  '          let zden = (maxz - minz) / 2 * params[5];\r\n' \
+  '          if (params[0] > zden) {\r\n' \
+  '            zfactmax = params[0] / zden;\r\n' \
+  '            ppos[0] = params[0];\r\n' \
+  '          } else {\r\n' \
+  '            zfactmax = 1.0;\r\n' \
+  '            ppos[0] = zden;\r\n' \
+  '          }\r\n' \
+  '          ppos[1] = params[1];\r\n' \
+  '          ppos[2] = params[2];\r\n' \
+  '          ppos[3] = minz;\r\n' \
+  '          const cor = params[5];\r\n' \
+  '          ppos[4] = cor;\r\n' \
+  '          const den = ppos[0];\r\n' \
+  '          scale = den / cor;\r\n' \
+  '          radius = 6378137 / scale;\r\n' \
+  '          pace_length = 10 / scale;\r\n' \
+  '          if (kgxyzs) {\r\n' \
+  '            gxs = gxs.slice();\r\n' \
+  '            gys = gys.slice();\r\n' \
+  '          }\r\n' \
+  '          for (let px=0; px<gxs.length; px++) {gxs[px] /= den;}\r\n' \
+  '          device.queue.writeBuffer(bgxs, 0, gxs);\r\n' \
+  '          for (let py=0; py<gys.length; py++) {gys[py] /= den;}\r\n' \
+  '          device.queue.writeBuffer(bgys, 0, gys);\r\n' \
+  '          device.queue.writeBuffer(bvals, 0, new Float32Array([cor / den, - minz * cor / den - 1]));\r\n' \
+  '          encoder = device.createCommandEncoder();\r\n' \
+  '          pass = encoder.beginComputePass();\r\n' \
+  '          pass.setPipeline(pzrel);\r\n' \
+  '          pass.setBindGroup(0, bgground);\r\n' \
+  '          pass.setBindGroup(1, bgz, [0]);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvz / (wgs * wgs)));\r\n' \
+  '          pass.setPipeline(pground);\r\n' \
+  '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
+  '          pass.end();\r\n' \
+  '          if (kgxyzs) {\r\n' \
+  '            mb = device.createBuffer({size: bgzs.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '            encoder.copyBufferToBuffer(bgzs, 0, mb, 0, bgzs.size);\r\n' \
+  '          }\r\n' \
+  '          commands = encoder.finish();\r\n' \
+  '          device.queue.submit([commands]);\r\n' \
+  '          const ns = (new Uint32Array(data, 4 * (3 + lvx + lvy + lvz), 1))[0];\r\n' \
+  '          trpositions = [];\r\n' \
+  '          for (let s=0,i=0; s<ns; s++) {\r\n' \
+  '            const nscs = 2 * (new Uint32Array(data, 4 * (4 + lvx + lvy + lvz + s + i), 1))[0];\r\n' \
+  '            const segpositions = new Float32Array(data, 4 * (5 + lvx + lvy + lvz + s + i), nscs);\r\n' \
+  '            trpositions.push(segpositions);\r\n' \
+  '            for (let c=0; c<nscs; c++) {segpositions[c] /= den;}\r\n' \
+  '            i += nscs;\r\n' \
+  '          }\r\n' \
+  '          mpos = new Float32Array(data, data.byteLength - 56, 4).slice();\r\n' \
+  '          mpos[0] *= den;\r\n' \
+  '          mpos[1] *= den;\r\n' \
+  '          [tminrow, tmincol, tmaxrow, tmaxcol] = new Uint32Array(data, data.byteLength - 40, 4);\r\n' \
+  '          if (kgxyzs) {\r\n' \
+  '            await mb.mapAsync(GPUMapMode.READ);\r\n' \
+  '            gzs = new Float32Array(mb.getMappedRange()).slice();\r\n' \
+  '            mb.unmap();\r\n' \
+  '          } else {\r\n' \
+  '            await device.queue.onSubmittedWorkDone();\r\n' \
+  '          }\r\n' \
+  '          bgzs.destroy();\r\n' \
+  '          bvals.destroy();\r\n' \
+  '          bstride.destroy();\r\n' \
+  '          bzmins.destroy();\r\n' \
+  '          bzmaxs.destroy();\r\n' \
+  '          return true;\r\n' \
+  '        }\r\n'
+  HTML_3D_WGPU_INIT0_TEMPLATE = \
+  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
+  '        }\r\n' \
+  '        let bgxs = null;\r\n' \
+  '        let bgys = null;\r\n' \
+  '        let bgrznorms = null;\r\n' \
+  '        let bgrinds = null;\r\n' \
+  '        let trpositions = null;\r\n' \
+  '        let mpos = null;\r\n' \
+  '        let tminrow = null;\r\n' \
+  '        let tmincol = null;\r\n' \
+  '        let tmaxrow = null;\r\n' \
+  '        let tmaxcol = null;\r\n' \
+  '        const data_wait = data_load();\r\n' \
+  '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
+  '        context = canvas.getContext("webgpu");\r\n' \
+  '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
+  '        context.configure({alphaMode: "opaque", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
+  '        const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n'
+  HTML_3DP_WGPU_TEMPLATE = HTML_3DP_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + \
+  '      var linewidth = null;\r\n' \
+  '      var blinematrix = null;\r\n' \
+  '      var blinewidth = null;\r\n' \
+  '      var rbaxis = null;\r\n' \
+  '      var rblightrays1 = null;\r\n' \
+  '      var rblightrays2 = null;\r\n' \
+  '      var zfact = 1;\r\n' \
+  '      var r_dimd = document.getElementById("radio_dimd");\r\n' \
+  '      var c_zfact = document.getElementById("cursor_zfact");\r\n' \
+  '      var c_zoom = document.getElementById("cursor_zoom");\r\n' \
+  '      var zoom = 1;\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "zs") {\r\n' \
+  '          if (v != null) {c_zfact.value = v.toString();}\r\n' \
+  '          zfact = parseFloat(c_zfact.value);\r\n' \
+  '          cv_tangle.innerHTML = Math.round(90 - 180 / Math.PI * Math.atan(stangle / ctangle * zfact)).toString();\r\n' \
+  '          let angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '          cltangle = Math.cos(angle);\r\n' \
+  '          sltangle = Math.sin(angle);\r\n' \
+  '          modified.add("v");\r\n' \
+  '        } else if (p == "zo") {\r\n' \
+  '          if (v != null) {c_zoom.value = (v <= 2 ? ((v - 1) * 2) : v).toString();}\r\n' \
+  '          zoom = parseFloat(c_zoom.value);\r\n' \
+  '          zoom = zoom <= 1 ? (1 + zoom / 2) : zoom;\r\n' \
+  '          if (v == null) {canvas_resize();}\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          let angle0 = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 - parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (dim_mode == 2) {modified.add("l");}\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle0 = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              clt0angle = Math.cos(angle0);\r\n' \
+  '              slt0angle = Math.sin(angle0);\r\n' \
+  '              angle = Math.atan(slt0angle / clt0angle / zfact);\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          if (p == "t") {\r\n' \
+  '            angle0 = Math.atan(stangle / ctangle * zfact);\r\n' \
+  '            cv_tangle.innerHTML = Math.round(90 - angle0 * 180 / Math.PI).toString();\r\n' \
+  '          } else if (p == "lt") {\r\n' \
+  '            cv_ltangle.innerHTML = Math.round(angle0 * 180 / Math.PI + 90).toString();\r\n' \
+  '          } else {\r\n' \
+  '            window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      var clt0angle = null;\r\n' \
+  '      var slt0angle = null;\r\n' \
+  '      set_param("t", 30);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 35);\r\n' \
+  '      set_param("lr", 315);\r\n' \
+  '      set_param("zs", 1);\r\n' \
+  '      set_param("zo", 1);\r\n##DECLARATIONS##\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
+  '      function canvas_resize() {\r\n' \
+  '        const cpn = canvas.parentNode;\r\n' \
+  '        let size = Math.floor(Math.min(cpn.offsetWidth, cpn.offsetHeight) * zoom);\r\n' \
+  '        canvas.style.width = size.toString() + "px";\r\n' \
+  '        canvas.style.height = size.toString() + "px";\r\n' \
+  '        linewidth = 2.5 / size;\r\n' \
+  '        modified.add("s");\r\n' \
+  '        size = size * Math.max(Math.floor(Math.min(c_msize / size, ssampling)), 1.0);\r\n' \
+  '        canvas.setAttribute("width", size.toString());\r\n' \
+  '        canvas.setAttribute("height", size.toString());\r\n' \
+  '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) - cpn.clientHeight) / 2);\r\n' \
+  '        if (color_texture != null) {queue[0].then(color_texture.destroy.bind(color_texture));}\r\n' \
+  '        color_texture = device.createTexture({size: [size, size], format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '        if (depth_texture != null) {queue[0].then(depth_texture.destroy.bind(depth_texture));}\r\n' \
+  '        depth_texture = device.createTexture({size: [size, size], format: "depth16unorm", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '      }\r\n' \
+  '      async function init() {\r\n' \
+  '        document.body.style.cursor = "wait";\r\n' \
+  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
+  '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
+  '        device = await adapter?.requestDevice();\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + \
+  '        let gxs = null;\r\n' \
+  '        let gys = null;\r\n' \
+  '        let gzs = null;\r\n' + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
+  '        c_msize = Math.min(4096, max_size);\r\n' \
+  '        const m_size = Math.min(2048, max_size);\r\n' \
+  '        const tr_size = Math.min(2048, max_size);\r\n' \
+  '        const d_size = Math.min(2048, max_size);\r\n' \
+  '        const mview = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(2) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(3) var<uniform> mappos: mat4x4f;\r\n' \
+  '          @group(0) @binding(4) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(5) var<storage, read> gys: array<f32>;\r\n' \
+  '          struct vout0 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f};\r\n' \
+  '          struct vout1 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vmz: f32};\r\n' \
+  '          struct vout2 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f};\r\n' \
+  '          struct vout3 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f, @location(2) vlcoord: vec2f, @location(3) vldepth: f32};\r\n' \
+  '          @vertex fn vview0(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout0 {\r\n' \
+  '            var out: vout0;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview1(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout1 {\r\n' \
+  '            var out: vout1;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vmz = 0.5 * dimfact.y * (grposition.z + 1.0);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview2(@builtin(vertex_index) vi: u32, @location(0) gz: f32, @location(1) grnormal: vec3f) -> vout2 {\r\n' \
+  '            var out: vout2;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vnormal = grnormal;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview3(@builtin(vertex_index) vi: u32, @location(0) gz: f32, @location(1) grnormal: vec3f) -> vout3 {\r\n' \
+  '            var out: vout3;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            out.vposition = viewmatrix * grposition;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vnormal = grnormal;\r\n' \
+  '            let vlposition: vec4f = lightmatrix * grposition;\r\n' \
+  '            out.vlcoord = fma(vlposition.xy / vlposition.w, vec2f(0.5, -0.5), vec2f(0.5));\r\n' \
+  '            out.vldepth = vlposition.z / vlposition.w - 0.002;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @group(0) @binding(6) var trcksampler: sampler;\r\n' \
+  '          @group(0) @binding(7) var trcktex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(8) var grsampler: sampler;\r\n' \
+  '          @group(0) @binding(9) var grtex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(10) var grfftex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(11) var depthsampler: sampler_comparison;\r\n' \
+  '          @group(0) @binding(12) var ldepthtex: texture_depth_2d;\r\n' \
+  '          @fragment fn fview0(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f) -> @location(0) vec4f {\r\n' \
+  '            let pdim: f32 = dimfact.x;\r\n' \
+  '            return select(mix(textureSample(grtex, grsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r), textureSample(grfftex, grsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview1(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f, @location(1) pmz: f32) -> @location(0) vec4f {\r\n' \
+  '            let pdim: f32 = pow(pmz, 0.7);\r\n' \
+  '            return select(mix(textureSample(grtex, grsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r), textureSample(grfftex, grsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview2(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f) -> @location(0) vec4f {\r\n' \
+  '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
+  '            let pdim: f32 = select(0.7 + 0.3 * saturate(select(1.5, 4.0, cinc <= 0.57) * (cinc - 0.57) + 0.8), 0.3, ffacing);\r\n' \
+  '            return select(mix(textureSample(grtex, grsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r), textureSample(grfftex, grsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview3(@builtin(front_facing) ffacing: bool, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f, @location(2) plcoord: vec2f, @location(3) pldepth: f32) -> @location(0) vec4f {\r\n' \
+  '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
+  '            let pdim: f32 = select(0.2, mix(0.2 , fma(0.8, abs(cinc), 0.2), textureSampleCompare(ldepthtex, depthsampler, plcoord, fma(0.0015, abs(cinc), pldepth))), (cinc <= 0.0) == ffacing);\r\n' \
+  '            return select(mix(textureSample(grtex, grsampler, pcoords.zw), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r), textureSample(grfftex, grsampler, pcoords.zw), ffacing) * vec4(vec3(pdim), 1.0);\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 6, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 7, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
+  '        const pview = ["0", "1", "2", "3"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, }));\r\n' \
+  '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
+  '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
+  '        const depth_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8, compare: "less"});\r\n' \
+  '        const ptex = new Uint8Array(32);\r\n' \
+  '        const pattern_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        ptex.set([0, 0, 255, 255, 210, 255, 190, 255]);\r\n' \
+  '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
+  '        device.queue.writeTexture({texture: pattern_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
+  '        const patternff_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        ptex.set([120, 110, 90, 255], 4);\r\n' \
+  '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
+  '        device.queue.writeTexture({texture: patternff_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
+  '        const mapff_texture = device.createTexture({size: [1, 1], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        device.queue.writeTexture({texture: mapff_texture, mipLevel: 0}, new Uint8Array([120, 110, 90, 255]), {}, {width: 1, height: 1});\r\n' \
+  '        const ldepth_texture = device.createTexture({size: [d_size, d_size], format: "depth16unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.1569, 0.1765, 0.1961, 1.0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const mshadow = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(1) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(2) var<storage, read> gys: array<f32>;\r\n' \
+  '          @vertex fn vshadow(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> @builtin(position) vec4f {\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            return lightmatrix * grposition;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
+  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
+  '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const mline = device.createShaderModule({code: `\r\n' \
+  '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcolor: vec4f};\r\n' \
+  '          @group(0) @binding(0) var<uniform> linematrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> linewidth: f32;\r\n' \
+  '          @group(0) @binding(2) var<uniform> linetype: u32;\r\n' \
+  '          @vertex fn vline(@builtin(vertex_index) vi: u32, @location(0) lposition1: vec4f, @location(1) lposition2: vec4f, @location(2) loffset: vec2f) -> vout  {\r\n' \
+  '            let lpos1: vec4f = linematrix * lposition1;\r\n' \
+  '            let lpos2: vec4f = linematrix * lposition2;\r\n' \
+  '            var out: vout;\r\n' \
+  '            out.vposition = select(lpos1, lpos2, vi > 2u) + vec4f(mat2x2f(loffset.x, -loffset.y, loffset.y, loffset.x) * normalize(lpos2.xy - lpos1.xy) * linewidth, 0.0, 0.0);\r\n' \
+  '            out.vcolor = select(vec4f(vec3f(fma(0.35, select(lpos1.z, lpos2.z, vi > 2u), 0.65)), 1.0) , vec4f(1.0, 1.0, 0.0, 1.0), linetype == 1u);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fline(@location(0) pcolor: vec4f) -> @location(0) vec4f {\r\n' \
+  '            return pcolor;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglline = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]});\r\n' \
+  '        const pline = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglline]}), vertex: {module: mline, entryPoint: "vline", buffers: [{attributes: [{shaderLocation: 0, format: "float32x3", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 12}], arrayStride: 24, stepMode: "instance"}, {attributes: [{shaderLocation: 2, format: "float32x2", offset: 0}], arrayStride: 8, stepMode: "vertex"}]}, fragment: {module: mline, entryPoint: "fline", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
+  '        const baxispositions = device.createBuffer({size: 120, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(baxispositions.getMappedRange()).set([0, 0, -1, 1.225, 0, -1, 0, 0, -1, 0, 1.225, -1, 0, 1.225, -1, -0.05, 1.125, -1, 0, 1.225, -1, 0.05, 1.125, -1, 0, 0, -1, 0, 0, 1.225]);\r\n' \
+  '        baxispositions.unmap();\r\n' \
+  '        const blightrayspositions = device.createBuffer({size: 216, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(blightrayspositions.getMappedRange()).set([0, 0, 1.65, 0, 0, 1.5, 0, 0, 1.5, 0, -0.02, 1.55, 0, 0, 1.5, 0, 0.02, 1.55, -0.5, 0, 1.65, -0.5, 0, 1.5, -0.5, 0, 1.5, -0.5, -0.02, 1.55, -0.5, 0, 1.5, -0.5, 0.02, 1.55, 0.5, 0, 1.65, 0.5, 0, 1.5, 0.5, 0, 1.5, 0.5, -0.02, 1.55, 0.5, 0, 1.5, 0.5, 0.02, 1.55]);\r\n' \
+  '        blightrayspositions.unmap();\r\n' \
+  '        const blineoffsets = device.createBuffer({size: 48, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
+  '        new Float32Array(blineoffsets.getMappedRange()).set([0.5, 0, 0, -1, 0, 1, 0, -1, 0, 1, 0.5, 0]);\r\n' \
+  '        blineoffsets.unmap();\r\n' \
+  '        const blstride = Math.ceil(64 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
+  '        blinematrix = device.createBuffer({size: 64 + 2 * blstride, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        blinewidth = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const blinetype = device.createBuffer({size: 4 + 2 * blstride, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, mappedAtCreation: true});\r\n' \
+  '        const blt = new Uint8Array(blinetype.getMappedRange());\r\n' \
+  '        blt[0] = 0;\r\n' \
+  '        blt[blstride] = 1;\r\n' \
+  '        blt[2 * blstride] = 1;\r\n' \
+  '        blinetype.unmap();\r\n' \
+  '        const cmap = create_map();\r\n' \
+  '        cmap.next();\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
+  '        bdimfact.forEach((b) => b.unmap());\r\n' \
+  '        create_track();\r\n' \
+  '        const map_texture = device.createTexture({...cmap.next().value, format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        new Float32Array(bmappos[0].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 50, 0, 0, 0, 0, 0.5, 0.5, 0.5, 50]);\r\n' \
+  '        new Float32Array(bmappos[1].getMappedRange()).set([0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 25 * zfactmax, 0.5, 0.5, 0.5, 25 * zfactmax]);\r\n' \
+  '        new Float32Array(bmappos[2].getMappedRange()).set([0.5, 0, mpos[0], 0, 0, 0.5, 0, mpos[1], 0, 0, 0, 0, 0.5, 0.5, mpos[2], mpos[3]]);\r\n' \
+  '        bmappos.forEach((b) => b.unmap());\r\n' \
+  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bviewmatrix, blightmatrix, bmappos[tm], bgxs, bgys), {binding: 6, resource: image_sampler,}, {binding: 7, resource: track_texture.createView(),}, {binding: 8, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 9, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 10, resource: (tm <= 1 ? patternff_texture : mapff_texture).createView(),}, {binding: 11, resource: depth_sampler,}, {binding: 12, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
+  '        const bgline = device.createBindGroup({layout: bglline, entries: [{binding: 0, resource: {buffer: blinematrix, size: 64}, }, {binding: 1, resource: {buffer: blinewidth}, }, {binding: 2, resource: {buffer: blinetype, size: 4},}]});\r\n' \
+  '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth16unorm"});\r\n' \
+  '        bencoder.setPipeline(pshadow);\r\n' \
+  '        bencoder.setBindGroup(0, bgshadow);\r\n' \
+  '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '        rbshadow = bencoder.finish();\r\n' \
+  '        rbview = [];\r\n' \
+  '        for (let dm=0; dm<4; dm++) {\r\n' \
+  '          for (let tm=0; tm<3; tm++) {\r\n' \
+  '            bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth16unorm"});\r\n' \
+  '            bencoder.setPipeline(pview[dm]);\r\n' \
+  '            bencoder.setBindGroup(0, bgview[tm]);\r\n' \
+  '            bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '            bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '            bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '            rbview.push(bencoder.finish());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        [rbaxis, rblightrays1, rblightrays2] = [baxispositions, blightrayspositions, blightrayspositions].map(function (b, l) {\r\n' \
+  '          bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth16unorm"});\r\n' \
+  '          bencoder.setPipeline(pline);\r\n' \
+  '          bencoder.setBindGroup(0, bgline, [l * blstride, l * blstride]);\r\n' \
+  '          bencoder.setVertexBuffer(0, b);\r\n' \
+  '          bencoder.setVertexBuffer(1, blineoffsets);\r\n' \
+  '          bencoder.draw(blineoffsets.size / 8, b.size / 24);\r\n' \
+  '          return bencoder.finish();\r\n' \
+  '        });\r\n' \
+  '        window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
+  '        canvas_resize();\r\n' \
+  '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
+  '        canvas_redraw();\r\n' \
+  '        queue[1].then(cmap.next.bind(cmap));\r\n' \
+  '        c_zoom.disabled = false;\r\n' \
+  '        c_zoom.nextElementSibling.onclick = function () {set_param("zo");}\r\n' \
+  '        c_tangle.disabled = false;\r\n' \
+  '        c_rangle.disabled = false;\r\n' \
+  '        b_rangle.disabled = false;\r\n' \
+  '        if (zfactmax > 1) {\r\n' \
+  '          c_zfact.max = zfactmax.toString();\r\n' \
+  '          c_zfact.disabled = false;\r\n' \
+  '        }\r\n' \
+  '        r_yiso.disabled = false;\r\n' \
+  '        r_ziso.disabled = false;\r\n' \
+  '        r_dimn.disabled = false;\r\n' \
+  '        r_dimz.disabled = false\r\n' \
+  '        r_dimd.disabled = false\r\n' \
+  '        r_dims.disabled = false;\r\n' \
+  '        document.body.style.cursor = "";\r\n' \
+  '         <!-- toggle_rotation(1); -->\r\n' \
+  '         <!-- toggle_lrotation(1); -->\r\n' \
+  '      }\r\n' \
+  '      function _canvas_redraw() {\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        let pass = null;\r\n' \
+  '        if (modified.has("s")) {\r\n' \
+  '          device.queue.writeBuffer(blinewidth, 0, new Float32Array([linewidth]));\r\n' \
+  '        }\r\n' \
+  '        if (modified.has("l") && dim_mode >= 2) {\r\n' \
+  '          const lmatrix = mat4_zscale(1);\r\n' \
+  '          if (dim_mode == 2) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
+  '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(clt0angle, slt0angle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '          if (dim_mode == 3) {\r\n' \
+  '            mat4_mult(mat4_yscale(1.732 / (1.415 * clt0angle - slt0angle / zfactmax), 1.415 * clt0angle - slt0angle), lmatrix);\r\n' \
+  '          }\r\n' \
+  '          mat4_flip(lmatrix);\r\n' \
+  '          device.queue.writeBuffer(blightmatrix, 0, lmatrix);\r\n' \
+  '          if (dim_mode == 3) {\r\n' \
+  '            pass = encoder.beginRenderPass(rpdshadow);\r\n' \
+  '            pass.executeBundles([rbshadow]);\r\n' \
+  '            pass.end();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (modified.has("v")) {\r\n' \
+  '          const vmatrix = mat4_zscale(zfact);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), vmatrix);\r\n' \
+  '          mat4_flip(vmatrix);\r\n' \
+  '          device.queue.writeBuffer(bviewmatrix, 0, vmatrix);\r\n' \
+  '          const amatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), amatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), amatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), amatrix);\r\n' \
+  '          mat4_flip(amatrix);\r\n' \
+  '          device.queue.writeBuffer(blinematrix, 0, amatrix);\r\n' \
+  '        }\r\n' \
+  '        const rbs = [rbview[3 * dim_mode + tex_mode], rbaxis];\r\n' \
+  '        rpdview.colorAttachments[0].resolveTarget = context.getCurrentTexture().createView();\r\n' \
+  '        pass = encoder.beginRenderPass(rpdview);\r\n' \
+  '        if (dim_mode >= 2) {\r\n' \
+  '          if (modified.has("l") || modified.has("v")) {\r\n' \
+  '            const lmatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_tilt(clt0angle, -slt0angle), lmatrix);\r\n' \
+  '            if (dim_mode == 3) {mat4_mult(mat4_rotation(crangle, srangle), lmatrix);}\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, -slrangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '            mat4_flip(lmatrix);\r\n' \
+  '            device.queue.writeBuffer(blinematrix, (blinematrix.size - 64) >> 1, lmatrix);\r\n' \
+  '          }\r\n' \
+  '          rbs.push(rblightrays1);\r\n' \
+  '        }\r\n' \
+  '        if (dim_mode == 3) {\r\n' \
+  '          if (modified.has("l") || modified.has("v")) {\r\n' \
+  '            const lmatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_tilt(cltangle, -sltangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(crangle, srangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, -slrangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), lmatrix);\r\n' \
+  '            mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '            mat4_flip(lmatrix);\r\n' \
+  '            device.queue.writeBuffer(blinematrix, blinematrix.size - 64, lmatrix);\r\n' \
+  '          }\r\n' \
+  '          rbs.push(rblightrays2);\r\n' \
+  '        }\r\n' \
+  '        pass.executeBundles(rbs);\r\n' \
+  '        pass.end();\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        modified.clear();\r\n' \
+  '        queue[0] = queue[1];\r\n' \
+  '        queue[1] = null;\r\n' \
+  '        return device.queue.onSubmittedWorkDone();\r\n' \
+  '      }\r\n' \
+  '      function canvas_redraw() {\r\n' \
+  '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
+  '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
+  '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
+  '      function toggle_filling(mode) {\r\n' \
+  '        if (mode == tex_mode) {return;};\r\n' \
+  '        tex_mode = mode;\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '      function toggle_dimming(mode) {\r\n' \
+  '        if (mode == dim_mode) {return;};\r\n' \
+  '        if (dim_mode == 3 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
+  '        dim_mode = mode;\r\n' \
+  '        if (dim_mode == 3) {\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          b_lrangle.disabled = false;\r\n' \
+  '        } else {\r\n' \
+  '          c_ltangle.disabled = true;\r\n' \
+  '          c_lrangle.disabled = true;\r\n' \
+  '          b_lrangle.disabled = true;\r\n' \
+  '          if (dim_mode == 2) {\r\n' \
+  '            set_param("lt", 35);\r\n' \
+  '            set_param("lr", 315);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        modified.add("l");\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '    </script>\r\n' \
+  '  </body>\r\n' \
+  '</html>\r\n'
+  HTML_3DP_WGPU_TEMPLATE = HTML_3DP_WGPU_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
+  HTML_3DS_DOC_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
@@ -14390,7 +16250,7 @@ class GPXTweakerWebInterfaceServer():
   '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
   '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
   '          </svg>\r\n' \
-  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
+  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="display:none;position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
   '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
   '            <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
   '              <textPath pointer-events="none" href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
@@ -14424,10 +16284,8 @@ class GPXTweakerWebInterfaceServer():
   '        </td>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
-  '    <script>\r\n' + HTML_3D_GLOBALVARS_TEMPLATE + \
-  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
-  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["scale", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trpos", "vec4"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
-  '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
+  '    <script>\r\n'
+  HTML_3DS_GLOBALVARS_TEMPLATE = \
   '      var track = document.getElementById("track");\r\n' \
   '      var eye = document.getElementById("eye");\r\n' \
   '      var c_pace = document.getElementById("cursor_pace");\r\n' \
@@ -14446,6 +16304,294 @@ class GPXTweakerWebInterfaceServer():
   '      var minimap = document.getElementById("mini_map");\r\n' \
   '      var trpaces = null;\r\n' \
   '      var trscale = null;\r\n' \
+  '      var mzoom = 1;\r\n' \
+  '      var show_infos = false;\r\n' \
+  '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
+  '      var click_r = null;\r\n' \
+  '      var click_t = null;\r\n' \
+  '      var click_cr = null;\r\n' \
+  '      var click_ct = null;\r\n' \
+  '      var click_id = 0.0;\r\n'
+  HTML_3DS_TRACK_TEMPLATE = \
+  '        function create_track() {\r\n' \
+  '          function move_to(x, y, d=true) {\r\n' \
+  '            if (d) {\r\n' \
+  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
+  '            } else {\r\n' \
+  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let cnv2d = document.createElement("canvas");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
+  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
+  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
+  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale / trscale);\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          trpaces = [];\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dr = false;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ptg = false;\r\n' \
+  '            let pac = true;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (! dr) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                move_to(px, py, false);\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                  if (! ptg) {\r\n' \
+  '                    ptg = true;\r\n' \
+  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (dist < pace_length) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
+  '                  pac = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
+  '                  move_to(px, py);\r\n' \
+  '                } else {\r\n' \
+  '                  pac = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              dr = true;\r\n' \
+  '              if (pac) {\r\n' \
+  '                let pz = get_pz(px, py);\r\n' \
+  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '          }\r\n' \
+  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
+  '          minimap.style.display = "";\r\n'
+  HTML_3DS_KEY_MINIMAP_TEMPLATE = \
+  '      function process_key(e) {\r\n' \
+  '        let rd = false;\r\n' \
+  '        let alt = false;\r\n' \
+  '        switch (e.key.toLowerCase()) {\r\n' \
+  '          case "end":\r\n' \
+  '            alt = true;\r\n' \
+  '          case "arrowup":\r\n' \
+  '            if (pace < parseInt(c_pace.max)) {\r\n' \
+  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.shiftKey?10:(e.repeat?2:1)),parseInt(c_pace.max)));\r\n' \
+  '              rd = true;\r\n' \
+  '            } else {return;}\r\n' \
+  '            break;\r\n' \
+  '          case "home":\r\n' \
+  '            alt = true;\r\n' \
+  '          case "arrowdown":\r\n' \
+  '            if (pace > 0) {\r\n' \
+  '              set_param("p", alt?0:Math.max(pace-(e.shiftKey?10:(e.repeat?2:1)),0));\r\n' \
+  '              rd = true;\r\n' \
+  '            } else {return;}\r\n' \
+  '            break;\r\n' \
+  '          case "arrowleft":\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?350:(e.repeat?358:359))) % 360);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "arrowright":\r\n' \
+  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?10:(e.repeat?2:1))) % 360);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "pageup":\r\n' \
+  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "pagedown":\r\n' \
+  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "delete":\r\n' \
+  '            cb_pace.checked = ! cb_pace.checked;\r\n' \
+  '            toggle_auto_rotation();\r\n' \
+  '            break;\r\n' \
+  '          case "insert":\r\n' \
+  '            set_param("t", 0);\r\n' \
+  '            rd = true;\r\n' \
+  '            break;\r\n' \
+  '          case "-":\r\n' \
+  '            c_height.value = Math.max(parseFloat(c_height.value) - 1, 0).toString();\r\n' \
+  '            set_param("h");\r\n' \
+  '            break;\r\n' \
+  '          case "+":\r\n' \
+  '            c_height.value = Math.min(parseFloat(c_height.value) + 1, 100).toString();\r\n' \
+  '            set_param("h");\r\n' \
+  '            break;\r\n' \
+  '          case "enter":\r\n' \
+  '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
+  '            break;\r\n' \
+  '          default:\r\n' \
+  '            return;\r\n' \
+  '        }\r\n' \
+  '        if (e instanceof KeyboardEvent) {\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          e.preventDefault();\r\n' \
+  '        }\r\n' \
+  '        if (rd) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      function toggle_minimap_magnification() {\r\n' \
+  '        mzoom = (mzoom==1)?5:1;\r\n' \
+  '        mini_map.style.width = (mzoom * 10).toString() + "vh";\r\n' \
+  '        mini_map.style.height = (mzoom * 10).toString() + "vh";\r\n' \
+  '        eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
+  '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
+  '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
+  '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
+  '        mini_map.style.cursor = (mzoom==1)?"zoom-in":"zoom-out";\r\n' \
+  '      }\r\n'
+  HTML_3DS_INF_MOUSE_TEMPLATE = \
+  '      function update_pointer(e) {\r\n' \
+  '        e.preventDefault();\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (! window.opener) {return;}\r\n' \
+  '        let c = null;\r\n' \
+  '        if (e.target.htmlFor == "eye_info") {\r\n' \
+  '          c = e_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        } else if (e.target.htmlFor == "target_info") {\r\n' \
+  '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        }\r\n' \
+  '        if (! c || c.length != 3) {return;}\r\n' \
+  '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
+  '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
+  '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
+  '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_reversegeocodingswitch() {\r\n' \
+  '        if (s_rg.options.length > 0) {\r\n' \
+  '          if (p_rg.style.display == "none") {\r\n' \
+  '            p_rg.style.display = "block";\r\n' \
+  '          } else {\r\n' \
+  '            p_rg.style.display = "none";\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function load_rgcb(t, f, c) {\r\n' \
+  '        if (t.status != 200) {\r\n' \
+  '          return;\r\n' \
+  '        }\r\n' \
+  '        let c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        if (! c_) {return;}\r\n' \
+  '        if (c_.length != 3) {return;}\r\n' \
+  '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
+  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
+  '        f.value = f.value + " | " + t.response;\r\n' \
+  '      }\r\n' \
+  '      function error_rgcb() {\r\n' \
+  '      }\r\n' \
+  '      function complete_infos(e=null) {\r\n' \
+  '        let f = null;\r\n' \
+  '        if (e) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (e.target.htmlFor != "eye_info" && e.target.htmlFor != "target_info") {return;}\r\n' \
+  '          f = e.target.nextElementSibling;\r\n' \
+  '        } else {\r\n' \
+  '          f = t_info;\r\n' \
+  '        }\r\n' \
+  '        if (rgset < 0) {return;}\r\n' \
+  '        let c = null;\r\n' \
+  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
+  '        c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        if (c) {\r\n' \
+  '          if (c.length == 3) {\r\n' \
+  '            let plat = parseFloat(c[1]);\r\n' \
+  '            let plon = parseFloat(c[2]);\r\n' \
+  '            let xhrrg = new XMLHttpRequest();\r\n' \
+  '            xhrrg.onerror = error_rgcb;\r\n' \
+  '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
+  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
+  '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '       function mouse_down(e) {\r\n' \
+  '        if (e.button == 1) {process_key({key:"delete"});return;} else if (e.button != 0) {return;}\r\n' \
+  '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
+  '        document.onmouseup = mouse_up;\r\n' \
+  '        mini_map.setAttribute("pointer-events", "none");\r\n' \
+  '        p_infos.style.pointerEvents = "none";\r\n' \
+  '        canvas.parentNode.style.cursor = "all-scroll";\r\n' \
+  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '        click_cr = parseFloat(c_rangle.value);\r\n' \
+  '        click_ct = parseFloat(c_tangle.value);\r\n' \
+  '        var click_c = 0;\r\n' \
+  '        click_id += 0.5;\r\n' \
+  '        var click_lid = click_id;\r\n' \
+  '        function loop_redraw(c) {\r\n' \
+  '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
+  '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '          canvas_redraw();\r\n' \
+  '        }\r\n' \
+  '        window.requestAnimationFrame(loop_redraw);\r\n' \
+  '      }\r\n' \
+  '      function mouse_up(e) {\r\n' \
+  '        click_id += 0.5;\r\n' \
+  '        canvas.parentNode.onmousemove = null;\r\n' \
+  '        document.onmouseup = null;\r\n' \
+  '        mini_map.removeAttribute("pointer-events");\r\n' \
+  '        canvas.parentNode.style.cursor = "";\r\n' \
+  '        p_infos.style.pointerEvents = "";\r\n' \
+  '      }\r\n' \
+  '      function mouse_move(e) {\r\n' \
+  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
+  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '      }\r\n' \
+  '      function mouse_wheel(e) {\r\n' \
+  '        if (e.deltaY > 0) {;\r\n' \
+  '          if (pace < parseInt(c_pace.max)) {\r\n' \
+  '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
+  '            canvas_redraw();\r\n' \
+  '          }\r\n' \
+  '        } else if (e.deltaY < 0) {;\r\n' \
+  '          if (pace > 0) {\r\n' \
+  '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
+  '            canvas_redraw();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n'
+  HTML_3DS_TEMPLATE = HTML_3DS_DOC_TEMPLATE + HTML_3D_GLOBALVARS_TEMPLATE + HTML_3DS_GLOBALVARS_TEMPLATE + \
+  '      var gl_attributes = new Map([["tvposition", ["vec4", 3]], ["tvnormal", ["vec3", 3]], ["rvposition", ["vec3", 3]]]);\r\n' \
+  '      var gl_static_uniforms = new Map([["zfactmax", "float"], ["scale", "float"], ["radius", "float"], ["mpos", "vec4"], ["mtex", "sampler2D"], ["trpos", "vec4"], ["trtex", "sampler2D"], ["dtex", "sampler2DShadow"]]);\r\n' \
+  '      var gl_dynamic_uniforms = new Map([["eposition", "vec2"], ["vmatrix", "mat4"], ["lmatrix", "mat4"], ["ldirection", "vec3"], ["dmode", "int"], ["pmode", "int"]]);\r\n' \
   '      var rpositions = null;\r\n' \
   '      var rvposition = null;\r\n' \
   '      var eposition = null;\r\n' \
@@ -14458,14 +16604,6 @@ class GPXTweakerWebInterfaceServer():
   '      var pd_texture = null;\r\n' \
   '      var pfrbuf = null;\r\n' \
   '      var predraw = false;\r\n' \
-  '      var mzoom = 1;\r\n' \
-  '      var show_infos = false;\r\n' \
-  '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
-  '      var click_r = null;\r\n' \
-  '      var click_t = null;\r\n' \
-  '      var click_cr = null;\r\n' \
-  '      var click_ct = null;\r\n' \
-  '      var click_id = 0.0;\r\n' \
   '      function set_param(p, v=null) {\r\n' \
   '        if (p == "p") {\r\n' \
   '          if (v != null) {c_pace.value = v.toString();}\r\n' \
@@ -14757,91 +16895,7 @@ class GPXTweakerWebInterfaceServer():
   '            pcolor = ivec2(round(32767.0 * pcoord));\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
-  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
-  '        function create_track() {\r\n' \
-  '          function move_to(x, y, d=true) {\r\n' \
-  '            if (d) {\r\n' \
-  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
-  '            } else {\r\n' \
-  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
-  '          cnv2d.height = tr_size;\r\n' \
-  '          cnv2d.width = tr_size;\r\n' \
-  '          ctx.strokeStyle = "red";\r\n' \
-  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
-  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
-  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
-  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale / trscale);\r\n' \
-  '          ctx.lineJoin = "round";\r\n' \
-  '          ctx.lineCap = "round";\r\n' \
-  '          ctx.fillStyle = "red";\r\n' \
-  '          trpaces = [];\r\n' \
-  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
-  '            let ind = 0;\r\n' \
-  '            let dr = false;\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let px = null;\r\n' \
-  '            let py = null;\r\n' \
-  '            let tx = null;\r\n' \
-  '            let ty = null;\r\n' \
-  '            let td = null;\r\n' \
-  '            let tdx = null;\r\n' \
-  '            let tdy = null;\r\n' \
-  '            let ptg = false;\r\n' \
-  '            let pac = true;\r\n' \
-  '            while (ind < trpositions[s].length - 1) {\r\n' \
-  '              if (! dr) {\r\n' \
-  '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind + 1];\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
-  '                ctx.stroke()\r\n' \
-  '                ctx.fill();\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                move_to(px, py, false);\r\n' \
-  '                ind += 2;\r\n' \
-  '              } else {\r\n' \
-  '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
-  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
-  '                if (td > 0) {\r\n' \
-  '                  tx = tdx / td;\r\n' \
-  '                  ty = tdy / td;\r\n' \
-  '                  dist += td;\r\n' \
-  '                  if (! ptg) {\r\n' \
-  '                    ptg = true;\r\n' \
-  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
-  '                  }\r\n' \
-  '                }\r\n' \
-  '                if (dist < pace_length) {\r\n' \
-  '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind + 1];\r\n' \
-  '                  pac = false;\r\n' \
-  '                  ind += 2;\r\n' \
-  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
-  '                  move_to(px, py);\r\n' \
-  '                } else {\r\n' \
-  '                  pac = true;\r\n' \
-  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
-  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
-  '                  dist = 0;\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              dr = true;\r\n' \
-  '              if (pac) {\r\n' \
-  '                let pz = get_pz(px, py);\r\n' \
-  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            ctx.stroke();\r\n' \
-  '          }\r\n' \
-  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
-  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
-  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
-  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
@@ -14934,7 +16988,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_pace.max = (trpaces.length - 1).toString();\r\n' \
   '          cv_pace.nextElementSibling.innerHTML = (trpaces.length - 1).toString();\r\n' \
   '          c_pace.disabled = false;\r\n' \
-  '          cb_pace.disabled = false\r\n' \
+  '          cb_pace.disabled = false;\r\n' \
   '          r_yiso.disabled = false;\r\n' \
   '          r_ziso.disabled = false;\r\n' \
   '          r_dimn.disabled = false;\r\n' \
@@ -14946,7 +17000,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_vfov.disabled = false;\r\n' \
   '          c_height.disabled = false;\r\n' \
   '          canvas.focus();\r\n' \
-  '          canvas.style.outline="none";\r\n' \
+  '          canvas.style.outline = "none";\r\n' \
   '        }\r\n' \
   '        let xhr = new XMLHttpRequest();\r\n' \
   '        xhr.onerror = (e) => derror_cb(e.target);\r\n' \
@@ -14955,7 +17009,12 @@ class GPXTweakerWebInterfaceServer():
   '        xhr.responseType = "arraybuffer";\r\n' \
   '        xhr.send();\r\n' \
   '      }\r\n' \
-  '      data_load();\r\n' + HTML_3D_TOGGLE_TEMPLATE + \
+  '      data_load();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
+  '      function toggle_filling(mode) {\r\n' \
+  '        if (mode == fillmode) {return;};\r\n' \
+  '        fillmode = mode;\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
   '      function toggle_auto_rotation() {\r\n' \
   '        if (cb_pace.checked) {\r\n' \
   '          if (c_rangle.disabled) {toggle_rotation();}\r\n' \
@@ -14977,81 +17036,7 @@ class GPXTweakerWebInterfaceServer():
   '          b_lrangle.disabled = true;\r\n' \
   '        }\r\n' \
   '        canvas_redraw();\r\n' \
-  '      }\r\n' \
-  '      function process_key(e) {\r\n' \
-  '        let rd = false;\r\n' \
-  '        let alt = false;\r\n' \
-  '        switch (e.key.toLowerCase()) {\r\n' \
-  '          case "end":\r\n' \
-  '            alt = true;\r\n' \
-  '          case "arrowup":\r\n' \
-  '            if (pace < parseInt(c_pace.max)) {\r\n' \
-  '              set_param("p", alt?parseInt(c_pace.max):Math.min(pace+(e.shiftKey?10:(e.repeat?2:1)),parseInt(c_pace.max)));\r\n' \
-  '              rd = true;\r\n' \
-  '            } else {return;}\r\n' \
-  '            break;\r\n' \
-  '          case "home":\r\n' \
-  '            alt = true;\r\n' \
-  '          case "arrowdown":\r\n' \
-  '            if (pace > 0) {\r\n' \
-  '              set_param("p", alt?0:Math.max(pace-(e.shiftKey?10:(e.repeat?2:1)),0));\r\n' \
-  '              rd = true;\r\n' \
-  '            } else {return;}\r\n' \
-  '            break;\r\n' \
-  '          case "arrowleft":\r\n' \
-  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?350:(e.repeat?358:359))) % 360);\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "arrowright":\r\n' \
-  '            set_param("r", (parseFloat(c_rangle.value) + (e.shiftKey?10:(e.repeat?2:1))) % 360);\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "pageup":\r\n' \
-  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "pagedown":\r\n' \
-  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "delete":\r\n' \
-  '            cb_pace.checked = ! cb_pace.checked;\r\n' \
-  '            toggle_auto_rotation();\r\n' \
-  '            break;\r\n' \
-  '          case "insert":\r\n' \
-  '            set_param("t", 0);\r\n' \
-  '            rd = true;\r\n' \
-  '            break;\r\n' \
-  '          case "-":\r\n' \
-  '            c_height.value = Math.max(parseFloat(c_height.value) - 1, 0).toString();\r\n' \
-  '            set_param("h");\r\n' \
-  '            break;\r\n' \
-  '          case "+":\r\n' \
-  '            c_height.value = Math.min(parseFloat(c_height.value) + 1, 100).toString();\r\n' \
-  '            set_param("h");\r\n' \
-  '            break;\r\n' \
-  '          case "enter":\r\n' \
-  '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
-  '            break;\r\n' \
-  '          default:\r\n' \
-  '            return;\r\n' \
-  '        }\r\n' \
-  '        if (e instanceof KeyboardEvent) {\r\n' \
-  '          e.stopPropagation();\r\n' \
-  '          e.preventDefault();\r\n' \
-  '        }\r\n' \
-  '        if (rd) {canvas_redraw();}\r\n' \
-  '      }\r\n' \
-  '      function toggle_minimap_magnification() {\r\n' \
-  '        mzoom = (mzoom==1)?5:1;\r\n' \
-  '        mini_map.style.width = (mzoom * 10).toString() + "vh";\r\n' \
-  '        mini_map.style.height = (mzoom * 10).toString() + "vh";\r\n' \
-  '        eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
-  '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
-  '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
-  '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
-  '        mini_map.style.cursor = (mzoom==1)?"zoom-in":"zoom-out";\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
   '          show_infos = false;\r\n' \
@@ -15112,128 +17097,606 @@ class GPXTweakerWebInterfaceServer():
   '          clear_tinfos();\r\n '\
   '          predraw = true;\r\n' \
   '        }\r\n' \
-  '      }\r\n' \
-  '      function update_pointer(e) {\r\n' \
-  '        e.preventDefault();\r\n' \
-  '        e.stopPropagation();\r\n' \
-  '        if (! window.opener) {return;}\r\n' \
-  '        let c = null;\r\n' \
-  '        if (e.target.htmlFor == "eye_info") {\r\n' \
-  '          c = e_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        } else if (e.target.htmlFor == "target_info") {\r\n' \
-  '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        }\r\n' \
-  '        if (! c || c.length != 3) {return;}\r\n' \
-  '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
-  '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
-  '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
-  '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function toggle_reversegeocodingswitch() {\r\n' \
-  '        if (s_rg.options.length > 0) {\r\n' \
-  '          if (p_rg.style.display == "none") {\r\n' \
-  '            p_rg.style.display = "block";\r\n' \
-  '          } else {\r\n' \
-  '            p_rg.style.display = "none";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '      function load_rgcb(t, f, c) {\r\n' \
-  '        if (t.status != 200) {\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        let c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        if (! c_) {return;}\r\n' \
-  '        if (c_.length != 3) {return;}\r\n' \
-  '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
-  '        let dpos = f.value.indexOf(" | ");\r\n' \
-  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
-  '        f.value = f.value + " | " + t.response;\r\n' \
-  '      }\r\n' \
-  '      function error_rgcb() {\r\n' \
-  '      }\r\n' \
-  '      function complete_infos(e=null) {\r\n' \
-  '        let f = null;\r\n' \
-  '        if (e) {\r\n' \
-  '          e.preventDefault();\r\n' \
-  '          e.stopPropagation();\r\n' \
-  '          if (e.target.htmlFor != "eye_info" && e.target.htmlFor != "target_info") {return;}\r\n' \
-  '          f = e.target.nextElementSibling;\r\n' \
-  '        } else {\r\n' \
-  '          f = t_info;\r\n' \
-  '        }\r\n' \
-  '        if (rgset < 0) {return;}\r\n' \
-  '        let c = null;\r\n' \
-  '        let dpos = f.value.indexOf(" | ");\r\n' \
-  '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
-  '        c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        if (c) {\r\n' \
-  '          if (c.length == 3) {\r\n' \
-  '            let plat = parseFloat(c[1]);\r\n' \
-  '            let plon = parseFloat(c[2]);\r\n' \
-  '            let xhrrg = new XMLHttpRequest();\r\n' \
-  '            xhrrg.onerror = error_rgcb;\r\n' \
-  '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
-  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
-  '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
-  '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
-  '       function mouse_down(e) {\r\n' \
-  '        if (e.button == 1) {process_key({key:"delete"});return;} else if (e.button != 0) {return;}\r\n' \
-  '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
-  '        document.onmouseup = mouse_up;\r\n' \
-  '        mini_map.setAttribute("pointer-events", "none");\r\n' \
-  '        p_infos.style.pointerEvents = "none";\r\n' \
-  '        canvas.parentNode.style.cursor = "all-scroll";\r\n' \
-  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '        click_cr = parseFloat(c_rangle.value);\r\n' \
-  '        click_ct = parseFloat(c_tangle.value);\r\n' \
-  '        var click_c = 0;\r\n' \
-  '        click_id += 0.5;\r\n' \
-  '        var click_lid = click_id;\r\n' \
-  '        function loop_redraw(c) {\r\n' \
-  '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
-  '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
-  '          canvas_redraw();\r\n' \
-  '        }\r\n' \
-  '        window.requestAnimationFrame(loop_redraw);\r\n' \
-  '      }\r\n' \
-  '      function mouse_up(e) {\r\n' \
-  '        click_id += 0.5;\r\n' \
-  '        canvas.parentNode.onmousemove = null;\r\n' \
-  '        document.onmouseup = null;\r\n' \
-  '        mini_map.removeAttribute("pointer-events");\r\n' \
-  '        canvas.parentNode.style.cursor = "";\r\n' \
-  '        p_infos.style.pointerEvents = "";\r\n' \
-  '      }\r\n' \
-  '      function mouse_move(e) {\r\n' \
-  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
-  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
-  '      }\r\n' \
-  '      function mouse_wheel(e) {\r\n' \
-  '        if (e.deltaY > 0) {;\r\n' \
-  '          if (pace < parseInt(c_pace.max)) {\r\n' \
-  '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
-  '            canvas_redraw();\r\n' \
-  '          }\r\n' \
-  '        } else if (e.deltaY < 0) {;\r\n' \
-  '          if (pace > 0) {\r\n' \
-  '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
-  '            canvas_redraw();\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
+  '      }\r\n' + HTML_3DS_INF_MOUSE_TEMPLATE + \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
   HTML_3DS_TEMPLATE = HTML_3DS_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
-  HTML_3DS_DECLARATIONS_TEMPLATE = HTML_3DP_DECLARATIONS_TEMPLATE + '\r\n' + \
-  '      var scale = ##SCALE##;\r\n' \
-  '      var ppos = [##PPOS##];'
+  HTML_3DS_WGPU_TEMPLATE = HTML_3DS_DOC_TEMPLATE + HTML_3D_WGPU_GLOBALVARS_TEMPLATE + HTML_3DS_GLOBALVARS_TEMPLATE + \
+  '      var gxs = null;\r\n' \
+  '      var gys = null;\r\n' \
+  '      var gzs = null;\r\n' \
+  '      var eposition = null;\r\n' \
+  '      var beposition = null;\r\n' \
+  '      var bsunratio = null;\r\n' \
+  '      var bsunmatrix = null;\r\n' \
+  '      var rpdposition = null;\r\n' \
+  '      var rbsun = null;\r\n' \
+  '      var rbposition = null;\r\n' \
+  '      const snt = 36;\r\n' \
+  '      var position_texture = null;\r\n' \
+  '      var pdepth_texture = null;\r\n' \
+  '      function set_param(p, v=null) {\r\n' \
+  '        if (p == "p") {\r\n' \
+  '          if (v != null) {c_pace.value = v.toString();}\r\n' \
+  '          cv_pace.innerHTML = c_pace.value;\r\n' \
+  '          pace = parseInt(c_pace.value);\r\n' \
+  '          eposition[0] = trpaces[pace][0];\r\n' \
+  '          eposition[1] = trpaces[pace][1];\r\n' \
+  '          if (cb_pace.checked) {\r\n' \
+  '            if (c_rangle.disabled) {toggle_rotation();}\r\n' \
+  '            set_param("r", (450 - trpaces[pace][3] / Math.PI * 180) % 360);\r\n' \
+  '          } else if (eposition != null) {\r\n' \
+  '            eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
+  '          }\r\n' \
+  '          modified.add("e");\r\n' \
+  '          modified.add("v");\r\n' \
+  '          if (show_infos) {update_infos();}\r\n' \
+  '        } else if (p == "f") {\r\n' \
+  '          if (v != null) {c_vfov.value = v.toString();}\r\n' \
+  '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
+  '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
+  '          modified.add("v");\r\n' \
+  '          if (show_infos) {clear_tinfos();}\r\n' \
+  '        } else if (p == "h") {\r\n' \
+  '          if (v != null) {\r\n' \
+  '            c_height.value = (Math.min(v, 10) * 2 + Math.min(Math.max(v - 10, 0), 40) / 2 + Math.min(Math.max(v - 50, 0), 150) / 7.5 + Math.min(Math.max(v - 200, 0), 300) / 15 + Math.max(v - 500, 0) / 25).toString();\r\n' \
+  '            cv_height.innerHTML = (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10).toString();\r\n' \
+  '            zoff = v / scale;\r\n' \
+  '          } else {\r\n' \
+  '            let hv = parseFloat(c_height.value);\r\n' \
+  '            let height = Math.max(Math.min(hv, 20) / 2, 0.2) + Math.min(Math.max(hv - 20, 0), 20) * 2 + Math.min(Math.max(hv - 40, 0), 20) * 7.5 + Math.min(Math.max(hv - 60, 0), 20) * 15 + Math.max(hv - 80, 0) * 25;\r\n' \
+  '            cv_height.innerHTML = (height >= 10 ? Math.round(height) : Math.round(height * 10) / 10).toString();\r\n' \
+  '            zoff = height / scale;\r\n' \
+  '          }\r\n' \
+  '          modified.add("v");\r\n' \
+  '          if (show_infos) {update_infos();}\r\n' \
+  '        } else {\r\n' \
+  '          let angle = null;\r\n' \
+  '          switch (p) {\r\n' \
+  '            case "t":\r\n' \
+  '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
+  '              angle = (90 + parseFloat(c_tangle.value)) * Math.PI / 180;\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (show_infos) {clear_tinfos();}\r\n' \
+  '              break;\r\n' \
+  '            case "r":\r\n' \
+  '              if (v != null) {c_rangle.value = v.toString();}\r\n' \
+  '              angle =  parseFloat(c_rangle.value) * Math.PI / -180;\r\n' \
+  '              if (eposition != null) {eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);}\r\n' \
+  '              modified.add("v");\r\n' \
+  '              if (show_infos) {clear_tinfos();}\r\n' \
+  '              break;\r\n' \
+  '            case "lt":\r\n' \
+  '              if (v != null) {c_ltangle.value = v.toString();}\r\n' \
+  '              angle = (parseFloat(c_ltangle.value) - 90) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '            case "lr":\r\n' \
+  '              if (v != null) {c_lrangle.value = v.toString();}\r\n' \
+  '              angle = - parseFloat(c_lrangle.value) * Math.PI / 180;\r\n' \
+  '              modified.add("l");\r\n' \
+  '              break;\r\n' \
+  '          }\r\n' \
+  '          window["c" + p + "angle"] = Math.cos(angle);\r\n' \
+  '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
+  '          window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
+  '        }\r\n' \
+  '        if (v == null) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      set_param("t", 0);\r\n' \
+  '      set_param("r", 0);\r\n' \
+  '      set_param("lt", 25);\r\n' \
+  '      set_param("lr", 90);\r\n' \
+  '      var pace = 0;\r\n' \
+  '      var vfov = null;\r\n' \
+  '      set_param("f", 55);\r\n##DECLARATIONS##\r\n' \
+  '      var radius = null;\r\n' \
+  '      var pace_length = null;\r\n' \
+  '      var zoff = null;\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
+  '        function mat4_translation(xt, yt, zt) {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          1, 0, 0, xt,\r\n' \
+  '          0, 1, 0, yt,\r\n' \
+  '          0, 0, 1, zt,\r\n' \
+  '          0, 0, 0, 1\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function mat4_perspective() {\r\n' \
+  '        return new Float32Array([\r\n' \
+  '          vfov / 4 / canvas.clientWidth * canvas.clientHeight, 0, 0, 0,\r\n' \
+  '          0, vfov / 4, 0, 0,\r\n' \
+  '          0, 0, 1/4, 0,\r\n' \
+  '          0, 0, 1/4, 0,\r\n' \
+  '        ]);\r\n' \
+  '      }\r\n' \
+  '      function canvas_resize() {\r\n' \
+  '        const cpn = canvas.parentNode;\r\n' \
+  '        const ss = Math.min(ssampling, Math.max(1, Math.floor(c_msize / Math.max(cpn.offsetWidth, cpn.offsetHeight))));\r\n' \
+  '        const osize = [cpn.offsetWidth, cpn.offsetHeight];\r\n' \
+  '        const size = [osize[0] * ss, osize[1] * ss];\r\n' \
+  '        canvas.setAttribute("width", size[0].toString());\r\n' \
+  '        canvas.setAttribute("height", size[1].toString());\r\n' \
+  '        canvas.style.width = osize[0].toString() + "px";;\r\n' \
+  '        canvas.style.height = osize[1].toString() + "px";\r\n' \
+  '        modified.add("v");\r\n' \
+  '        modified.add("s");\r\n' \
+  '        if (show_infos) {clear_tinfos();}\r\n' \
+  '        if (color_texture != null) {queue[0].then(color_texture.destroy.bind(color_texture));}\r\n' \
+  '        color_texture = device.createTexture({size: size, format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '        if (depth_texture != null) {queue[0].then(depth_texture.destroy.bind(depth_texture));}\r\n' \
+  '        depth_texture = device.createTexture({size: size, format: "depth32float", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '        if (position_texture != null) {\r\n' \
+  '          queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
+  '          position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '          rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '        }\r\n' \
+  '        if (pdepth_texture != null) {\r\n' \
+  '          queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
+  '          pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '          rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function get_pz(px, py) {\r\n' \
+  '        const lvx = gxs.length;\r\n' \
+  '        const lvy = gys.length;\r\n' \
+  '        let i1 = 0;\r\n' \
+  '        let ix = lvx - 1;\r\n' \
+  '        let im = (i1 + ix) >> 1;\r\n' \
+  '        while (im < ix) {\r\n' \
+  '          if (gxs[im] <= px) {i1 = im + 1;} else {ix = im;}\r\n' \
+  '          im = (i1 + ix) >> 1;\r\n' \
+  '        }\r\n' \
+  '        i1 = 0;\r\n' \
+  '        let iy = lvy - 1;\r\n' \
+  '        im = (i1 + iy) >> 1;\r\n' \
+  '        while (im < iy) {\r\n' \
+  '          if (gys[im] <= py) {i1 = im + 1;} else {iy = im;}\r\n' \
+  '          im = (i1 + iy) >> 1;\r\n' \
+  '        }\r\n' \
+  '        const cx = (px - gxs[ix - 1]) / (gxs[ix] - gxs[ix - 1]);\r\n' \
+  '        const cy = (py - gys[iy - 1]) / (gys[iy] - gys[iy - 1]);\r\n' \
+  '        return cx + cy <= 1 ? (1 - cx - cy) * gzs[ix - 1 + (iy - 1) * lvx] + cx * gzs[ix + (iy - 1) * lvx] + cy  * gzs[ix - 1 + iy * lvx] : (1 - cy) * gzs[ix + (iy - 1) * lvx] + (1 - cx) * gzs[ix - 1 + iy * lvx] + (cx + cy - 1) * gzs[ix + iy * lvx];\r\n' \
+  '      }\r\n' \
+  '      async function init() {\r\n' \
+  '        document.body.style.cursor = "wait";\r\n' \
+  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
+  '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
+  '        device = await adapter?.requestDevice({requiredLimits:{maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
+  '        c_msize = Math.min(4096, max_size);\r\n' \
+  '        const m_size = Math.min(11008, max_size);\r\n' \
+  '        const tr_size = Math.min(8192, max_size);\r\n' \
+  '        const d_size = max_size;\r\n' \
+  '        const mview = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> radius: f32;\r\n' \
+  '          @group(0) @binding(2) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(3) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(4) var<uniform> eposition: vec2f;\r\n' \
+  '          @group(0) @binding(5) var<uniform> mappos: mat4x4f;\r\n' \
+  '          @group(0) @binding(6) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(7) var<storage, read> gys: array<f32>;\r\n' \
+  '          struct vout0 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f};\r\n' \
+  '          struct vout1 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vmz: f32};\r\n' \
+  '          struct vout2 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f, @location(2) vlcoord: vec2f, @location(3) vldepth: f32};\r\n' \
+  '          @vertex fn vview0(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout0 {\r\n' \
+  '            var out: vout0;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * radius, 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview1(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout1 {\r\n' \
+  '            var out: vout1;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * radius, 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vmz = 0.5 * dimfact.y * (grposition.z + 1.0);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @vertex fn vview2(@builtin(vertex_index) vi: u32, @location(0) gz: f32, @location(1) grnormal: vec3f) -> vout2 {\r\n' \
+  '            var out: vout2;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * radius, 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoords = mappos * grposition;\r\n' \
+  '            out.vnormal = grnormal;\r\n' \
+  '            let vlposition: vec4f = lightmatrix * grposition;\r\n' \
+  '            out.vlcoord = fma(vlposition.xy / vlposition.w, vec2f(0.5, -0.5), vec2f(0.5));\r\n' \
+  '            out.vldepth = vlposition.z / vlposition.w - 0.002;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @group(0) @binding(8) var trcksampler: sampler;\r\n' \
+  '          @group(0) @binding(9) var trcktex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(10) var grsampler: sampler;\r\n' \
+  '          @group(0) @binding(11) var grtex: texture_2d<f32>;\r\n' \
+  '          @group(0) @binding(12) var depthsampler: sampler_comparison;\r\n' \
+  '          @group(0) @binding(13) var ldepthtex: texture_depth_2d;\r\n' \
+  '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pcolor: vec4f};\r\n' \
+  '          @fragment fn fview0(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            let pdim: f32 = dimfact.x;\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview1(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pmz: f32) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            let pdim: f32 = pow(pmz, 0.7);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @fragment fn fview2(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f, @location(2) plcoord: vec2f, @location(3) pldepth: f32) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
+  '            let pdim: f32 = select(0.2, mix(0.2 , fma(0.8, abs(cinc), 0.2), textureSampleCompare(ldepthtex, depthsampler, plcoord, fma(0.0015, cinc, pldepth))), cinc > 0.0);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 6, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 7, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 13, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
+  '        const pview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, }));\r\n' \
+  '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        const bradius = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
+  '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        beposition = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
+  '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
+  '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
+  '        const depth_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8, compare: "less"});\r\n' \
+  '        const ptex = new Uint8Array(32);\r\n' \
+  '        const pattern_texture = device.createTexture({size: [1, 7], format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST});\r\n' \
+  '        ptex.set([0, 0, 255, 255, 210, 255, 190, 255]);\r\n' \
+  '        for (let r=4; r<28; r+=4) {ptex.copyWithin(r, 4, 8);}\r\n' \
+  '        device.queue.writeTexture({texture: pattern_texture, mipLevel: 0}, ptex, {bytesPerRow: 4}, {width: 1, height: 7});\r\n' \
+  '        const ldepth_texture = device.createTexture({size: [d_size, d_size], format: "depth32float", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '        rpdview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 1.0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const mshadow = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(1) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(2) var<storage, read> gys: array<f32>;\r\n' \
+  '          @vertex fn vshadow(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> @builtin(position) vec4f {\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            return lightmatrix * grposition;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
+  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
+  '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const override = navigator_firefox ? "const" : "override";\r\n' \
+  '        const msun = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> sratio: f32;\r\n' \
+  '          @group(0) @binding(1) var<uniform> smatrix: mat4x4f;\r\n' \
+  '          ${override} snt: u32 = 36;\r\n' \
+  '          ${override} sa: f32 = 2.0 * 3.1415926536 / f32(snt);\r\n' \
+  '          @vertex fn vsun(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> @builtin(position) vec4f {\r\n' \
+  '            var vposition = smatrix * vec4f(0.0, 0.0, 1.0, 1.0) + 0.01 * f32(1u - (vi >> 1u)) * vec4f(sratio * cos(f32(ii + vi) * sa), sin(f32(ii + vi) * sa), 0.0, 0.0);\r\n' \
+  '            vposition.z *= vposition.w;\r\n' \
+  '            return vposition;\r\n' \
+  '          }\r\n' \
+  '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pcolor: vec4f};\r\n' \
+  '          @fragment fn fsun() -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = 1.0;\r\n' \
+  '            out.pcolor = vec4f(1.0, 1.0, 0.0, 1.0);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglsun = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}]});\r\n' \
+  '        const psun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglsun]}), vertex: {module: msun, entryPoint: "vsun", buffers: []}, fragment: {module: msun, entryPoint: "fsun", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-list"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less-equal", format: "depth32float"}, });\r\n' \
+  '        bsunratio = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        bsunmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const mposition = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> radius: f32;\r\n' \
+  '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(2) var<uniform> eposition: vec2f;\r\n' \
+  '          @group(0) @binding(3) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(4) var<storage, read> gys: array<f32>;\r\n' \
+  '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
+  '          @vertex fn vposition(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout {\r\n' \
+  '            var out: vout;\r\n' \
+  '            let nc: u32 = arrayLength(&gxs);\r\n' \
+  '            let grposition: vec4f = vec4f(gxs[vi % nc], gys[vi / nc], gz, 1.0);\r\n' \
+  '            let zcor: f32 = - pow(distance(eposition, grposition.xy) / radius, 2.0) / 2.0;\r\n' \
+  '            out.vposition = viewmatrix * (grposition + vec4f(0.0, 0.0, zcor * (gz + radius), 0.0));\r\n' \
+  '            out.vposition.z *= out.vposition.w;\r\n' \
+  '            out.vcoord = grposition.xy;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pposition: vec2i};\r\n' \
+  '          @fragment fn fposition(@builtin(position) pposition: vec4f, @location(0) pcoord: vec2f) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pdepth = pposition.w;\r\n' \
+  '            out.pposition = vec2i(round(32767.0 * pcoord));\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglposition = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
+  '        const pposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglposition]}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
+  '        rpdposition = {colorAttachments: [{view: null, clearValue: [-32768, -32768, 0, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
+  '        const cmap = create_map();\r\n' \
+  '        cmap.next();\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        new Float32Array(bdimfact[0].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[1].getMappedRange()).set([0.7, zfactmax]);\r\n' \
+  '        new Float32Array(bdimfact[2].getMappedRange()).set([1, zfactmax]);\r\n' \
+  '        bdimfact.forEach((b) => b.unmap());\r\n' \
+  '        new Float32Array(bradius.getMappedRange())[0] = 6378137 / scale;\r\n' \
+  '        bradius.unmap();\r\n' \
+  '        const trpos = new Float32Array(4);\r\n' \
+  '        create_track();\r\n' \
+  '        const map_texture = device.createTexture({...cmap.next().value, format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        new Float32Array(bmappos[0].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, scale / 50, 0, 0, 0, 0, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
+  '        new Float32Array(bmappos[1].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, 0, 0, 0, 0, scale / 50, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
+  '        new Float32Array(bmappos[2].getMappedRange()).set([trpos[0], 0, mpos[0], 0, 0, trpos[1], 0, mpos[1], 0, 0, 0, 0, trpos[2], trpos[3], mpos[2], mpos[3]]);\r\n' \
+  '        bmappos.forEach((b) => b.unmap());\r\n' \
+  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bradius, bviewmatrix, blightmatrix, beposition, bmappos[tm], bgxs, bgys), {binding: 8, resource:image_sampler,}, {binding: 9, resource: track_texture.createView(),}, {binding: 10, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 11, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 12, resource: depth_sampler,}, {binding: 13, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
+  '        const bgsun = device.createBindGroup({layout: bglsun, entries: bgentries(bsunratio, bsunmatrix)});\r\n' \
+  '        const bgposition = device.createBindGroup({layout: bglposition, entries: bgentries(bradius, bviewmatrix, beposition, bgxs, bgys)});\r\n' \
+  '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth32float"});\r\n' \
+  '        bencoder.setPipeline(pshadow);\r\n' \
+  '        bencoder.setBindGroup(0, bgshadow);\r\n' \
+  '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '        rbshadow = bencoder.finish();\r\n' \
+  '        rbview = [];\r\n' \
+  '        for (let dm=0; dm<3; dm++) {\r\n' \
+  '          for (let tm=0; tm<3; tm++) {\r\n' \
+  '            bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth32float"});\r\n' \
+  '            bencoder.setPipeline(pview[dm]);\r\n' \
+  '            bencoder.setBindGroup(0, bgview[tm]);\r\n' \
+  '            bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '            bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '            bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '            rbview.push(bencoder.finish());\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth32float"});\r\n' \
+  '        bencoder.setPipeline(psun);\r\n' \
+  '        bencoder.setBindGroup(0, bgsun);\r\n' \
+  '        bencoder.draw(3, snt);\r\n' \
+  '        rbsun = bencoder.finish();\r\n' \
+  '        bencoder = device.createRenderBundleEncoder({colorFormats: ["rg16sint"], depthStencilFormat: "depth32float"});\r\n' \
+  '        bencoder.setPipeline(pposition);\r\n' \
+  '        bencoder.setBindGroup(0, bgposition);\r\n' \
+  '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '        rbposition = bencoder.finish();\r\n' \
+  '        window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
+  '        canvas_resize();\r\n' \
+  '        eposition = new Float32Array(2);\r\n' \
+  '        set_param("p", 0);\r\n' \
+  '        set_param("h", 2);\r\n' \
+  '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
+  '        canvas_redraw();\r\n' \
+  '        queue[1].then(cmap.next.bind(cmap));\r\n' \
+  '        c_tangle.disabled = false;\r\n' \
+  '        c_rangle.disabled = false;\r\n' \
+  '        b_rangle.disabled = false;\r\n' \
+  '        c_pace.max = (trpaces.length - 1).toString();\r\n' \
+  '        cv_pace.nextElementSibling.innerHTML = (trpaces.length - 1).toString();\r\n' \
+  '        c_pace.disabled = false;\r\n' \
+  '        cb_pace.disabled = false\r\n' \
+  '        r_yiso.disabled = false;\r\n' \
+  '        r_ziso.disabled = false;\r\n' \
+  '        r_dimn.disabled = false;\r\n' \
+  '        r_dimz.disabled = false\r\n' \
+  '        r_dims.disabled = false;\r\n' \
+  '        c_ltangle.disabled = false;\r\n' \
+  '        c_lrangle.disabled = false;\r\n' \
+  '        b_lrangle.disabled = false;\r\n' \
+  '        c_vfov.disabled = false;\r\n' \
+  '        c_height.disabled = false;\r\n' \
+  '        document.body.style.cursor = "";\r\n' \
+  '        canvas.focus();\r\n' \
+  '        canvas.style.outline = "none";\r\n' \
+  '         <!-- toggle_rotation(1); -->\r\n' \
+  '         <!-- toggle_lrotation(1); -->\r\n' \
+  '      }\r\n' \
+  '      function _canvas_redraw() {\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        if (modified.has("e")) {\r\n' \
+  '          device.queue.writeBuffer(beposition, 0, eposition);\r\n' \
+  '        }\r\n' \
+  '        if (modified.has("s")) {\r\n' \
+  '          device.queue.writeBuffer(bsunratio, 0, new Float32Array([canvas.clientHeight / canvas.clientWidth]));\r\n' \
+  '        }\r\n' \
+  '        if (modified.has("l") && dim_mode == 2) {\r\n' \
+  '          const lmatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_rotation(clrangle, slrangle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(cltangle, sltangle), lmatrix);\r\n' \
+  '          mat4_mult(mat4_scale(1.733), lmatrix);\r\n' \
+  '          mat4_mult(mat4_yscale(1.732 / (1.415 * cltangle - sltangle / zfactmax), 1.415 * cltangle - sltangle), lmatrix);\r\n' \
+  '          mat4_flip(lmatrix);\r\n' \
+  '          device.queue.writeBuffer(blightmatrix, 0, lmatrix);\r\n' \
+  '          const pass = encoder.beginRenderPass(rpdshadow);\r\n' \
+  '          pass.executeBundles([rbshadow]);\r\n' \
+  '          pass.end();\r\n' \
+  '        }\r\n' \
+  '        if (modified.has("v")) {\r\n' \
+  '          const vmatrix = mat4_zscale(1);\r\n' \
+  '          mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
+  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '          mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '          mat4_flip(vmatrix);\r\n' \
+  '          device.queue.writeBuffer(bviewmatrix, 0, vmatrix);\r\n' \
+  '        }\r\n' \
+  '        if (modified.has("l") || modified.has("v") || modified.has("m")) {\r\n' \
+  '          const rbs = [rbview[3 * dim_mode + tex_mode]];\r\n' \
+  '          rpdview.colorAttachments[0].resolveTarget = context.getCurrentTexture().createView();\r\n' \
+  '          const pass = encoder.beginRenderPass(rpdview);\r\n' \
+  '          if ((modified.has("l") || modified.has("v")) && dim_mode == 2) {\r\n' \
+  '            const smatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_tilt(cltangle, -sltangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(crangle, srangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(clrangle, -slrangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
+  '            mat4_mult(mat4_perspective(), smatrix);\r\n' \
+  '            mat4_flip(smatrix);\r\n' \
+  '            device.queue.writeBuffer(bsunmatrix, 0, smatrix);\r\n' \
+  '            rbs.push(rbsun);\r\n' \
+  '          }\r\n' \
+  '          pass.executeBundles(rbs);\r\n' \
+  '          pass.end();\r\n' \
+  '        }\r\n' \
+  '        if ((modified.has("p") || modified.has("v")) && show_infos) {\r\n' \
+  '          const pass = encoder.beginRenderPass(rpdposition);\r\n' \
+  '          pass.executeBundles([rbposition]);\r\n' \
+  '          pass.end();\r\n' \
+  '        }\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        modified.clear();\r\n' \
+  '        queue[0] = queue[1];\r\n' \
+  '        queue[1] = null;\r\n' \
+  '        return device.queue.onSubmittedWorkDone();\r\n' \
+  '      }\r\n' \
+  '      function canvas_redraw() {\r\n' \
+  '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
+  '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
+  '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
+  '      function toggle_filling(mode) {\r\n' \
+  '        if (mode == tex_mode) {return;};\r\n' \
+  '        tex_mode = mode;\r\n' \
+  '        modified.add("m");\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '      function toggle_auto_rotation() {\r\n' \
+  '        if (cb_pace.checked) {\r\n' \
+  '          if (c_rangle.disabled) {toggle_rotation();}\r\n' \
+  '          set_param("p")\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function toggle_dimming(mode) {\r\n' \
+  '        if (mode == dim_mode) {return;};\r\n' \
+  '        if (dim_mode == 2 && c_lrangle.disabled) {toggle_lrotation();}\r\n' \
+  '        dim_mode = mode;\r\n' \
+  '        if (dim_mode == 2) {\r\n' \
+  '          c_ltangle.disabled = false;\r\n' \
+  '          c_lrangle.disabled = false;\r\n' \
+  '          b_lrangle.disabled = false;\r\n' \
+  '          modified.add("l");\r\n' \
+  '        } else {\r\n' \
+  '          c_ltangle.disabled = true;\r\n' \
+  '          c_lrangle.disabled = true;\r\n' \
+  '          b_lrangle.disabled = true;\r\n' \
+  '        modified.add("m");\r\n' \
+  '        }\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
+  '      function toggle_infos() {\r\n' \
+  '        if (show_infos) {\r\n' \
+  '          show_infos = false;\r\n' \
+  '          p_infos.style.display = "none";\r\n' \
+  '          e_info.value = "";\r\n' \
+  '          clear_tinfos();\r\n' \
+  '          if (position_texture != null) {\r\n' \
+  '            queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
+  '            position_texture = null;\r\n' \
+  '            rpdposition.colorAttachments[0].view = null;\r\n' \
+  '          }\r\n' \
+  '          if (pdepth_texture != null) {\r\n' \
+  '            queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
+  '            pdepth_texture = null;\r\n' \
+  '            rpdposition.depthStencilAttachment.view =null;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          show_infos = true;\r\n' \
+  '          p_infos.style.display = "block";\r\n' \
+  '          const osize = [canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight];\r\n' \
+  '          if (position_texture == null) {\r\n' \
+  '            position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '            rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '          }\r\n' \
+  '          if (pdepth_texture == null) {\r\n' \
+  '            pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '            rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '          }\r\n' \
+  '          modified.add("p");\r\n' \
+  '          canvas_redraw();\r\n' \
+  '          update_infos();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function clear_tinfos() {\r\n' \
+  '        t_info.value = "";\r\n' \
+  '        t_mark.style.display = "none";\r\n' \
+  '        t_mark.style.left = "0%";\r\n' \
+  '        t_mark.style.top = "0%";\r\n' \
+  '      }\r\n' \
+  '      async function _update_infos(x, y, ci) {\r\n' \
+  '        const bpxy = device.createBuffer({size: 16, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const encoder = device.createCommandEncoder();\r\n' \
+  '        encoder.copyTextureToBuffer({texture: position_texture, origin: {x: x, y: y},}, {buffer: bpxy}, {width: 1, height: 1});\r\n' \
+  '        const commands = encoder.finish();\r\n' \
+  '        device.queue.submit([commands]);\r\n' \
+  '        await bpxy.mapAsync(GPUMapMode.READ);\r\n' \
+  '        const pxy = new Int16Array(bpxy.getMappedRange());\r\n' \
+  '        if (pxy[0] != -32768 && pxy[1] != -32768) {\r\n' \
+  '          let px = pxy[0] / 32767;\r\n' \
+  '          let py = pxy[1] / 32767;\r\n' \
+  '          let pz = get_pz(px, py);\r\n' \
+  '          let plat = (2 * Math.atan(Math.exp((py * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          let plon = (px * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          let pele = (pz + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          let pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
+  '          t_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m dist: " + pdist.toFixed(0) + "m";\r\n' \
+  '          t_mark.style.left = `calc(${x * 100 / canvas.parentNode.offsetWidth}% - 1vh)`;\r\n' \
+  '          t_mark.style.top = `calc(${y * 100 / canvas.parentNode.offsetHeight}% - 1vh)`;\r\n' \
+  '          t_mark.style.display = "block";\r\n' \
+  '          if (ci) {complete_infos();}\r\n' \
+  '        } else {\r\n' \
+  '          clear_tinfos();\r\n' \
+  '        }\r\n' \
+  '        bpxy.unmap();\r\n' \
+  '        bpxy.destroy();\r\n' \
+  '      }\r\n' \
+  '      function update_infos(e=null) {\r\n' \
+  '        if (e) {\r\n' \
+  '          e.preventDefault();\r\n' \
+  '          e.stopPropagation();\r\n' \
+  '          if (queue[1] == null) {\r\n' \
+  '            queue[0] = queue[0].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
+  '          } else {\r\n' \
+  '            queue[1] = queue[1].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          let plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          let plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          let pele = (trpaces[pace][2] + zoff + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          e_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m";\r\n' \
+  '          clear_tinfos();\r\n' \
+  '        }\r\n' \
+  '      }\r\n' + HTML_3DS_INF_MOUSE_TEMPLATE + \
+  '    </script>\r\n' \
+  '  </body>\r\n' \
+  '</html>'
+  HTML_3DS_WGPU_TEMPLATE = HTML_3DS_WGPU_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTMLExp_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
@@ -15477,8 +17940,8 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_xy_offsets = null;\r\n' \
   '      var tracks_normnames = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
-  '      var tracks_props = [];\r\n' + HTML_GPUSTATS_TEMPLATE + \
-  '      if (gpucomp > 0) {var gpustats = new GPUStats("explorer");}\r\n' \
+  '      var tracks_props = [];\r\n' \
+  '      var wgpu_persistence = ##WEBGPUPERS##;\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "explorer") + \
   '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
   '      var media_ex_visible = false;\r\n' \
@@ -15570,8 +18033,8 @@ class GPXTweakerWebInterfaceServer():
   '        hide_media("m");\r\n' \
   '        update_tiles();\r\n' \
   '        if (mvis) {show_media();}\r\n' \
-  '        if (document.getElementById("oset").selectedIndex == 8) {tracks_sort();}\r\n' \
-  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {tracks_cfilter();}\r\n' \
+  '        if (document.getElementById("oset").selectedIndex == 8) {fence(tracks_sort);}\r\n' \
+  '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {fence(tracks_cfilter);}\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(tracks=null) {\r\n' \
   '        if (tracks_pts.length == 0) {return null;}\r\n' \
@@ -15586,6 +18049,8 @@ class GPXTweakerWebInterfaceServer():
   '        } else if (! Array.isArray(tracks)) {\r\n' \
   '          tracks = [tracks];\r\n' \
   '        }\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
   '        let gminx = null;\r\n' \
   '        let gminy = null;\r\n' \
   '        let gmaxx = null;\r\n' \
@@ -15609,10 +18074,10 @@ class GPXTweakerWebInterfaceServer():
   '            gmaxx = maxx;\r\n' \
   '            gmaxy = maxy;\r\n' \
   '          } else {\r\n' \
-  '            gminx = Math.min(gminx, minx);\r\n' \
-  '            gminy = Math.min(gminy, miny);\r\n' \
-  '            gmaxx = Math.max(gmaxx, maxx);\r\n' \
-  '            gmaxy = Math.max(gmaxy, maxy);\r\n' \
+  '            gminx = min(gminx, minx);\r\n' \
+  '            gminy = min(gminy, miny);\r\n' \
+  '            gmaxx = max(gmaxx, maxx);\r\n' \
+  '            gmaxy = max(gmaxy, maxy);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (gminx == null) {\r\n' \
@@ -15652,15 +18117,15 @@ class GPXTweakerWebInterfaceServer():
   '            if (scrollmode > 0) {scroll_to_track(document.getElementById(focused), scrollmode == 2)};\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        document.getElementById("places").reset();\r\n' \
-  '        refresh_graph();\r\n' \
+  '        if (! document.getElementById("places").elements.place.value) {set_target();}\r\n' \
+  '        fence(refresh_graph);\r\n' \
   '      }\r\n' \
   '      function track_over(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
-  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) && ! (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity())) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
+  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) && ! (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
   '      }\r\n' \
   '      function track_outside(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
@@ -15674,6 +18139,9 @@ class GPXTweakerWebInterfaceServer():
   '          stats[seg_ind] = [];\r\n' \
   '        }\r\n' \
   '        let seg_c = seg_smoothed?seg_smoothed:seg;\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0)) {\r\n' + HTML_SEGCALC_1_TEMPLATE + \
   '          for (let p=0; p<seg.length; p++) {\r\n' \
   '            let pt = seg[p];\r\n' \
@@ -15732,16 +18200,44 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' + HTML_SEGCALC_4_TEMPLATE + \
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
+  '      function tracks_desc(fpan) {\r\n' \
+  '        const nbtracks = tracks_pts.length;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
+  '        for (let t=0; t<nbtracks; t++) {\r\n' \
+  '          const track_props = tracks_props[t];\r\n' \
+  '          let dur_c = "--h--mn--s";\r\n' \
+  '          if (! isNaN(track_props[0])) {\r\n' \
+  '            const dur = Math.round(track_props[0]);\r\n' \
+  '            const dur_s = dur % 60;\r\n' \
+  '            const dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '            const dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '            dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '          }\r\n' \
+  '          const dist_c = isNaN(track_props[1]) ? "-km" : (ftos(track_props[1] / 1000, 2) + "km");\r\n' \
+  '          const ele_c = isNaN(track_props[2]) ? "-m" : (ftos(track_props[2]) + "m");\r\n' \
+  '          const alt_c = isNaN(track_props[3]) ? "-m" : (ftos(track_props[3]) + "m");\r\n' \
+  '          document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
+  '        }\r\n' \
+  '        if (fpan == 1 || fpan == 2) {\r\n' \
+  '          if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex)) {tracks_sort();}\r\n' \
+  '          if ((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) {tracks_cfilter();}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function tracks_calc(fpan=0) {\r\n' \
   '        let starts = null;\r\n' \
   '        let tls = null;\r\n' \
   '        let lls = null;\r\n' \
   '        let teahs = null;\r\n' \
   '        let nbtracks = tracks_pts.length;\r\n' \
+  '        let min = Math.min;\r\n' \
+  '        let max = Math.max;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
   '          let nbpt = tracks_xy_offsets[nbtracks];\r\n' \
-  '          tracks_xys = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
+  '          tracks_xys = new Float32Array(WebGLStats.pad(nbpt) * 2);\r\n' \
   '          tracks_pts_smoothed = null;\r\n' \
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
@@ -15749,8 +18245,8 @@ class GPXTweakerWebInterfaceServer():
   '          tls = [];\r\n' \
   '          if (gpucomp >= 1) {\r\n' \
   '            starts = [0];\r\n' \
-  '            lls = new Float32Array(GPUStats.pad(nbpt) * 2);\r\n' \
-  '            teahs = new Float32Array(GPUStats.pad(nbpt) * 4);\r\n' \
+  '            lls = new Float32Array(WebGLStats.pad(nbpt) * 2);\r\n' \
+  '            teahs = new Float32Array(WebGLStats.pad(nbpt) * 4);\r\n' \
   '          }\r\n' \
   '          let cseg = gpucomp==0?tracks_xys:lls;\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
@@ -15781,7 +18277,6 @@ class GPXTweakerWebInterfaceServer():
   '            gpustats.calc("pos");\r\n' \
   '            tracks_xys.set(gpustats.xys);\r\n' \
   '          }\r\n' \
-  '          if (smoothed) {tracks_smooth();}\r\n' \
   '        }\r\n' \
   '        if (tracks_stats.length == 0) {\r\n' \
   '          return;\r\n' \
@@ -15789,6 +18284,7 @@ class GPXTweakerWebInterfaceServer():
   '        let smoothed_ch = false;\r\n' \
   '        if (smoothed && tracks_pts_smoothed == null) {\r\n' \
   '          tracks_pts_smoothed = [];\r\n' \
+  '          tracks_smooth();\r\n' \
   '          smoothed_ch = true;\r\n' \
   '          if (gpucomp == 0) {\r\n' \
   '            for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
@@ -15834,7 +18330,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          gpustats.trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
   '          gpustats.spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
-  '          gpustats.drange = Math.max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '          gpustats.drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '          gpustats.calc((fpan==0 || smoothed_ch)?(smoothed?"gwmdist":"gdist"):"");\r\n' \
   '          let gs = gpustats.gs;\r\n' \
@@ -15856,8 +18352,8 @@ class GPXTweakerWebInterfaceServer():
   '                    stat[2] = 0;\r\n' \
   '                    stat[3] = 0;\r\n' \
   '                  } else {\r\n' \
-  '                    stat[2] = stats[s][p - 1][2] + Math.max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
-  '                    stat[3] = stats[s][p - 1][3] + Math.max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
+  '                    stat[2] = stats[s][p - 1][2] + max(0, ssss[3 * i - 3]) * gs[i];\r\n' \
+  '                    stat[3] = stats[s][p - 1][3] + max(0, ssss[3 * i - 2]) * gs[i];\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -15904,8 +18400,8 @@ class GPXTweakerWebInterfaceServer():
   '                for (let p=0; p<seg.length; p++) {\r\n' \
   '                  let t = seg[p][4];\r\n' \
   '                  if (! isNaN(t)) {\r\n' \
-  '                    ts = Math.min(t, ts==null?t:ts);\r\n' \
-  '                    te = Math.max(t, te==null?t:te);\r\n' \
+  '                    ts = min(t, ts==null?t:ts);\r\n' \
+  '                    te = max(t, te==null?t:te);\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -15937,25 +18433,310 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
-  '            if (! isNaN(tracks_props[t][0])) {\r\n' \
-  '              dur = Math.round(dur);\r\n' \
-  '              let dur_s = dur % 60;\r\n' \
-  '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '          }\r\n' \
+  '          tracks_desc(fpan);\r\n' \
+  '        }\r\n' \
+  '        refresh_graph();\r\n' \
+  '      }\r\n' \
+  '      async function tracks_calc_wgpu(fpan=0) {\r\n' \
+  '        if (gpustats.device == null || tracks_pts == null) {return;}\r\n' \
+  '        let starts = null;\r\n' \
+  '        let tls = null;\r\n' \
+  '        let lls = null;\r\n' \
+  '        let teahs = null;\r\n' \
+  '        const nbtracks = tracks_pts.length;\r\n' \
+  '        const min = Math.min;\r\n' \
+  '        const max = Math.max;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        let gdists = null;\r\n' \
+  '        let eags = null;\r\n' \
+  '        let slopestdistspeeds  = null;\r\n' \
+  '        let smoothed_ch = false;\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          if (wgpu_wait[0] != null) {await new Promise((res, rej) => setTimeout(res, 1));}\r\n' \
+  '          tracks_xy_offsets = tracks_pts.reduce((p, c, i) => p.push(p[i] + c.reduce((p, c) => p + c.length, 0)) && p, [0]);\r\n' \
+  '          const nbpt = tracks_xy_offsets[nbtracks];\r\n' \
+  '          tracks_xys = new Float32Array(nbpt * 2);\r\n' \
+  '          tracks_xys_smoothed = null;\r\n' \
+  '          tracks_stats = [];\r\n' \
+  '          tracks_props = [];\r\n' \
+  '          starts = [0]\r\n' \
+  '          tls = [];\r\n' \
+  '          lls = new Float32Array(nbpt * 2);\r\n' \
+  '          teahs = new Float32Array(nbpt * 4);\r\n' \
+  '          let clls = lls;\r\n' \
+  '          let cteahs = teahs;\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            const track_stats = [];\r\n' \
+  '            tracks_stats.push(track_stats);\r\n' \
+  '            const track_props = [NaN, NaN, NaN, NaN, NaN, [NaN, NaN]];\r\n' \
+  '            tracks_props.push(track_props);\r\n' \
+  '            let ts = null;\r\n' \
+  '            let te = null;\r\n' \
+  '            let st = true;\r\n' \
+  '            for (const seg of segs) {\r\n' \
+  '              const nbp = seg.length;\r\n' \
+  '              const seg_stats = [];\r\n' \
+  '              track_stats.push(seg_stats);\r\n' \
+  '              if (nbp == 0) {continue;}\r\n' \
+  '              if (st) {\r\n' \
+  '                st = false;\r\n' \
+  '                track_props[5][0] = seg[0][0];\r\n' \
+  '                track_props[5][1] = seg[0][1];\r\n' \
+  '              }\r\n' \
+  '              starts.push(starts.at(-1) + nbp);\r\n' \
+  '              const tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top)).map((l) => round(l * 1000000) / 1000000);\r\n' \
+  '              tls.push(tl);\r\n' \
+  '              seg.forEach((c, p) => {clls[2 * p] = tl[0] - c[0]; clls[2 * p + 1] = c[1] - tl[1];});\r\n' \
+  '              clls = clls.subarray(2 * nbp);\r\n' \
+  '              track_props[1] = 0;\r\n' \
+  '              let ind = 0;\r\n' \
+  '              let tb = null;\r\n' \
+  '              let tp = 0;\r\n' \
+  '              let ep = null;\r\n' \
+  '              let ap = null;\r\n' \
+  '              let hp = null;\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                const pt = seg[p];\r\n' \
+  '                const t = pt[4];\r\n' \
+  '                if (! isNaN(t)) {\r\n' \
+  '                  if (tb == null) {tb = t;}\r\n' \
+  '                  tp = max((t - tb) / 1000, tp);\r\n' \
+  '                  ts = (ts == null) ? t : min(t, ts);\r\n' \
+  '                  te = (te == null) ? t : max(t, te);\r\n' \
+  '                }\r\n' \
+  '                cteahs[ind] = tp;\r\n' \
+  '                const e = pt[2];\r\n' \
+  '                const a = pt[3];\r\n' \
+  '                let h = null;\r\n' \
+  '                if (isNaN(a)) {\r\n' \
+  '                  cteahs[ind + 2] = ap == null ? 0 : ap;\r\n' \
+  '                } else {\r\n' \
+  '                  if (ap == null) {\r\n' \
+  '                    for (let i=0; i<ind; i+=4) {cteahs[i + 2] = a;}\r\n' \
+  '                    track_props[3] = 0;\r\n' \
+  '                  }\r\n' \
+  '                  ap = a;\r\n' \
+  '                  cteahs[ind + 2] = a;\r\n' \
+  '                  h = a;\r\n' \
+  '                }\r\n' \
+  '                if (isNaN(e)) {\r\n' \
+  '                  cteahs[ind + 1] = ep == null ? 0 : ep;\r\n' \
+  '                } else {\r\n' \
+  '                  if (ep == null) {\r\n' \
+  '                    for (let i=0; i<ind; i+=4) {cteahs[i + 1] = e;}\r\n' \
+  '                    track_props[2] = 0;\r\n' \
+  '                  }\r\n' \
+  '                  ep = e;\r\n' \
+  '                  cteahs[ind + 1] = e;\r\n' \
+  '                  if (h == null) {h = e;}\r\n' \
+  '                }\r\n' \
+  '                if (h == null) {\r\n' \
+  '                  cteahs[ind + 3] = hp == null ? 0 : hp;\r\n' \
+  '                } else {\r\n' \
+  '                  if (hp == null) {\r\n' \
+  '                    for (let i=0; i<ind; i+=4) {cteahs[i + 3] = h;}\r\n' \
+  '                  }\r\n' \
+  '                  hp = h;\r\n' \
+  '                  cteahs[ind + 3] = h;\r\n' \
+  '                }\r\n' \
+  '                ind += 4;\r\n' \
+  '              }\r\n' \
+  '              if (tb != null) {track_props[0] = (isNaN(track_props[0]) ? 0 : track_props[0]) + cteahs[ind - 4];}\r\n' \
+  '              cteahs = cteahs.subarray(ind);\r\n' \
   '            }\r\n' \
-  '            let dist_c = "-km";\r\n' \
-  '            if (dist != null) {dist_c = (dist / 1000).toFixed(2) + "km";}\r\n' \
-  '            let ele_c = "-m";\r\n' \
-  '            if (! noe) {ele_c = ele.toFixed(0) + "m";}\r\n' \
-  '            let alt_c = "-m";\r\n' \
-  '            if (! noa) {alt_c = alt.toFixed(0) + "m";}\r\n' \
-  '            document.getElementById("track" + t.toString() + "desc").innerHTML = document.getElementById("track" + t.toString() + "desc").innerHTML.replace(/(.*<br>).*/,"$1(" + dur_c + " | " + dist_c + " | " + ele_c + " | " + alt_c + ")");\r\n' \
+  '            if (ts != null) {\r\n' \
+  '              track_props[4] = ts;\r\n' \
+  '              document.getElementById("track" + t.toString() + "period").value = time_conv.format(ts)  + " " + date_conv.format(ts) + " - " + time_conv.format(te)  + " " + date_conv.format(te);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (wgpu_wait[0] != null) {await new Promise((res, rej) => setTimeout(res, 1));}\r\n' \
+  '          gpustats.starts = starts;\r\n' \
+  '          if (nbpt == 0) {\r\n' \
+  '            if (wgpu_wait[0] != null) {\r\n' \
+  '              wgpu_wait[0] = null;\r\n' \
+  '              wgpu_wait[1]();\r\n' \
+  '            }\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '          gpustats.trlats = tls;\r\n' \
+  '          gpustats.lls = lls;\r\n' \
+  '          gpustats.teahs = teahs;\r\n' \
+  '          gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '          gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '          if (smoothed) {\r\n' \
+  '            gpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '            gpustats.calc("pos", "smooth", "sgdist", "eagain", "slopedist", "speed");\r\n' \
+  '            tracks_xys = await gpustats.xys;\r\n' \
+  '            tracks_xys_smoothed = await gpustats.sxys;\r\n' \
+  '          } else {\r\n' \
+  '            gpustats.calc("pos", "gdist", "eagain", "slopedist", "speed");\r\n' \
+  '            tracks_xys = await gpustats.xys;\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          if (tracks_stats.length == 0 || gpustats.chunks.length == 1) {return;}\r\n' \
+  '          smoothed_ch = (smoothed && tracks_pts_smoothed == null) || (! smoothed && tracks_pts_smoothed != null);\r\n' \
+  '          if (smoothed_ch) {\r\n' \
+  '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            if (smoothed) {\r\n' \
+  '              gpustats.smdrange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '              gpustats.calc("smooth", "sgdist", "slopedist", "speed");\r\n' \
+  '              tracks_xys_smoothed = await gpustats.sxys;\r\n' \
+  '            } else {\r\n' \
+  '              gpustats.calc("gdist", "slopedist", "speed");\r\n' \
+  '            }\r\n' \
+  '          } else if (fpan == 1) {\r\n' \
+  '            gpustats.eagainf = {egf: parseFloat(document.getElementById("egstren").innerHTML), agf: parseFloat(document.getElementById("agstren").innerHTML)};\r\n' \
+  '            gpustats.calc("eagain");\r\n' \
+  '            eags = await gpustats.eags;\r\n' \
+  '          } else {\r\n' \
+  '            gpustats.slopesspeedf = {sldrange: max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2, slmax: parseFloat(document.getElementById("slmax").innerHTML) / 100, sptrange: parseFloat(document.getElementById("sptime").innerHTML) / 2, spmax: parseFloat(document.getElementById("spmax").innerHTML) / 3.6};\r\n' \
+  '            if (fpan == 2) {\r\n' \
+  '              gpustats.calc("slopedist", "speed");\r\n' \
+  '            } else {\r\n' \
+  '              gpustats.calc("speed");\r\n' \
+  '            }\r\n' \
+  '            slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if ([4, 5, 6].includes(document.getElementById("oset").selectedIndex) && (fpan == 1 || fpan == 2)) {tracks_sort();}\r\n' \
-  '        if (((document.getElementById("cfdistmin").value && document.getElementById("cfdistmin").checkValidity()) || (document.getElementById("cfdistmax").value && document.getElementById("cfdistmax").checkValidity()) || (document.getElementById("cfegmin").value && document.getElementById("cfegmin").checkValidity()) || (document.getElementById("cfegmax").value && document.getElementById("cfegmax").checkValidity()) || (document.getElementById("cfagmin").value && document.getElementById("cfagmin").checkValidity()) || (document.getElementById("cfagmax").value && document.getElementById("cfagmax").checkValidity())) && (fpan == 1 || fpan == 2)) {tracks_cfilter();}\r\n' \
+  '        if (fpan == 0 || smoothed_ch) {\r\n' \
+  '          tracks_pts_smoothed = smoothed ? [] : null;\r\n' \
+  '          gdists = await gpustats.gdists;\r\n' \
+  '          if (fpan ==0) {eags = await gpustats.eags;}\r\n' \
+  '          slopestdistspeeds = await gpustats.slopestdistspeeds;\r\n' \
+  '          if (fpan == 0 && wgpu_wait[0] != null) {\r\n' \
+  '            const prom = wgpu_wait[0];\r\n' \
+  '            wgpu_wait[0] = null;\r\n' \
+  '            wgpu_wait[1]();\r\n' \
+  '            await prom;\r\n' \
+  '          }\r\n' \
+  '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            let d = "M0 0";\r\n' \
+  '            for (const seg of segs) {\r\n' \
+  '              const mind = 2 * seg.length;\r\n' \
+  '              for (let ind=0; ind<mind; ind+=2) {\r\n' \
+  '                const sx = round(10 * xys[ind]).toString();\r\n' \
+  '                const sy = round(10 * xys[ind+1]).toString();\r\n' \
+  '                d += (ind == 0 ? " M" : " L") + (sx.slice(0, -1) || "0" ) + "." + sx.slice(-1) + " " + (sy.slice(0, -1) || "0" ) + "." + sy.slice(-1);\r\n' \
+  '              }\r\n' \
+  '              xys = xys.subarray(mind);\r\n' \
+  '            }\r\n' \
+  '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        gpustats.free();\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            const track_props = tracks_props[t];\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              const stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = [teahs[4 * p], stat[1] + gdists[p], eags[2 * p], eags[2 * p + 1], slopestdistspeeds[4 * p], slopestdistspeeds[4 * p + 1], (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2])), slopestdistspeeds[4 * p + 3]];\r\n' \
+  '                stats.push(stat);\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[1])) {track_props[1] += stat[6];}\r\n' \
+  '              if (! isNaN(track_props[2])) {track_props[2] += stat[2];}\r\n' \
+  '              if (! isNaN(track_props[3])) {track_props[3] += stat[3];}\r\n' \
+  '              teahs = teahs.subarray(4 * nbp);\r\n' \
+  '              gdists = gdists.subarray(nbp);\r\n' \
+  '              eags = eags.subarray(2 * nbp);\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (fpan == 1) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            const track_props = tracks_props[t];\r\n' \
+  '            if (! isNaN(track_props[2])) {track_props[2] = 0;}\r\n' \
+  '            if (! isNaN(track_props[3])) {track_props[3] = 0;}\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              const stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stat = stats[p];\r\n' \
+  '                stat[2] = eags[2 * p]\r\n' \
+  '                stat[3] = eags[2 * p + 1];\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[2])) {track_props[2] += stat[2];}\r\n' \
+  '              if (! isNaN(track_props[3])) {track_props[3] += stat[3];}\r\n' \
+  '              eags = eags.subarray(2 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (smoothed_ch) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            const track_props = tracks_props[t];\r\n' \
+  '            if (! isNaN(track_props[1])) {track_props[1] = 0;}\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              const stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                let stat_ = stats[p];\r\n' \
+  '                stat_[1] = stat[1] + gdists[p];\r\n' \
+  '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
+  '                stat_[5] = slopestdistspeeds[4 * p + 1];\r\n' \
+  '                stat_[6] = (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2]));\r\n' \
+  '                stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '                stat = stat_;\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[1])) {track_props[1] += stat[6];}\r\n' \
+  '              gdists = gdists.subarray(nbp);\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else if (fpan == 2) {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            const track_props = tracks_props[t];\r\n' \
+  '            if (! isNaN(track_props[1])) {track_props[1] = 0;}\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              const stats = tracks_stats[t][s];\r\n' \
+  '              let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                let stat_ = stats[p];\r\n' \
+  '                stat_[4] = slopestdistspeeds[4 * p];\r\n' \
+  '                stat_[5] = slopestdistspeeds[4 * p + 1];\r\n' \
+  '                stat_[6] = (p == 0 ? 0 : (stat[6] + slopestdistspeeds[4 * p - 2]));\r\n' \
+  '                stat_[7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '                stat = stat_;\r\n' \
+  '              }\r\n' \
+  '              if (! isNaN(track_props[1])) {track_props[1] += stat[6];}\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            const track_props = tracks_props[t];\r\n' \
+  '            for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const nbp = segs[s].length;\r\n' \
+  '              const stats = tracks_stats[t][s];\r\n' \
+  '              for (let p=0; p<nbp; p++) {\r\n' \
+  '                stats[p][7] = slopestdistspeeds[4 * p + 3];\r\n' \
+  '              }\r\n' \
+  '              slopestdistspeeds = slopestdistspeeds.subarray(4 * nbp);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
   '        refresh_graph();\r\n' \
+  '      }\r\n' \
+  '      function calc_changed(fpan) {\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          fence(tracks_calc_wgpu, fpan);\r\n' \
+  '        } else {\r\n' \
+  '          tracks_calc(fpan);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function track_checkbox(trk) {\r\n' \
   '        if (trk.checked) {\r\n' \
@@ -16034,6 +18815,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
+  '        document.getElementById("places").reset();\r\n' \
   '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
@@ -16046,7 +18828,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + host + location.port + "/3D/viewer.html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '        window.open("http://" + host + location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function magnify_dec() {\r\n' \
   '        if (magnify > 1) {\r\n' \
@@ -16092,6 +18874,7 @@ class GPXTweakerWebInterfaceServer():
   '        let trkcss = Array.from(tracks_pts, function (tr, t) {let s = document.getElementById("track" + t.toString() + "content").style; s.display=""; return s;});\r\n' \
   '        let conv = [3600, 1000, 1, 1];\r\n' \
   '        let cfc = null;\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        for (let cf=0, cfd=0; cf<=3; cfd=2*++cf) {\r\n' \
   '          if (cfilters[cfd].value && cfilters[cfd].checkValidity()) {\r\n' \
   '            let cfvmin = parseFloat(cfilters[cfd].value) * conv[cf];\r\n' \
@@ -16180,6 +18963,7 @@ class GPXTweakerWebInterfaceServer():
   '        let n = function (a, b) {return no_sort[a] - no_sort[b]};\r\n' \
   '        let c = n;\r\n' \
   '        let vals = [];\r\n' \
+  '        let isNaN = Number.isNaN;\r\n' \
   '        function comp_flt(a, b) {\r\n' \
   '          if (a == b || (isNaN(a) && isNaN(b))) {return 0;}\r\n' \
   '          if (isNaN(a)) {return 1;}\r\n' \
@@ -16235,7 +19019,7 @@ class GPXTweakerWebInterfaceServer():
   '        let g = document.getElementById("sortup").style.display;\r\n' \
   '        document.getElementById("sortup").style.display = document.getElementById("sortdown").style.display;\r\n' \
   '        document.getElementById("sortdown").style.display = g;\r\n' \
-  '        tracks_sort();\r\n' \
+  '        fence(tracks_sort);\r\n' \
   '      }\r\n' \
   '      function switch_cfilterpanel() {\r\n' \
   '        let cfps = document.getElementById("cfilterpanel").style;\r\n' \
@@ -16325,9 +19109,8 @@ class GPXTweakerWebInterfaceServer():
   '       }\r\n' \
   '       folders_select();\r\n' \
   '      }\r\n' \
-  '      function tracks_smooth(recalc=false) {\r\n' \
+  '      function tracks_smooth() {\r\n' \
   '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
-  '        tracks_pts_smoothed = null;\r\n' \
   '        tracks_xys_smoothed = tracks_xys.slice();\r\n' \
   '        let ind = 0;\r\n' \
   '        for (let t=0; t<tracks_pts.length; t++) {\r\n' \
@@ -16344,65 +19127,71 @@ class GPXTweakerWebInterfaceServer():
   '                pp = p;\r\n' \
   '                continue;\r\n' \
   '              }\r\n' \
-  '              let ndirx = 0;\r\n' \
-  '              let ndiry = 0;\r\n' \
-  '              let dist = 0;\r\n' \
-  '              let pr = pp;\r\n' \
-  '              for (let pn=p; pn<2*nind; pn+=2) {\r\n' \
-  '                dist += Math.sqrt((tracks_xys_smoothed[pn] - tracks_xys_smoothed[pr]) ** 2 + (tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pr + 1]) ** 2);\r\n' \
-  '                pr = pn;\r\n' \
-  '                if (dist > tdrange) {break;}\r\n' \
-  '                ndirx += tracks_xys_smoothed[pn] - tracks_xys_smoothed[pp];\r\n' \
-  '                ndiry += tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
-  '              }\r\n' \
-  '              let ndirl = Math.sqrt(ndirx ** 2 + ndiry ** 2);\r\n' \
-  '              if (ndirl > 0) {\r\n' \
-  '                ndirx /= ndirl;\r\n' \
-  '                ndiry /= ndirl;\r\n' \
-  '                if (dirx == null) {\r\n' \
-  '                  dirx = ndirx;\r\n' \
-  '                  diry = ndiry;\r\n' \
+  '              let pdirx = tracks_xys_smoothed[p] - tracks_xys_smoothed[pp];\r\n' \
+  '              let pdiry = tracks_xys_smoothed[p + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
+  '              let pdirl = Math.sqrt(pdirx ** 2 + pdiry ** 2);\r\n' \
+  '              if (pdirl <= tdrange) {\r\n' \
+  '                let ndirx = pdirx;\r\n' \
+  '                let ndiry = pdiry;\r\n' \
+  '                let dist = 0;\r\n' \
+  '                let pr = p;\r\n' \
+  '                for (let pn=p+2; pn<2*nind; pn+=2) {\r\n' \
+  '                  dist += Math.sqrt((tracks_xys_smoothed[pn] - tracks_xys_smoothed[pr]) ** 2 + (tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pr + 1]) ** 2);\r\n' \
+  '                  if (dist > tdrange) {break;}\r\n' \
+  '                  pr = pn;\r\n' \
+  '                  ndirx += tracks_xys_smoothed[pn] - tracks_xys_smoothed[pp];\r\n' \
+  '                  ndiry += tracks_xys_smoothed[pn + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
   '                }\r\n' \
-  '                let pdirx = tracks_xys_smoothed[p] - tracks_xys_smoothed[pp];\r\n' \
-  '                let pdiry = tracks_xys_smoothed[p + 1] - tracks_xys_smoothed[pp + 1];\r\n' \
-  '                let pdirl = Math.sqrt(pdirx ** 2 + pdiry ** 2);\r\n' \
-  '                if (pdirl > 0) {\r\n' \
-  '                  pdirx /= pdirl;\r\n' \
-  '                  pdiry /= pdirl;\r\n' \
-  '                  let nsin = dirx * ndiry - diry * ndirx;\r\n' \
-  '                  let ncos = dirx * ndirx + diry * ndiry;\r\n' \
-  '                  let psin = dirx * pdiry - diry * pdirx;\r\n' \
-  '                  let pcos = dirx * pdirx + diry * pdiry;\r\n' \
-  '                  if (nsin * psin < 0) {\r\n' \
-  '                    if (pcos < 0) {\r\n' \
-  '                      if (ncos < 0) {\r\n' \
-  '                        pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
-  '                        dirx = -dirx;\r\n' \
-  '                        diry = -diry;\r\n' \
-  '                      } else {\r\n' \
-  '                        pdirl = 0;\r\n' \
-  '                      }\r\n' \
-  '                    }\r\n' \
-  '                    tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * dirx;\r\n' \
-  '                    tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * diry;\r\n' \
-  '                  } else if (ncos > pcos) {\r\n' \
-  '                    pdirl = Math.max(0, pdirl * (pdirx * ndirx + pdiry * ndiry));\r\n' \
-  '                    tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * ndirx;\r\n' \
-  '                    tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * ndiry;\r\n' \
+  '                let ndirl = Math.sqrt(ndirx ** 2 + ndiry ** 2);\r\n' \
+  '                if (ndirl > 0) {\r\n' \
+  '                  ndirx /= ndirl;\r\n' \
+  '                  ndiry /= ndirl;\r\n' \
+  '                  if (dirx == null) {\r\n' \
   '                    dirx = ndirx;\r\n' \
   '                    diry = ndiry;\r\n' \
-  '                  } else {\r\n' \
-  '                    dirx = pdirx;\r\n' \
-  '                    diry = pdiry;\r\n' \
   '                  }\r\n' \
+  '                  if (pdirl > 0) {\r\n' \
+  '                    pdirx /= pdirl;\r\n' \
+  '                    pdiry /= pdirl;\r\n' \
+  '                    let nsin = dirx * ndiry - diry * ndirx;\r\n' \
+  '                    let ncos = dirx * ndirx + diry * ndiry;\r\n' \
+  '                    let psin = dirx * pdiry - diry * pdirx;\r\n' \
+  '                    let pcos = dirx * pdirx + diry * pdiry;\r\n' \
+  '                    if (nsin * psin < 0) {\r\n' \
+  '                      if (pcos < 0) {\r\n' \
+  '                        if (ncos < 0) {\r\n' \
+  '                          pdirl = Math.min(-pdirl * pcos, -ndirl * ncos);\r\n' \
+  '                          dirx = -dirx;\r\n' \
+  '                          diry = -diry;\r\n' \
+  '                        } else {\r\n' \
+  '                          pdirl = 0;\r\n' \
+  '                        }\r\n' \
+  '                      } else {\r\n' \
+  '                        pdirl *= pcos;\r\n' \
+  '                      }\r\n' \
+  '                      tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * dirx;\r\n' \
+  '                      tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * diry;\r\n' \
+  '                    } else if (ncos > pcos) {\r\n' \
+  '                      pdirl = Math.max(0, pdirl * (pdirx * ndirx + pdiry * ndiry));\r\n' \
+  '                      tracks_xys_smoothed[p] = tracks_xys_smoothed[pp] + pdirl * ndirx;\r\n' \
+  '                      tracks_xys_smoothed[p + 1] = tracks_xys_smoothed[pp + 1] + pdirl * ndiry;\r\n' \
+  '                      dirx = ndirx;\r\n' \
+  '                      diry = ndiry;\r\n' \
+  '                    } else {\r\n' \
+  '                      dirx = pdirx;\r\n' \
+  '                      diry = pdiry;\r\n' \
+  '                    }\r\n' \
+      '                  }\r\n' \
   '                }\r\n' \
+  '              } else {\r\n' \
+  '                dirx = pdirx / pdirl;\r\n' \
+  '                diry = pdiry / pdirl;\r\n' \
   '              }\r\n' \
   '              pp = p;\r\n' \
   '            }\r\n' \
   '            ind = nind;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (recalc) {tracks_calc(2);}\r\n' \
   '      }\r\n' \
   '      function switch_smooth() {\r\n' \
   '        if (smoothed) {\r\n' \
@@ -16411,9 +19200,9 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          smoothed = true;\r\n' \
   '          document.getElementById("swsm").innerHTML = "&divide;&divide;"\r\n' \
-  '          tracks_smooth();\r\n' \
+  '          tracks_pts_smoothed = null;\r\n' \
   '        }\r\n' \
-  '        tracks_calc(2);\r\n' \
+  '        return webgpu ? tracks_calc_wgpu(2) : tracks_calc(2);\r\n' \
   '      }\r\n' \
   '      function error_trcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
@@ -16458,7 +19247,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmdetach1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_tdcb(e.target, foc)?show_msg("{#jmdetach2#}", 5, msgn):show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => fence((e) => {load_tdcb(e.target, foc) ? show_msg("{#jmdetach2#}", 5, msgn) : show_msg("{#jmdetach3#}", 10, msgn);}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdetach3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/detach?" + encodeURIComponent(foc.substring(5)));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -16510,12 +19299,16 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        track_click(null, document.getElementById("track" + ind1.toString() + "desc"));\r\n' \
-  '        tracks_calc(0);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
-  '        tracks_sort();\r\n' \
-  '        tracks_cfilter();\r\n' \
-  '        return true;\r\n' \
+  '        if (webgpu) {\r\n' \
+  '          return tracks_calc_wgpu(0).then(tracks_sort).then(tracks_cfilter);\r\n' \
+  '        } else {\r\n' \
+  '          tracks_calc(0);\r\n' \
+  '          tracks_sort();\r\n' \
+  '          tracks_cfilter();\r\n' \
+  '          return true;\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function track_incorporate_integrate(after=null) {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
@@ -16541,7 +19334,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_ticb(e.target, ind1, ind2)?show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn):show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => fence((e) => {let r = load_ticb(e.target, ind1, ind2); if (r) {show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn);} else {show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);}; return r;}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + encodeURIComponent(ind1.toString()) + "," + encodeURIComponent(ind2.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -16575,6 +19368,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_normnames.push("");\r\n' \
   '        tracks_stats.push([]);\r\n' \
   '        tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
+  '        tracks_xy_offsets.push(tracks_xy_offsets.at(-1));\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
@@ -16599,7 +19393,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmnew1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
+  '        xhrtr.onload = (e) => fence((e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -16856,7 +19650,7 @@ class GPXTweakerWebInterfaceServer():
   '        let mpview = document.getElementById("mediapreview");\r\n' \
   '        if (mpview.style.display == "none") {\r\n' \
   '          if (other) {return;}\r\n' \
-  '          if (document.getElementById("graph").style.display != "none") {refresh_graph(true);}\r\n' \
+  '          if (document.getElementById("graph").style.display != "none") {switch_graph();}\r\n' \
   '          switch_spanel(true);\r\n' \
   '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
@@ -17210,7 +20004,7 @@ class GPXTweakerWebInterfaceServer():
   '        let spanel = document.getElementById("searchpanel");\r\n' \
   '        if (spanel.style.display == "none") {\r\n' \
   '          if (other) {return;}\r\n' \
-  '          if (document.getElementById("graph").style.display != "none") {refresh_graph(true);}\r\n' \
+  '          if (document.getElementById("graph").style.display != "none") {switch_graph();}\r\n' \
   '          switch_mediapreview(true);\r\n' \
   '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
   '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
@@ -17414,12 +20208,12 @@ class GPXTweakerWebInterfaceServer():
   '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
   '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '           </form>\r\n' \
-  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?cfilter_reset():(event.shiftKey?cfilter_restore():switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="tracks_sort()"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?download_tracklist(event.altKey):(event.ctrlKey?download_graph():download_map(event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="open_webmapping()">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():switch_smooth()">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);refresh_graph(true);}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?fence(cfilter_reset):(event.shiftKey?fence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
+  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?fence(download_tracklist,event.altKey):(event.ctrlKey?fence(download_graph):fence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="fence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():fence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?fence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';tracks_cfilter();" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
+  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';fence(tracks_cfilter);" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
   '                <div style="display:inline-block;padding-right:1em;">\r\n' \
   '                  <span>{#jsortduration#} :&nbsp;</span>\r\n' \
   '                  <span>{#jsortdistance#} :&nbsp;</span>\r\n' \
@@ -17444,7 +20238,7 @@ class GPXTweakerWebInterfaceServer():
   '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
   '              </form>\r\n' \
-  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE.replace('segments_calc', 'tracks_calc') + HTML_3DPANEL_TEMPLATE + \
+  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
   '          </th>\r\n' \
   '        </tr>\r\n' \
   '      </thead>\r\n' \
@@ -17452,7 +20246,7 @@ class GPXTweakerWebInterfaceServer():
   '        <tr style="display:table-row;">\r\n' \
   '          <td style="display:table-cell;vertical-align:top;">\r\n' \
   '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
-  '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%">\r\n' \
+  '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%" onmouseenter="!navigator_firefox?document.documentElement.style.setProperty(\'--tprend\',\'optimizeSpeed\'):null" onmouseleave="!navigator_firefox?document.documentElement.style.setProperty(\'--tprend\',\'auto\'):null">\r\n' \
   '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
   '                <form id="tracksform" autocomplete="off" onchange="track_change(event)" onsubmit="return(false);">\r\n                  #<#TRACKS#>#\r\n' \
   '                </form>\r\n' \
@@ -17471,7 +20265,7 @@ class GPXTweakerWebInterfaceServer():
   '                </svg>\r\n' \
   '              </div>\r\n' \
   '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?switch_tiles(null, null, 1):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, 1)):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
   '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
   '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '    </div>\r\n' \
@@ -17485,7 +20279,7 @@ class GPXTweakerWebInterfaceServer():
   '    </form>\r\n' \
   '    <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
   '    <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
-  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;user-select:text" onsubmit="return false" onchange="target_place(event.target)" onreset="set_target()">\r\n' \
+  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;user-select:text" onsubmit="return false" onchange="target_place(event.target)" onreset="this.elements.place.value?set_target():null">\r\n' \
   '      <div id="plcont" style="min-width:fit-content">\r\n' \
   '        <div onclick="this.firstElementChild.click()">\r\n' \
   '          <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
@@ -17524,7 +20318,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmousemove = mouse_move;\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
   '        if (document.activeElement) {\r\n' \
-  '          if (document.activeElement.nodeName != "BODY") {document.activeElement.blur();}\r\n' \
+  '          if (document.activeElement.nodeName.toUpperCase() != "BODY") {document.activeElement.blur();}\r\n' \
   '        }\r\n' \
   '        if (e.button == 2) {\r\n' \
   '          if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
@@ -17542,13 +20336,13 @@ class GPXTweakerWebInterfaceServer():
   '            hide_media("m");\r\n' \
   '          } else if (e.target.id == "gbarc") {\r\n' \
   '            hand = e.target;\r\n' \
-  '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
+  '            fence(graph_point, parseFloat(document.getElementById("gbarc").style.left));\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          } else if (e.target.id == "graphc") {\r\n' \
   '            hand = document.getElementById("gbarc");\r\n' \
   '            hand.setAttribute("stroke", "darkgray");\r\n' \
-  '            graph_point(document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
+  '            fence(graph_point, document.getElementById("graphc").offsetLeft + e.offsetX);\r\n' \
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -17573,7 +20367,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
-  '            graph_point();\r\n' \
+  '            fence(graph_point);\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
   '          pointer_e = null;\r\n' \
@@ -17646,7 +20440,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            fence(graph_point, e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          let p = viewpane.parentNode;\r\n' \
@@ -17692,12 +20486,12 @@ class GPXTweakerWebInterfaceServer():
   '          if (e.deltaY > 0) {\r\n' \
   '            if (focused_targeted < graph_ip.length - 1) {\r\n' \
   '              focused_targeted++;\r\n' \
-  '              graph_point();\r\n' \
+  '              fence(graph_point);\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (focused_targeted > 0) {\r\n' \
   '              focused_targeted--;\r\n' \
-  '              graph_point();\r\n' \
+  '              fence(graph_point);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
@@ -17725,7 +20519,21 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          } else {\r\n' \
   '            rescale();\r\n' \
-  '            refresh_graph();\r\n' \
+  '            if (webgpu) {\r\n' \
+  '              let graph = document.getElementById("graph");\r\n' \
+  '              if (graph.style.display == "none") {return;}\r\n' \
+  '              let graphc = document.getElementById("graphc");\r\n' \
+  '              let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '              let gheight = graph.offsetHeight;\r\n' \
+  '              graphc.setAttribute("width", gwidth.toString());\r\n' \
+  '              graphc.setAttribute("height", gheight.toString());\r\n' \
+  '              graph_px = null;\r\n' \
+  '              graph_point();\r\n' \
+  '              if (focused_targeted != null) {targetmark.style.display = "none";}\r\n' \
+  '              fence(refresh_graph);\r\n' \
+  '            } else {\r\n' \
+  '              refresh_graph();\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -17741,28 +20549,25 @@ class GPXTweakerWebInterfaceServer():
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#"));\r\n' \
   '      }\r\n' \
-  '      function error_dcb() {\r\n' \
-  '        window.alert("{#jexpfail#}");\r\n' \
-  '        document.body.innerHTML = "";\r\n' \
-  '        document.head.innerHTML = "";\r\n' \
-  '        window.close();\r\n' \
-  '        throw "{#jexpfail#}";\r\n' \
-  '      }\r\n' \
-  '      function load_dcb(t) {\r\n' \
-  '        if (t.status != 200) {error_dcb();return;}\r\n' \
-  '        tracks_pts = JSON.parse(t.response);\r\n' \
+  '      async function data_load() {\r\n' \
+  '        tracks_pts = await fetch("/GPXExplorer/data").then((r) => r.ok ? r.json() : null, () => null);\r\n' \
+  '        if (tracks_pts == null) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '          return false;\r\n' \
+  '        }\r\n' \
   '        tracks_pts.forEach((c) => {c.forEach((c) => {c.forEach((c) => {if (c[2] === "") {c[2] = NaN}; if (c[3] === "") {c[3] = NaN}; c[4] = Date.parse(c[4])})})});\r\n' \
-  '        page_load(true);\r\n' \
+  '        return true;\r\n' \
   '      }\r\n' \
-  '      function page_load(fol=false) {\r\n' \
-  '        if (! fol) {\r\n' \
-  '          let xhrd = new XMLHttpRequest();\r\n' \
-  '          xhrd.onerror = (e) => error_dcb(e.target);\r\n' \
-  '          xhrd.onload = (e) => load_dcb(e.target);\r\n' \
-  '          xhrd.open("GET", "/GPXExplorer/data");\r\n' \
-  '          xhrd.send();\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
+  '      async function page_load() {\r\n' \
+  '        if (mode != "map") {\r\n' \
+  '          document.getElementById("tset").disabled = true;\r\n' \
+  '          document.getElementById("tset").style.pointerEvents = "none";\r\n' \
+  '        }\r\n' \
+  '        if (! await data_load()) {return;}\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
   '        if (prev_state != null) {\r\n' \
   '          dots_visible = prev_state[4] == "true";\r\n' \
   '        }\r\n' \
@@ -17779,7 +20584,8 @@ class GPXTweakerWebInterfaceServer():
   '          let st = prev_state[4].split("-");\r\n' \
   '          for (let f=0; f<folders.length; f++) {folders[f].checked = st[f]=="t";}\r\n' \
   '          st = prev_state[5].split("-");\r\n' \
-  '          for (let t=0; t<st.length; t++) {\r\n' \
+  '          let nbt = Math.min(st.length, document.getElementById("tracksform").children.length);\r\n' \
+  '          for (let t=0; t<nbt; t++) {\r\n' \
   '            document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";\r\n' \
   '            track_checkbox(document.getElementById("track" + t.toString() + "visible"));\r\n' \
   '          }\r\n' \
@@ -17797,7 +20603,7 @@ class GPXTweakerWebInterfaceServer():
   '          magnify_inc();\r\n' \
   '        }\r\n' \
   '        if (smoothed) {document.getElementById("swsm").innerHTML = "&divide;&divide;"};\r\n' \
-  '        tracks_calc();\r\n' \
+  '        if (webgpu) {await tracks_calc_wgpu();} else {tracks_calc();}\r\n' \
   '        tracks_sort();\r\n' \
   '        tracks_filter();\r\n' \
   '        cfilter_restore();\r\n' \
@@ -17821,7 +20627,7 @@ class GPXTweakerWebInterfaceServer():
   '        throw "{#jsession#}";\r\n' \
   '      }\r\n' \
   '      norm_trackname();\r\n' \
-  '      page_load();\r\n' \
+  '      fence(page_load);\r\n' \
   '    </script>\r\n' \
   '  </body>\r\n' \
   '</html>'
@@ -18157,29 +20963,33 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'statistics':
           if field == 'gpu_comp':
             self.GpuComp = 0 if value is None else value
+          elif field == 'prefer_webgpu':
+            self.PreferWebGpu = value
           elif field == 'ele_gain_threshold':
             if value is not None:
-              self.EleGainThreshold = int(value)
+              self.EleGainThreshold = min(max(0, round(float(value))), 25)
           elif field == 'alt_gain_threshold':
             if value is not None:
-              self.AltGainThreshold = int(value)
+              self.AltGainThreshold = min(max(0, round(float(value))), 25)
           elif field == 'slope_range':
             if value is not None:
-              self.SlopeRange = int(value)
+              self.SlopeRange = min(max(0, round(float(value) / 2) * 2), 500)
           elif field == 'slope_max':
             if value is not None:
-              self.SlopeMax = int(value)
+              self.SlopeMax = min(max(0, round(float(value))), 200)
           elif field == 'speed_range':
             if value is not None:
-              self.SpeedRange = int(value)
+              self.SpeedRange = min(max(0, round(float(value) / 2) * 2), 300)
           elif field == 'speed_max':
             if value is not None:
-              self.SpeedMax = int(value)
+              self.SpeedMax = min(max(0, round(float(value))), 90)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == '3dviewer':
-          if field == 'pano_margin':
+          if field == 'prefer_webgpu_also':
+            self.V3DPreferWebGpu = value
+          elif field == 'pano_margin':
             if value is not None:
               self.V3DPanoMargin = round(2 * float(value)) / 2
           elif field == 'subj_margin':
@@ -18220,7 +21030,10 @@ class GPXTweakerWebInterfaceServer():
             self.SmoothTracks = bool(value)
           elif field == 'smooth_range':
             if value is not None:
-              self.SmoothRange = int(value)
+              self.SmoothRange = min(max(5, round(float(value))), 50)
+          elif field == 'webgpu_persistence':
+            if value is not None:
+              self.WebGpuPersistence = round(float(value)) if float(value) >= 0 else -1
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -18260,7 +21073,7 @@ class GPXTweakerWebInterfaceServer():
             self.MediaVideos = value
           elif field == 'size':
             try:
-              self.MediaThumbSize = max(min(int(value), 512), 16)
+              self.MediaThumbSize = max(min(round(float(value)), 512), 16)
             except:
               pass
           else:
@@ -18542,6 +21355,7 @@ class GPXTweakerWebInterfaceServer():
         return False
     if not self.MediaPorts:
       self.MediaPorts = self.Ports
+    self.V3DPreferWebGpu &= self.PreferWebGpu
     self.log(1, 'cloaded')
     return True
 
@@ -18576,6 +21390,8 @@ class GPXTweakerWebInterfaceServer():
     self.MediaVideos = True
     self.MediaThumbSize = 64
     self.GpuComp = 0
+    self.PreferWebGpu = False
+    self.WebGpuPersistence = 30
     self.EleGainThreshold = 10
     self.AltGainThreshold = 5
     self.SlopeRange = 80
@@ -18585,8 +21401,9 @@ class GPXTweakerWebInterfaceServer():
     self.V3DPanoMargin = 0.5
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
+    self.V3DPreferWebGpu = False
     self.SmoothTracks = False
-    self.SmoothRange = 15
+    self.SmoothRange = 10
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -19039,7 +21856,7 @@ class GPXTweakerWebInterfaceServer():
       return False
     if defx is None or defy is None:
       defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -19055,7 +21872,7 @@ class GPXTweakerWebInterfaceServer():
     self.log(2, 'built')
     return True
 
-  def Build3DHTML(self, mode3d, margin=0.5):
+  def Build3DHTML(self, mode3d, margin=0.5, wgpu=False):
     self.HTML3D = None
     self.HTML3DData = None
     if next((p for seg in self.Track.Pts for p in seg), None) is None:
@@ -19083,6 +21900,12 @@ class GPXTweakerWebInterfaceServer():
       self.Elevation.Map = None
       self.Elevation.MapInfos = {}
       self.Elevation.MapResolution = None
+    tpath = '"/map/map"' if self.Mode == 'map' else '"/tiles/tile-" + row.toString() + "-" + col.toString() + ".?%s,%s"' % (str(self.TilesSet), str(self.Map.TilesInfos['matrix']))
+    if wgpu:
+      declarations = GPXTweakerWebInterfaceServer.HTML_3D_WGPU_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1]))
+      self.HTML3DData = wgpu_event = threading.Event()
+      self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      yield True
     if not self.Elevation.Map:
       try:
         if self.EMode == 'tiles':
@@ -19100,11 +21923,17 @@ class GPXTweakerWebInterfaceServer():
           return False
       except:
         self.log(0, '3derror1')
+        if wgpu:
+          self.HTML3DData = None
+          wgpu_event.set()
         return False
       tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
       self.HTML3DElevationProvider = self.ElevationProviderSel
     if self.Elevation.MapInfos.get('format') not in ('image/x-bil;bits=32', 'image/hgt'):
       self.log(0, '3derror1')
+      if wgpu:
+        self.HTML3DData = None
+        wgpu_event.set()
       return False
     scale = self.Elevation.MapResolution
     width = self.Elevation.MapInfos['width']
@@ -19145,7 +21974,8 @@ class GPXTweakerWebInterfaceServer():
     lpy.reverse()
     nrow = len(lpy)
     ncol = len(lpx)
-    ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
+    if not wgpu:
+      ef = lambda e, no_data=self.Elevation.MapInfos.get('nodata'), min_valid_ele=self.V3DMinValidEle: e if e != no_data and e >= min_valid_ele else 0
     accel = ctypes.sizeof(ctypes.c_float if e_f[1] == 'f' else ctypes.c_short) == e_s
     if accel:
       if sys.byteorder == ('little' if e_f[0] == '<' else 'big'):
@@ -19153,15 +21983,23 @@ class GPXTweakerWebInterfaceServer():
       else:
         _e_m = array.array(e_f[1], self.Elevation.Map)
         _e_m.byteswap()
-      eles = tuple(ef(_e_m[py + px]) for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx)
-      minele = min(eles)
-      maxele = max(max(eles), minele + 1)
+      if wgpu:
+        eles = struct.pack('=%df' % (nrow * ncol), *(_e_m[py + px] for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx))
+        no_data_ele = self.Elevation.MapInfos.get('nodata')
+      else:
+        eles = tuple(ef(_e_m[py + px]) for _lpy in (map(width.__mul__,lpy),) for py in _lpy for px in lpx)
+        minele = min(eles)
+        maxele = max(max(eles), minele + 1)
     else:
       _e_f = e_f[0] + str(ncol) + e_f[1]
       _e_m_ = self.Elevation.Map
-      eles = tuple(tuple(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
-      minele = min(min(eles[row]) for row in range(nrow))
-      maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
+      if wgpu:
+        eles = struct.pack('=%df' % (nrow * ncol), *(e for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,) for e in struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx))))
+        no_data_ele = self.Elevation.MapInfos.get('nodata')
+      else:
+        eles = tuple(tuple(map(ef, struct.unpack(_e_f, b''.join(_e_m_[_py_0 + _px: _py_1 + _px] for _px in _lpx)))) for _lpx in (tuple(map(e_s.__mul__, lpx)),) for _py_0 in map((e_s * width).__mul__,lpy) for _py_1 in (e_s + _py_0,))
+        minele = min(min(eles[row]) for row in range(nrow))
+        maxele = max(max(max(eles[row]) for row in range(nrow)), minele + 1)
     msource = self.Elevation.MapInfos.get('source', '')
     if self.EMode == 'tiles':
       self.Elevation.Map = None
@@ -19173,48 +22011,61 @@ class GPXTweakerWebInterfaceServer():
     moyx = (minx + maxx) / 2
     moyy = (miny + maxy) / 2
     cor = math.cosh(moyy / WGS84WebMercator.R)
-    z_den = (maxele - minele) / 2 * cor
-    if xy_den > z_den:
-      den = xy_den
-      zfactor = xy_den / z_den
-    else:
-      den = z_den
+    if wgpu:
+      den = 1
       zfactor = 1
-    _cor = cor / den
-    _minele =  minele * _cor + 1
-    if accel:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles)), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
+      minele = self.V3DMinValidEle
     else:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts)))))
-    self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
+      z_den = (maxele - minele) / 2 * cor
+      if xy_den > z_den:
+        den = xy_den
+        zfactor = xy_den / z_den
+      else:
+        den = z_den
+        zfactor = 1
+      _cor = cor / den
+      _minele =  minele * _cor + 1
     if self.Mode == 'map':
       minrow, mincol = 1, 1
       maxrow, maxcol = 1, 1
       tminx, tminy = self.VMinx, self.VMiny
       tmaxx, tmaxy = self.VMaxx, self.VMaxy
-      tpath = '"/map/map"'
     elif self.Mode == 'tiles':
       try:
         infos = {**self.Map.TilesInfos}
         (minrow, mincol), (maxrow, maxcol) = WebMercatorMap.WGS84BoxtoTileBox(infos, minlat, maxlat, minlon, maxlon)
       except:
         self.log(0, '3derror2')
+        if wgpu:
+          self.HTML3DData = None
+          wgpu_event.set()
         return False
-      scale = infos['scale'] / WebMercatorMap.CRS_MPU
-      tminx = infos['topx'] + scale * infos['width'] * mincol
-      tminy = infos['topy'] - scale * infos['height'] * (maxrow + 1)
-      tmaxx = infos['topx'] + scale * infos['width'] * (maxcol + 1)
-      tmaxy = infos['topy'] - scale * infos['height'] * minrow
-      tpath = '"/tiles/tile-" + row.toString() + "-" + col.toString() + ".?%s,%s"' % (str(self.TilesSet), str(self.Map.TilesInfos['matrix']))
+      mscale = infos['scale'] / WebMercatorMap.CRS_MPU
+      tminx = infos['topx'] + mscale * infos['width'] * mincol
+      tminy = infos['topy'] - mscale * infos['height'] * (maxrow + 1)
+      tmaxx = infos['topx'] + mscale * infos['width'] * (maxcol + 1)
+      tmaxy = infos['topy'] - mscale * infos['height'] * minrow
     else:
       self.log(0, '3derror2')
+      if wgpu:
+        self.HTML3DData = None
+        wgpu_event.set()
       return False
     ax = den / (tmaxx - tminx)
     bx = (moyx - tminx) / (tmaxx - tminx)
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
-    declarations = (GPXTweakerWebInterfaceServer.HTML_3DP_DECLARATIONS_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_DECLARATIONS_TEMPLATE).replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
-    self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d != 's' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+    if accel:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+    else:
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+    self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
+    if wgpu:
+      wgpu_event.set()
+    else:
+      declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
+      self.HTML3D = getattr(GPXTweakerWebInterfaceServer, "HTML_3D%s%s_TEMPLATE" % (mode3d.upper(), ("_WGPU" if wgpu else ""))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      yield True
     self.log(0, '3dbuilt')
     return True
 
@@ -19251,7 +22102,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (WebMercatorMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
@@ -19260,7 +22111,7 @@ class GPXTweakerWebInterfaceServer():
     esets = self._build_esets()
     wmsets = self._build_wmsets()
     gsets = self._build_gsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
