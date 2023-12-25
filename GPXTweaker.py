@@ -12344,11 +12344,11 @@ class GPXTweakerWebInterfaceServer():
   '              if (ind == 0) {\r\n' \
   '                cmms[0] = 0;\r\n' \
   '                cmms[1] = 0;\r\n' \
-  '                lats[0] = lat;\r\n' \
+  '                clats[0] = lat;\r\n' \
   '              } else {\r\n' \
   '                cmms[2 * ind] = lat - latp;\r\n' \
   '                cmms[2 * ind + 1] = lon - lonp;\r\n' \
-  '                lats[ind] = lat;\r\n' \
+  '                clats[ind] = lat;\r\n' \
   '              }\r\n' \
   '              latp = lat;\r\n' \
   '              lonp = lon;\r\n' \
@@ -20582,7 +20582,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("oset").selectedIndex = parseInt(prev_state[3]);\r\n' \
   '          let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
   '          let st = prev_state[4].split("-");\r\n' \
-  '          for (let f=0; f<folders.length; f++) {folders[f].checked = st[f]=="t";}\r\n' \
+  '          for (let f=0; f<folders.length; f++) {folders[f].checked = f >= st.length || st[f] == "t";}\r\n' \
   '          st = prev_state[5].split("-");\r\n' \
   '          let nbt = Math.min(st.length, document.getElementById("tracksform").children.length);\r\n' \
   '          for (let t=0; t<nbt; t++) {\r\n' \
