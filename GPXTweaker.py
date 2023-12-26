@@ -16561,7 +16561,7 @@ class GPXTweakerWebInterfaceServer():
   '        function loop_redraw(c) {\r\n' \
   '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
   '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
-  '          canvas_redraw();\r\n' \
+  '          canvas_redraw(true);\r\n' \
   '        }\r\n' \
   '        window.requestAnimationFrame(loop_redraw);\r\n' \
   '      }\r\n' \
@@ -16921,7 +16921,7 @@ class GPXTweakerWebInterfaceServer():
   '        d_texture = texture_attach(gl.TEXTURE2);\r\n' \
   '        gl.bindFramebuffer(gl.FRAMEBUFFER, null);\r\n' \
   '      }\r\n' \
-  '      function canvas_redraw() {\r\n' \
+  '      function canvas_redraw(force=null) {\r\n' \
   '        if (! lmatrix) {\r\n' \
   '          lmatrix = mat4_zscale(1);\r\n' \
   '          ldirection = new Float32Array([0, 0, 0]);\r\n' \
@@ -17579,7 +17579,8 @@ class GPXTweakerWebInterfaceServer():
   '        queue[1] = null;\r\n' \
   '        return device.queue.onSubmittedWorkDone();\r\n' \
   '      }\r\n' \
-  '      function canvas_redraw() {\r\n' \
+  '      function canvas_redraw(force=false) {\r\n' \
+  '        if (force) {modified.add("v");}\r\n' \
   '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
@@ -17926,6 +17927,11 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        width:2em;\r\n' \
   '        text-align:left;\r\n' \
+  '      }\r\n' \
+  '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
+  '        body {\r\n' \
+  '          scrollbar-color: rgb(121,123,126) rgb(34,37,43);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
