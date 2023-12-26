@@ -7435,7 +7435,9 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               self.server.Interface.SLock.release()
               continue
-            if mode == 'ta' or mode == 'tb':
+            if mode == 's':
+              track1.WebMercatorPts = None
+            else:
               track2.BackupGPX(uri2)
               self.server.Interface.Tracks[tr_ind2][0] = uri1
               if next((tr for tr in self.server.Interface.Tracks if tr[0] == uri2), None) is None:
