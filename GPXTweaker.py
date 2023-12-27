@@ -8799,13 +8799,12 @@ class GPXTweakerWebInterfaceServer():
   '      class WebGPUStats {\r\n' \
   '        static get ptsws() {return 64;}\r\n' \
   '        static get segsws() {return 8;}\r\n' \
-  '        static get maxsbs() {return 1 << 27;}\r\n' \
   '        constructor (mode, persistence) {\r\n' \
   '          this.mode = mode;\r\n' \
   '          this.persistence = persistence * 1000;\r\n' \
   '          this.adapter = null;\r\n' \
   '          this.device = null;\r\n' \
-  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice();})?.then((d) => {this.device = d; this.init(); this.calc();}));\r\n' \
+  '          this.lock = (mode != "tweaker" && mode != "explorer") ? Promise.resolve(undefined) : Promise.resolve(navigator.gpu?.requestAdapter()?.then((a) => {this.adapter = a; return a.requestDevice({requiredLimits:{maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize, maxBufferSize: this.adapter.limits.maxBufferSize},});})?.then((d) => {this.device = d; this.init(); this.calc();}));\r\n' \
   '        }\r\n' \
   '        init() {\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
@@ -9191,7 +9190,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
-  '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize, WebGPUStats.maxsbs) / 16) | 0;\r\n' \
+  '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize) / 16) | 0;\r\n' \
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
