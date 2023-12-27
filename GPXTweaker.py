@@ -8226,6 +8226,9 @@ class GPXTweakerWebInterfaceServer():
   '          width:calc(100% - 2px);\r\n' \
   '          height:calc(100% - 2px);\r\n' \
   '        }\r\n' \
+  '        body {\r\n' \
+  '          scrollbar-color: rgb(121,123,126) rgb(34,37,43);\r\n' \
+  '        }\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
@@ -17927,11 +17930,6 @@ class GPXTweakerWebInterfaceServer():
   '        display:inline-block;\r\n' \
   '        width:2em;\r\n' \
   '        text-align:left;\r\n' \
-  '      }\r\n' \
-  '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
-  '        body {\r\n' \
-  '          scrollbar-color: rgb(121,123,126) rgb(34,37,43);\r\n' \
-  '        }\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
