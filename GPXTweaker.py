@@ -19029,7 +19029,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      async function tracks_vfilter() {\r\n' \
   '        vfilt = false;\r\n' \
-  '        const ti=performance.now();\r\n' \
   '        if (document.getElementById("vfbutton").style.backgroundColor == "") {\r\n' \
   '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][3] = true;};\r\n' \
   '        } else {\r\n' \
@@ -19048,7 +19047,6 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        console.log(performance.now()-ti);\r\n' \
   '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      function input_history(input) {\r\n' \
@@ -19495,6 +19493,10 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
   '        tracks_nfilter();\r\n' \
   '        cfilter_reset();\r\n' \
+  '        if (document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
+  '          document.getElementById("vfbutton").style.backgroundColor = "";\r\n' \
+  '          switch_vfilter();\r\n' \
+  '        }\r\n' \
   '        tracks_sort();\r\n' \
   '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
   '        return true;\r\n' \
