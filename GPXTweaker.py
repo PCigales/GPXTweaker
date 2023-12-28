@@ -245,7 +245,7 @@ FR_STRINGS = {
     'jsortproximity': 'Proximité',
     'jfilterplaceholder': 'filtrer sur le nom contient...',
     'jcfilter': 'afficher / masquer le panneau de filtre avancé&#13;&#10;+ctrl: réinitialiser le filtre avancé&#13;&#10;+shift: restaurer le filtre avancé tel qu\'avant réinitialisation',
-    'jvfilter': 'activer / désactiver le filtrage sur la visibilité potentielle à l\'écran du tracé de la trace',
+    'jvfilter': 'activer / désactiver le filtrage sur le franchissement de l\'écran par le tracé de la trace',
     'jto': 'à',
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
@@ -646,7 +646,7 @@ EN_STRINGS = {
     'jsortproximity': 'Proximity',
     'jfilterplaceholder': 'filter on the name contains...',
     'jcfilter': 'show / hide the panel of advanced filter&#13;&#10;+ctrl: reset the advanced filter&#13;&#10;+shift: restore the advanced filter as before reset',
-    'jvfilter': 'toggle the filtering on the potential visibility on screen of the plot of the track',
+    'jvfilter': 'toggle the filtering on the crossing of the screen by the plot of the track',
     'jto': 'to',
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
@@ -8834,7 +8834,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.bslopestdistspeeds = [];\r\n' \
   '          this.btls = twmode ? null : [];\r\n' \
   '          const override = navigator_firefox ? "const" : "override";\r\n' \
-  '          this.mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
+  '          const mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> lls: array<vec2f>;\r\n' \
@@ -8860,9 +8860,9 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: this.mpos, entryPoint: "pos", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: mpos, entryPoint: "pos", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bgpos = twmode ? null : [];\r\n' \
-  '          this.mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
+  '          const mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
@@ -8938,11 +8938,11 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 7, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tdir", constants: navigator_firefox ? {} : {ws1: WebGPUStats.ptsws},},});\r\n' \
-  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: this.mtsmooth, entryPoint: "tsmooth", constants: navigator_firefox ? {} : {ws2: WebGPUStats.segsws},},});\r\n' \
+  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: mtsmooth, entryPoint: "tdir", constants: navigator_firefox ? {} : {ws1: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: mtsmooth, entryPoint: "tsmooth", constants: navigator_firefox ? {} : {ws2: WebGPUStats.segsws},},});\r\n' \
   '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
-  '          this.mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
+  '          const mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> mms: array<vec2f>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> lats: array<f32>;\r\n' \
@@ -8985,10 +8985,10 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: this.mgdist, entryPoint: "gdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: mgdist, entryPoint: "gdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bggdist = [];\r\n' \
   '          this.bgsgdist = twmode ? null : [];\r\n' \
-  '          this.meagain = this.device.createShaderModule({code: `\r\n' \
+  '          const meagain = this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
   '            @group(0) @binding(2) var<uniform> eagainf: vec2f;\r\n' \
@@ -9045,10 +9045,10 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: this.meagain, entryPoint: "eagain", constants: navigator_firefox ? {} : {ws: WebGPUStats.segsws / 2},},});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: meagain, entryPoint: "eagain", constants: navigator_firefox ? {} : {ws: WebGPUStats.segsws / 2},},});\r\n' \
   '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgeagain = [];\r\n' \
-  '          this.mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
+  '          const mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
   '            struct sfilters {sldrange: f32, slmax: f32, sptrange: f32, spmax: f32};\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
@@ -9182,10 +9182,10 @@ class GPXTweakerWebInterfaceServer():
   '          `});\r\n' \
   '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
-  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopes1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "slopestdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "slopes1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "slopestdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '          this.mvisib = null;\r\n' \
@@ -9314,7 +9314,7 @@ class GPXTweakerWebInterfaceServer():
   '          const _tls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
   '          if (this.mvisib == null) {\r\n' \
   '            const override = navigator_firefox ? "const" : "override";\r\n' \
-  '            this.mvisib = this.device.createShaderModule({code: `\r\n' \
+  '            const mvisib = this.device.createShaderModule({code: `\r\n' \
   '              @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '              @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
   '              @group(0) @binding(2) var<storage, read> tls: array<vec2f>;\r\n' \
@@ -9345,7 +9345,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            `});\r\n' \
   '            this.bglvisib = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '            this.pvisib = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglvisib]}), compute: {module: this.mvisib, entryPoint: "visib", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '            this.pvisib = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglvisib]}), compute: {module: mvisib, entryPoint: "visib", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          }\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '            this.btls.push(this.device.createBuffer({size: this.nbsegs[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
@@ -18833,9 +18833,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
-  '        if (fpan == 0 && document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
-  '          switch_vfilter();\r\n' \
-  '        }\r\n' \
+  '        if (fpan == 0 && document.getElementById("vfbutton").style.backgroundColor != "") {switch_vfilter();}\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function calc_changed(fpan) {\r\n' \
@@ -20330,7 +20328,7 @@ class GPXTweakerWebInterfaceServer():
   '              <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '            </form>\r\n' \
   '            <button id="cfbutton" style="position:relative;font-size:80%;" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?fence(cfilter_reset):(event.shiftKey?fence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '            <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');fence(switch_vfilter)">&#128065;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '            <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');fence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
   '            <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?fence(download_tracklist,event.altKey):(event.ctrlKey?fence(download_graph):fence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="fence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():fence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?fence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '            <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
