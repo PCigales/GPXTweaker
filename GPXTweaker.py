@@ -8963,7 +8963,7 @@ class GPXTweakerWebInterfaceServer():
   '              segs[p] = s;\r\n' \
   '              let mm: vec2f = mms[p] * 0.00872664626;\r\n' \
   '              let le: f32 = lats[p] * 0.0174532925;\r\n' \
-  '              let ls: f32 = select(lats[p - 1u] * 0.0174532925, le, pt == starts[segs[p]]);\r\n' \
+  '              let ls: f32 = lats[max(p, starts[segs[p]] - starts[0u] + 1u) - 1u] * 0.0174532925;\r\n' \
   '              let a: f32 = sqrt(dot(pow(mm, vec2f(2.0)) - pow(mm, vec2f(4.0)) / 3.0, vec2f(1.0, cos(ls) * cos(le))));\r\n' \
   '              gdists[p] = 12756274.0 * (a + pow(a, 3.0) / 6.0);\r\n' \
   '            }\r\n' \
@@ -8978,7 +8978,7 @@ class GPXTweakerWebInterfaceServer():
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
   '              let xye: vec2f = xys[p];\r\n' \
-  '              let xys: vec2f = select(xys[p - 1u], xye, p == starts[segs[p]] - starts[0u]);\r\n' \
+  '              let xys: vec2f = xys[max(p, starts[segs[p]] - starts[0u] + 1u) - 1u];\r\n' \
   '              let e: vec2f = trlats[segs[p]] * exp(- vec2(xys.y, xye.y) / 6378137.0);\r\n' \
   '              let c: vec2f = 1.0 / (e + 1.0 / e);\r\n' \
   '              gdists[p] = distance(xys, xye) * (c.x + c.y);\r\n' \
@@ -9324,14 +9324,10 @@ class GPXTweakerWebInterfaceServer():
   '              @compute @workgroup_size(ws) fn visib(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '                let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '                if (p >= arrayLength(&segs)) {return;}\r\n' \
-  '                let xy1: vec2f = xys[p];\r\n' \
-  '                let xy2: vec2f = select(xys[p + 1u], xy1, p + 1u == starts[segs[p] + 1u] - starts[0u]);\r\n' \
+  '                let xy2: vec2f = xys[p];\r\n' \
+  '                let xy1: vec2f = xys[max(p, starts[segs[p]] - starts[0u] + 1u) - 1u];\r\n' \
   '                let sc1: vec2f = screen.xy - tls[segs[p]];\r\n' \
   '                let sc2: vec2f = sc1 + screen.zw;\r\n' \
-  '                if (all((xy1 > sc1) & (xy1 < sc2))) {\r\n' \
-  '                  visibs[segs[p]] = 1.0;\r\n' \
-  '                  return;\r\n' \
-  '                }\r\n' \
   '                if (any((xy1 <= sc1) & (xy2 <= sc1)) || any((xy1 >= sc2) & (xy2 >= sc2))) {return;}\r\n' \
   '                let d: vec2f = xy2 - xy1;\r\n' \
   '                if (d.x == 0.0) {\r\n' \
@@ -18225,7 +18221,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
-  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) && ! (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {scroll_to_track(document.getElementById(foc), false);}\r\n' \
+  '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) && ! (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity()) && document.getElementById("vfbutton").style.backgroundColor == "") {scroll_to_track(document.getElementById(foc), false);}\r\n' \
   '      }\r\n' \
   '      function track_outside(trk) {\r\n' \
   '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
@@ -18832,7 +18828,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
-  '        if (fpan == 0 && document.getElementById("vfbutton").style.backgroundColor != "") {switch_vfilter();}\r\n' \
+  '        if (fpan == 0) {\r\n' \
+  '          gpustats.tls = null;\r\n' \
+  '          if (document.getElementById("vfbutton").style.backgroundColor != "") {await switch_vfilter();}\r\n' \
+  '        }\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function calc_changed(fpan) {\r\n' \
@@ -18975,7 +18974,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function tracks_cfilter() {\r\n' \
   '        let cfilters = document.getElementById("cfilterform").getElementsByTagName("input");\r\n' \
-  '        tracks_filts.forEach(function (tfs) {tfs[1] = true;});\r\n' \
+  '        for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] = true;};\r\n' \
   '        let conv = [3600, 1000, 1, 1];\r\n' \
   '        let cfc = null;\r\n' \
   '        let isNaN = Number.isNaN;\r\n' \
@@ -18992,7 +18991,7 @@ class GPXTweakerWebInterfaceServer():
   '            let cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
   '            cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p <= cfvmax;};\r\n' \
   '          } else {continue;}\r\n' \
-  '          tracks_filts.forEach(function (tfs, t) {tfs[1] &&= cfc(t);});\r\n' \
+  '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] &&= cfc(t);};\r\n' \
   '        }\r\n' \
   '        if (cfilters[8].value && cfilters[8].checkValidity()) {\r\n' \
   '          let cfvmin = cfilters[8].valueAsNumber;\r\n' \
@@ -19006,7 +19005,9 @@ class GPXTweakerWebInterfaceServer():
   '          let cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
   '          cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p < cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
-  '        if (cfc != null) {tracks_filts.forEach(function (tfs, t) {tfs[1] &&= cfc(t);});}\r\n' \
+  '        if (cfc != null) {\r\n' \
+  '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] &&= cfc(t);};\r\n' \
+  '        }\r\n' \
   '        if (cfilters[10].value && cfilters[10].checkValidity()) {\r\n' \
   '          let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
   '          let cfvmin = parseFloat(cfilters[10].value) * 1000;\r\n' \
@@ -19021,16 +19022,18 @@ class GPXTweakerWebInterfaceServer():
   '          let cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
   '          cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d <= cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
-  '        if (cfc != null) {tracks_filts.forEach(function (tfs, t) {tfs[1] &&= cfc(t);});}\r\n' \
+  '        if (cfc != null) {\r\n' \
+  '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] &&= cfc(t);};\r\n' \
+  '        }\r\n' \
   '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      async function tracks_vfilter() {\r\n' \
   '        vfilt = false;\r\n' \
   '        const ti=performance.now();\r\n' \
   '        if (document.getElementById("vfbutton").style.backgroundColor == "") {\r\n' \
-  '          tracks_filts.forEach(function (tfs) {tfs[3] = true;});\r\n' \
+  '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][3] = true;};\r\n' \
   '        } else {\r\n' \
-  '          tracks_filts.forEach(function (tfs) {tfs[3] = false;});\r\n' \
+  '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][3] = false;};\r\n' \
   '          if (tracks_xys.length > 0) {\r\n' \
   '            gpustats.screen = {left: (-hpx - 1) * tscale / zoom, top: (-hpy - 1) * tscale / zoom, width: (viewpane.offsetWidth + 2) * tscale / zoom, height: (viewpane.offsetHeight + 2) * tscale / zoom};\r\n' \
   '            gpustats.calc_visib();\r\n' \
@@ -19194,7 +19197,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          gpustats.tls = tls;\r\n' \
   '        }\r\n' \
-  '        tracks_vfilter();\r\n' \
+  '        return tracks_vfilter();\r\n' \
   '      }\r\n' \
   '      function switch_folderspanel() {\r\n' \
   '        let fps = document.getElementById("folderspanel").style;\r\n' \
