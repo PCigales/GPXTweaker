@@ -3994,7 +3994,7 @@ class JSONTiles():
           scheme = desc.get('scheme')
           minzoom = desc.get('minzoom', None)
           maxzoom = desc.get('maxzoom', None)
-        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if (next(schemes, '') or scheme) == 'tms' else '{row}')), 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512), **({'minmat': minzoom} if minzoom is not None else {}), **({'maxmat': maxzoom} if maxzoom is not None else {})}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers}))
+        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if (next(schemes, '') or scheme) == 'tms' else '{row}')), 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512), **({'minmat': minzoom} if minzoom is not None else {}), **({'maxmat': maxzoom} if maxzoom is not None else {})}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local}))
         sources[name] = {'type': desc['type'], 'tiles': [tiles]}
         if 'tileSize' in desc:
           sources[name]['tileSize'] = desc['tileSize']
@@ -4983,7 +4983,7 @@ class MapLegend():
       self.log(2, 'legendfail', infos)
     return f_l
 
-  def GetTilesLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, capabilities = None):
+  def GetTilesLegendInfos(self, infos, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, capabilities=None):
     if 'source' not in infos or '{wmts}' not in infos['source'] or not infos.get('layer') or 'style' not in infos:
       return None
     if capabilities is None:
@@ -8830,6 +8830,7 @@ class GPXTweakerWebInterfaceServer():
   '          this.beags = [];\r\n' \
   '          this.bslsps = [];\r\n' \
   '          this.bslopestdistspeeds = [];\r\n' \
+  '          this.btls = twmode ? null : [];\r\n' \
   '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          this.mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
@@ -9185,6 +9186,12 @@ class GPXTweakerWebInterfaceServer():
   '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: this.mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
+  '          this.mvisib = null;\r\n' \
+  '          this.bglvisib = null;\r\n' \
+  '          this.pvisib = null;\r\n' \
+  '          this.bscreen = null;\r\n' \
+  '          this.bvisibs = twmode ? null : [];\r\n' \
+  '          this.bgvisib = twmode ? null : [];\r\n' \
   '        }\r\n' \
   '        set starts(a) {\r\n' \
   '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
@@ -9194,7 +9201,7 @@ class GPXTweakerWebInterfaceServer():
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
-  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds", "btls"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -9295,6 +9302,58 @@ class GPXTweakerWebInterfaceServer():
   '        set slopesspeedf(v) {\r\n' \
   '          this.device.queue.writeBuffer(this.bslopesspeedf, 0, new Float32Array([v.sldrange, v.slmax, v.sptrange, v.spmax]));\r\n' \
   '        }\r\n' \
+  '        set tls(a) {\r\n' \
+  '          if (a == null) {\r\n' \
+  '            ["btls", "bvisibs"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '            this.bscreen = null;\r\n' \
+  '            this.bgvisib = [];\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '          const _tls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
+  '          if (this.mvisib == null) {\r\n' \
+  '            const override = navigator_firefox ? "const" : "override";\r\n' \
+  '            this.mvisib = this.device.createShaderModule({code: `\r\n' \
+  '              @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
+  '              @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
+  '              @group(0) @binding(2) var<storage, read> tls: array<vec2f>;\r\n' \
+  '              @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
+  '              @group(0) @binding(4) var<uniform> screen: vec4f;\r\n' \
+  '              @group(0) @binding(5) var<storage, read_write> visibs: array<f32>;\r\n' \
+  '              ${override} ws: u32 = 64u;\r\n' \
+  '              @compute @workgroup_size(ws) fn visib(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '                let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
+  '                if (p >= arrayLength(&segs)) {return;}\r\n' \
+  '                let xy1: vec2f = xys[p];\r\n' \
+  '                let xy2: vec2f = select(xys[p + 1u], xy1, p + 1u == starts[segs[p] + 1u] - starts[0u]);\r\n' \
+  '                let sc1: vec2f = screen.xy - tls[segs[p]];\r\n' \
+  '                let sc2: vec2f = sc1 + screen.zw;\r\n' \
+  '                if (all((xy1 > sc1) & (xy1 < sc2))) {\r\n' \
+  '                  visibs[segs[p]] = 1.0;\r\n' \
+  '                  return;\r\n' \
+  '                }\r\n' \
+  '                if (any((xy1 <= sc1) & (xy2 <= sc1)) || any((xy1 >= sc2) & (xy2 >= sc2))) {return;}\r\n' \
+  '                let d: vec2f = xy2 - xy1;\r\n' \
+  '                if (d.x == 0.0) {\r\n' \
+  '                  visibs[segs[p]] = tls[0].x;\r\n' \
+  '                  return;\r\n' \
+  '                }\r\n' \
+  '                let yc: vec2f = d.y / d.x * (vec2f(sc1.x, sc2.x) - xy1.x) + xy1.y;\r\n' \
+  '                if (all(yc <= vec2f(sc1.y)) || all(yc >= vec2f(sc2.y))) {return;}\r\n' \
+  '                //visibs[segs[p]] = 1.0;\r\n' \
+  '              }\r\n' \
+  '            `});\r\n' \
+  '            this.bglvisib = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
+  '            this.pvisib = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglvisib]}), compute: {module: this.mvisib, entryPoint: "visib", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          }\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.btls.push(this.device.createBuffer({size: this.nbsegs[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
+  '            this.device.queue.writeBuffer(this.btls[c], 0, _tls.subarray(this.chunks[c][0] * 2, this.chunks[c + 1][0] * 2));\r\n' \
+  '          }\r\n' \
+  '          this.bscreen = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        }\r\n' \
+  '        set screen(v) {\r\n' \
+  '          this.device.queue.writeBuffer(this.bscreen, 0, new Float32Array([v.left, v.top, v.width, v.height]));\r\n' \
+  '        }\r\n' \
   '        calc(...tasks) {\r\n' \
   '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
   '          tasks = new Set(tasks);\r\n' \
@@ -9385,6 +9444,32 @@ class GPXTweakerWebInterfaceServer():
   '          const commands = encoder.finish();\r\n' \
   '          this.device.queue.submit([commands]);\r\n' \
   '        }\r\n' \
+  '        calc_visib() {\r\n' \
+  '          const encoder = this.device.createCommandEncoder();\r\n' \
+  '          const pass = encoder.beginComputePass();\r\n' \
+  '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
+  '          if (this.bvisibs.length == 0) {\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              this.bvisibs.push(this.device.createBuffer({size: this.nbsegs[c] * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            this.device.queue.writeBuffer(this.bvisibs[c], 0, (new Float32Array(this.chunks[c + 1][0] - this.chunks[c][0])).fill(0.0));\r\n' \
+  '          }\r\n' \
+  '          if (this.bgvisib.length == 0) {\r\n' \
+  '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '              this.bgvisib.push(this.device.createBindGroup({layout: this.bglvisib, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btls[c], this.bxys[c], this.bscreen, this.bvisibs[c])}));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          pass.setPipeline(this.pvisib);\r\n' \
+  '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
+  '            pass.setBindGroup(0, this.bgvisib[c]);\r\n' \
+  '            pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
+  '          }\r\n' \
+  '          pass.end();\r\n' \
+  '          const commands = encoder.finish();\r\n' \
+  '          this.device.queue.submit([commands]);\r\n' \
+  '        }\r\n' \
   '        _get_result(rn) {\r\n' \
   '          const nbpts = this.chunks.at(-1)[1];\r\n' \
   '          if (nbpts == 0) {return Promise.resolve(new Float32Array());}\r\n' \
@@ -9414,6 +9499,9 @@ class GPXTweakerWebInterfaceServer():
   '        get slopestdistspeeds() {\r\n' \
   '          return this._get_result("slopestdistspeeds");\r\n' \
   '        }\r\n' \
+  '        get visibs() {\r\n' \
+  '          return this._get_result("visibs");\r\n' \
+  '        }\r\n' \
   '        _free() {\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          ["bwns", "bwds", "bsxys", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
@@ -9437,7 +9525,7 @@ class GPXTweakerWebInterfaceServer():
   '          var gpustats = new WebGPUStats("##MODE##", wgpu_persistence);\r\n' \
   '          wgpu_wait[0] = new Promise((res, rej) => {wgpu_wait[1] = res;});\r\n' \
   '          var fence = gpustats.fence.bind(gpustats);\r\n' \
-  '          fence(() => {if (gpustats.device == null) {webgpu = false;  wgpu_wait[0] = null; wgpu_wait[1](); fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; gpustats = new WebGLStats("##MODE##")} else {gpucomp = 1;};});\r\n' \
+  '          fence(() => {if (gpustats.device == null) {webgpu = false; wgpu_wait[0] = null; wgpu_wait[1](); fence = (func, ...args) => func(...args); window.onload = (e) => {show_msg("{#jwebgpuno#}", 10); window.onload = null;}; gpustats = new WebGLStats("##MODE##")} else {gpucomp = 1; if ("##MODE##" == "explorer") {document.getElementById("vfbutton").style.display = ""};};});\r\n' \
   '        } else {\r\n' \
   '          var gpustats = new WebGLStats("##MODE##");\r\n' \
   '          var fence = (func, ...args) => func(...args);\r\n' \
@@ -17715,7 +17803,7 @@ class GPXTweakerWebInterfaceServer():
   '        color:rgb(250,220,200);\r\n' \
   '      }\r\n' \
   '      input[id=tracksfilter] {\r\n' \
-  '        max-width:calc(98vw - 78em);\r\n' \
+  '        max-width:calc(98vw - 78.5em);\r\n' \
   '        width:25em;\r\n' \
   '        font-size:70%;\r\n' \
   '      }\r\n' \
@@ -17946,6 +18034,8 @@ class GPXTweakerWebInterfaceServer():
   '      var tracks_normnames = [];\r\n' \
   '      var tracks_stats = [];\r\n' \
   '      var tracks_props = [];\r\n' \
+  '      var tracks_filts = [];\r\n' \
+  '      var vfilt = false;\r\n' \
   '      var wgpu_persistence = ##WEBGPUPERS##;\r\n' + HTML_WEBGLSTATS_TEMPLATE + HTML_WEBGPUSTATS_TEMPLATE + HTML_GPUSTATS_TEMPLATE.replace("##MODE##", "explorer") + \
   '      var focused_targeted = null;\r\n' \
   '      var media_visible = false;\r\n' \
@@ -18040,6 +18130,10 @@ class GPXTweakerWebInterfaceServer():
   '        if (mvis) {show_media();}\r\n' \
   '        if (document.getElementById("oset").selectedIndex == 8) {fence(tracks_sort);}\r\n' \
   '        if ((document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) || (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity())) {fence(tracks_cfilter);}\r\n' \
+  '        if (! vfilt && document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
+  '          vfilt = true;\r\n' \
+  '          fence(tracks_vfilter);\r\n' \
+  '        }\r\n' \
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function track_boundaries(tracks=null) {\r\n' \
   '        if (tracks_pts.length == 0) {return null;}\r\n' \
@@ -18247,6 +18341,7 @@ class GPXTweakerWebInterfaceServer():
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
   '          tracks_props = [];\r\n' \
+  '          tracks_filts = []\r\n' \
   '          tls = [];\r\n' \
   '          if (gpucomp >= 1) {\r\n' \
   '            starts = [0];\r\n' \
@@ -18258,6 +18353,7 @@ class GPXTweakerWebInterfaceServer():
   '            let segs = tracks_pts[t];\r\n' \
   '            tracks_stats.push([]);\r\n' \
   '            tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
+  '            tracks_filts.push([true, true, true, true]);\r\n' \
   '            for (const seg of segs) {\r\n' \
   '              let nbp = seg.length;\r\n' \
   '              if (nbp != 0) {\r\n' \
@@ -18466,6 +18562,7 @@ class GPXTweakerWebInterfaceServer():
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
   '          tracks_props = [];\r\n' \
+  '          tracks_filts = [];\r\n' \
   '          starts = [0]\r\n' \
   '          tls = [];\r\n' \
   '          lls = new Float32Array(nbpt * 2);\r\n' \
@@ -18478,21 +18575,21 @@ class GPXTweakerWebInterfaceServer():
   '            tracks_stats.push(track_stats);\r\n' \
   '            const track_props = [NaN, NaN, NaN, NaN, NaN, [NaN, NaN]];\r\n' \
   '            tracks_props.push(track_props);\r\n' \
+  '            tracks_filts.push([true, true, true, true]);\r\n' \
+  '            let tl = null;\r\n' \
   '            let ts = null;\r\n' \
   '            let te = null;\r\n' \
-  '            let st = true;\r\n' \
   '            for (const seg of segs) {\r\n' \
   '              const nbp = seg.length;\r\n' \
   '              const seg_stats = [];\r\n' \
   '              track_stats.push(seg_stats);\r\n' \
   '              if (nbp == 0) {continue;}\r\n' \
-  '              if (st) {\r\n' \
-  '                st = false;\r\n' \
+  '              if (tl == null) {\r\n' \
+  '                tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top)).map((l) => round(l * 1000000) / 1000000);\r\n' \
   '                track_props[5][0] = seg[0][0];\r\n' \
   '                track_props[5][1] = seg[0][1];\r\n' \
   '              }\r\n' \
   '              starts.push(starts.at(-1) + nbp);\r\n' \
-  '              const tl = WebMercatortoWGS84(htopx + prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top)).map((l) => round(l * 1000000) / 1000000);\r\n' \
   '              tls.push(tl);\r\n' \
   '              seg.forEach((c, p) => {clls[2 * p] = tl[0] - c[0]; clls[2 * p + 1] = c[1] - tl[1];});\r\n' \
   '              clls = clls.subarray(2 * nbp);\r\n' \
@@ -18734,6 +18831,10 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
+  '        if (fpan == 0 && ! vfilt && document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
+  '          vfilt = true;\r\n' \
+  '          fence(tracks_vfilter);\r\n' \
+  '        }\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function calc_changed(fpan) {\r\n' \
@@ -18848,23 +18949,16 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function tracks_filter() {\r\n' \
-  '        let filt = norm_trackname(document.getElementById("tracksfilter").value);\r\n' \
   '        let trv = 0;\r\n' \
-  '        for (let t=0; t<tracks_normnames.length; t++) {\r\n' \
-  '          if (tracks_normnames[t].indexOf(filt) >= 0) {\r\n' \
-  '            if (document.getElementById("track" + t.toString() + "folder").style.display == "none" || document.getElementById("track" + t.toString() + "content").style.display == "none") {\r\n' \
-  '              document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '            } else {\r\n' \
-  '              document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
-  '              trv++;\r\n' \
-  '            }\r\n' \
-  '            document.getElementById("track" + t.toString() + "name").style.display = "";\r\n' \
-  '          } else {\r\n' \
+  '        for (let t=0; t<tracks_filts.length; t++) {\r\n' \
+  '          if (tracks_filts[t].includes(false)) {\r\n' \
   '            document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '            document.getElementById("track" + t.toString() + "name").style.display = "none";\r\n' \
+  '          } else {\r\n' \
+  '            document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
+  '            trv++;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
+  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_filts.length?(trv.toString() + "/"):"") + tracks_filts.length.toString() + ")");\r\n' \
   '        if (focused) {\r\n' \
   '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
   '            track_click(null, document.getElementById(focused + "desc"));\r\n' \
@@ -18874,9 +18968,16 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function tracks_nfilter() {\r\n' \
+  '        let filt = norm_trackname(document.getElementById("tracksfilter").value);\r\n' \
+  '        for (let t=0; t<tracks_normnames.length; t++) {\r\n' \
+  '          tracks_filts[t][0] = (tracks_normnames[t].indexOf(filt) >= 0)\r\n' \
+  '        }\r\n' \
+  '        tracks_filter();\r\n' \
+  '      }\r\n' \
   '      function tracks_cfilter() {\r\n' \
   '        let cfilters = document.getElementById("cfilterform").getElementsByTagName("input");\r\n' \
-  '        let trkcss = Array.from(tracks_pts, function (tr, t) {let s = document.getElementById("track" + t.toString() + "content").style; s.display=""; return s;});\r\n' \
+  '        tracks_filts.forEach(function (tfs) {tfs[1] = true;});\r\n' \
   '        let conv = [3600, 1000, 1, 1];\r\n' \
   '        let cfc = null;\r\n' \
   '        let isNaN = Number.isNaN;\r\n' \
@@ -18893,7 +18994,7 @@ class GPXTweakerWebInterfaceServer():
   '            let cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
   '            cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p <= cfvmax;};\r\n' \
   '          } else {continue;}\r\n' \
-  '          trkcss.forEach(function (s, t) {if (s.display != "none" && ! cfc(t)) {s.display = "none";};});\r\n' \
+  '          tracks_filts.forEach(function (tfs, t) {tfs[1] &&= cfc(t);});\r\n' \
   '        }\r\n' \
   '        if (cfilters[8].value && cfilters[8].checkValidity()) {\r\n' \
   '          let cfvmin = cfilters[8].valueAsNumber;\r\n' \
@@ -18907,7 +19008,7 @@ class GPXTweakerWebInterfaceServer():
   '          let cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
   '          cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p < cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
-  '        if (cfc != null) {trkcss.forEach(function (s, t) {if (s.display != "none" && ! cfc(t)) {s.display = "none";};});}\r\n' \
+  '        if (cfc != null) {tracks_filts.forEach(function (tfs, t) {tfs[1] &&= cfc(t);});}\r\n' \
   '        if (cfilters[10].value && cfilters[10].checkValidity()) {\r\n' \
   '          let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
   '          let cfvmin = parseFloat(cfilters[10].value) * 1000;\r\n' \
@@ -18922,25 +19023,32 @@ class GPXTweakerWebInterfaceServer():
   '          let cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
   '          cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d <= cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
-  '        if (cfc != null) {trkcss.forEach(function (s, t) {if (s.display != "none" && ! cfc(t)) {s.display = "none";};});}\r\n' \
-  '        let trv = 0;\r\n' \
-  '        for (let t=0; t<trkcss.length; t++) {\r\n' \
-  '          if (trkcss[t].display == "none" || document.getElementById("track" + t.toString() + "folder").style.display == "none" || document.getElementById("track" + t.toString() + "name").style.display == "none") {\r\n' \
-  '            document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
-  '            trv++;\r\n' \
+  '        if (cfc != null) {tracks_filts.forEach(function (tfs, t) {tfs[1] &&= cfc(t);});}\r\n' \
+  '        tracks_filter();\r\n' \
+  '      }\r\n' \
+  '      async function tracks_vfilter() {\r\n' \
+  '        vfilt = false;\r\n' \
+  '        const ti=performance.now();\r\n' \
+  '        if (document.getElementById("vfbutton").style.backgroundColor == "") {\r\n' \
+  '          tracks_filts.forEach(function (tfs) {tfs[3] = true;});\r\n' \
+  '        } else {\r\n' \
+  '          tracks_filts.forEach(function (tfs) {tfs[3] = false;});\r\n' \
+  '          if (tracks_xys.length > 0) {\r\n' \
+  '            gpustats.screen = {left: (-hpx - 1) * tscale / zoom, top: (-hpy - 1) * tscale / zoom, width: (viewpane.offsetWidth + 2) * tscale / zoom, height: (viewpane.offsetHeight + 2) * tscale / zoom};\r\n' \
+  '            gpustats.calc_visib();\r\n' \
+  '            const visibs = await gpustats.visibs;\r\n' \
+  '            for (let t=0, ind=0; t<tracks_pts.length; t++) {\r\n' \
+  '              const segs = tracks_pts[t];\r\n' \
+  '              for (const seg of segs) {\r\n' \
+  '                if (seg.length == 0) {continue;}\r\n' \
+  '                tracks_filts[t][3] ||= (visibs[ind] > 0.5);\r\n' \
+  '                ind++;\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
-  '        if (focused) {\r\n' \
-  '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
-  '            track_click(null, document.getElementById(focused + "desc"));\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
-  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
+  '        console.log(performance.now()-ti);\r\n' \
+  '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      function input_history(input) {\r\n' \
   '        let val = input.value;\r\n' \
@@ -19069,6 +19177,27 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("cfilterform").dataset.backup.split("#").forEach((c, i) => document.getElementById("cfilterform").getElementsByTagName("input")[i].value = c);\r\n' \
   '        document.getElementById("cfilterform").dispatchEvent(new Event("change"));\r\n' \
   '      }\r\n' \
+  '      function switch_vfilter() {\r\n' \
+  '        if (document.getElementById("vfbutton").style.backgroundColor == "") {\r\n' \
+  '          gpustats.tls = null;\r\n' \
+  '        } else if (gpustats.btls.length == 0) {\r\n' \
+  '          const nbtracks = tracks_pts.length;\r\n' \
+  '          const tls = [];\r\n' \
+  '          for (let t=0; t<nbtracks; t++) {\r\n' \
+  '            const segs = tracks_pts[t];\r\n' \
+  '            let tl = null;\r\n' \
+  '            for (const seg of segs) {\r\n' \
+  '              if (seg.length == 0) {continue;}\r\n' \
+  '              if (tl == null) {\r\n' \
+  '                tl = [prop_to_wmvalue(document.getElementById("track" + t.toString()).style.left), prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top)];\r\n' \
+  '              }\r\n' \
+  '              tls.push(tl[0], tl[1]);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          gpustats.tls = tls;\r\n' \
+  '        }\r\n' \
+  '        tracks_vfilter();\r\n' \
+  '      }\r\n' \
   '      function switch_folderspanel() {\r\n' \
   '        let fps = document.getElementById("folderspanel").style;\r\n' \
   '        if (fps.display == "none") {\r\n' \
@@ -19080,32 +19209,17 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function folders_select() {\r\n' \
   '        let folders = Array.from(document.getElementById("foldersform").getElementsByTagName("input"));\r\n' \
-  '        let trv = 0;\r\n' \
+  '        if (folders.every((f) => f.checked)) {\r\n' \
+  '          document.getElementById("ffbutton").style.backgroundColor = "";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("ffbutton").style.backgroundColor = "rgb(50,95,130)";\r\n' \
+  '        }\r\n' \
   '        for (let t=0, f=0; t<tracks_pts.length; t++) {\r\n' \
   '          let tf = document.getElementById("track" + t.toString() + "folder").value.toLowerCase();\r\n' \
   '          while (tf.indexOf(folders[f].value.toLowerCase()) < 0) {if (++f == folders.length) {f = 0;};}\r\n' \
-  '          if (folders[f].checked) {\r\n' \
-  '            if (document.getElementById("track" + t.toString() + "name").style.display == "none" || document.getElementById("track" + t.toString() + "content").style.display == "none") {\r\n' \
-  '              document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '            } else {\r\n'\
-  '              document.getElementById("track" + t.toString() + "cont").style.display = "";\r\n' \
-  '              trv++;\r\n' \
-  '            }\r\n' \
-  '            document.getElementById("track" + t.toString() + "folder").style.display = "";\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById("track" + t.toString() + "cont").style.display = "none";\r\n' \
-  '            document.getElementById("track" + t.toString() + "folder").style.display = "none";\r\n' \
-  '          }\r\n' \
+  '          tracks_filts[t][2] = folders[f].checked;\r\n' \
   '        }\r\n' \
-  '        document.getElementById("tracks").firstChild.textContent = document.getElementById("tracks").firstChild.textContent.replace(/\\(.*\\)/, "(" + (trv<tracks_pts.length?(trv.toString() + "/"):"") + tracks_pts.length.toString() + ")");\r\n' \
-  '        if (focused) {\r\n' \
-  '          if (document.getElementById(focused + "cont").style.display == "none") {\r\n' \
-  '            track_click(null, document.getElementById(focused + "desc"));\r\n' \
-  '          } else {\r\n' \
-  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
-  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
+  '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      function folders_whole(tick) {\r\n' \
   '       let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
@@ -19373,11 +19487,12 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_normnames.push("");\r\n' \
   '        tracks_stats.push([]);\r\n' \
   '        tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
+  '        tracks_filts.push([true, true, true, true]);\r\n' \
   '        tracks_xy_offsets.push(tracks_xy_offsets.at(-1));\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
-  '        tracks_filter();\r\n' \
+  '        tracks_nfilter();\r\n' \
   '        cfilter_reset();\r\n' \
   '        tracks_sort();\r\n' \
   '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
@@ -20115,7 +20230,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById(prop.id.replace("name", "desc")).title = prop.value;\r\n' \
   '          document.getElementById(prop.id.slice(0, -4).replace("track", "path")).firstElementChild.innerHTML = escape(prop.value);\r\n' \
   '          if (document.getElementById("oset").selectedIndex == 1) {tracks_sort();}\r\n' \
-  '          tracks_filter();\r\n' \
+  '          tracks_nfilter();\r\n' \
   '        } else if (prop.id.slice(-5) == "color") {\r\n' \
   '          let trk = prop.id.slice(0, -5);\r\n' \
   '          let col = prop.value.toUpperCase();\r\n' \
@@ -20209,14 +20324,14 @@ class GPXTweakerWebInterfaceServer():
   '      <thead>\r\n' \
   '        <tr>\r\n' \
   '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
-  '           <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
-  '             <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_filter();" onchange="input_history(this)">\r\n' \
-  '             <datalist id="tracksfilterhistory"></datalist>\r\n' \
-  '           </form>\r\n' \
-  '           <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onclick="event.ctrlKey?fence(cfilter_reset):(event.shiftKey?fence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '           <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option><</select><button title="{#jfolders#}" style="margin-left:0.75em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?fence(download_tracklist,event.altKey):(event.ctrlKey?fence(download_graph):fence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="fence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():fence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?fence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
-  '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
+  '            <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
+  '              <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_nfilter();" onchange="input_history(this)">\r\n' \
+  '              <datalist id="tracksfilterhistory"></datalist>\r\n' \
+  '            </form>\r\n' \
+  '            <button id="cfbutton" style="position:relative;font-size:80%;" title ="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?fence(cfilter_reset):(event.shiftKey?fence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
+  '            <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');fence(switch_vfilter)">&#128065;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '            <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?fence(download_tracklist,event.altKey):(event.ctrlKey?fence(download_graph):fence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="fence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():fence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?fence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '            <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
   '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';fence(tracks_cfilter);" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
   '                <div style="display:inline-block;padding-right:1em;">\r\n' \
@@ -20552,7 +20667,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#"));\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#") + "|" + (document.getElementById("vfbutton").style.backgroundColor==""?"f":"t"));\r\n' \
   '      }\r\n' \
   '      async function data_load() {\r\n' \
   '        tracks_pts = await fetch("/GPXExplorer/data").then((r) => r.ok ? r.json() : null, () => null);\r\n' \
@@ -20603,6 +20718,10 @@ class GPXTweakerWebInterfaceServer():
   '          magnify = parseInt(prev_state[10]);\r\n' \
   '          document.documentElement.style.setProperty("--magnify", prev_state[10]);\r\n' \
   '          document.getElementById("cfilterform").dataset.backup = prev_state[11];\r\n' \
+  '          if (webgpu && prev_state[12] == "t") {\r\n' \
+  '            document.getElementById("vfbutton").style.backgroundColor = "rgb(50,95,130)";\r\n' \
+  '            fence(switch_vfilter);\r\n' \
+  '          }\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
   '          magnify_inc();\r\n' \
@@ -20610,7 +20729,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (smoothed) {document.getElementById("swsm").innerHTML = "&divide;&divide;"};\r\n' \
   '        if (webgpu) {await tracks_calc_wgpu();} else {tracks_calc();}\r\n' \
   '        tracks_sort();\r\n' \
-  '        tracks_filter();\r\n' \
+  '        tracks_nfilter();\r\n' \
   '        cfilter_restore();\r\n' \
   '        folders_select();\r\n' \
   '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
