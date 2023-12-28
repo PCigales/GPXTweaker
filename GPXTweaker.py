@@ -245,7 +245,7 @@ FR_STRINGS = {
     'jsortproximity': 'Proximité',
     'jfilterplaceholder': 'filtrer sur le nom contient...',
     'jcfilter': 'afficher / masquer le panneau de filtre avancé&#13;&#10;+ctrl: réinitialiser le filtre avancé&#13;&#10;+shift: restaurer le filtre avancé tel qu\'avant réinitialisation',
-    'jvfilter': 'activer / désactiver le filtrage sur la visibilité à l\'écran du tracé de la trace',
+    'jvfilter': 'activer / désactiver le filtrage sur la visibilité potentielle à l\'écran du tracé de la trace',
     'jto': 'à',
     'jfolders': 'afficher / masquer le panneau de sélection des répertoires des traces à lister',
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
@@ -646,7 +646,7 @@ EN_STRINGS = {
     'jsortproximity': 'Proximity',
     'jfilterplaceholder': 'filter on the name contains...',
     'jcfilter': 'show / hide the panel of advanced filter&#13;&#10;+ctrl: reset the advanced filter&#13;&#10;+shift: restore the advanced filter as before reset',
-    'jvfilter': 'toggle the filtering on the visibility on screen of the plot of the track',
+    'jvfilter': 'toggle the filtering on the potential visibility on screen of the plot of the track',
     'jto': 'to',
     'jfolders': 'show / hide the selection panel of the folders of the tracks to list',
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
@@ -18833,9 +18833,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
-  '        if (fpan == 0 && ! vfilt && document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
-  '          vfilt = true;\r\n' \
-  '          fence(tracks_vfilter);\r\n' \
+  '        if (fpan == 0 && document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
+  '          switch_vfilter();\r\n' \
   '        }\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
@@ -20722,7 +20721,6 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("cfilterform").dataset.backup = prev_state[11];\r\n' \
   '          if (webgpu && prev_state[12] == "t") {\r\n' \
   '            document.getElementById("vfbutton").style.backgroundColor = "rgb(50,95,130)";\r\n' \
-  '            fence(switch_vfilter);\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
