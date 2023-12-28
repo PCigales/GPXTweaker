@@ -9188,7 +9188,6 @@ class GPXTweakerWebInterfaceServer():
   '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
-  '          this.mvisib = null;\r\n' \
   '          this.bglvisib = null;\r\n' \
   '          this.pvisib = null;\r\n' \
   '          this.bscreen = null;\r\n' \
@@ -9307,12 +9306,12 @@ class GPXTweakerWebInterfaceServer():
   '        set tls(a) {\r\n' \
   '          if (a == null) {\r\n' \
   '            ["btls", "bvisibs"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
-  '            this.bscreen = null;\r\n' \
+  '            if (this.bscreen != null) {this.bscreen.destroy(); this.bscreen = null;}\r\n' \
   '            this.bgvisib = [];\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          const _tls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
-  '          if (this.mvisib == null) {\r\n' \
+  '          if (this.pvisib == null) {\r\n' \
   '            const override = navigator_firefox ? "const" : "override";\r\n' \
   '            const mvisib = this.device.createShaderModule({code: `\r\n' \
   '              @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
@@ -9336,12 +9335,12 @@ class GPXTweakerWebInterfaceServer():
   '                if (any((xy1 <= sc1) & (xy2 <= sc1)) || any((xy1 >= sc2) & (xy2 >= sc2))) {return;}\r\n' \
   '                let d: vec2f = xy2 - xy1;\r\n' \
   '                if (d.x == 0.0) {\r\n' \
-  '                  visibs[segs[p]] = tls[0].x;\r\n' \
+  '                  visibs[segs[p]] = 1.0;\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
   '                let yc: vec2f = d.y / d.x * (vec2f(sc1.x, sc2.x) - xy1.x) + xy1.y;\r\n' \
   '                if (all(yc <= vec2f(sc1.y)) || all(yc >= vec2f(sc2.y))) {return;}\r\n' \
-  '                //visibs[segs[p]] = 1.0;\r\n' \
+  '                visibs[segs[p]] = 1.0;\r\n' \
   '              }\r\n' \
   '            `});\r\n' \
   '            this.bglvisib = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
