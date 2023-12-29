@@ -9203,7 +9203,7 @@ class GPXTweakerWebInterfaceServer():
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
   '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize) / 16) | 0;\r\n' \
-  '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
+  '          const maxcw = this.device.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
   '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds", "btls", "bvisibs"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
@@ -15709,23 +15709,23 @@ class GPXTweakerWebInterfaceServer():
   '            @group(1) @binding(2) var<storage, read_write> zmins: array<f32>;\r\n' \
   '            @group(1) @binding(3) var<storage, read_write> zmaxs: array<f32>;\r\n' \
   '            ${override} ws: u32 = 8u;\r\n' \
-  '            @compute @workgroup_size(ws * ws) fn zvalid(@builtin(global_invocation_id) id: vec3u) {\r\n' \
-  '              let p: u32 = id.x;\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zvalid(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws * ws;\r\n' \
   '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
   '              let z = gzs[p];\r\n' \
   '              gzs[p] = select(0.0, z, z != vals.x && z >= vals.y);\r\n' \
   '            }\r\n' \
-  '            @compute @workgroup_size(ws * ws) fn zminmax(@builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zminmax(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let pmax: u32 = arrayLength(&zmins);\r\n' \
-  '              let p1: u32 = id.x * stride * 2u;\r\n' \
+  '              let p1: u32 = (id.x + id.y * nw.x * ws * ws) * stride * 2u;\r\n' \
   '              if (p1 >= pmax) {return;}\r\n' \
   '              let p2: u32 = p1 + stride;\r\n' \
   '              if (p2 >= pmax) {return;}\r\n' \
   '              zmins[p1] = min(zmins[p1], zmins[p2]);\r\n' \
   '              zmaxs[p1] = max(zmaxs[p1], zmaxs[p2]);\r\n' \
   '            }\r\n' \
-  '            @compute @workgroup_size(ws * ws) fn zrel(@builtin(global_invocation_id) id: vec3u) {\r\n' \
-  '              let p: u32 = id.x;\r\n' \
+  '            @compute @workgroup_size(ws * ws) fn zrel(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
+  '              let p: u32 = id.x + id.y * nw.x * ws * ws;\r\n' \
   '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
   '              gzs[p] = fma(vals.x, gzs[p], vals.y);\r\n' \
   '            }\r\n' \
@@ -15783,12 +15783,16 @@ class GPXTweakerWebInterfaceServer():
   '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
   '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bgrznorms, bgrinds)});\r\n' \
   '          const bgz = device.createBindGroup({layout: bglz, entries: [{binding: 0, resource: {buffer: bvals, size: bvals.size},}, {binding: 1, resource: {buffer: bstride, size: 4},}, {binding: 2, resource: {buffer: bzmins, size: bzmins.size},}, {binding: 3, resource: {buffer: bzmaxs, size: bzmaxs.size},}]});\r\n' \
+  '          const maxcw = this.device.limits.maxComputeWorkgroupsPerDimension;\r\n' \
+  '          const wcx = Math.ceil(lvz / (wgs * wgs));\r\n' \
+  '          const wcy = Math.ceil(wcx / maxcw);\r\n' \
+  '          const wc = [Math.ceil(wcx / wcy), wcy];\r\n' \
   '          let encoder = device.createCommandEncoder();\r\n' \
   '          let pass = encoder.beginComputePass();\r\n' \
   '          pass.setPipeline(pzvalid);\r\n' \
   '          pass.setBindGroup(0, bgground);\r\n' \
   '          pass.setBindGroup(1, bgz, [0]);\r\n' \
-  '          pass.dispatchWorkgroups(Math.ceil(lvz / (wgs * wgs)));\r\n' \
+  '          pass.dispatchWorkgroups(...wc);\r\n' \
   '          pass.end();\r\n' \
   '          encoder.copyBufferToBuffer(bgzs, 0, bzmins, 0, bgzs.size);\r\n' \
   '          encoder.copyBufferToBuffer(bgzs, 0, bzmaxs, 0, bgzs.size);\r\n' \
@@ -15796,8 +15800,10 @@ class GPXTweakerWebInterfaceServer():
   '          pass.setBindGroup(0, bgground);\r\n' \
   '          pass.setPipeline(pzminmax);\r\n' \
   '          for (let s=0; s<=mexp; s++) {\r\n' \
+  '            const wcx = Math.ceil(Math.ceil(lvz / (2 ** (s + 1))) / (wgs * wgs));\r\n' \
+  '            const wcy = Math.ceil(wcx / maxcw);\r\n' \
   '            pass.setBindGroup(1, bgz, [s * bdynunifstride]);\r\n' \
-  '            pass.dispatchWorkgroups(Math.ceil(Math.ceil(lvz / (2 ** (s + 1))) / (wgs * wgs)));\r\n' \
+  '            pass.dispatchWorkgroups(Math.ceil(wcx / wcy), wcy);\r\n' \
   '          }\r\n' \
   '          pass.end();\r\n' \
   '          let mb = device.createBuffer({size: 8, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
@@ -15842,7 +15848,7 @@ class GPXTweakerWebInterfaceServer():
   '          pass.setPipeline(pzrel);\r\n' \
   '          pass.setBindGroup(0, bgground);\r\n' \
   '          pass.setBindGroup(1, bgz, [0]);\r\n' \
-  '          pass.dispatchWorkgroups(Math.ceil(lvz / (wgs * wgs)));\r\n' \
+  '          pass.dispatchWorkgroups(...wc);\r\n' \
   '          pass.setPipeline(pground);\r\n' \
   '          pass.dispatchWorkgroups(Math.ceil(lvx / wgs), Math.ceil(lvy / wgs));\r\n' \
   '          pass.end();\r\n' \
