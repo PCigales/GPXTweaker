@@ -9193,16 +9193,20 @@ class GPXTweakerWebInterfaceServer():
   '          this.bscreen = null;\r\n' \
   '          this.bvisibs = twmode ? null : [];\r\n' \
   '          this.bgvisib = twmode ? null : [];\r\n' \
+  '          this.bgsvisib = twmode ? null : [];\r\n' \
   '        }\r\n' \
   '        set starts(a) {\r\n' \
-  '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
+  '          if (this.timer != null) {\r\n' \
+  '            clearTimeout(this.timer);\r\n' \
+  '            this.timer = null;\r\n' \
+  '          }\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
   '          const _starts = (a instanceof Uint32Array) ? a : new Uint32Array(a);\r\n' \
   '          const maxp = (Math.min(this.device.limits.maxStorageBufferBindingSize, this.device.limits.maxBufferSize) / 16) | 0;\r\n' \
   '          const maxcw = this.adapter.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const nbtsegs = _starts.length - 1;\r\n' \
   '          const nbtpts = _starts[nbtsegs];\r\n' \
-  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds", "btls"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          ["bstarts", "bsegs", "bmms", "blats", "btrlats", "blls", "bxys", "bwns", "bwds", "bsxys", "bgdists", "bteahs", "beags", "bslsps", "bslopestdistspeeds", "btls", "bvisibs"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.chunks = [[0, 0]];\r\n' \
   '          this.nbsegs = [];\r\n' \
   '          this.nbpts = [];\r\n' \
@@ -9215,6 +9219,8 @@ class GPXTweakerWebInterfaceServer():
   '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
+  '          this.bgvisib = twmode ? null : [];\r\n' \
+  '          this.bgsvisib = twmode ? null : [];\r\n' \
   '          if (nbtpts == 0) {return;}\r\n' \
   '          let cofs = 0;\r\n' \
   '          if (nbtpts > maxp) {\r\n' \
@@ -9308,6 +9314,10 @@ class GPXTweakerWebInterfaceServer():
   '            ["btls", "bvisibs"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '            if (this.bscreen != null) {this.bscreen.destroy(); this.bscreen = null;}\r\n' \
   '            this.bgvisib = [];\r\n' \
+  '            if (this.bgsvisib.length > 0) {\r\n' \
+  '              this.bgsvisib = [];\r\n' \
+  '              this.free();\r\n' \
+  '            }\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          const _tls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
@@ -9329,30 +9339,34 @@ class GPXTweakerWebInterfaceServer():
   '                let sc1: vec2f = screen.xy - tls[segs[p]];\r\n' \
   '                let sc2: vec2f = sc1 + screen.zw;\r\n' \
   '                if (any((xy1 <= sc1) & (xy2 <= sc1)) || any((xy1 >= sc2) & (xy2 >= sc2))) {return;}\r\n' \
-  '                let d: vec2f = xy2 - xy1;\r\n' \
-  '                if (d.x == 0.0) {\r\n' \
+  '                var d: vec2f = xy2 - xy1;\r\n' \
+  '                d = sign(d.x) * d;\r\n' \
+  '                let c: vec2f = d.y * (vec2f(sc1.x, sc2.x) - xy1.x) + d.x * xy1.y;\r\n' \
+  '                if ((d.x == 0.0) || (any((c - d.x * sc1.y) > vec2f(0.0)) && any((c - d.x * sc2.y) < vec2f(0.0)))) {\r\n' \
   '                  visibs[segs[p]] = 1.0;\r\n' \
-  '                  return;\r\n' \
   '                }\r\n' \
-  '                let yc: vec2f = d.y / d.x * (vec2f(sc1.x, sc2.x) - xy1.x) + xy1.y;\r\n' \
-  '                if (all(yc <= vec2f(sc1.y)) || all(yc >= vec2f(sc2.y))) {return;}\r\n' \
-  '                visibs[segs[p]] = 1.0;\r\n' \
   '              }\r\n' \
   '            `});\r\n' \
   '            this.bglvisib = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '            this.pvisib = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglvisib]}), compute: {module: mvisib, entryPoint: "visib", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
   '          }\r\n' \
+  '          if (this.bscreen == null) {\r\n' \
+  '            this.bscreen = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '          }\r\n' \
+  '          if (this.chunks.at(-1)[0] == 0) {return;}\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '            this.btls.push(this.device.createBuffer({size: this.nbsegs[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST}));\r\n' \
   '            this.device.queue.writeBuffer(this.btls[c], 0, _tls.subarray(this.chunks[c][0] * 2, this.chunks[c + 1][0] * 2));\r\n' \
   '          }\r\n' \
-  '          this.bscreen = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        }\r\n' \
   '        set screen(v) {\r\n' \
   '          this.device.queue.writeBuffer(this.bscreen, 0, new Float32Array([v.left, v.top, v.width, v.height]));\r\n' \
   '        }\r\n' \
   '        calc(...tasks) {\r\n' \
-  '          if (this.timer != null) {clearTimeout(this.timer);}\r\n' \
+  '          if (this.timer != null) {\r\n' \
+  '            clearTimeout(this.timer);\r\n' \
+  '            this.timer = null;\r\n' \
+  '          }\r\n' \
   '          tasks = new Set(tasks);\r\n' \
   '          if (tasks.has("speed") && this.bgslopestdistspeed.length == 0) {tasks.add("slopedist");}\r\n' \
   '          const encoder = this.device.createCommandEncoder();\r\n' \
@@ -9367,10 +9381,11 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (tasks.has("smooth")) {\r\n' \
   '            if (this.bgtsmooth.length == 0) {\r\n' \
+  '              const fsxys = this.bsxys.length == 0;\r\n' \
   '              for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '                this.bwns.push(this.device.createBuffer({size: this.nbpts[c] * 4, usage: GPUBufferUsage.STORAGE}));\r\n' \
   '                this.bwds.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE}));\r\n' \
-  '                this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));\r\n' \
+  '                if (fsxys) {this.bsxys.push(this.device.createBuffer({size: this.nbpts[c] * 8, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}));}\r\n' \
   '                this.bgtsmooth.push(this.device.createBindGroup({layout: this.bgltsmooth, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bxys[c], this.bsmdrange, this.bwns[c], this.bwds[c], this.bsxys[c])}));\r\n' \
   '                this.bgsgdist.push(this.device.createBindGroup({layout: this.bglgdist, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btrlats[c], this.bsxys[c], this.bgdists[c])}));\r\n' \
   '              }\r\n' \
@@ -9441,7 +9456,7 @@ class GPXTweakerWebInterfaceServer():
   '          const commands = encoder.finish();\r\n' \
   '          this.device.queue.submit([commands]);\r\n' \
   '        }\r\n' \
-  '        calc_visib() {\r\n' \
+  '        calc_visib(sm=false) {\r\n' \
   '          const encoder = this.device.createCommandEncoder();\r\n' \
   '          const pass = encoder.beginComputePass();\r\n' \
   '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
@@ -9453,19 +9468,30 @@ class GPXTweakerWebInterfaceServer():
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
   '            this.device.queue.writeBuffer(this.bvisibs[c], 0, (new Float32Array(this.chunks[c + 1][0] - this.chunks[c][0])).fill(0.0));\r\n' \
   '          }\r\n' \
-  '          if (this.bgvisib.length == 0) {\r\n' \
+  '          const bgv = sm ? this.bgsvisib : this.bgvisib;\r\n' \
+  '          let smf = false;\r\n' \
+  '          if (sm) {\r\n' \
+  '            if (this.bsxys.length == 0) {\r\n' \
+  '              smf = true;\r\n' \
+  '              this.calc("smooth");\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            this.bgsvisib = [];\r\n' \
+  '          }\r\n' \
+  '          if (bgv.length == 0) {\r\n' \
   '            for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '              this.bgvisib.push(this.device.createBindGroup({layout: this.bglvisib, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btls[c], this.bxys[c], this.bscreen, this.bvisibs[c])}));\r\n' \
+  '              bgv.push(this.device.createBindGroup({layout: this.bglvisib, entries: bgentries(this.bstarts[c], this.bsegs[c], this.btls[c], (sm ? this.bsxys[c] : this.bxys[c]), this.bscreen, this.bvisibs[c])}));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          pass.setPipeline(this.pvisib);\r\n' \
   '          for (let c=0; c<this.chunks.length-1; c++) {\r\n' \
-  '            pass.setBindGroup(0, this.bgvisib[c]);\r\n' \
+  '            pass.setBindGroup(0, bgv[c]);\r\n' \
   '            pass.dispatchWorkgroups(...this.ptswc[c]);\r\n' \
   '          }\r\n' \
   '          pass.end();\r\n' \
   '          const commands = encoder.finish();\r\n' \
   '          this.device.queue.submit([commands]);\r\n' \
+  '          return smf;\r\n' \
   '        }\r\n' \
   '        _get_result(rn) {\r\n' \
   '          const nbpts = this.chunks.at(-1)[1];\r\n' \
@@ -9500,15 +9526,16 @@ class GPXTweakerWebInterfaceServer():
   '          return this._get_result("visibs");\r\n' \
   '        }\r\n' \
   '        _free() {\r\n' \
+  '          this.timer = null;\r\n' \
   '          const twmode = this.mode == "tweaker";\r\n' \
-  '          ["bwns", "bwds", "bsxys", "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
+  '          ["bwns", "bwds", ...((twmode ? false : this.bgsvisib.length == 0) ? ["bsxys"] : []), "beags", "bslsps", "bslopestdistspeeds"].forEach((bn) => {if (this[bn] != null) {this[bn].forEach((b) => b.destroy()); this[bn] = [];};});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '        }\r\n' \
   '        free () {\r\n' \
-  '          if (this.persistence >= 0) {this.timer = setTimeout(this._free.bind(this), this.persistence);}\r\n' \
+  '          if (this.timer == null && this.persistence >= 0) {this.timer = setTimeout(this._free.bind(this), this.persistence);}\r\n' \
   '        }\r\n' \
   '        fence(func, ...args) {\r\n' \
   '          this.lock = this.lock.then(() => func(...args)).catch((e) => console.error(e));\r\n' \
@@ -9940,9 +9967,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        sc = parseFloat(sc_s) * b;\r\n' \
   '        document.getElementById("scaleline").setAttribute("width", (sc / tscale * zoom * k).toFixed(0) + "px");\r\n' \
-  '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n' \
-  '        update_tiles();\r\n' \
-  '      }\r\n'
+  '        document.getElementById("scalevalue").innerHTML = sc_s + " " + unit;\r\n'
   HTML_UTIL_TEMPLATE = \
   '      function prop_to_wmvalue(s) {\r\n' \
   '        return parseFloat(s.match(/-?\\d+[.]?\\d*/)[0]);\r\n' \
@@ -11248,7 +11273,9 @@ class GPXTweakerWebInterfaceServer():
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
-  '      }\r\n' + HTML_TILES_TEMPLATE + HTML_UTIL_TEMPLATE + \
+  '      }\r\n' + HTML_TILES_TEMPLATE + \
+  '        update_tiles();\r\n' \
+  '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function scroll_to_dot(dot, center=true) {\r\n' \
   '        if (dot == null) {return;}\r\n' \
   '        let dl = prop_to_wmvalue(dot.style.left);\r\n' \
@@ -18121,7 +18148,8 @@ class GPXTweakerWebInterfaceServer():
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
-  '      }\r\n' + HTML_TILES_TEMPLATE.rsplit('update_tiles();\r\n', 1)[0] + 'let mvis = media_visible;\r\n' \
+  '      }\r\n' + HTML_TILES_TEMPLATE + \
+  '        let mvis = media_visible;\r\n' \
   '        hide_media("m");\r\n' \
   '        update_tiles();\r\n' \
   '        if (mvis) {show_media();}\r\n' \
@@ -18727,7 +18755,6 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        gpustats.free();\r\n' \
   '        if (fpan == 0) {\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
@@ -18828,10 +18855,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (fpan != 3) {tracks_desc(fpan);}\r\n' \
-  '        if (fpan == 0) {\r\n' \
-  '          gpustats.tls = null;\r\n' \
-  '          if (document.getElementById("vfbutton").style.backgroundColor != "") {await switch_vfilter();}\r\n' \
-  '        }\r\n' \
+  '        if (smoothed_ch && document.getElementById("vfbutton").style.backgroundColor != "") {await tracks_vfilter();};\r\n' \
+  '        gpustats.free();\r\n' \
   '        refresh_graph();\r\n' \
   '      }\r\n' \
   '      function calc_changed(fpan) {\r\n' \
@@ -19035,8 +19060,9 @@ class GPXTweakerWebInterfaceServer():
   '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][3] = false;};\r\n' \
   '          if (tracks_xys.length > 0) {\r\n' \
   '            gpustats.screen = {left: (-hpx - 1) * tscale / zoom, top: (-hpy - 1) * tscale / zoom, width: (viewpane.offsetWidth + 2) * tscale / zoom, height: (viewpane.offsetHeight + 2) * tscale / zoom};\r\n' \
-  '            gpustats.calc_visib();\r\n' \
+  '            const smf = gpustats.calc_visib(smoothed);\r\n' \
   '            const visibs = await gpustats.visibs;\r\n' \
+  '            if (smf) {gpustats.free();}\r\n' \
   '            for (let t=0, ind=0; t<tracks_pts.length; t++) {\r\n' \
   '              const segs = tracks_pts[t];\r\n' \
   '              for (const seg of segs) {\r\n' \
@@ -19420,7 +19446,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        if (webgpu) {\r\n' \
-  '          return tracks_calc_wgpu(0).then(tracks_sort).then(tracks_cfilter);\r\n' \
+  '          return tracks_calc_wgpu(0).then(tracks_sort).then(tracks_cfilter).then(document.getElementById("vfbutton").style.backgroundColor==""?null:switch_vfilter);\r\n' \
   '        } else {\r\n' \
   '          tracks_calc(0);\r\n' \
   '          tracks_sort();\r\n' \
@@ -20734,6 +20760,7 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_nfilter();\r\n' \
   '        cfilter_restore();\r\n' \
   '        folders_select();\r\n' \
+  '        if (document.getElementById("vfbutton").style.backgroundColor != "") {await switch_vfilter();}\r\n' \
   '        document.getElementById("mediaview").dataset.sl = "0";\r\n' \
   '        document.getElementById("mediapreview").dataset.sl = "0";\r\n' \
   '        window.onresize = window_resize;\r\n' \
