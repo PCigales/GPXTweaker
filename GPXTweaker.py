@@ -17386,7 +17386,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.body.style.cursor = "wait";\r\n' \
   '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
-  '        device = await adapter?.requestDevice({requiredLimits:{maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
+  '        device = await adapter?.requestDevice({requiredLimits:{maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize, maxBufferSize: this.adapter.limits.maxBufferSize, maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(11008, max_size);\r\n' \
