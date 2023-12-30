@@ -21978,7 +21978,7 @@ class GPXTweakerWebInterfaceServer():
               if not webbrowser.open(add):
                 raise
             else:
-              if not self.Browsers[launch].open(add):
+              if not self.Browsers[launch.lower()].open(add):
                 raise
           else:
             raise
