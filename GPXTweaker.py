@@ -437,10 +437,11 @@ FR_STRINGS = {
     'dpi': 'densité de la carte à retourner en pixels par pouce (pour l\'utilisation d\'un fournisseur de carte) [90 par défaut]',
     'record': 'enregistre les cartes récupérées dans le répertoire indiqué',
     'noopen': 'pas d\'ouverture automatique dans le navigateur par défaut',
+    'open': 'ouverture automatique dans le navigateur indiqué [navigateur par défaut]',
     'verbosity': 'niveau de verbosité de 0 à 2 [0 par défaut]',
     'gpx': 'seuls les fichiers .gpx sont pris en charge',
     'openc': 'Ouvrir l\'url (copiée dans le presse-papier) %s',
-    'open': 'Ouvrir l\'url %s',
+    'opennc': 'Ouvrir l\'url %s',
     'keyboard': 'Presser "S" pour quitter'
    }
 }
@@ -838,10 +839,11 @@ EN_STRINGS = {
     'dpi': 'density of the map to be retrieved in dots per inch (for the use of a map provider) [90 by default]',
     'record': 'saves the retrieved maps in the specified folder',
     'noopen': 'no automatic opening in the default browser',
+    'open': 'automatic opening in the specified browser [default browser]',
     'verbosity': 'verbosity level from 0 to 2 [0 by default]',
     'gpx': 'only .gpx files are supported',
     'openc': 'Open the url (copied in the clipboard) %s',
-    'open': 'Open the url %s',
+    'opennc': 'Open the url %s',
     'keyboard': 'Press "S" to exit'
    }
 }
@@ -20937,8 +20939,12 @@ class GPXTweakerWebInterfaceServer():
         scur = l[1:-1].lower()
         if hcur == 'global':
           if not scur in ('interfaceserver', 'proxy', 'jsontiles', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
-            self.log(0, 'cerror', hcur + ' - ' + scur)
-            return False
+            if scur[:8] == "browser ":
+              b = ['']
+              self.Browsers[scur[8:].strip()] = b
+            else:
+              self.log(0, 'cerror', hcur + ' - ' + scur)
+              return False
         elif hcur == 'explorer':
           if not scur in ('loading', 'folders', 'statistics', 'media') and scur[:11] != 'webmapping ':
             self.log(0, 'cerror', hcur + ' - ' + scur)
@@ -21159,6 +21165,14 @@ class GPXTweakerWebInterfaceServer():
               self.V3DMinValidEle = - 5000000
             else:
               self.V3DMinValidEle = float(value)
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
+        elif scur[:8] == 'browser ':
+          if field == 'path':
+            b[0] = os.path.abspath(os.path.expandvars(value.rstrip()))
+          elif field == 'argument':
+            b.append(value)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -21515,6 +21529,14 @@ class GPXTweakerWebInterfaceServer():
     if not self.MediaPorts:
       self.MediaPorts = self.Ports
     self.V3DPreferWebGpu &= self.PreferWebGpu
+    for br, cm in self.Browsers.items():
+      if all('%s' not in arg for arg in cm[1:]):
+        cm.append('%s')
+      try:
+        webbrowser.register(br, None, webbrowser.BackgroundBrowser(cm))
+        self.Browsers[br] = webbrowser.get(br)
+      except:
+        self.Browsers[br] = None
     self.log(1, 'cloaded')
     return True
 
@@ -21540,6 +21562,7 @@ class GPXTweakerWebInterfaceServer():
     self.VMaxLon = 180
     self.DefLat = None
     self.DefLon = None
+    self.Browsers = {}
     self.ExplorerLoadingWorkers = 1
     self.ExplorerLoadingRepatriation = True
     self.Folders = []
@@ -21949,15 +21972,23 @@ class GPXTweakerWebInterfaceServer():
           return None
         add = 'http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))
         print('')
-        if launch:
-          webbrowser.open(add)
-        else:
+        try:
+          if launch is not False:
+            if launch is True:
+              if not webbrowser.open(add):
+                raise
+            else:
+              if not self.Browsers[launch].open(add):
+                raise
+          else:
+            raise
+        except:
           try:
             if subprocess.run('echo %s| clip' % add, shell=True).returncode != 0:
               raise
             print(LSTRINGS['parser']['openc'] % add)
           except:
-            print(LSTRINGS['parser']['open'] % add)
+            print(LSTRINGS['parser']['opennc'] % add)
       return self
     except Interrupted:
       self.log(0, 'berrori')
@@ -22437,13 +22468,15 @@ if __name__ == '__main__':
   parser.add_argument('uri', metavar='URI', help=LSTRINGS['parser']['uri'], nargs='?', default=None)
   parser.add_argument('--conf', '-c', metavar='CONF', help=LSTRINGS['parser']['conf'], default='')
   parser.add_argument('--trk', '-t', metavar='TRK', help=LSTRINGS['parser']['trk'], type=int, default=None)
-  parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs ='?', const=' ', default='')
-  parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs ='?', const=' ', default='')
+  parser.add_argument('--map', '-m', metavar='MAP', help=LSTRINGS['parser']['map'], nargs='?', const=' ', default='')
+  parser.add_argument('--emap', '-e', metavar='EMAP', help=LSTRINGS['parser']['emap'], nargs='?', const=' ', default='')
   parser.add_argument('--box', '-b', metavar='BOX', help=LSTRINGS['parser']['box'], type=(lambda b: ([(p,q,r,s) for [p,q,r,s] in (map(float, map(str.strip, b.split(','))),)][0]) if b != '' else (None, ) * 4), default='')
   parser.add_argument('--size', '-s', metavar='SIZE', help=LSTRINGS['parser']['size'], type=(lambda s: ([(p,q) for [p,q] in (map(int, map(str.strip, s.split(','))),)][0]) if s != '' else (None, ) * 2), default='')
   parser.add_argument('--dpi', '-d', metavar='DPI', help=LSTRINGS['parser']['dpi'], type=(lambda d: (int(d) if not '.' in d else float(d)) if d != '' else None), default='')
   parser.add_argument('--record', '-r', metavar='RECORD', help=LSTRINGS['parser']['record'], default=None)
-  parser.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
+  ogroup = parser.add_mutually_exclusive_group(required=False)
+  ogroup.add_argument('--noopen', '-n', help=LSTRINGS['parser']['noopen'], action='store_true')
+  ogroup.add_argument('--open', '-o', metavar='OPEN', help=LSTRINGS['parser']['open'], nargs='?', const='', default=True)
   parser.add_argument('--verbosity', '-v', metavar='VERBOSITY', help=LSTRINGS['parser']['verbosity'], type=int, choices=[0,1,2], default=0)
   args = parser.parse_args()
   if args.uri is not None:
@@ -22455,7 +22488,7 @@ if __name__ == '__main__':
   cfg = os.path.expandvars(args.conf).rstrip('\\')
   if not os.path.isfile(cfg):
     cfg = os.path.join(cfg or os.path.dirname(os.path.abspath(__file__)), 'GPXTweaker.cfg')
-  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=cfg, launch=(not args.noopen), stop=(stop := (lambda: bool(msvcrt.kbhit() and ((c := msvcrt.getch().upper()) == b'S' or (c == b'\xe0' and msvcrt.getch() and False) or stop())))))
+  GPXTweakerInterface = GPXTweakerWebInterfaceServer(uri=args.uri, trk=args.trk if args.uri is not None else None, bmap=(args.map or None), emap=(args.emap or None), map_minlat=args.box[0], map_maxlat=args.box[1], map_minlon=args.box[2], map_maxlon=args.box[3], map_maxheight=(args.size[0] or 2000), map_maxwidth=(args.size[1] or 4000), map_resolution=((WGS84WebMercator.WGS84toWebMercator(args.box[1], args.box[3])[0] - WGS84WebMercator.WGS84toWebMercator(args.box[0], args.box[2])[0]) / args.size[0] if not (None in args.box or None in args.size) else None), map_dpi=args.dpi, record_map=args.record, cfg=cfg, launch=(False if args.noopen else (args.open or True)), stop=(stop := (lambda: bool(msvcrt.kbhit() and ((c := msvcrt.getch().upper()) == b'S' or (c == b'\xe0' and msvcrt.getch() and False) or stop())))))
   if GPXTweakerInterface is None:
     exit()
   print(LSTRINGS['parser']['keyboard'])
