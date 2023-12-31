@@ -51,7 +51,7 @@ Le module fournit diverses classes destinées à la manipulation directe de cont
 
 Syntaxe:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record|-r RECORD] [--noopen|-n] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record|-r RECORD] [--noopen|-n] [--open|-o OPEN] [--v|-v VERBOSITY]  
 où:  
   -h: afficher l'aide  
   URI: le chemin d'accès à la trace (en local ou, en lecture seule, sur un serveur) ou argument pas mentionné pour démarrer avec l'explorateur de traces  
@@ -63,7 +63,8 @@ où:
   SIZE: si le chemin d'une carte ou le nom d'un fournisseur de carte est mentionné ou laissé vide, les dimensions au format "hauteur, largeur" (avec les "") de la carte à retourner peuvent être indiquées au moyen de ce paramètre  
   DPI: si le nom d'un fournisseur de carte est mentionné ou laissé vide, la densité d'image en pixels par pouce de la carte à retourner peut être indiquée au moyen de ce paramètre (90 par défaut)  
   RECORD: si le nom d'un fournisseur de carte est mentionné ou laissé vide, ce paramètre permet d'indiquer un répertoire dans lequel enregistrer la carte  
-  -noopen: pour que le script n'ouvre pas la page d'interface dans le navigateur par défaut (et ainsi pouvoir utiliser un autre navigateur)  
+  -noopen: pour que le script n'ouvre pas la page d'interface dans le navigateur par défaut (et ainsi pouvoir utiliser un autre navigateur, exclut l'utilisation de l'argument --open)  
+  OPEN: le navigateur, défini dans le fichier de configuration, dans lequel ouvrir la page d'interface (navigateur par défaut sinon)  
   VERBOSITY: niveau de verbosité de 0 à 2 (0 par défaut)
 
 Exemples:  
@@ -133,19 +134,20 @@ The module provides different classes designed for direct handling of cartograph
 
 Syntax:  
 
-  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record|-r RECORD] [--noopen|-n] [--v|-v VERBOSITY]  
+  GPXTweaker [-h] URI [--conf|-c CONF] [--trk|-t TRK] [--map|-m MAP] [--emap|-e EMAP] [--box|-b BOX] [--size|-s SIZE] [--dpi|-d DPI] [--record|-r RECORD] [--noopen|-n] [--open|-o OPEN] [--v|-v VERBOSITY]  
 where:  
   -h: shows the help  
   URI: the path to the track (on local or, in read only mode, on a server) or argument not mentioned to start with the explorer of tracks  
   CONF: the path to the configuration file (same folder as the script by default)  
-  TRK: the index of the track (starting at 0, for the gpx files containing several tracks) (0, that is to say the first one, by défault)  
+  TRK: the index of the track (starting at 0, for the gpx files containing several tracks) (0, that is to say the first one, by default)  
   MAP: the full path to the map (on local or on a server) or the name of a map provider set in the configuration file or blank to use the first map provider configured, or not mentioned in order to use the tiles providers defined in this file  
   EMAP: the full path to the elevations map or the name of an elevations map provider set in the configuration file or blank to use the first elevations map provider configured, or not mentioned in order to use the elevations tiles or data providers defined in this file  
   BOX: if the path to a map or the name of a map provider is mentioned or kept blank, the box in format "minlat, maxlat, minlon, maxlon" (with the "") of the map to be retrieved can be indicated with this argument  
   SIZE: if the path to a map or the name of a map provider is mentioned or kept blank, the dimensions in format "height, width" (with the "") of the map to be retrieved can be indicated with this argument  
   DPI: if the name of a map provider is mentioned or kept blank, the image density in dots per inch of the map to be retrieved can be indicated with this argument (90 by default)  
   RECORD: if the name of a map provider is mentioned or kept blank, this argument allows to indicate a folder in which save the map  
-  -noopen: so that the script does not open the interface page in the default browser (and so, be able to use another browser)  
+  -noopen: so that the script does not open the interface page in the default browser (and so, be able to use another browser, excludes the use of the argument --open)  
+  OPEN: the browser, defined in the configuration file, in which open the interface page (default browser otherwise)  
   VERBOSITY: verbosity level from 0 to 2 (0 by default)
 
 Examples:  
