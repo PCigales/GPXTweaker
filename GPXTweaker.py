@@ -20526,7 +20526,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (hand.id == "view") {\r\n' \
   '            viewpane.style.cursor = "";\r\n' \
   '            viewpane.releasePointerCapture(pointer_e);\r\n' \
-  '            if (! navigator_firefox) {document.documentElement.style.setProperty("--tprend", "auto");};\r\n' \
+  '            if (! navigator_firefox) {setTimeout(function () {document.documentElement.style.setProperty("--tprend", "auto");}, 1);};\r\n' \
   '          } else {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
