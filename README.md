@@ -147,7 +147,7 @@ where:
   DPI: if the name of a map provider is mentioned or kept blank, the image density in dots per inch of the map to be retrieved can be indicated with this argument (90 by default)  
   RECORD: if the name of a map provider is mentioned or kept blank, this argument allows to indicate a folder in which save the map  
   -noopen: so that the script does not open the interface page in the default browser (and so, be able to use another browser, excludes the use of the argument --open)  
-  OPEN: the browser, defined in the configuration file, in which open the interface page (default browser otherwise)  
+  OPEN: the browser, defined in the configuration file, in which to open the interface page (default browser otherwise)  
   VERBOSITY: verbosity level from 0 to 2 (0 by default)
 
 Examples:  
