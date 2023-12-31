@@ -14567,6 +14567,7 @@ class GPXTweakerWebInterfaceServer():
   '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
   HTML_3D_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
+  '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      var canvas = document.getElementById("canvas");\r\n' \
   '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
   '      canvas.addEventListener("webglcontextlost", function(event) {event.preventDefault();gl_programs=new Map();}, false);\r\n' \
@@ -15530,6 +15531,7 @@ class GPXTweakerWebInterfaceServer():
   '      var portmax = ##PORTMAX##;\r\n'
   HTML_3D_WGPU_GLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
+  '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      const canvas = document.getElementById("canvas");\r\n' \
   '      var context = null;\r\n' \
   '      var adapter = null;\r\n' \
@@ -16002,7 +16004,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      async function init() {\r\n' \
   '        document.body.style.cursor = "wait";\r\n' \
-  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
   '        device = await adapter?.requestDevice();\r\n' \
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + \
@@ -16613,6 +16614,12 @@ class GPXTweakerWebInterfaceServer():
   '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
   '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
   '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
+  '        }\r\n' \
+  '        if (! navigator_firefox) {\r\n' \
+  '          const oname = "3d" + Date.now().toString();\r\n' \
+  '          window.opener.name = oname;\r\n' \
+  '          window.open("", oname);\r\n' \
+  '          window.opener.name = "";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function toggle_reversegeocodingswitch() {\r\n' \
@@ -17386,7 +17393,6 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      async function init() {\r\n' \
   '        document.body.style.cursor = "wait";\r\n' \
-  '        const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
   '        device = await adapter?.requestDevice({requiredLimits:{maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize, maxBufferSize: this.adapter.limits.maxBufferSize, maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
@@ -18955,7 +18961,7 @@ class GPXTweakerWebInterfaceServer():
   '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
-  '        window.alert("3D");\r\n' \
+  '        if (navigator_firefox) {window.alert("3D");}\r\n' \
   '      }\r\n' \
   '      function open_3D(mode3d="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
