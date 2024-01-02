@@ -17396,6 +17396,7 @@ class GPXTweakerWebInterfaceServer():
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
   '        device = await adapter?.requestDevice({requiredLimits:{maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize, maxBufferSize: this.adapter.limits.maxBufferSize, maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
+  '        const ppositionw = (navigator_firefox ? "" : (parseInt(navigator.userAgent.toLowerCase().match(/(?:edg|chrome)\\/(\\d*?)\\./)?.[1]) < 122 ? "" : "1.0 / ")) + "pposition.w";\r\n' \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(11008, max_size);\r\n' \
   '        const tr_size = Math.min(8192, max_size);\r\n' \
@@ -17456,21 +17457,21 @@ class GPXTweakerWebInterfaceServer():
   '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pcolor: vec4f};\r\n' \
   '          @fragment fn fview0(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f) -> fout {\r\n' \
   '            var out: fout;\r\n' \
-  '            out.pdepth = pposition.w;\r\n' \
+  '            out.pdepth = ${ppositionw};\r\n' \
   '            let pdim: f32 = dimfact.x;\r\n' \
   '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
   '          @fragment fn fview1(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pmz: f32) -> fout {\r\n' \
   '            var out: fout;\r\n' \
-  '            out.pdepth = pposition.w;\r\n' \
+  '            out.pdepth = ${ppositionw};\r\n' \
   '            let pdim: f32 = pow(pmz, 0.7);\r\n' \
   '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
   '          @fragment fn fview2(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f, @location(2) plcoord: vec2f, @location(3) pldepth: f32) -> fout {\r\n' \
   '            var out: fout;\r\n' \
-  '            out.pdepth = pposition.w;\r\n' \
+  '            out.pdepth = ${ppositionw};\r\n' \
   '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
   '            let pdim: f32 = select(0.2, mix(0.2 , fma(0.8, abs(cinc), 0.2), textureSampleCompare(ldepthtex, depthsampler, plcoord, fma(0.0015, cinc, pldepth))), cinc > 0.0);\r\n' \
   '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
@@ -17552,7 +17553,7 @@ class GPXTweakerWebInterfaceServer():
   '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pposition: vec2i};\r\n' \
   '          @fragment fn fposition(@builtin(position) pposition: vec4f, @location(0) pcoord: vec2f) -> fout {\r\n' \
   '            var out: fout;\r\n' \
-  '            out.pdepth = pposition.w;\r\n' \
+  '            out.pdepth = ${ppositionw};\r\n' \
   '            out.pposition = vec2i(round(32767.0 * pcoord));\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
