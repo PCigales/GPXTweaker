@@ -39,7 +39,9 @@ Il est possible d'assembler une carte à partir de tuiles au format jpeg au moye
 
 L'application peut être configurée de sorte à accéder aux ressources distantes via un proxy; l'authentification basique et le chiffrement de bout en bout (TLS-in-TLS) sont pris en charge.
 
-Une trace peut être visualisée en 3D panoramique ou subjective. Dans ce dernier mode, il est possible d'afficher les informations relatives à un point de la carte récupérées auprès d'un des services de géocodage inversé configuré.
+Une trace peut être visualisée en 3D panoramique ou subjective. Dans ce dernier mode, il est possible d'afficher les informations relatives à un point de la carte récupérées auprès d'un des services de géocodage inversé configuré. L'utilisation de l'API WebGPU peut être sélectionnée (option Prefer_WebGPU_also dans la section 3DViewer sur true) si elle est activée pour le calcul des statistiques.
+
+La désactivation des fonctionnalités d'économie d'énergie du processeur graphique (gestion de l'alimentation sur performances maximales) améliore la réactivité et réduit la latence induite autrement par le mécanisme de diminution de la fréquence de l'horloge au repos et à faible charge, tout particulièrement en visualisation 3D subjective, mais au détriment de la consommation et de la température.
 
 Mode d'emploi:
   - copier le script GPXTweaker.py dans un répertoire
@@ -122,7 +124,9 @@ It is possible to assemble a map from tiles in jpeg format thanks to the program
 
 The application can be configured to access remote resources through a proxy; basic authentication and end-to-end encryption (TLS-in-TLS) are supported.
 
-A track can be visualized in panoramic or subjective 3D. In this latest mode, it is possible to display the information relating to a point on the map retrieved from one of the configured reverse geocoding services.
+A track can be visualized in panoramic or subjective 3D. In this latest mode, it is possible to display the information relating to a point on the map retrieved from one of the configured reverse geocoding services. The use of the WebGPU API can be selected (option Prefer_WebGPU_also in the section 3DViewer on true) if it is active for the computation of the statistics.
+
+Disabling the energy-saving features of the graphics processor unit (power management on maximum performance) improves the responsiveness and reduces the latency otherwise induced by the clock-down mechanism at idle and low load, particularly in subjective 3D visualization, but at the expense of consumption and temperature.
 
 Instructions:
   - copy the script GPXTWeaker in a folder
