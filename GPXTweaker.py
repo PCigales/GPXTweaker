@@ -14565,13 +14565,10 @@ class GPXTweakerWebInterfaceServer():
   '            <p><label for="cursor_lrangle">{#jlrotation#}</label></p>\r\n' \
   '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
   '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
-  HTML_3D_GLOBALVARS_TEMPLATE = \
+  HTML_3D_CGLOBALVARS_TEMPLATE = \
   '      const host = location.hostname + ":";\r\n' \
   '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      var canvas = document.getElementById("canvas");\r\n' \
-  '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
-  '      canvas.addEventListener("webglcontextlost", function(event) {event.preventDefault();gl_programs=new Map();}, false);\r\n' \
-  '      canvas.addEventListener("webglcontextrestored", function(event) {gl=canvas.getContext("webgl2", {preserveDrawingBuffer:true});canvas_init();canvas_redraw();}, false);\r\n' \
   '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
   '      var cv_tangle = document.getElementById("cursorv_tangle");\r\n' \
   '      var c_rangle = document.getElementById("cursor_rangle");\r\n' \
@@ -14588,6 +14585,24 @@ class GPXTweakerWebInterfaceServer():
   '      var c_lrangle = document.getElementById("cursor_lrangle");\r\n' \
   '      var cv_lrangle = document.getElementById("cursorv_lrangle");\r\n' \
   '      var b_lrangle = document.getElementById("button_lrangle");\r\n' \
+  '      var ctangle = null;\r\n' \
+  '      var stangle = null;\r\n' \
+  '      var crangle = null;\r\n' \
+  '      var srangle = null;\r\n' \
+  '      var nrot = 0;\r\n' \
+  '      var nlrot = 0;\r\n' \
+  '      var rep_rot = null;\r\n' \
+  '      var rep_lrot = null;\r\n' \
+  '      var ltangle_rotmax = null;\r\n' \
+  '      var cltangle = null;\r\n' \
+  '      var sltangle = null;\r\n' \
+  '      var clrangle = null;\r\n' \
+  '      var slrangle = null;\r\n' \
+  '      var loop_rd = false;\r\n'
+  HTML_3D_GLOBALVARS_TEMPLATE = HTML_3D_CGLOBALVARS_TEMPLATE + \
+  '      var gl = canvas.getContext("webgl2", {preserveDrawingBuffer: true});\r\n' \
+  '      canvas.addEventListener("webglcontextlost", function(event) {event.preventDefault();gl_programs=new Map();}, false);\r\n' \
+  '      canvas.addEventListener("webglcontextrestored", function(event) {gl=canvas.getContext("webgl2", {preserveDrawingBuffer:true});canvas_init();canvas_redraw();}, false);\r\n' \
   '      var lvx = null;\r\n' \
   '      var lvy = null;\r\n' \
   '      var vpositions = null;\r\n' \
@@ -14610,19 +14625,6 @@ class GPXTweakerWebInterfaceServer():
   '      var pmode = 0;\r\n' \
   '      var dmode = 2;\r\n' \
   '      var ylmag = 1;\r\n' \
-  '      var ctangle = null;\r\n' \
-  '      var stangle = null;\r\n' \
-  '      var crangle = null;\r\n' \
-  '      var srangle = null;\r\n' \
-  '      var nrot = 0;\r\n' \
-  '      var nlrot = 0;\r\n' \
-  '      var rep_rot = null;\r\n' \
-  '      var rep_lrot = null;\r\n' \
-  '      var ltangle_rotmax = null;\r\n' \
-  '      var cltangle = null;\r\n' \
-  '      var sltangle = null;\r\n' \
-  '      var clrangle = null;\r\n' \
-  '      var slrangle = null;\r\n' \
   '      var gl_programs = new Map();\r\n' \
   '      var cur_prog = null;\r\n'
   HTML_3D_MAT_TEMPLATE = \
@@ -14948,7 +14950,7 @@ class GPXTweakerWebInterfaceServer():
   '          rangle -= 360;\r\n' \
   '        }\r\n' \
   '        set_param("r", rangle);\r\n' \
-  '        canvas_redraw();\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      function canvas_lrotate(number=null) {\r\n' \
   '        if (number != null) {\r\n' \
@@ -14969,7 +14971,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        set_param("lr", lrangle);\r\n' \
   '        set_param("lt", Math.sin((lrangle - 90) * Math.PI / 180) * ltangle_rotmax);\r\n' \
-  '        canvas_redraw();\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n'
   HTML_3D_LOAD_TEMPLATE = \
   '      function data_load() {\r\n' \
@@ -15044,7 +15046,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          canvas_init();\r\n'
   HTML_3D_TOGGLE_ROT_TEMPLATE = \
-    '      function toggle_rotation(number=null) {\r\n' \
+  '      function toggle_rotation(number=null) {\r\n' \
   '        if (c_rangle.disabled) {\r\n' \
   '          window.clearInterval(rep_rot);\r\n' \
   '          c_rangle.disabled = false;\r\n' \
@@ -15058,7 +15060,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (c_lrangle.disabled) {\r\n' \
   '          window.clearInterval(rep_lrot);\r\n' \
   '          set_param("lt", ltangle_rotmax);\r\n' \
-  '          canvas_redraw();\r\n' \
+  '          if (loop_rd === false) {canvas_redraw();}\r\n' \
   '          c_lrangle.disabled = false;\r\n' \
   '          c_ltangle.disabled = false;\r\n' \
   '        } else {\r\n' \
@@ -15485,8 +15487,8 @@ class GPXTweakerWebInterfaceServer():
   '          r_dimz.disabled = false\r\n' \
   '          r_dimd.disabled = false\r\n' \
   '          r_dims.disabled = false;\r\n' \
-  '           <!-- toggle_rotation(1); -->\r\n' \
-  '           <!-- toggle_lrotation(1); -->\r\n' \
+  '          <!-- toggle_rotation(1); -->\r\n' \
+  '          <!-- toggle_lrotation(1); -->\r\n' \
   '        }\r\n' \
   '        let xhr = new XMLHttpRequest();\r\n' \
   '        xhr.onerror = (e) => derror_cb(e.target);\r\n' \
@@ -15529,10 +15531,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_3D_WGPU_DECLARATIONS_TEMPLATE = \
   '      var portmin = ##PORTMIN##;\r\n' \
   '      var portmax = ##PORTMAX##;\r\n'
-  HTML_3D_WGPU_GLOBALVARS_TEMPLATE = \
-  '      const host = location.hostname + ":";\r\n' \
-  '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
-  '      const canvas = document.getElementById("canvas");\r\n' \
+  HTML_3D_WGPU_GLOBALVARS_TEMPLATE = HTML_3D_CGLOBALVARS_TEMPLATE + \
   '      var context = null;\r\n' \
   '      var adapter = null;\r\n' \
   '      var device = null;\r\n' \
@@ -15540,22 +15539,6 @@ class GPXTweakerWebInterfaceServer():
   '      var pcolorformat = null;\r\n' \
   '      var color_texture = null;\r\n' \
   '      var depth_texture = null;\r\n' \
-  '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
-  '      var cv_tangle = document.getElementById("cursorv_tangle");\r\n' \
-  '      var c_rangle = document.getElementById("cursor_rangle");\r\n' \
-  '      var cv_rangle = document.getElementById("cursorv_rangle");\r\n' \
-  '      var b_rangle = document.getElementById("button_rangle");\r\n' \
-  '      var r_yiso = document.getElementById("radio_yiso");\r\n' \
-  '      var r_ziso = document.getElementById("radio_ziso");\r\n' \
-  '      var r_map = document.getElementById("radio_map");\r\n' \
-  '      var r_dimn = document.getElementById("radio_dimn");\r\n' \
-  '      var r_dimz = document.getElementById("radio_dimz");\r\n' \
-  '      var r_dims = document.getElementById("radio_dims");\r\n' \
-  '      var c_ltangle = document.getElementById("cursor_ltangle");\r\n' \
-  '      var cv_ltangle = document.getElementById("cursorv_ltangle");\r\n' \
-  '      var c_lrangle = document.getElementById("cursor_lrangle");\r\n' \
-  '      var cv_lrangle = document.getElementById("cursorv_lrangle");\r\n' \
-  '      var b_lrangle = document.getElementById("button_lrangle");\r\n' \
   '      var bviewmatrix = null;\r\n' \
   '      var blightmatrix = null;\r\n' \
   '      var rpdview = null;\r\n' \
@@ -15567,19 +15550,6 @@ class GPXTweakerWebInterfaceServer():
   '      var zfactmax = null;\r\n' \
   '      var scale = null;\r\n' \
   '      var ppos = null;\r\n' \
-  '      var ctangle = null;\r\n' \
-  '      var stangle = null;\r\n' \
-  '      var crangle = null;\r\n' \
-  '      var srangle = null;\r\n' \
-  '      var nrot = 0;\r\n' \
-  '      var nlrot = 0;\r\n' \
-  '      var rep_rot = null;\r\n' \
-  '      var rep_lrot = null;\r\n' \
-  '      var ltangle_rotmax = null;\r\n' \
-  '      var cltangle = null;\r\n' \
-  '      var sltangle = null;\r\n' \
-  '      var clrangle = null;\r\n' \
-  '      var slrangle = null;\r\n' \
   '      const ssampling = 2;\r\n' \
   '      var c_msize = null;\r\n' \
   '      var modified = new Set();\r\n' \
@@ -16233,8 +16203,8 @@ class GPXTweakerWebInterfaceServer():
   '        r_dimd.disabled = false\r\n' \
   '        r_dims.disabled = false;\r\n' \
   '        document.body.style.cursor = "";\r\n' \
-  '         <!-- toggle_rotation(1); -->\r\n' \
-  '         <!-- toggle_lrotation(1); -->\r\n' \
+  '        <!-- toggle_rotation(1); -->\r\n' \
+  '        <!-- toggle_lrotation(1); -->\r\n' \
   '      }\r\n' \
   '      function _canvas_redraw() {\r\n' \
   '        const encoder = device.createCommandEncoder();\r\n' \
@@ -16389,7 +16359,7 @@ class GPXTweakerWebInterfaceServer():
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
   '          <div title="{#jhelp3d#}" style="position:absolute;z-index:10;right:20px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '          <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:auto;max-height:100vh;padding-left:0.3em;">\r\n' \
+  '          <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:auto;max-height:100vh;padding-left:0.3em;" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)">\r\n' \
   '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
   '            <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
   '            <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
@@ -16436,7 +16406,7 @@ class GPXTweakerWebInterfaceServer():
   '      var click_t = null;\r\n' \
   '      var click_cr = null;\r\n' \
   '      var click_ct = null;\r\n' \
-  '      var click_id = 0.0;\r\n'
+  '      var loop_dur = ##LOOPDUR##;\r\n'
   HTML_3DS_TRACK_TEMPLATE = \
   '        function create_track() {\r\n' \
   '          function move_to(x, y, d=true) {\r\n' \
@@ -16525,6 +16495,7 @@ class GPXTweakerWebInterfaceServer():
   '          minimap.style.display = "";\r\n'
   HTML_3DS_KEY_MINIMAP_TEMPLATE = \
   '      function process_key(e) {\r\n' \
+  '        if (c_pace.disabled) {return;}\r\n' \
   '        let rd = false;\r\n' \
   '        let alt = false;\r\n' \
   '        switch (e.key.toLowerCase()) {\r\n' \
@@ -16579,6 +16550,8 @@ class GPXTweakerWebInterfaceServer():
   '          case "enter":\r\n' \
   '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
   '            break;\r\n' \
+  '          case "form":\r\n' \
+  '            break;\r\n' \
   '          default:\r\n' \
   '            return;\r\n' \
   '        }\r\n' \
@@ -16586,7 +16559,10 @@ class GPXTweakerWebInterfaceServer():
   '          e.stopPropagation();\r\n' \
   '          e.preventDefault();\r\n' \
   '        }\r\n' \
-  '        if (rd) {canvas_redraw();}\r\n' \
+  '        if (loop_dur != 0) {\r\n' \
+  '          if (loop_rd === false) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '          if (loop_rd !== true) {loop_rd = performance.now();}\r\n' \
+  '        } else if (rd) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      function toggle_minimap_magnification() {\r\n' \
   '        mzoom = (mzoom==1)?5:1;\r\n' \
@@ -16673,50 +16649,68 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '       function mouse_down(e) {\r\n' \
-  '        if (e.button == 1) {process_key({key:"delete"});return;} else if (e.button != 0) {return;}\r\n' \
-  '        canvas.parentNode.onmousemove = mouse_move;\r\n' \
-  '        document.onmouseup = mouse_up;\r\n' \
-  '        mini_map.setAttribute("pointer-events", "none");\r\n' \
-  '        p_infos.style.pointerEvents = "none";\r\n' \
-  '        canvas.parentNode.style.cursor = "all-scroll";\r\n' \
-  '        click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '        click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '        click_cr = parseFloat(c_rangle.value);\r\n' \
-  '        click_ct = parseFloat(c_tangle.value);\r\n' \
-  '        var click_c = 0;\r\n' \
-  '        click_id += 0.5;\r\n' \
-  '        var click_lid = click_id;\r\n' \
-  '        function loop_redraw(c) {\r\n' \
-  '          if (click_lid == click_id) {click_c = c;} else if (click_id - click_lid > 0.6) {return;}\r\n' \
-  '          if (c - click_c < 2000) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '      function loop_redraw(c) {\r\n' \
+  '        if (loop_rd === false) {return;}\r\n' \
+  '        if (loop_rd !== true && (c - loop_rd >= loop_dur && loop_dur >= 0)) {\r\n' \
+  '          loop_rd = false;\r\n' \
+  '          canvas_redraw();\r\n' \
+  '        } else {\r\n' \
+  '          window.requestAnimationFrame(loop_redraw);\r\n' \
   '          canvas_redraw(true);\r\n' \
   '        }\r\n' \
-  '        window.requestAnimationFrame(loop_redraw);\r\n' \
+  '      }\r\n' \
+  '      function mouse_down(e) {\r\n' \
+  '        if (c_pace.disabled) {return;}\r\n' \
+  '        if (e.target.nodeName.toUpperCase() == "CANVAS") {\r\n' \
+  '          if (e.button == 1) {\r\n' \
+  '            process_key({key:"delete"});\r\n'\
+  '            return;\r\n' \
+  '          } else if (e.button != 0) {return;}\r\n' \
+  '          canvas.parentNode.onmousemove = mouse_move;\r\n' \
+  '          mini_map.setAttribute("pointer-events", "none");\r\n' \
+  '          p_infos.style.pointerEvents = "none";\r\n' \
+  '          canvas.parentNode.style.cursor = "all-scroll";\r\n' \
+  '          click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '          click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '          click_cr = parseFloat(c_rangle.value);\r\n' \
+  '          click_ct = parseFloat(c_tangle.value);\r\n' \
+  '        } else if (e.button != 0) {return;}\r\n' \
+  '        document.onmouseup = mouse_up;\r\n' \
+  '        document.body.onmouseleave = mouse_up;\r\n' \
+  '        if (loop_dur != 0) {\r\n' \
+  '          if (loop_rd === false) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '          loop_rd = true;\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function mouse_up(e) {\r\n' \
-  '        click_id += 0.5;\r\n' \
   '        canvas.parentNode.onmousemove = null;\r\n' \
-  '        document.onmouseup = null;\r\n' \
   '        mini_map.removeAttribute("pointer-events");\r\n' \
   '        canvas.parentNode.style.cursor = "";\r\n' \
   '        p_infos.style.pointerEvents = "";\r\n' \
+  '        document.onmouseup = null;\r\n' \
+  '        document.body.onmouseleave = null;\r\n' \
+  '        if (loop_dur != 0) {loop_rd = performance.now();}\r\n' \
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
   '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
   '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '        if (loop_dur == 0) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
   '        if (e.deltaY > 0) {;\r\n' \
   '          if (pace < parseInt(c_pace.max)) {\r\n' \
   '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
-  '            canvas_redraw();\r\n' \
+  '            if (loop_dur == 0) {canvas_redraw();}\r\n' \
   '          }\r\n' \
   '        } else if (e.deltaY < 0) {;\r\n' \
   '          if (pace > 0) {\r\n' \
   '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
-  '            canvas_redraw();\r\n' \
+  '            if (loop_dur == 0) {canvas_redraw();}\r\n' \
   '          }\r\n' \
+  '        }\r\n' \
+  '        if (loop_dur != 0) {\r\n' \
+  '          if (loop_rd === false) {window.requestAnimationFrame(loop_redraw);}\r\n' \
+  '          if (loop_rd !== true) {loop_rd = performance.now();}\r\n' \
   '        }\r\n' \
   '      }\r\n'
   HTML_3DS_TEMPLATE = HTML_3DS_DOC_TEMPLATE + HTML_3D_GLOBALVARS_TEMPLATE + HTML_3DS_GLOBALVARS_TEMPLATE + \
@@ -16794,7 +16788,7 @@ class GPXTweakerWebInterfaceServer():
   '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
   '          window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
   '        }\r\n' \
-  '        if (v == null) {canvas_redraw();}\r\n' \
+  '        if (v == null && loop_dur == 0) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      set_param("t", 0);\r\n' \
   '      set_param("r", 0);\r\n' \
@@ -17132,6 +17126,10 @@ class GPXTweakerWebInterfaceServer():
   '          c_height.disabled = false;\r\n' \
   '          canvas.focus();\r\n' \
   '          canvas.style.outline = "none";\r\n' \
+  '          if (loop_dur != 0) {\r\n' \
+  '            window.requestAnimationFrame(loop_redraw);\r\n' \
+  '            loop_rd = performance.now();\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        let xhr = new XMLHttpRequest();\r\n' \
   '        xhr.onerror = (e) => derror_cb(e.target);\r\n' \
@@ -17144,7 +17142,7 @@ class GPXTweakerWebInterfaceServer():
   '      function toggle_filling(mode) {\r\n' \
   '        if (mode == fillmode) {return;};\r\n' \
   '        fillmode = mode;\r\n' \
-  '        canvas_redraw();\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      function toggle_auto_rotation() {\r\n' \
   '        if (cb_pace.checked) {\r\n' \
@@ -17166,7 +17164,7 @@ class GPXTweakerWebInterfaceServer():
   '          c_lrangle.disabled = true;\r\n' \
   '          b_lrangle.disabled = true;\r\n' \
   '        }\r\n' \
-  '        canvas_redraw();\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
@@ -17313,7 +17311,7 @@ class GPXTweakerWebInterfaceServer():
   '          window["s" + p + "angle"] = Math.sin(angle);\r\n' \
   '          window["cv_" + p + "angle"].innerHTML = Math.round(parseFloat(window["c_" + p + "angle"].value)).toString();\r\n' \
   '        }\r\n' \
-  '        if (v == null) {canvas_redraw();}\r\n' \
+  '        if (v == null && loop_dur == 0) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      set_param("t", 0);\r\n' \
   '      set_param("r", 0);\r\n' \
@@ -17646,8 +17644,10 @@ class GPXTweakerWebInterfaceServer():
   '        document.body.style.cursor = "";\r\n' \
   '        canvas.focus();\r\n' \
   '        canvas.style.outline = "none";\r\n' \
-  '         <!-- toggle_rotation(1); -->\r\n' \
-  '         <!-- toggle_lrotation(1); -->\r\n' \
+  '        if (loop_dur != 0) {\r\n' \
+  '          window.requestAnimationFrame(loop_redraw);\r\n' \
+  '          loop_rd = performance.now();\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function _canvas_redraw() {\r\n' \
   '        const encoder = device.createCommandEncoder();\r\n' \
@@ -17717,7 +17717,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (mode == tex_mode) {return;};\r\n' \
   '        tex_mode = mode;\r\n' \
   '        modified.add("m");\r\n' \
-  '        canvas_redraw();\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();};\r\n' \
   '      }\r\n' \
   '      function toggle_auto_rotation() {\r\n' \
   '        if (cb_pace.checked) {\r\n' \
@@ -17738,9 +17738,9 @@ class GPXTweakerWebInterfaceServer():
   '          c_ltangle.disabled = true;\r\n' \
   '          c_lrangle.disabled = true;\r\n' \
   '          b_lrangle.disabled = true;\r\n' \
-  '        modified.add("m");\r\n' \
+  '          modified.add("m");\r\n' \
   '        }\r\n' \
-  '        canvas_redraw();\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
@@ -21172,6 +21172,11 @@ class GPXTweakerWebInterfaceServer():
               self.V3DMinValidEle = - 5000000
             else:
               self.V3DMinValidEle = float(value)
+          elif field == 'subj_loop_duration':
+            if value is None:
+              self.V3DSubjLoopDuration = 0
+            else:
+              self.V3DSubjLoopDuration = float(value) * 1000
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -21591,6 +21596,7 @@ class GPXTweakerWebInterfaceServer():
     self.V3DSubjMargin = 2
     self.V3DMinValidEle = -100
     self.V3DPreferWebGpu = False
+    self.V3DSubjLoopDuration = 5000
     self.SmoothTracks = False
     self.SmoothRange = 10
     self.Mode = None
@@ -22101,7 +22107,7 @@ class GPXTweakerWebInterfaceServer():
     if wgpu:
       declarations = GPXTweakerWebInterfaceServer.HTML_3D_WGPU_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1]))
       self.HTML3DData = wgpu_event = threading.Event()
-      self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
       yield True
     if not self.Elevation.Map:
       try:
@@ -22261,7 +22267,7 @@ class GPXTweakerWebInterfaceServer():
       wgpu_event.set()
     else:
       declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
-      self.HTML3D = getattr(GPXTweakerWebInterfaceServer, "HTML_3D%s%s_TEMPLATE" % (mode3d.upper(), ("_WGPU" if wgpu else ""))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
       yield True
     self.log(0, '3dbuilt')
     return True
