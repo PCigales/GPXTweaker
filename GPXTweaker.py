@@ -1,4 +1,4 @@
-# GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -16359,7 +16359,7 @@ class GPXTweakerWebInterfaceServer():
   '        </td>\r\n' \
   '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
   '          <div title="{#jhelp3d#}" style="position:absolute;z-index:10;right:20px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '          <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:auto;max-height:100vh;padding-left:0.3em;" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)">\r\n' \
+  '          <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:auto;max-height:100vh;padding-left:0.3em;" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)" onwheel="process_key({key:\'form\'})">\r\n' \
   '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
   '            <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
   '            <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
@@ -16424,7 +16424,7 @@ class GPXTweakerWebInterfaceServer():
   '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
   '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
   '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
-  '          ctx.lineWidth = Math.max(0.5, tr_size / 2 / scale / trscale);\r\n' \
+  '          ctx.lineWidth = Math.max((navigator_firefox ? 0.75 : 0.6), tr_size / 2 / scale / trscale);\r\n' \
   '          ctx.lineJoin = "round";\r\n' \
   '          ctx.lineCap = "round";\r\n' \
   '          ctx.fillStyle = "red";\r\n' \
@@ -22471,7 +22471,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.17.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
