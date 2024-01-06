@@ -7292,6 +7292,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               if isinstance(resp_body, threading.Event):
                 resp_body.wait()
                 resp_body = self.server.Interface.HTML3DData
+              self.server.Interface.HTML3DData = None
               resp_body = resp_body or b''
               _send_resp('application/octet-stream')
             else:
