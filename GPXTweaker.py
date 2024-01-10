@@ -14540,6 +14540,11 @@ class GPXTweakerWebInterfaceServer():
   '        width:1em;\r\n' \
   '        text-align:center;\r\n' \
   '      }\r\n' \
+  '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
+  '        body {\r\n' \
+  '          scrollbar-color: rgb(121,123,126) rgb(34,37,43);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '    </style>\r\n'
   HTML_3D_FORM1_TEMPLATE = \
   '            <br><br>\r\n' \
@@ -15743,7 +15748,7 @@ class GPXTweakerWebInterfaceServer():
   '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
   '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
   '          device.queue.writeBuffer(bgzs, 0, new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
-  '          const params = new Float32Array(data, data.byteLength - 24, 6);\r\n' \
+  '          const params = new Float64Array(data, data.byteLength - 48, 6);\r\n' \
   '          const bvals = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, mappedAtCreation: true});\r\n' \
   '          new Float32Array(bvals.getMappedRange()).set([params[4], params[3]]);\r\n' \
   '          bvals.unmap();\r\n' \
@@ -15791,7 +15796,7 @@ class GPXTweakerWebInterfaceServer():
   '          maxz = Math.max(maxz, minz + 1);\r\n' \
   '          mb.unmap();\r\n' \
   '          mb.destroy();\r\n' \
-  '          ppos = new Float32Array(5);\r\n' \
+  '          ppos = new Float64Array(5);\r\n' \
   '          let zden = (maxz - minz) / 2 * params[5];\r\n' \
   '          if (params[0] > zden) {\r\n' \
   '            zfactmax = params[0] / zden;\r\n' \
@@ -15842,10 +15847,10 @@ class GPXTweakerWebInterfaceServer():
   '            for (let c=0; c<nscs; c++) {segpositions[c] /= den;}\r\n' \
   '            i += nscs;\r\n' \
   '          }\r\n' \
-  '          mpos = new Float32Array(data, data.byteLength - 56, 4).slice();\r\n' \
+  '          mpos = new Float32Array(data, data.byteLength - 80, 4).slice();\r\n' \
   '          mpos[0] *= den;\r\n' \
   '          mpos[1] *= den;\r\n' \
-  '          [tminrow, tmincol, tmaxrow, tmaxcol] = new Uint32Array(data, data.byteLength - 40, 4);\r\n' \
+  '          [tminrow, tmincol, tmaxrow, tmaxcol] = new Uint32Array(data, data.byteLength - 64, 4);\r\n' \
   '          if (kgxyzs) {\r\n' \
   '            await mb.mapAsync(GPUMapMode.READ);\r\n' \
   '            gzs = new Float32Array(mb.getMappedRange()).slice();\r\n' \
@@ -22260,9 +22265,9 @@ class GPXTweakerWebInterfaceServer():
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
     if accel:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     else:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6f', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
     if wgpu:
       wgpu_event.set()
