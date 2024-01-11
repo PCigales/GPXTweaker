@@ -18230,7 +18230,7 @@ class GPXTweakerWebInterfaceServer():
   '      var media_sides = null;\r\n' \
   '      var media_div = null;\r\n' \
   '      var media_hold = null;\r\n' \
-  '      var media_fs = false;\r\n' + HTML_MSG_TEMPLATE + \
+  '      var media_fs = [0, null];\r\n' + HTML_MSG_TEMPLATE + \
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        let b = 0;\r\n' \
   '        if (nset == null && nlevel == null) {\r\n' \
@@ -20816,10 +20816,17 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function window_resize() {\r\n' \
   '        if (document.fullscreen) {\r\n' \
-  '          media_fs = true;\r\n' \
+  '          if (media_fs[1] != null) {clearTimeout(media_fs[1]);}\r\n' \
+  '          media_fs = [2, null];\r\n' \
   '        } else {\r\n' \
-  '          if (media_fs) {\r\n' \
-  '            media_fs = false;\r\n' \
+  '          if (media_fs[0] > 0) {\r\n' \
+  '            media_fs[0] -= (navigator_firefox ? media_fs[0] : 1);\r\n' \
+  '            if (media_fs[0] > 0) {\r\n' \
+  '              media_fs[1] = setTimeout(function () {media_fs = [0, null];}, 25);\r\n' \
+  '            } else if (media_fs[1] != null) {\r\n' \
+  '              clearTimeout(media_fs[1]);\r\n' \
+  '              media_fs[1] = null;\r\n' \
+  '            }\r\n' \
   '            if (media_visible) {\r\n' \
   '              document.getElementById("mediaview").scrollLeft = parseFloat(document.getElementById("mediaview").dataset.sl);\r\n' \
   '              document.getElementById("mediapreview").scrollLeft = parseFloat(document.getElementById("mediapreview").dataset.sl);\r\n' \
