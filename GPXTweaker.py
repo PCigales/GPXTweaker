@@ -7273,26 +7273,43 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 _send_err_nf()
             except:
               _send_err_nf()
-            try:
-              next(gen)
-            except StopIteration:
-              pass
-            except:
-              resp_body = self.server.Interface.HTML3DData
-              if isinstance(resp_body, threading.Event):
-                resp_body.set()
-                self.server.Interface.HTML3DData = None
-            if not self.server.Interface.HTML:
-              self.server.Interface.TrackInd = None
-              self.server.Interface.Uri, self.server.Interface.Track = None, None
-            self.server.Interface.SLock.release()
+            def nb():
+              try:
+                next(gen)
+              except StopIteration:
+                pass
+              except:
+                resp_body = self.server.Interface.HTML3DData
+                if isinstance(resp_body, list):
+                  resp_body = resp_body[1]
+                  if isinstance(resp_body, threading.Event):
+                    resp_body.set()
+                  self.server.Interface.HTML3DData = [None, None]
+              finally:
+                if not self.server.Interface.HTML:
+                  self.server.Interface.TrackInd = None
+                  self.server.Interface.Uri, self.server.Interface.Track = None, None
+                self.server.Interface.SLock.release()
+            if wgpu:
+              th = threading.Thread(target=nb, daemon=True)
+              th.start()
+            else:
+              nb()
           elif req.path.lower() == '/3D/data'.lower():
             if self.server.Interface.HTML3D:
               resp_body = self.server.Interface.HTML3DData
-              if isinstance(resp_body, threading.Event):
-                resp_body.wait()
-                resp_body = self.server.Interface.HTML3DData
-              self.server.Interface.HTML3DData = None
+              if isinstance(resp_body, list):
+                if resp_body[0] is not None:
+                  resp_body = resp_body[0]
+                  self.server.Interface.HTML3DData[0] = None
+                else:
+                  resp_body = resp_body[1]
+                  if isinstance(resp_body, threading.Event):
+                    resp_body.wait()
+                    resp_body = self.server.Interface.HTML3DData[1]
+                    self.server.Interface.HTML3DData[1] = None
+              else:
+                self.server.Interface.HTML3DData = None
               resp_body = resp_body or b''
               _send_resp('application/octet-stream')
             else:
@@ -15672,9 +15689,22 @@ class GPXTweakerWebInterfaceServer():
   '          setTimeout(add_row_tile, 1);\r\n' \
   '        }\r\n'
   HTML_3D_WGPU_DATA_LOAD_TEMPLATE = \
-  '        async function data_load() {\r\n' \
+  '        async function* data_load() {\r\n' \
   '          let data = fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
   '          const kgxyzs = window.hasOwnProperty("gzs");\r\n' \
+  '          if (kgxyzs) {\r\n' \
+  '            data = await data;\r\n' \
+  '            if (data == null || ! data?.byteLength) {return false;}\r\n' \
+  '            const ns = (new Uint32Array(data, 0, 1))[0];\r\n' \
+  '            trpositions = [];\r\n' \
+  '            for (let s=0,i=0; s<ns; s++) {\r\n' \
+  '              const nscs = 2 * (new Uint32Array(data, 4 * (1 +  s + i), 1))[0];\r\n' \
+  '              trpositions.push(new Float32Array(data, 4 * (2  + s + i), nscs));\r\n' \
+  '              i += nscs;\r\n' \
+  '            }\r\n' \
+  '            data = fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
+  '            yield true;\r\n' \
+  '          }\r\n' \
   '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          const bdynunifstride = Math.ceil(4 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
   '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
@@ -15748,7 +15778,7 @@ class GPXTweakerWebInterfaceServer():
   '          const lvz = (new Uint32Array(data, 4 * (2 + lvx + lvy), 1))[0];\r\n' \
   '          const bgzs = device.createBuffer({size: 4 * lvz, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC});\r\n' \
   '          device.queue.writeBuffer(bgzs, 0, new Float32Array(data, 4 * (3 + lvx + lvy), lvz));\r\n' \
-  '          const params = new Float64Array(data, data.byteLength - 48, 6);\r\n' \
+  '          const params = new Float64Array(data.slice(-48));\r\n' \
   '          const bvals = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, mappedAtCreation: true});\r\n' \
   '          new Float32Array(bvals.getMappedRange()).set([params[4], params[3]]);\r\n' \
   '          bvals.unmap();\r\n' \
@@ -15763,7 +15793,7 @@ class GPXTweakerWebInterfaceServer():
   '          bgrinds = device.createBuffer({size: (lvy - 1) * (2 * lvx + 1) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.INDEX});\r\n' \
   '          const bgground = device.createBindGroup({layout: bglground, entries: bgentries(bgxs, bgys, bgzs, bgrznorms, bgrinds)});\r\n' \
   '          const bgz = device.createBindGroup({layout: bglz, entries: [{binding: 0, resource: {buffer: bvals, size: bvals.size},}, {binding: 1, resource: {buffer: bstride, size: 4},}, {binding: 2, resource: {buffer: bzmins, size: bzmins.size},}, {binding: 3, resource: {buffer: bzmaxs, size: bzmaxs.size},}]});\r\n' \
-  '          const maxcw = this.device.limits.maxComputeWorkgroupsPerDimension;\r\n' \
+  '          const maxcw = device.limits.maxComputeWorkgroupsPerDimension;\r\n' \
   '          const wcx = Math.ceil(lvz / (wgs * wgs));\r\n' \
   '          const wcy = Math.ceil(wcx / maxcw);\r\n' \
   '          const wc = [Math.ceil(wcx / wcy), wcy];\r\n' \
@@ -15812,9 +15842,9 @@ class GPXTweakerWebInterfaceServer():
   '          ppos[4] = cor;\r\n' \
   '          const den = ppos[0];\r\n' \
   '          scale = den / cor;\r\n' \
+  '          if (kgxyzs) {\r\n' \
   '          radius = 6378137 / scale;\r\n' \
   '          pace_length = 10 / scale;\r\n' \
-  '          if (kgxyzs) {\r\n' \
   '            gxs = gxs.slice();\r\n' \
   '            gys = gys.slice();\r\n' \
   '          }\r\n' \
@@ -15855,6 +15885,10 @@ class GPXTweakerWebInterfaceServer():
   '            await mb.mapAsync(GPUMapMode.READ);\r\n' \
   '            gzs = new Float32Array(mb.getMappedRange()).slice();\r\n' \
   '            mb.unmap();\r\n' \
+  '            trpos[2] += (params[1] - trref[0]) * trpos[0];\r\n' \
+  '            trpos[3] += (params[2] - trref[1]) * trpos[1];\r\n' \
+  '            trpos[0] *= den;\r\n' \
+  '            trpos[1] *= den;\r\n' \
   '          } else {\r\n' \
   '            await device.queue.onSubmittedWorkDone();\r\n' \
   '          }\r\n' \
@@ -15866,8 +15900,6 @@ class GPXTweakerWebInterfaceServer():
   '          return true;\r\n' \
   '        }\r\n'
   HTML_3D_WGPU_INIT0_TEMPLATE = \
-  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
-  '        }\r\n' \
   '        let bgxs = null;\r\n' \
   '        let bgys = null;\r\n' \
   '        let bgrznorms = null;\r\n' \
@@ -15878,7 +15910,8 @@ class GPXTweakerWebInterfaceServer():
   '        let tmincol = null;\r\n' \
   '        let tmaxrow = null;\r\n' \
   '        let tmaxcol = null;\r\n' \
-  '        const data_wait = data_load();\r\n' \
+  '        const dload = data_load();\r\n' \
+  '        let data_wait = dload.next();\r\n' \
   '        const max_size = device.limits.maxTextureDimension2D;\r\n' \
   '        context = canvas.getContext("webgpu");\r\n' \
   '        pcolorformat = navigator.gpu.getPreferredCanvasFormat();\r\n' \
@@ -15985,7 +16018,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + \
   '        let gxs = null;\r\n' \
   '        let gys = null;\r\n' \
-  '        let gzs = null;\r\n' + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
+  '        let gzs = null;\r\n' + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DP_TRACK_TEMPLATE + \
+  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
+  '        }\r\n' + HTML_3D_WGPU_INIT0_TEMPLATE + \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(2048, max_size);\r\n' \
   '        const tr_size = Math.min(2048, max_size);\r\n' \
@@ -16413,92 +16448,6 @@ class GPXTweakerWebInterfaceServer():
   '      var click_cr = null;\r\n' \
   '      var click_ct = null;\r\n' \
   '      var loop_dur = ##LOOPDUR##;\r\n'
-  HTML_3DS_TRACK_TEMPLATE = \
-  '        function create_track() {\r\n' \
-  '          function move_to(x, y, d=true) {\r\n' \
-  '            if (d) {\r\n' \
-  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
-  '            } else {\r\n' \
-  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          let cnv2d = document.createElement("canvas");\r\n' \
-  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
-  '          cnv2d.height = tr_size;\r\n' \
-  '          cnv2d.width = tr_size;\r\n' \
-  '          ctx.strokeStyle = "red";\r\n' \
-  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
-  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
-  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
-  '          ctx.lineWidth = Math.max((navigator_firefox ? 0.75 : 0.6), tr_size / 2 / scale / trscale);\r\n' \
-  '          ctx.lineJoin = "round";\r\n' \
-  '          ctx.lineCap = "round";\r\n' \
-  '          ctx.fillStyle = "red";\r\n' \
-  '          trpaces = [];\r\n' \
-  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
-  '            let ind = 0;\r\n' \
-  '            let dr = false;\r\n' \
-  '            let dist = 0;\r\n' \
-  '            let px = null;\r\n' \
-  '            let py = null;\r\n' \
-  '            let tx = null;\r\n' \
-  '            let ty = null;\r\n' \
-  '            let td = null;\r\n' \
-  '            let tdx = null;\r\n' \
-  '            let tdy = null;\r\n' \
-  '            let ptg = false;\r\n' \
-  '            let pac = true;\r\n' \
-  '            while (ind < trpositions[s].length - 1) {\r\n' \
-  '              if (! dr) {\r\n' \
-  '                px = trpositions[s][ind];\r\n' \
-  '                py = trpositions[s][ind + 1];\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
-  '                ctx.stroke()\r\n' \
-  '                ctx.fill();\r\n' \
-  '                ctx.beginPath();\r\n' \
-  '                move_to(px, py, false);\r\n' \
-  '                ind += 2;\r\n' \
-  '              } else {\r\n' \
-  '                tdx = trpositions[s][ind] - px;\r\n' \
-  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
-  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
-  '                if (td > 0) {\r\n' \
-  '                  tx = tdx / td;\r\n' \
-  '                  ty = tdy / td;\r\n' \
-  '                  dist += td;\r\n' \
-  '                  if (! ptg) {\r\n' \
-  '                    ptg = true;\r\n' \
-  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
-  '                  }\r\n' \
-  '                }\r\n' \
-  '                if (dist < pace_length) {\r\n' \
-  '                  px = trpositions[s][ind];\r\n' \
-  '                  py = trpositions[s][ind + 1];\r\n' \
-  '                  pac = false;\r\n' \
-  '                  ind += 2;\r\n' \
-  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
-  '                  move_to(px, py);\r\n' \
-  '                } else {\r\n' \
-  '                  pac = true;\r\n' \
-  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
-  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
-  '                  dist = 0;\r\n' \
-  '                }\r\n' \
-  '              }\r\n' \
-  '              dr = true;\r\n' \
-  '              if (pac) {\r\n' \
-  '                let pz = get_pz(px, py);\r\n' \
-  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            ctx.stroke();\r\n' \
-  '          }\r\n' \
-  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
-  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
-  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
-  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
-  '          minimap.style.display = "";\r\n'
   HTML_3DS_KEY_MINIMAP_TEMPLATE = \
   '      function process_key(e) {\r\n' \
   '        if (c_pace.disabled) {return;}\r\n' \
@@ -17026,7 +16975,92 @@ class GPXTweakerWebInterfaceServer():
   '            pcolor = ivec2(round(32767.0 * pcoord));\r\n' \
   '            gl_FragDepth = 1.0 / gl_FragCoord.w;\r\n' \
   '          }\r\n' \
-  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + \
+  '        `;\r\n' + HTML_3D_MAP_TEMPLATE + \
+  '        function create_track() {\r\n' \
+  '          function move_to(x, y, d=true) {\r\n' \
+  '            if (d) {\r\n' \
+  '              ctx.lineTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
+  '            } else {\r\n' \
+  '              ctx.moveTo(tr_size * (trpos[0] * x + trpos[2]), tr_size * (trpos[1] * y + trpos[3]));\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          let cnv2d = document.createElement("canvas");\r\n' \
+  '          let ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
+  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.00001) * 1.3) / 2;\r\n' \
+  '          trpos.set([0.5 / trscale, 0.5 / trscale, 0.5 - (trb[0] + trb[1]) / (4 * trscale), 0.5 - (trb[2] + trb[3]) / (4 * trscale)]);\r\n' \
+  '          ctx.lineWidth = Math.max((navigator_firefox ? 0.75 : 0.6), tr_size / 2 / scale / trscale);\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          trpaces = [];\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dr = false;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ptg = false;\r\n' \
+  '            let pac = true;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (! dr) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(tr_size * (trpos[0] * px + trpos[2]), tr_size * (trpos[1] * py + trpos[3]), tr_size / scale / trscale, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                move_to(px, py, false);\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                  if (! ptg) {\r\n' \
+  '                    ptg = true;\r\n' \
+  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (dist < pace_length) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
+  '                  pac = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
+  '                  move_to(px, py);\r\n' \
+  '                } else {\r\n' \
+  '                  pac = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              dr = true;\r\n' \
+  '              if (pac) {\r\n' \
+  '                let pz = get_pz(px, py);\r\n' \
+  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '          }\r\n' \
+  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
+  '          minimap.style.display = "";\r\n' \
   '          tr_texture = texture_load(gl.TEXTURE1, cnv2d, false);\r\n' \
   '        }\r\n' \
   '        program_create("tcprogram", vertex_tcshader_s, fragment_cshader_s);\r\n' \
@@ -17398,13 +17432,118 @@ class GPXTweakerWebInterfaceServer():
   '      async function init() {\r\n' \
   '        document.body.style.cursor = "wait";\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
-  '        device = await adapter?.requestDevice({requiredLimits:{maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize, maxBufferSize: this.adapter.limits.maxBufferSize, maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
-  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + HTML_3DS_TRACK_TEMPLATE + HTML_3D_WGPU_INIT0_TEMPLATE + \
-  '        const ppositionw = (navigator_firefox ? "" : (parseInt(navigator.userAgent.toLowerCase().match(/(?:edg|chrome)\\/(\\d*?)\\./)?.[1]) < 122 ? "" : "1.0 / ")) + "pposition.w";\r\n' \
+  '        device = await adapter?.requestDevice({requiredLimits:{maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize, maxBufferSize: adapter.limits.maxBufferSize, maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
+  '        if (! device ) {throw("WebGPU unsupported");}\r\n' + HTML_3D_WGPU_CMAP_TEMPLATE + HTML_3D_WGPU_DATA_LOAD_TEMPLATE + \
+  '        function* create_track() {\r\n' \
+  '          const cnv2d = document.createElement("canvas");\r\n' \
+  '          const ctx = cnv2d.getContext("2d", {alpha: false});\r\n' \
+  '          cnv2d.height = tr_size;\r\n' \
+  '          cnv2d.width = tr_size;\r\n' \
+  '          ctx.strokeStyle = "red";\r\n' \
+  '          let trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1e8, -1e8, 1e8, -1e8]);\r\n' \
+  '          trscale = Math.max(trb[1] - trb[0], trb[3] - trb[2], 10);\r\n' \
+  '          ctx.lineWidth = Math.max((navigator_firefox ? 0.75 : 0.6), tr_size / trscale * Math.cosh(trref[1] / 6378137));\r\n' \
+  '          ctx.lineJoin = "round";\r\n' \
+  '          ctx.lineCap = "round";\r\n' \
+  '          ctx.fillStyle = "red";\r\n' \
+  '          const trsize = tr_size - 2 * Math.ceil(ctx.lineWidth * 2.5) - 34;\r\n' \
+  '          trpos.set([trsize / trscale, trsize / trscale, tr_size * 0.5 - trsize * (trb[0] + trb[1]) / (2 * trscale), tr_size * 0.5 - trsize * (trb[2] + trb[3]) / (2 * trscale)]);\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            for (let ind=0; ind<trpositions[s].length-1; ind+=2) {\r\n' \
+  '              const px = trpositions[s][ind];\r\n' \
+  '              const py = trpositions[s][ind + 1];\r\n' \
+  '              if (ind == 0) {\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.arc(trpos[0] * px + trpos[2], trpos[1] * py + trpos[3], ctx.lineWidth * 2, 0, 2 * Math.PI);\r\n' \
+  '                ctx.stroke()\r\n' \
+  '                ctx.fill();\r\n' \
+  '                ctx.beginPath();\r\n' \
+  '                ctx.moveTo(trpos[0] * px + trpos[2], trpos[1] * py + trpos[3]);\r\n' \
+  '              } else {\r\n' \
+  '                ctx.lineTo(trpos[0] * px + trpos[2], trpos[1] * py + trpos[3]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '            ctx.stroke();\r\n' \
+  '          }\r\n' \
+  '          for (let i=0; i<4; i++) {trpos[i] /= tr_size;}\r\n' \
+  '          device.queue.copyExternalImageToTexture({source: cnv2d, flipY: false}, {texture: track_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: tr_size, height: tr_size, depthOrArrayLayers: 1});\r\n' \
+  '          yield;\r\n' \
+  '          trb = trpositions.reduce(function (p, c) {return c.reduce(function (p, c, i) {return (i%2==0?[Math.min(p[0], c), Math.max(p[1], c), p[2], p[3]]:[p[0], p[1], Math.min(p[2], c), Math.max(p[3], c)])}, p)}, [1, -1, 1, -1]);\r\n' \
+  '          trscale = Math.min(2, Math.max(trb[1] - trb[0], trb[3] - trb[2], 0.0005) * 1.3) / 2;\r\n' \
+  '          trpaces = [];\r\n' \
+  '          for (let s=0; s<trpositions.length; s++) {\r\n' \
+  '            let ind = 0;\r\n' \
+  '            let dist = 0;\r\n' \
+  '            let px = null;\r\n' \
+  '            let py = null;\r\n' \
+  '            let tx = null;\r\n' \
+  '            let ty = null;\r\n' \
+  '            let td = null;\r\n' \
+  '            let tdx = null;\r\n' \
+  '            let tdy = null;\r\n' \
+  '            let ptg = false;\r\n' \
+  '            let pac = true;\r\n' \
+  '            while (ind < trpositions[s].length - 1) {\r\n' \
+  '              if (px == null) {\r\n' \
+  '                px = trpositions[s][ind];\r\n' \
+  '                py = trpositions[s][ind + 1];\r\n' \
+  '                ind += 2;\r\n' \
+  '              } else {\r\n' \
+  '                tdx = trpositions[s][ind] - px;\r\n' \
+  '                tdy = trpositions[s][ind + 1] - py;\r\n' \
+  '                td = Math.sqrt(tdx * tdx + tdy * tdy);\r\n' \
+  '                if (td > 0) {\r\n' \
+  '                  tx = tdx / td;\r\n' \
+  '                  ty = tdy / td;\r\n' \
+  '                  dist += td;\r\n' \
+  '                  if (! ptg) {\r\n' \
+  '                    ptg = true;\r\n' \
+  '                    trpaces[trpaces.length - 1][3] = Math.atan2(ty, tx);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '                if (dist < pace_length) {\r\n' \
+  '                  px = trpositions[s][ind];\r\n' \
+  '                  py = trpositions[s][ind + 1];\r\n' \
+  '                  pac = false;\r\n' \
+  '                  ind += 2;\r\n' \
+  '                  if (ind >= trpositions[s].length - 1) {pac = true;}\r\n' \
+  '                } else {\r\n' \
+  '                  pac = true;\r\n' \
+  '                  px = trpositions[s][ind] - (dist - pace_length) * tx;\r\n' \
+  '                  py = trpositions[s][ind + 1] - (dist - pace_length) * ty;\r\n' \
+  '                  dist = 0;\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              if (pac) {\r\n' \
+  '                let pz = get_pz(px, py);\r\n' \
+  '                trpaces.push([px, py, pz, ((tx==null || ty ==null)?0:Math.atan2(ty, tx))]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          track.setAttribute("d", trpositions.reduce(function (p, c) {return p + c.reduce(function (p, c, i) {return p + (i%2==0?(" L" + c.toFixed(5)):(" " + (-c).toFixed(5)))}, "").replace("L", "M")}, "").trim());\r\n' \
+  '          eye.setAttribute("transform", `scale(${trscale})`);\r\n' \
+  '          track.parentNode.setAttribute("viewBox", [(trb[0] + trb[1]) / 2 - trscale, -(trb[2] + trb[3]) / 2 - trscale, 2 * trscale, 2 * trscale].map(String).join(" "));\r\n' \
+  '          track.nextElementSibling.style.fontSize=`${2.5 * trscale}%`;\r\n' \
+  '          minimap.style.display = "";\r\n' \
+  '        }\r\n' + HTML_3D_WGPU_INIT0_TEMPLATE + \
   '        c_msize = Math.min(4096, max_size);\r\n' \
   '        const m_size = Math.min(11008, max_size);\r\n' \
   '        const tr_size = Math.min(8192, max_size);\r\n' \
   '        const d_size = max_size;\r\n' \
+  '        const trref = [##TRREF##];\r\n' \
+  '        const trpos = new Float64Array(4);\r\n' \
+  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
+  '        if (! await data_wait) {\r\n' \
+  '          window.alert("{#jdatafail#}");\r\n' \
+  '          document.body.innerHTML = "";\r\n' \
+  '          document.head.innerHTML = "";\r\n' \
+  '          window.close();\r\n' \
+  '          throw "{#jdatafail#}";\r\n' \
+  '        };\r\n' \
+  '        const ctrack = create_track();\r\n' \
+  '        ctrack.next();\r\n' \
+  '        data_wait = dload.next();\r\n' \
+  '        const ppositionw = (navigator_firefox ? "" : (parseInt(navigator.userAgent.toLowerCase().match(/(?:edg|chrome)\\/(\\d*?)\\./)?.[1]) < 122 ? "" : "1.0 / ")) + "pposition.w";\r\n' \
   '        const mview = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
   '          @group(0) @binding(1) var<uniform> radius: f32;\r\n' \
@@ -17489,7 +17628,6 @@ class GPXTweakerWebInterfaceServer():
   '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        beposition = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
-  '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
   '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
   '        const pattern_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "repeat", minFilter: "nearest", magFilter: "nearest"});\r\n' \
   '        const image_sampler = device.createSampler({addressModeU: "clamp-to-edge", addressModeV: "clamp-to-edge", minFilter: "linear", magFilter: "linear", mipmapFilter: "linear", maxAnisotropy: 8});\r\n' \
@@ -17580,8 +17718,7 @@ class GPXTweakerWebInterfaceServer():
   '        bdimfact.forEach((b) => b.unmap());\r\n' \
   '        new Float32Array(bradius.getMappedRange())[0] = 6378137 / scale;\r\n' \
   '        bradius.unmap();\r\n' \
-  '        const trpos = new Float32Array(4);\r\n' \
-  '        create_track();\r\n' \
+  '        ctrack.next();\r\n' \
   '        const map_texture = device.createTexture({...cmap.next().value, format: "rgba8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
   '        new Float32Array(bmappos[0].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, scale / 50, 0, 0, 0, 0, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
   '        new Float32Array(bmappos[1].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, 0, 0, 0, 0, scale / 50, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
@@ -22083,7 +22220,7 @@ class GPXTweakerWebInterfaceServer():
 
   def Build3DHTML(self, mode3d, margin=0.5, wgpu=False):
     self.HTML3D = None
-    self.HTML3DData = None
+    self.HTML3DData = [None, None] if wgpu else None
     if next((p for seg in self.Track.Pts for p in seg), None) is None:
       return False
     self.log(1, '3dbuild')
@@ -22112,8 +22249,17 @@ class GPXTweakerWebInterfaceServer():
     tpath = '"/map/map"' if self.Mode == 'map' else '"/tiles/tile-" + row.toString() + "-" + col.toString() + ".?%s,%s"' % (str(self.TilesSet), str(self.Map.TilesInfos['matrix']))
     if wgpu:
       declarations = GPXTweakerWebInterfaceServer.HTML_3D_WGPU_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1]))
-      self.HTML3DData = wgpu_event = threading.Event()
-      self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      wgpu_event = threading.Event()
+      if mode3d == 'p':
+        self.HTML3DData = [None, wgpu_event]
+        self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+      else:
+        minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
+        maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
+        moyx = (minx + maxx) / 2
+        moyy = (miny + maxy) / 2
+        self.HTML3DData = [b''.join(e for g in ((struct.pack('=L', len(self.Track.WebMercatorPts)),), ((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx), (pt[1][1] - moyy))))) for s in range(len(self.Track.WebMercatorPts)))) for e in g), wgpu_event]
+        self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration)).replace('##TRREF##', '%f, %f' % (moyx, moyy)).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
       yield True
     if not self.Elevation.Map:
       try:
@@ -22133,7 +22279,7 @@ class GPXTweakerWebInterfaceServer():
       except:
         self.log(0, '3derror1')
         if wgpu:
-          self.HTML3DData = None
+          self.HTML3DData = [None, None]
           wgpu_event.set()
         return False
       tminlat, tminlon, tmaxlat, tmaxlon = list(map(float, self.Elevation.MapInfos['bbox'].split(',')))
@@ -22141,7 +22287,7 @@ class GPXTweakerWebInterfaceServer():
     if self.Elevation.MapInfos.get('format') not in ('image/x-bil;bits=32', 'image/hgt'):
       self.log(0, '3derror1')
       if wgpu:
-        self.HTML3DData = None
+        self.HTML3DData = [None, None]
         wgpu_event.set()
       return False
     scale = self.Elevation.MapResolution
@@ -22246,7 +22392,7 @@ class GPXTweakerWebInterfaceServer():
       except:
         self.log(0, '3derror2')
         if wgpu:
-          self.HTML3DData = None
+          self.HTML3DData = [None, None]
           wgpu_event.set()
         return False
       mscale = infos['scale'] / WebMercatorMap.CRS_MPU
@@ -22257,7 +22403,7 @@ class GPXTweakerWebInterfaceServer():
     else:
       self.log(0, '3derror2')
       if wgpu:
-        self.HTML3DData = None
+        self.HTML3DData = [None, None]
         wgpu_event.set()
       return False
     ax = den / (tmaxx - tminx)
@@ -22265,13 +22411,15 @@ class GPXTweakerWebInterfaceServer():
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
     if accel:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+      data = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     else:
-      self.HTML3DData = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+      data = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
     if wgpu:
+      self.HTML3DData[1] = data
       wgpu_event.set()
     else:
+      self.HTML3DData = data
       declarations = GPXTweakerWebInterfaceServer.HTML_3D_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##ZFACTMAX##', str(zfactor)).replace('##MPOS##', '%f, %f, %f, %f' % (ax, ay, bx, by)).replace('##TMINROW##', str(minrow)).replace('##TMINCOL##', str(mincol)).replace('##TMAXROW##', str(maxrow)).replace('##TMAXCOL##', str(maxcol)).replace('##SCALE##', str(den / cor)).replace('##PPOS##', '%f, %f, %f, %f, %f' % (den, moyx, moyy, minele, cor))
       self.HTML3D = (GPXTweakerWebInterfaceServer.HTML_3DP_TEMPLATE if mode3d == 'p' else GPXTweakerWebInterfaceServer.HTML_3DS_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration))).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
       yield True
