@@ -15843,8 +15843,8 @@ class GPXTweakerWebInterfaceServer():
   '          const den = ppos[0];\r\n' \
   '          scale = den / cor;\r\n' \
   '          if (kgxyzs) {\r\n' \
-  '          radius = 6378137 / scale;\r\n' \
-  '          pace_length = 10 / scale;\r\n' \
+  '            radius = 6378137 / scale;\r\n' \
+  '            pace_length = 10 / scale;\r\n' \
   '            gxs = gxs.slice();\r\n' \
   '            gys = gys.slice();\r\n' \
   '          }\r\n' \
@@ -22252,14 +22252,14 @@ class GPXTweakerWebInterfaceServer():
       wgpu_event = threading.Event()
       if mode3d == 'p':
         self.HTML3DData = [None, wgpu_event]
-        self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+        self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DP_WGPU_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '')
       else:
         minx, miny = WGS84WebMercator.WGS84toWebMercator(minlat, minlon)
         maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
         moyx = (minx + maxx) / 2
         moyy = (miny + maxy) / 2
         self.HTML3DData = [b''.join(e for g in ((struct.pack('=L', len(self.Track.WebMercatorPts)),), ((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx), (pt[1][1] - moyy))))) for s in range(len(self.Track.WebMercatorPts)))) for e in g), wgpu_event]
-        self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration)).replace('##TRREF##', '%f, %f' % (moyx, moyy)).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', '' if mode3d != 's' else ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
+        self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration)).replace('##TRREF##', '%f, %f' % (moyx, moyy)).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
       yield True
     if not self.Elevation.Map:
       try:
