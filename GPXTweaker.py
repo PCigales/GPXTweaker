@@ -8981,7 +8981,7 @@ class GPXTweakerWebInterfaceServer():
   '                sm = (s + s2) >> 1u;\r\n' \
   '              }\r\n' \
   '              segs[p] = s;\r\n' \
-  '              let mm: vec2f = mms[p] * 0.00872664626;\r\n' \
+  '              let mm: vec2f = abs(mms[p] * 0.00872664626);\r\n' \
   '              let le: f32 = lats[p] * 0.0174532925;\r\n' \
   '              let ls: f32 = lats[max(p, starts[segs[p]] - starts[0u] + 1u) - 1u] * 0.0174532925;\r\n' \
   '              let a: f32 = sqrt(dot(pow(mm, vec2f(2.0)) - pow(mm, vec2f(4.0)) / 3.0, vec2f(1.0, cos(ls) * cos(le))));\r\n' \
