@@ -3217,17 +3217,23 @@ class WebMercatorMap(BaseMap):
   CRS = 'EPSG:3857'
   CRS_MPU = 1
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
-  WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
+  # WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
+  # WMS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
+  WMS_IGN_SOURCE = 'https://data.geopf.fr/wms-r'
+  WMS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wms-r'
   MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
-  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
-  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
-  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
+  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_LIMITED_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
+  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_LIMITED_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
+  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_LIMITED_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
   MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE + '{wms}', 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
   WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service'
   MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE + '{wms}', 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
-  WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
+  # WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
+  # WMTS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
+  WMTS_IGN_SOURCE = 'https://data.geopf.fr/wmts'
+  WMTS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wmts'
   TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - SCAN EXPRESS: 17-18
+  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_LIMITED_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - Plan V2: 17-18
   TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
   TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TC_IGN_HYBRIDE = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
@@ -3237,10 +3243,10 @@ class WebMercatorMap(BaseMap):
   TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
   TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/standard.json', 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
-  TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
+  TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', '80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
+  TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TC_OSM_SHADED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
   TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
@@ -3743,26 +3749,33 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
       cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
       cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, 'Release')
       cls.CreateStreamOnHGlobal = cls.ole32.CreateStreamOnHGlobal
-      cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.c_bool, ctypes.c_void_p
+      cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.wintypes.BOOL, ctypes.c_void_p
+      cls.GetHGlobalFromStream = cls.ole32.GetHGlobalFromStream
+      cls.GetHGlobalFromStream.argtypes = ctypes.c_void_p, ctypes.POINTER(ctypes.wintypes.HGLOBAL)
       cls.gdiplus = ctypes.WinDLL('gdiplus',  use_last_error=True)
       cls.gdiplus_token = ctypes.wintypes.ULONG()
       cls.gdiplus.GdiplusStartup(ctypes.byref(cls.gdiplus_token), ctypes.c_char_p(ctypes.string_at(ctypes.addressof(ctypes.c_uint(1)),ctypes.sizeof(ctypes.c_uint)) + b'\x00' * 24), None)
       cls.png_clsid = struct.pack('@LHH8B', *struct.unpack('>LHH8B', int('557CF406-1A04-11D3-9A73-0000F81EF32E'.replace('-', ''), 16).to_bytes(16, 'big')))
     try:
+      i = ctypes.c_void_p()
       h = cls.GlobalAlloc(0x42, len(self.image))
       hl = cls.GlobalLock(h)
       ctypes.memmove(hl, self.image, len(self.image))
       cls.GlobalUnlock(h)
       ist = ctypes.c_void_p()
-      cls.CreateStreamOnHGlobal(h, True, ctypes.byref(ist))
-      i = ctypes.c_void_p()
+      if cls.CreateStreamOnHGlobal(h, True, ctypes.byref(ist)):
+        raise
       if cls.gdiplus.GdipLoadImageFromStream(ist, ctypes.byref(i)):
         i = None
         raise
       h_ = cls.GlobalAlloc(0x42, 0)
       ist_ = ctypes.c_void_p()
-      cls.CreateStreamOnHGlobal(h_, True, ctypes.byref(ist_))
+      if cls.CreateStreamOnHGlobal(h_, True, ctypes.byref(ist_)):
+        raise
       if cls.gdiplus.GdipSaveImageToStream(i, ist_, ctypes.c_char_p(cls.png_clsid), None):
+        raise
+      h_ = ctypes.wintypes.HGLOBAL()
+      if cls.GetHGlobalFromStream(ist_, ctypes.byref(h_)):
         raise
       hl_ = cls.GlobalLock(h_)
       self.converted = ctypes.string_at(hl_, cls.GlobalSize(h_))
@@ -3770,10 +3783,19 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
     except:
       return False
     finally:
-      cls.Release(ist)
-      if i is not None:
-        cls.gdiplus.GdipDisposeImage(i)
-        cls.Release(ist_)
+      try:
+        cls.Release(ist)
+      except:
+        pass
+      if i:
+        try:
+          cls.gdiplus.GdipDisposeImage(i)
+        except:
+          pass
+        try:
+          cls.Release(ist_)
+        except:
+          pass
     return True
 
 
@@ -4207,7 +4229,8 @@ class ElevationTilesCache(TilesCache):
 
 class WGS84Elevation(WGS84Map):
 
-  AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
+  # AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
+  AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?resource=ign_rge_alti_wld&lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 100, 'parallel': True}
   TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
   MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE + '{wms}', 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
   AS_OPENROUTE_SRTM = {'alias': 'OPENROUTE_SRTM', 'source': 'https://api.openrouteservice.org/elevation/point?api_key={key}&geometry={lon},{lat}&format_out=geojson&dataset=srtm', 'separator': ',', 'key': ('geometry', 'coordinates', 2), 'nodata': 32768, 'limit': 1, 'parallel': True}
@@ -4588,6 +4611,7 @@ class WGS84Itinerary():
 
   AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/{key}/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
+  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://data.geopf.fr/navigation/itineraire?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
   AS_OPENROUTE = {'alias': 'OPENROUTE', 'source': 'https://api.openrouteservice.org/v2/directions/foot-hiking?api_key={key}&start={lons},{lats}&end={lone},{late}', 'key': ('features', 0, 'geometry', 'coordinates')}
   AS_HERE_ROUTING = {'alias': 'HERE_ROUTING', 'source': 'https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin={lats},{lons}&destination={late},{lone}&return=polyline&apikey={key}', 'key': ('routes', 0, 'sections', 0, 'polyline' , '{flexible_polyline}')}
@@ -4692,9 +4716,14 @@ class WGS84Itinerary():
 
 class WGS84ReverseGeocoding():
 
-  AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
-  AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
-  AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  # AS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse'
+  AS_IGN_SOURCE = 'https://data.geopf.fr/geocodage/reverse'
+  # AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  # AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  # AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
+  AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'name')}
+  AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': AS_IGN_SOURCE + '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'name')}
+  AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': AS_IGN_SOURCE + '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'name')}
   AS_OSM_NOMINATIM = {'alias': 'OSM_NOMINATIM', 'source': 'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=jsonv2', 'key': ('display_name',)}
   AS_OPENROUTE_150 = {'alias': 'OPENROUTE_150', 'source': 'https://api.openrouteservice.org/geocode/reverse?api_key={key}&point.lon={lon}&point.lat={lat}&boundary.circle.radius=0.15', 'key': ('features', 'properties', 'name')}
   AS_GOOGLE_MAPS_FR = {'alias': 'GOOGLE_MAPS_FR', 'source': 'https://www.google.fr/maps/place/{lat},{lon}','regex': '<[^<]*?· ([^<]*?). itemprop="name">'}
@@ -4753,8 +4782,11 @@ class WGS84ReverseGeocoding():
 
 class WGS84Geocoding():
 
-  AS_IGN_GEOCODAGE_POI = {'alias': 'IGN_GEOCODAGE_POI', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'), ('features', '*', 'properties', 'city', '|'), ('features', '*', 'properties', 'category', '|'))}
-  AS_IGN_GEOCODAGE_ADDRESS = {'alias': 'IGN_GEOCODAGE_ADDRESS', 'source': 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search?index=address&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
+  # AS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search'
+  AS_IGN_SOURCE = 'https://data.geopf.fr/geocodage/search'
+  # AS_IGN_GEOCODAGE_POI = {'alias': 'IGN_GEOCODAGE_POI', 'source': AS_IGN_SOURCE + '?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'), ('features', '*', 'properties', 'city', '|'), ('features', '*', 'properties', 'category', '|'))}
+  AS_IGN_GEOCODAGE_POI = {'alias': 'IGN_GEOCODAGE_POI', 'source': AS_IGN_SOURCE + '?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'name', '|'), ('features', '*', 'properties', 'city', '|'), ('features', '*', 'properties', 'category', '|'))}
+  AS_IGN_GEOCODAGE_ADDRESS = {'alias': 'IGN_GEOCODAGE_ADDRESS', 'source': AS_IGN_SOURCE + '?index=address&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
   AS_OSM_NOMINATIM_POI = {'alias': 'OSM_NOMINATIM_POI', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=natural,poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
   AS_OSM_NOMINATIM_ADDRESS = {'alias': 'OSM_NOMINATIM_ADDRESS', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=address{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
   AS_OPENROUTE_POI = {'alias': 'OPENROUTE_POI', 'source': 'https://api.openrouteservice.org/geocode/search?api_key={key}&text={query}&size=40;&layers=venue{location}', 'location': ('&focus.point.lon={lon}&focus.point.lat={lat}', '&boundary.rect.min_lat={lat1}&boundary.rect.min_lon={lon1}&boundary.rect.max_lat={lat2}&boundary.rect.max_lon={lon2}'), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
@@ -6434,14 +6466,14 @@ class GeotaggedMedia():
     try:
       if f.read(2) != b'\xff\xd8':
         raise
-      t = f.read(2)
-      if t == b'\xff\xe0':
-        l = struct.unpack('!H', f.read(2))[0]
+      t = b''
+      l = 2
+      while t != b'\xff\xe1':
         f.seek(l - 2, os.SEEK_CUR)
         t = f.read(2)
-      if t != b'\xff\xe1':
-        raise
-      l = struct.unpack('!H', f.read(2))[0]
+        if t[:1] != b'\xff' or t == b'\xff\xda':
+          raise
+        l = struct.unpack('!H', f.read(2))[0]
       if f.read(6) != b'Exif\x00\x00':
         raise
       ref = f.tell()
@@ -13508,7 +13540,7 @@ class GPXTweakerWebInterfaceServer():
   '          for (let s=0; s<segms.length; s++) {\r\n' \
   '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
   '          }\r\n' \
-  '          if (segs.length == 0) {return;}\r\n' \
+  '          if (segs.length == 0 && ! remove) {return;}\r\n' \
   '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
   '          if (! document.getElementById(focused).checked) {return;}\r\n' \
@@ -13516,11 +13548,11 @@ class GPXTweakerWebInterfaceServer():
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
   '          if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
-  '        } else if (focused.substring(0, 5) == "point") {\r\n' \
+  '        } else if (focused.substring(0, 5) == "point" || (focused.substring(0, 8) == "waypoint" && remove)) {\r\n' \
   '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
   '          pt_foc = focused;\r\n' \
   '          document.getElementById(pt_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
-  '          seg_foc = document.getElementById(pt_foc + "cont").parentNode;\r\n' \
+  '          seg_foc = focused.substring(0, 3) == "way" ? null : document.getElementById(pt_foc + "cont").parentNode;\r\n' \
   '          segs = [seg_foc];\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.replace("point", "dot")), scrollmode == 2);}\r\n' \
   '        } else {\r\n' \
@@ -13529,10 +13561,29 @@ class GPXTweakerWebInterfaceServer():
   '        let batch = ++hist_b;\r\n' \
   '        if (remove) {\r\n' \
   '          let msg = null;\r\n' \
+  '          if (focused == "") {\r\n' \
+  '            let spans = Array.from(document.getElementById("waypointsform").getElementsByTagName("span"));\r\n' \
+  '            for (let p=0; p<spans.length; p++) {\r\n' \
+  '              let wpt = spans[p].id.slice(0, -5);\r\n' \
+  '              if (document.getElementById(wpt).checked && document.getElementById(wpt).value != "error") {\r\n' \
+  '                if (document.getElementById(wpt + "time").value != "") {\r\n' \
+  '                  msg = "";\r\n' \
+  '                  focused = wpt;\r\n' \
+  '                  save_old();\r\n' \
+  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  document.getElementById(wpt + "time").value = "";\r\n' \
+  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
+  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
+  '                  }\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            let spans = pt_foc==null?Array.from(segs[s].getElementsByTagName("span")):[document.getElementById(pt_foc + "focus")];\r\n' \
   '            for (let p=0; p<spans.length; p++) {\r\n' \
-  '              pt = spans[p].id.slice(0, -5);\r\n' \
+  '              let pt = spans[p].id.slice(0, -5);\r\n' \
   '              if ((pt_foc == null && document.getElementById(pt).checked && document.getElementById(pt).value != "error") || pt_foc == pt) {\r\n' \
   '                if (document.getElementById(pt + "time").value != "") {\r\n' \
   '                  msg = "";\r\n' \
@@ -13552,7 +13603,7 @@ class GPXTweakerWebInterfaceServer():
   '            msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
   '            if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
   '            if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
-  '            calc_modified(...segs);\r\n' \
+  '            if (segs.length > 0 && segs[0] != null) {calc_modified(...segs);}\r\n' \
   '            show_msg(msg, 2);\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
