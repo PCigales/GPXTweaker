@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.18.1 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -3241,7 +3241,8 @@ class WebMercatorMap(BaseMap):
   TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
   TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
-  TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles'
+  # TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles'
+  TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/standard.json', 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
@@ -22683,7 +22684,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.18.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.18.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
