@@ -4109,7 +4109,6 @@ class JSONTiles():
         return None
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
-        print(uri)
         self.log(1, 'glyphfail', tid, fontstack, fontrange)
         return None
       glyph = rep.body
@@ -4158,7 +4157,6 @@ class JSONTiles():
         return None
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
-        print(uri)
         self.log(1, 'sprite%sfail' % target, tid, scale)
         return None
       sprite = rep.body
