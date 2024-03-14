@@ -3236,7 +3236,7 @@ class WebMercatorMap(BaseMap):
   TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_LIMITED_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - Plan V2: 17-18
   TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
   TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TC_IGN_HYBRIDE = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
+  TC_IGN_HYBRIDE_NOMS = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
   TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
@@ -3245,6 +3245,8 @@ class WebMercatorMap(BaseMap):
   TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/standard.json', 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
+  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/toponymes.json', 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz', 'replace_regex': (r'("fill-color":[^,]*?,\x20*)"line-opacity"', r'\1"fill-opacity"', 0)}
+  TC_IGN_HYBRIDE_TOPO = [['IGN_PHOTOS', '1'], ['IGN_TOPONYMES', '1']]
   TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
   TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
@@ -3926,7 +3928,7 @@ class JSONTiles():
         elif local_store:
           Path(os.path.dirname(infopath)).mkdir(parents=True, exist_ok=True)
           loc = True
-          inf = infos
+          inf = {k: v for k, v in infos.items() if k != 'replace_regex'}
           updt = True
       except:
         pass
@@ -3978,7 +3980,11 @@ class JSONTiles():
           self.log(1, 'stylefail', infos)
           return False
         try:
-          style = json.loads(rep.body)
+          rr = infos.get('replace_regex')
+          if rr:
+            style = json.loads(re.sub(rr[0].encode('utf-8'), rr[1].encode('utf-8'), rep.body, rr[2]))
+          else:
+            style = json.loads(rep.body)
         except:
           self.log(1, 'stylefail', infos)
           return False
@@ -3986,7 +3992,11 @@ class JSONTiles():
         self.log(2, 'stylefetch', infos)
         try:
           f = open(infos['source'], 'rt', encoding='utf-8')
-          style = json.load(f)
+          rr = infos.get('replace_regex')
+          if rr:
+            style = json.loads(re.sub(rr[0], rr[1], f.read(), rr[2]))
+          else:
+            style = json.load(f)
         except:
           self.log(1, 'stylefail', infos)
           return False
@@ -4099,6 +4109,7 @@ class JSONTiles():
         return None
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
+        print(uri)
         self.log(1, 'glyphfail', tid, fontstack, fontrange)
         return None
       glyph = rep.body
@@ -4147,6 +4158,7 @@ class JSONTiles():
         return None
       rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
+        print(uri)
         self.log(1, 'sprite%sfail' % target, tid, scale)
         return None
       sprite = rep.body
@@ -21499,6 +21511,20 @@ class GPXTweakerWebInterfaceServer():
               pass
           elif field in ('overwrite_schemes', 'overwrite_names', 'slash_url') and hcur[:9] == 'maptiles ':
             s[1][field] = value
+          elif field == 'replace_regex' and hcur[:9] == 'maptiles ':
+            try:
+              r = list(map(str.strip, value.split(' ')))
+              if len(r) == 2:
+                r.append(0)
+              elif len(r) == 3:
+                r[2] = int(r[2])
+              else:
+                raise
+              re.compile(r[0], r[2])
+            except:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
+            s[1][field] = tuple(r)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
