@@ -12174,7 +12174,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        save_old();\r\n' \
   '        scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
-  '        window.alert("3D");\r\n' \
+  '        if (navigator_firefox) {window.alert("3D");}\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, fpan=0, ind=null, mmls=null, teahs=null) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
