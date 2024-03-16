@@ -3217,50 +3217,48 @@ class WebMercatorMap(BaseMap):
   CRS = 'EPSG:3857'
   CRS_MPU = 1
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
-  # WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
-  # WMS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms'
-  WMS_IGN_SOURCE = 'https://data.geopf.fr/wms-r'
-  WMS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wms-r'
-  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
-  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_LIMITED_SOURCE + '{wms}', 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
-  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_LIMITED_SOURCE + '{wms}', 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
-  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_LIMITED_SOURCE + '{wms}', 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
-  MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE + '{wms}', 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
-  WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service'
-  MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE + '{wms}', 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
-  # WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
-  # WMTS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/wmts'
-  WMTS_IGN_SOURCE = 'https://data.geopf.fr/wmts'
-  WMTS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wmts'
-  TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_LIMITED_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - Plan V2: 17-18
-  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
-  TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  # WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms{wms}'
+  # WMS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms{wms}'
+  WMS_IGN_SOURCE = 'https://data.geopf.fr/wms-r{wms}'
+  WMS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wms-r{wms}'
+  MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
+  MS_IGN_SCAN25 = {'alias': 'IGN_SCAN25', 'source': WMS_IGN_LIMITED_SOURCE, 'layers':'SCAN25TOUR_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN25TOUR_PYR-JPEG_WLD_WM
+  MS_IGN_SCAN100 = {'alias': 'IGN_SCAN100', 'source': WMS_IGN_LIMITED_SOURCE, 'layers':'SCAN100_PYR-PNG_FXX_LAMB93', 'format': 'image/png', 'styles': ''} #SCAN100_PYR-JPEG_WLD_WM
+  MS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMS_IGN_LIMITED_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'format': 'image/png', 'styles': ''}
+  MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE, 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
+  WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service{wms}'
+  MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE, 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
+  # WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts{wmts}'
+  # WMTS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/wmts{wmts}'
+  WMTS_IGN_SOURCE = 'https://data.geopf.fr/wmts{wmts}'
+  WMTS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wmts{wmts}'
+  TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_CARTES = {'alias': 'IGN_CARTES', 'source': WMTS_IGN_LIMITED_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}  #SCAN 1000: 9-10 SCAN Régional: 11-12 SCAN 100: 13-14 - SCAN25: 15-16 - Plan V2: 17-18
+  TS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMTS_IGN_SOURCE, 'layer': 'ORTHOIMAGERY.ORTHOPHOTOS', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/jpeg'}
+  TS_IGN_NOMS = {'alias': 'IGN_NOMS', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALNAMES.NAMES', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TC_IGN_HYBRIDE_NOMS = [['IGN_PHOTOS', '1'], ['IGN_NOMS', '1', {'19':'18', '20':'18'}]]
-  TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
-  TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_CONTOUR = {'alias': 'IGN_CONTOUR', 'source': WMTS_IGN_SOURCE, 'layer': 'ELEVATION.CONTOUR.LINE', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
+  TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
-  TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
-  # TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles'
-  TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles'
-  TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/standard.json', 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
+  TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
+  # TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles/{layer}/{style}.json'
+  TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/{layer}/{style}.json'
+  TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
-  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE + '/PLAN.IGN/toponymes.json', 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz', 'replace_regex': (r'("fill-color":[^,]*?,\x20*)"line-opacity"', r'\1"fill-opacity"', 0)}
+  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz', 'replace_regex': (r'("fill-color":[^,]*?,\x20*)"line-opacity"', r'\1"fill-opacity"', 0)}
   TC_IGN_HYBRIDE_TOPO = [['IGN_PHOTOS', '1'], ['IGN_TOPONYMES', '1']]
-  TS_OSM_SOURCE = 'https://a.tile.openstreetmap.org'
-  TS_OSM = {'alias': 'OSM', 'source': TS_OSM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_OSM = {'alias': 'OSM', 'source': 'https://a.tile.openstreetmap.org/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
   TC_OSM_SHADED = [['OSM', '100%'], ['ESRI_HILLSHADE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
-  TS_OTM_SOURCE = 'https://b.tile.opentopomap.org'
-  TS_OTM = {'alias': 'OTM', 'source': TS_OTM_SOURCE + '/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_WAYMARKED_HIKING = {'alias': 'WAYMARKED_HIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_OTM = {'alias': 'OTM', 'source': 'https://b.tile.opentopomap.org/{matrix}/{col}/{row}.png', 'layer':'OTM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
+  TS_WAYMARKED_HILLSHADING = {'alias': 'WAYMARKED_HILLSHADING', 'source': 'https://hillshading.waymarkedtrails.org/srtm/{matrix}/{col}/{invrow}.png', 'layer':'hillshading', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
+  TS_WAYMARKED_HIKING = {'alias': 'WAYMARKED_HIKING', 'source': 'https://tile.waymarkedtrails.org/hiking/{matrix}/{col}/{row}.png', 'layer':'hiking', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
   TC_WAYMARKED_TRAILSHIKING = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '40%'], ['WAYMARKED_HIKING', '100%']]
-  TS_WAYMARKED_CYCLING = {'alias': 'WAYMARKED_CYCLING', 'source': 'https://tile.waymarkedtrails.org/cycling/{matrix}/{col}/{row}.png', 'layer':'cycling', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_WAYMARKED_CYCLING = {'alias': 'WAYMARKED_CYCLING', 'source': 'https://tile.waymarkedtrails.org/cycling/{matrix}/{col}/{row}.png', 'layer':'cycling', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
   TC_WAYMARKED_TRAILSCYCLING = [['OSM', '100%'], ['WAYMARKED_HILLSHADING', '40%'], ['WAYMARKED_CYCLING', '100%']]
-  TS_CYCLOSM = {'alias': 'CYCLOSM', 'source': 'https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{matrix}/{col}/{row}.png', 'layer':'CyclOSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_TRACESTRACK_TOPO = {'alias': 'TRACESTRACK_TOPO', 'source': 'https://tile.tracestrack.com/topo__/{matrix}/{col}/{row}.png?key={key}', 'layer':'totp', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_TRACESTRACK_BICYCLE = {'alias': 'TRACESTRACK_BICYCLE', 'source': 'https://tile.tracestrack.com/bicycle-route/{matrix}/{col}/{row}.png?key={key}', 'layer':'cycle', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_CYCLOSM = {'alias': 'CYCLOSM', 'source': 'https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{matrix}/{col}/{row}.png', 'layer':'CyclOSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
+  TS_TRACESTRACK_TOPO = {'alias': 'TRACESTRACK_TOPO', 'source': 'https://tile.tracestrack.com/topo__/{matrix}/{col}/{row}.png?key={key}', 'layer':'totp', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
+  TS_TRACESTRACK_BICYCLE = {'alias': 'TRACESTRACK_BICYCLE', 'source': 'https://tile.tracestrack.com/bicycle-route/{matrix}/{col}/{row}.png?key={key}', 'layer':'cycle', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
   TC_TRACESTRACK_CYCLE = [['TRACESTRACK_TOPO', '100%'], ['TRACESTRACK_BICYCLE', '100%']]
   TS_MAPTILER_SOURCE = 'https://api.maptiler.com/maps'
   TS_MAPTILER_TOPO = {'alias': 'MAPTILER_TOPO', 'source': TS_MAPTILER_SOURCE + '/topo/style.json?key={key}', 'layer':'MAPTILER.TOPO', 'style': 'topo', 'format': 'application/json'}
@@ -3285,15 +3283,15 @@ class WebMercatorMap(BaseMap):
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_CYCLE = {'alias': 'THUNDERFOREST_CYCLE', 'source': TS_THUNDERFOREST_SOURCE + '/cycle/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.CYCLE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts'
-  TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '{wmts}&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
-  TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
-  TS_HERE_NORMAL = {'alias': 'HERE_NORMAL', 'source': TS_HEREBASE_SOURCE + '/normal.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HERE_PEDESTRIAN = {'alias': 'HERE_PEDESTRIAN', 'source': TS_HEREBASE_SOURCE + '/pedestrian.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HEREAERIAL_SOURCE = 'https://1.aerial.maps.ls.hereapi.com/maptile/2.1/maptile/newest'
-  TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE + '/terrain.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE + '/satellite.day/{matrix}/{col}/{row}/256/png8?apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
-  TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE + '/hybrid.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}', 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts{wmts}'
+  TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
+  TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/{layer}.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}'
+  TS_HERE_NORMAL = {'alias': 'HERE_NORMAL', 'source': TS_HEREBASE_SOURCE, 'layer':'normal', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_PEDESTRIAN = {'alias': 'HERE_PEDESTRIAN', 'source': TS_HEREBASE_SOURCE, 'layer':'pedestrian', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HEREAERIAL_SOURCE = 'https://1.aerial.maps.ls.hereapi.com/maptile/2.1/maptile/newest/{layer}.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}'
+  TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE, 'layer':'terrain', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE, 'layer':'satellite', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE, 'layer':'hybrid', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
 
   def LinkLegend(self, legend):
     self.Legend = legend
@@ -3909,8 +3907,9 @@ class JSONTiles():
             pattern = os.path.dirname(pattern)
           pattern = os.path.join(pattern, '{resource}')
         a_l = infos.get('alias') or infos.get('layer', '')
+        a_ls = infos.get('alias') or '_'.join(filter(None, (infos.get('layer', ''), infos.get('style', ''))))
         pattern = pattern.format_map({**infos,  'alias|layer': a_l, 'resource': '{resource}'})
-        infopath = pattern.replace('{resource}',  a_l + ' - infos.json')
+        infopath = pattern.replace('{resource}',  a_ls + ' - infos.json')
         if os.path.exists(infopath):
           f = open(infopath, 'rt', encoding='utf-8')
           inf = json.load(f)
@@ -3951,7 +3950,7 @@ class JSONTiles():
     style = None
     if loc:
       try:
-        stylepath = pattern.replace('{resource}', a_l + ' - style.json')
+        stylepath = pattern.replace('{resource}', a_ls + ' - style.json')
       except:
         stylepath = ''
       exp, updt, loc_style, style = JSONTiles._get_resource(stylepath, True, local_expiration, local_store)
@@ -3971,7 +3970,7 @@ class JSONTiles():
       if '://' in infos['source']:
         self.log(2, 'stylefetch', infos)
         try:
-          uri = infos['source'].format_map({'key': key or ''})
+          uri = infos['source'].format_map({**infos, 'key': key or ''})
         except:
           self.log(1, 'stylefail', infos)
           return False
@@ -3991,7 +3990,7 @@ class JSONTiles():
       else:
         self.log(2, 'stylefetch', infos)
         try:
-          f = open(infos['source'], 'rt', encoding='utf-8')
+          f = open(infos['source'].format_map(infos), 'rt', encoding='utf-8')
           rr = infos.get('replace_regex')
           if rr:
             style = json.loads(re.sub(rr[0], rr[1], f.read(), rr[2]))
@@ -4054,7 +4053,7 @@ class JSONTiles():
       for name, desc in style['sources'].items():
         sid += 1
         desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1][0:4], tid + self.TilesSetIdMult * sid)]
-      self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layer': (a_l if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local})
+      self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layerstyle': (a_ls if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local})
     except:
       self.log(1, 'stylefail', infos)
       return False
@@ -4132,7 +4131,7 @@ class JSONTiles():
     sprite = None
     if handling['pattern'] is not None:
       try:
-        spritepath = handling['pattern'].replace('{resource}',  handling['alias_layer'] + ' - sprite%s.%s' % (scale, target.lower()))
+        spritepath = handling['pattern'].replace('{resource}',  handling['alias_layerstyle'] + ' - sprite%s.%s' % (scale, target.lower()))
       except:
         spritepath = ''
       exp, updt, loc_sprite, sprite = JSONTiles._get_resource(spritepath, False, handling['local_expiration'], handling['local_store'])
@@ -4242,8 +4241,8 @@ class WGS84Elevation(WGS84Map):
 
   # AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?resource=ign_rge_alti_wld&lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 100, 'parallel': True}
-  TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE + '{wmts}', 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
-  MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE + '{wms}', 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
+  TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
+  MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE, 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
   AS_OPENROUTE_SRTM = {'alias': 'OPENROUTE_SRTM', 'source': 'https://api.openrouteservice.org/elevation/point?api_key={key}&geometry={lon},{lat}&format_out=geojson&dataset=srtm', 'separator': ',', 'key': ('geometry', 'coordinates', 2), 'nodata': 32768, 'limit': 1, 'parallel': True}
   TS_SRTM_GL1 = {'alias': 'SRTM_GL1', 'source': 'http://step.esa.int/auxdata/dem/SRTMGL1/{hgt}.SRTMGL1.hgt.zip', 'layer': 'SRTM.GL1', 'basescale': WGS84Map.CRS_MPU / 3600, 'topx': -180, 'topy': 90,'width': 3600, 'height': 3600, 'format': 'image/hgt', 'nodata': -32768}
   AS_OTD_EUDEM = {'alias': 'AS_OTD_EUDEM', 'source': 'https://api.opentopodata.org/v1/eudem25m?locations={location}', 'separator': '|', 'key': ('results', '*', 'elevation'), 'nodata': -32767, 'limit': 100, 'parallel': False}
@@ -4620,9 +4619,10 @@ class WGS84Itinerary():
   URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
   POLYLINE_RE =  re.compile(r'^{(flexible_)polyline}$|^{polyline(\d+)?}$', re.ASCII).match
 
-  AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/{key}/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
+  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/{key}/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
-  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://data.geopf.fr/navigation/itineraire?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
+  AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://data.geopf.fr/navigation/itineraire?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
+  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://data.geopf.fr/navigation/itineraire?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
   AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
   AS_OPENROUTE = {'alias': 'OPENROUTE', 'source': 'https://api.openrouteservice.org/v2/directions/foot-hiking?api_key={key}&start={lons},{lats}&end={lone},{late}', 'key': ('features', 0, 'geometry', 'coordinates')}
   AS_HERE_ROUTING = {'alias': 'HERE_ROUTING', 'source': 'https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin={lats},{lons}&destination={late},{lone}&return=polyline&apikey={key}', 'key': ('routes', 0, 'sections', 0, 'polyline' , '{flexible_polyline}')}
