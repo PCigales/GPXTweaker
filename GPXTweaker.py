@@ -3245,7 +3245,7 @@ class WebMercatorMap(BaseMap):
   TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/{layer}/{style}.json'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
-  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz', 'replace_regex': (r'("fill-color":[^,]*?,\x20*)"line-opacity"', r'\1"fill-opacity"', 0)}
+  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz', 'replace_regex': (r'("fill-color"\040*?:[^,]*?,\040*?)"line-opacity"\040*?:[^}]*?}', r'\1"fill-opacity":\0400.4', 0)}
   TC_IGN_HYBRIDE_TOPO = [['IGN_PHOTOS', '1'], ['IGN_TOPONYMES', '1']]
   TS_OSM = {'alias': 'OSM', 'source': 'https://a.tile.openstreetmap.org/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
@@ -17605,7 +17605,7 @@ class GPXTweakerWebInterfaceServer():
   '        const ctrack = create_track();\r\n' \
   '        ctrack.next();\r\n' \
   '        data_wait = dload.next();\r\n' \
-  '        const ppositionw = (navigator_firefox ? "" : (parseInt(navigator.userAgent.toLowerCase().match(/(?:edg|chrome)\\/(\\d*?)\\./)?.[1]) < 122 ? "" : "1.0 / ")) + "pposition.w";\r\n' \
+  '        const ppositionw = (navigator_firefox ? "pposition.w" : "1.0 / pposition.w");\r\n' \
   '        const mview = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
   '          @group(0) @binding(1) var<uniform> radius: f32;\r\n' \
