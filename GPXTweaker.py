@@ -292,6 +292,8 @@ FR_STRINGS = {
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;clic milieu sur la carte pour afficher la latitude et la longitude du curseur (+shift pour les copier dans le presse-papier)&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpgset': 'sélectionner le fournisseur de géocodages',
     'jexpgloc': 'privilégier la zone affichée',
+    'jexpgdec': 'minimiser',
+    'jexpginc': 'restaurer',
     'jhelp3d': 'survol souris de la mini-carte pour afficher sa légende&#13;&#10;clic sur la vue 3d puis :&#13;&#10;flèche haut / bas ou roulette souris pour avancer / reculer&#13;&#10;flèche gauche / droite ou clic-glisse horizontal pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante  ou clic-glisse vertical pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression ou clic roulette pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
     'jpoints': 'Points',
@@ -694,6 +696,8 @@ EN_STRINGS = {
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;middle click on the map to display the latitude and longitude of the cursor (+shift to copy them to the clipboard)&#13;&#10;mouse over a button to display its legend',
     'jexpgset': 'select the geocodings provider',
     'jexpgloc': 'favor the displayed area',
+    'jexpgdec': 'minimize',
+    'jexpginc': 'restore',
     'jhelp3d': 'mouse over the mini-map to display its legend&#13;&#10;click on the 3d view then :&#13;&#10;arrow up / down or mouse wheel to move forward / backward&#13;&#10;arrow left / right or horizontal click-drag to rotate left / right&#13;&#10;page up / down or vertical click-drag to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete or wheel click to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
     'jpoints': 'Points',
@@ -18201,6 +18205,12 @@ class GPXTweakerWebInterfaceServer():
   '        border-top:1px darkgray solid;\r\n' \
   '        overflow: hidden;\r\n' \
   '      }\r\n' \
+  '      button[id=spdec], button[id=spinc] {\r\n' \
+  '        position:absolute;\r\n' \
+  '        font-size:94%;\r\n' \
+  '        top:3px;\r\n' \
+  '        right:calc(2vw - 16px);\r\n' \
+  '      }\r\n' \
   '      input[type=radio] {\r\n' \
   '        vertical-align:middle;\r\n' \
   '        margin:0.2em 0.5em 0.2em 0.5em;\r\n' \
@@ -20387,10 +20397,36 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          spanel.style.display = "none";\r\n' \
   '          document.getElementById("places").reset();\r\n' \
+  '          if (document.getElementById("spdec").style.display == "none") {resize_spanel(1);}\r\n' \
   '          if (! other) {\r\n' \
   '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            rescale();\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function resize_spanel(mode) {\r\n' \
+  '        if (mode < 0) {\r\n' \
+  '          document.getElementById("spdec").style.display = "none";\r\n' \
+  '          document.getElementById("spinc").style.display = "";\r\n' \
+  '          document.getElementById("searchpanel").style.maxHeight = "calc(2em + 42px)";\r\n' \
+  '          document.getElementById("content").style.minHeight = "calc(99vh - 4.4em - 60px)";\r\n' \
+  '          viewpane.style.minHeight = "calc(99vh - 4.4em - 60px)";\r\n' \
+  '        } else {\r\n' \
+  '          document.getElementById("spdec").style.display = "";\r\n' \
+  '          document.getElementById("spinc").style.display = "none";\r\n' \
+  '          document.getElementById("searchpanel").style.maxHeight = "";\r\n' \
+  '          document.getElementById("content").style.minHeight = "";\r\n' \
+  '          viewpane.style.minHeight = "";\r\n' \
+  '        }\r\n' \
+  '        let pls = document.getElementById("plcont").getElementsByTagName("div");\r\n' \
+  '        if (pls.length > 1) {\r\n' \
+  '          pls[1].scrollIntoView({block:"start"});\r\n' \
+  '          for (pl of pls) {\r\n' \
+  '            if (pl.firstElementChild.checked) {\r\n' \
+  '              pl.scrollIntoView({block:(mode<0?"center":"nearest")});\r\n' \
+  '              return;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -20645,20 +20681,21 @@ class GPXTweakerWebInterfaceServer():
   '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
   '    </div>\r\n' \
   '    <div id="searchpanel" style="display:none;user-select:none;" onclick="event.target.id==\'searchpanel\'?document.getElementById(\'places\').reset():null" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
-  '    <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
-  '      <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 24em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null">\r\n' \
-  '      <datalist id="searchqueryhistory"></datalist>\r\n' \
-  '      <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
-  '    </form>\r\n' \
-  '    <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
-  '    <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:2vw;" autocomplete="off" style="margin-left:0.75em;" >##GSETS##</select>\r\n' \
-  '    <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;user-select:text" onsubmit="return false" onchange="target_place(event.target)" onreset="this.elements.place.value?set_target():null">\r\n' \
-  '      <div id="plcont" style="min-width:fit-content">\r\n' \
-  '        <div onclick="this.firstElementChild.click()">\r\n' \
-  '          <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
+  '      <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
+  '        <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 26em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null">\r\n' \
+  '        <datalist id="searchqueryhistory"></datalist>\r\n' \
+  '        <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
+  '      </form>\r\n' \
+  '      <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
+  '      <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:calc(2vw + 2em);" autocomplete="off" style="margin-left:0.75em;margin-right:1em" >##GSETS##</select>\r\n' \
+  '      <button id="spdec" title="{#jexpgdec#}" onclick="resize_spanel(-1)">&darr;</button><button id="spinc" title="{#jexpginc#}" style="display:none;" onclick="resize_spanel(1)">&uarr;</button>\r\n' \
+  '      <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;user-select:text" onsubmit="return false" onchange="target_place(event.target)" onreset="this.elements.place.value?set_target():null">\r\n' \
+  '        <div id="plcont" style="min-width:fit-content">\r\n' \
+  '          <div onclick="this.firstElementChild.click()">\r\n' \
+  '            <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
+  '          </div>\r\n' \
   '        </div>\r\n' \
-  '      </div>\r\n' \
-  '    </form>\r\n' \
+  '      </form>\r\n' \
   '    </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
