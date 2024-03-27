@@ -20397,7 +20397,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          spanel.style.display = "none";\r\n' \
   '          document.getElementById("places").reset();\r\n' \
-  '          if (document.getElementById("spdec").style.display == "none") {resize_spanel(1);}\r\n' \
+  '          if (document.getElementById("spdec").style.display == "none") {resize_spanel(1, false);}\r\n' \
   '          if (! other) {\r\n' \
   '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
   '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
@@ -20405,7 +20405,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function resize_spanel(mode) {\r\n' \
+  '      function resize_spanel(mode, resc=true) {\r\n' \
   '        if (mode < 0) {\r\n' \
   '          document.getElementById("spdec").style.display = "none";\r\n' \
   '          document.getElementById("spinc").style.display = "";\r\n' \
@@ -20419,6 +20419,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("content").style.minHeight = "";\r\n' \
   '          viewpane.style.minHeight = "";\r\n' \
   '        }\r\n' \
+  '        if (resc) {rescale();}\r\n' \
   '        let pls = document.getElementById("plcont").getElementsByTagName("div");\r\n' \
   '        if (pls.length > 1) {\r\n' \
   '          pls[1].scrollIntoView({block:"start"});\r\n' \
