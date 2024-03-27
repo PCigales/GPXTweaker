@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.1 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.18.2 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -12143,7 +12143,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function pointed3d_waypoint(lat, lon) {\r\n' \
   '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
+  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return false;}\r\n' \
   '        if (focused) {\r\n' \
   '          ex_foc = focused;\r\n' \
   '          element_click(null, document.getElementById(focused + "desc"), false);\r\n' \
@@ -12175,6 +12175,7 @@ class GPXTweakerWebInterfaceServer():
   '        save_old();\r\n' \
   '        scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
   '        if (navigator_firefox) {window.alert("3D");}\r\n' \
+  '        return true;\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, fpan=0, ind=null, mmls=null, teahs=null) {\r\n' \
   '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
@@ -16603,12 +16604,13 @@ class GPXTweakerWebInterfaceServer():
   '          c = t_info.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
   '        }\r\n' \
   '        if (! c || c.length != 3) {return;}\r\n' \
+  '        let r = false;\r\n' \
   '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
-  '          window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
+  '          r = window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
   '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
-  '          window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
+  '          r = window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
   '        }\r\n' \
-  '        if (! navigator_firefox) {\r\n' \
+  '        if (r && ! navigator_firefox) {\r\n' \
   '          const oname = "3d" + Date.now().toString();\r\n' \
   '          window.opener.name = oname;\r\n' \
   '          window.open("", oname);\r\n' \
@@ -19159,15 +19161,17 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function pointed3d_target(lat, lon, track) {\r\n' \
-  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
-  '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
   '        document.getElementById("places").reset();\r\n' \
+  '        if (document.getElementById("track" + track + "cont").style.display == "none") {return false;}\r\n' \
+  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return false;}\r\n' \
+  '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
   '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
   '        if (navigator_firefox) {window.alert("3D");}\r\n' \
+  '        return true;\r\n' \
   '      }\r\n' \
   '      function open_3D(mode3d="p") {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
@@ -22708,7 +22712,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.18.1 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.18.2 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
