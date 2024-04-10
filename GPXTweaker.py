@@ -289,7 +289,7 @@ FR_STRINGS = {
     'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+shift: recadrer sur la trace&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)&#13;&#10;+alt: centrer sur le pointeur',
-    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;clic milieu sur la carte pour afficher la latitude et la longitude du curseur (+shift pour les copier dans le presse-papier)&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
+    'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;clic milieu / shift + clic milieu sur la carte pour afficher la latitude et la longitude / l\'élévation du curseur (+ctrl pour les / la copier dans le presse-papier)&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpgset': 'sélectionner le fournisseur de géocodages',
     'jexpgloc': 'privilégier la zone affichée',
     'jexpgdec': 'minimiser',
@@ -347,6 +347,8 @@ FR_STRINGS = {
     'jmelevations4': 'Élévations de la trace mises à jour (%s point(s) et point(s) de cheminement sur %s)',
     'jmelevations5': 'Élévations de la trace mises à jour (%s point(s) sur %s)',
     'jmelevations6': 'Échec de la récupération des élévations',
+    'jmelevations7': 'Récupération de l\'élévation en cours...',
+    'jmelevations8': 'Échec de la récupération de l\'élévation',
     'jmelealt1': 'Élévation et altitude du point interverties',
     'jmelealt2': 'Élévations et altitudes du segment interverties',
     'jmelealt3': 'Élévations et altitudes de la trace interverties',
@@ -693,7 +695,7 @@ EN_STRINGS = {
     'jscrollcross': 'center on the focused element&#13;&#10;+shift: reframe on the track&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexpscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)&#13;&#10;+alt: center on the pointer',
-    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;middle click on the map to display the latitude and longitude of the cursor (+shift to copy them to the clipboard)&#13;&#10;mouse over a button to display its legend',
+    'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;middle click / shift + middle click on the map to display the latitude and longitude / the elevation of the cursor (+ctrl to copy them / it to the clipboard)&#13;&#10;mouse over a button to display its legend',
     'jexpgset': 'select the geocodings provider',
     'jexpgloc': 'favor the displayed area',
     'jexpgdec': 'minimize',
@@ -751,6 +753,8 @@ EN_STRINGS = {
     'jmelevations4': 'Elevations of the track updated (%s point(s) and waypoint(s) out of %s)',
     'jmelevations5': 'Elevations of the track updated (%s point(s) out of %s)',
     'jmelevations6': 'Failure of the retrieval of elevations',
+    'jmelevations7': 'Retrieval of the elevation in progress...',
+    'jmelevations8': 'Failure of the retrieval of the elevation',
     'jmelealt1': 'Elevation and altitude of the point switched',
     'jmelealt2': 'Elevations and altitudes of the segment switched',
     'jmelealt3': 'Elevations and altitudes of the track switched',
@@ -20711,13 +20715,45 @@ class GPXTweakerWebInterfaceServer():
   '      function pointer_down(e) {\r\n' \
   '        pointer_e = e.pointerId;\r\n' \
   '      }\r\n' \
+  '      function error_ecb() {\r\n' \
+  '        xhr_ongoing--;\r\n' \
+  '        document.getElementById("eset").disabled = false;\r\n' \
+  '        document.getElementById("eset").style.pointerEvents = "";\r\n' \
+  '      }\r\n' \
+  '      function load_ecb(t, c=false) {\r\n' \
+  '        error_ecb();\r\n' \
+  '        if (t.status != 200 || t.response == "") {return null;}\r\n' \
+  '        let r = t.response.split(",");\r\n' \
+  '        if (r.length != 2) {return null;}\r\n' \
+  '        let e = parseFloat(r[1]);\r\n' \
+  '        if (isNaN(e)) {return null;}\r\n' \
+  '        let m = e.toFixed(1) + " m";\r\n' \
+  '        if (c) {navigator.clipboard.writeText(m);}\r\n' \
+  '        return m;\r\n' \
+  '      }\r\n' \
   '      function mouse_down(e) {\r\n' \
   '        if (e.button == 1 && e.target && (e.target.id == "view" || e.target.id.substring(0, 4) == "path" || e.target.parentNode.id.substring(0, 7) == "waydots")) {\r\n' \
   '          let wm = [(e.pageX - viewpane.parentNode.offsetLeft - hpx) * tscale / zoom + htopx, htopy - (e.pageY - viewpane.parentNode.offsetTop - hpy) * tscale / zoom];\r\n' \
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
-  '          let msg = WebMercatortoWGS84(...wm).map((c)=>c.toFixed(6)).join(", ");\r\n' \
-  '          show_msg(msg, 5);\r\n' \
-  '          if (e.shiftKey) {navigator.clipboard.writeText(msg);}\r\n' \
+  '          if (e.shiftKey) {\r\n'\
+  '            if (eset < 0 || document.getElementById("eset").disabled) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
+  '            document.getElementById("eset").disabled = true;\r\n' \
+  '            document.getElementById("eset").style.pointerEvents = "none";\r\n' \
+  '            let msgn = show_msg("{#jmelevations7#}", 0);\r\n' \
+  '            let xhre = new XMLHttpRequest();\r\n' \
+  '            let c = e.ctrlKey;\r\n' \
+  '            xhre.onload = (e) => {let msg = load_ecb(e.target, c); msg==null?show_msg("{#jmelevations8#}", 10, msgn):show_msg(msg, 5, msgn)};\r\n'\
+  '            xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations8#}", 10, msgn);};\r\n' \
+  '            xhre.open("POST", "/ele");\r\n' \
+  '            xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '            xhre.setRequestHeader("If-Match", sessionid);\r\n' \
+  '            xhr_ongoing++;\r\n' \
+  '            xhre.send([0, ...WebMercatortoWGS84(...wm)].toString());\r\n' \
+  '          } else {\r\n' \
+  '            let msg = WebMercatortoWGS84(...wm).map((c)=>c.toFixed(6)+"°").join(", ");\r\n' \
+  '            show_msg(msg, 5);\r\n' \
+  '            if (e.ctrlKey) {navigator.clipboard.writeText(msg);}\r\n' \
+  '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (e.button != 0 && e.button != 2) {return;}\r\n' \
@@ -22733,8 +22769,14 @@ class GPXTweakerWebInterfaceServer():
     for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
       webserver_thread = threading.Thread(target=self._stop_webserver, args=(ind,))
       webserver_thread.start()
-    self.Map.Close()
-    self.Elevation.Close()
+    try:
+      self.Map.Close()
+    except:
+      pass
+    try:
+      self.Elevation.Close()
+    except:
+      pass
     with self.SLock:
       if self.GPXLoader:
         self.GPXLoader.Close()
