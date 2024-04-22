@@ -8304,7 +8304,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
-  '      const host = location.hostname + ":";\r\n' \
+  '      const host = window.location.hostname + ":";\r\n' \
   '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
   '      var hpx = 0;\r\n' \
   '      var hpy = 0;\r\n' \
@@ -9769,7 +9769,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (wgpu_wait[0] != null) {\r\n' \
-  '            wgpu_wait[0].then(() => load_tcb(t, nset, nlevel, kzoom));\r\n' \
+  '            wgpu_wait[0] = wgpu_wait[0].then(() => load_tcb(t, nset, nlevel, kzoom));\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          if (nlevel == null) {\r\n' \
@@ -11340,7 +11340,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (nset == null) {document.getElementById("ctset").style.display = "inline-block";}\r\n' \
   '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track();};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if (sta) {Promise.resolve(wgpu_wait[0]).then(() => scroll_to_track());};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
@@ -13965,7 +13965,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (t.responseURL.indexOf("?") < 0) {window.alert("{#jserror#}" + t.status.toString() + " " + t.statusText);}\r\n' \
   '          return false;\r\n'\
   '        } else if (mode3d) {\r\n' \
-  '          window.open("http://" + host + location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
+  '          window.open("http://" + host + window.location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML);\r\n' \
   '        }\r\n' \
   '        return true;\r\n'\
   '      }\r\n' \
@@ -14660,7 +14660,7 @@ class GPXTweakerWebInterfaceServer():
   '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
   '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
   HTML_3D_CGLOBALVARS_TEMPLATE = \
-  '      const host = location.hostname + ":";\r\n' \
+  '      const host = window.location.hostname + ":";\r\n' \
   '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      var canvas = document.getElementById("canvas");\r\n' \
   '      var c_tangle = document.getElementById("cursor_tangle");\r\n' \
@@ -16616,7 +16616,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (window.opener.hasOwnProperty("pointed3d_waypoint")) {\r\n' \
   '          r = window.opener.pointed3d_waypoint(parseFloat(c[1]), parseFloat(c[2]));\r\n' \
   '        } else if (window.opener.hasOwnProperty("pointed3d_target")) {\r\n' \
-  '          r = window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), location.search.split(",").at(-1));\r\n' \
+  '          r = window.opener.pointed3d_target(parseFloat(c[1]), parseFloat(c[2]), window.location.search.split(",").at(-1));\r\n' \
   '        }\r\n' \
   '        if (r && ! navigator_firefox) {\r\n' \
   '          const oname = "3d" + Date.now().toString();\r\n' \
@@ -18351,7 +18351,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "none";\r\n' \
   '        let q = "";\r\n' \
-  '        let sta = false;\r\n' \
+  '        let sto = false;\r\n' \
   '        if (nset != null) {\r\n' \
   '          document.getElementById("opanel").style.display="none";\r\n' \
   '          if (nset == -1) {\r\n' \
@@ -18362,9 +18362,11 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        } else if (nlevel != null) {\r\n' \
   '          q = "matrix=" + encodeURIComponent(tlevels[nlevel][0].toString());\r\n' \
-  '          sta = twidth == 0 && focused == "";\r\n' \
+  '          if (twidth == 0) {\r\n' \
+  '            sto = focused == "" ? null : document.getElementById(focused);\r\n' \
+  '          }\r\n' \
   '        } else {\r\n' \
-  '          sta = true;\r\n' \
+  '          sto = null;\r\n' \
   '          if (b == null) {\r\n' \
   '            if (twidth || kzoom != true) {\r\n' \
   '              document.getElementById("tset").disabled = false;\r\n' \
@@ -18380,7 +18382,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (nset == null) {document.getElementById("ctset").style.display = "inline-block";}\r\n' \
   '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if(sta) {scroll_to_track(null, true, b);};};\r\n' \
+  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if (sto !== false) {Promise.resolve(wgpu_wait[0]).then(() => scroll_to_track(sto, true, b))};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
@@ -19194,7 +19196,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        if (focused == "") {return;}\r\n' \
-  '        window.open("http://" + host + location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
+  '        window.open("http://" + host + window.location.port + "/3D/viewer" + ((webgpu && webgpu3d) ? "wgpu" : "") + ".html?3d=" + mode3d + document.getElementById(`v3d${mode3d}dist`).innerHTML + "," + focused.substring(5));\r\n' \
   '      }\r\n' + HTML_MAP_TEMPLATE.replace('function rescale(tscale_ex=tscale) {\r\n', 'function rescale(tscale_ex=tscale) {\r\n        media_sides = null;\r\n') + \
   '      function magnify_dec() {\r\n' \
   '        if (magnify > 1) {\r\n' \
