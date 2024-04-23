@@ -9768,10 +9768,7 @@ class GPXTweakerWebInterfaceServer():
   '              return;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (wgpu_wait[0] != null) {\r\n' \
-  '            wgpu_wait[0] = wgpu_wait[0].then(() => load_tcb(t, nset, nlevel, kzoom));\r\n' \
-  '            return;\r\n' \
-  '          }\r\n' \
+  '          if (wgpu_wait[0] != null) {return wgpu_wait[0].then(() => load_tcb(t, nset, nlevel, kzoom));}\r\n' \
   '          if (nlevel == null) {\r\n' \
   '            if (tlock) {switch_tlock(false);}\r\n' \
   '            tlevel = msg.level;\r\n' \
@@ -11340,7 +11337,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (nset == null) {document.getElementById("ctset").style.display = "inline-block";}\r\n' \
   '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if (sta) {Promise.resolve(wgpu_wait[0]).then(() => scroll_to_track());};};\r\n' \
+  '        xhrt.onload = (e) => {let r = load_tcb(e.target, nset, nlevel, kzoom); if (sta) {Promise.resolve(r).then(() => scroll_to_track());};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
@@ -18382,7 +18379,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (nset == null) {document.getElementById("ctset").style.display = "inline-block";}\r\n' \
   '        if (xhr_ongoing == 0) {window.stop();}\r\n' \
-  '        xhrt.onload = (e) => {load_tcb(e.target, nset, nlevel, kzoom); if (sto !== false) {Promise.resolve(wgpu_wait[0]).then(() => scroll_to_track(sto, true, b))};};\r\n' \
+  '        xhrt.onload = (e) => {let r = load_tcb(e.target, nset, nlevel, kzoom); if (sto !== false) {Promise.resolve(r).then(() => scroll_to_track(sto, true, b))};};\r\n' \
   '        xhrt.open("GET", "/tiles/switch?" + q);\r\n' \
   '        xhrt.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrt.send();\r\n' \
