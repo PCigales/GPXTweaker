@@ -19503,7 +19503,7 @@ class GPXTweakerWebInterfaceServer():
   '          tn++;\r\n' \
   '          const track_props = tracks_props[t];\r\n' \
   '          tt += isNaN(track_props[0]) ? 0 : round(track_props[0]);\r\n' \
-  '          td += isNaN(track_props[1]) ? 0 : rnd(track_props[1] / 1000, 2);\r\n' \
+  '          td += isNaN(track_props[1]) ? 0 : rnd(track_props[1] / 1000, 3);\r\n' \
   '          te += isNaN(track_props[2]) ? 0 : rnd(track_props[2]);\r\n' \
   '          ta += isNaN(track_props[3]) ? 0 : rnd(track_props[3]);\r\n' \
   '        }\r\n' \
