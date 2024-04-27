@@ -251,6 +251,7 @@ FR_STRINGS = {
     'jhidetracks': 'masquer les traces listées&#13;&#10;+alt: masquer les traces pas listées',
     'jshowtracks': 'afficher les traces listées&#13;&#10;+alt: afficher les traces pas listées',
     'jzoomall': 'recadrer sur toutes les traces cochées et listées&#13;&#10;+alt: recadrer sur toutes les traces cochées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
+    'jtot': 'afficher les données cumulées des traces listées&#13;&#10;+alt: uniquement pour les traces affichées&#13;&#10;+ctrl: les copier dans le presse-papier',
     'jtrackedit': 'éditer la trace',
     'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
@@ -657,6 +658,7 @@ EN_STRINGS = {
     'jhidetracks': 'hide the listed tracks&#13;&#10;+alt: hide the not listed tracks',
     'jshowtracks': 'show the listed tracks&#13;&#10;+alt: show the not listed tracks',
     'jzoomall': 'reframe on all ticked and listed tracks&#13;&#10;+alt: reframe on all ticked tracks&#13;&#10;+shift: reframe on the focused track',
+    'jtot': 'display the cumulative data of the listed tracks&#13;&#10;+alt: only for the displayed tracks&#13;&#10;+ctrl: copy them to the clipboard',
     'jtrackedit': 'edit the track',
     'jtracknew': 'create a new empty track in the first ticked folder',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
@@ -18054,7 +18056,7 @@ class GPXTweakerWebInterfaceServer():
   '        color:rgb(250,220,200);\r\n' \
   '      }\r\n' \
   '      input[id=tracksfilter] {\r\n' \
-  '        max-width:calc(98vw - 78.5em);\r\n' \
+  '        max-width:calc(98vw - 80em);\r\n' \
   '        width:25em;\r\n' \
   '        font-size:70%;\r\n' \
   '      }\r\n' \
@@ -18568,7 +18570,7 @@ class GPXTweakerWebInterfaceServer():
   '          const track_props = tracks_props[t];\r\n' \
   '          let dur_c = "--h--mn--s";\r\n' \
   '          if (! isNaN(track_props[0])) {\r\n' \
-  '            const dur = Math.round(track_props[0]);\r\n' \
+  '            const dur = round(track_props[0]);\r\n' \
   '            const dur_s = dur % 60;\r\n' \
   '            const dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '            const dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
@@ -19489,6 +19491,28 @@ class GPXTweakerWebInterfaceServer():
   '         folders[f].checked = tick;\r\n' \
   '       }\r\n' \
   '       folders_select();\r\n' \
+  '      }\r\n' \
+  '      function tracks_tot(d=false, c=false) {\r\n' \
+  '        const nbtracks = tracks_pts.length;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        const rnd = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d));\r\n' \
+  '        let tn = 0, tt = 0, td = 0, te = 0, ta = 0;\r\n' \
+  '        for (let t=0; t<nbtracks; t++) {\r\n' \
+  '          if (tracks_filts[t].includes(false) || (d && ! document.getElementById("track" + t.toString() + "visible").checked)) {continue;}\r\n' \
+  '          tn++;\r\n' \
+  '          const track_props = tracks_props[t];\r\n' \
+  '          tt += isNaN(track_props[0]) ? 0 : round(track_props[0]);\r\n' \
+  '          td += isNaN(track_props[1]) ? 0 : rnd(track_props[1] / 1000, 2);\r\n' \
+  '          te += isNaN(track_props[2]) ? 0 : rnd(track_props[2]);\r\n' \
+  '          ta += isNaN(track_props[3]) ? 0 : rnd(track_props[3]);\r\n' \
+  '        }\r\n' \
+  '        const tt_s = tt % 60;\r\n' \
+  '        const tt_m = ((tt - tt_s) / 60) % 60;\r\n' \
+  '        const tt_h = (tt - tt_m * 60 - tt_s) / 3600;\r\n' \
+  '        let msg = ("{#jtracks#}: " + tn.toString() + ", {#jsortduration#}: " + tt_h.toString() + "h" + tt_m.toString().padStart(2, "0") + "mn" + tt_s.toString().padStart(2, "0") + "s, {#jsortdistance#}: " + td.toFixed(2) + "km, {#jsortelegain#}: " + te.toFixed(0) + "m, {#jsortaltgain#}: " + ta.toFixed(0) + "m").toLowerCase();\r\n' \
+  '        show_msg(msg, 10);\r\n' \
+  '        if (c) {navigator.clipboard.writeText(msg);}\r\n' \
   '      }\r\n' \
   '      function tracks_smooth() {\r\n' \
   '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
@@ -20622,7 +20646,7 @@ class GPXTweakerWebInterfaceServer():
   '              <datalist id="tracksfilterhistory"></datalist>\r\n' \
   '            </form>\r\n' \
   '            <button id="cfbutton" style="position:relative;font-size:80%;" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?fence(cfilter_reset):(event.shiftKey?fence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '            <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');fence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button></span>\r\n' \
+  '            <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');fence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="fence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="fence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
   '            <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?fence(download_tracklist,event.altKey):(event.ctrlKey?fence(download_graph):fence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="fence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():fence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?fence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '            <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
   '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
