@@ -15735,25 +15735,19 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          function gen_mipmap() {\r\n' \
-  '            const rbmipmap = [];\r\n' \
-  '            for (let l=0; l< mlevels - 1; l++) {\r\n' \
-  '              const bgmipmap = device.createBindGroup({layout: bglmipmap, entries: [{binding: 0, resource: image_sampler,}, {binding: 1, resource: map_texture.createView({baseMipLevel: l, mipLevelCount: 1}),}]});\r\n' \
-  '              const bencoder = device.createRenderBundleEncoder({colorFormats: [map_texture.format]});\r\n' \
-  '              bencoder.setPipeline(pmipmap);\r\n' \
-  '              bencoder.setBindGroup(0, bgmipmap);\r\n' \
-  '              bencoder.draw(3);\r\n' \
-  '              rbmipmap.push(bencoder.finish());\r\n' \
-  '            }\r\n' \
   '            const encoder = device.createCommandEncoder();\r\n' \
   '            for (let l=0; l<mlevels-1; l++) {\r\n' \
   '              const rpdmipmap = {colorAttachments: [{view: map_texture.createView({baseMipLevel: l + 1, mipLevelCount: 1}), clearValue: [0.0, 0.0, 0.0, 0.0], loadOp: "clear", storeOp: "store"}]};\r\n' \
+  '              const bgmipmap = device.createBindGroup({layout: bglmipmap, entries: [{binding: 0, resource: image_sampler,}, {binding: 1, resource: map_texture.createView({baseMipLevel: l, mipLevelCount: 1}),}]});\r\n' \
   '              const pass = encoder.beginRenderPass(rpdmipmap);\r\n' \
-  '              pass.executeBundles([rbmipmap[l]]);\r\n' \
+  '              pass.setPipeline(pmipmap);\r\n' \
+  '              pass.setBindGroup(0, bgmipmap);\r\n' \
+  '              pass.draw(3);\r\n' \
   '              pass.end();\r\n' \
   '            }\r\n' \
   '            const commands = encoder.finish();\r\n' \
   '            device.queue.submit([commands]);\r\n' \
-  '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "Carte"; r_map.disabled = false;});\r\n' \
+  '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "{#jtexturemap#}"; r_map.disabled = false;});\r\n' \
   '          }\r\n' \
   '          yield {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
   '          setTimeout(add_row_tile, 1);\r\n' \
@@ -19833,6 +19827,8 @@ class GPXTweakerWebInterfaceServer():
   '      function error_mcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (document.getElementById("mediapreview").style.display != "none") {switch_mediapreview();}\r\n' \
+  '        document.getElementById("switchmedia").disabled = false;\r\n' \
+  '        document.getElementById("switchmedia").style.pointerEvents = "";\r\n' \
   '        return false;\r\n' \
   '      }\r\n' \
   '      function load_mcb(t) {\r\n' \
