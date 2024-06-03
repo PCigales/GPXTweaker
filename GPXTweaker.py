@@ -2615,20 +2615,21 @@ class BaseMap(WGS84WebMercator):
               break
         if matrixset:
           break
-      elif ms != infos['matrixset']:
-        for node in content.childNodes:
-          if node.localName == 'TileMatrixSet':
-            for c_node in node.childNodes:
-              if c_node.localName == 'Identifier':
-                if _XMLGetNodeText(c_node) == infos['matrixset']:
-                  matrixset = node
-                break
-          if matrixset:
-            break
+      else:
+        if ms != infos['matrixset']:
+          for node in content.childNodes:
+            if node.localName == 'TileMatrixSet':
+              for c_node in node.childNodes:
+                if c_node.localName == 'Identifier':
+                  if _XMLGetNodeText(c_node) == infos['matrixset']:
+                    matrixset = node
+                  break
+            if matrixset:
+              break
+          else:
+            return False
         else:
           return False
-      else:
-        return False
       if hasattr(self, 'Legend'):
         try:
           self.Legend.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth, extra_headers, cap)
