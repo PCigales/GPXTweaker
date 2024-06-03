@@ -2570,7 +2570,7 @@ class BaseMap(WGS84WebMercator):
               break
         if layer:
           break
-      if not layer:
+      else:
         return False
       style = None
       for node in layer.getElementsByTagNameNS('*', 'Style'):
@@ -2578,22 +2578,33 @@ class BaseMap(WGS84WebMercator):
           if c_node.localName == 'Identifier':
             if _XMLGetNodeText(c_node) == infos['style']:
               style = node
-            break
-          if style:
-            break
-      if not style:
+              break
+        if style:
+          break
+      else:
         return False
       matrixset = None
+      ms = infos['matrixset']
       for node in layer.getElementsByTagNameNS('*', 'TileMatrixSetLink'):
         for c_node in node.childNodes:
           if c_node.localName == 'TileMatrixSet':
-            if _XMLGetNodeText(c_node) == infos['matrixset']:
+            if _XMLGetNodeText(c_node) == ms:
               matrixset = node
-            break
+              break
+        if matrixset:
+          break
+      else:
+        for node in layer.getElementsByTagNameNS('*', 'TileMatrixSetLink'):
+          for c_node in node.childNodes:
+            if c_node.localName == 'TileMatrixSet':
+              if _XMLGetNodeText(c_node).startswith(infos['matrixset']):
+                ms = _XMLGetNodeText(c_node)
+                matrixset = node
+                break
           if matrixset:
             break
-      if not matrixset:
-        return False
+        else:
+          return False
       matrixset = None
       for node in content.childNodes:
         if node.localName == 'TileMatrixSet':
@@ -2601,11 +2612,21 @@ class BaseMap(WGS84WebMercator):
             if c_node.localName == 'Identifier':
               if _XMLGetNodeText(c_node) == infos['matrixset']:
                 matrixset = node
-              break
+                break
         if matrixset:
           break
-      if not matrixset:
-        return False
+      else:
+        for node in content.childNodes:
+          if node.localName == 'TileMatrixSet':
+            for c_node in node.childNodes:
+              if c_node.localName == 'Identifier':
+                if _XMLGetNodeText(c_node) == ms:
+                  matrixset = node
+                  break
+          if matrixset:
+            break
+        else:
+          return False
       if hasattr(self, 'Legend'):
         try:
           self.Legend.GetTilesLegendInfos(infos, key, referer, user_agent, basic_auth, extra_headers, cap)
