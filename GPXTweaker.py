@@ -2572,17 +2572,18 @@ class BaseMap(WGS84WebMercator):
           break
       else:
         return False
-      style = None
-      for node in layer.getElementsByTagNameNS('*', 'Style'):
-        for c_node in node.childNodes:
-          if c_node.localName == 'Identifier':
-            if _XMLGetNodeText(c_node) == infos['style']:
-              style = node
+      if infos['style']:
+        style = None
+        for node in layer.getElementsByTagNameNS('*', 'Style'):
+          for c_node in node.childNodes:
+            if c_node.localName == 'Identifier':
+              if _XMLGetNodeText(c_node) == infos['style']:
+                style = node
+              break
+          if style:
             break
-        if style:
-          break
-      else:
-        return False
+        else:
+          return False
       matrixset = None
       ms = infos['matrixset']
       for node in layer.getElementsByTagNameNS('*', 'TileMatrixSetLink'):
@@ -5097,6 +5098,9 @@ class MapLegend():
         return []
       style = None
       for node in layer.getElementsByTagNameNS('*', 'Style'):
+        if not infos['style'] and node.nodeType == minidom.Node.ELEMENT_NODE and node.getAttribute('isDefault') == 'true':
+          style = node
+          break
         for c_node in node.childNodes:
           if c_node.localName == 'Identifier':
             if _XMLGetNodeText(c_node) == infos['style']:
@@ -5106,7 +5110,7 @@ class MapLegend():
           break
       if not style:
         return []
-      for node in layer.getElementsByTagNameNS('*', 'LegendURL'):
+      for node in style.getElementsByTagNameNS('*', 'LegendURL'):
         format = node.getAttribute('format')
         url = node.getAttribute('xlink:href')
         try:
