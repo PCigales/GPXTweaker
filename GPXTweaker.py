@@ -22834,8 +22834,8 @@ class GPXTweakerWebInterfaceServer():
           pass
       return False
     for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
-        webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
-        webserver_thread.start()
+      webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
+      webserver_thread.start()
     return True
 
   def shutdown(self):
