@@ -6828,9 +6828,9 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
   allow_reuse_address = True
   block_on_close = False
 
-  def __init__(self, server_address, *args, **kwargs):
-    self.address_family, server_address = socket.getaddrinfo(*server_address, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE)[0][::4]
-    super().__init__(server_address, *args, **kwargs)
+  def __init__(self, server_info, port, *args, **kwargs):
+    self.address_family, server_address = server_info[::4]
+    super().__init__((server_address[0], port, *server_address[2:]), *args, **kwargs)
 
   def server_bind(self):
     try:
@@ -22336,20 +22336,20 @@ class GPXTweakerWebInterfaceServer():
         self.HTMLExp = ''
       if launch is not None:
         try:
-          add = socket.getaddrinfo(socket.gethostbyaddr(self.Ip)[2][0], 0, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE)[0]
+          add = socket.getaddrinfo(self.Ip, 0, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE)[0]
           if int.from_bytes(socket.inet_pton(add[0], add[4][0]), byteorder='big'):
-            add = ('%s]' % self.Ip.split('%')[0].rstrip(']')) if ':' in self.Ip else self.Ip
+            self.Addr = ('%s]' % self.Ip.split('%')[0].rstrip(']')) if ':' in self.Ip else self.Ip
           else:
-            add = '[::1]' if add[0] == socket.AF_INET6 else '127.0.0.1'
-          self.Addr = 'http://%s:%s' % (add, self.Ports[0])
-          add = '%s/GPX%s.html' % (self.Addr, ('Tweaker' if uri is not None else 'Explorer'))
-          if not self.run():
+            self.Addr = '[::1]' if add[0] == socket.AF_INET6 else '127.0.0.1'
+          self.Addr = 'http://%s:%s' % (self.Addr, self.Ports[0])
+          if not self.run(add):
             raise
         except:
           self.HTML = self.HTMLExp = None
           self.log(0, 'berror')
           return None
         print('')
+        add = '%s/GPX%s.html' % (self.Addr, ('Tweaker' if uri is not None else 'Explorer'))
         try:
           if launch is not False:
             if launch is True:
@@ -22804,7 +22804,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _start_webserver(self, ind):
     try:
-      with ThreadedDualStackServer((self.Ip, self.GPXTweakerInterfaceServerInstances[ind]), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
+      with self.GPXTweakerInterfaceServerInstances[ind]:
         self.GPXTweakerInterfaceServerInstances[ind].Interface = self
         self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
     except:
@@ -22816,16 +22816,26 @@ class GPXTweakerWebInterfaceServer():
     except:
       pass
 
-  def run(self):
+  def run(self, server_info):
     try:
       if not (self.EditMode() if self.Uri is not None else self.ExploreMode()):
         return False
     except:
       return False
     self.log(0, 'start')
+    try:
+      for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
+        self.GPXTweakerInterfaceServerInstances[ind] = ThreadedDualStackServer(server_info, self.GPXTweakerInterfaceServerInstances[ind], GPXTweakerRequestHandler)
+    except:
+      for ind in range(ind):
+        try:
+          self.GPXTweakerInterfaceServerInstances[ind].socket.close()
+        except:
+          pass
+      return False
     for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
-      webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
-      webserver_thread.start()
+        webserver_thread = threading.Thread(target=self._start_webserver, args=(ind,))
+        webserver_thread.start()
     return True
 
   def shutdown(self):
