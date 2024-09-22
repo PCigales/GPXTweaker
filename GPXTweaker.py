@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.3 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.18.4 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -970,11 +970,11 @@ class HTTPExplodedMessage():
               continue
             if cd is None and can.lower() == 'domain' and cav:
               cav = cav.lstrip('.').lower()
-              if (domain != cav) if dom_ip else (not domain[-len(cav) - 1 :] in (cav, '.' + cav)):
+              if (domain != cav) if dom_ip else (domain[-len(cav) - 1 :] not in (cav, '.' + cav)):
                 raise
               cd = (cav, True)
             if cp is None and can.lower() == 'path':
-              if not path[: len(cav) + (1 if cav[-1:] != '/' else 0)] in (cav, cav + '/'):
+              if path[: len(cav) + (1 if cav[-1:] != '/' else 0)] not in (cav, cav + '/'):
                 raise
               cp = cav
           if cd is None:
@@ -1020,7 +1020,7 @@ class HTTPMessage():
         header_name = header_name.strip().title()
         if header_name:
           header_value = header_value.strip()
-          if not header_name in ('Content-Length', 'Location', 'Host') and http_message.headers.get(header_name):
+          if header_name not in ('Content-Length', 'Location', 'Host') and http_message.headers.get(header_name):
             if header_value:
               http_message.headers[header_name] += ('\n' if header_name in ('Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate') else ', ') + header_value
           else:
@@ -1130,7 +1130,7 @@ class HTTPMessage():
     if decompress and body_len != 0:
       hce = [e for h in (http_message.header('Content-Encoding', ''), http_message.header('Transfer-Encoding', '')) for e in map(str.strip, h.lower().split(',')) if not e in ('chunked', '', 'identity')]
       for ce in hce:
-        if not ce in ('deflate', 'gzip'):
+        if ce not in ('deflate', 'gzip'):
           if http_message.method is not None and iss:
             try:
               message.sendall(('HTTP/1.1 415 Unsupported media type\r\nContent-Length: 0\r\nDate: %s\r\nCache-Control: no-cache, no-store, must-revalidate\r\n\r\n' % email.utils.formatdate(time.time(), usegmt=True)).encode('ISO-8859-1'))
@@ -1343,10 +1343,10 @@ class HTTPBaseRequest():
       headers = {k: v for k, v in hitems if not k.lower() in ('host', 'content-length', 'connection', 'expect')}
       if hexp:
         headers['Expect'] = '100-continue'
-      if not 'accept-encoding' in (k.lower() for k, v in hitems):
+      if 'accept-encoding' not in (k.lower() for k, v in hitems):
         headers['Accept-Encoding'] = 'identity, deflate, gzip' if decompress else 'identity'
       if data is not None:
-        if not 'chunked' in (e.strip() for k, v in hitems if k.lower() == 'transfer-encoding' for e in v.lower().split(',')):
+        if 'chunked' not in (e.strip() for k, v in hitems if k.lower() == 'transfer-encoding' for e in v.lower().split(',')):
           headers['Content-Length'] = str(len(data))
       headers['Connection'] = 'close' if hccl else 'keep-alive'
       hauth = headers.get('Authorization')
@@ -1365,7 +1365,7 @@ class HTTPBaseRequest():
           path = path.rstrip('/') if (path != '/' and path[:1] == '/') else '/'
           for k, v in cook.items():
             if ((domain[-len(k[0][0]) - 1 :] in (k[0][0], '.' + k[0][0])) if (k[0][1] and not dom_ip) else (domain == k[0][0])) and path[: len(k[1]) + (1 if k[1][-1:] != '/' else 0)] in (k[1], k[1] + '/'):
-              if (not k[2] in ck) or (len(k[0][0]) > len(ck[k[2]][1]) or (len(k[0][0]) == len(ck[k[2]][1]) and len(k[1]) >= len(ck[k[2]][2]))):
+              if (k[2] not in ck) or (len(k[0][0]) > len(ck[k[2]][1]) or (len(k[0][0]) == len(ck[k[2]][1]) and len(k[1]) >= len(ck[k[2]][2]))):
                 ck[k[2]] = (v, k[0][0], k[1])
         path = cls.connect(url, url_p, headers, max_length, max_hlength, timeout, pconnection)
         try:
@@ -1619,7 +1619,7 @@ class NestedSSLContext(ssl.SSLContext):
     return new_callable
 
   def __getattribute__(self, name):
-    if not name in NestedSSLContext.__dict__ and type(object.__getattribute__(self, name)) in (types.BuiltinMethodType, types.MethodType):
+    if name not in NestedSSLContext.__dict__ and type(object.__getattribute__(self, name)) in (types.BuiltinMethodType, types.MethodType):
       return self.wrap_callable(name)
     else:
       return object.__getattribute__(self, name)
@@ -1677,7 +1677,7 @@ def gen_HTTPRequest(proxy=None):
             else:
               psock = cls.SSLContext.wrap_socket(socket.create_connection(cls.PROXY, timeout=timeout), server_side=False, server_hostname=cls.PROXY[0])
             psock.sendall(('CONNECT %s:%s HTTP/1.1\r\nHost: %s:%s\r\n%s\r\n' % (*(cls._netloc_split(url_p.netloc, '443') * 2), ('Proxy-Authorization: %s\r\n' % cls.PROXY_AUTH) if cls.PROXY_AUTH else '')).encode('iso-8859-1'))
-            if not HTTPMessage(psock, body=False, decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=False).code in ('200', '204'):
+            if HTTPMessage(psock, body=False, decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=False).code not in ('200', '204'):
               raise
             pconnection[0] = cls.SSLContext.wrap_socket(psock, server_side=False, server_hostname=cls._netloc_split(url_p.netloc)[0])
           else:
@@ -6828,6 +6828,10 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
   allow_reuse_address = True
   block_on_close = False
 
+  def __init__(self, server_address, *args, **kwargs):
+    self.address_family, server_address = socket.getaddrinfo(*server_address, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE)[0][::4]
+    super().__init__(server_address, *args, **kwargs)
+
   def server_bind(self):
     try:
       self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
@@ -6853,7 +6857,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Server: GPXTweaker\r\n' \
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       '%s' \
-      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True), 'Access-Control-Allow-Origin: %s\r\n' % ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])) if e == 404 else '')
+      '\r\n' % (e, {501: 'Not Implemented', 404: 'Not found', 412: 'Precondition failed', 422: 'Unprocessable entity', 416: 'Range not satisfiable'}.get(e, 'Not found'), email.utils.formatdate(time.time(), usegmt=True), 'Access-Control-Allow-Origin: %s\r\n' % self.server.Interface.Addr if e == 404 else '')
       try:
         self.request.sendall(resp_e.encode('ISO-8859-1'))
         if e != 501:
@@ -6879,7 +6883,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Cache-Control: no-cache, no-store, must-revalidate\r\n' \
       '%s' \
       'Access-Control-Allow-Origin: %s\r\n' \
-      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s is not None else '', 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]))
+      '\r\n' % (email.utils.formatdate(time.time(), usegmt=True), 'Accept-Ranges: bytes\r\n' if s is not None else '', self.server.Interface.Addr)
       try:
         if req.method == 'GET' or req.method == 'POST':
           self.request.sendall(resp_200.replace('##type##', btype).replace('##len##', str(s or len(resp_body))).encode('ISO-8859-1') + resp_body)
@@ -6929,7 +6933,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
       'Access-Control-Allow-Origin: %s\r\n' \
       'Accept-Ranges: bytes\r\n' \
       'Content-Range: bytes %d-%d/%d\r\n' \
-      '\r\n' % (re - rs, email.utils.formatdate(time.time(), usegmt=True), 'http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0]), rs, re - 1, s)
+      '\r\n' % (re - rs, email.utils.formatdate(time.time(), usegmt=True), self.server.Interface.Addr, rs, re - 1, s)
       try:
         if req.method == 'GET' or req.method == 'POST':
           self.request.sendall(resp_206.replace('##type##', btype).encode('ISO-8859-1') + resp_body)
@@ -7186,7 +7190,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   raise
               elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
                 raise
-              resp_body = (self.server.Interface.Map.JSONTiles.Style(tid) or b'').replace(b'{netloc}', ('http://%s:%s' % (self.server.Interface.Ip, self.server.Interface.Ports[0])).encode('utf-8'))
+              resp_body = (self.server.Interface.Map.JSONTiles.Style(tid) or b'').replace(b'{netloc}', self.server.Interface.Addr.encode('utf-8'))
               if resp_body:
                 _send_resp('application/json; charset=utf-8')
               else:
@@ -7459,8 +7463,8 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                       req_end = min(int(req_end) + 1, msize)
                     else:
                       req_end = msize
-                    if req_start < 0 or req_start >= req_end:
-                      raise
+                  if req_start < 0 or req_start >= req_end:
+                    raise
                 except:
                   _send_err_rns()
                   continue
@@ -21336,7 +21340,7 @@ class GPXTweakerWebInterfaceServer():
       if hcur == 'global':
         if scur == 'interfaceserver':
           if field == 'ip':
-            self.Ip = value or self.Ip
+            self.Ip = (('[%s]' % value.strip('[]')) if ':' in value else value) or self.Ip
           elif field == 'port':
             if value:
               if '-' in value:
@@ -21909,6 +21913,7 @@ class GPXTweakerWebInterfaceServer():
     self.SessionId = None
     self.PSessionId = None
     self.Ip = '127.0.0.1'
+    self.Addr = '127.0.0.1:8000'
     self.Ports = (8000, 8000)
     self.Proxy = {'ip': '', 'port': 8080, 'auth': '', 'secure': False}
     self.JSONTiles = False
@@ -22330,11 +22335,20 @@ class GPXTweakerWebInterfaceServer():
       else:
         self.HTMLExp = ''
       if launch is not None:
-        if not self.run():
+        try:
+          add = socket.getaddrinfo(socket.gethostbyaddr(self.Ip)[2][0], 0, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE)[0]
+          if int.from_bytes(socket.inet_pton(add[0], add[4][0]), byteorder='big'):
+            add = ('%s]' % self.Ip.split('%')[0].rstrip(']')) if ':' in self.Ip else self.Ip
+          else:
+            add = '[::1]' if add[0] == socket.AF_INET6 else '127.0.0.1'
+          self.Addr = 'http://%s:%s' % (add, self.Ports[0])
+          add = '%s/GPX%s.html' % (self.Addr, ('Tweaker' if uri is not None else 'Explorer'))
+          if not self.run():
+            raise
+        except:
           self.HTML = self.HTMLExp = None
           self.log(0, 'berror')
           return None
-        add = 'http://%s:%s/GPX%s.html' % (self.Ip, self.Ports[0], ('Tweaker' if uri is not None else 'Explorer'))
         print('')
         try:
           if launch is not False:
@@ -22789,9 +22803,12 @@ class GPXTweakerWebInterfaceServer():
       return False
 
   def _start_webserver(self, ind):
-    with ThreadedDualStackServer((self.Ip, self.GPXTweakerInterfaceServerInstances[ind]), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
-      self.GPXTweakerInterfaceServerInstances[ind].Interface = self
-      self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
+    try:
+      with ThreadedDualStackServer((self.Ip, self.GPXTweakerInterfaceServerInstances[ind]), GPXTweakerRequestHandler) as self.GPXTweakerInterfaceServerInstances[ind]:
+        self.GPXTweakerInterfaceServerInstances[ind].Interface = self
+        self.GPXTweakerInterfaceServerInstances[ind].serve_forever()
+    except:
+      pass
 
   def _stop_webserver(self, ind):
     try:
@@ -22839,7 +22856,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.18.3 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.18.4 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
