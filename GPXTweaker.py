@@ -14017,27 +14017,27 @@ class GPXTweakerWebInterfaceServer():
   '        for (let p=0; p<spans.length; p++) {\r\n' \
   '          let pt = spans[p].id.slice(0, -5);\r\n' \
   '          if (document.getElementById(pt).checked && document.getElementById(pt).value != "error") {\r\n' \
-  '            body = body + pt.substring(8);\r\n' \
+  '            body += pt.substring(8);\r\n' \
   '            if (document.getElementById(pt).value == "edited") {\r\n' \
-  '              body = body + "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value) + "&" + encodeURIComponent(document.getElementById(pt + "name").value);\r\n' \
+  '              body += "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value) + "&" + encodeURIComponent(document.getElementById(pt + "name").value);\r\n' \
   '            }\r\n' \
-  '            body = body + "\\r\\n";\r\n' \
+  '            body += "\\r\\n";\r\n' \
   '           }\r\n' \
   '        }\r\n' \
-  '        body = body + "=\\r\\n";\r\n' \
+  '        body += "=\\r\\n";\r\n' \
   '        let segments = document.getElementById("pointsform").children;\r\n' \
   '        for (let s=0; s<segments.length; s++) {\r\n' \
   '          if (! segments[s].firstElementChild.checked) {continue;}\r\n' \
-  '          body = body + "-\\r\\n";\r\n' \
+  '          body += "-\\r\\n";\r\n' \
   '          spans = segments[s].getElementsByTagName("span");\r\n' \
   '          for (let p=0; p<spans.length; p++) {\r\n' \
   '            let pt = spans[p].id.slice(0, -5);\r\n' \
   '            if (document.getElementById(pt).checked && document.getElementById(pt).value != "error") {\r\n' \
-  '              body = body + pt.substring(5);\r\n' \
+  '              body += pt.substring(5);\r\n' \
   '              if (document.getElementById(pt).value == "edited") {\r\n' \
-  '                body = body + "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + document.getElementById(pt + "alt").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value);\r\n' \
+  '                body += "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + document.getElementById(pt + "alt").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value);\r\n' \
   '              }\r\n' \
-  '              body = body + "\\r\\n";\r\n' \
+  '              body += "\\r\\n";\r\n' \
   '             }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
