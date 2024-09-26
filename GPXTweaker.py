@@ -3344,12 +3344,28 @@ class WebMercatorMap(BaseMap):
 
   @staticmethod
   def run_jpegtran(i1, i2, cmd):
-    kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
     DWORD = ctypes.wintypes.DWORD
+    LPDWORD = ctypes.wintypes.LPDWORD
     HANDLE = ctypes.wintypes.HANDLE
     PVOID = ctypes.c_void_p
     LPVOID = ctypes.wintypes.LPVOID
     LPCWSTR = ctypes.wintypes.LPCWSTR
+    BOOL = ctypes.wintypes.BOOL
+    kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
+    kernel32.CreateNamedPipeW.restype = HANDLE
+    kernel32.CreateNamedPipeW.argtypes = (LPCWSTR, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, LPVOID)
+    kernel32.ConnectNamedPipe.restype = BOOL
+    kernel32.ConnectNamedPipe.argtypes = (HANDLE, LPVOID)
+    kernel32.ReadFile.restype = BOOL
+    kernel32.ReadFile.argtypes = (HANDLE, LPVOID, DWORD, LPDWORD, LPVOID)
+    kernel32.WriteFile.restype = BOOL
+    kernel32.WriteFile.argtypes = (HANDLE, LPVOID, DWORD, LPDWORD, LPVOID)
+    kernel32.FlushFileBuffers.restype = BOOL
+    kernel32.FlushFileBuffers.argtypes = (HANDLE,)
+    kernel32.CloseHandle.restype = BOOL
+    kernel32.CloseHandle.argtypes = (HANDLE,)
+    kernel32.CreateFileW.restype = HANDLE
+    kernel32.CreateFileW.argtypes = (LPCWSTR, DWORD, DWORD, PVOID, DWORD, DWORD, HANDLE)
     path = os.path.dirname(os.path.abspath(__file__))
     r = True
     w = True
@@ -3359,12 +3375,12 @@ class WebMercatorMap(BaseMap):
       nonlocal r
       nonlocal o
       try:
-        kernel32.ConnectNamedPipe(p, LPVOID(0))
+        kernel32.ConnectNamedPipe(p, None)
         if not r:
           return
         b = ctypes.create_string_buffer(0x100000)
         while True:
-          if not kernel32.ReadFile(p, ctypes.cast(b, PVOID), DWORD(len(b)), ctypes.byref(nr), LPVOID(0)):
+          if not kernel32.ReadFile(p, b, len(b), ctypes.byref(nr), None):
             r = false
           elif nr.value > 0:
             o = o + b.raw[:nr.value]
@@ -3381,10 +3397,10 @@ class WebMercatorMap(BaseMap):
       nw = DWORD()
       nonlocal w
       try:
-        kernel32.ConnectNamedPipe(p, LPVOID(0))
+        kernel32.ConnectNamedPipe(p, None)
         if not w:
           return
-        if not kernel32.WriteFile(p, ctypes.cast(i, PVOID), DWORD(len(i)), ctypes.byref(nw), LPVOID(0)):
+        if not kernel32.WriteFile(p, ctypes.cast(i, PVOID), len(i), ctypes.byref(nw), None):
           w = False
         else:
           kernel32.FlushFileBuffers(p)
@@ -3397,10 +3413,10 @@ class WebMercatorMap(BaseMap):
           pass
     try:
       name = 'GPXTweaker' + base64.b32encode(os.urandom(10)).decode('utf-8')
-      pipe_w1 = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\write1_' + name), DWORD(0x00000002), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
+      pipe_w1 = kernel32.CreateNamedPipeW(r'\\.\pipe\write1_' + name, 0x00000002, 0, 1, 0x100000, 0x100000, 0, None)
       if i2:
-        pipe_w2 = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\write2_' + name), DWORD(0x00000002), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
-      pipe_r = HANDLE(kernel32.CreateNamedPipeW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x00000001), DWORD(0), DWORD(1), DWORD(0x100000), DWORD(0x100000), DWORD(0), HANDLE(0)))
+        pipe_w2 = kernel32.CreateNamedPipeW(r'\\.\pipe\write2_' + name, 0x00000002, 0, 1, 0x100000, 0x100000, 0, None)
+      pipe_r = kernel32.CreateNamedPipeW(r'\\.\pipe\read_' + name, 0x00000001, 0, 1, 0x100000, 0x100000, 0, None)
     except:
       return None
     tr = threading.Thread(target=pipe_read, args=(pipe_r,), daemon=False)
@@ -3424,14 +3440,14 @@ class WebMercatorMap(BaseMap):
     r = False
     w = False
     if tr.is_alive():
-      h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\read_' + name), DWORD(0x40000000), DWORD(0), PVOID(0), DWORD(2), DWORD(0x00000000), HANDLE(0)))
+      h = kernel32.CreateFileW(r'\\.\pipe\read_' + name, 0x40000000, 0, None, 2, 0, None)
       kernel32.CloseHandle(h)
     if tw1.is_alive():
-      h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\write1_' + name), DWORD(0x80000000), DWORD(0), PVOID(0), DWORD(4), DWORD(0x00000000), HANDLE(0)))
+      h = kernel32.CreateFileW(r'\\.\pipe\write1_' + name, 0x80000000, 0, None, 4, 0, None)
       kernel32.CloseHandle(h)
     if i2:
       if tw2.is_alive():
-        h = HANDLE(kernel32.CreateFileW(LPCWSTR(r'\\.\pipe\write2_' + name), DWORD(0x80000000), DWORD(0), PVOID(0), DWORD(4), DWORD(0x00000000), HANDLE(0)))
+        h = kernel32.CreateFileW(r'\\.\pipe\write2_' + name, 0x80000000, 0, None, 4, 0, None)
         kernel32.CloseHandle(h)
     tr.join()
     if not o:
@@ -3771,26 +3787,28 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
     if cls.kernel32 is None:
       cls.kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
       cls.GlobalAlloc = cls.kernel32.GlobalAlloc
+      cls.GlobalAlloc.restype = ctypes.wintypes.HGLOBAL
       cls.GlobalAlloc.argtypes = ctypes.wintypes.UINT, ctypes.c_ssize_t
-      cls.GlobalAlloc.restype = ctypes.wintypes.HANDLE
       cls.GlobalLock = cls.kernel32.GlobalLock
-      cls.GlobalLock.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalLock.restype = ctypes.wintypes.LPVOID
+      cls.GlobalLock.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalUnlock = cls.kernel32.GlobalUnlock
+      cls.GlobalUnlock.restype = ctypes.wintypes.BOOL
       cls.GlobalUnlock.argtypes = ctypes.wintypes.HGLOBAL,
-      cls.GlobalUnlock.restype = ctypes.wintypes.LPVOID
       cls.GlobalSize = cls.kernel32.GlobalSize
-      cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL,
       cls.GlobalSize.restype = ctypes.c_ssize_t
+      cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL,
       cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
-      cls.Release = ctypes.WINFUNCTYPE(ctypes.c_ulong)(2, 'Release')
+      cls.Release = ctypes.WINFUNCTYPE(ctypes.wintypes.ULONG)(2, 'Release')
       cls.CreateStreamOnHGlobal = cls.ole32.CreateStreamOnHGlobal
-      cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.wintypes.BOOL, ctypes.c_void_p
+      cls.CreateStreamOnHGlobal.restype = ctypes.wintypes.ULONG
+      cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.wintypes.BOOL, ctypes.wintypes.LPVOID
       cls.GetHGlobalFromStream = cls.ole32.GetHGlobalFromStream
-      cls.GetHGlobalFromStream.argtypes = ctypes.c_void_p, ctypes.POINTER(ctypes.wintypes.HGLOBAL)
+      cls.GetHGlobalFromStream.restype = ctypes.wintypes.ULONG
+      cls.GetHGlobalFromStream.argtypes = ctypes.wintypes.LPVOID, ctypes.POINTER(ctypes.wintypes.HGLOBAL)
       cls.gdiplus = ctypes.WinDLL('gdiplus',  use_last_error=True)
       cls.gdiplus_token = ctypes.wintypes.ULONG()
-      cls.gdiplus.GdiplusStartup(ctypes.byref(cls.gdiplus_token), ctypes.c_char_p(ctypes.string_at(ctypes.addressof(ctypes.c_uint(1)),ctypes.sizeof(ctypes.c_uint)) + b'\x00' * 24), None)
+      cls.gdiplus.GdiplusStartup(ctypes.byref(cls.gdiplus_token), ctypes.c_char_p(ctypes.string_at(ctypes.addressof(ctypes.c_uint(1)), ctypes.sizeof(ctypes.c_uint)) + b'\x00' * 24), None)
       cls.png_clsid = struct.pack('@LHH8B', *struct.unpack('>LHH8B', int('557CF406-1A04-11D3-9A73-0000F81EF32E'.replace('-', ''), 16).to_bytes(16, 'big')))
     try:
       i = ctypes.c_void_p()
@@ -22816,7 +22834,7 @@ class GPXTweakerWebInterfaceServer():
     except:
       pass
 
-  def run(self, server_info):
+  def run(self, server_info=None):
     try:
       if not (self.EditMode() if self.Uri is not None else self.ExploreMode()):
         return False
@@ -22824,6 +22842,8 @@ class GPXTweakerWebInterfaceServer():
       return False
     self.log(0, 'start')
     try:
+      if server_info is None:
+        server_info = socket.getaddrinfo(self.Ip, 0, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE)[0]
       for ind in range(len(self.GPXTweakerInterfaceServerInstances)):
         self.GPXTweakerInterfaceServerInstances[ind] = ThreadedDualStackServer(server_info, self.GPXTweakerInterfaceServerInstances[ind], GPXTweakerRequestHandler)
     except:
