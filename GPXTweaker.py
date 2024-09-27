@@ -1660,9 +1660,9 @@ def gen_HTTPRequest(proxy=None):
         return (url_p.path + ('?' + url_p.query if url_p.query else '')).replace(' ', '%20') or '/'
   else:
     class HTTPRequest(HTTPBaseRequest, context_class=NestedSSLContext):
-      PROXY = ('', 8080)
-      PROXY_AUTH = ''
-      PROXY_SECURE = False
+      PROXY = (proxy['ip'], proxy['port'])
+      PROXY_AUTH = ('Basic ' + base64.b64encode(proxy['auth'].encode('utf-8')).decode('utf-8')) if proxy['auth'] else ''
+      PROXY_SECURE = bool(proxy['secure'])
       @classmethod
       def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
         if pconnection[0] is None:
@@ -1693,11 +1693,6 @@ def gen_HTTPRequest(proxy=None):
           else:
             headers.pop('Proxy-Authorization', None)
         return ((url_p.path + ('?' + url_p.query if url_p.query else '')) if url_p.scheme.lower() != 'http' else url).replace(' ', '%20') or '/'
-    HTTPRequest.PROXY = (proxy['ip'], proxy['port'])
-    if proxy['auth']:
-      HTTPRequest.PROXY_AUTH = 'Basic ' + base64.b64encode(proxy['auth'].encode('utf-8')).decode('utf-8')
-    if proxy['secure']:
-      HTTPRequest.PROXY_SECURE = True
 
 
 class WGS84WebMercator():
@@ -3785,30 +3780,36 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
   def convert(self):
     cls = self.__class__
     if cls.kernel32 is None:
+      HGLOBAL = ctypes.wintypes.HGLOBAL
+      UINT = ctypes.wintypes.UINT
+      ULONG = ctypes.wintypes.ULONG
+      LPVOID = ctypes.wintypes.LPVOID
+      BOOL = ctypes.wintypes.BOOL
+      SIZE_T = ctypes.c_ssize_t
       cls.kernel32 = ctypes.WinDLL('kernel32',  use_last_error=True)
       cls.GlobalAlloc = cls.kernel32.GlobalAlloc
-      cls.GlobalAlloc.restype = ctypes.wintypes.HGLOBAL
-      cls.GlobalAlloc.argtypes = ctypes.wintypes.UINT, ctypes.c_ssize_t
+      cls.GlobalAlloc.restype = HGLOBAL
+      cls.GlobalAlloc.argtypes = UINT, SIZE_T
       cls.GlobalLock = cls.kernel32.GlobalLock
-      cls.GlobalLock.restype = ctypes.wintypes.LPVOID
-      cls.GlobalLock.argtypes = ctypes.wintypes.HGLOBAL,
+      cls.GlobalLock.restype = LPVOID
+      cls.GlobalLock.argtypes = HGLOBAL,
       cls.GlobalUnlock = cls.kernel32.GlobalUnlock
-      cls.GlobalUnlock.restype = ctypes.wintypes.BOOL
-      cls.GlobalUnlock.argtypes = ctypes.wintypes.HGLOBAL,
+      cls.GlobalUnlock.restype = BOOL
+      cls.GlobalUnlock.argtypes = HGLOBAL,
       cls.GlobalSize = cls.kernel32.GlobalSize
-      cls.GlobalSize.restype = ctypes.c_ssize_t
-      cls.GlobalSize.argtypes = ctypes.wintypes.HGLOBAL,
+      cls.GlobalSize.restype = SIZE_T
+      cls.GlobalSize.argtypes = HGLOBAL,
       cls.ole32 = ctypes.WinDLL('ole32',  use_last_error=True)
-      cls.Release = ctypes.WINFUNCTYPE(ctypes.wintypes.ULONG)(2, 'Release')
+      cls.Release = ctypes.WINFUNCTYPE(ULONG)(2, 'Release')
       cls.CreateStreamOnHGlobal = cls.ole32.CreateStreamOnHGlobal
-      cls.CreateStreamOnHGlobal.restype = ctypes.wintypes.ULONG
-      cls.CreateStreamOnHGlobal.argtypes = ctypes.wintypes.HGLOBAL, ctypes.wintypes.BOOL, ctypes.wintypes.LPVOID
+      cls.CreateStreamOnHGlobal.restype = ULONG
+      cls.CreateStreamOnHGlobal.argtypes = HGLOBAL, BOOL, LPVOID
       cls.GetHGlobalFromStream = cls.ole32.GetHGlobalFromStream
-      cls.GetHGlobalFromStream.restype = ctypes.wintypes.ULONG
-      cls.GetHGlobalFromStream.argtypes = ctypes.wintypes.LPVOID, ctypes.POINTER(ctypes.wintypes.HGLOBAL)
+      cls.GetHGlobalFromStream.restype = ULONG
+      cls.GetHGlobalFromStream.argtypes = LPVOID, ctypes.POINTER(HGLOBAL)
       cls.gdiplus = ctypes.WinDLL('gdiplus',  use_last_error=True)
-      cls.gdiplus_token = ctypes.wintypes.ULONG()
-      cls.gdiplus.GdiplusStartup(ctypes.byref(cls.gdiplus_token), ctypes.c_char_p(ctypes.string_at(ctypes.addressof(ctypes.c_uint(1)), ctypes.sizeof(ctypes.c_uint)) + b'\x00' * 24), None)
+      cls.gdiplus_token = ULONG()
+      cls.gdiplus.GdiplusStartup(ctypes.byref(cls.gdiplus_token), ctypes.byref(type('GdiplusStartupInput', (ctypes.Structure,), {'_fields_': [('GdiplusVersion', UINT), ('DebugEventCallback', LPVOID), ('SuppressBackgroundThread', BOOL), ('SuppressExternalCodecs', BOOL), ('GdiplusStartupInput', LPVOID)]})(1, None, False, False, None)), None)
       cls.png_clsid = struct.pack('@LHH8B', *struct.unpack('>LHH8B', int('557CF406-1A04-11D3-9A73-0000F81EF32E'.replace('-', ''), 16).to_bytes(16, 'big')))
     try:
       i = ctypes.c_void_p()
