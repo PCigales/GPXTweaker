@@ -1,4 +1,4 @@
-# GPXTweaker v1.18.4 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.19.0 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -175,8 +175,7 @@ FR_STRINGS = {
     'buildexp': 'génération de la page d\'interface de l\'explorateur',
     'bloaded1': '%s trace(s) chargée(s) en %.1fs',
     'bloaded2': '%s trace(s) chargée(s) en %.1fs, %s trace(s) sautée(s), %s trace(s) rejetée(s), %s fichier(s) gpx rejeté(s)',
-    'berror': 'échec de la génération de la page d\'interface',
-    'berror1': 'échec de la génération de la page d\'interface (conversion en WebMercator)',
+    'berror1': 'échec de la génération de la page d\'interface',
     'berror2': 'échec de la génération de la page d\'interface (carte extérieure au cadre)',
     'berror3': 'échec de la génération de la page d\'interface (carte "%s" pas définie)',
     'berror4': 'échec de la génération de la page d\'interface (trace débordant de la vue)',
@@ -215,12 +214,12 @@ FR_STRINGS = {
     'junload': 'Attention, les données seront perdues !',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
-    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début',
-    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessous&#13;&#10;pas de focus: insérer un point de cheminement à la fin',
+    'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début&#13;&#10;+shift: insérer un segment au-dessus',
+    'jinserta': 'focus sur segment: insérer un point en fin de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessous&#13;&#10;pas de focus: insérer un point de cheminement à la fin&#13;&#10;+shift: insérer un segment au-dessous',
     'jpath': 'tracer un chemin vers le point qui a le focus depuis le point précédent',
-    'jelementup': 'focus sur segment: monter l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment courant&#13;&#10;focus sur point de cheminement: monter l\'élément',
-    'jelementdown': 'focus sur segment: descendre l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: déplacer le focus sur le segment suivant&#13;&#10;focus sur point de cheminement: descendre l\'élément',
-    'jsegmentcut': 'focus sur segment: dupliquer le segment&#13;&#10;focus sur point: diviser le segment au-dessus',
+    'jelementup': 'focus sur segment: monter l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point de cheminement: monter l\'élément',
+    'jelementdown': 'focus sur segment: descendre l\'élément (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point de cheminement: descendre l\'élément',
+    'jsegmentcut': 'focus sur segment: dupliquer le segment (annuler pour rétablir l\'horodatage d\'origine)&#13;&#10;focus sur point: diviser le segment au-dessus',
     'jsegmentabsorb': 'fusionner le segment qui a le focus avec le segment suivant',
     'jsegmentreverse': 'focus sur segment / pas de focus: inverser le segment / la trace',
     'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude',
@@ -228,7 +227,7 @@ FR_STRINGS = {
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
     'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace&#13;&#10;+shift: supprimer l\'horodatage',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
-    'jswitchpoints': 'afficher / masquer les marques de point et point de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
+    'jdotsarrows': 'afficher / masquer les marques de point et point de cheminement&#13;&#10;+alt: afficher / masquer les flèches de sens de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
     'j3dviewer': 'ouvrir la visionneuse 3D en mode vue panoramique&#13;&#10;+alt: ouvrir la visionneuse 3D en mode vue subjective&#13;&#10;+ctrl: afficher / masquer les contrôles de la marge autour de la trace',
     'jascending': 'permuter l\'ordre de tri des traces sur croissant',
@@ -287,6 +286,15 @@ FR_STRINGS = {
     'j3dsubjective': 'subject',
     'jopacityreset': 'double-clic pour rétablir la valeur d\'origine\\r\\n+shift: rétablir l\'ensemble des valeurs d\'origine',
     'jfoldersw': 'Répertoires:',
+    'jnavca': 'replier tous les segments',
+    'jnavcc': 'replier le segment courant',
+    'jnavec': 'déplier le segment courant, puis faire défiler jusqu\'à l\'élement qui a le focus',
+    'jnavea': 'déplier tous les segments, puis faire défiler jusqu\'à l\'élement qui a le focus',
+    'jnavsu': 'focus sur segment: déplacer le focus sur le segment précédent&#13;&#10;focus sur point: déplacer le focus sur le segment courant',
+    'jnavsd': 'déplacer le focus sur le segment suivant',
+    'jnavms': 'placer le signet sur l\'élement qui a le focus',
+    'jnavmg': 'déplacer le focus sur l\'élément porteur du signet',
+    'jnavsw': 'agrandir / retrécir le panneau des points de cheminement',
     'jscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+shift: recadrer sur la trace&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)',
     'jhelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer au point de cheminement / point / segment précédent ou suivant&#13;&#10;clic / clic-glisse gauche (+ shift / alt) sur le tracé d\'un point / point de cheminement pour le sélectionner / le déplacer (et effacer / conserver ses données d\'élévation, ou à défaut choisir selon si la distance est supérieure à 25m ou pas)&#13;&#10;ctrl + clic / clic-glisse gauche sur le tracé d\'un point pour le sélectionner / le déplacer et construire un chemin depuis le point précédent jusqu\'à celui-ci&#13;&#10;clic gauche sur le tracé d\'un segment pour le sélectionner&#13;&#10;clic droit sur la carte pour insérer un point après le point qui a le focus ou un point de cheminement sinon&#13;&#10;ctrl + clic droit sur la carte pour insérer un point après le point qui a le focus en mode suivi de chemin&#13;&#10;clic droit sur le tracé d\'un point / point de cheminement / segment pour le supprimer&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpscrollcross': 'centrer sur l\'élément qui a le focus&#13;&#10;+ctrl: alterner entre les modes de défilement automatique de la carte (grisé: pas de défilement, bleu: défilement sur focus, vert: centrage sur focus et défilement sur survol)&#13;&#10;+alt: centrer sur le pointeur',
@@ -328,6 +336,7 @@ FR_STRINGS = {
     'jmredo2': 'Modification de %s point(s) rétablie',
     'jminsert1': 'Point de cheminement inséré',
     'jminsert2': 'Point inséré',
+    'jminsert3': 'Segment inséré',
     'jmpathno': 'Aucun fournisseur d\'itinéraires configuré',
     'jmpath1': 'Récupération de l\'itinéraire en cours...',
     'jmpath2': 'Itinéraire inséré',
@@ -582,8 +591,7 @@ EN_STRINGS = {
     'buildexp': 'generation of the interface page of the explorer',
     'bloaded1': '%s track(s) loaded in %.1fs',
     'bloaded2': '%s track(s) loaded in %.1fs, %s track(s) skipped, %s track(s) rejected, %s gpx file(s) rejected',
-    'berror': 'failure of the generation of the interface page',
-    'berror1': 'failure of the generation of the interface page (conversion into WebMercator)',
+    'berror1': 'failure of the generation of the interface page',
     'berror2': 'failure of the generation of the interface page (map outside frame)',
     'berror3': 'failure of the generation of the interface page (map "%s" not defined)',
     'berror4': 'failure of the generation of the interface page (track overflowing with the view)',
@@ -622,12 +630,12 @@ EN_STRINGS = {
     'junload': 'Warning, the data will be lost !',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
-    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint above&#13;&#10;no focus: insert a waypoint at the start',
-    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint below&#13;&#10;no focus: insert a waypoint at the end',
+    'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint above&#13;&#10;no focus: insert a waypoint at the start&#13;&#10;+shift: insert a segment above',
+    'jinserta': 'focus on segment: insert a point at the end of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint below&#13;&#10;no focus: insert a waypoint at the end&#13;&#10;+shift: insert a segment below',
     'jpath': 'draw a path towards the focused point from the previous point',
-    'jelementup': 'focus on segment: move the element up (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the current segment&#13;&#10;focus on waypoint: move the element up',
-    'jelementdown': 'focus on segment: move the element down (undo to restore the original timestamps)&#13;&#10;focus on point: move the focus to the next segment&#13;&#10;focus on waypoint: move the element down',
-    'jsegmentcut': 'focus on segment: duplicate the segment&#13;&#10;focus on point: split the segment above',
+    'jelementup': 'focus on segment: move the element up (undo to restore the original timestamps)&#13;&#10;focus on waypoint: move the element up',
+    'jelementdown': 'focus on segment: move the element down (undo to restore the original timestamps)&#13;&#10;focus on waypoint: move the element down',
+    'jsegmentcut': 'focus on segment: duplicate the segment (undo to restore the original timestamps)&#13;&#10;focus on point: split the segment above',
     'jsegmentabsorb': 'merge the focused segment with the next segment',
     'jsegmentreverse': 'focus on segment / no focus: reverse the segment / the track',
     'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track&#13;&#10;+alt: from the altitude data',
@@ -635,7 +643,7 @@ EN_STRINGS = {
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
     'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track&#13;&#10;+shift: remove the timestamp(s)',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
-    'jswitchpoints': 'show / hide the marks of point and waypoint&#13;&#10;+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
+    'jdotsarrows': 'show / hide the marks of point and waypoint&#13;&#10;+alt: show / hide the arrows of direction of travel+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
     'j3dviewer': 'open the 3D viewer in panoramic view mode&#13;&#10;+alt: open the 3D viewer in subjective view mode&#13;&#10;+ctrl: show / hide the controls of the margin around the track',
     'jascending': 'switch the sort order of the tracks to ascending',
@@ -695,6 +703,15 @@ EN_STRINGS = {
     'jopacityreset': 'double-click to restore the original value\\r\\n+alt:+shift: restore all the original values',
     'jfoldersw': 'Folders:',
     'jscrollcross': 'center on the focused element&#13;&#10;+shift: reframe on the track&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)',
+    'jnavca': 'fold all the segments',
+    'jnavcc': 'fold the current segment',
+    'jnavec': 'unfold the current segment, then scroll to the focused element',
+    'jnavea': 'unfold all the segments, then scroll to the focused element',
+    'jnavsu': 'focus on segment: move the focus to the previous segment&#13;&#10;focus on point: move the focus to the current segment',
+    'jnavsd': 'move the focus to the next segment',
+    'jnavms': 'place the bookmark on the focused element',
+    'jnavmg': 'move the focus to the bookmarked element',
+    'jnavsw': 'expand / shrink the waypoints panel',
     'jhelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next waypoint / point / segment&#13;&#10;click / left click-drag (+ shift / alt) on the plot of a point / waypoint to select it / move it (and delete / keep its elevation data, or failing that choose depending whether the distance is greater than 25m or not)&#13;&#10;ctrl + click / left click-drag on the plot of a point to select it / move it and build a path from the previous point to this one&#13;&#10;left click on the plot of a segment to select it&#13;&#10;right click on the map to insert a point after the focused point or a waypoint otherwise&#13;&#10;ctrl + right click on the map to insert a point after the focused point in path following mode&#13;&#10;right click on the plot of a point / waypoint / segment to delete it&#13;&#10;mouse over a button to display its legend',
     'jexpscrollcross': 'center on the focused element&#13;&#10;+ctrl: cycle between the map auto-scrolling modes (grayed: no scrolling, blue: scrolling on focus, green: centering on focus and scrolling on hover)&#13;&#10;+alt: center on the pointer',
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;middle click / shift + middle click on the map to display the latitude and longitude / the elevation of the cursor (+ctrl to copy them / it to the clipboard)&#13;&#10;mouse over a button to display its legend',
@@ -735,6 +752,7 @@ EN_STRINGS = {
     'jmredo2': 'Modification of %s point(s) restored',
     'jminsert1': 'Waypoint inserted',
     'jminsert2': 'Point inserted',
+    'jminsert3': 'Segment inserted',
     'jmpathno': 'No itineraries provider configured',
     'jmpath1': 'Retrieval of the itinerary in progress...',
     'jmpath2': 'Itinerary inserted',
@@ -5822,8 +5840,8 @@ class WGS84Track(WGS84WebMercator):
     self.Color = None
     self.Wpts = None
     self.Pts = None
-    self.WebMercatorWpts = None
-    self.WebMercatorPts = None
+    self._WebMercatorWpts = None
+    self._WebMercatorPts = None
     self.intern_dict = None
     self.intern = None
     if not hasattr(self, 'log'):
@@ -5889,6 +5907,26 @@ class WGS84Track(WGS84WebMercator):
       self.unlink(self._tracks[2])
     self._tracks[2] = None
 
+  @property
+  def WebMercatorWpts(self):
+    if self._WebMercatorWpts is None:
+      self._WebMercatorWpts = [WGS84Track.WGS84toWebMercator(*pt[1][0:2]) for pt in self.Wpts]
+    return self._WebMercatorWpts
+
+  @WebMercatorWpts.deleter
+  def WebMercatorWpts(self):
+    self._WebMercatorWpts = None
+
+  @property
+  def WebMercatorPts(self):
+    if self._WebMercatorPts is None:
+      self._WebMercatorPts = [[WGS84Track.WGS84toWebMercator(*pt[1][0:2]) for pt in seg] for seg in self.Pts]
+    return self._WebMercatorPts
+
+  @WebMercatorPts.deleter
+  def WebMercatorPts(self):
+    self._WebMercatorPts = None
+
   def _XMLNewNode(self, localname, uri, prefix=None):
     return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(localname, localname))
 
@@ -5911,6 +5949,7 @@ class WGS84Track(WGS84WebMercator):
       regexp_dt = re.compile('[^\\r\\n]'.join((regexp_d, regexp_t))).match
       regexp_st = re.compile('^$').match
     if mode in ('a', 'w'):
+      del self.WebMercatorWpts
       pti = 0
       try:
         self.Wpts = []
@@ -5940,7 +5979,7 @@ class WGS84Track(WGS84WebMercator):
           else:
             pele = ''
           if ch:
-              raise
+            raise
           ptime = ptime.strip()
           if ptime:
             if not regexp_st(ptime):
@@ -5974,6 +6013,7 @@ class WGS84Track(WGS84WebMercator):
         except:
           pass
     if mode in ('a', 't'):
+      del self.WebMercatorPts
       self.Pts = []
       pti = 0
       try:
@@ -6094,21 +6134,8 @@ class WGS84Track(WGS84WebMercator):
       return False
     if source is None or source is self:
       self.OTrack = self.STrack = self.Track
-    self.WebMercatorWpts = None
-    self.WebMercatorPts = None
     self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts), color=32)
     GCMan.restore()
-    return True
-
-  def BuildWebMercator(self):
-    if self.Wpts:
-      self.WebMercatorWpts = [(pt[0], WGS84Track.WGS84toWebMercator(*pt[1][0:2])) for pt in self.Wpts]
-    else:
-      self.WebMercatorWpts = []
-    if self.Pts:
-      self.WebMercatorPts = [[(pt[0], WGS84Track.WGS84toWebMercator(*pt[1][0:2])) for pt in seg] for seg in self.Pts]
-    else:
-      self.WebMercatorPts = []
     return True
 
   def BackupGPX(self, uri):
@@ -6343,8 +6370,6 @@ class WGS84Track(WGS84WebMercator):
       return False
     finally:
       GCMan.restore()
-    self.WebMercatorWpts = None
-    self.WebMercatorPts = None
     return True
 
   def DetachFromGPX(self, others, uri=None, backup=True):
@@ -7366,8 +7391,6 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if not self.server.Interface.HTML:
               self.server.Interface.TrackInd = int(req.path.split(',')[1])
               self.server.Interface.Uri, self.server.Interface.Track = self.server.Interface.Tracks[self.server.Interface.TrackInd]
-              if self.server.Interface.Track.WebMercatorPts is None:
-                self.server.Interface.Track.BuildWebMercator()
             try:
               gen = self.server.Interface.Build3DHTML(mode3d, margin, wgpu)
               if next(gen):
@@ -7561,9 +7584,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               self.server.Interface.SLock.release()
               continue
-            if mode == 's':
-              track1.WebMercatorPts = None
-            else:
+            if mode != 's':
               track2.BackupGPX(uri2)
               self.server.Interface.Tracks[tr_ind2][0] = uri1
               if next((tr for tr in self.server.Interface.Tracks if tr[0] == uri2), None) is None:
@@ -7748,9 +7769,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 uri = None
               if not self.server.Interface.Track.UpdateGPX(req.body, uri, uri_suf == '.gpx'):
                 raise
-              if nosave:
-                self.server.Interface.Track.BuildWebMercator()
-              else:
+              if not nosave:
                 if self.server.Interface.HTML:
                   try:
                     self.server.Interface.EditMode()
@@ -7823,12 +7842,15 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
 
 class WGS84TrackProxy():
 
+  WebMercatorWpts = WGS84Track.WebMercatorWpts
+  WebMercatorPts = WGS84Track.WebMercatorPts
+
   def __init__(self, trkid, name, color, wpts, pts, retrieve):
     for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
       object.__setattr__(self, att, locals()[att.lower()])
     object.__setattr__(self, '_retrieve', retrieve)
     object.__setattr__(self, '_rlock', threading.Lock())
-    for att in ('_track', 'WebMercatorWpts', 'WebMercatorPts'):
+    for att in ('_track', '_WebMercatorWpts', '_WebMercatorPts'):
       object.__setattr__(self, att, None)
 
   def _gather(self, ulock, intern_dict, _tracks):
@@ -7837,13 +7859,13 @@ class WGS84TrackProxy():
         track = object.__new__(WGS84Track)
         track.ULock = ulock
         track._tracks = _tracks
-        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', '_WebMercatorWpts', '_WebMercatorPts'):
           setattr(track, att, getattr(self, att))
         track.intern_dict = intern_dict
         track._intern()
         track.log = partial(log, 'track')
         object.__setattr__(self, '_track', track)
-        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', 'WebMercatorWpts', 'WebMercatorPts'):
+        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', '_WebMercatorWpts', '_WebMercatorPts'):
           object.__delattr__(self, att)
     return self._track
 
@@ -7853,7 +7875,7 @@ class WGS84TrackProxy():
     return getattr(self._track, name)
 
   def __setattr__(self, name, value):
-    if name in ('WebMercatorWpts', 'WebMercatorPts'):
+    if name in ('_WebMercatorWpts', '_WebMercatorPts'):
       with self._rlock:
         if self._track is None:
           object.__setattr__(self, name, value)
@@ -7869,9 +7891,6 @@ class WGS84TrackProxy():
 
   def __eq__(self, other):
     return self._track == other if (isinstance(other, WGS84Track) and self._track is not None) else NotImplemented
-
-  def BuildWebMercator(self):
-    return WGS84Track.BuildWebMercator(self)
 
 
 class Interrupted(Exception):
@@ -8152,213 +8171,499 @@ class GPXTweakerWebInterfaceServer():
 
   HTML_STYLES_TEMPLATE = \
   '    <style type="text/css">\r\n' \
-  '      :root {\r\n' \
-  '        --scale:1;\r\n' \
-  '        --zoom:1;\r\n' \
-  '        --wsp:6em;\r\n' \
-  '        --filter:none;\r\n' \
-  '        --magnify:1;\r\n' \
-  '        --tprend:auto;\r\n' \
+  '      body {\r\n' \
+  '        width: 100vw;\r\n' \
+  '        height: 100vh;\r\n' \
+  '        margin: 0 0 0 0;\r\n' \
+  '        background-color: rgb(40, 45, 50);\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
+  '        font-size: 80%\r\n' \
   '      }\r\n' \
-  '      input:focus-visible, select:focus-visible, button:focus-visible {\r\n' \
-  '        outline:rgb(200,250,240) solid 1px;\r\n' \
-  '        outline-offset:-1px;\r\n' \
+  '      input:focus-visible, select:focus, button:focus-visible {\r\n' \
+  '        outline: rgb(200, 250, 240) solid 1px;\r\n' \
+  '        outline-offset: -1px;\r\n' \
   '      }\r\n' \
-  '      div:focus-visible {outline:none;}\r\n' \
+  '      div:focus-visible {\r\n' \
+  '        outline: none;\r\n' \
+  '      }\r\n' \
   '      input {\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: inherit;\r\n' \
   '      }\r\n' \
   '      input[type=text] {\r\n' \
-  '        border-width:0.5px;\r\n' \
+  '        border-width: 0.5px;\r\n' \
   '      }\r\n' \
   '      input[type=text]:focus {\r\n' \
-  '        color:rgb(200,250,240);\r\n' \
-  '      }\r\n' \
-  '      input[type=checkbox] {\r\n' \
-  '        appearance:none;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        margin-left:1px;\r\n' \
-  '        width:1.25em;\r\n' \
-  '        height:1.25em;\r\n' \
-  '      }\r\n' \
-  '      input[type=checkbox]:checked::before {\r\n' \
-  '        content:"\\2714";\r\n' \
-  '        display:inline-block;\r\n' \
-  '        text-align:center;\r\n' \
-  '        width:100%;\r\n' \
-  '        font-weight:bold;\r\n' \
-  '      }\r\n' \
-  '      input+label[id$=desc]:hover,input:hover+label[id$=desc] {\r\n' \
-  '        background-color:green;\r\n' \
-  '      }\r\n' \
-  '      svg[id*=dot] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        cursor:pointer;\r\n' \
-  '        stroke-width:1.5;\r\n' \
-  '      }\r\n' \
-  '      svg[id^=track] path {\r\n' \
-  '        pointer-events:stroke;\r\n' \
-  '        cursor:pointer;\r\n' \
-  '        stroke-width:calc(2px * var(--magnify));\r\n' \
-  '        fill:none;\r\n' \
-  '        vector-effect:non-scaling-stroke;\r\n' \
-  '      }\r\n' \
-  '      textPath {\r\n' \
-  '        vector-effect:non-scaling-stroke;\r\n' \
-  '      }\r\n' \
-  '      svg[id^=track] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        stroke-linecap:round;\r\n' \
-  '        stroke-linejoin:round;\r\n' \
-  '        shape-rendering:var(--tprend);\r\n' \
-  '      }\r\n' \
-  '      svg[id^=track] text {\r\n' \
-  '        stroke-width:calc(1px * var(--magnify));\r\n' \
-  '        font-size:calc(24px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
-  '        word-spacing:calc(var(--wsp) * 2 / (var(--magnify) + 1));\r\n' \
+  '        color: rgb(200, 250, 240);\r\n' \
   '      }\r\n' \
   '      button {\r\n' \
-  '        border:none;\r\n' \
-  '        padding-left:0;\r\n' \
-  '        padding-right:0;\r\n' \
-  '        width:1.4em;\r\n' \
-  '        height:1.4em;\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
-  '        line-height:1.2em;\r\n' \
-  '        font-size:100%;\r\n' \
-  '        cursor:pointer;\r\n' \
+  '        contain: paint;\r\n' \
+  '        width: 1.4em;\r\n' \
+  '        height: 1.4em;\r\n' \
+  '        border: none;\r\n' \
+  '        padding-left: 0;\r\n' \
+  '        padding-right: 0;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: inherit;\r\n' \
+  '        line-height: 1.22em;\r\n' \
+  '        font-size: 100%;\r\n' \
+  '        cursor: pointer;\r\n' \
   '      }\r\n' \
   '      select {\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
-  '        border-width:0.5px;\r\n' \
+  '        border-width: 0.5px;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: inherit;\r\n' \
   '      }\r\n' \
   '      select:focus {\r\n' \
-  '        color:rgb(200,250,240);\r\n' \
+  '        color: rgb(200, 250, 240);\r\n' \
   '      }\r\n' \
-  '      @-moz-document url-prefix() {\r\n' \
-  '        select {\r\n' \
-  '          appearance:none;\r\n' \
-  '          padding-right:1.7em;\r\n' \
-  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(225,225,225)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
-  '          background-repeat:no-repeat;\r\n' \
-  '          background-position-x:right;\r\n' \
-  '          background-position-y:bottom;\r\n' \
-  '          background-size:2em 1em;\r\n' \
-  '        }\r\n' \
-  '        select:focus {\r\n' \
-  '          background-image:url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" style="fill:rgb(200,250,240)"><text x="0.2em" y="0.4em" >%E2%8C%84</text></svg>\');\r\n' \
-  '        }\r\n' \
+  '      select>option {\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
   '      }\r\n' \
-  '      select option {\r\n' \
-  '        color:rgb(225,225,225);\r\n' \
+  '      #top_bar {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        left: 10px;\r\n' \
+  '        top: 5px;\r\n' \
+  '        width: calc(100vw - 20px);\r\n' \
+  '        height: 2em;\r\n' \
+  '        border-bottom: 1px darkgray solid;\r\n' \
+  '        line-height: calc(2em - 1px);\r\n' \
   '      }\r\n' \
-  '      select[id$=set] {\r\n' \
-  '        width:14em;\r\n' \
-  '        height:1.7em;\r\n' \
+  '      #lpanels {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        left: 10px;\r\n' \
+  '        top: calc(75vh - 6px);\r\n' \
+  '        width: calc(100vw - 20px);\r\n' \
+  '        height: 25vh;\r\n' \
+  '        pointer-events: none;\r\n' \
   '      }\r\n' \
-  '      select[id^=graph] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        left:0;\r\n' \
-  '        width:7em;\r\n' \
-  '        height:1.7em;\r\n' \
+  '      #lpanels:not([style*=none]) {\r\n' \
+  '        border-top: 1px darkgray solid;\r\n' \
   '      }\r\n' \
-  '      div[id=dfpanel], div[id=mtpanel], div[id=v3Dpanel], div[id^=filterpanel] {\r\n' \
-  '        display:none;\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:calc(1.6em + 10px);\r\n' \
-  '        right:2vw;\r\n' \
-  '        width:10em;\r\n' \
-  '        height:13.4em;\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        z-index:10;\r\n' \
-  '        font-size:75%;\r\n' \
-  '        text-align:center;\r\n' \
-  '        font-weight:normal;\r\n' \
-  '        user-select:none;\r\n' \
+  '      #bottom_bar {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        left: 10px;\r\n' \
+  '        top: calc(100vh - 1.6em - 6px);\r\n' \
+  '        width: calc(100vw - 20px);\r\n' \
+  '        height: 1.6em;\r\n' \
+  '        border-top: 1px darkgray solid;\r\n' \
+  '        line-height: calc(2em + 1px);\r\n' \
   '      }\r\n' \
-  '      label[for$=filter], label[for$=margin], label[for=mthumb] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:1.5em;\r\n' \
-  '        text-align:center;\r\n' \
-  '        font-weight:normal;\r\n' \
-  '        font-size:90%;\r\n' \
+  '      #lpanels:not([style*=none])~#bottom_bar {\r\n' \
+  '        top: calc(75vh - 1.6em - 8px);\r\n' \
   '      }\r\n' \
-  '      span[id=dfdist], span[id=mtsize], span[id$=stren], span[id^=sl], span[id^=sp], span[id^=v3d] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:2.8em;\r\n' \
+  '      #patterns {\r\n' \
+  '        display: none;\r\n' \
+  '      }\r\n' \
+  '      #content {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        display: flex;\r\n' \
+  '        flex-flow: column nowrap;\r\n' \
+  '        left: 10px;\r\n' \
+  '        top: calc(2em + 8px);\r\n' \
+  '        width: 26.2em;\r\n' \
+  '        height: calc(100vh - 3.6em - 16px);\r\n' \
+  '      }\r\n' \
+  '      #view {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        background-color: inherit;\r\n' \
+  '        right: 10px;\r\n' \
+  '        top: calc(2em + 8px);\r\n' \
+  '        width: calc(100vw - 26.2em - 22px);\r\n' \
+  '        height: calc(100vh - 3.6em - 16px);\r\n' \
+  '        line-height: 0;\r\n' \
+  '        user-select: none;\r\n' \
+  '      }\r\n' \
+  '      #lpanels:not([style*=none])~#content, #lpanels:not([style*=none])~#view {\r\n' \
+  '        height: calc(75vh - 4em - 16px);\r\n' \
+  '      }\r\n' \
+  '      #panels {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        right: 10px;\r\n' \
+  '        top: calc(2em + 6px);\r\n' \
+  '        width: 37.8em;\r\n' \
+  '        height: calc(100vh - 3.6em - 12px);\r\n' \
+  '        pointer-events: none;\r\n' \
+  '        --offset: 0em;\r\n' \
+  '      }\r\n' \
+  '      body[style*=map]>#panels {\r\n' \
+  '        --offset: 3em;\r\n' \
+  '      }\r\n' \
+  '      #top_bar input[type=text] {\r\n' \
+  '        height:1.65em;\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        margin-bottom: 0.07em;\r\n' \
+  '        vertical-align: bottom;\r\n' \
+  '        font-size: 105%;\r\n' \
+  '      }\r\n' \
+  '      #name_track {\r\n' \
+  '        width: calc(100% - 64em - 6px);\r\n' \
+  '      }\r\n' \
+  '      #actions, #navigation, #message, #help {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: inline-block;\r\n' \
+  '        height: 1.6em;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        user-select: none;\r\n' \
+  '      }\r\n' \
+  '      #actions {\r\n' \
+  '        right: 0;\r\n' \
+  '        text-align: right;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      #actions>select {\r\n' \
+  '        width: 14em;\r\n' \
+  '        height: 1.7em;\r\n' \
+  '        vertical-align: top\r\n' \
+  '        font-size: 85%;\r\n' \
+  '      }\r\n' \
+  '      #matrix {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 1.5em;\r\n' \
+  '      }\r\n' \
+  '      body[style*=map] #matrix {\r\n' \
+  '        display: none;\r\n' \
+  '      }\r\n' \
+  '      #zoom {\r\n' \
+  '        display: inline-block;\r\n' \
   '        width:2em;\r\n' \
-  '        font-size:90%;\r\n' \
+  '        text-align:center;\r\n' \
   '      }\r\n' \
-  '      span+input[type=range] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        top:3em;\r\n' \
-  '        max-width:40vh;\r\n' \
-  '        width:9em;\r\n' \
-  '        margin-right:0;\r\n' \
-  '        transform:rotate(-90deg);\r\n' \
-  '        transform-origin:right center;\r\n' \
-  '        font-size:100%;\r\n' \
+  '      #tlock {\r\n' \
+  '        width: 1em;\r\n' \
   '      }\r\n' \
-  '      label[for^=opacity] {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        margin:0.5em;\r\n' \
-  '        width:10.5em;\r\n' \
-  '        overflow:hidden;\r\n' \
-  '        white-space:nowrap;\r\n' \
-  '        vertical-align:middle;\r\n' \
+  '      body[style*=map] #tlock {\r\n' \
+  '        display: none;\r\n' \
   '      }\r\n' \
-  '      input[id^=opacity] {\r\n' \
-  '        width:9em;\r\n' \
-  '        vertical-align:middle;\r\n' \
+  '      #ctset {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 7.55em;\r\n' \
+  '        width: 11.9em;\r\n' \
+  '        height: 1.7em;\r\n' \
+  '        line-height: 0;\r\n' \
+  '        font-size: 120%;\r\n' \
   '      }\r\n' \
-  '      span[id^=opacity] {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        margin:0.5em;\r\n' \
-  '        vertical-align:middle;\r\n' \
+  '      #navigation {\r\n' \
+  '        width: 16.2em;\r\n' \
+  '        margin-top: 2px;\r\n' \
+  '        padding-right: 0.4em;\r\n' \
+  '        border-right: 1px darkgray solid;\r\n' \
+  '        font-size: 120%;\r\n' \
   '      }\r\n' \
-  '      div[id$=box] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        bottom:3px;\r\n' \
-  '        background-color:rgba(255,255,255,0.7);\r\n' \
-  '        padding-left:2px;\r\n' \
-  '        padding-right:2px;\r\n' \
-  '        user-select:none;\r\n' \
+  '      #navigation>button {\r\n' \
+  '        position: relative;\r\n' \
+  '        height: 1.8em;\r\n' \
+  '        top: -0.5em;\r\n' \
   '      }\r\n' \
-  '      span+span[id^=message] {\r\n' \
-  '        margin-left:0.4em;\r\n' \
-  '        padding-left:0.4em;\r\n' \
-  '        border-left:1px rgb(225,225,225) solid;\r\n' \
+  '      #message {\r\n' \
+  '        line-height: 1.8em;\r\n' \
   '      }\r\n' \
-  '      div[id=view]>div[id^=jmap] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        pointer-events:none;\r\n' \
-  '        overflow:hidden;\r\n' \
-  '        width:calc(100% / var(--zoom));\r\n' \
-  '        height:calc(100% / var(--zoom));\r\n' \
-  '        transform-origin:left top;\r\n' \
-  '        transform:scale(var(--zoom));\r\n' \
-  '        background-color:rgba(0,0,0,0);\r\n' \
+  '      #message>span+span[id^=message] {\r\n' \
+  '        margin-left: 0.4em;\r\n' \
+  '        padding-left: 0.4em;\r\n' \
+  '        border-left: 1px rgb(225, 225, 225) solid;\r\n' \
+  '      }\r\n' \
+  '      #help {\r\n' \
+  '        right: 0;\r\n' \
+  '        width: 1.4em;\r\n' \
+  '        height: 1.2em;\r\n' \
+  '        margin-top: 1px;\r\n' \
+  '        background-color: lightgray;\r\n' \
+  '        color: black;\r\n' \
+  '        text-align: center;\r\n' \
+  '        line-height: 1.3em;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '        font-weight: bold;\r\n' \
+  '        cursor: help;\r\n' \
+  '      }\r\n' \
+  '      #lpanels>div {\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: none;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '        width: 100%;\r\n' \
+  '        height: 100%;\r\n' \
+  '        pointer-events: initial;\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=graph]>#graph {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #graphx {\r\n' \
+  '        bottom: 0;\r\n' \
+  '      }\r\n' \
+  '      #graphy {\r\n' \
+  '        top: 2px;\r\n' \
+  '      }\r\n' \
+  '      #graphp {\r\n' \
+  '        overflow: auto; \r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 2px;\r\n' \
+  '        top: 2em;\r\n' \
+  '        bottom: 2em\r\n' \
+  '        width: 6em;\r\n' \
+  '        color: dodgerblue;\r\n' \
+  '        text-align: right;\r\n' \
+  '      }\r\n' \
+  '      #graphpx, #graphpy {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 0;\r\n' \
+  '      }\r\n' \
+  '      #graphpx {\r\n' \
+  '        bottom: 0;\r\n' \
+  '      }\r\n' \
+  '      #graphpy {\r\n' \
+  '        top: 0;\r\n' \
+  '      }\r\n' \
+  '      #graph>select {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 0;\r\n' \
+  '        width: 7em;\r\n' \
+  '        height: 1.7em;\r\n' \
+  '      }\r\n' \
+  '      #graphc {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 8em;\r\n' \
+  '        top: 0;\r\n' \
+  '      }\r\n' \
+  '      #gbarc, #gbar {\r\n' \
+  '        position: absolute;\r\n' \
+  '        top: 10px;\r\n' \
+  '        width: 3px; \r\n' \
+  '        height: calc(100% - 25px);\r\n' \
+  '        stroke-width: 1px;\r\n' \
+  '        fill: none;\r\n' \
+  '      }\r\n' \
+  '      #gbarc {\r\n' \
+  '        cursor: ew-resize;\r\n' \
+  '      }\r\n' \
+  '      #gbar {\r\n' \
+  '        stroke: dodgerblue;\r\n' \
+  '        pointer-events: none;\r\n' \
+  '      }\r\n' \
+  '      #background {\r\n' \
+  '        position: absolute;\r\n' \
+  '        top: 0;\r\n' \
+  '        left: 0;\r\n' \
+  '        width: 100%;\r\n' \
+  '        height: 100%;\r\n' \
+  '        backdrop-filter: var(--filter);\r\n' \
+  '      }\r\n' \
+  '      .track {\r\n' \
+  '        position: absolute;\r\n' \
+  '        stroke-linecap: round;\r\n' \
+  '        stroke-linejoin: round;\r\n' \
+  '        shape-rendering: var(--tprend);\r\n' \
+  '      }\r\n' \
+  '      .track path {\r\n' \
+  '        pointer-events: stroke;\r\n' \
+  '        stroke-width: calc(2px * var(--magnify));\r\n' \
+  '        fill: none;\r\n' \
+  '        vector-effect: non-scaling-stroke;\r\n' \
+  '        cursor: pointer;\r\n' \
+  '      }\r\n' \
+  '      .track text {\r\n' \
+  '        display: var(--ardis);\r\n' \
+  '        stroke-width: calc(1px * var(--magnify));\r\n' \
+  '        font-size: calc(24px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
+  '        word-spacing: calc(var(--wsp) * 2 / (var(--magnify) + 1));\r\n' \
+  '      }\r\n' \
+  '      .track textPath {\r\n' \
+  '        vector-effect: non-scaling-stroke;\r\n' \
+  '      }\r\n' \
+  '      #scrollbox, #scalebox {\r\n' \
+  '        contain: content;\r\n' \
+  '        position: absolute;\r\n' \
+  '        bottom: 3px;\r\n' \
+  '        padding-left: 2px;\r\n' \
+  '        padding-right: 2px;\r\n' \
+  '        background-color: rgba(255, 255, 255, 0.7);\r\n' \
+  '        font-size:125%;\r\n' \
+  '        user-select: none;\r\n' \
+  '      }\r\n' \
+  '      #scrollbox {\r\n' \
+  '        left: 3px;\r\n' \
+  '        line-height: 1.1em;\r\n' \
+  '        color: green;\r\n' \
+  '        cursor: pointer;\r\n' \
+  '      }\r\n' \
+  '      #scalebox {\r\n' \
+  '        left: calc(1.5em + 2px);\r\n' \
+  '        line-height: 0.7em;\r\n' \
+  '      }\r\n' \
+  '      #scalevalue {\r\n' \
+  '        color: black;\r\n' \
+  '        font-size: 70%;\r\n' \
+  '      }\r\n' \
+  '      #handle {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '        width: 100px;\r\n' \
+  '        height: 100px;\r\n' \
+  '        pointer-events: none;\r\n' \
+  '      }\r\n' \
+  '      .jmap {\r\n' \
+  '        position: absolute;\r\n' \
+  '        overflow: hidden;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '        width: calc(100% / var(--zoom));\r\n' \
+  '        height: calc(100% / var(--zoom));\r\n' \
+  '        transform-origin: left top;\r\n' \
+  '        transform: scale(var(--zoom));\r\n' \
+  '        background-color: rgba(0, 0, 0, 0);\r\n' \
+  '        pointer-events: none;\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
-  '        div[id=handle]>img::before{\r\n' \
-  '          content:"";\r\n' \
-  '          position:absolute;\r\n' \
-  '          left:1px;\r\n' \
-  '          top:1px;\r\n' \
-  '          background:rgb(40,45,50);\r\n' \
-  '          width:calc(100% - 2px);\r\n' \
-  '          height:calc(100% - 2px);\r\n' \
+  '        #handle img::before{\r\n' \
+  '          content: "";\r\n' \
+  '          position: absolute;\r\n' \
+  '          left: 1px;\r\n' \
+  '          top: 1px;\r\n' \
+  '          width: calc(100% - 2px);\r\n' \
+  '          height: calc(100% - 2px);\r\n' \
+  '          background: rgb(40, 45, 50);\r\n' \
   '        }\r\n' \
   '        body {\r\n' \
-  '          scrollbar-color: rgb(121,123,126) rgb(34,37,43);\r\n' \
+  '          scrollbar-color: rgb(121, 123, 126) rgb(34, 37, 43);\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      .tlayer {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '      }\r\n' \
+  '      #panels>div {\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: none;\r\n' \
+  '        top: 0;\r\n' \
+  '        max-height: 100%;\r\n' \
+  '        background-color: rgb(40, 45, 50);\r\n' \
+  '        pointer-events: initial;\r\n' \
+  '        user-select: none;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel) {\r\n' \
+  '        contain: strict;\r\n' \
+  '        width: 11.2em;\r\n' \
+  '        height: 13.4em;\r\n' \
+  '        text-align: center;\r\n' \
+  '      }\r\n' \
+  '      #opanel {\r\n' \
+  '        contain: content;\r\n' \
+  '        overflow: auto;\r\n' \
+  '        right: 0;\r\n' \
+  '        max-width: 100%;\r\n' \
+  '      }\r\n' \
+  '      #panels[style*=opanel]>#opanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #dfpanel {\r\n' \
+  '        right: calc(18.55em - var(--offset));\r\n' \
+  '      }\r\n' \
+  '      #panels[style*=dfpanel]>#dfpanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #panels>div[id^=filterpanel] {\r\n' \
+  '        right: calc(16.57em - var(--offset));\r\n' \
+  '      }\r\n' \
+  '      #panels[style*=filterpanel1]>#filterpanel1 {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #panels[style*=filterpanel2]>#filterpanel2 {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #panels[style*=filterpanel3]>#filterpanel3 {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #v3dpanel {\r\n' \
+  '        right: calc(14.59em - var(--offset));\r\n' \
+  '      }\r\n' \
+  '      #panels[style*=v3dpanel]>#v3dpanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>span {\r\n' \
+  '        font-size: 110%;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>label {\r\n' \
+  '        position: absolute;\r\n' \
+  '        top: 1.5em;\r\n' \
+  '        text-align: center;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>label:first-of-type {\r\n' \
+  '        left: 2px;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>label:last-of-type {\r\n' \
+  '        right: 2px;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>label:only-of-type {\r\n' \
+  '        left: 1.5em;\r\n' \
+  '        width: 8em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>span{\r\n' \
+  '        position:absolute;\r\n' \
+  '        top: 2.8em;\r\n' \
+  '        width: 2em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>span:first-of-type {\r\n' \
+  '        left: 0.55em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>span:last-of-type {\r\n' \
+  '        right: 0.55em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>span:only-of-type {\r\n' \
+  '        left: 4.5em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>input{\r\n' \
+  '        position: absolute;\r\n' \
+  '        top: 3em;\r\n' \
+  '        max-width: calc(100vh - 10.5em - 19px);\r\n' \
+  '        width: 9em;\r\n' \
+  '        margin-right: 0;\r\n' \
+  '        transform: rotate(-90deg);\r\n' \
+  '        transform-origin: right center;\r\n' \
+  '        font-size: 100%;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>input:first-of-type {\r\n' \
+  '        right: 9.7em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>input:last-of-type {\r\n' \
+  '        right: 1.5em;\r\n' \
+  '      }\r\n' \
+  '      #panels>div:not(#opanel)>form>input:only-of-type {\r\n' \
+  '        right: 5.7em;\r\n' \
+  '      }\r\n' \
+  '      #oform {\r\n' \
+  '        font-size: 110%;\r\n' \
+  '      }\r\n' \
+  '      #oform>label {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        overflow: hidden;\r\n' \
+  '        width: 10.5em;\r\n' \
+  '        margin: 0.5em;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '      }\r\n' \
+  '      #oform>input {\r\n' \
+  '        width: 9em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '      }\r\n' \
+  '      #oform>span {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 3em;\r\n' \
+  '        margin: 0.5em;\r\n' \
+  '        text-align: right;\r\n' \
+  '        vertical-align: middle;\r\n' \
   '      }\r\n'
   HTML_GLOBALVARS_TEMPLATE = \
   '      const host = window.location.hostname + ":";\r\n' \
-  '      var wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
+  '      const wmb = Math.PI * 6378137;\r\n##DECLARATIONS##\r\n' \
   '      var hpx = 0;\r\n' \
   '      var hpy = 0;\r\n' \
   '      var cpx = null;\r\n' \
@@ -8389,11 +8694,11 @@ class GPXTweakerWebInterfaceServer():
   '      var scrollmode = 2;\r\n' \
   '      var scrollmode_ex = scrollmode;\r\n' \
   '      var focused = "";\r\n' \
-  '      var navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
+  '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      var tiles_hold = null;\r\n' \
-  '      if (tholdsize > 0 && ! navigator_firefox) {var tiles_hold = new Map();}\r\n' \
-  '      var date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
-  '      var time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+  '      if (tholdsize > 0 && ! navigator_firefox) {tiles_hold = new Map();}\r\n' \
+  '      const date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
+  '      const time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
   '      var xhr_ongoing = 0;\r\n' \
   '      var graph_ip = null;\r\n' \
   '      var graph_px = null;\r\n'
@@ -9700,27 +10005,24 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n'
   HTML_TILES_TEMPLATE = \
   '      function set_opacities(){\r\n' \
-  '        let oform = document.getElementById("oform");\r\n' \
+  '        const oform = document.getElementById("oform");\r\n' \
   '        while (oform.firstElementChild) {oform.removeChild(oform.lastElementChild);}\r\n' \
-  '        let rules = document.styleSheets[0].cssRules;\r\n' \
+  '        const rules = document.styleSheets[0].cssRules;\r\n' \
   '        let nrule = rules.length;\r\n' \
   '        for (let irule=nrule-1; irule>=0; irule--) {\r\n' \
-  '          if ((rules[irule].selectorText || "").indexOf("tile-") > 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
+  '          if ((rules[irule].selectorText || "").indexOf("#tlayer") == 0) {document.styleSheets[0].deleteRule(irule);}\r\n' \
   '        }\r\n' \
   '        nrule = rules.length;\r\n' \
   '        if (tlayers.has(tset)) {\r\n' \
-  '          let tlays = tlayers.get(tset);\r\n' \
+  '          const tlays = tlayers.get(tset);\r\n' \
   '          if (! opacities.has(tset)) {\r\n' \
   '            opacities.set(tset, tlays.map((l)=>l[1].replace("x", "").replace("-", "")));\r\n' \
   '          }\r\n' \
-  '          let opcts = opacities.get(tset);\r\n' \
-  '          let tiset = document.getElementById("tset");\r\n' \
+  '          const opcts = opacities.get(tset);\r\n' \
+  '          const tiset = document.getElementById("tset");\r\n' \
   '          for (let l=0; l<tlays.length; l++) {\r\n' \
-  '            let ls = l.toString();\r\n' \
-  '            if (l > 0) {\r\n' \
-  '              let e = document.createElement("br");\r\n' \
-  '              oform.appendChild(e);\r\n' \
-  '            }\r\n' \
+  '            const ls = l.toString();\r\n' \
+  '            if (l > 0) {oform.appendChild(document.createElement("br"));}\r\n' \
   '            let e = document.createElement("label");\r\n' \
   '            e.htmlFor = "opacityl" + ls;\r\n' \
   '            e.innerHTML = tiset.options[tlays[l][0]].innerHTML;\r\n' \
@@ -9734,21 +10036,21 @@ class GPXTweakerWebInterfaceServer():
   '            e.max = "1";\r\n' \
   '            e.step = "0.01";\r\n' \
   '            e.value = opcts[l];\r\n' \
-  '            e.oninput = (e) => {e.target.nextElementSibling.innerHTML=(parseFloat(e.target.value)*100).toFixed(0)+" %";opacities.get(tset)[l]=e.target.value;document.documentElement.style.setProperty("--opacity" + ls, e.target.value);};\r\n' \
-  '            e.onfocus = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="rgb(200, 250,240)";};\r\n' \
+  '            e.oninput = (e) => {e.target.nextElementSibling.innerHTML=(parseFloat(e.target.value)*100).toFixed(0)+" %";opacities.get(tset)[l]=e.target.value;viewpane.style.setProperty("--opacity" + ls, e.target.value);};\r\n' \
+  '            e.onfocus = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="rgb(200, 250, 240)";};\r\n' \
   '            e.onblur = (e) => {e.target.previousElementSibling.style.color=e.target.nextElementSibling.style.color="";}\r\n' \
   '            oform.appendChild(e);\r\n' \
   '            e = document.createElement("span");\r\n' \
   '            e.id = "opacity" + ls;\r\n' \
   '            e.innerHTML = (parseFloat(opcts[l])*100).toFixed(0)+" %";\r\n' \
   '            oform.appendChild(e);\r\n' \
-  '            document.documentElement.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
+  '            viewpane.style.setProperty("--opacity" + ls, opcts[l]);\r\n' \
   '            if (layers[l].ext != ".json") {\r\n' \
-  '              document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-" + ls + "] {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x")>=0?";mix-blend-mode:multiply":"") + (tlays[l][1].indexOf("-")>=0?";filter:invert(1)":"") + ";}", nrule++);\r\n' \
+  '              document.styleSheets[0].insertRule("#tlayer" + ls + " {opacity:var(--opacity" + ls + ");z-index:" + (l-tlays.length).toString() + (tlays[l][1].indexOf("x") >=0 ? ";mix-blend-mode:multiply" : "") + (tlays[l][1].indexOf("-") >=0 ? ";filter:invert(1)" : "") + ";}", nrule++);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        } else if (layers[0].ext != ".json") {\r\n' \
-  '          document.styleSheets[0].insertRule("div[id=handle]>img[id^=tile-0] {z-index:-1;}", nrule);\r\n' \
+  '          document.styleSheets[0].insertRule("#tlayer0 {z-index:-1;}", nrule);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function set_jmaps() {\r\n' \
@@ -9758,13 +10060,14 @@ class GPXTweakerWebInterfaceServer():
   '          viewpane.removeChild(document.getElementById("jmap" + jm.toString()));\r\n' \
   '        }\r\n' \
   '        jmaps = [];\r\n' \
-  '        let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '        const [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '        let tlays = null;\r\n' \
   '        if (tlayers.has(tset)) {tlays = tlayers.get(tset);}\r\n' \
   '        for (let l=0; l<layers.length; l++) {\r\n' \
   '          if (layers[l].ext != ".json") {continue;}\r\n' \
-  '          let jdiv = document.createElement("div");\r\n' \
+  '          const jdiv = document.createElement("div");\r\n' \
   '          jdiv.id = "jmap" + jmaps.length.toString();\r\n' \
+  '          jdiv.classList.add("jmap");\r\n' \
   '          jdiv.style.zIndex = (l - layers.length).toString();\r\n' \
   '          if (tlays != null) {\r\n' \
   '            jdiv.style.opacity = "var(--opacity" + l.toString() + ")";\r\n' \
@@ -9809,9 +10112,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (nset == null) {\r\n' \
   '          if (treset == 2 && tmaplibre == false) {\r\n' \
   '            if (msg.layers.some((l)=>l.ext==".json")) {\r\n' \
-  '              let sc = document.createElement("script");\r\n' \
+  '              const sc = document.createElement("script");\r\n' \
   '              sc.src = "/jsontiles/maplibre_js/##TMAPLIBREJS##";\r\n' \
-  '              let li = document.createElement("link");\r\n' \
+  '              const li = document.createElement("link");\r\n' \
   '              li.href = "/jsontiles/maplibre_css/##TMAPLIBRECSS##";\r\n' \
   '              li.rel = "stylesheet";\r\n' \
   '              sc.onload = li.onload = (e) => {if (tmaplibre==false) {tmaplibre=true;} else {load_tcb(t,nset,nlevel,kzoom);if (tmaplibre==null) {sc.remove();li.remove();};};};\r\n' \
@@ -9831,13 +10134,13 @@ class GPXTweakerWebInterfaceServer():
   '          if (! kzoom || nlevel == null) {zoom_s = tlevels[tlevel][1];}\r\n' \
   '          layers = msg.layers;\r\n' \
   '          layersc = Array(layers.length).fill([null, null, null, null]);\r\n' \
-  '          let tscale_ex = tscale;\r\n' \
+  '          const tscale_ex = tscale;\r\n' \
   '          tscale = msg.scale;\r\n' \
   '          if (treset == 2) {\r\n' \
   '            set_jmaps();\r\n' \
   '            set_opacities();\r\n' \
   '          } else {\r\n' \
-  '            let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '            const [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
   '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
   '              jmap.setCenter([lon, lat]);\r\n' \
@@ -9918,6 +10221,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (tset < 0) {\r\n' \
   '          tset = 0;\r\n' \
   '          if (! tlock) {switch_tlock(false);}\r\n' \
+  '          zoom_s = 1;\r\n' \
+  '          document.getElementById("zoom").innerHTML = "1";\r\n' \
   '        }\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
   '        document.getElementById("tset").disabled = false;\r\n' \
@@ -9925,14 +10230,15 @@ class GPXTweakerWebInterfaceServer():
   '        cpx = cpy = null;\r\n' \
   '      }\r\n' \
   '      function cancel_switch_tiles() {\r\n' \
-  '        let xhrct = new XMLHttpRequest();\r\n' \
+  '        const xhrct = new XMLHttpRequest();\r\n' \
   '        xhrct.open("GET", "/tiles/cancel");\r\n' \
   '        xhrct.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhrct.send();\r\n' \
   '      }\r\n' \
-  '      function add_tile(row=0, col=0, suf="", pref="", width="", height="", oleft=0, otop=0) {\r\n' \
-  '        let tile = document.createElement("img");\r\n' \
+  '      function add_tile(row=0, col=0, suf="", pref="", width="", height="", oleft=0, otop=0, tlayer=null) {\r\n' \
+  '        const tile = document.createElement("img");\r\n' \
   '        if (mode == "map") {\r\n' \
+  '          tlayer = handle;\r\n' \
   '          tile.id = "map";\r\n' \
   '          width = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
   '          height = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
@@ -9944,9 +10250,9 @@ class GPXTweakerWebInterfaceServer():
   '          tile.src = "/map/" + tile.id + text;\r\n' \
   '          tile.style.zIndex = -1;\r\n' \
   '        } else {\r\n' \
-  '          let tpos = row.toString() + "-" + col.toString();\r\n' \
+  '          const tpos = row.toString() + "-" + col.toString();\r\n' \
   '          tile.id = pref + tpos;\r\n' \
-  '          let port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
+  '          const port = portmin + (row + col) % (portmax + 1 - portmin);\r\n' \
   '          tile.src = "http://" + host + port.toString() + "/tiles/tile-" + tpos + (suf || (text + "?" + document.getElementById("tset").selectedIndex.toString() + "," + document.getElementById("matrix").innerHTML));\r\n' \
   '        }\r\n' \
   '        tile.alt = "";\r\n' \
@@ -9955,19 +10261,25 @@ class GPXTweakerWebInterfaceServer():
   '        tile.style.height = height;\r\n' \
   '        tile.style.left = "calc(var(--zoom) * " + (oleft + col * twidth).toString() + "px)";\r\n' \
   '        tile.style.top = "calc(var(--zoom) * " + (otop + row * theight).toString() + "px)";\r\n' \
-  '        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '        tlayer.insertBefore(tile, tlayer.firstElementChild);\r\n' \
   '        return tile;\r\n' \
   '      }\r\n' \
   '      function update_tiles() {\r\n' \
   '        if (mode == "map") {return;}\r\n' \
-  '        let tiles = Array.from(handle.getElementsByTagName("img"));\r\n' \
   '        if (treset >= 1) {\r\n' \
-  '          tiles.forEach((t) => handle.removeChild(t));\r\n' \
-  '          tiles = [];\r\n' \
+  '          Array.from(handle.getElementsByClassName("tlayer")).forEach((tl) => handle.removeChild(tl));\r\n' \
+  '          for (let l=layers.length-1; l>=0; l--) {\r\n' \
+  '            if (layers[l].ext == ".json") {continue;}\r\n' \
+  '            const tlayer = document.createElement("div");\r\n' \
+  '            tlayer.id = "tlayer" + l.toString();\r\n' \
+  '            tlayer.classList.add("tlayer");\r\n' \
+  '            handle.insertBefore(tlayer, handle.firstElementChild);\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        for (let l=0; l<layers.length; l++) {\r\n' \
-  '          let layer = layers[l];\r\n' \
-  '          let tmatrix = layer.matrix;\r\n' \
+  '          const tlayer = document.getElementById("tlayer" + l.toString());\r\n' \
+  '          const layer = layers[l];\r\n' \
+  '          const tmatrix = layer.matrix;\r\n' \
   '          ttopx = layer.topx;\r\n' \
   '          ttopy = layer.topy;\r\n' \
   '          twidth = layer.width;\r\n' \
@@ -9975,45 +10287,46 @@ class GPXTweakerWebInterfaceServer():
   '          text = layer.ext;\r\n' \
   '          if (text == ".json" || twidth == 0 || theight == 0) {continue;}\r\n' \
   '          let [cleft, cright, ctop, cbottom] = layersc[l];\r\n' \
-  '          let vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
-  '          let vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
-  '          let vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
-  '          let vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
-  '          let rleft = parseInt(vleft / twidth - 1.5);\r\n' \
-  '          let rright = parseInt(vright / twidth + 1.5);\r\n' \
-  '          let rtop = parseInt(vtop / theight - 1.5);\r\n' \
-  '          let rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
+  '          const vleft = -hpx / zoom + (htopx - ttopx) / tscale;\r\n' \
+  '          const vtop = -hpy / zoom + (ttopy - htopy) / tscale;\r\n' \
+  '          const vright = vleft + viewpane.offsetWidth / zoom;\r\n' \
+  '          const vbottom = vtop + viewpane.offsetHeight / zoom;\r\n' \
+  '          const rleft = parseInt(vleft / twidth - 1.5);\r\n' \
+  '          const rright = parseInt(vright / twidth + 1.5);\r\n' \
+  '          const rtop = parseInt(vtop / theight - 1.5);\r\n' \
+  '          const rbottom = parseInt(vbottom / theight + 1.5);\r\n' \
   '          if (treset >= 1) {\r\n' \
   '            cleft = rright + 1;\r\n' \
   '            cright = rleft - 1;\r\n' \
   '            ctop = rbottom + 1;\r\n' \
   '            cbottom = rtop - 1;\r\n' \
   '          }\r\n' \
-  '          let iwidth = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
-  '          let iheight = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
-  '          let ioleft = (ttopx - htopx) / tscale;\r\n' \
-  '          let iotop = (htopy - ttopy) / tscale;\r\n' \
+  '          const iwidth = "calc(var(--zoom) * " + twidth.toString() + "px)";\r\n' \
+  '          const iheight = "calc(var(--zoom) * " + theight.toString() + "px)";\r\n' \
+  '          const ioleft = (ttopx - htopx) / tscale;\r\n' \
+  '          const iotop = (htopy - ttopy) / tscale;\r\n' \
   '          if (rleft != cleft || rright != cright || rtop != ctop || rbottom != cbottom) {\r\n' \
-  '            for (let tile of tiles) {\r\n' \
-  '              let [tlayer, row, col] = tile.id.split("-").slice(1, 4).map(Number);\r\n' \
-  '              if (tlayer == l && (row < rtop || row > rbottom || col < rleft || col > rright)) {\r\n' \
-  '                handle.removeChild(tile);\r\n' \
+  '            const tiles = Array.from(tlayer.children);\r\n' \
+  '            for (let t=tiles.length-1; t>=0; t--) {\r\n' \
+  '              const [tlayer, row, col] = tiles[t].id.split("-").slice(1, 4).map(Number);\r\n' \
+  '              if (row < rtop || row > rbottom || col < rleft || col > rright) {\r\n' \
+  '                tiles[t].remove();\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            let suf = text + "?" + (tlayers.has(document.getElementById("tset").selectedIndex)?tlayers.get(document.getElementById("tset").selectedIndex)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
-  '            let pref = "tile-" + l.toString() + "-";\r\n' \
+  '            const suf = text + "?" + (tlayers.has(document.getElementById("tset").selectedIndex)?tlayers.get(document.getElementById("tset").selectedIndex)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
+  '            const pref = "tile-" + l.toString() + "-";\r\n' \
   '            if (tiles_hold == null) {\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '                for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);}\r\n' \
+  '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop, tlayer);}\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '                for (let col=rleft; col<=rright; col++) {\r\n' \
   '                  if (col < cleft || col > cright || row < ctop || row > cbottom) {\r\n' \
-  '                    let tpos = row.toString() + "-" + col.toString();\r\n' \
-  '                    let tk = "tile-" + tpos + suf;\r\n' \
+  '                    const tpos = row.toString() + "-" + col.toString();\r\n' \
+  '                    const tk = "tile-" + tpos + suf;\r\n' \
   '                    let tile = tiles_hold.get(tk);\r\n' \
   '                    if (tile) {\r\n' \
   '                      tiles_hold.delete(tk);\r\n' \
@@ -10023,12 +10336,12 @@ class GPXTweakerWebInterfaceServer():
   '                        tile.style.height = iheight;\r\n' \
   '                        tile.style.left = "calc(var(--zoom) * " + (ioleft + col * twidth).toString() + "px)";\r\n' \
   '                        tile.style.top = "calc(var(--zoom) * " + (iotop + row * theight).toString() + "px)";\r\n' \
-  '                        handle.insertBefore(tile, handle.firstElementChild);\r\n' \
+  '                        tlayer.insertBefore(tile, tlayer.firstElementChild);\r\n' \
   '                      } else {\r\n' \
-  '                        tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
+  '                        tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop, tlayer);\r\n' \
   '                      }\r\n' \
   '                    } else {\r\n' \
-  '                      tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop);\r\n' \
+  '                      tile = add_tile(row, col, suf, pref, iwidth, iheight, ioleft, iotop, tlayer);\r\n' \
   '                    }\r\n' \
   '                    tiles_hold.set(tk, tile);\r\n' \
   '                  }\r\n' \
@@ -10052,7 +10365,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (treset == 1) {treset = 0;}\r\n' \
   '        if (jmaps.length > 0) {\r\n' \
-  '          let [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
+  '          const [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
   '          for (const jmap of jmaps) {\r\n' \
   '            jmap.setCenter([lon, lat]);\r\n' \
   '          }\r\n' \
@@ -10063,7 +10376,7 @@ class GPXTweakerWebInterfaceServer():
   '        hpy = Math.round(Math.min(Math.max(hpy, (vminy - htopy) * zoom / tscale + viewpane.offsetHeight), (vmaxy - htopy) * zoom / tscale));\r\n' \
   '        handle.style.left = hpx.toString() + "px";\r\n' \
   '        handle.style.top = hpy.toString() + "px";\r\n' \
-  '        let k = Math.cosh((htopy + (hpy - viewpane.offsetHeight) * tscale / zoom) / 6378137);\r\n' \
+  '        const k = Math.cosh((htopy + (hpy - viewpane.offsetHeight) * tscale / zoom) / 6378137);\r\n' \
   '        let sc = 150 * tscale / zoom / k;\r\n' \
   '        let unit = "m";\r\n' \
   '        let b = 1;\r\n' \
@@ -10077,7 +10390,7 @@ class GPXTweakerWebInterfaceServer():
   '          unit = "cm";\r\n' \
   '          b = 1/100;\r\n' \
   '        }\r\n' \
-  '        let sc_c = (sc / b).toFixed(0);\r\n' \
+  '        const sc_c = (sc / b).toFixed(0);\r\n' \
   '        let sc_s = "";\r\n' \
   '        if (sc_c[0] == "1") {\r\n' \
   '          sc_s = "1".padEnd(sc_c.length, "0");\r\n' \
@@ -10160,7 +10473,7 @@ class GPXTweakerWebInterfaceServer():
   '          let ea_b = [NaN, NaN];\r\n' \
   '          let ea_g = [null, null];\r\n' \
   '          let ea_ic = [null, null];\r\n' \
-  '          let ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
+  '          const ea_f = [parseFloat(document.getElementById("egstren").innerHTML), parseFloat(document.getElementById("agstren").innerHTML)];\r\n' \
   '          let el_s = 0;\r\n' \
   '          let el = null;\r\n' \
   '          let el_p = NaN;\r\n' \
@@ -10256,8 +10569,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n'
   HTML_SEGCALC_4_TEMPLATE = \
   '          if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
-  '            let drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
-  '            let slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
+  '            const drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
+  '            const slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '              let ea = stats[seg_ind][p].slice(4,6);\r\n' \
   '              let el = stats[seg_ind][p][6];\r\n' \
@@ -10317,8 +10630,8 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n'
   HTML_SEGCALC_5_TEMPLATE = \
   '        if (gpucomp == 0 && (fpan == 0 || fpan == 3)) {\r\n' \
-  '          let trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
-  '          let spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
+  '          const trange = parseFloat(document.getElementById("sptime").innerHTML) / 2;\r\n' \
+  '          const spmax = parseFloat(document.getElementById("spmax").innerHTML) / 3.6;\r\n' \
   '          for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '            stats[seg_ind][p][7] = 0;\r\n' \
   '            let ps = p;\r\n' \
@@ -10361,41 +10674,27 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n'
   HTML_GRAPH1_TEMPLATE = \
   '      function switch_dfpanel() {\r\n' \
-  '        if (document.getElementById("dfpanel").style.display != "initial") {\r\n' \
-  '          document.getElementById("dfpanel").style.display = "initial";\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("dfpanel").style.display = "none";\r\n' \
-  '        }\r\n' \
-  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
-  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
+  '        const ps = document.getElementById("panels").style;\r\n' \
+  '        ps.setProperty("--panel", ps.getPropertyValue("--panel") == "dfpanel" ? "none" : "dfpanel");\r\n' \
   '      }\r\n' \
   '      function switch_filterpanel(pa) {\r\n' \
-  '        let fp = [null, document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")];\r\n' \
-  '        for (let p=1; p<=3; p++) {\r\n' \
-  '          if (p == pa && (pa != 1 || gpucomp <= 1)) {\r\n' \
-  '            if (fp[p].style.display != "initial") {fp[p].style.display = "initial";} else {fp[p].style.display = "none";}\r\n' \
-  '          } else {\r\n' \
-  '            fp[p].style.display = "none";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        document.getElementById("dfpanel").style.display = "none";\r\n' \
-  '        document.getElementById("mtpanel").style.display = "none";\r\n' \
-  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
+  '        pa = "filterpanel" + pa;\r\n' \
+  '        const ps = document.getElementById("panels").style;\r\n' \
+  '        ps.setProperty("--panel", ps.getPropertyValue("--panel") == pa ? "none" : pa);\r\n' \
   '      }\r\n' \
   '      function graph_point(bx=null) {\r\n' \
-  '        let graph = document.getElementById("graph");\r\n' \
-  '        if (graph.style.display == "none") {return;}\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let xl = graphc.offsetLeft + 45;\r\n' \
-  '        let xr = graphc.offsetLeft + parseFloat(graphc.getAttribute("width")) - 20;\r\n' \
-  '        let gbar = document.getElementById("gbar");\r\n' \
+  '        if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph") {return;}\r\n' \
+  '        const graphc = document.getElementById("graphc");\r\n' \
+  '        const xl = graphc.offsetLeft + 45;\r\n' \
+  '        const xr = graphc.offsetLeft + parseFloat(graphc.getAttribute("width")) - 20;\r\n' \
+  '        const gbar = document.getElementById("gbar");\r\n' \
   '        gbar.style.display = "none";\r\n' \
-  '        let gbarc = document.getElementById("gbarc");\r\n' \
+  '        const gbarc = document.getElementById("gbarc");\r\n' \
   '        gbarc.style.display = "none";\r\n' \
-  '        let graphpx = document.getElementById("graphpx");\r\n' \
-  '        let graphpy = document.getElementById("graphpy");\r\n' \
-  '        let gpx = graphpx.innerHTML;\r\n' \
-  '        let gpy = graphpy.innerHTML;\r\n' \
+  '        const graphpx = document.getElementById("graphpx");\r\n' \
+  '        const graphpy = document.getElementById("graphpy");\r\n' \
+  '        const gpx = graphpx.innerHTML;\r\n' \
+  '        const gpy = graphpy.innerHTML;\r\n' \
   '        graphpx.innerHTML = "";\r\n' \
   '        graphpy.innerHTML = "";\r\n' \
   '        if (graph_ip.length < 2 || graph_px == null) {return;}\r\n' \
@@ -10407,23 +10706,23 @@ class GPXTweakerWebInterfaceServer():
   '        let stats = null;\r\n' \
   '        let tr_ind = null;\r\n' \
   '        if (bx == null) {\r\n' \
-  '          if (focused.substring(0, 5) == "point") {\r\n' \
+  '          if (focused.startsWith("point")) {\r\n' \
   '            if (wgpu_modified.size > 0) {return;}\r\n' \
-  '            segf = document.getElementById(focused + "cont").parentNode;\r\n' \
-  '            if (! segf.firstElementChild.checked) {return;}\r\n' \
+  '            segf = document.getElementById(focused).parentNode;\r\n' \
+  '            if (segf.hasAttribute("data-deleted")) {return;}\r\n' \
   '            foc_ind = parseInt(focused.substring(5));\r\n' \
   '            if (foc_ind >= point_stat.length) {return;}\r\n' \
   '            stat_ind = point_stat[foc_ind];\r\n' \
   '            if (stat_ind == null) {return;}\r\n' \
-  '            segf_ind = parseInt(segf.id.slice(7, -4));\r\n' \
-  '            segs = document.getElementById("pointsform").children;\r\n' \
+  '            segf_ind = parseInt(segf.id.substring(7));\r\n' \
+  '            segs = document.getElementById("pointslist").getElementsByClassName("segment");\r\n' \
   '            stats = window["stats"];\r\n' \
-  '          } else if (focused.substring(0, 5) == "track") {\r\n' \
+  '          } else if (focused.startsWith("track")) {\r\n' \
   '            tr_ind = parseInt(focused.substring(5));\r\n' \
   '            if (focused_targeted == null) {return;}\r\n' \
   '            foc_ind = graph_ip[focused_targeted];\r\n' \
   '            let xys_ind = 2 * (tracks_xy_offsets[tr_ind] + foc_ind);\r\n' \
-  '            let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
+  '            let xys = smoothed ? tracks_xys_smoothed : tracks_xys;\r\n' \
   '            set_target([xys[xys_ind] + prop_to_wmvalue(document.getElementById(focused).style.left), xys[xys_ind + 1] + prop_to_wmvalue(document.getElementById(focused).style.top)]);\r\n' \
   '            segf_ind = -1;\r\n' \
   '            let nbpt = 0;\r\n' \
@@ -10447,12 +10746,12 @@ class GPXTweakerWebInterfaceServer():
   '              let dur_s = dur % 60;\r\n' \
   '              let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '              let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              let dur_s_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
-  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '              const dur_s_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '              for (let s=0, l=segs.length; s<l; s++) {\r\n' \
   '                let seg_ind = null;\r\n' \
   '                if (tr_ind == null) {\r\n' \
-  '                  if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                  seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                  if (segs[s].hasAttribute("data-deleted")) {continue;}\r\n' \
+  '                  seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
   '                } else {\r\n' \
   '                  seg_ind = s;\r\n' \
   '                }\r\n' \
@@ -10463,16 +10762,16 @@ class GPXTweakerWebInterfaceServer():
   '              dur_s = dur % 60;\r\n' \
   '              dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
   '              dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
-  '              let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
+  '              const dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
   '              graphpx.innerHTML = dur_c + "<br>" + dur_s_c;\r\n' \
   '            } else {\r\n' \
-  '              let dist_s = stats[segf_ind][stat_ind][6];\r\n' \
+  '              const dist_s = stats[segf_ind][stat_ind][6];\r\n' \
   '              let dist = dist_s;\r\n' \
-  '              for (let s=0; s<segs.length; s++) {\r\n' \
+  '              for (let s=0, l=segs.length; s<l; s++) {\r\n' \
   '                let seg_ind = null;\r\n' \
   '                if (tr_ind == null) {\r\n' \
-  '                  if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                  seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                  if (segs[s].hasAttribute("data-deleted")) {continue;}\r\n' \
+  '                  seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
   '                } else {\r\n' \
   '                  seg_ind = s;\r\n' \
   '                }\r\n' \
@@ -10482,16 +10781,16 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              graphpx.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
   '            }\r\n' \
-  '            let yi = document.getElementById("graphy").selectedIndex;\r\n' \
+  '            const yi = document.getElementById("graphy").selectedIndex;\r\n' \
   '            switch (yi) {\r\n' \
   '              case 0:\r\n' \
-  '                let dist_s = stats[segf_ind][stat_ind][6];\r\n' \
+  '                const dist_s = stats[segf_ind][stat_ind][6];\r\n' \
   '                let dist = dist_s;\r\n' \
-  '                for (let s=0; s<segs.length; s++) {\r\n' \
+  '                for (let s=0, l=segs.length; s<l; s++) {\r\n' \
   '                  let seg_ind = null;\r\n' \
   '                  if (tr_ind == null) {\r\n' \
-  '                    if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                    seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                    if (segs[s].hasAttribute("data-deleted")) {continue;}\r\n' \
+  '                    seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
   '                  } else {\r\n' \
   '                    seg_ind = s;\r\n' \
   '                  }\r\n' \
@@ -10502,20 +10801,20 @@ class GPXTweakerWebInterfaceServer():
   '                graphpy.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
   '                break;\r\n' \
   '              case 1:\r\n' \
-  '                graphpy.innerHTML = (tr_ind==null?document.getElementById(focused + "ele").value:segs[segf_ind][stat_ind][2]) + "m";\r\n' \
+  '                graphpy.innerHTML = (tr_ind == null ? document.getElementById(focused).getAttribute("data-ele") : segs[segf_ind][stat_ind][2]) + "m";\r\n' \
   '                break\r\n' \
   '              case 2:\r\n' \
-  '                graphpy.innerHTML = (tr_ind==null?document.getElementById(focused + "alt").value:segs[segf_ind][stat_ind][3]) + "m";\r\n' \
+  '                graphpy.innerHTML = (tr_ind == null ? document.getElementById(focused).getAttribute("data-alt") : segs[segf_ind][stat_ind][3]) + "m";\r\n' \
   '                break\r\n' \
   '              case 3:\r\n' \
   '              case 4:\r\n' \
-  '                let g_s = stats[segf_ind][stat_ind][yi - 1];\r\n' \
+  '                const g_s = stats[segf_ind][stat_ind][yi - 1];\r\n' \
   '                let g = g_s;\r\n' \
-  '                for (let s=0; s<segs.length; s++) {\r\n' \
+  '                for (let s=0, l=segs.length; s<l; s++) {\r\n' \
   '                  let seg_ind = null;\r\n' \
   '                  if (tr_ind == null) {\r\n' \
-  '                    if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '                    seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '                    if (segs[s].hasAttribute("data-deleted")) {continue;}\r\n' \
+  '                    seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
   '                  } else {\r\n' \
   '                    seg_ind = s;\r\n' \
   '                  }\r\n' \
@@ -10533,7 +10832,7 @@ class GPXTweakerWebInterfaceServer():
   '                graphpy.innerHTML = (stats[segf_ind][stat_ind][5] * 100).toFixed(1) + "%";\r\n' \
   '                break\r\n' \
   '              case 7:\r\n' \
-  '                graphpy.innerHTML = (stats[segf_ind][stat_ind][7] * 3.6 ).toFixed(1) + "km/h";\r\n' \
+  '                graphpy.innerHTML = (stats[segf_ind][stat_ind][7] * 3.6).toFixed(1) + "km/h";\r\n' \
   '                break\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -10548,16 +10847,16 @@ class GPXTweakerWebInterfaceServer():
   '            let inda = Math.floor((ind1 + ind2) / 2);\r\n' \
   '            let indb = inda + 1;\r\n' \
   '            while (graph_px[graph_ip[inda]] == graph_px[graph_ip[indb]] && indb < ind2) {indb++;}\r\n' \
-  '            let da = Math.abs(graph_px[graph_ip[inda]] - x);\r\n' \
-  '            let db = Math.abs(graph_px[graph_ip[indb]] - x);\r\n' \
+  '            const da = Math.abs(graph_px[graph_ip[inda]] - x);\r\n' \
+  '            const db = Math.abs(graph_px[graph_ip[indb]] - x);\r\n' \
   '            if (da <= db) {ind2 = inda;} else {ind1 = indb;}\r\n' \
   '          }\r\n' \
-  '          if (focused.substring(0, 5) == "track") {\r\n' \
+  '          if (focused.startsWith("track")) {\r\n' \
   '            focused_targeted = ind1;\r\n' \
   '            graph_point();\r\n' \
   '          } else {\r\n' \
   '            if ("point" + graph_ip[ind1].toString() != focused) {\r\n' \
-  '              let pt = document.getElementById("point" + graph_ip[ind1].toString() + "desc");\r\n' \
+  '              const pt = document.getElementById("point" + graph_ip[ind1].toString());\r\n' \
   '              element_click(null, pt);\r\n' \
   '            } else {\r\n' \
   '              gfence(() => {if (wgpu_modified.size == 0) {gbar.style.display = ""; graphpx.innerHTML = gpx; graphpy.innerHTML = gpy;};});\r\n' \
@@ -10566,49 +10865,38 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function switch_graph() {\r\n' \
-  '        let graph = document.getElementById("graph");\r\n' \
-  '        if (graph.style.display == "none") {\r\n' \
-  '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          graph.style.display = "block";\r\n' \
-  '          rescale();\r\n' \
-  '          return true;\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '          viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '          graph.style.display = "none";\r\n' \
+  '      function switch_graph(other=false) {\r\n' \
+  '        const lps = document.getElementById("lpanels").style;\r\n' \
+  '        if (lps.getPropertyValue("--panel") == "graph") {\r\n' \
+  '          lps.setProperty("--panel", "none");\r\n' \
   '          document.getElementById("gbar").style.display = "none";\r\n' \
   '          document.getElementById("gbarc").style.display = "none";\r\n' \
   '          document.getElementById("graphpx").innerHTML = "";\r\n' \
   '          document.getElementById("graphpy").innerHTML = "";\r\n' \
   '          graph_ip = null;\r\n' \
   '          graph_px = null;\r\n' \
-  '          let graphc = document.getElementById("graphc");\r\n' \
+  '          const graphc = document.getElementById("graphc");\r\n' \
   '          graphc.setAttribute("width", graphc.getAttribute("width"));\r\n' \
-  '          if (targetmark != null) {\r\n' \
-  '            if (focused_targeted != null) {set_target();}\r\n' \
-  '          }\r\n' \
-  '          rescale();\r\n' \
+  '          if (targetmark != null && focused_targeted != null) {set_target();}\r\n' \
+  '          if (! other) {rescale();}\r\n' \
   '          return false;\r\n' \
+  '        } else {\r\n' \
+  '          if (other) {return false;}\r\n' \
+  '          lps.setProperty("--panel", "graph");\r\n' \
+  '          rescale();\r\n' \
+  '          return true;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
   '        if (sw) {switch_graph();}\r\n' \
-  '        let graph = document.getElementById("graph");\r\n' \
-  '        if (graph.style.display == "none") {return;}\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
-  '        let gheight = graph.offsetHeight;\r\n' \
+  '        const graph = document.getElementById("graph");\r\n' \
+  '        if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph") {return;}\r\n' \
+  '        const graphc = document.getElementById("graphc");\r\n' \
+  '        const gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '        const gheight = graph.offsetHeight;\r\n' \
   '        graphc.setAttribute("width", gwidth.toString());\r\n' \
   '        graphc.setAttribute("height", gheight.toString());\r\n' \
-  '        let gbar = document.getElementById("gbar");\r\n' \
-  '        gbar.style.top= "10px";\r\n' \
-  '        gbar.setAttribute("height", (gheight - 25).toString());\r\n' \
-  '        let gbarc = document.getElementById("gbarc");\r\n' \
-  '        gbarc.style.top= "10px";\r\n' \
-  '        gbarc.setAttribute("height", (gheight - 25).toString());\r\n' \
-  '        let gctx = graphc.getContext("2d");\r\n' \
+  '        const gctx = graphc.getContext("2d");\r\n' \
   '        gctx.lineWidth = 1;\r\n' \
   '        gctx.lineJoin = "round";\r\n' \
   '        gctx.lineCap = "square";\r\n' \
@@ -10617,19 +10905,19 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.fillRect(0, 0, gwidth, gheight);\r\n' \
   '        gctx.globalCompositeOperation = "source-over";\r\n' \
   '        gctx.fillStyle = "rgb(40,45,50)";\r\n' \
-  '        let xl = 45;\r\n' \
-  '        let xr = gwidth - 20;\r\n' \
-  '        let yt = 10;\r\n' \
-  '        let yb = gheight - 15;\r\n' \
-  '        let gx = [];\r\n' \
-  '        let gy = [];\r\n' \
-  '        let gc = [0];\r\n' \
+  '        const xl = 45;\r\n' \
+  '        const xr = gwidth - 20;\r\n' \
+  '        const yt = 10;\r\n' \
+  '        const yb = gheight - 14;\r\n' \
+  '        const gx = [];\r\n' \
+  '        const gy = [];\r\n' \
+  '        const gc = [0];\r\n' \
   '        let dur = 0;\r\n' \
   '        let dist = 0;\r\n' \
   '        let ele = 0;\r\n' \
   '        let alt = 0;\r\n' \
-  '        let gx_ind = document.getElementById("graphx").selectedIndex;\r\n' \
-  '        let gy_ind = document.getElementById("graphy").selectedIndex;\r\n' \
+  '        const gx_ind = document.getElementById("graphx").selectedIndex;\r\n' \
+  '        const gy_ind = document.getElementById("graphy").selectedIndex;\r\n' \
   '        let p_targeted = null;\r\n'
   HTML_GRAPH2_TEMPLATE = \
   '            let dr = true;\r\n' \
@@ -10699,7 +10987,7 @@ class GPXTweakerWebInterfaceServer():
   '        let maxx = gx[0];\r\n' \
   '        let miny = gy[0];\r\n' \
   '        let maxy = gy[0];\r\n' \
-  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '        for (let i=0, l=gx.length; i<l; i++) {\r\n' \
   '          if (minx > gx[i]) {minx = gx[i];}\r\n' \
   '          if (maxx < gx[i]) {maxx = gx[i];}\r\n' \
   '          if (miny > gy[i]) {miny = gy[i];}\r\n' \
@@ -10707,8 +10995,8 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (maxx == minx) {maxx++;}\r\n' \
   '        if (maxy == miny) {maxy++;}\r\n' \
-  '        let cx = (xr - xl) / (maxx - minx);\r\n' \
-  '        let cy = (yb - yt) / (maxy - miny);\r\n' \
+  '        const cx = (xr - xl) / (maxx - minx);\r\n' \
+  '        const cy = (yb - yt) / (maxy - miny);\r\n' \
   '        let yl = 0;\r\n' \
   '        if (gy_ind == 0) {\r\n' \
   '          yl = yb;\r\n' \
@@ -10722,7 +11010,7 @@ class GPXTweakerWebInterfaceServer():
   '        gctx.strokeStyle = "rgb(56,56,56)";\r\n' \
   '        gctx.beginPath();\r\n' \
   '        let x = xl;\r\n' \
-  '        let dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
+  '        const dx = (xr - xl) / Math.floor((xr - xl) / 100);\r\n' \
   '        while (x <= xr) {\r\n' \
   '          gctx.moveTo(x, yb + 1);\r\n' \
   '          gctx.lineTo(x, yt);\r\n' \
@@ -10731,7 +11019,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (x > xr) {x = xr;}\r\n' \
   '        }\r\n' \
   '        let y = yb;\r\n' \
-  '        let dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
+  '        const dy = (yb - yt) / Math.floor((yb - yt) / 50);\r\n' \
   '        while (y >= yt) {\r\n' \
   '          gctx.moveTo(xl + 1, y);\r\n' \
   '          gctx.lineTo(xr, y);\r\n' \
@@ -10756,10 +11044,10 @@ class GPXTweakerWebInterfaceServer():
   '        x = xl;\r\n' \
   '        while (x <= xr) {\r\n' \
   '          if (gx_ind == 0) {\r\n' \
-  '            let dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
-  '            let dur_m = (dur / 60) % 60;\r\n' \
-  '            let dur_h = (dur - dur_m * 60) / 3600;\r\n' \
-  '            let dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
+  '            const dur = Math.round((minx + (x - xl) / cx) / 60) * 60;\r\n' \
+  '            const dur_m = (dur / 60) % 60;\r\n' \
+  '            const dur_h = (dur - dur_m * 60) / 3600;\r\n' \
+  '            const dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn";\r\n' \
   '            gctx.fillText(dur_c, x, yl + 3);\r\n' \
   '          } else {\r\n' \
   '            gctx.fillText(((minx + (x - xl) / cx) / 1000).toFixed(1) + "km", x, yl + 3);\r\n' \
@@ -10795,7 +11083,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        gctx.strokeStyle = "rgb(255,0,0)";\r\n' \
   '        gctx.beginPath();\r\n' \
-  '        for (let i=0; i<gx.length; i++) {\r\n' \
+  '        for (let i=0, l=gx.length; i<l; i++) {\r\n' \
   '          graph_px[graph_ip[i]] = (gx[i] - minx) * cx + xl;\r\n' \
   '          if (i == gc[0]) {\r\n' \
   '            gctx.moveTo(graph_px[graph_ip[i]], (maxy - gy[i]) * cy + yt);\r\n' \
@@ -10810,17 +11098,11 @@ class GPXTweakerWebInterfaceServer():
   HTML_MAP_TEMPLATE = \
   '      function switch_3Dpanel() {\r\n' \
   '        if (eset < 0) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        if (document.getElementById("v3Dpanel").style.display != "initial") {\r\n' \
-  '          document.getElementById("v3Dpanel").style.display = "initial";\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("v3Dpanel").style.display = "none";\r\n' \
-  '        }\r\n' \
-  '        document.getElementById("dfpanel").style.display = "none";\r\n' \
-  '        document.getElementById("mtpanel").style.display = "none";\r\n' \
-  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
+  '        const ps = document.getElementById("panels").style;\r\n' \
+  '        ps.setProperty("--panel", ps.getPropertyValue("--panel") == "v3dpanel" ? "none" : "v3dpanel");\r\n' \
   '      }\r\n' \
   '      function rescale(tscale_ex=tscale) {\r\n' \
-  '        let zoom_ex = zoom;\r\n' \
+  '        const zoom_ex = zoom;\r\n' \
   '        if (mode == "map") {\r\n' \
   '          zoom = eval(zoom_s) * Math.min((viewpane.offsetWidth - 2) * tscale / (vmaxx - vminx), (viewpane.offsetHeight - 4) * tscale / (vmaxy - vminy));\r\n' \
   '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
@@ -10829,12 +11111,12 @@ class GPXTweakerWebInterfaceServer():
   '          if (tlevel != 0) {document.getElementById("matrix").innerHTML = tlevels[tlevel][0].toString();}\r\n' \
   '          document.getElementById("zoom").innerHTML = zoom_s;\r\n' \
   '        }\r\n' \
-  '        document.documentElement.style.setProperty("--scale", tscale / zoom);\r\n' \
-  '        document.documentElement.style.setProperty("--zoom", zoom);\r\n' \
-  '        document.documentElement.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
-  '        let r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
-  '        let cx = cpx==null?(viewpane.offsetWidth/2):cpx;\r\n' \
-  '        let cy = cpy==null?(viewpane.offsetHeight/2):cpy;\r\n' \
+  '        viewpane.style.setProperty("--scale", tscale / zoom);\r\n' \
+  '        viewpane.style.setProperty("--zoom", zoom);\r\n' \
+  '        viewpane.style.setProperty("--wsp", (6 * Math.max(zoom/tscale, 1)).toFixed(1) + "em");\r\n' \
+  '        const r = zoom / zoom_ex * tscale_ex / tscale;\r\n' \
+  '        const cx = cpx==null?(viewpane.offsetWidth/2):cpx;\r\n' \
+  '        const cy = cpy==null?(viewpane.offsetHeight/2):cpy;\r\n' \
   '        cpx = cpy = null;\r\n' \
   '        hpx = cx * (1 - r) + hpx * r;\r\n' \
   '        hpy = cy * (1 - r) + hpy * r;\r\n' \
@@ -10848,9 +11130,9 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (scrollmode > 0) {\r\n' \
   '          if (focused) {\r\n' \
-  '            if (focused.indexOf("segment") >= 0) {\r\n' \
+  '            if (focused.startsWith("segment")) {\r\n' \
   '              scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);\r\n' \
-  '            } else if (focused.indexOf("track") >= 0){\r\n' \
+  '            } else if (focused.startsWith("track")){\r\n' \
   '              scroll_to_track(document.getElementById(focused), scrollmode == 2);\r\n' \
   '              if (targetmark.style.display != "none") {\r\n' \
   '                scroll_to_target(scrollmode == 2);\r\n' \
@@ -10869,7 +11151,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function switch_tlock(resc=true) {\r\n' \
   '        if (mode == "map" || (document.getElementById("tset").disabled && resc)) {return;}\r\n' \
-  '        let zoom_s_ex = zoom_s;\r\n' \
+  '        const zoom_s_ex = zoom_s;\r\n' \
   '        if (tlock) {\r\n' \
   '          if (tlevel == 0) {return;}\r\n' \
   '          document.getElementById("tlock").innerHTML = "&#128275;&#xfe0e;";\r\n' \
@@ -10896,7 +11178,7 @@ class GPXTweakerWebInterfaceServer():
   '        rescale();\r\n' \
   '      }\r\n' \
   '      function zoom_change(o, cx=null, cy=null) {\r\n' \
-  '        let zoom_s_ex = zoom_s;\r\n' \
+  '        const zoom_s_ex = zoom_s;\r\n' \
   '        if (mode == "map") {\r\n' \
   '          if (o < 0) {\r\n' \
   '            zoom_s = ([zooms[0]].concat(zooms))[zooms.indexOf(zoom_s)];\r\n' \
@@ -10951,56 +11233,115 @@ class GPXTweakerWebInterfaceServer():
   '        if (! document.getElementById("tset").disabled) {zoom_change(1, cx, cy);}\r\n' \
   '      }\r\n' \
   '      function map_adjust(s, t) {\r\n' \
-  '        let adj = "adjustment_" + t;\r\n' \
+  '        const adj = "adjustment_" + t;\r\n' \
   '        if (s == "-") {\r\n' \
   '          if (window[adj] > 0.19) {window[adj] -= 0.1;} else {return;}\r\n' \
   '        } else {\r\n' \
   '          if (window[adj] < 0.91) {window[adj] += 0.1;} else {return;}\r\n' \
   '        }\r\n' \
-  '        let filt = document.getElementById("attenuate").firstElementChild;\r\n' \
-  '        Array.from(filt.firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
+  '        const filt = document.getElementById("attenuate").firstElementChild;\r\n' \
+  '        Array.prototype.forEach.call(filt.firstElementChild.children, function(f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
   '        if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
   '          if (! navigator_firefox) {\r\n' \
-  '            let nid = "attenuate" + (parseInt(filt.id.substring(9)) + 1).toString();\r\n' \
+  '            const nid = "attenuate" + (parseInt(filt.id.substring(9)) + 1).toString();\r\n' \
   '            filt.id = nid;\r\n' \
-  '            document.documentElement.style.setProperty("--filter", "url(#" + nid + ")");\r\n' \
-  '          } else if ((document.documentElement.style.getPropertyValue("--filter") || "").length <= 4) {document.documentElement.style.setProperty("--filter", "url(#attenuate0)");}\r\n' \
+  '            viewpane.style.setProperty("--filter", "url(#" + nid + ")");\r\n' \
+  '          } else if ((viewpane.style.getPropertyValue("--filter") || "").length <= 4) {viewpane.style.setProperty("--filter", "url(#attenuate0)");}\r\n' \
   '        } else {\r\n' \
-  '          document.documentElement.style.setProperty("--filter", "none");\r\n' \
+  '          viewpane.style.setProperty("--filter", "none");\r\n' \
   '        }\r\n' \
   '        show_msg("{#jmadjust#}".replace("%s", adjustment_a.toFixed(1)).replace("%s", adjustment_e.toFixed(1)), 2);\r\n' \
   '      }\r\n' \
   '      function scrollcross(sw=false, target=false) {\r\n' \
   '        if (sw) {\r\n' \
   '          scrollmode = scrollmode_ex = (scrollmode + 1) % 3;\r\n' \
-  '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n' \
+  '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode == 1 ? "blue" : "green");\r\n' \
   '        } else {\r\n' \
   '          if (target) {\r\n' \
   '            if (targetmark.style.display != "none") {scroll_to_target(true);}\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          if (! focused) {return;}\r\n' \
-  '          if (focused.substring(0, 3) == "seg") {\r\n' \
-  '            document.getElementById(focused + "desc").scrollIntoView({block:"start"});\r\n' \
+  '          if (focused.startsWith("seg")) {\r\n' \
+  '            document.getElementById(focused).scrollIntoView({block:"start"});\r\n' \
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), true);\r\n' \
-  '          } else if (focused.substring(0, 3) == "tra") {\r\n' \
+  '          } else if (focused.startsWith("tra")) {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
   '            scroll_to_track(document.getElementById(focused), true);\r\n' \
   '          } else {\r\n' \
-  '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
-  '            document.getElementById(focused + "focus").scrollIntoView({block:"nearest"});\r\n' \
-  '            if (document.getElementById(focused).value != "error") {\r\n' \
+  '            document.getElementById(focused).scrollIntoView({block:"nearest"});\r\n' \
+  '            document.getElementById((focused.startsWith("way") ? "waypoint" : "point") + "form").scrollIntoView({block:"nearest"});\r\n' \
+  '            if (! document.getElementById(focused).hasAttribute("data-error")) {\r\n' \
   '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function points_navigate(cmd) {\r\n' \
+  '        let seg = null;\r\n' \
+  '        switch (cmd) {\r\n' \
+  '          case "ca":\r\n' \
+  '            Array.prototype.forEach.call(document.getElementById("pointslist").getElementsByClassName("segment"), function(s) {s.setAttribute("data-collapsed", "");});\r\n' \
+  '            break;\r\n' \
+  '          case "cc":\r\n' \
+  '            if (focused.startsWith("seg")) {\r\n' \
+  '              document.getElementById(focused).setAttribute("data-collapsed", "");\r\n' \
+  '            } else if (focused.startsWith("point")) {\r\n' \
+  '              document.getElementById(focused).parentNode.setAttribute("data-collapsed", "");\r\n' \
+  '            }\r\n' \
+  '            break;\r\n' \
+  '          case "ea":\r\n' \
+  '            Array.prototype.forEach.call(document.getElementById("pointslist").getElementsByClassName("segment"), function(s) {s.removeAttribute("data-collapsed");});\r\n' \
+  '          case "ec":\r\n' \
+  '            if (focused.startsWith("seg")) {\r\n' \
+  '              document.getElementById(focused).removeAttribute("data-collapsed");\r\n' \
+  '              document.getElementById(focused).getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"nearest"});\r\n' \
+  '            } else if (focused.startsWith("point")) {\r\n' \
+  '              document.getElementById(focused).parentNode.removeAttribute("data-collapsed");\r\n' \
+  '              document.getElementById(focused).scrollIntoView({block:"nearest"});\r\n' \
+  '              document.getElementById("pointform").scrollIntoView({block:"nearest"});\r\n' \
+  '            } else if (focused) {\r\n' \
+  '              document.getElementById(focused).scrollIntoView({block:"nearest"});\r\n' \
+  '              document.getElementById("waypointform").scrollIntoView({block:"nearest"});\r\n' \
+  '            }\r\n' \
+  '            break;\r\n' \
+  '          case "su":\r\n' \
+  '            if (focused.startsWith("seg")) {\r\n' \
+  '              seg = document.getElementById(focused).previousElementSibling;\r\n' \
+  '            } else if (focused.startsWith("point")) {\r\n' \
+  '              seg = document.getElementById(focused).parentNode;\r\n' \
+  '            }\r\n' \
+  '            if (seg) {element_click(null, seg);}\r\n' \
+  '            break;\r\n' \
+  '          case "sd":\r\n' \
+  '            if (focused.startsWith("seg")) {\r\n' \
+  '              seg = document.getElementById(focused).nextElementSibling;\r\n' \
+  '            } else if (focused.startsWith("point")) {\r\n' \
+  '              seg = document.getElementById(focused).parentNode.nextElementSibling;\r\n' \
+  '            }\r\n' \
+  '            if (seg) {element_click(null, seg);}\r\n' \
+  '            break;\r\n' \
+  '          case "ms":\r\n' \
+  '            marked = focused;\r\n' \
+  '            break;\r\n' \
+  '          case "mg":\r\n' \
+  '            if (marked) {\r\n' \
+  '              if (marked == focused) {element_click(null, document.getElementById(marked));}\r\n' \
+  '              element_click(null, document.getElementById(marked));\r\n' \
+  '            }\r\n' \
+  '            break;\r\n' \
+  '          case "sw":\r\n' \
+  '            document.getElementById("waypoints").style.setProperty("--wpth", document.getElementById("waypoints").style.getPropertyValue("--wpth") == "80vh" ? "10vh" : "80vh");\r\n' \
+  '            break;\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function open_legend() {\r\n' \
-  '        let msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
+  '        const msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {let url=URL.createObjectURL(e);let w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
+  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {const url=URL.createObjectURL(e);const w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
   '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
+  '        const ps = document.getElementById("panels").style;\r\n' \
   '        if (e.button == 2) {\r\n' \
   '          e.preventDefault();\r\n' \
   '          e.stopPropagation();\r\n' \
@@ -11011,11 +11352,11 @@ class GPXTweakerWebInterfaceServer():
   '            return;\r\n' \
   '          }\r\n' \
   '          if (s.id == "tset" && mode != "map" && layers.length > 1) {\r\n' \
-  '            document.getElementById("opanel").style.display = document.getElementById("opanel").style.display=="none"?"block":"none";\r\n' \
+  '            ps.setProperty("--panel", ps.getPropertyValue("--panel") == "opanel" ? "none" : "opanel");\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        document.getElementById("opanel").style.display = "none";\r\n' \
+  '        if (ps.getPropertyValue("--panel") == "opanel") {ps.setProperty("--panel", "none");}\r\n' \
   '        if (e.altKey) {\r\n' \
   '          e.preventDefault();\r\n' \
   '          e.stopPropagation();\r\n' \
@@ -11062,7 +11403,7 @@ class GPXTweakerWebInterfaceServer():
   '      function switch_elevations(eset) {\r\n' \
   '        document.getElementById("eset").disabled = true;\r\n' \
   '        document.getElementById("eset").style.pointerEvents = "none";\r\n' \
-  '        let q = "eset=" + encodeURIComponent(eset.toString());\r\n' \
+  '        const q = "eset=" + encodeURIComponent(eset.toString());\r\n' \
   '        xhrep.onload = (e) => {load_epcb(e.target)};\r\n' \
   '        xhrep.open("GET", "/elevationsproviders/switch?" + q);\r\n' \
   '        xhrep.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -11070,129 +11411,110 @@ class GPXTweakerWebInterfaceServer():
   '        xhrep.send();\r\n' \
   '      }\r\n'
   HTML_ATTENUATE_TEMPLATE = \
-  '            <svg id="attenuate" xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;top:0px;left:0px;">\r\n' \
-  '              <filter id="attenuate0">\r\n' \
-  '                <feComponentTransfer color-interpolation-filters="sRGB">\r\n' \
-  '                  <feFuncR type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
-  '                  <feFuncG type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
-  '                  <feFuncB type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
-  '                </feComponentTransfer>\r\n' \
-  '              </filter>\r\n' \
-  '            </svg>\r\n'
-  HTML_OPACITYPANEL_TEMPLATE = \
-  '            <div id="opanel" style="position:absolute;display:none;top:calc(1.6em + 10px);right:2vw;width:26em;max-height:20em;overflow-y:auto;background-color:rgb(30,30,35);z-index:9;font-size:70%;text-align:left;font-weight:normal;user-select:none;">\r\n' \
-  '              <form id="oform" autocomplete="off" onsubmit="return(false);"/>\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n'
-  HTML_DFMTPANEL_TEMPLATE = \
-  '            <div id="dfpanel">\r\n' \
-  '              <span>{#jdfpanel#}</span>\r\n' \
-  '              <form id="dfform" autocomplete="off" onsubmit="return(false);" onchange="if(smoothed) {tracks_pts_smoothed=null;webgpu?gfence(tracks_calc_wgpu,2):tracks_calc(2);}">\r\n' \
-  '                <label for="dffilter" style="left:1.5em;width:8em;">{#jgraphdistance#}</label>\r\n' \
-  '                <span id="dfdist" style="left:4.5em;">##SMRANGE##</span>\r\n' \
-  '                <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="##SMRANGE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="mtpanel">\r\n' \
-  '              <span>{#jmtpanel#}</span>\r\n' \
-  '              <form id="mtform" autocomplete="off" onsubmit="return(false);" onchange="update_media();">\r\n' \
-  '                <label for="mthumb" style="left:1.5em;width:8em;">{#jpixels#}</label>\r\n' \
-  '                <span id="mtsize" style="left:4.5em;">##THUMBSIZE##</span>\r\n' \
-  '                <input type="range" id="mthumb" name="mthumb" min="16" max="512" step="4" value="##THUMBSIZE##" style="right:5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n'
-  HTML_FILTERPANEL_TEMPLATE = \
-  '            <div id="filterpanel1">\r\n' \
-  '              <span>{#jfilterpanel1#}</span>\r\n' \
-  '              <form id="filterform1" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(1)">\r\n' \
-  '                <label for="egfilter" style="left:2px;">{#jgraphelevation#}</label>\r\n' \
-  '                <label for="agfilter" style="right:2px;">{#jgraphaltitude#}</label>\r\n' \
-  '                <span id="egstren" style="left:0.7em;">##EGTHRESHOLD##</span>\r\n' \
-  '                <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="##EGTHRESHOLD##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="agstren" style="right:0.7em;">##AGTHRESHOLD##</span>\r\n' \
-  '                <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel2">\r\n' \
-  '              <span>{#jfilterpanel2#}</span>\r\n' \
-  '              <form id="filterform2" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(2)">\r\n' \
-  '                <label for="sldfilter" style="left:2px;">{#jgraphdistance#}</label>\r\n' \
-  '                <label for="slmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
-  '                <span id="sldist" style="left:0.7em;">##SLRANGE##</span>\r\n' \
-  '                <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="slmax" style="right:0.7em;">##SLMAX##</span>\r\n' \
-  '                <input type="range" id="slmfilter" name="slmfilter" min="0" max="200" step="1" value="##SLMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n' \
-  '            <div id="filterpanel3">\r\n' \
-  '              <span>{#jfilterpanel3#}</span>\r\n' \
-  '              <form id="filterform3" autocomplete="off" onsubmit="return(false);" onchange="calc_changed(3)">\r\n' \
-  '                <label for="sptfilter" style="left:2px;">{#jspduration#}</label>\r\n' \
-  '                <label for="spmfilter" style="right:2px;">{#jsmax#}</label>\r\n' \
-  '                <span id="sptime" style="left:0.7em;">##SPRANGE##</span>\r\n' \
-  '                <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="##SPRANGE##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="spmax" style="right:0.7em;">##SPMAX##</span>\r\n' \
-  '                <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n'
-  HTML_3DPANEL_TEMPLATE = \
-  '            <div id="v3Dpanel">\r\n' \
-  '              <span>{#j3dpanel#}</span>\r\n' \
-  '              <form id="v3dform" autocomplete="off" onsubmit="return(false);">\r\n' \
-  '                <label for="v3dpmargin" style="left:2px;">{#j3dpanoramic#}</label>\r\n' \
-  '                <label for="v3dsmargin" style="right:2px;">{#j3dsubjective#}</label>\r\n' \
-  '                <span id="v3dpdist" style="left:0.7em;">##V3DPMARGIN##</span>\r\n' \
-  '                <input type="range" id="v3dpmargin" name="v3dpmargin" min="0.5" max="20" step="0.5" value="##V3DPMARGIN##" style="right:8.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '                <span id="v3dsdist" style="right:0.7em;">##V3DSMARGIN##</span>\r\n' \
-  '                <input type="range" id="v3dsmargin" name="v3dsmargin" min="0.5" max="20" step="0.5" value="##V3DSMARGIN##" style="right:1.5em;" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200, 250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
-  '              </form>\r\n' \
-  '            </div>\r\n'
-  HTML_SSB_GRAPH_TEMPLATE = \
-  '              <div id="scalebox" style="left:1.5em;line-height:0.7em;">\r\n' \
-  '                <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
-  '                  <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
-  '                  <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
-  '                  <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
-  '                </svg>\r\n' \
-  '                <span id="scalevalue" style="font-size:70%;color:black;">0 m</span>\r\n' \
-  '              </div>\r\n' \
-  '            </div>\r\n' \
-  '          </td>\r\n' \
-  '        </tr>\r\n' \
-  '      </tbody>\r\n' \
-  '      <tfoot>\r\n' \
-  '        <tr>\r\n' \
-  '          <th colspan=2 style="text-align:left;font-size:80%;width:100%;border-top:1px darkgray solid;font-weight:normal;padding-bottom:0px;">\r\n' \
-  '            <div style="height:1.2em;overflow-y:hidden;width:100%;user-select:none;">\r\n' \
-  '              <div id="message" style="overflow-y:auto;width:calc(98vw - 6px - 1.4em);height:1.2em;display:inline-block;" ></div><div title="{#jhelp#}" style="overflow-y:auto;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '            </div>\r\n' \
-  '          </th>\r\n' \
-  '        </tr>\r\n' \
-  '      </tfoot>\r\n' \
-  '    </table>\r\n' \
-  '    <div id="graph" style="height:25vh;display:none;position:relative;width:100%;border-top:1px darkgray solid;font-size:80%;overflow:hidden;">\r\n' \
-  '      <select id="graphy" name="graphy" title="y" autocomplete="off" style="top:0;" onchange="gfence(refresh_graph)"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
-  '      <select id="graphx" name="graphx" title="x" autocomplete="off" style="bottom:0;" onchange="gfence(refresh_graph)"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
-  '      <div id="graphp" style="width:6em;color:dodgerblue;position:absolute;left:2px;top:2em;bottom:2em;overflow:auto;text-align:right;">\r\n' \
-  '        <span id="graphpx" style="bottom:0;position:absolute;right:0;"></span>\r\n' \
-  '        <span id="graphpy" style="top:0;position:absolute;right:0;"></span>\r\n' \
+  '      <svg id="attenuate" xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;top:0px;left:0px;">\r\n' \
+  '        <filter id="attenuate0">\r\n' \
+  '          <feComponentTransfer color-interpolation-filters="sRGB">\r\n' \
+  '            <feFuncR type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
+  '            <feFuncG type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
+  '            <feFuncB type="gamma" offset="0" amplitude="1" exponent="1"/>\r\n' \
+  '          </feComponentTransfer>\r\n' \
+  '        </filter>\r\n' \
+  '      </svg>\r\n'
+  HTML_PANELS_TEMPLATE = \
+  '    <div id="panels" style="--panel:none;">\r\n' \
+  '      <div id="opanel">\r\n' \
+  '        <form id="oform" autocomplete="off" onsubmit="return(false);">\r\n' \
+  '        </form>\r\n' \
   '      </div>\r\n' \
-  '      <canvas id="graphc" width="100" height="25" style="position:absolute;left:8em;top:0;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '      </canvas>\r\n' \
-  '      <svg id="gbarc" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="none" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;cursor:ew-resize;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '        <line vector-effect="non-scaling-stroke" pointer-events="none" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
-  '      </svg>\r\n' \
-  '      <svg id="gbar" preserveAspectRatio="none" width="3" height="1" viewbox="0 0 3 100" stroke="dodgerblue" stroke-width="1" fill="none" style="position:absolute;display:none;left:20px;top:1px;" pointer-events="none">\r\n' \
-  '        <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
-  '      </svg>\r\n' \
+  '      <div id="dfpanel">\r\n' \
+  '        <span>{#jdfpanel#}</span>\r\n' \
+  '        <form autocomplete="off" onsubmit="return(false);" onchange="if(smoothed) {tracks_pts_smoothed=null;webgpu?gfence(tracks_calc_wgpu,2):tracks_calc(2);}">\r\n' \
+  '          <label for="dffilter">{#jgraphdistance#}</label>\r\n' \
+  '          <span id="dfdist">##SMRANGE##</span>\r\n' \
+  '          <input type="range" id="dffilter" name="dffilter" min="5" max="50" step="1" value="##SMRANGE##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="mtpanel">\r\n' \
+  '        <span>{#jmtpanel#}</span>\r\n' \
+  '        <form autocomplete="off" onsubmit="return(false);" onchange="update_media();">\r\n' \
+  '          <label for="mthumb">{#jpixels#}</label>\r\n' \
+  '          <span id="mtsize">##THUMBSIZE##</span>\r\n' \
+  '          <input type="range" id="mthumb" name="mthumb" min="16" max="512" step="4" value="##THUMBSIZE##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="filterpanel1">\r\n' \
+  '        <span>{#jfilterpanel1#}</span>\r\n' \
+  '        <form autocomplete="off" onsubmit="return(false);" onchange="calc_changed(1)">\r\n' \
+  '          <label for="egfilter">{#jgraphelevation#}</label>\r\n' \
+  '          <label for="agfilter">{#jgraphaltitude#}</label>\r\n' \
+  '          <span id="egstren">##EGTHRESHOLD##</span>\r\n' \
+  '          <input type="range" id="egfilter" name="egfilter" min="0" max="25" step="1" value="##EGTHRESHOLD##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '          <span id="agstren">##AGTHRESHOLD##</span>\r\n' \
+  '          <input type="range" id="agfilter" name="agfilter" min="0" max="25" step="1" value="##AGTHRESHOLD##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="filterpanel2">\r\n' \
+  '        <span>{#jfilterpanel2#}</span>\r\n' \
+  '        <form autocomplete="off" onsubmit="return(false);" onchange="calc_changed(2)">\r\n' \
+  '          <label for="sldfilter">{#jgraphdistance#}</label>\r\n' \
+  '          <label for="slmfilter">{#jsmax#}</label>\r\n' \
+  '          <span id="sldist">##SLRANGE##</span>\r\n' \
+  '          <input type="range" id="sldfilter" name="sldfilter" min="0" max="500" step="2" value="##SLRANGE##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '          <span id="slmax">##SLMAX##</span>\r\n' \
+  '          <input type="range" id="slmfilter" name="slmfilter" min="0" max="200" step="1" value="##SLMAX##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="filterpanel3">\r\n' \
+  '        <span>{#jfilterpanel3#}</span>\r\n' \
+  '        <form autocomplete="off" onsubmit="return(false);" onchange="calc_changed(3)">\r\n' \
+  '          <label for="sptfilter">{#jspduration#}</label>\r\n' \
+  '          <label for="spmfilter">{#jsmax#}</label>\r\n' \
+  '          <span id="sptime">##SPRANGE##</span>\r\n' \
+  '          <input type="range" id="sptfilter" name="sptfilter" min="0" max="300" step="2" value="##SPRANGE##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '          <span id="spmax">##SPMAX##</span>\r\n' \
+  '          <input type="range" id="spmfilter" name="spmfilter" min="0" max="90" step="1" value="##SPMAX##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="v3dpanel">\r\n' \
+  '        <span>{#j3dpanel#}</span>\r\n' \
+  '        <form autocomplete="off" onsubmit="return(false);">\r\n' \
+  '          <label for="v3dpmargin">{#j3dpanoramic#}</label>\r\n' \
+  '          <label for="v3dsmargin">{#j3dsubjective#}</label>\r\n' \
+  '          <span id="v3dpdist">##V3DPMARGIN##</span>\r\n' \
+  '          <input type="range" id="v3dpmargin" name="v3dpmargin" min="0.5" max="20" step="0.5" value="##V3DPMARGIN##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '          <span id="v3dsdist">##V3DSMARGIN##</span>\r\n' \
+  '          <input type="range" id="v3dsmargin" name="v3dsmargin" min="0.5" max="20" step="0.5" value="##V3DSMARGIN##" oninput="this.previousElementSibling.innerHTML=this.value" onfocus="this.previousElementSibling.style.color=\'rgb(200,250,240)\'" onblur="this.previousElementSibling.style.color=\'\'">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
   '    </div>\r\n'
+  HTML_SSB_TEMPLATE = \
+  '      <div id="scalebox">\r\n' \
+  '        <svg id="scaleline" stroke="black" stroke-width="1.5" width="100px" height="0.3em">\r\n' \
+  '          <line x1="0" y1="0" x2="100%" y2="0"/>\r\n' \
+  '          <line x1="0" y1="0" x2="0" y2="100%"/>\r\n' \
+  '          <line x1="100%" y1="0" x2="100%" y2="100%"/>\r\n' \
+  '        </svg>\r\n' \
+  '        <span id="scalevalue">0 m</span>\r\n' \
+  '      </div>\r\n'
+  HTML_GRAPH_TEMPLATE = \
+  '      <div id="graph">\r\n' \
+  '        <select id="graphy" name="graphy" title="y" autocomplete="off" onchange="gfence(refresh_graph)"><option value="distance">{#jgraphdistance#}</option><option value="elevation">{#jgraphelevation#}</option><option value="altitude">{#jgraphaltitude#}</option><option value="elegain">{#jgraphelegain#}</option><option value="altgain">{#jgraphaltgain#}</option><option value="eleslope">{#jgrapheleslope#}</option><option value="altslope">{#jgraphaltslope#}</option><option value="speed">{#jgraphspeed#}</option></select>\r\n' \
+  '        <select id="graphx" name="graphx" title="x" autocomplete="off" onchange="gfence(refresh_graph)"><option value="time">{#jgraphtime#}</option><option value="distance">{#jgraphdistance#}</option></select>\r\n' \
+  '        <div id="graphp">\r\n' \
+  '          <span id="graphpx"></span>\r\n' \
+  '          <span id="graphpy"></span>\r\n' \
+  '        </div>\r\n' \
+  '        <canvas id="graphc" width="100" height="25" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '        </canvas>\r\n' \
+  '        <svg id="gbarc" preserveAspectRatio="none" viewbox="0 0 3 100" stroke="none" style="display:none;left:20px;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '          <line vector-effect="non-scaling-stroke" pointer-events="none" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '        </svg>\r\n' \
+  '        <svg id="gbar" preserveAspectRatio="none" viewbox="0 0 3 100" style="display:none;left:20px;">\r\n' \
+  '          <line vector-effect="non-scaling-stroke" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
+  '        </svg>\r\n' \
+  '      </div>\r\n'
   HTML_PAGE_LOAD_TEMPLATE = \
-  '        document.getElementById("dfpanel").style.right = "calc(2vw + " + (mode=="tiles"?"18.7":"16.1") + "em - 30px)";\r\n' \
-  '        document.getElementById("mtpanel").style.right = "calc(2vw + " + (mode=="tiles"?"36.2":"33.6") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel1").style.right = "calc(2vw + " + (mode=="tiles"?"17.1":"14.3") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel2").style.right = "calc(2vw + " + (mode=="tiles"?"17.1":"14.3") + "em - 30px)";\r\n' \
-  '        document.getElementById("filterpanel3").style.right = "calc(2vw + " + (mode=="tiles"?"17.1":"14.3") + "em - 30px)";\r\n' \
-  '        document.getElementById("v3Dpanel").style.right = "calc(2vw + " + (mode=="tiles"?"15.3":"12.6") + "em - 30px)";\r\n' \
+  '        history.scrollRestoration = "manual";\r\n' \
   '        let prev_state = sessionStorage.getItem("state");\r\n' \
   '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
   '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
@@ -11201,7 +11523,7 @@ class GPXTweakerWebInterfaceServer():
   '          add_tile();\r\n' \
   '          rescale();\r\n' \
   '        } else {\r\n' \
-  '          let b = track_boundaries();\r\n' \
+  '          const b = track_boundaries();\r\n' \
   '          if (b != null) {\r\n' \
   '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
   '          }\r\n' \
@@ -11214,8 +11536,6 @@ class GPXTweakerWebInterfaceServer():
   '            switch_tiles(parseInt(prev_state[0]), parseInt(prev_state[1]));\r\n' \
   '            if (prev_state[2] == "true") {switch_tlock(false);}\r\n' \
   '          }\r\n' \
-  '          document.getElementById("matrix").style.display = "inline-block";\r\n' \
-  '          document.getElementById("tlock").style.display = "";\r\n' \
   '          rescale();\r\n' \
   '        }\r\n' \
   '        xhr_ongoing--;\r\n' \
@@ -11224,7 +11544,7 @@ class GPXTweakerWebInterfaceServer():
   '          [adjustment_a, adjustment_e] = prev_state[5].split("-").map(Number);\r\n' \
   '          if (adjustment_a < 0.91 || adjustment_e < 0.91) {\r\n' \
   '            Array.from(document.getElementById("attenuate0").firstElementChild.children).forEach(function (f) {f.setAttribute("offset", (1.0 - adjustment_a).toFixed(1)); f.setAttribute("amplitude", adjustment_a.toFixed(1)); f.setAttribute("exponent", adjustment_e.toFixed(1));});\r\n' \
-  '            document.documentElement.style.setProperty("--filter", "url(#attenuate0)");\r\n' \
+  '            viewpane.style.setProperty("--filter", "url(#attenuate0)");\r\n' \
   '          }\r\n' \
   '          eset = parseInt(prev_state[6]);\r\n' \
   '          if (eset >= 0 && document.getElementById("eset").options.length > eset) {\r\n' \
@@ -11267,71 +11587,252 @@ class GPXTweakerWebInterfaceServer():
   '          eset = document.getElementById("eset").selectedIndex;\r\n' \
   '          if (document.getElementById("iset").name == "iset") {iset = document.getElementById("iset").selectedIndex;}\r\n' \
   '        }\r\n' \
-  '        document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode==1?"blue":"green");\r\n'
+  '        document.getElementById("scrollcross").style.color = scrollmode == 0 ? "rgb(90,90,90)" : (scrollmode == 1 ? "blue" : "green");\r\n'
   HTML_PAGE_UNLOAD_TEMPLATE = \
-  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + Math.max(0, Math.min(tlevel, tlevels.length - 1)).toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + dots_visible.toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "[]" : JSON.stringify(Array.from(opacities))));\r\n'
+  '        sessionStorage.setItem("state", (mode == "map" ? "||" : (tset.toString() + "|" + Math.max(0, Math.min(tlevel, tlevels.length - 1)).toString() + "|" + tlock.toString())) + "|" + zoom_s + "|" + ((dots_visible ? 1 : 0) + (arrows_visible ? 0 : 2)).toString() + "|" + adjustment_a.toFixed(1) + "-" + adjustment_e.toFixed(1) + "|" + eset.toString() + "|" + iset.toString() + "|" + document.getElementById("egstren").innerHTML + "|" + document.getElementById("agstren").innerHTML + "|" + document.getElementById("sldist").innerHTML + "|" + document.getElementById("slmax").innerHTML + "|" + document.getElementById("sptime").innerHTML + "|" + document.getElementById("spmax").innerHTML + "|" + document.getElementById("graphx").selectedIndex.toString() + "|" + document.getElementById("graphy").selectedIndex.toString() + "|" + document.getElementById("v3dpdist").innerHTML + "|" + document.getElementById("v3dsdist").innerHTML +  "|" + document.getElementById("dfdist").innerHTML + "|" + scrollmode.toString() + "|" + (mode == "map" ? "[]" : JSON.stringify(Array.from(opacities))));\r\n'
   HTML_TEMPLATE = \
   '<!DOCTYPE html>\r\n' \
   '<html lang="fr-FR">\r\n' \
   '  <head>\r\n' \
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker</title>\r\n' + HTML_STYLES_TEMPLATE + \
-  '      input[id=name_track] {\r\n' \
-  '        width:calc(98vw - 64em);\r\n' \
-  '        font-size:70%;\r\n' \
+  '      #actions {\r\n' \
+  '        width: 55em;\r\n' \
   '      }\r\n' \
-  '      form[id*=point] {\r\n' \
-  '        overflow-x:hidden;\r\n' \
-  '        margin-right: 4px;\r\n' \
+  '      #message {\r\n' \
+  '        left: calc(20.5em + 1px);\r\n' \
+  '        width: calc(100% - 22.7em - 1px);\r\n' \
   '      }\r\n' \
-  '      input[type=checkbox][id*=point] {\r\n' \
-  '        margin-left:3px;\r\n' \
-  '        margin-right:2px;\r\n' \
+  '      #waypoints, #points {\r\n' \
+  '        overflow: hidden scroll;\r\n' \
+  '        width: 100%;\r\n' \
   '      }\r\n' \
-  '      div[id$=cont] {\r\n' \
-  '        text-decoration-line:inherit;\r\n' \
-  '        text-decoration-color:rgb(40,45,50);\r\n' \
+  '      #waypoints {\r\n' \
+  '        max-height: min(max(var(--wpth), 4.2em), max(100% - 4.2em, 50%));\r\n' \
+  '        border-bottom: 1px solid darkgray;\r\n' \
   '      }\r\n' \
-  '      label[id^=segment], label[id^=point] {\r\n' \
-  '        text-decoration-line:inherit;\r\n' \
+  '      #points {\r\n' \
+  '        flex: 1 1 0;\r\n' \
+  '        padding-top: 2px;\r\n' \
   '      }\r\n' \
-  '      label[id$=desc] {\r\n' \
-  '        cursor:cell;\r\n' \
-  '        display:inline-block;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        white-space:nowrap;\r\n' \
-  '        width:calc(24em - 22px);\r\n' \
-  '        min-height:1.35em;\r\n' \
+  '      @-moz-document url-prefix() {\r\n' \
+  '        #waypoints:not(:has(#waypoint0)) {\r\n' \
+  '          overflow-y: auto;\r\n' \
+  '          width: calc(100% - 17px);\r\n' \
+  '          border-right: solid rgb(34, 37, 42) 17px;\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
-  '      label[for$=lat], label[for$=lon], label[for$=ele], label[for$=alt], label[for$=time], label[for$=name] {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        width:2em;\r\n' \
-  '        padding-left:1em;\r\n' \
+  '      #waypoints:has(.waypoint[data-focused]) {\r\n' \
+  '        max-height :min(max(var(--wpth), 11.5em), max(100% - 4.2em, 50%));\r\n' \
   '      }\r\n' \
-  '      input[id$=lat], input[id$=lon], input[id$=ele], input[id$=alt], input[id$=time], input[id$=name] {\r\n' \
-  '        height:1.35em;\r\n' \
-  '        width:75%;\r\n' \
-  '        font-size:100%;\r\n' \
+  '      #waypointslist,#pointslist {\r\n' \
+  '        contain: paint;\r\n' \
+  '        width: calc(100% - 5px);\r\n' \
   '      }\r\n' \
-  '      br+span {\r\n' \
-  '        display:none;\r\n' \
+  '      #pointslist {\r\n' \
+  '        counter-reset: segment;\r\n' \
   '      }\r\n' \
-  '      svg[id^=dot] {\r\n' \
-  '        stroke:gray;\r\n' \
-  '        fill:none;\r\n' \
-  '        pointer-events:all;\r\n' \
+  '      .pos:hover, .segmentdesc:hover, .segmentdelete:hover+.segmentdesc {\r\n' \
+  '        background-color: green;\r\n' \
   '      }\r\n' \
-  '      svg[id^=waydot] {\r\n' \
-  '        stroke:red;\r\n' \
-  '        fill:red;\r\n' \
-  '        pointer-events:all;\r\n' \
+  '      .segment {\r\n' \
+  '        contain: paint;\r\n' \
+  '        white-space: nowrap;\r\n' \
   '      }\r\n' \
-  '      svg[id^=dot] rect, svg[id^=waydot] circle {\r\n' \
-  '        pointer-events:none;\r\n' \
+  '      .segment[data-collapsed] {\r\n' \
+  '        max-height: 1.8em;\r\n' \
   '      }\r\n' \
-  '      svg[id^=track] {\r\n' \
-  '        stroke:red;\r\n' \
-  '        fill:red;\r\n' \
+  '      .segmentdesc {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: calc(26.15em - 33px);\r\n' \
+  '        height: 1.4em;\r\n' \
+  '        margin-top: 0.4em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        line-height: 1.4em;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        text-decoration: inherit;\r\n' \
+  '        cursor: cell;\r\n' \
+  '      }\r\n' \
+  '      .segmentdesc::before {\r\n' \
+  '        counter-increment: segment 1;\r\n' \
+  '        content: "{#jsegment#} "counter(segment)" ";\r\n' \
+  '      }\r\n' \
+  '      .segmentdesc::after {\r\n' \
+  '        content: " ··················································";\r\n' \
+  '      }\r\n' \
+  '      .segmentcollapse, .segmentdelete {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 1.35em;\r\n' \
+  '        height: 1.35em;\r\n' \
+  '        margin-top: 0.4em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        line-height: 1.4em;\r\n' \
+  '      }\r\n' \
+  '      .segmentdelete {\r\n' \
+  '        margin-right: 0.35em;\r\n' \
+  '      }\r\n' \
+  '      .segmentcollapse::before, .segmentdelete::before {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 1.35em;\r\n' \
+  '        height: 1.35em;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
+  '        text-align: center;\r\n' \
+  '        font-weight: bold;\r\n' \
+  '      }\r\n' \
+  '      .segmentcollapse::before {\r\n' \
+  '        content: "\\25bc";\r\n' \
+  '}\r\n' \
+  '      .segment[data-collapsed]>.segmentcollapse::before {\r\n' \
+  '        content: "\\25ba";\r\n' \
+  '      }\r\n' \
+  '      .segmentdelete::before {\r\n' \
+  '        content: "\\2713";\r\n' \
+  '      }\r\n' \
+  '      .segment[data-deleted] {\r\n' \
+  '        text-decoration-line: line-through;\r\n' \
+  '      }\r\n' \
+  '      .segment[data-deleted]>.segmentdelete::before {\r\n' \
+  '        content: ""\r\n' \
+  '      }\r\n' \
+  '      .segment[data-focused]>.segmentdesc {\r\n' \
+  '        color: dodgerblue;\r\n' \
+  '      }\r\n' \
+  '      .pos {\r\n' \
+  '        display: block;\r\n' \
+  '        width: calc(100% - 1.70em);\r\n' \
+  '        height: 1.4em;\r\n' \
+  '        margin-top: 0.4em;\r\n' \
+  '        margin-left: calc(1.70em + 3px);\r\n' \
+  '        line-height: 1.4em;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        cursor: cell;\r\n' \
+  '      }\r\n' \
+  '      .waypoint {\r\n' \
+  '        height: 2.25em;\r\n' \
+  '        line-height: 0.7em;\r\n' \
+  '      }\r\n' \
+  '      .pos::before {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        content: "\\2713";\r\n' \
+  '        width: 1.35em;\r\n' \
+  '        height: 1.35em;\r\n' \
+  '        margin-right: 0.35em;\r\n' \
+  '        margin-left: -1.70em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
+  '        line-height: 1.4em;\r\n' \
+  '        text-align: center;\r\n' \
+  '        font-weight: bold;\r\n' \
+  '        cursor: initial;\r\n' \
+  '      }\r\n' \
+  '      .waypoint::before {\r\n' \
+  '        position: relative;\r\n' \
+  '        top: 0.4em;\r\n' \
+  '      }\r\n' \
+  '      .pos[data-deleted] {\r\n' \
+  '        text-decoration-line: line-through;\r\n' \
+  '      }\r\n' \
+  '      .pos[data-deleted]::before {\r\n' \
+  '        content: ""\r\n' \
+  '      }\r\n' \
+  '      .pos[data-error] {\r\n' \
+  '        text-decoration-line: line-through;\r\n' \
+  '        text-decoration-color: red;\r\n' \
+  '      }\r\n' \
+  '      .pos[data-focused] {\r\n' \
+  '        color: dodgerblue;\r\n' \
+  '        margin-bottom: calc(7.15em + 20px);\r\n' \
+  '      }\r\n' \
+  '      .pos[data-focused]:hover:has(.focus:hover) {\r\n' \
+  '        background-color: initial;\r\n' \
+  '      }\r\n' \
+  '      .focus {\r\n' \
+  '        display: block;\r\n' \
+  '        width: fit-content;\r\n' \
+  '        margin-top: 0.2em;\r\n' \
+  '        margin-left: -0.7em;\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
+  '        cursor: initial;\r\n' \
+  '      }\r\n' \
+  '      #waypointform {\r\n' \
+  '        margin-top: 0.6em;\r\n' \
+  '      }\r\n' \
+  '      .focus>label {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 2.2em;\r\n' \
+  '      }\r\n' \
+  '      .focus>input {\r\n' \
+  '        height: 1.35em;\r\n' \
+  '        width: 17em;\r\n' \
+  '        font-size: 100%;\r\n' \
+  '      }\r\n' \
+  '      .waydot, .dot {\r\n' \
+  '        position: absolute;\r\n' \
+  '        stroke-width: 1.5;\r\n' \
+  '        cursor: pointer;\r\n' \
+  '        pointer-events: all;\r\n' \
+  '      }\r\n' \
+  '      .waydot {\r\n' \
+  '        width: 8px;\r\n' \
+  '        height: 8px;\r\n' \
+  '        stroke: var(--wdstr);\r\n' \
+  '        fill: red;\r\n' \
+  '      }\r\n' \
+  '      .dot {\r\n' \
+  '        display: var(--ddis);\r\n' \
+  '        width: 7px;\r\n' \
+  '        height: 7px;\r\n' \
+  '        stroke: gray;\r\n' \
+  '        fill: none;\r\n' \
+  '      }\r\n' \
+  '      .waydot.deleted {\r\n' \
+  '        visibility: hidden;\r\n' \
+  '        fill: none;\r\n' \
+  '      }\r\n' \
+  '      .dot.deleted {\r\n' \
+  '        visibility: hidden;\r\n' \
+  '      }\r\n' \
+  '      .waydot.over, .dot.over {\r\n' \
+  '        display: block;\r\n' \
+  '        stroke: green;\r\n' \
+  '        zIndex: 2;\r\n' \
+  '      }\r\n' \
+  '      .waydot.focused, .dot.focused {\r\n' \
+  '        display: block;\r\n' \
+  '        visibility: visible;\r\n' \
+  '        stroke: blue;\r\n' \
+  '        zIndex: 1;\r\n' \
+  '      }\r\n' \
+  '      .waydot.error, .dot.error {\r\n' \
+  '        visibility: hidden;\r\n' \
+  '      }\r\n' \
+  '      .waydot circle {\r\n' \
+  '        cx: 4px;\r\n' \
+  '        cy: 4px;\r\n' \
+  '        r: 3px;\r\n' \
+  '        pointer-events: none;\r\n' \
+  '      }\r\n' \
+  '      .dot rect {\r\n' \
+  '        x: 1px;\r\n' \
+  '        y: 1px;\r\n' \
+  '        width: 5px;\r\n' \
+  '        height: 5px;\r\n' \
+  '        pointer-events: none;\r\n' \
+  '      }\r\n' \
+  '      .track {\r\n' \
+  '        stroke: red;\r\n' \
+  '        fill: red;\r\n' \
+  '      }\r\n' \
+  '      .track.deleted {\r\n' \
+  '        visibility: hidden;\r\n' \
+  '      }\r\n' \
+  '      .track.focused {\r\n' \
+  '        visibility: visible;\r\n' \
+  '        stroke: blue;\r\n' \
+  '        fill: blue;\r\n' \
+  '        zIndex: 1;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
@@ -11339,6 +11840,7 @@ class GPXTweakerWebInterfaceServer():
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
   '      var stats = [];\r\n' \
+  '      var arrows_visible = true;\r\n' \
   '      var smoothed = false;\r\n' \
   '      var point_stat = [];\r\n' \
   '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
@@ -11347,12 +11849,12 @@ class GPXTweakerWebInterfaceServer():
   '      function switch_tiles(nset, nlevel, kzoom=false) {\r\n' \
   '        if (mode == "map") {\r\n' \
   '          if (nset == null && nlevel == null) {\r\n' \
-  '            let b = track_boundaries();\r\n' \
+  '            const b = track_boundaries();\r\n' \
   '            if (b == null) {return;}\r\n' \
-  '            let r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '            const r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
   '            let z = eval(zooms.slice(-1)[0]);\r\n' \
   '            if (r > 0) {z = 1 / r / Math.min((viewpane.offsetWidth - 2) / (vmaxx - vminx), (viewpane.offsetHeight - 4) / (vmaxy - vminy));}\r\n' \
-  '            let zoom_s_ex = zoom_s;\r\n' \
+  '            const zoom_s_ex = zoom_s;\r\n' \
   '            zoom_s = "1";\r\n' \
   '            for (let i=1; i<zooms.length; i++) {\r\n' \
   '              if (eval(zooms[i]) <= z) {zoom_s = zooms[i];} else {break;}\r\n' \
@@ -11367,7 +11869,8 @@ class GPXTweakerWebInterfaceServer():
   '        let q = "";\r\n' \
   '        let sta = false;\r\n' \
   '        if (nset != null) {\r\n' \
-  '          document.getElementById("opanel").style.display="none";\r\n' \
+  '          const ps = document.getElementById("panels").style;\r\n' \
+  '          if (ps.getPropertyValue("--panel") == "opanel") {ps.setProperty("--panel", "none");}\r\n' \
   '          if (nset == -1) {\r\n' \
   '            nset = 0;\r\n' \
   '            q = "set=" + encodeURIComponent(document.getElementById("tset").selectedIndex);\r\n' \
@@ -11379,7 +11882,7 @@ class GPXTweakerWebInterfaceServer():
   '          sta = twidth == 0;\r\n' \
   '        } else {\r\n' \
   '          sta = true;\r\n' \
-  '          let b = track_boundaries();\r\n' \
+  '          const b = track_boundaries();\r\n' \
   '          if (b == null) {\r\n' \
   '            document.getElementById("tset").disabled = false;\r\n' \
   '            document.getElementById("tset").style.pointerEvents = "";\r\n' \
@@ -11399,9 +11902,9 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' + HTML_UTIL_TEMPLATE + \
   '      function scroll_to_dot(dot, center=true) {\r\n' \
   '        if (dot == null) {return;}\r\n' \
-  '        let dl = prop_to_wmvalue(dot.style.left);\r\n' \
-  '        let dt = prop_to_wmvalue(dot.style.top);\r\n' \
-  '        let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '        const dl = prop_to_wmvalue(dot.style.left);\r\n' \
+  '        const dt = prop_to_wmvalue(dot.style.top);\r\n' \
+  '        const o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '        if (center) {\r\n' \
   '          hpx = viewpane.offsetWidth / 2 - dl * zoom / tscale;\r\n' \
   '          hpy = viewpane.offsetHeight / 2 - dt * zoom / tscale;\r\n' \
@@ -11412,23 +11915,30 @@ class GPXTweakerWebInterfaceServer():
   '        reframe();\r\n' \
   '      }\r\n' \
   '      function drag_dot(x, y) {\r\n' \
-  '       let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
+  '       const wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
   '       wm[0] = Math.max(Math.min(wm[0], vmaxx - 1), vminx + 1);\r\n' \
   '       wm[1] = Math.max(Math.min(wm[1], vmaxy - 1), vminy + 1);\r\n' \
   '       let [lat, lon] = WebMercatortoWGS84(...wm);\r\n' \
-  '       document.getElementById(focused + "lat").value = lat.toFixed(6);\r\n' \
-  '       document.getElementById(focused + "lon").value = lon.toFixed(6);\r\n' \
+  '       lat = lat.toFixed(6);\r\n' \
+  '       lon = lon.toFixed(6);\r\n' \
+  '       const pt = document.getElementById(focused);\r\n' \
+  '       pt.setAttribute("data-lat", lat);\r\n' \
+  '       pt.setAttribute("data-lon", lon);\r\n' \
+  '       if (pt.hasAttribute("data-focused")) {\r\n' \
+  '         const p = pt.id.startsWith("way") ? "waypoint" : "point";\r\n' \
+  '         document.getElementById(p + "lat").value = lat;\r\n' \
+  '         document.getElementById(p + "lon").value = lon;\r\n' \
+  '       }\r\n' \
   '       point_edit(false, false, false, true);\r\n' \
   '      }\r\n' \
   '      function track_boundaries(track=null) {\r\n' \
-  '        let tracks = [];\r\n' \
+  '        const tracks = [];\r\n' \
   '        if (track != null) {\r\n' \
   '          tracks.push(track);\r\n' \
   '        } else {\r\n' \
-  '          let segs = document.getElementById("pointsform").children;\r\n' \
-  '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            if (segs[s].firstElementChild.checked) {\r\n' \
-  '              tracks.push(document.getElementById("track" + segs[s].id.slice(7, -4)));\r\n' \
+  '          for (const seg of document.getElementById("pointslist").getElementsByClassName("segment")) {\r\n' \
+  '            if (! seg.hasAttribute("data-deleted")) {\r\n' \
+  '              tracks.push(document.getElementById(seg.id.replace("segment", "track")));\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -11438,15 +11948,15 @@ class GPXTweakerWebInterfaceServer():
   '        let gminy = null;\r\n' \
   '        let gmaxx = null;\r\n' \
   '        let gmaxy = null;\r\n' \
-  '        for (let t=0; t<tracks.length; t++) {\r\n' \
-  '          let d = tracks[t].firstElementChild.getAttribute("d").match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '        for (const trck of tracks) {\r\n' \
+  '          const d = trck.firstElementChild.getAttribute("d").match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '          let minx = null;\r\n' \
   '          let miny = null;\r\n' \
   '          let maxx = null;\r\n' \
   '          let maxy = null;\r\n' \
-  '          for (let p=1; p<d.length; p++) {\r\n' \
+  '          for (let p=1, l=d.length; p<l; p++) {\r\n' \
   '            if (d[p][0] != "m") {\r\n' \
-  '              let pt = d[p].substring(1).replace(/ +/g, " ").split(" ").map(Number);\r\n' \
+  '              const pt = d[p].substring(1).replace(/ +/g, " ").split(" ").map(Number);\r\n' \
   '              if (minx == null) {\r\n' \
   '                [minx, miny] = pt;\r\n' \
   '                [maxx, maxy] = pt;\r\n' \
@@ -11460,24 +11970,22 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (minx != null) {\r\n' \
   '            if (gminx == null) {\r\n' \
-  '              gminx = prop_to_wmvalue(tracks[t].style.left) + minx;\r\n' \
-  '              gminy = prop_to_wmvalue(tracks[t].style.top) + miny;\r\n' \
-  '              gmaxx = prop_to_wmvalue(tracks[t].style.left) + maxx;\r\n' \
-  '              gmaxy = prop_to_wmvalue(tracks[t].style.top) + maxy;\r\n' \
+  '              gminx = prop_to_wmvalue(trck.style.left) + minx;\r\n' \
+  '              gminy = prop_to_wmvalue(trck.style.top) + miny;\r\n' \
+  '              gmaxx = prop_to_wmvalue(trck.style.left) + maxx;\r\n' \
+  '              gmaxy = prop_to_wmvalue(trck.style.top) + maxy;\r\n' \
   '            } else {\r\n' \
-  '              gminx = min(gminx, prop_to_wmvalue(tracks[t].style.left) + minx);\r\n' \
-  '              gminy = min(gminy, prop_to_wmvalue(tracks[t].style.top) + miny);\r\n' \
-  '              gmaxx = max(gmaxx, prop_to_wmvalue(tracks[t].style.left) + maxx);\r\n' \
-  '              gmaxy = max(gmaxy, prop_to_wmvalue(tracks[t].style.top) + maxy);\r\n' \
+  '              gminx = min(gminx, prop_to_wmvalue(trck.style.left) + minx);\r\n' \
+  '              gminy = min(gminy, prop_to_wmvalue(trck.style.top) + miny);\r\n' \
+  '              gmaxx = max(gmaxx, prop_to_wmvalue(trck.style.left) + maxx);\r\n' \
+  '              gmaxy = max(gmaxy, prop_to_wmvalue(trck.style.top) + maxy);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (track == null) {\r\n' \
-  '          let wpts = document.getElementById("waypointsform").children;\r\n' \
-  '          for (let w=0; w<wpts.length; w++) {\r\n' \
-  '            let wpt = wpts[w].firstElementChild;\r\n' \
-  '            if (wpt.checked && wpt.value != "error") {\r\n' \
-  '              let wdot = document.getElementById(wpt.id.replace("point", "dot"));\r\n' \
+  '          for (const wpt of document.getElementById("waypointslist").getElementsByClassName("waypoint")) {\r\n' \
+  '            if (! (wpt.hasAttribute("data-deleted") || wpt.hasAttribute("data-error"))) {\r\n' \
+  '              const wdot = document.getElementById(wpt.id.replace("point", "dot"));\r\n' \
   '              if (gminx == null) {\r\n' \
   '                gminx = prop_to_wmvalue(wdot.style.left);\r\n' \
   '                gminy = prop_to_wmvalue(wdot.style.top);\r\n' \
@@ -11495,138 +12003,120 @@ class GPXTweakerWebInterfaceServer():
   '        if (gminx == null) {\r\n' \
   '          return null;\r\n' \
   '        } else {\r\n' \
-  '          let o = min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '          const o = min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '          return [gminx - o, gmaxx + o, gminy - o, gmaxy + o];\r\n' \
   '        }\r\n' \
   '      }\r\n' + HTML_SCROLL_TEMPLATE + \
   '      function dot_style(pt, over) {\r\n' \
   '        if (pt.indexOf("point") < 0) {return;}\r\n' \
-  '        let dot = document.getElementById(pt.replace("point", "dot"))\r\n' \
+  '        const dot = document.getElementById(pt.replace("point", "dot"));\r\n' \
   '        if (dot == null) {return;}\r\n' \
-  '        if (document.getElementById(pt).value == "error") {\r\n' \
-  '          dot.style.stroke = "";\r\n' \
-  '          dot.style.display = "none";\r\n' \
-  '          dot.style.zIndex = "";\r\n' \
+  '        const iswpt = pt.startsWith("way");\r\n' \
+  '        dot.setAttribute("class", iswpt ? "waydot" : "dot");\r\n' \
+  '        const isfoc = pt == focused;\r\n' \
+  '        pt = document.getElementById(pt);\r\n' \
+  '        const ptd = pt.hasAttribute("data-deleted");\r\n' \
+  '        const segd = iswpt ? false : pt.parentNode.hasAttribute("data-deleted");\r\n' \
+  '        if (pt.hasAttribute("data-error")) {\r\n' \
+  '          dot.classList.add("error");\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let cb = document.getElementById(pt).checked;\r\n' \
-  '        let segcb = true;\r\n' \
-  '        let iswpt = pt.substring(0, 3) == "way";\r\n' \
-  '        if (iswpt) {\r\n' \
-  '          if (cb) {dot.style.fill = "";} else {dot.style.fill = "none";}\r\n' \
-  '        } else {\r\n' \
-  '          segcb = document.getElementById(pt).parentNode.parentNode.firstElementChild.checked;\r\n' \
+  '        if (ptd || segd) {\r\n' \
+  '          dot.classList.add("deleted");\r\n' \
   '        }\r\n' \
-  '        if (pt == focused) {\r\n' \
-  '          dot.style.stroke = "blue";\r\n' \
-  '          dot.style.display = "";\r\n' \
-  '          dot.style.zIndex = "1";\r\n' \
-  '        } else if (!cb || !segcb) {\r\n' \
-  '          dot.style.stroke = "";\r\n' \
-  '          dot.style.display = "none";\r\n' \
-  '          dot.style.zIndex = "";\r\n' \
+  '        if (isfoc) {\r\n' \
+  '          dot.classList.add("focused");\r\n' \
   '        } else if (over) {\r\n' \
-  '          dot.style.stroke = "green";\r\n' \
-  '          dot.style.display = "";\r\n' \
-  '          dot.style.zIndex = "2";\r\n' \
-  '        } else if (dots_visible) {\r\n' \
-  '          dot.style.stroke = iswpt?"gray":"";\r\n' \
-  '          dot.style.display = "";\r\n' \
-  '          dot.style.zIndex = "";\r\n' \
-  '        } else {\r\n' \
-  '          dot.style.stroke = "";\r\n' \
-  '          dot.style.display = iswpt?"":"none";\r\n' \
-  '          dot.style.zIndex = "";\r\n' \
+  '          dot.classList.add("over");\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function save_old() {\r\n' \
-  '        if (! focused) {return;}\r\n' \
   '        if (focused.indexOf("point") < 0) {return;}\r\n' \
-  '        let elt_foc = document.getElementById(focused + "focus");\r\n' \
-  '        let c = "";\r\n' \
-  '        let inputs = elt_foc.getElementsByTagName("input");\r\n' \
-  '        for (let i=0; i<inputs.length;i++) {c = c + inputs[i].value + "\\r\\n";}\r\n' \
-  '        foc_old = c;\r\n' \
+  '        const elt_data = document.getElementById(focused).dataset;\r\n' \
+  '        foc_old = elt_data.lat + "\\r\\n" + elt_data.lon + "\\r\\n" + elt_data.ele + "\\r\\n" + (focused.startsWith("way") ? (elt_data.time + "\\r\\n" + elt_data.name) : (elt_data.alt + "\\r\\n" + elt_data.time)) + "\\r\\n";\r\n' \
+  '      }\r\n' \
+  '      function hist_trim() {\r\n' \
+  '        for (let i=hist[1].length-1; i>=0; i--) {\r\n' \
+  '          if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
+  '      function hist_push(arg=null) {\r\n' \
+  '        if (Array.isArray(arg)) {\r\n' \
+  '          hist[0].push(arg);\r\n' \
+  '        } else if (arg == null) {\r\n' \
+  '          hist[0].push([focused, foc_old]);\r\n' \
+  '        } else {\r\n' \
+  '          hist[0].push([focused, foc_old, arg]);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function element_click(e, elt, scroll=true) {\r\n' \
   '        if (e == null) {\r\n' \
-  '          if (document.activeElement) {\r\n' \
-  '            if (document.activeElement.id) {\r\n' \
-  '              if (document.activeElement.id.indexOf("point") >= 0 || document.activeElement.id == "name_track") {document.activeElement.blur();}\r\n' \
-  '            }\r\n' \
+  '          if (document.activeElement?.id) {\r\n' \
+  '            if (document.activeElement.id.indexOf("point") >= 0 || document.activeElement.id == "name_track") {document.activeElement.blur();}\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          e.preventDefault();\r\n' \
   '        }\r\n' \
-  '        let ex_foc = focused;\r\n' \
-  '        if (elt.htmlFor == ex_foc) {focused = "";} else {focused = elt.htmlFor;}\r\n' \
+  '        const ex_foc = focused;\r\n' \
+  '        focused = elt.id;\r\n' \
+  '        if (focused == ex_foc) {focused = "";}\r\n' \
   '        if (ex_foc != "") {\r\n' \
-  '          document.getElementById(ex_foc + "desc").style.color = "";\r\n' \
-  '          if (ex_foc.indexOf("point") >= 0) {\r\n' \
-  '            document.getElementById(ex_foc + "focus").style.display = "";\r\n' \
-  '            dot_style(ex_foc, elt.htmlFor == ex_foc);\r\n' \
-  '          }\r\n' \
-  '          if (ex_foc.substring(0, 3) == "way") {\r\n' \
-  '            document.getElementById("points").style.height = "88%";\r\n' \
-  '            document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
-  '            document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '          }\r\n' \
-  '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
-  '            let track = document.getElementById(ex_foc.replace("segment", "track"));\r\n' \
-  '            track.style.stroke = "";\r\n' \
-  '            track.style.fill = "";\r\n' \
-  '            if (document.getElementById(ex_foc).checked) {\r\n' \
-  '              track.style.display = "";\r\n' \
-  '            } else {\r\n' \
-  '              track.style.display = "none";\r\n' \
-  '            }\r\n' \
-  '            track.style.zIndex = "";\r\n' \
+  '          document.getElementById(ex_foc).removeAttribute("data-focused");\r\n' \
+  '          if (ex_foc.startsWith("seg")) {\r\n' \
+  '            document.getElementById(ex_foc.replace("segment", "track")).classList.remove("focused");\r\n' \
+  '          } else {\r\n' \
+  '            const iswpt = ex_foc.startsWith("way");\r\n' \
+  '            const elt_foc = document.getElementById(iswpt ? "waypointform" : "pointform");\r\n' \
+  '            Array.prototype.forEach.call(elt_foc.getElementsByTagName("input"), function(i) {i.value = "";});\r\n' \
+  '            document.getElementById(iswpt ? "pattern_waypoint" : "pattern_point").appendChild(elt_foc);\r\n' \
+  '            dot_style(ex_foc, focused == "");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (focused) {\r\n' \
-  '          elt.style.color = "dodgerblue";\r\n' \
-  '          let elt_foc = null;\r\n' \
-  '          if (focused.indexOf("point") >= 0) {\r\n' \
-  '            save_old();\r\n' \
-  '            elt_foc = document.getElementById(elt.htmlFor + "focus");\r\n' \
-  '            elt_foc.style.display = "inline";\r\n' \
-  '            dot_style(focused, elt.htmlFor == ex_foc);\r\n' \
-  '          }\r\n' \
-  '          if (focused.substring(0, 3) == "way") {\r\n' \
-  '            document.getElementById("points").style.height = "calc(100% - 10em)";\r\n' \
-  '            document.getElementById("waypoints").style.maxHeight = "10em";\r\n' \
-  '            document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
-  '          }\r\n' \
-  '          if (focused.substring(0, 3) == "seg") {\r\n' \
-  '            let track = document.getElementById(focused.replace("segment", "track"));\r\n' \
-  '            track.style.stroke = "blue";\r\n' \
-  '            track.style.fill = "blue";\r\n' \
-  '            track.style.display = "";\r\n' \
-  '            track.style.zIndex = "1";\r\n' \
-  '            if (scroll) {elt.scrollIntoView({block:"start"});}\r\n' \
+  '          elt.setAttribute("data-focused", "");\r\n' \
+  '          if (focused.startsWith("seg")) {\r\n' \
+  '            const track = document.getElementById(focused.replace("segment", "track"));\r\n' \
+  '            track.classList.add("focused");\r\n' \
+  '            if (scroll) {elt.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});}\r\n' \
   '            if (scrollmode > 0) {scroll_to_track(track, scrollmode == 2);}\r\n' \
-  '          } else if (scroll) {\r\n' \
-  '            elt.scrollIntoView({block:"nearest"});\r\n' \
-  '            elt_foc.scrollIntoView({block:"nearest"});\r\n' \
-  '            let par_c = true;\r\n' \
-  '            if (focused.substring(0, 3) != "way") {par_c = elt.parentNode.parentNode.firstElementChild.checked;}\r\n' \
-  '            if ((! document.getElementById(focused).checked || ! par_c || e) && document.getElementById(focused).value != "error" && scrollmode > 0) {\r\n' \
-  '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
+  '          } else {\r\n' \
+  '            const iswpt = focused.startsWith("way");\r\n' \
+  '            const elt_data = elt.dataset;\r\n' \
+  '            const elt_foc = document.getElementById(iswpt ? "waypointform" : "pointform");\r\n' \
+  '            const inputs = elt_foc.getElementsByTagName("input");\r\n' \
+  '            inputs[0].value = elt_data.lat;\r\n' \
+  '            inputs[1].value = elt_data.lon;\r\n' \
+  '            inputs[2].value = elt_data.ele;\r\n' \
+  '            if (iswpt) {\r\n' \
+  '              inputs[3].value = elt_data.time;\r\n' \
+  '              inputs[4].value = elt_data.name;\r\n' \
+  '            } else {\r\n' \
+  '              inputs[3].value = elt_data.alt;\r\n' \
+  '              inputs[4].value = elt_data.time;\r\n' \
+  '            }\r\n' \
+  '            save_old();\r\n' \
+  '            elt.append(elt_foc);\r\n' \
+  '            dot_style(focused, false);\r\n' \
+  '            if (scroll) {\r\n' \
+  '              if (focused.startsWith("point")) {elt.parentNode.removeAttribute("data-collapsed");}\r\n' \
+  '              elt.scrollIntoView({block:"nearest"});\r\n' \
+  '              elt_foc.scrollIntoView({block:"nearest"});\r\n' \
+  '              const par_d = iswpt ? false : elt.parentNode.hasAttribute("data-deleted");\r\n' \
+  '              if (scrollmode > 0 && ! elt.hasAttribute("data-error") && (elt.hasAttribute("data-deleted") || par_d || e)) {\r\n' \
+  '                scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        gfence(graph_point);\r\n' \
   '      }\r\n' \
   '      function point_to_position(pt) {\r\n' \
-  '        let lat = parseFloat(document.getElementById(pt.htmlFor + "lat").value);\r\n' \
-  '        let lon = parseFloat(document.getElementById(pt.htmlFor + "lon").value);\r\n' \
-  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '        let o = "3.5";\r\n' \
-  '        if (pt.id.substring(0, 3) == "way") {o = "4";}\r\n' \
+  '        const wm = WGS84toWebMercator(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")));\r\n' \
+  '        const o = pt.id.startsWith("way") ? "4" : "3.5";\r\n' \
   '        return [wmvalue_to_prop(wm[0] - htopx, o), wmvalue_to_prop(htopy - wm[1], o)];\r\n' \
   '      }\r\n' \
   '      function rebase_track(x, y, track, exact=false, batch=false) {\r\n' \
-  '        let path = track.firstElementChild;\r\n' \
+  '        const path = track.firstElementChild;\r\n' \
   '        let minx = wmb;\r\n' \
   '        let maxx = -wmb;\r\n' \
   '        let miny = wmb;\r\n' \
@@ -11637,12 +12127,11 @@ class GPXTweakerWebInterfaceServer():
   '          maxx = minx + prop_to_wmvalue(track.style.width);\r\n' \
   '          miny = maxy - prop_to_wmvalue(track.style.height);\r\n' \
   '        }\r\n' \
-  '        let viewbox = track.getAttribute("viewBox").split(" ");\r\n' \
-  '        let minx_ex = minx;\r\n' \
-  '        let maxy_ex = maxy;\r\n' \
+  '        const viewbox = track.getAttribute("viewBox").split(" ");\r\n' \
+  '        const minx_ex = minx;\r\n' \
+  '        const maxy_ex = maxy;\r\n' \
   '        let vb = false;\r\n' \
-  '        let padding = 1000;\r\n' \
-  '        if (exact) {padding = 0;}\r\n' \
+  '        const padding = exact ? 0 : 1000;\r\n' \
   '        if (x < minx) {\r\n' \
   '          minx = Math.max(vminx, -wmb, x - padding);\r\n' \
   '          track.style.left = wmvalue_to_prop(minx - htopx);\r\n' \
@@ -11672,16 +12161,16 @@ class GPXTweakerWebInterfaceServer():
   '        if (vb) {track.setAttribute("viewBox", viewbox.join(" "));}\r\n' \
   '        if (! batch) {\r\n' \
   '          if (minx_ex != minx || maxy_ex != maxy) {\r\n' \
-  '            let d_ex = path.getAttribute("d").substring(4);\r\n' \
+  '            const d_ex = path.getAttribute("d").substring(4);\r\n' \
   '            let d = "M0 0";\r\n' \
-  '            let points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '            const points = d_ex.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '            if (points != null) {\r\n' \
-  '              for (let point of points) {\r\n' \
+  '              for (const point of points) {\r\n' \
   '                if (point[0] != "m") {\r\n' \
-  '                  let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '                  d = d + " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
+  '                  const [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                  d += " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
   '                } else {\r\n' \
-  '                  d = d + " " + point;\r\n' \
+  '                  d += " " + point;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
@@ -11696,126 +12185,117 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function WGS84_to_viewbox(lat, lon, track) {\r\n' \
-  '        let [x, y] = WGS84toWebMercator(lat, lon);\r\n' \
+  '        const [x, y] = WGS84toWebMercator(lat, lon);\r\n' \
   '        rebase_track(x, y, track);\r\n' \
   '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
   '      }\r\n' \
-  '      function point_desc(ptspan = null) {\r\n' \
-  '        if (! ptspan) {\r\n' \
-  '          let points = Array.from(document.getElementById("content").getElementsByTagName("span"));\r\n' \
-  '          for (let p=2; p<points.length; p++) {\r\n' \
-  '            points[p].parentNode.firstElementChild.nextElementSibling.innerHTML = point_desc(points[p]);\r\n' \
-  '          }\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        let chld = ptspan.children;\r\n' \
-  '        let lat = parseFloat(chld[1].value).toFixed(4);\r\n' \
-  '        let lon = parseFloat(chld[4].value).toFixed(4);\r\n' \
-  '        let time_ = Date.parse(chld[(ptspan.id.substring(0, 3) == "way")?10:13].value);\r\n' \
-  '        let time = isNaN(time_)?"":time_conv.format(time_)  + "˙" + date_conv.format(time_);\r\n' \
-  '        if (ptspan.id.substring(0, 3) == "way") {\r\n' \
-  '          let ele = chld[7].value==""?"":parseFloat(chld[7].value).toFixed(0);\r\n' \
-  '          let name = chld[13].value;\r\n' \
-  '          return escape("(" + lat + ", " + lon + ") " + ele + " " + time) + "<br>" + escape(name);\r\n' \
+  '      function point_desc(pt, add=false) {\r\n' \
+  '        if (pt.id.substring(0, 3) == "way") {\r\n' \
+  '          const d = pt.dataset;\r\n' \
+  '          const lat = parseFloat(d.lat).toFixed(4);\r\n' \
+  '          const lon = parseFloat(d.lon).toFixed(4);\r\n' \
+  '          const ele = d.ele == "" ? "" : parseFloat(d.ele).toFixed(0);\r\n' \
+  '          const time_ = Date.parse(d.time);\r\n' \
+  '          const time = isNaN(time_) ? "" : time_conv.format(time_)  + "˙" + date_conv.format(time_);\r\n' \
+  '          const name = d.name;\r\n' \
+  '          const cn = pt.childNodes;\r\n' \
+  '          cn[0].nodeValue = "(" + lat + ", " + lon + ") " + ele + " " + time;\r\n' \
+  '          cn[2].nodeValue = "\u200d" + name;\r\n' \
   '        } else {\r\n' \
-  '          let ele = chld[7].value==""?"...":parseFloat(chld[7].value).toFixed(0);\r\n' \
-  '          let alt = chld[10].value==""?"":parseFloat(chld[10].value).toFixed(0);\r\n' \
-  '          return escape("(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time);\r\n' \
+  '          const p = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '          let d = null;\r\n' \
+  '          if (add) {\r\n' \
+  '            const pt_d = pt.dataset;\r\n' \
+  '            d = [parseFloat(pt_d.lat), parseFloat(pt_d.lon), parseFloat(pt_d.ele), parseFloat(pt_d.alt), Date.parse(pt_d.time)];\r\n' \
+  '            if (p >= point_data.length) {point_data.buffer.resize(8 * (p + 2500));}\r\n' \
+  '            point_data.set(d, p);\r\n' \
+  '          } else {\r\n' \
+  '            d = point_data.subarray(p);\r\n' \
+  '          }\r\n' \
+  '          const lat = d[0].toFixed(4);\r\n' \
+  '          const lon = d[1].toFixed(4);\r\n' \
+  '          const ele = isNaN(d[2]) ? "..." : d[2].toFixed(0);\r\n' \
+  '          const alt = isNaN(d[3]) ? "" : d[3].toFixed(0);\r\n' \
+  '          const time = isNaN(d[4]) ? "" : time_conv.format(d[4])  + "˙" + date_conv.format(d[4]);\r\n' \
+  '          pt.firstChild.nodeValue = "(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function point_edit(scroll=true, cancel=true, recalc=true, coord=true) {\r\n' \
-  '        let pt = document.getElementById(focused + "desc");\r\n' \
-  '        let pt_cb = document.getElementById(focused);\r\n' \
-  '        let valid = false;\r\n' \
+  '        const rll = new RegExp(/^[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)$/);\r\n' \
+  '        const rea = new RegExp(/^(?:(?:[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))|)$/);\r\n' \
+  '        const rt = new RegExp(/^(?:(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29).(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[\\+\\-](?:[01][0-9]|2[0-3]):[0-5][0-9])?)|)$/);\r\n' \
+  '        const pt = document.getElementById(focused);\r\n' \
+  '        const pt_data = pt.dataset;\r\n' \
+  '        const iswpt = focused.startsWith("way");\r\n' \
+  '        pt_data.edited = "";\r\n' \
   '        if (cancel) {\r\n' \
-  '          hist[0].push([focused, foc_old]);\r\n' \
+  '          hist_push();\r\n' \
   '          save_old();\r\n' \
-  '          for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '            if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '          }\r\n' \
+  '          hist_trim();\r\n' \
   '        }\r\n' \
-  '        if (focused.substring(0, 3) == "way") {\r\n' \
-  '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "time").checkValidity() && document.getElementById(focused + "name").checkValidity();\r\n' \
-  '        } else {\r\n' \
-  '          valid = document.getElementById(focused + "lat").checkValidity() && document.getElementById(focused + "lon").checkValidity() && document.getElementById(focused + "ele").checkValidity() && document.getElementById(focused + "alt").checkValidity() && document.getElementById(focused + "time").checkValidity();\r\n' \
-  '        }\r\n' \
-  '        let wm = null;\r\n' \
+  '        let valid = rll.test(pt_data.lat) && rll.test(pt_data.lon) && rea.test(pt_data.ele) && rt.test(pt_data.time) && (iswpt || rea.test(pt_data.alt));\r\n' \
   '        if (valid) {\r\n' \
-  '          wm = WGS84toWebMercator(parseFloat(document.getElementById(focused + "lat").value), parseFloat(document.getElementById(focused + "lon").value));\r\n' \
+  '          const wm = WGS84toWebMercator(parseFloat(pt_data.lat), parseFloat(pt_data.lon));\r\n' \
   '          valid = wm[0] > vminx && wm[0] < vmaxx && wm[1] > vminy && wm[1] < vmaxy;\r\n' \
   '        }\r\n' \
   '        if (valid) {\r\n' \
-  '          if (pt_cb.checked) {\r\n' \
-  '            pt.style.textDecorationLine = "inherit";\r\n' \
-  '          } else {\r\n' \
-  '            pt.style.textDecorationLine = "line-through";\r\n' \
+  '          if (! iswpt) {\r\n' \
+  '            point_data.set([parseFloat(pt_data.lat), parseFloat(pt_data.lon), parseFloat(pt_data.ele), parseFloat(pt_data.alt), Date.parse(pt_data.time)], 5 * parseInt(focused.substring(5)));\r\n' \
   '          }\r\n' \
-  '          pt.style.textDecorationColor = "";\r\n' \
-  '          document.getElementById(focused + "desc").innerHTML = point_desc(document.getElementById(focused + "focus"));\r\n' \
-  '          if (pt_cb.value != "error") {pt_cb.value = "edited";}\r\n' \
-  '          if (coord || pt_cb.value == "error") {\r\n' \
-  '            let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '          point_desc(pt);\r\n' \
+  '          pt_data.edited = "";\r\n' \
+  '          if (coord || pt_data.hasOwnProperty("error")) {\r\n' \
+  '            const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            [dot.style.left, dot.style.top] = point_to_position(pt);\r\n' \
-  '            if (pt_cb.value == "error") {\r\n' \
-  '              pt_cb.disabled = false;\r\n' \
-  '              pt_cb.value = "edited";\r\n' \
-  '              if (pt_cb.checked) {point_undelete(pt_cb);} else {dot_style(focused, true);}\r\n' \
+  '            if (pt_data.hasOwnProperty("error")) {\r\n' \
+  '              delete pt_data.error;\r\n' \
+  '              if (pt_data.hasOwnProperty("deleted")) {dot_style(focused, true);} else {point_undelete(pt);}\r\n' \
   '              if (scrollmode > 0) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
   '            } else {\r\n' \
   '              if (scroll && scrollmode > 0) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
-  '              if (focused.substring(0, 3) != "way" && pt_cb.checked) {\r\n' \
-  '                let seg = pt.parentNode.parentNode;\r\n' \
-  '                let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
-  '                let np = WGS84_to_viewbox(parseFloat(document.getElementById(focused + "lat").value), parseFloat(document.getElementById(focused + "lon").value), track);\r\n' \
-  '                let path = document.getElementById("path" + seg.id.slice(7, -4));\r\n' \
-  '                let spans = seg.getElementsByTagName("span");\r\n' \
-  '                let ind = 0;\r\n' \
-  '                while (spans[ind].id != focused + "focus") {ind++;}\r\n' \
-  '                let d = path.getAttribute("d");\r\n' \
+  '              if (! (iswpt || pt_data.hasOwnProperty("deleted"))) {\r\n' \
+  '                const seg = pt.parentNode;\r\n' \
+  '                const track = document.getElementById("track" + seg.id.substring(7));\r\n' \
+  '                const np = WGS84_to_viewbox(parseFloat(pt_data.lat), parseFloat(pt_data.lon), track);\r\n' \
+  '                const path = document.getElementById("path" + seg.id.substring(7));\r\n' \
+  '                const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
+  '                const d = path.getAttribute("d");\r\n' \
   '                let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
   '                let d_right = d.slice(d_left[0].length);\r\n' \
   '                if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
-  '                d = d_left[0].slice(0, -d_left[1].length) + d_left[1][0] + np + d_right;\r\n' \
-  '                path.setAttribute("d", d);\r\n' \
+  '                path.setAttribute("d", d_left[0].slice(0, -d_left[1].length) + d_left[1][0] + np + d_right);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '        } else {\r\n' \
-  '          if (pt_cb.value != "error") {\r\n' \
-  '            pt_cb.disabled = true;\r\n' \
-  '            pt_cb.value = "error";\r\n' \
-  '            if (pt_cb.checked) {point_delete(pt_cb);} else {dot_style(focused, true);}\r\n' \
-  '            pt.style.textDecoration = "line-through red";\r\n' \
-  '          }\r\n' \
+  '        } else if (! pt_data.hasOwnProperty("error")) {\r\n' \
+  '            pt_data.error = "";\r\n' \
+  '            point_data.set([NaN, NaN, NaN, NaN, NaN], 5 * parseInt(focused.substring(5)));\r\n' \
+  '            if (pt_data.hasOwnProperty("deleted")) {dot_style(focused, true);} else {point_delete(pt);}\r\n' \
   '        }\r\n' \
-  '        if (recalc && focused.substring(0, 3) != "way") {calc_modified(pt.parentNode.parentNode);}\r\n' \
+  '        if (recalc && ! iswpt) {calc_modified(pt.parentNode);}\r\n' \
   '      }\r\n' \
   '      function point_edit_oc(point, recalc=true, coord=true) {\r\n' \
-  '        let ex_foc = focused;\r\n' \
-  '        if (point != focused) {focused = point;}\r\n' \
+  '        const ex_foc = focused;\r\n' \
+  '        focused = point;\r\n' \
   '        point_edit(coord, true, recalc, coord);\r\n' \
   '        focused = ex_foc;\r\n' \
   '      }\r\n' \
   '      function point_over(pt) {\r\n' \
-  '        let foc = null;\r\n' \
-  '        if (pt.id.indexOf("desc") < 0) {foc = pt.id;} else {foc = pt.htmlFor;}\r\n' \
-  '        let par_c = true;\r\n' \
-  '        if (foc.substring(0, 3) != "way") {par_c = pt.parentNode.parentNode.firstElementChild.checked;}\r\n' \
+  '        const foc = pt.id;\r\n' \
+  '        const par_d = foc.startsWith("way") ? false : pt.parentNode.hasAttribute("data-deleted");\r\n' \
   '        dot_style(foc, true);\r\n' \
-  '        if (((document.getElementById(foc).checked && par_c) || foc == focused) && document.getElementById(foc).value != "error" && scrollmode == 2) {\r\n' \
+  '        if ((! (pt.hasAttribute("data-deleted") || par_d) || foc == focused) && ! pt.hasAttribute("data-error") && scrollmode == 2) {\r\n' \
   '          scroll_to_dot(document.getElementById(foc.replace("point", "dot")), false);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function point_outside(pt) {\r\n' \
-  '        let foc = null;\r\n' \
-  '        if (pt.id.indexOf("desc") < 0) {foc = pt.id;} else {foc = pt.htmlFor;}\r\n' \
-  '        dot_style(foc, false);\r\n' \
+  '        dot_style(pt.id, false);\r\n' \
   '      }\r\n' \
   '      function undo(redo, whole) {\r\n' \
-  '        let s = redo?1:0;\r\n' \
+  '        const s = redo ? 1 : 0;\r\n' \
   '        if (hist[s].length == 0) {return;}\r\n' \
-  '        let ex_foc = focused;\r\n' \
-  '        if (whole && focused) {element_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
+  '        const ex_foc = focused;\r\n' \
+  '        if (focused && whole) {element_click(null, document.getElementById(focused), false);}\r\n' \
   '        let ind = null;\r\n' \
   '        let histb = 0;\r\n' \
   '        let inds = [];\r\n' \
@@ -11833,7 +12313,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        } else if (focused.indexOf("point") < 0) {\r\n' \
   '          for (let i=hist[s].length-1; i>=0; i--) {\r\n' \
-  '            if (document.getElementById(hist[s][i][0] + "cont").parentNode.id == focused + "cont") {\r\n' \
+  '            if (document.getElementById(hist[s][i][0]).parentNode.id == focused) {\r\n' \
   '              if (ind == null && hist[s][i].length >= 3) {histb = hist[s][i][2];}\r\n' \
   '              ind = i;\r\n' \
   '              if (histb > 0) {\r\n' \
@@ -11857,45 +12337,53 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (ind == null) {return;}\r\n' \
-  '          element_click(null, document.getElementById(focused + "desc"), false);\r\n' \
+  '          element_click(null, document.getElementById(focused), false);\r\n' \
   '        }\r\n' \
-  '        let gr = document.getElementById("graph").style.display != "none";\r\n' \
+  '        const gr = document.getElementById("lpanels").style.getPropertyValue("--panel") == "graph";\r\n' \
   '        if (gr) {switch_graph();}\r\n' \
-  '        document.getElementById("graph").style.display = "none";\r\n' \
   '        let segments = null;\r\n' \
   '        let points = null;\r\n' \
-  '        for (let ind_=0; ind_<inds.length; ind_++) {\r\n' \
+  '        for (let ind_=0, l=inds.length; ind_<l; ind_++) {\r\n' \
   '          ind = inds[ind_];\r\n' \
   '          focused = hist[s][ind][0];\r\n' \
-  '          let elt_foc = document.getElementById(focused);\r\n' \
-  '          let err = elt_foc.value == "error";\r\n' \
+  '          const elt_foc = document.getElementById(focused);\r\n' \
+  '          const elt_foc_data = elt_foc.dataset\r\n' \
+  '          const err = elt_foc_data.hasOwnProperty("error");\r\n' \
   '          if (hist[s][ind][1] != "") {\r\n' \
-  '            let c = hist[s][ind][1].split("\\r\\n");\r\n' \
+  '            const c = hist[s][ind][1].split("\\r\\n");\r\n' \
   '            save_old();\r\n' \
   '            if (histb == 0) {\r\n' \
   '              hist[1-s].push([focused, foc_old]);\r\n' \
   '            } else {\r\n' \
   '              hist[1-s].push([focused, foc_old, histb]);\r\n' \
   '            }\r\n' \
-  '            let inputs = document.getElementById(focused + "focus").getElementsByTagName("input");\r\n' \
-  '            let coord = (inputs[0].value != c[0]) || (inputs[1].value != c[1]);\r\n' \
-  '            for (let i=0; i<inputs.length;i++) {inputs[i].value = c[i];}\r\n' \
+  '            const coord = (elt_foc_data.lat != c[0]) || (elt_foc_data.lon != c[1]);\r\n' \
+  '            elt_foc_data.lat = c[0];\r\n' \
+  '            elt_foc_data.lon = c[1];\r\n' \
+  '            elt_foc_data.ele = c[2];\r\n' \
+  '            if (focused.startsWith("way")) {\r\n' \
+  '              elt_foc_data.time = c[3];\r\n' \
+  '              elt_foc_data.name = c[4];\r\n' \
+  '            } else {\r\n' \
+  '              elt_foc_data.alt = c[3];\r\n' \
+  '              elt_foc_data.time = c[4];\r\n' \
+  '            }\r\n' \
   '            save_old();\r\n' \
   '            point_edit(false, false, histb == 0, coord && histb == 0);\r\n' \
-  '            if (err && elt_foc.value != "error") {\r\n' \
+  '            if (err && ! elt_foc_data.hasOwnProperty("error")) {\r\n' \
   '              focused = "";\r\n' \
   '              dot_style(hist[s][ind][0], false);\r\n' \
   '              focused = hist[s][ind][0];\r\n' \
   '            }\r\n' \
   '            if (coord && histb != 0) {\r\n' \
   '              if (segments == null) {\r\n' \
-  '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
-  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
+  '                segments = Array(document.getElementById("pointslist").getElementsByClassName("segment").length).fill(null);\r\n' \
+  '                points = Array(document.getElementById("pointslist").getElementsByClassName("point").length).fill(null);\r\n' \
   '              }\r\n' \
-  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.slice(7, -4))] = true;\r\n' \
-  '              points[parseInt(focused.substring(5))] = elt_foc.checked && elt_foc.value != "error";\r\n' \
-  '              let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
-  '              [dot.style.left, dot.style.top] = point_to_position(document.getElementById(focused + "desc"));\r\n' \
+  '              segments[parseInt(document.getElementById(focused).parentNode.id.substring(7))] = true;\r\n' \
+  '              points[parseInt(focused.substring(5))] = ! (elt_foc_data.deleted || elt_foc_data.error);\r\n' \
+  '              const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '              [dot.style.left, dot.style.top] = point_to_position(document.getElementById(focused));\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (histb == 0) {\r\n' \
@@ -11903,13 +12391,13 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              hist[1-s].push([focused, "", histb]);\r\n' \
   '              if (segments == null) {\r\n' \
-  '                segments= Array(document.getElementById("pointsform").children.length).fill(null);\r\n' \
-  '                points = Array(document.getElementById("points").getElementsByTagName("span").length).fill(null);\r\n' \
+  '                segments = Array(document.getElementById("pointslist").getElementsByClassName("segment").length).fill(null);\r\n' \
+  '                points = Array(document.getElementById("pointslist").getElementsByClassName("point").length).fill(null);\r\n' \
   '              }\r\n' \
-  '              segments[parseInt(document.getElementById(focused + "cont").parentNode.id.slice(7, -4))] = true;\r\n' \
+  '              segments[parseInt(document.getElementById(focused).parentNode.id.substring(7))] = true;\r\n' \
   '              points[parseInt(focused.substring(5))] = redo;\r\n' \
   '            }\r\n' \
-  '            elt_foc.checked = redo;\r\n' \
+  '            elt_foc_data.deleted = redo;\r\n' \
   '            focused = "";\r\n' \
   '            point_checkbox(document.getElementById(hist[s][ind][0]), histb != 0);\r\n' \
   '            if (histb == 0) {dot_style(hist[s][ind][0], false)};\r\n' \
@@ -11918,205 +12406,171 @@ class GPXTweakerWebInterfaceServer():
   '          hist[s].splice(ind, 1);\r\n' \
   '        }\r\n' \
   '        if (segments != null) {\r\n' \
-  '          for (let s=0; s<segments.length; s++) {\r\n' \
+  '          for (let s=0, l=segments.length; s<l; s++) {\r\n' \
   '            if (! segments[s]) {continue;}\r\n' \
-  '            let track = document.getElementById("track" + s.toString());\r\n' \
-  '            let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
-  '            let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
-  '            let path = document.getElementById("path" + s.toString());\r\n' \
-  '            let pt = document.getElementById("segment" + s.toString() + "cont").firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
-  '            let d = path.getAttribute("d");\r\n' \
-  '            let dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '            const s_s = s.toString();\r\n' \
+  '            const track = document.getElementById("track" + s_s);\r\n' \
+  '            const tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '            const tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
+  '            const path = document.getElementById("path" + s_s);\r\n' \
+  '            const pts = document.getElementById("segment" + s_s).getElementsByClassName("point");\r\n' \
+  '            const d = path.getAttribute("d");\r\n' \
+  '            const dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '            let d_r = "M0 0";\r\n' \
-  '            for (let p=1; p<dots.length; p++) {\r\n' \
-  '              let pt_s = points[parseInt(pt.id.slice(5, -4))];\r\n' \
+  '            for (let p=0, l=dots.length-1; p<l; p++) {\r\n' \
+  '              const pt = pts[p];\r\n' \
+  '              const pt_s = points[parseInt(pt.id.substring(5))];\r\n' \
   '              if (pt_s == null) {\r\n' \
-  '                d_r = d_r + " " + dots[p];\r\n' \
+  '                d_r += " " + dots[p];\r\n' \
   '              } else if (pt_s) {\r\n' \
-  '                let [x, y] = WGS84toWebMercator(parseFloat(document.getElementById(pt.id.replace("cont", "lat")).value), parseFloat(document.getElementById(pt.id.replace("cont", "lon")).value));\r\n' \
-  '                d_r = d_r + " L" + (x - tl).toFixed(1) + " " + (tt - y).toFixed(1);\r\n' \
+  '                const [x, y] = WGS84toWebMercator(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")));\r\n' \
+  '                d_r += " L" + (x - tl).toFixed(1) + " " + (tt - y).toFixed(1);\r\n' \
   '              } else {\r\n' \
-  '                d_r = d_r + " m0 0";\r\n' \
+  '                d_r += " m0 0";\r\n' \
   '              }\r\n' \
-  '              pt = pt.nextElementSibling;\r\n' \
   '            }\r\n' \
   '            if (d_r.substring(1).indexOf("M") < 0) {d_r = d_r.replace("L", "M");}\r\n' \
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (histb != 0) {calc_modified();}\r\n' \
-  '        let ex_foc_ = focused;\r\n' \
+  '        const ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
-  '        if (ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
+  '        if (ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
   '        if (gr) {refresh_graph(true);}\r\n' \
   '        if (ex_foc.indexOf("point") < 0) {\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(ex_foc_.replace("point", "dot")), scrollmode == 2);}\r\n' \
-  '          document.getElementById(ex_foc_ + "cont").scrollIntoView({block:"center"});\r\n' \
+  '          document.getElementById(ex_foc_).scrollIntoView({block:"center"});\r\n' \
   '        } else {\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(ex_foc.replace("point", "dot")), scrollmode == 2);}\r\n' \
-  '          document.getElementById(ex_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
+  '          document.getElementById(ex_foc).scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
   '        if (hist[1-s][hist[1-s].length-1][1] == "") {\r\n' \
-  '          show_msg((redo?"{#jmredo1#}":"{#jmundo1#}").replace("%s", inds.length), 3);\r\n' \
+  '          show_msg((redo ? "{#jmredo1#}" : "{#jmundo1#}").replace("%s", inds.length), 3);\r\n' \
   '        } else {\r\n' \
-  '          show_msg((redo?"{#jmredo2#}":"{#jmundo2#}").replace("%s", inds.length), 3);\r\n' \
+  '          show_msg((redo ? "{#jmredo2#}" : "{#jmundo2#}").replace("%s", inds.length), 3);\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function segment_insert(pos) {\r\n' \
+  '        let seg_foc = null;\r\n' \
+  '        if (focused.startsWith("seg")) {\r\n' \
+  '          seg_foc = document.getElementById(focused);\r\n' \
+  '        } else if (focused.startsWith("point")) {\r\n' \
+  '          seg_foc = document.getElementById(focused).parentNode;\r\n' \
+  '        } else {return;}\r\n' \
+  '        const track_foc = document.getElementById(seg_foc.id.replace("segment", "track"));\r\n' \
+  '        const seg = document.getElementById("segment%s").cloneNode(true);\r\n' \
+  '        seg.id = "segment" + document.getElementById("pointslist").getElementsByClassName("segment").length.toString();\r\n' \
+  '        document.getElementById("pointslist").insertBefore(seg, pos == "b" ? seg_foc : seg_foc.nextElementSibling);\r\n' \
+  '        const track = document.getElementById("track%s").cloneNode(true);\r\n' \
+  '        track.id = seg.id.replace("segment", "track");\r\n' \
+  '        const path = track.firstElementChild;\r\n' \
+  '        path.id = seg.id.replace("segment", "path");\r\n' \
+  '        path.setAttribute("d", "M0 0");\r\n' \
+  '        path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
+  '        handle.insertBefore(track, pos == "b" ? track_foc : track_foc.nextElementSibling);\r\n' \
+  '        calc_modified(seg);\r\n' \
+  '        element_click(null, seg);\r\n' \
+  '        show_msg("{#jminsert3#}", 2);\r\n' \
   '      }\r\n' \
   '      function point_insert(pos, coord=null) {\r\n' \
   '        let ex_foc = "";\r\n' \
   '        if (focused) {\r\n' \
-  '          if (document.getElementById(focused).value == "error") {return;}\r\n' \
+  '          if (document.getElementById(focused).hasAttribute("data-error")) {return;}\r\n' \
   '          ex_foc = focused;\r\n' \
-  '          element_click(null, document.getElementById(focused + "desc"), false);\r\n' \
+  '          element_click(null, document.getElementById(focused), false);\r\n' \
   '          dot_style(ex_foc, false);\r\n' \
   '        }\r\n' \
-  '        let el_cont = null;\r\n' \
-  '        let el_dot = null;\r\n' \
+  '        let elt = null;\r\n' \
+  '        let elt_dot = null;\r\n' \
   '        let seg = "";\r\n' \
   '        let ref = null;\r\n' \
   '        let par = null;\r\n' \
-  '        if (ex_foc.substring(0, 3) == "seg") {\r\n' \
-  '          seg = document.getElementById(ex_foc).parentNode;\r\n' \
-  '          if (document.getElementById(ex_foc).nextElementSibling.nextElementSibling.nextElementSibling) {\r\n' \
-  '            if (pos == "b") {\r\n' \
-  '              ref = document.getElementById(ex_foc).nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
-  '            } else {\r\n' \
-  '              ref = document.getElementById(ex_foc).parentNode.lastElementChild;\r\n' \
-  '            }\r\n' \
-  '          } else {\r\n' \
-  '            pos = "b";\r\n' \
-  '          }\r\n' \
-  '          par = seg;\r\n' \
-  '          el_cont = document.getElementById("point%scont").cloneNode(true);\r\n' \
-  '          el_dot = document.getElementById("dot%s").cloneNode(true);\r\n' \
-  '        }\r\n' \
-  '        if (! ex_foc) {\r\n' \
-  '          if (document.getElementById("waypointsform").firstElementChild) {\r\n' \
-  '            if (pos == "b") {\r\n' \
-  '              ref = document.getElementById("waypointsform").firstElementChild;\r\n' \
-  '            } else {\r\n' \
-  '              ref = document.getElementById("waypointsform").lastElementChild;\r\n' \
-  '            }\r\n' \
-  '          } else {\r\n' \
-  '            pos = "b";\r\n' \
-  '          }\r\n' \
-  '          par = document.getElementById("waypointsform");\r\n' \
-  '          el_cont = document.getElementById("waypoint%scont").cloneNode(true);\r\n' \
-  '          el_dot = document.getElementById("waydot%s").cloneNode(true);\r\n' \
-  '        }\r\n' \
   '        let pref = "";\r\n' \
-  '        if (ex_foc.substring(0, 3) == "way" || ! ex_foc) {\r\n' \
-  '          pref = document.getElementById("waypoints").getElementsByTagName("span").length.toString();\r\n' \
-  '          if (pref == "0") {\r\n' \
-  '            document.getElementById("waypoints").style.borderRight = "";\r\n' \
-  '            document.getElementById("waypoints").style.overflowY = "scroll";\r\n' \
-  '          }\r\n' \
-  '          pref = "waypoint" + pref;\r\n' \
-  '        } else {\r\n' \
-  '          pref = document.getElementById("points").getElementsByTagName("span").length.toString();\r\n' \
-  '          if (! seg) {seg = document.getElementById(ex_foc).parentNode.parentNode;}\r\n' \
-  '          pref = "point" + pref;\r\n' \
-  '        }\r\n' \
-  '        if (! el_cont) {\r\n' \
-  '          ref = document.getElementById(ex_foc + "cont");\r\n' \
-  '          par = ref.parentNode;\r\n' \
-  '          el_cont = document.getElementById(ex_foc).parentNode.cloneNode(true);\r\n' \
-  '        }\r\n' \
-  '        el_cont.id = pref + "cont";\r\n' \
-  '        let el_input = el_cont.firstElementChild;\r\n' \
-  '        el_input.id = pref;\r\n' \
-  '        el_input.name = pref;\r\n' \
-  '        el_input.checked = true;\r\n' \
-  '        el_input.value = "edited";\r\n' \
-  '        let el_label = el_input.nextElementSibling;\r\n' \
-  '        el_label.htmlFor = pref;\r\n' \
-  '        el_label.id = pref + "desc";\r\n' \
-  '        el_label.style.textDecorationLine = "inherit";\r\n' \
-  '        let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
-  '        el_span.id = pref + "focus";\r\n' \
-  '        let el_span_children = el_span.children;\r\n' \
-  '        el_span_children[0].htmlFor = pref + "lat";\r\n' \
-  '        el_span_children[1].id = pref + "lat";\r\n' \
-  '        el_span_children[1].name = pref + "lat";\r\n' \
-  '        el_span_children[3].htmlFor = pref + "lon";\r\n' \
-  '        el_span_children[4].id = pref + "lon";\r\n' \
-  '        el_span_children[4].name = pref + "lon";\r\n' \
-  '        el_span_children[6].htmlFor = pref + "ele";\r\n' \
-  '        el_span_children[7].id = pref + "ele";\r\n' \
-  '        el_span_children[7].name = pref + "ele";\r\n' \
-  '        if (ex_foc.substring(0, 3) == "way" || ! ex_foc) {\r\n' \
-  '          el_span_children[9].htmlFor = pref + "time";\r\n' \
-  '          el_span_children[10].id = pref + "time";\r\n' \
-  '          el_span_children[10].name = pref + "time";\r\n' \
-  '          el_span_children[12].htmlFor = pref + "name";\r\n' \
-  '          el_span_children[13].id = pref + "name";\r\n' \
-  '          el_span_children[13].name = pref + "name";\r\n' \
-  '        } else {\r\n' \
-  '          el_span_children[9].htmlFor = pref + "alt";\r\n' \
-  '          el_span_children[10].id = pref + "alt";\r\n' \
-  '          el_span_children[10].name = pref + "alt";\r\n' \
-  '          el_span_children[12].htmlFor = pref + "time";\r\n' \
-  '          el_span_children[13].id = pref + "time";\r\n' \
-  '          el_span_children[13].name = pref + "time";\r\n' \
-  '        }\r\n' \
-  '        if (el_dot || coord) {\r\n' \
-  '          let lat = null;\r\n' \
-  '          let lon = null;\r\n' \
-  '          if (coord) {\r\n' \
-  '            [lat, lon] = coord;\r\n' \
-  '          } else {\r\n' \
-  '            [lat, lon] = WebMercatortoWGS84(Math.max(vminx, Math.min(vmaxx, htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom)), Math.max(vminy, Math.min(vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom)));\r\n' \
-  '          }\r\n' \
-  '          if (! el_dot) {\r\n' \
-  '            el_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);\r\n' \
-  '          }\r\n' \
-  '          el_span_children[1].value = lat.toFixed(6);\r\n' \
-  '          el_span_children[4].value = lon.toFixed(6);\r\n' \
-  '          el_span_children[7].value = "";\r\n' \
-  '          el_span_children[10].value = "";\r\n' \
-  '          el_span_children[13].value = "";\r\n' \
-  '          el_label.innerHTML = point_desc(el_span);\r\n' \
-  '          let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '          if (ex_foc) {\r\n' \
-  '            el_dot.style.left = wmvalue_to_prop(wm[0] - htopx, 3.5);\r\n' \
-  '            el_dot.style.top = wmvalue_to_prop(htopy - wm[1], 3.5);\r\n' \
-  '          } else {\r\n' \
-  '            el_dot.style.left = wmvalue_to_prop(wm[0] - htopx, 4);\r\n' \
-  '            el_dot.style.top = wmvalue_to_prop(htopy - wm[1], 4);\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        if (pos == "a") {ref = ref.nextElementSibling}\r\n' \
-  '        par.insertBefore(el_cont, ref);\r\n' \
-  '        if (! el_dot) {\r\n' \
-  '          el_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);\r\n' \
-  '        }\r\n' \
-  '        el_dot.id = pref.replace("point", "dot");\r\n' \
-  '        par = handle;\r\n' \
-  '        ref = el_cont.nextElementSibling;\r\n' \
-  '        if (! ref ) {\r\n' \
-  '          let spans = document.getElementById("pointsform").getElementsByTagName("span");\r\n' \
-  '          if (el_cont.id.substring(0,3) == "way") {\r\n' \
-  '            if (spans.length > 0) {ref = spans[0].parentNode;}\r\n' \
-  '          } else {\r\n' \
-  '            for (let p=0; p<spans.length; p++) {\r\n' \
-  '              if (spans[p].id == el_span.id && p + 1 < spans.length) {\r\n' \
-  '                ref = spans[p + 1].parentNode;\r\n' \
-  '                break;\r\n' \
-  '              }\r\n' \
+  '        let pts = null;\r\n' \
+  '        let iswpt = false;\r\n' \
+  '        if (ex_foc.startsWith("way") || ! ex_foc) {\r\n' \
+  '          iswpt = true;\r\n' \
+  '          const wpts = document.getElementById("waypointslist").getElementsByClassName("waypoint");\r\n' \
+  '          pref = "waypoint" + wpts.length.toString();\r\n' \
+  '          if (! ex_foc) {\r\n' \
+  '            if (wpts.length > 0) {\r\n' \
+  '              ref = pos == "b" ? wpts[0] : wpts[wpts.length - 1];\r\n' \
+  '            } else {\r\n' \
+  '              pos = "b";\r\n' \
   '            }\r\n' \
+  '            par = document.getElementById("waypointslist");\r\n' \
+  '            elt = document.getElementById("waypoint%s").cloneNode(true);\r\n' \
+  '            elt_dot = document.getElementById("waydot%s").cloneNode(true);\r\n' \
+  '          }\r\n' \
+  '        } else {\r\n' \
+  '          const apts = document.getElementById("pointslist").getElementsByClassName("point");\r\n' \
+  '          pref = "point" + apts.length.toString();\r\n' \
+  '          if (ex_foc.startsWith("seg")) {\r\n' \
+  '            seg = document.getElementById(ex_foc);\r\n' \
+  '            pts = seg.getElementsByClassName("point");\r\n' \
+  '            if (pts.length > 0) {\r\n' \
+  '              ref = pos == "b" ? pts[0] : pts[pts.length - 1]\r\n' \
+  '            } else {\r\n' \
+  '              pos = "b";\r\n' \
+  '            }\r\n' \
+  '            par = seg;\r\n' \
+  '            elt = document.getElementById("point%s").cloneNode(true);\r\n' \
+  '            elt_dot = document.getElementById("dot%s").cloneNode(true);\r\n' \
+  '          } else {\r\n' \
+  '            seg = document.getElementById(ex_foc).parentNode;\r\n' \
+  '            pts = seg.getElementsByClassName("point");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (ref) {ref = document.getElementById(ref.id.slice(0, -4).replace("point", "dot"));}\r\n' \
-  '        par.insertBefore(el_dot, ref);\r\n' \
+  '        if (! elt) {\r\n' \
+  '          ref = document.getElementById(ex_foc);\r\n' \
+  '          par = ref.parentNode;\r\n' \
+  '          elt = document.getElementById(ex_foc).cloneNode(true);\r\n' \
+  '          elt.removeAttribute("data-deleted");\r\n' \
+  '        }\r\n' \
+  '        elt.id = pref;\r\n' \
+  '        const elt_data = elt.dataset;\r\n' \
+  '        elt_data.edited = "";\r\n' \
+  '        if (elt_dot || coord) {\r\n' \
+  '          const [lat, lon] = coord ? coord : WebMercatortoWGS84(Math.max(vminx, Math.min(vmaxx, htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom)), Math.max(vminy, Math.min(vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom)));\r\n' \
+  '          if (! elt_dot) {\r\n' \
+  '            elt_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);\r\n' \
+  '          }\r\n' \
+  '          elt_data.lat = lat.toFixed(6);\r\n' \
+  '          elt_data.lon = lon.toFixed(6);\r\n' \
+  '          elt_data.ele = "";\r\n' \
+  '          elt_data.time = "";\r\n' \
+  '          if (ex_foc) {elt_data.alt = "";} else {elt_data.name = "";}\r\n' \
+  '          point_desc(elt, true);\r\n' \
+  '          const wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '          elt_dot.style.left = wmvalue_to_prop(wm[0] - htopx, (ex_foc ? 3.5 : 4));\r\n' \
+  '          elt_dot.style.top = wmvalue_to_prop(htopy - wm[1], (ex_foc ? 3.5 : 4));\r\n' \
+  '        }\r\n' \
+  '        if (pos == "a") {ref = ref.nextElementSibling;}\r\n' \
+  '        par.insertBefore(elt, ref);\r\n' \
+  '        if (! elt_dot) {elt_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);}\r\n' \
+  '        elt_dot.id = pref.replace("point", "dot");\r\n' \
+  '        par = handle;\r\n' \
+  '        ref = elt.nextElementSibling;\r\n' \
+  '        if (! ref) {\r\n' \
+  '          let s = iswpt ? document.getElementById("pointslist").getElementsByClassName("segment")?.[0] : seg.nextElementSibling;\r\n' \
+  '          while (s) {\r\n' \
+  '            const spts = s.getElementsByClassName("point");\r\n' \
+  '            if (spts.length > 0) {\r\n' \
+  '              ref = spts[0];\r\n' \
+  '              break;\r\n' \
+  '            }\r\n' \
+  '            s = s.nextElementSibling;\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (ref) {ref = document.getElementById(ref.id.replace("point", "dot"));}\r\n' \
+  '        par.insertBefore(elt_dot, ref);\r\n' \
   '        dot_style(pref, false);\r\n' \
-  '        if (ex_foc.substring(0, 3) != "way" && ex_foc) {\r\n' \
-  '          let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
-  '          let np = WGS84_to_viewbox(parseFloat(el_span_children[1].value), parseFloat(el_span_children[4].value), track);\r\n' \
-  '          let path = document.getElementById("path" + seg.id.slice(7, -4));\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' \
-  '          let ind = 0;\r\n' \
-  '          while (spans[ind].id != pref + "focus") {ind++;}\r\n' \
-  '          ind++;\r\n' \
+  '        if (! iswpt) {\r\n' \
+  '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
+  '          const np = WGS84_to_viewbox(parseFloat(elt.getAttribute("data-lat")), parseFloat(elt.getAttribute("data-lon")), track);\r\n' \
+  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
+  '          const ind = Array.prototype.indexOf.call(pts, elt) + 1;\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
   '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + ind.toString() + "}");\r\n' \
   '          let d_right = d.slice(d_left[0].length);\r\n' \
@@ -12128,31 +12582,27 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
   '        }\r\n' \
-  '        element_click(null, el_label, false);\r\n' \
-  '        hist[0].push([focused, ""]);\r\n' \
-  '        el_span.scrollIntoView({block:"center"});\r\n' \
+  '        element_click(null, elt, false);\r\n' \
+  '        hist_push([focused, ""]);\r\n' \
+  '        elt.scrollIntoView({block:"nearest"});\r\n' \
+  '        (document.getElementById(iswpt ? "waypointform" : "pointform")).scrollIntoView({block:"nearest"});\r\n' \
   '        if (! coord) {\r\n' \
-  '          if (scrollmode > 0) {scroll_to_dot(el_dot, scrollmode == 2);}\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(elt_dot, scrollmode == 2);}\r\n' \
   '          if (seg) {\r\n' \
   '            calc_modified(seg);\r\n' \
   '          } else {\r\n' \
   '            wpt_calc();\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        show_msg(((focused.substring(0, 3)=="way")?"{#jminsert1#}":"{#jminsert2#}"), 2);\r\n' \
+  '        show_msg((focused.startsWith("way") ? "{#jminsert1#}" : "{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function point_delete(pt, batch=false) {\r\n' \
-  '        if (document.getElementById(pt.id + "desc").style.textDecorationColor != "red") {\r\n' \
-  '          document.getElementById(pt.id + "desc").style.textDecorationLine = "line-through";\r\n' \
-  '        }\r\n' \
-  '        if (pt.id.substring(0, 3) == "way") {\r\n' \
+  '        if (pt.id.startsWith("way")) {\r\n' \
   '          wpt_calc();\r\n' \
   '        } else if (! batch) {\r\n' \
-  '          let seg = pt.parentNode.parentNode;\r\n' \
-  '          let path = document.getElementById("path" + seg.id.slice(7, -4));\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' \
-  '          let ind = 0;\r\n' \
-  '          while (spans[ind].id != pt.id + "focus") {ind++;}\r\n' \
+  '          const seg = pt.parentNode;\r\n' \
+  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
+  '          const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
   '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
   '          let d_right = d.slice(d_left[0].length);\r\n' \
@@ -12168,19 +12618,14 @@ class GPXTweakerWebInterfaceServer():
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
   '      function point_undelete(pt, batch=false) {\r\n' \
-  '        if (document.getElementById(pt.id + "desc").style.textDecorationColor != "red") {\r\n' \
-  '          document.getElementById(pt.id + "desc").style.textDecorationLine = "inherit";\r\n' \
-  '        }\r\n' \
-  '        if (pt.id.substring(0, 3) == "way") {\r\n' \
+  '        if (pt.id.startsWith("way")) {\r\n' \
   '          wpt_calc();\r\n' \
-  '        } else if (! batch) {\r\n' \
-  '          let seg = pt.parentNode.parentNode;\r\n' \
-  '          let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
-  '          let np = WGS84_to_viewbox(parseFloat(document.getElementById(pt.id + "lat").value), parseFloat(document.getElementById(pt.id + "lon").value), track);\r\n' \
-  '          let path = document.getElementById("path" + seg.id.slice(7, -4));\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' \
-  '          let ind = 0;\r\n' \
-  '          while (spans[ind].id != pt.id + "focus") {ind++;}\r\n' \
+  '        } else if (! batch && ! pt.hasAttribute("data-error")) {\r\n' \
+  '          const seg = pt.parentNode;\r\n' \
+  '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
+  '          const np = WGS84_to_viewbox(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")), track);\r\n' \
+  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
+  '          const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
   '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
   '          let d_right = d.slice(d_left[0].length);\r\n' \
@@ -12196,68 +12641,61 @@ class GPXTweakerWebInterfaceServer():
   '        dot_style(pt.id, ! batch);\r\n' \
   '      }\r\n' \
   '      function point_checkbox(pt, batch=false) {\r\n' \
-  '        if (pt.value == "error") {pt.checked = ! pt.checked;}\r\n' \
-  '        if (pt.checked) {point_undelete(pt, batch);} else {point_delete(pt, batch);}\r\n' \
+  '        if (! pt.hasAttribute("data-error")) {\r\n' \
+  '          if (pt.hasAttribute("data-deleted")) {pt.removeAttribute("data-deleted");} else {pt.setAttribute("data-deleted", "");}\r\n' \
+  '        }\r\n' \
+  '        if (pt.hasAttribute("data-deleted")) {point_delete(pt, batch);} else {point_undelete(pt, batch);}\r\n' \
   '      }\r\n' \
   '      function pointed3d_waypoint(lat, lon) {\r\n' \
-  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '        const wm = WGS84toWebMercator(lat, lon);\r\n' \
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return false;}\r\n' \
   '        if (focused) {\r\n' \
   '          ex_foc = focused;\r\n' \
-  '          element_click(null, document.getElementById(focused + "desc"), false);\r\n' \
+  '          element_click(null, document.getElementById(focused), false);\r\n' \
   '          dot_style(ex_foc, false);\r\n' \
   '        }\r\n' \
-  '        let wpts = document.getElementById("waypointsform").children;\r\n' \
-  '        let w = 0;\r\n' \
-  '        let wpt = null;\r\n' \
-  '        while (w < wpts.length) {\r\n' \
-  '          wpt = wpts[w].firstElementChild;\r\n' \
-  '          if (! wpt.checked && document.getElementById(wpt.id + "name").value == "#### 3D ####") {break;}\r\n' \
-  '          w++;\r\n' \
-  '        }\r\n' \
-  '        if (w < wpts.length) {\r\n' \
-  '          element_click(null, document.getElementById(wpt.id + "desc"), false);\r\n' \
-  '          document.getElementById(wpt.id + "lat").value = lat.toFixed(6);\r\n' \
-  '          document.getElementById(wpt.id + "lon").value = lon.toFixed(6);\r\n' \
-  '          document.getElementById(wpt.id + "ele").value = "";\r\n' \
-  '          document.getElementById(wpt.id + "time").value = "";\r\n' \
+  '        let wpt = Array.prototype.find.call(document.getElementById("waypointslist").getElementsByClassName("waypoint"), (w) => w.hasAttribute("data-deleted") && w.getAttribute("data-name") == "#### 3D ####")\r\n' \
+  '        if (wpt) {\r\n' \
+  '          const wpt_data = wpt.dataset;\r\n' \
+  '          wpt_data.lat = lat.toFixed(6);\r\n' \
+  '          wpt_data.lon = lon.toFixed(6);\r\n' \
+  '          wpt_data.ele = "";\r\n' \
+  '          wpt_data.time = "";\r\n' \
+  '          element_click(null, wpt, true);\r\n' \
   '          point_edit(false, true, false, true);\r\n' \
   '        } else {\r\n' \
   '          point_insert("a", [lat, lon]);\r\n' \
-  '          document.getElementById(focused + "name").value = "#### 3D ####";\r\n' \
-  '          point_edit(false, false, false, false);\r\n' \
   '          wpt = document.getElementById(focused);\r\n' \
-  '          wpt.checked = ! wpt.checked;\r\n' \
+  '          wpt.setAttribute("data-name", "#### 3D ####");\r\n' \
+  '          document.getElementById("waypointname").value = "#### 3D ####";\r\n' \
+  '          point_edit(false, false, false, false);\r\n' \
   '          point_checkbox(wpt);\r\n' \
+  '          scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
   '        }\r\n' \
   '        save_old();\r\n' \
-  '        scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
   '        if (navigator_firefox) {window.alert("3D");}\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, fpan=0, ind=null, mmls=null, teahs=null) {\r\n' \
-  '        let seg_ind = parseInt(seg.id.slice(7, -4));\r\n' \
-  '        let seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        let min = Math.min;\r\n' \
-  '        let max = Math.max;\r\n' \
-  '        let round = Math.round;\r\n' \
-  '        let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
+  '        const seg_ind = parseInt(seg.id.substring(7));\r\n' \
+  '        const seg_desc = seg.getElementsByClassName("segmentdesc")[0];\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const min = Math.min;\r\n' \
+  '        const max = Math.max;\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '        if (fpan == 0) {\r\n' \
-  '          let pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
-  '          if (pos_d > 0) {\r\n' \
-  '            seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(1, pos_d) + "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;";\r\n' \
-  '          }\r\n' \
+  '          seg_desc.innerHTML = "()";\r\n' \
   '          while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
   '          stats[seg_ind] = [];\r\n' \
   '        }\r\n' \
-  '        if (! seg.firstElementChild.checked) {return;}\r\n' \
+  '        if (seg.hasAttribute("data-deleted")) {return;}\r\n' \
   '        if (fpan <= 1 || (fpan == 2 && gpucomp == 0) || gpu_part) {\r\n' \
-  '          let spans = seg.getElementsByTagName("span");\r\n' + HTML_SEGCALC_1_TEMPLATE + \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            if (point_stat[parseInt(spans[p].id.slice(5, -5))] == null) {continue;}\r\n' \
-  '            let p_c = spans[p].children;\r\n' \
-  '            let ea = [parseFloat(p_c[7].value), parseFloat(p_c[10].value)];\r\n' \
+  '          const pts = seg.getElementsByClassName("point");\r\n' + HTML_SEGCALC_1_TEMPLATE + \
+  '          for (let p=0, l=pts.length; p<l; p++) {\r\n' \
+  '            if (point_stat[parseInt(pts[p].id.substring(5))] == null) {continue;}\r\n' \
+  '            const p_d = point_data.subarray(5 * parseInt(pts[p].id.substring(5)));\r\n' \
+  '            let ea = [p_d[2], p_d[3]];\r\n' \
   '            for (let v=0; v<2; v++) {\r\n' \
   '              if (! isNaN(ea[v]) && isNaN(ea_p[v])) {\r\n' \
   '                ea_p[v] = ea[v];\r\n' \
@@ -12266,9 +12704,9 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            if (fpan == 0 || fpan == 2 || (gpucomp >= 1 && fpan != 1)) {\r\n' \
-  '              let t = Date.parse(p_c[13].value);\r\n' \
-  '              lat = parseFloat(p_c[1].value);\r\n' \
-  '              lon = parseFloat(p_c[4].value);\r\n'  + HTML_SEGCALC_2_TEMPLATE + \
+  '              let t = p_d[4];\r\n' \
+  '              lat = p_d[0];\r\n' \
+  '              lon = p_d[1];\r\n'  + HTML_SEGCALC_2_TEMPLATE + \
   '            if (gpucomp == 0 && (fpan == 0 || fpan == 2)) {\r\n' \
   '              stat[4] = isNaN(ea[0])?ea_p[0]:ea[0];\r\n' \
   '              stat[5] = isNaN(ea[1])?ea_p[1]:ea[1];\r\n' \
@@ -12309,9 +12747,9 @@ class GPXTweakerWebInterfaceServer():
   '          if (fpan == 0) {\r\n' \
   '            let dur_c = "--h--mn--s";\r\n' \
   '            if (t_s != null) {\r\n' \
-  '              let dur_s = stat_p[0] % 60;\r\n' \
-  '              let dur_m = ((stat_p[0] - dur_s) / 60) % 60;\r\n' \
-  '              let dur_h = (stat_p[0] - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '              const dur_s = stat_p[0] % 60;\r\n' \
+  '              const dur_m = ((stat_p[0] - dur_s) / 60) % 60;\r\n' \
+  '              const dur_h = (stat_p[0] - dur_m * 60 - dur_s) / 3600;\r\n' \
   '              dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
   '            }\r\n' \
   '            let dist_c = "-km";\r\n' \
@@ -12320,7 +12758,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (! isNaN(ea_p[0])) {ele_c = (gpucomp<=1?ftos(stat_p[2]):"[eg]") + "m";}\r\n' \
   '            let alt_c = "-m";\r\n' \
   '            if (! isNaN(ea_p[1])) {alt_c = (gpucomp<=1?ftos(stat_p[3]):"[ag]") + "m";}\r\n' \
-  '            seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ") &ndash;";\r\n' \
+  '            seg_desc.innerHTML = "(" + dur_c + "|" + dist_c + "|" + ele_c + "|" + alt_c + ")";\r\n' \
   '          } else if (fpan == 1) {\r\n' \
   '            seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, ftos(stat_p[2]) + "m|").replace(/\\d+m\\)/, ftos(stat_p[3]) + "m)");\r\n' \
   '          } else if (fpan == 2 && gpucomp == 0) {\r\n' \
@@ -12329,13 +12767,9 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' + HTML_SEGCALC_5_TEMPLATE + \
   '      }\r\n' \
   '      function wpt_calc() {\r\n' \
-  '        let nbpt = 0;\r\n' \
-  '        let wpts = document.getElementById("waypointsform").getElementsByTagName("input");\r\n' \
-  '        for (let w=0; w<wpts.length; w++) {\r\n' \
-  '          if (wpts[w].checked && wpts[w].value != "error") {nbpt++;}\r\n' \
-  '        }\r\n' \
-  '        let waypoints = document.getElementById("waypoints").firstChild;\r\n' \
-  '        let pos_p = waypoints.data.indexOf("(");\r\n' \
+  '        const nbpt = Array.prototype.reduce.call(document.getElementById("waypointslist").getElementsByClassName("waypoint"), (c, w) => c + (w.hasAttribute("data-deleted") || w.hasAttribute("data-error") ? 0 : 1), 0);\r\n' \
+  '        const waypoints = document.getElementById("waypoints").firstChild;\r\n' \
+  '        const pos_p = waypoints.data.indexOf("(");\r\n' \
   '        if (pos_p < 0) {\r\n' \
   '          waypoints.appendData("(" + nbpt.toString() + ") ");\r\n' \
   '        } else {\r\n' \
@@ -12343,10 +12777,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function whole_calc() {\r\n' \
-  '        let round = Math.round;\r\n' \
-  '        let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
-  '        let points = document.getElementById("points").firstChild;\r\n' \
-  '        let pos_p =  points.data.indexOf("(");\r\n' \
+  '        const round = Math.round;\r\n' \
+  '        const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
+  '        const points = document.getElementById("points").firstChild;\r\n' \
+  '        const pos_p =  points.data.indexOf("(");\r\n' \
   '        if (pos_p >= 0) {points.deleteData(pos_p, points.length - pos_p);}\r\n' \
   '        let dur = null;\r\n' \
   '        let dist = null;\r\n' \
@@ -12365,9 +12799,9 @@ class GPXTweakerWebInterfaceServer():
   '        let dur_c = "--h--mn--s";\r\n' \
   '        if (dur != null) {\r\n' \
   '          dur = Math.round(dur);\r\n' \
-  '          let dur_s = dur % 60;\r\n' \
-  '          let dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
-  '          let dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
+  '          const dur_s = dur % 60;\r\n' \
+  '          const dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
+  '          const dur_h = (dur - dur_m * 60 - dur_s) / 3600;\r\n' \
   '          dur_c = dur_h.toString() + "h" + dur_m.toString().padStart(2, "0") + "mn" + dur_s.toString().padStart(2, "0") + "s";\r\n' \
   '        }\r\n' \
   '        let dist_c = "-km";\r\n' \
@@ -12386,7 +12820,7 @@ class GPXTweakerWebInterfaceServer():
   '          if ((typeof args[0]).toLowerCase() != "object") {fpan = args[0];}\r\n' \
   '        }\r\n' \
   '        if (args.length == 0 || fpan != 0) {\r\n' \
-  '          segs = Array.from(document.getElementById("pointsform").children);\r\n' \
+  '          segs = Array.from(document.getElementById("pointslist").getElementsByClassName("segment"));\r\n' \
   '        } else {\r\n' \
   '          segs = args;\r\n' \
   '        }\r\n' \
@@ -12399,15 +12833,15 @@ class GPXTweakerWebInterfaceServer():
   '        if (fpan <= 1 || gpucomp == 0 || gpu_part) {\r\n' \
   '          starts = [0];\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            if (! segs[s].firstElementChild.checked) {continue};\r\n' \
+  '            if (segs[s].hasAttribute("data-deleted")) {continue};\r\n' \
   '            let nbp = 0;\r\n' \
   '            if (fpan == 0) {\r\n' \
-  '              let spans = segs[s].getElementsByTagName("span");\r\n' \
-  '              for (let p=0; p<spans.length; p++) {\r\n' \
-  '                if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {\r\n' \
-  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = null;\r\n' \
+  '              let pts = segs[s].getElementsByClassName("point");\r\n' \
+  '              for (let p=0; p<pts.length; p++) {\r\n' \
+  '                if (pts[p].hasAttribute("data-deleted") || pts[p].hasAttribute("data-error")) {\r\n' \
+  '                  point_stat[parseInt(pts[p].id.substring(5))] = null;\r\n' \
   '                } else {\r\n' \
-  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = nbp;\r\n' \
+  '                  point_stat[parseInt(pts[p].id.substring(5))] = nbp;\r\n' \
   '                  nbp++;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -12423,7 +12857,7 @@ class GPXTweakerWebInterfaceServer():
   '          let ind = 0;\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            segment_calc(segs[s], fpan, ind, mmls, teahs);\r\n' \
-  '            ind += stats[parseInt(segs[s].id.slice(7, -4))].length;\r\n' \
+  '            ind += stats[parseInt(segs[s].id.substring(7))].length;\r\n' \
   '          }\r\n' \
   '          if (starts[starts.length - 1] == 0) {\r\n' \
   '            gpu_part = gpucomp >= 1;\r\n' \
@@ -12437,7 +12871,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        } else {\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            if (stats[parseInt(segs[s].id.slice(7, -4))].length > 0) {\r\n' \
+  '            if (stats[parseInt(segs[s].id.substring(7))].length > 0) {\r\n' \
   '              starts = true;\r\n' \
   '              break;\r\n' \
   '            }\r\n' \
@@ -12459,7 +12893,7 @@ class GPXTweakerWebInterfaceServer():
   '          let i = 0;\r\n' \
   '          let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '            let seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
   '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
   '              let stat = stats[seg_ind][p];\r\n' \
   '              if (fpan == 0) {stat[1] = stats[seg_ind][p>0?p-1:0][1] + gs[i];}\r\n' \
@@ -12479,7 +12913,7 @@ class GPXTweakerWebInterfaceServer():
   '              i++;\r\n' \
   '            }\r\n' \
   '            if (stats[seg_ind].length > 0) {\r\n' \
-  '              let seg_desc = segs[s].firstElementChild.nextElementSibling;\r\n' \
+  '              let seg_desc = segs[s].getElementsByClassName("segmentdesc")[0];\r\n' \
   '              let stat = stats[seg_ind][stats[seg_ind].length - 1];\r\n' \
   '              if (gpucomp == 2 && fpan == 2) {\r\n' \
   '                seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, "[eg]m|").replace(/\\d+m\\)/, "[ag]m)");\r\n' \
@@ -12512,27 +12946,25 @@ class GPXTweakerWebInterfaceServer():
   '          if (fpan == 0) {gpu_part = stats.some((st, s) => st.length > 0 && ! wgpu_modified.has(s));}\r\n' \
   '          starts = [0];\r\n' \
   '          for (const seg_ind of seg_inds) {\r\n' \
-  '            const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
+  '            const seg = document.getElementById("segment" + seg_ind.toString());\r\n' \
   '            let nbp = 0;\r\n' \
   '            if (fpan == 0) {\r\n' \
   '              wgpu_modified.delete(seg_ind);\r\n' \
-  '              const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
-  '              const pos_d = seg_desc.innerHTML.indexOf("(");\r\n' \
-  '              if (pos_d > 0) {\r\n' \
-  '                seg_desc.innerHTML = "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;" + seg_desc.innerHTML.substring(1, pos_d) + "&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;";\r\n' \
-  '              }\r\n' \
+  '              const seg_desc = seg.getElementsByClassName("segmentdesc")[0];\r\n' \
+  '              seg_desc.innerHTML = "()";\r\n' \
   '              while (stats.length <= seg_ind) {stats.push([]);}\r\n' \
   '              stats[seg_ind] = [];\r\n' \
-  '              if (! seg.firstElementChild.checked) {\r\n' \
+  '              if (seg.hasAttribute("data-deleted")) {\r\n' \
   '                seg_nbps.set(seg_ind, 0);\r\n' \
   '                continue;\r\n' \
   '              };\r\n' \
-  '              const spans = seg.getElementsByTagName("span");\r\n' \
-  '              for (let p=0; p<spans.length; p++) {\r\n' \
-  '                if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {\r\n' \
-  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = null;\r\n' \
+  '              const pts = seg.getElementsByClassName("point");\r\n' \
+  '              for (let p=0, l=pts.length; p<l; p++) {\r\n' \
+  '                const pt = pts[p];\r\n' \
+  '                if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {\r\n' \
+  '                  point_stat[parseInt(pt.id.substring(5))] = null;\r\n' \
   '                } else {\r\n' \
-  '                  point_stat[parseInt(spans[p].id.slice(5,-5))] = nbp;\r\n' \
+  '                  point_stat[parseInt(pt.id.substring(5))] = nbp;\r\n' \
   '                  nbp++;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -12564,8 +12996,8 @@ class GPXTweakerWebInterfaceServer():
   '          let cteahs = teahs;\r\n' \
   '          for (const seg_ind of seg_inds) {\r\n' \
   '            if (seg_nbps.get(seg_ind) == 0) {continue;}\r\n' \
-  '            const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
-  '            const spans = seg.getElementsByTagName("span");\r\n' \
+  '            const seg = document.getElementById("segment" + seg_ind.toString());\r\n' \
+  '            const pts = seg.getElementsByClassName("point");\r\n' \
   '            let ind = 0;\r\n' \
   '            let latp = null;\r\n' \
   '            let lonp = null;\r\n' \
@@ -12574,11 +13006,11 @@ class GPXTweakerWebInterfaceServer():
   '            let ep = null;\r\n' \
   '            let ap = null;\r\n' \
   '            let hp = null;\r\n' \
-  '            for (let p=0; p<spans.length; p++) {\r\n' \
-  '              if (point_stat[parseInt(spans[p].id.slice(5, -5))] == null) {continue;}\r\n' \
-  '              const pc = spans[p].children;\r\n' \
-  '              const lat = parseFloat(pc[1].value);\r\n' \
-  '              const lon = parseFloat(pc[4].value);\r\n' \
+  '            for (let p=0, l=pts.length; p<l; p++) {\r\n' \
+  '              if (point_stat[parseInt(pts[p].id.substring(5))] == null) {continue;}\r\n' \
+  '              const p_d = point_data.subarray(5 * parseInt(pts[p].id.substring(5)));\r\n' \
+  '              const lat = p_d[0] ;\r\n' \
+  '              const lon = p_d[1];\r\n' \
   '              if (ind == 0) {\r\n' \
   '                cmms[0] = 0;\r\n' \
   '                cmms[1] = 0;\r\n' \
@@ -12590,14 +13022,14 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              latp = lat;\r\n' \
   '              lonp = lon;\r\n' \
-  '              const t = Date.parse(pc[13].value);\r\n' \
+  '              const t = p_d[4];\r\n' \
   '              if (! isNaN(t)) {\r\n' \
   '                if (tb == null) {tb = t;}\r\n' \
   '                tp = max((t - tb) / 1000, tp);\r\n' \
   '              }\r\n' \
   '              cteahs[4 * ind] = tp;\r\n' \
-  '              const e = parseFloat(pc[7].value);\r\n' \
-  '              const a = parseFloat(pc[10].value);\r\n' \
+  '              const e = p_d[2];\r\n' \
+  '              const a = p_d[3];\r\n' \
   '              let h = null;\r\n' \
   '              if (isNaN(a)) {\r\n' \
   '                cteahs[4 * ind + 2] = ap == null ? 0 : ap;\r\n' \
@@ -12635,7 +13067,7 @@ class GPXTweakerWebInterfaceServer():
   '            cteahs = cteahs.subarray(4 * ind);\r\n' \
   '            if (fpan == 0) {\r\n' \
   '              if (ind > 0) {\r\n' \
-  '                const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '                const seg_desc = seg.getElementsByClassName("segmentdesc")[0];\r\n' \
   '                let dur_c = "--h--mn--s";\r\n' \
   '                if (tp != null) {\r\n' \
   '                  const dur_s = tp % 60;\r\n' \
@@ -12643,7 +13075,7 @@ class GPXTweakerWebInterfaceServer():
   '                  const dur_h = (tp - dur_m * 60 - dur_s) / 3600;\r\n' \
   '                  dur_c = dur_h.toFixed(0) + "h" + dur_m.toFixed(0).padStart(2, "0") + "mn" + dur_s.toFixed(0).padStart(2, "0") + "s";\r\n' \
   '                }\r\n' \
-  '                seg_desc.innerHTML = "&ndash;" + seg_desc.innerHTML.slice(6, -6) + "(" + dur_c + "|.km|" + (ep == null ? "-" : ".") + "m|" + (ap == null ? "-" : ".") + "m) &ndash;";\r\n' \
+  '                seg_desc.innerHTML = "(" + dur_c + "|.km|" + (ep == null ? "-" : ".") + "m|" + (ap == null ? "-" : ".") + "m)";\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -12695,9 +13127,9 @@ class GPXTweakerWebInterfaceServer():
   '        for (const seg_ind of seg_inds) {\r\n' \
   '          const nbp = seg_nbps.get(seg_ind);\r\n' \
   '          if (nbp == 0) {continue;}\r\n' \
-  '          const seg = document.getElementById("segment" + seg_ind.toString() + "cont");\r\n' \
+  '          const seg = document.getElementById("segment" + seg_ind.toString());\r\n' \
   '          let stat = [0, 0, 0, 0, 0, 0, 0, 0];\r\n' \
-  '          const seg_desc = seg.firstElementChild.nextElementSibling;\r\n' \
+  '          const seg_desc = seg.getElementsByClassName("segmentdesc")[0];\r\n' \
   '          const cstats = stats[seg_ind];\r\n' \
   '          if (fpan == 0) {\r\n' \
   '            if (wgpu_modified.has(seg_ind)) {\r\n' \
@@ -12749,7 +13181,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function calc_modified(...segs) {\r\n' \
   '        if (webgpu) {\r\n' \
-  '          (segs.length > 0 ? segs : Array.from(document.getElementById("pointsform").children)).forEach((seg) => wgpu_modified.add(parseInt(seg.id.slice(7, -4))));\r\n' \
+  '          (segs.length > 0 ? segs : Array.from(document.getElementById("pointslist").getElementsByClassName("segment"))).forEach((seg) => wgpu_modified.add(parseInt(seg.id.substring(7))));\r\n' \
   '          gfence(segments_calc_wgpu);\r\n' \
   '        } else {\r\n' \
   '          segments_calc(...segs);\r\n' \
@@ -12764,499 +13196,382 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function segment_checkbox(seg) {\r\n' \
-  '        if (seg.checked) {\r\n' \
-  '          document.getElementById("track" + seg.id.substring(7)).style.display = "";\r\n' \
-  '          seg.parentNode.style.textDecorationLine = "";\r\n' \
+  '        if (seg.hasAttribute("data-deleted")) {\r\n' \
+  '          seg.removeAttribute("data-deleted");\r\n' \
+  '          document.getElementById("track" + seg.id.substring(7)).classList.remove("deleted");\r\n' \
   '        } else {\r\n' \
-  '          if (seg.id != focused) {\r\n' \
-  '            document.getElementById("track" + seg.id.substring(7)).style.display = "none";\r\n' \
-  '          }\r\n' \
-  '          seg.parentNode.style.textDecorationLine = "line-through";\r\n' \
+  '          seg.setAttribute("data-deleted", "");\r\n' \
+  '          document.getElementById("track" + seg.id.substring(7)).classList.add("deleted");\r\n' \
   '        }\r\n' \
-  '        let spans = seg.parentNode.getElementsByTagName("span");\r\n' \
-  '        for (let i=0; i<spans.length;i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
-  '        calc_modified(seg.parentNode);\r\n' \
-  '      }\r\n' \
-  '      function segment_renum() {\r\n' \
-  '        let segs = document.getElementById("pointsform").children;\r\n' \
-  '        for (let i=0; i<segs.length; i++) {\r\n' \
-  '          let seg_desc = segs[i].firstElementChild.nextElementSibling;\r\n' \
-  '          seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+/, (i + 1).toString());\r\n' \
-  '        }\r\n' \
+  '        Array.from(seg.getElementsByClassName("pos")).forEach(function(pt) {dot_style(pt.id, false);});\r\n' \
+  '        seg.scrollIntoView();\r\n' \
+  '        calc_modified(seg);\r\n' \
   '      }\r\n' \
   '      function segment_cut() {\r\n' \
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
-  '        if (focused.substring(0, 3) == "seg") {\r\n' \
-  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '          if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
-  '        } else if (focused.substring(0, 5) == "point") {\r\n' \
-  '          pt_foc = document.getElementById(focused + "cont");\r\n' \
+  '        let seg = null;\r\n' \
+  '        if (focused.startsWith("seg")) {\r\n' \
+  '          seg_foc = document.getElementById(focused);\r\n' \
+  '          if (seg_foc.hasAttribute("data-deleted") || seg_foc.getElementsByClassName("point").length == 0) {return;}\r\n' \
+  '          seg = seg_foc.cloneNode(true);\r\n' \
+  '        } else if (focused.startsWith("point")) {\r\n' \
+  '          pt_foc = document.getElementById(focused);\r\n' \
   '          seg_foc = pt_foc.parentNode;\r\n' \
+  '          if (pt_foc == seg_foc.getElementsByClassName("point")[0]) {return;}\r\n' \
+  '          seg = document.getElementById("segment%s").cloneNode(true);\r\n' \
+  '          if (seg_foc.hasAttribute("data-deleted")) {seg.setAttribute("data-deleted", "");}\r\n' \
   '        } else {return;}\r\n' \
-  '        let seg = seg_foc.cloneNode(true);\r\n' \
-  '        let pref = "segment" + document.getElementById("pointsform").children.length.toString();\r\n' \
-  '        let track_foc = document.getElementById("track" + seg_foc.id.slice(7, -4));\r\n' \
-  '        let path_foc = track_foc.firstElementChild;\r\n' \
-  '        let track = track_foc.cloneNode(true);\r\n' \
-  '        let path = track.firstElementChild;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        if (focused.substring(0, 3) == "seg") {\r\n' \
-  '          seg.id = pref + "cont";\r\n' \
-  '          seg.children[0].id = pref;\r\n' \
-  '          seg.children[0].name = pref;\r\n' \
-  '          seg.children[1].htmlFor = pref;\r\n' \
-  '          seg.children[1].id = pref + "desc";\r\n' \
-  '          track.id = "track" + pref.substring(7);\r\n' \
-  '          path.id = "path" + pref.substring(7);\r\n' \
-  '          path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
-  '          let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
-  '          let pref_num = document.getElementById("points").getElementsByTagName("span").length;\r\n' \
-  '          let dot_ref = document.getElementById(spans[spans.length - 1].id.slice(0, -5).replace("point", "dot")).nextElementSibling;\r\n' \
+  '        seg.id = "segment" + document.getElementById("pointslist").getElementsByClassName("segment").length.toString();\r\n' \
+  '        const track_foc = document.getElementById(seg_foc.id.replace("segment", "track"));\r\n' \
+  '        const path_foc = track_foc.firstElementChild;\r\n' \
+  '        const track = track_foc.cloneNode(true);\r\n' \
+  '        track.id = seg.id.replace("segment", "track");\r\n' \
+  '        const path = track.firstElementChild;\r\n' \
+  '        path.id = seg.id.replace("segment", "path");\r\n' \
+  '        path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        if (focused.startsWith("seg")) {\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '          let pref_num = document.getElementById("pointslist").getElementsByClassName("point").length;\r\n' \
+  '          const dot_ref = document.getElementById(pts.at(-1).id.replace("point", "dot")).nextElementSibling;\r\n' \
   '          let mintime = null;\r\n' \
   '          let maxtime = null;\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
-  '            let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
   '            if (! isNaN(t)) {\r\n' \
   '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
   '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            let dot = document.getElementById(spans[p].id.slice(0, -5).replace("point", "dot")).cloneNode(true);\r\n' \
-  '            let pref = "point" + pref_num.toString();\r\n' \
-  '            let el_cont = spans[p].parentNode;\r\n' \
-  '            el_cont.id = pref + "cont";\r\n' \
-  '            let el_input = el_cont.firstElementChild;\r\n' \
-  '            el_input.id = pref;\r\n' \
-  '            el_input.name = pref;\r\n' \
-  '            if (el_input.value != "error") {el_input.value = "edited";}\r\n' \
-  '            let el_label = el_input.nextElementSibling;\r\n' \
-  '            el_label.htmlFor = pref;\r\n' \
-  '            el_label.id = pref + "desc";\r\n' \
-  '            let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
-  '            el_span.id = pref + "focus";\r\n' \
-  '            let el_span_children = el_span.children;\r\n' \
-  '            el_span_children[0].htmlFor = pref + "lat";\r\n' \
-  '            el_span_children[1].id = pref + "lat";\r\n' \
-  '            el_span_children[1].name = pref + "lat";\r\n' \
-  '            el_span_children[3].htmlFor = pref + "lon";\r\n' \
-  '            el_span_children[4].id = pref + "lon";\r\n' \
-  '            el_span_children[4].name = pref + "lon";\r\n' \
-  '            el_span_children[6].htmlFor = pref + "ele";\r\n' \
-  '            el_span_children[7].id = pref + "ele";\r\n' \
-  '            el_span_children[7].name = pref + "ele";\r\n' \
-  '            el_span_children[9].htmlFor = pref + "alt";\r\n' \
-  '            el_span_children[10].id = pref + "alt";\r\n' \
-  '            el_span_children[10].name = pref + "alt";\r\n' \
-  '            el_span_children[12].htmlFor = pref + "time";\r\n' \
-  '            el_span_children[13].id = pref + "time";\r\n' \
-  '            el_span_children[13].name = pref + "time";\r\n' \
+  '          const batch = (mintime != null && maxtime != null) ? ++hist_b : null;\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            const dot = document.getElementById(pt.id.replace("point", "dot")).cloneNode(true);\r\n' \
+  '            pt.id = "point" + pref_num.toString();\r\n' \
+  '            pt.setAttribute("data-edited", "");\r\n' \
   '            if (mintime != null && maxtime != null) {\r\n' \
-  '              let t = Date.parse(el_span_children[13].value);\r\n' \
+  '              const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
   '              if (! isNaN(t)) {\r\n' \
-  '                el_span_children[13].value = (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                el_label.innerHTML = point_desc(el_span);\r\n' \
+  '                focused = pt.id;\r\n' \
+  '                save_old();\r\n' \
+  '                hist_push(batch);\r\n' \
+  '                pt.setAttribute("data-time", (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,""));\r\n' \
+  '                hist_trim();\r\n' \
+  '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            dot.id = pref.replace("point", "dot");\r\n' \
+  '            dot.id = "dot" + pref_num.toString();\r\n' \
   '            handle.insertBefore(dot, dot_ref);\r\n' \
   '            pref_num++;\r\n' \
   '          }\r\n' \
-  '          document.getElementById("pointsform").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
-  '          segment_renum();\r\n' \
+  '          focused = seg_foc.id;\r\n' \
+  '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
   '          calc_modified(seg);\r\n' \
-  '          element_click(null, document.getElementById(seg.id.replace("cont", "desc")));\r\n' \
+  '          element_click(null, seg);\r\n' \
   '          show_msg("{#jmsegmentcut1#}", 2);\r\n' \
-  '          return;\r\n' \
+  '        } else {\r\n' \
+  '          const pts = Array.from(seg_foc.getElementsByClassName("point"));\r\n' \
+  '          pts.splice(0, pts.indexOf(pt_foc));\r\n' \
+  '          for (let p=pts.length-1; p>=0; p--) {pts[p].remove();}\r\n' \
+  '          pts.forEach(function(pt) {seg.appendChild(pt);});\r\n' \
+  '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
+  '          const ind = seg_foc.getElementsByClassName("point").length;\r\n' \
+  '          const d = path.getAttribute("d");\r\n' \
+  '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 1).toString() + "}");\r\n' \
+  '          let d_right = d.slice(d_left[0].length);\r\n' \
+  '          if (d_right.indexOf("M") < 0) {d_right = d_right.replace("L", "M");}\r\n' \
+  '          path.setAttribute("d", "M0 0 " + d_right);\r\n' \
+  '          path_foc.setAttribute("d", d_left[0]);\r\n' \
+  '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.id.replace("point", "dot")), scrollmode == 2);}\r\n' \
+  '          calc_modified(seg_foc, seg);\r\n' \
+  '          show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '        }\r\n' \
-  '        let pt = pt_foc.previousElementSibling;\r\n' \
-  '        if (pt.id.indexOf("point") < 0) {return;}\r\n' \
-  '        seg_foc.id = pref + "cont";\r\n' \
-  '        seg_foc.children[0].id = pref;\r\n' \
-  '        seg_foc.children[0].name = pref;\r\n' \
-  '        seg_foc.children[1].htmlFor = pref;\r\n' \
-  '        seg_foc.children[1].id = pref + "desc";\r\n' \
-  '        while (pt.id.indexOf("point") >= 0) {\r\n' \
-  '          let pt_p = pt.previousElementSibling;\r\n' \
-  '          seg_foc.removeChild(pt);\r\n' \
-  '          pt = pt_p;\r\n' \
-  '        }\r\n' \
-  '        pt = seg.lastElementChild;\r\n' \
-  '        while (pt.id != pt_foc.id) {\r\n' \
-  '          pt = pt.previousElementSibling;\r\n' \
-  '          seg.removeChild(seg.lastElementChild);\r\n' \
-  '        }\r\n' \
-  '        seg.removeChild(seg.lastElementChild);\r\n' \
-  '        document.getElementById("pointsform").insertBefore(seg, seg_foc);\r\n' \
-  '        segment_renum();\r\n' \
-  '        track_foc.id = "track" + pref.substring(7);\r\n' \
-  '        path_foc.id = "path" + pref.substring(7);\r\n' \
-  '        path_foc.nextElementSibling.firstElementChild.setAttribute("href", "#" + path_foc.id);\r\n' \
-  '        let ind = seg.getElementsByTagName("span").length;\r\n' \
-  '        let d = path_foc.getAttribute("d");\r\n' \
-  '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 1).toString() + "}");\r\n' \
-  '        let d_right = d.slice(d_left[0].length);\r\n' \
-  '        if (d_right.indexOf("M") < 0) {d_right = d_right.replace("L", "M");}\r\n' \
-  '        path_foc.setAttribute("d", "M0 0 " + d_right);\r\n' \
-  '        path.setAttribute("d", d_left[0]);\r\n' \
-  '        handle.insertBefore(track, track_foc);\r\n' \
-  '        if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), scrollmode == 2);}\r\n' \
-  '        calc_modified(seg_foc, seg);\r\n' \
-  '        show_msg("{#jmsegmentcut2#}", 2);\r\n' \
   '      }\r\n' \
   '      function segment_absorb() {\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
-  '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '        if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
+  '        if (! focused.startsWith("seg")) {return;}\r\n' \
+  '        const seg_foc = document.getElementById(focused);\r\n' \
+  '        const pts_foc = Array.from(seg_foc.getElementsByClassName("point"));\r\n' \
+  '        if (seg_foc.hasAttribute("data-deleted") || pts_foc.length == 0) {return;}\r\n' \
   '        let seg = seg_foc.nextElementSibling;\r\n' \
   '        while (seg) {\r\n' \
-  '          if (seg.firstElementChild.checked) {break;}\r\n' \
+  '          if (! seg.hasAttribute("data-deleted")) {break;}\r\n' \
   '          seg = seg.nextElementSibling;\r\n' \
   '        }\r\n' \
   '        if (! seg) {return;}\r\n' \
-  '        let pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
-  '        if (! pt) {return;}\r\n' \
-  '        let ref_dot = document.getElementById(seg_foc.lastElementChild.id.slice(0, -4).replace("point", "dot")).nextElementSibling;\r\n' \
-  '        if (ref_dot == document.getElementById(pt.id.slice(0, -4).replace("point", "dot"))) {ref_dot = null;}\r\n' \
-  '        while (pt) {\r\n' \
-  '          seg_foc.appendChild(pt);\r\n' \
-  '          if (ref_dot) {\r\n' \
-  '            handle.insertBefore(document.getElementById(pt.id.slice(0, -4).replace("point", "dot")), ref_dot);\r\n' \
+  '        segment_checkbox(seg);\r\n' \
+  '        const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '        if (pts.length > 0) {\r\n' \
+  '          for (let p=pts.length-1; p>=0; p--) {pts[p].remove();}\r\n' \
+  '          const dot_first = document.getElementById(pts_foc.at(-1).id.replace("point", "dot"));\r\n' \
+  '          const dot_last = document.getElementById(pts[0].id.replace("point", "dot")).previousElementSibling;\r\n' \
+  '          const dot_ref = document.getElementById(pts.at(-1).id.replace("point", "dot")).nextElementSibling;\r\n' \
+  '          let dot = dot_last;\r\n' \
+  '          while (dot != dot_first) {\r\n' \
+  '            const dot_prev = dot.previousElementSibling;\r\n' \
+  '            handle.insertBefore(dot, dot_ref);\r\n' \
+  '            dot = dot_prev;\r\n' \
   '          }\r\n' \
-  '          pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
+  '          pts.forEach(function(pt) {seg_foc.appendChild(pt);});\r\n' \
+  '          const track_foc = document.getElementById("track" + seg_foc.id.substring(7));\r\n' \
+  '          const path_foc = track_foc.firstElementChild;\r\n' \
+  '          const track = document.getElementById("track" + seg.id.substring(7));\r\n' \
+  '          const path = track.firstElementChild;\r\n' \
+  '          const minx_foc = prop_to_wmvalue(track_foc.style.left) + htopx;\r\n' \
+  '          const maxy_foc = htopy - prop_to_wmvalue(track_foc.style.top);\r\n' \
+  '          const maxx_foc = minx_foc + prop_to_wmvalue(track_foc.style.width);\r\n' \
+  '          const miny_foc = maxy_foc - prop_to_wmvalue(track_foc.style.height);\r\n' \
+  '          const minx = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '          const maxy = htopy - prop_to_wmvalue(track.style.top);\r\n' \
+  '          const maxx = minx + prop_to_wmvalue(track.style.width);\r\n' \
+  '          const miny = maxy - prop_to_wmvalue(track.style.height);\r\n' \
+  '          rebase_track(minx, miny, track_foc, true);\r\n' \
+  '          rebase_track(maxx, maxy, track_foc, true);\r\n' \
+  '          rebase_track(minx_foc, miny_foc, track, true);\r\n' \
+  '          rebase_track(maxx_foc, maxy_foc, track, true);\r\n' \
+  '          const d_foc = path_foc.getAttribute("d");\r\n' \
+  '          let d = path.getAttribute("d").substring(4);\r\n' \
+  '          if (d_foc.substring(1).indexOf("M") >= 0) {d = d.replace("M", "L");}\r\n' \
+  '          path_foc.setAttribute("d", d_foc + d);\r\n' \
+  '          path.setAttribute("d", "M0 0");\r\n' \
   '        }\r\n' \
-  '        seg.firstElementChild.checked = false;\r\n' \
-  '        let track_foc = document.getElementById("track" + seg_foc.id.slice(7, -4));\r\n' \
-  '        let path_foc = track_foc.firstElementChild;\r\n' \
-  '        let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
-  '        let path = track.firstElementChild;\r\n' \
-  '        let minx_foc = prop_to_wmvalue(track_foc.style.left) + htopx;\r\n' \
-  '        let maxy_foc = htopy - prop_to_wmvalue(track_foc.style.top);\r\n' \
-  '        let maxx_foc = minx_foc + prop_to_wmvalue(track_foc.style.width);\r\n' \
-  '        let miny_foc = maxy_foc - prop_to_wmvalue(track_foc.style.height);\r\n' \
-  '        let minx = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
-  '        let maxy = htopy - prop_to_wmvalue(track.style.top);\r\n' \
-  '        let maxx = minx + prop_to_wmvalue(track.style.width);\r\n' \
-  '        let miny = maxy - prop_to_wmvalue(track.style.height);\r\n' \
-  '        rebase_track(minx, miny, track_foc, true);\r\n' \
-  '        rebase_track(maxx, maxy, track_foc, true);\r\n' \
-  '        rebase_track(minx_foc, miny_foc, track, true);\r\n' \
-  '        rebase_track(maxx_foc, maxy_foc, track, true);\r\n' \
-  '        let d_foc = path_foc.getAttribute("d");\r\n' \
-  '        let d = path.getAttribute("d").substring(4);\r\n' \
-  '        if (d_foc.substring(1).indexOf("M") >= 0) {d = d.replace("M", "L");}\r\n' \
-  '        path_foc.setAttribute("d", d_foc + d);\r\n' \
-  '        path.setAttribute("d", "M0 0");\r\n' \
-  '        if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
-  '        seg_foc.firstElementChild.scrollIntoView({block:"start"});\r\n' \
-  '        document.getElementById("track" + seg.id.slice(7, -4)).style.display = "none";\r\n' \
-  '        seg.style.textDecorationLine = "line-through";\r\n' \
+  '        if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
+  '        seg_foc.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
   '        calc_modified(seg_foc, seg);\r\n' \
   '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_up() {\r\n' \
-  '        if (focused.substring(0, 5) == "point") {\r\n' \
-  '          let seg = document.getElementById(focused + "cont").parentNode.firstElementChild.nextElementSibling;\r\n' \
-  '          element_click(null, seg);\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        if (focused.substring(0, 3) == "way") {\r\n' \
-  '          let pt_foc = document.getElementById(focused + "cont");\r\n' \
-  '          let pt = pt_foc.previousElementSibling;\r\n' \
+  '        if (focused.startsWith("way")) {\r\n' \
+  '          const pt_foc = document.getElementById(focused);\r\n' \
+  '          const pt = pt_foc.previousElementSibling;\r\n' \
   '          if (! pt) {return;}\r\n' \
-  '          document.getElementById("waypointsform").insertBefore(pt_foc, pt);\r\n' \
+  '          document.getElementById("waypointslist").insertBefore(pt_foc, pt);\r\n' \
   '          pt_foc.scrollIntoView({block:"start"});\r\n' \
-  '          handle.insertBefore(document.getElementById(pt_foc.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '          handle.insertBefore(document.getElementById(pt_foc.id.replace("point", "dot")), document.getElementById(pt.id.replace("point", "dot")));\r\n' \
   '          show_msg("{#jmelementup1#}", 2);\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        if (focused.substring(0, 3) != "seg") {return;}\r\n' \
-  '        let seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '        let seg = seg_foc.previousElementSibling;\r\n' \
-  '        if (! seg) {return;}\r\n' \
-  '        let mintime_foc = null;\r\n' \
-  '        let maxtime_foc = null;\r\n' \
-  '        let mintime = null;\r\n' \
-  '        let maxtime = null;\r\n' \
-  '        let spans_foc = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
-  '        let spans = Array.from(seg.getElementsByTagName("span"));\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        for (let p=0; p<spans_foc.length; p++) {\r\n' \
-  '          if (! spans_foc[p].parentNode.firstElementChild.checked || spans_foc[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
-  '          let t = Date.parse(document.getElementById(spans_foc[p].id.replace("focus", "time")).value);\r\n' \
-  '          if (! isNaN(t)) {\r\n' \
-  '            if (mintime_foc == null) {mintime_foc = t;} else {mintime_foc = Math.min(mintime_foc, t);}\r\n' \
-  '            if (maxtime_foc == null) {maxtime_foc = t;} else {maxtime_foc = Math.max(maxtime_foc, t);}\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        for (let p=0; p<spans.length; p++) {\r\n' \
-  '          if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
-  '          let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
-  '          if (! isNaN(t)) {\r\n' \
-  '            if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
-  '            if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        document.getElementById("pointsform").insertBefore(seg_foc, seg);\r\n' \
-  '        if (mintime_foc != null && maxtime_foc != null && mintime != null && maxtime != null) {\r\n' \
-  '          let batch = ++hist_b;\r\n' \
-  '          let offset =  mintime - mintime_foc;\r\n' \
-  '          for (let sp of [spans_foc, spans]) {\r\n' \
-  '            for (let p=0; p<sp.length; p++) {\r\n' \
-  '              let t = Date.parse(document.getElementById(sp[p].id.replace("focus", "time")).value);\r\n' \
-  '              if (! isNaN(t)) {\r\n' \
-  '                focused = sp[p].id.slice(0, -5);\r\n' \
-  '                let ex_time = document.getElementById(sp[p].id.replace("focus", "time")).value;\r\n' \
-  '                let new_time = (new Date(Math.round((t + offset) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                save_old();\r\n' \
-  '                hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                document.getElementById(sp[p].id.replace("focus", "time")).value = new_time;\r\n' \
-  '                for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '                 if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '                }\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
-  '              }\r\n' \
+  '        } else if (focused.startsWith("seg")) {\r\n' \
+  '          const seg_foc = document.getElementById(focused);\r\n' \
+  '          const seg = seg_foc.previousElementSibling;\r\n' \
+  '          if (! seg) {return;}\r\n' \
+  '          let mintime_foc = null;\r\n' \
+  '          let maxtime_foc = null;\r\n' \
+  '          let mintime = null;\r\n' \
+  '          let maxtime = null;\r\n' \
+  '          const pts_foc = Array.from(seg_foc.getElementsByClassName("point"));\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '          const isNaN = Number.isNaN;\r\n' \
+  '          for (const pt of pts_foc) {\r\n' \
+  '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '            if (! isNaN(t)) {\r\n' \
+  '              if (mintime_foc == null) {mintime_foc = t;} else {mintime_foc = Math.min(mintime_foc, t);}\r\n' \
+  '              if (maxtime_foc == null) {maxtime_foc = t;} else {maxtime_foc = Math.max(maxtime_foc, t);}\r\n' \
   '            }\r\n' \
-  '            offset = maxtime_foc - maxtime;\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '        seg_foc.scrollIntoView({block:"start"});\r\n' \
-  '        let pt_ref = seg.firstElementChild;\r\n' \
-  '        while (pt_ref.id.indexOf("point") < 0) {\r\n' \
-  '          pt_ref = pt_ref.nextElementSibling;\r\n' \
-  '          if (! pt_ref) {break;}\r\n' \
-  '        }\r\n' \
-  '        if (pt_ref) {\r\n' \
-  '          for (let i=0; i<seg_foc.children.length; i++) {\r\n' \
-  '            if (seg_foc.children[i].id.indexOf("point") < 0) {continue;}\r\n' \
-  '            handle.insertBefore(document.getElementById(seg_foc.children[i].id.slice(0, -4).replace("point", "dot")), document.getElementById(pt_ref.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '            if (! isNaN(t)) {\r\n' \
+  '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
+  '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
+  '          document.getElementById("pointslist").insertBefore(seg_foc, seg);\r\n' \
+  '          if (mintime_foc != null && maxtime_foc != null && mintime != null && maxtime != null) {\r\n' \
+  '            const batch = ++hist_b;\r\n' \
+  '            let offset =  mintime - mintime_foc;\r\n' \
+  '            for (const sp of [pts_foc, pts]) {\r\n' \
+  '              for (const pt of sp) {\r\n' \
+  '                const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '                if (! isNaN(t)) {\r\n' \
+  '                  focused = pt.id;\r\n' \
+  '                  const new_time = (new Date(Math.round((t + offset) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                  save_old();\r\n' \
+  '                  hist_push(batch);\r\n' \
+  '                  pt.setAttribute("data-time", new_time);\r\n' \
+  '                  hist_trim();\r\n' \
+  '                  point_edit(false, false, false, false);\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '              offset = maxtime_foc - maxtime;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          seg_foc.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
+  '          if (pts.length > 0) {\r\n' \
+  '            let dot_ref = document.getElementById(pts[0].id.replace("point", "dot"))\r\n' \
+  '            for (let p=pts_foc.length-1; p>=0; p--) {\r\n' \
+  '              const dot = document.getElementById(pts_foc[p].id.replace("point", "dot"));\r\n' \
+  '              handle.insertBefore(dot, dot_ref);\r\n' \
+  '              dot_ref = dot;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          handle.insertBefore(document.getElementById(seg_foc.id.replace("segment", "track")), document.getElementById(seg.id.replace("segment", "track")));\r\n' \
+  '          focused = seg_foc.id;\r\n' \
+  '          calc_modified(seg_foc, seg);\r\n' \
+  '          show_msg("{#jmelementup2#}", 2);\r\n' \
   '        }\r\n' \
-  '        handle.insertBefore(document.getElementById("track" + seg_foc.id.slice(7, -4)), document.getElementById("track" + seg.id.slice(7, -4)));\r\n' \
-  '        if (focused != seg_foc.id.slice(0, -4)) {element_click(null, seg_foc.firstElementChild.nextElementSibling);}\r\n' \
-  '        segment_renum();\r\n' \
-  '        calc_modified(seg_foc, seg);\r\n' \
-  '        show_msg("{#jmelementup2#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_down() {\r\n' \
-  '        if (focused.substring(0, 5) == "point") {\r\n' \
-  '          let seg = document.getElementById(focused + "cont").parentNode.nextElementSibling;\r\n' \
-  '          if (seg == null) {return;}\r\n' \
-  '          seg = seg.firstElementChild.nextElementSibling;\r\n' \
-  '          element_click(null, seg);\r\n' \
-  '          return;\r\n' \
+  '        if (focused.startsWith("seg") || focused.startsWith("way")) {\r\n' \
+  '          const elt_foc = document.getElementById(focused);\r\n' \
+  '          const elt = elt_foc.nextElementSibling;\r\n' \
+  '          if (! elt) {return;}\r\n' \
+  '          focused = elt.id;\r\n' \
+  '          element_up();\r\n' \
+  '          focused = elt_foc.id;\r\n' \
+  '          elt_foc.scrollIntoView({block:"start"});\r\n' \
   '        }\r\n' \
-  '        if (focused.substring(0, 3) != "seg" && focused.substring(0, 3) != "way") {return;}\r\n' \
-  '        let elt_foc = document.getElementById(focused + "cont");\r\n' \
-  '        let elt = elt_foc.nextElementSibling;\r\n' \
-  '        if (! elt) {return;}\r\n' \
-  '        focused = elt.id.slice(0, -4);\r\n' \
-  '        element_up();\r\n' \
-  '        if (focused != elt_foc.id.slice(0, -4)) {element_click(null, elt_foc.firstElementChild.nextElementSibling);};\r\n' \
-  '        elt_foc.scrollIntoView({block:"start"});\r\n' \
   '      }\r\n' \
   '      function segment_reverse() {\r\n' \
   '        let whole = false;\r\n' \
   '        let segs = null;\r\n' \
-  '        let pts = document.getElementById("pointsform");\r\n' \
-  '        let wpts = document.getElementById("waypointsform");\r\n' \
+  '        const pts_l = document.getElementById("pointslist");\r\n' \
+  '        const wpts_l = document.getElementById("waypointslist");\r\n' \
+  '        const ex_foc = focused;\r\n' \
   '        if (focused == "") {\r\n' \
   '          if (! window.confirm("{#jrconfirm#}")) {return;}\r\n' \
   '          whole = true;\r\n' \
   '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
-  '          segs = pts.children;\r\n' \
-  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
-  '          let seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '          segs = Array.from(pts_l.getElementsByClassName("segment"));\r\n' \
+  '        } else if (focused.startsWith("seg")) {\r\n' \
+  '          const seg_foc = document.getElementById(focused);\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          if (scrollmode >0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        } else {return;}\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            if (! spans[p].parentNode.firstElementChild.checked || spans[p].parentNode.firstElementChild.value == "error") {continue;}\r\n' \
-  '            let t = Date.parse(document.getElementById(spans[p].id.replace("focus", "time")).value);\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        const ptss = [];\r\n' \
+  '        for (const seg of segs) {\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '          ptss.push(pts);\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
   '            if (! isNaN(t)) {\r\n' \
   '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
   '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let pt_f = segs[s].firstElementChild;\r\n' \
-  '          while (pt_f.id.indexOf("point") < 0) {\r\n' \
-  '            pt_f = pt_f.nextElementSibling;\r\n' \
-  '            if (! pt_f) {break;}\r\n' \
-  '          }\r\n' \
-  '          let seg = segs[s].cloneNode(false);\r\n' \
-  '          let elt = segs[s].firstChild;\r\n' \
-  '          while (elt.nodeName.toUpperCase() != "DIV") {\r\n' \
-  '            seg.insertBefore(elt, null);\r\n' \
-  '            elt = segs[s].firstChild;\r\n' \
-  '            if (! elt) {break;}\r\n' \
-  '          }\r\n' \
-  '          if (pt_f) {\r\n' \
-  '            let pt = segs[s].lastElementChild;\r\n' \
-  '            while (pt) {\r\n' \
-  '              if (mintime != null && maxtime != null) {\r\n' \
-  '                let t = Date.parse(document.getElementById(pt.id.replace("cont", "time")).value);\r\n' \
-  '                if (! isNaN(t)) {\r\n' \
-  '                  let new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                  if (pt.firstElementChild.value != "error") {pt.firstElementChild.value = "edited";}\r\n' \
-  '                  document.getElementById(pt.id.replace("cont", "time")).value = new_time;\r\n' \
-  '                  document.getElementById(pt.id.replace("cont", "desc")).innerHTML = point_desc(document.getElementById(pt.id.replace("cont", "focus")));\r\n' \
-  '                }\r\n' \
+  '        const seg_ref = segs[0];\r\n' \
+  '        const track_ref = document.getElementById(seg_ref.id.replace("segment", "track"));\r\n' \
+  '        for (let s=segs.length-1; s>=0; s--) {\r\n' \
+  '          const seg = s > 0 ? pts_l.removeChild(segs[s]) : seg_ref;\r\n' \
+  '          const pts = ptss[s];\r\n' \
+  '          const pt_ref = pts.length > 0 ? pts[0] : null;\r\n' \
+  '          const dot_ref = pt_ref ? document.getElementById(pt_ref.id.replace("point", "dot")) : null;\r\n' \
+  '          for (let p=pts.length-1; p>=0; p--) {\r\n' \
+  '            const pt = p > 0 ? seg.removeChild(pts[p]) : pts[p];\r\n' \
+  '            if (mintime != null && maxtime != null) {\r\n' \
+  '              const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '              if (! isNaN(t)) {\r\n' \
+  '                const new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                pt.setAttribute("data-time", new_time);\r\n' \
+  '                focused = pt.id;\r\n' \
+  '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
-  '              seg.insertBefore(pt, null);\r\n' \
-  '              if (! whole && pt && pt != pt_f) {\r\n' \
-  '                handle.insertBefore(document.getElementById(pt.id.slice(0, -4).replace("point", "dot")), document.getElementById(pt_f.id.slice(0, -4).replace("point", "dot")));\r\n' \
+  '            }\r\n' \
+  '            if (pt != pt_ref) {\r\n' \
+  '              seg.insertBefore(pt, pt_ref);\r\n' \
+  '              if (! whole){\r\n' \
+  '                handle.insertBefore(document.getElementById(pt.id.replace("point", "dot")), dot_ref);\r\n' \
   '              }\r\n' \
-  '              pt = segs[s].lastElementChild;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (s > 0) {\r\n' \
-  '            pts.insertBefore(seg, segs[0]);\r\n' \
-  '            pts.removeChild(segs[s+1]);\r\n' \
-  '            handle.insertBefore(document.getElementById("track" + seg.id.slice(7, -4)), document.getElementById("track" + segs[1].id.slice(7, -4)));\r\n' \
-  '          } else {\r\n' \
-  '            pts.replaceChild(seg, segs[0]);\r\n' \
+  '            pts_l.insertBefore(seg, seg_ref);\r\n' \
+  '            handle.insertBefore(document.getElementById(seg.id.replace("segment", "track")), track_ref);\r\n' \
   '          }\r\n' \
-  '          if (Array.isArray(segs)) {segs[0] = seg;}\r\n' \
-  '          if (pt_f) {\r\n' \
-  '            let path = document.getElementById("path" + segs[0].id.slice(7, -4));\r\n' \
-  '            let d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
+  '          if (pt_ref) {\r\n' \
+  '            const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
+  '            const d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
   '            let d_r = "M0 0";\r\n' \
-  '            let points = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '            const points = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '            points.reverse();\r\n' \
-  '            for (let point of points) {d_r = d_r + " " + point};\r\n' \
+  '            for (const point of points) {d_r += " " + point};\r\n' \
   '            d_r = d_r.replace("L", "M");\r\n' \
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
+  '        focused = ex_foc;\r\n' \
   '        if (! whole) {\r\n' \
-  '          calc_modified(segs[0]);\r\n' \
+  '          calc_modified(seg_ref);\r\n' \
   '          show_msg("{#jmsegmentreverse1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let wpt_f = wpts.firstElementChild;\r\n' \
-  '        let wpt_r = wpt_f;\r\n' \
-  '        let wpt = wpt_f;\r\n' \
-  '        while (wpt) {\r\n' \
+  '        const wpts = Array.from(wpts_l.getElementsByClassName("waypoint"));\r\n' \
+  '        const wpt_ref = wpts.length > 0 ? wpts[0] : null;\r\n' \
+  '        const wdot_ref = wpt_ref ? document.getElementById(wpt_ref.id.replace("point", "dot")) : null;\r\n' \
+  '        for (let p=wpts.length-1; p>=0; p--) {\r\n' \
+  '          const wpt = wpts[p];\r\n' \
   '          if (mintime != null && maxtime != null) {\r\n' \
-  '            let t = Date.parse(document.getElementById(wpt.id.replace("cont", "time")).value);\r\n' \
+  '            const t = Date.parse(wpt.getAttribute("data-time"));\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              let new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '              if (wpt.firstElementChild.value != "error") {wpt.firstElementChild.value = "edited";}\r\n' \
-  '              document.getElementById(wpt.id.replace("cont", "time")).value = new_time;\r\n' \
-  '              document.getElementById(wpt.id.replace("cont", "desc")).innerHTML = point_desc(document.getElementById(wpt.id.replace("cont", "focus")));\r\n' \
+  '              const new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '              wpt.setAttribute("data-time", new_time);\r\n' \
+  '              focused = wpt.id;\r\n' \
+  '              point_edit(false, false, false, false);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          wpt = wpt_f.nextElementSibling;\r\n' \
-  '          if (wpt) {\r\n' \
-  '            wpts.insertBefore(wpt, wpt_r);\r\n' \
-  '            wpt_r = wpt;\r\n' \
+  '          if (wpt != wpt_ref) {\r\n' \
+  '            wpts_l.insertBefore(wpt, wpt_ref);\r\n' \
+  '            handle.insertBefore(document.getElementById(wpt.id.replace("point", "dot")), wdot_ref);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let wdot_f = document.getElementById("track" + segs[segs.length - 1].id.slice(7, -4)).nextElementSibling;\r\n' \
-  '        let wdot_r = wdot_f;\r\n' \
-  '        let wdot = wdot_f;\r\n' \
-  '        if (wdot_f) {\r\n' \
-  '          if (wdot_f.id.substring(0, 3) != "way") {wdot = null;}\r\n' \
-  '        }\r\n' \
-  '        while (wdot) {\r\n' \
-  '          wdot = wdot_f.nextElementSibling;\r\n' \
-  '          if (wdot) {\r\n' \
-  '            if (wdot.id.substring(0, 3) != "way") {wdot = null;}\r\n' \
-  '          }\r\n' \
-  '          if (wdot) {\r\n' \
-  '            handle.insertBefore(wdot, wdot_r);\r\n' \
-  '            wdot_r = wdot;\r\n' \
-  '          }\r\n' \
-  '        }\r\n' \
-  '        let dot_f = null;\r\n' \
-  '        if (wdot_f) {\r\n' \
-  '          if (wdot_f.id.substring(0, 3) == "way") {dot_f = wdot_f.nextElementSibling;} else {dot_f = wdot_f;}\r\n' \
-  '        }\r\n' \
-  '        let dot_r = dot_f;\r\n' \
-  '        let dot = dot_f;\r\n' \
-  '        if (dot_f) {\r\n' \
-  '          if (dot_f.id.substring(0, 3) != "dot") {dot = null;}\r\n' \
-  '        }\r\n' \
-  '        while (dot) {\r\n' \
-  '          dot = dot_f.nextElementSibling;\r\n' \
-  '          if (dot) {\r\n' \
-  '            if (dot.id.substring(0, 3) != "dot") {dot = null;}\r\n' \
-  '          }\r\n' \
-  '          if (dot) {\r\n' \
-  '            handle.insertBefore(dot, dot_r);\r\n' \
-  '            dot_r = dot;\r\n' \
-  '          }\r\n' \
+  '        focused = ex_foc;\r\n' \
+  '        const dots = Array.from(handle.getElementsByClassName("dot"));\r\n' \
+  '        const dot_ref = dots.length > 0 ? dots[0] : null;\r\n' \
+  '        for (let d=dots.length-1; d>0; d--) {\r\n' \
+  '          handle.insertBefore(dots[d], dot_ref);\r\n' \
   '        }\r\n' \
   '        calc_modified(...segs);\r\n' \
-  '        segment_renum();\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
   '      function segment_filter() {\r\n' \
-  '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '        const drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
   '        let seg_foc = null;\r\n' \
-  '        let segs = [];\r\n' \
+  '        let segs = null;\r\n' \
   '        if (focused == "") {\r\n' \
   '          if (! window.confirm("{#jfconfirm#}")) {return;}\r\n' \
-  '          let segms = document.getElementById("pointsform").children;\r\n' \
-  '          for (let s=0; s<segms.length; s++) {\r\n' \
-  '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
-  '          }\r\n' \
+  '          segs = Array.prototype.filter.call(document.getElementById("pointslist").getElementsByClassName("segment"), (seg) => ! seg.hasAttribute("data-deleted"));\r\n' \
   '          if (segs.length == 0) {return;}\r\n' \
   '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
-  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
-  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '          if (! seg_foc.firstElementChild.checked) {return;}\r\n' \
+  '        } else if (focused.startsWith("seg")) {\r\n' \
+  '          seg_foc = document.getElementById(focused);\r\n' \
+  '          if (seg_foc.hasAttribute("data-deleted")) {return;}\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
-  '          segs.push(seg_foc);\r\n' \
-  '          if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
+  '          segs = [seg_foc];\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        } else {return;}\r\n' \
-  '        let batch = ++hist_b;\r\n' \
+  '        const batch = ++hist_b;\r\n' \
   '        let nmod = 0;\r\n' \
-  '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
-  '          let positions = [];\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            let pt = document.getElementById(spans[p].id.slice(0, -5));\r\n' \
-  '            if (! pt.checked || pt.value == "error") {\r\n' \
-  '              positions.push(null);\r\n' \
-  '            } else {\r\n' \
-  '              let c = spans[p].children;\r\n' \
-  '              positions.push(WGS84toWebMercator(parseFloat(c[1].value), parseFloat(c[4].value)));\r\n' \
-  '            }\r\n' \
-  '          }\r\n' \
-  '          let track = document.getElementById("track" + segs[s].id.slice(7, -4));\r\n' \
-  '          let tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
-  '          let tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
-  '          let sdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
-  '          let path = document.getElementById("path" + segs[s].id.slice(7, -4));\r\n' \
+  '        for (const seg of segs) {\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '          const positions = Array.from(pts, (pt) => (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) ? null : WGS84toWebMercator(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon"))));\r\n' \
+  '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
+  '          const tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '          const tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
+  '          const sdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
+  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
-  '          let dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g).slice(1);\r\n' \
+  '          const dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g).slice(1);\r\n' \
   '          let d_f = "M0 0";\r\n' \
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
-  '          for (let p=0; p<positions.length; p++) {\r\n' \
-  '            let foc = spans[p].id.slice(0, -5);\r\n' \
-  '            for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '              if (hist[1][i][0] == foc) {hist[1].splice(i, 1);}\r\n' \
-  '            }\r\n' \
+  '          for (let p=0, l=positions.length; p<l; p++) {\r\n' \
+  '            const foc = pts[p].id;\r\n' \
+  '            hist_trim();\r\n' \
   '            if (positions[p] == null) {\r\n' \
-  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              d_f += " " + dots[p];\r\n' \
   '              continue;\r\n' \
   '            }\r\n' \
   '            if (pp == null) {\r\n' \
   '              pp = p;\r\n' \
-  '              d_f = d_f + " " + dots[p];\r\n' \
+  '              d_f += " " + dots[p];\r\n' \
   '              continue;\r\n' \
   '            }\r\n' \
   '            let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
@@ -13313,14 +13628,16 @@ class GPXTweakerWebInterfaceServer():
   '                  if (pmod) {\r\n' \
   '                    focused = foc;\r\n' \
   '                    save_old();\r\n' \
-  '                    [spans[p].children[1].value, spans[p].children[4].value] = WebMercatortoWGS84(...positions[p]).map((l) => l.toFixed(6));\r\n' \
-  '                    hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                    const [lat, lon] = WebMercatortoWGS84(...positions[p]);\r\n' \
+  '                    pts[p].setAttribute("data-lat", lat.toFixed(6));\r\n' \
+  '                    pts[p].setAttribute("data-lon", lon.toFixed(6));\r\n' \
+  '                    hist_push(batch);\r\n' \
   '                    save_old();\r\n' \
   '                    point_edit(false, false, false, false);\r\n' \
-  '                    let dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '                    const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '                    dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
   '                    dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
-  '                    d_f = d_f + " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
+  '                    d_f += " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
   '                    nmod++;\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
@@ -13328,57 +13645,51 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              dir = [pdir[0] / pdirl, pdir[1] / pdirl];\r\n' \
   '            }\r\n' \
-  '            if (! pmod) {d_f = d_f + " " + dots[p];}\r\n' \
+  '            if (! pmod) {d_f += " " + dots[p];}\r\n' \
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          if (d_f.substring(1).indexOf("M") < 0) {d_f = d_f.replace("L", "M");}\r\n' \
   '          path.setAttribute("d", d_f);\r\n' \
   '        }\r\n' \
-  '        if (seg_foc != null) {focused = seg_foc.id.slice(0, -4);} else {focused = "";}\r\n' \
+  '        if (seg_foc != null) {focused = seg_foc.id;} else {focused = "";}\r\n' \
   '        calc_modified(...segs);\r\n' \
-  '        show_msg((seg_foc!=null?"{#jmsegmentfilter1#}":"{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
+  '        show_msg((seg_foc != null ? "{#jmsegmentfilter1#}" : "{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
   '      }\r\n' \
-  '      function error_ecb() {\r\n' \
-  '        xhr_ongoing--;\r\n' \
-  '        document.getElementById("eset").disabled = false;\r\n' \
-  '        document.getElementById("eset").style.pointerEvents = "";\r\n' \
-  '      }\r\n' \
-  '      function load_ecb(t, pts) {\r\n' \
+  '      function load_ecb(t, epts) {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById("eset").disabled = false;\r\n' \
   '        document.getElementById("eset").style.pointerEvents = "";\r\n' \
   '        if (t.status != 200) {return 0;}\r\n' \
   '        if (t.response == "") {return 0;}\r\n' \
-  '        let ele = t.response.split("\\r\\n");\r\n' \
-  '        let p = 0;\r\n' \
+  '        const ex_foc = focused;\r\n' \
+  '        const ele = t.response.split("\\r\\n");\r\n' \
+  '        const epts_l = epts.length;\r\n' \
+  '        const ele_l = ele.length;\r\n' \
+  '        let ep = 0;\r\n' \
   '        let e = 0;\r\n' \
-  '        let ex_foc = focused;\r\n' \
-  '        let segs = [];\r\n' \
-  '        let batch = ++hist_b;\r\n' \
+  '        const segs = [];\r\n' \
+  '        const batch = ++hist_b;\r\n' \
   '        let np = 0;\r\n' \
-  '        while (p < pts.length) {\r\n' \
-  '          while (e < ele.length) {\r\n' \
-  '            let r = ele[e].split(",");\r\n' \
+  '        while (ep < epts_l) {\r\n' \
+  '          const ept = epts[ep];\r\n' \
+  '          while (e < ele_l) {\r\n' \
+  '            const r = ele[e].split(",");\r\n' \
   '            if (r.length == 2) {\r\n' \
-  '              if (pts[p] == r[0]) {\r\n' \
+  '              if (ept == r[0]) {\r\n' \
   '                if (r[1].replace(/(^\\s+)|(\\s+$)/g, "") != "") {\r\n' \
-  '                  focused = pts[p];\r\n' \
+  '                  focused = ept;\r\n' \
+  '                  const pt = document.getElementById(focused);\r\n' \
   '                  save_old();\r\n' \
-  '                  document.getElementById(focused + "ele").value = r[1];\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                  pt.setAttribute("data-ele", r[1]);\r\n' \
+  '                  if (focused == ex_foc) {document.getElementById(focused.startsWith("way") ? "waypointele" : "pointele").value = r[1];} \r\n' \
+  '                  hist_push(batch);\r\n' \
   '                  save_old();\r\n' \
-  '                  for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '                    if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '                  }\r\n' \
+  '                  hist_trim();\r\n' \
   '                  point_edit(false, false, false, false);\r\n' \
   '                  np++;\r\n' \
-  '                  if (pts[p].slice(0,3) != "way") {\r\n' \
-  '                    let seg_p = document.getElementById(pts[p]).parentNode.parentNode;\r\n' \
-  '                    if (segs.length == 0) {\r\n' \
-  '                      segs = [seg_p];\r\n' \
-  '                    } else if (seg_p.id != segs[segs.length - 1].id) {\r\n' \
-  '                      segs.push(seg_p);\r\n' \
-  '                    }\r\n' \
+  '                  if (! ept.startsWith("way")) {\r\n' \
+  '                    const seg_p = pt.parentNode;\r\n' \
+  '                    if (segs.length == 0 || seg_p != segs.at(-1)) {segs.push(seg_p);}\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
   '                e++;\r\n' \
@@ -13386,29 +13697,29 @@ class GPXTweakerWebInterfaceServer():
   '              break;\r\n' \
   '            } else {e++;}\r\n' \
   '          }\r\n' \
-  '          p++;\r\n' \
+  '          ep++;\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
   '        if (segs.length > 0) {\r\n' \
   '          calc_modified(...segs);\r\n' \
   '        }\r\n' \
-  '        return np;\r\n'\
+  '        return np;\r\n' \
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
   '        if (! fromalt && (eset < 0 || document.getElementById("eset").disabled)) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
-  '        let pts = [];\r\n' \
+  '        let pts = null;\r\n' \
+  '        const epts = [];\r\n' \
   '        let b = "";\r\n' \
-  '        let spans = null;\r\n' \
   '        let msg = "";\r\n' \
   '        if (focused) {\r\n' \
-  '          if (focused.substring(0, 3) == "seg") {\r\n' \
+  '          if (focused.startsWith("seg")) {\r\n' \
   '            if (all) {\r\n' \
   '              if (! window.confirm("{#jesconfirm#}")) {return;}\r\n' \
   '            }\r\n' \
-  '            spans = document.getElementById(focused + "cont").getElementsByTagName("span");\r\n' \
+  '            pts = document.getElementById(focused).getElementsByClassName("point");\r\n' \
   '            msg = "{#jmelevations3#}";\r\n' \
   '          } else {\r\n' \
-  '            spans = [document.getElementById(focused + "focus")];\r\n' \
+  '            pts = [document.getElementById(focused)];\r\n' \
   '            msg = "{#jmelevations2#}";\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
@@ -13416,32 +13727,32 @@ class GPXTweakerWebInterfaceServer():
   '            if (! window.confirm("{#jeconfirm#}")) {return;}\r\n' \
   '          }\r\n' \
   '          if (fromalt) {\r\n' \
-  '            spans = document.getElementById("pointsform").getElementsByTagName("span");\r\n' \
+  '            pts = document.getElementById("pointslist").getElementsByClassName("point");\r\n' \
   '            msg = "{#jmelevations5#}";\r\n' \
   '          } else {\r\n' \
-  '            spans = document.getElementById("content").getElementsByTagName("span");\r\n' \
+  '            pts = document.getElementById("content").getElementsByClassName("pos");\r\n' \
   '            msg = "{#jmelevations4#}";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        for (let p=(focused?0:2); p<spans.length; p++) {\r\n' \
-  '          pid = spans[p].id.slice(0, -5);\r\n' \
-  '          if (document.getElementById(pid).value != "error" && (all || document.getElementById(pid + "ele").value.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
-  '           pts.push(pid);\r\n' \
-  '           b = b + pid + "," + document.getElementById(pid + "lat").value + "," + document.getElementById(pid + "lon").value + "\\r\\n";\r\n' \
+  '        for (const pt of pts) {\r\n' \
+  '          const pt_data = pt.dataset;\r\n' \
+  '          if (! pt_data.hasOwnProperty("error") && (all || pt_data.ele.replace(/(^\\s+)|(\\s+$)/g, "") == "")) {\r\n' \
+  '           epts.push(pt.id);\r\n' \
+  '           b += pt.id + "," + pt_data.lat + "," + pt_data.lon + "\\r\\n";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (b.length == 0) {return;}\r\n' \
-  '        let msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
+  '        const msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
   '        if (fromalt) {\r\n' \
-  '          let t = new Object;\r\n' \
+  '          const t = new Object;\r\n' \
   '          t.status = 200;\r\n' \
   '          t.response = "";\r\n' \
-  '          for (let p of pts) {\r\n' \
-  '            t.response = t.response + p + "," + document.getElementById(p + "alt").value + "\\r\\n";\r\n' \
+  '          for (const ep of epts) {\r\n' \
+  '            t.response += ep + "," + document.getElementById(ep).getAttribute("data-alt") + "\\r\\n";\r\n' \
   '          }\r\n' \
-  '          let np = load_ecb(t, pts);\r\n' \
+  '          const np = load_ecb(t, epts);\r\n' \
   '          if (np) {\r\n' \
-  '            show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn);\r\n' \
+  '            show_msg(msg.replace("%s", np.toString()).replace("%s", epts.length.toString()), 4, msgn);\r\n' \
   '          } else {\r\n' \
   '            show_msg("{#jmelevations6#}", 10, msgn);\r\n' \
   '          }\r\n' \
@@ -13449,8 +13760,8 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        document.getElementById("eset").disabled = true;\r\n' \
   '        document.getElementById("eset").style.pointerEvents = "none";\r\n' \
-  '        let xhre = new XMLHttpRequest();\r\n' \
-  '        xhre.onload = (e) => {let np = load_ecb(e.target, pts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", pts.length.toString()), 4, msgn):show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
+  '        const xhre = new XMLHttpRequest();\r\n' \
+  '        xhre.onload = (e) => {let np = load_ecb(e.target, epts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", epts.length.toString()), 4, msgn):show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
   '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -13459,41 +13770,44 @@ class GPXTweakerWebInterfaceServer():
   '        xhre.send(b);\r\n' \
   '      }\r\n' \
   '      function ele_alt_switch() {\r\n' \
-  '        let spans = null;\r\n' \
-  '        let msg = "";\r\n' \
-  '        let ex_foc = focused;\r\n' \
+  '        const ex_foc = focused;\r\n' \
   '        let seg = null;\r\n' \
+  '        let pts = null;\r\n' \
+  '        let msg = "";\r\n' \
   '        if (ex_foc) {\r\n' \
-  '          if (ex_foc.substring(0, 3) == "seg") {\r\n' \
+  '          if (ex_foc.startsWith("seg")) {\r\n' \
   '            if (! window.confirm("{#jeasconfirm#}")) {return;}\r\n' \
-  '            spans = Array.from(document.getElementById(ex_foc + "cont").getElementsByTagName("span"));\r\n' \
+  '            seg = document.getElementById(ex_foc);\r\n' \
+  '            pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '            msg = "{#jmelealt2#}";\r\n' \
-  '            seg = document.getElementById(ex_foc + "cont");\r\n' \
-  '          } else if (ex_foc.substring(0, 3) == "way") {\r\n' \
+  '          } else if (ex_foc.startsWith("way")) {\r\n' \
   '            return;\r\n' \
   '          } else {\r\n' \
-  '            spans = [document.getElementById(ex_foc + "focus")];\r\n' \
+  '            pts = [document.getElementById(ex_foc)];\r\n' \
   '            msg = "{#jmelealt1#}";\r\n' \
-  '            seg = document.getElementById(ex_foc + "cont").parentNode;\r\n' \
+  '            seg = pts[0].parentNode;\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          if (! window.confirm("{#jeaconfirm#}")) {return;}\r\n' \
-  '          spans = Array.from(document.getElementById("points").getElementsByTagName("span"));\r\n' \
+  '          pts = Array.from(document.getElementById("points").getElementsByClassName("point"));\r\n' \
   '          msg = "{#jmelealt3#}";\r\n' \
   '        }\r\n' \
-  '        if (spans.length == 0) {return;}\r\n' \
-  '        let batch = ++hist_b;\r\n' \
-  '        for (let p=0; p<spans.length; p++) {\r\n' \
-  '          focused = spans[p].id.slice(0, -5);\r\n' \
+  '        if (pts.length == 0) {return;}\r\n' \
+  '        const batch = ++hist_b;\r\n' \
+  '        for (const pt of pts) {\r\n' \
+  '          const pt_data = pt.dataset;\r\n' \
+  '          focused = pt.id;\r\n' \
   '          save_old();\r\n' \
-  '          let g = document.getElementById(focused + "ele").value;\r\n' \
-  '          document.getElementById(focused + "ele").value = document.getElementById(focused + "alt").value;\r\n' \
-  '          document.getElementById(focused + "alt").value = g;\r\n' \
-  '          hist[0].push([focused, foc_old, batch]);\r\n' \
-  '          save_old();\r\n' \
-  '          for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '            if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
+  '          const g = pt_data.ele;\r\n' \
+  '          pt_data.ele = pt_data.alt;\r\n' \
+  '          pt_data.alt = g;\r\n' \
+  '          if (focused == ex_foc) {\r\n' \
+  '            document.getElementById("pointele").value = pt_data.ele;\r\n' \
+  '            document.getElementById("pointalt").value = pt_data.alt;\r\n' \
   '          }\r\n' \
+  '          hist_push(batch);\r\n' \
+  '          save_old();\r\n' \
+  '          hist_trim();\r\n' \
   '          point_edit(false, false, false, false);\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
@@ -13505,186 +13819,156 @@ class GPXTweakerWebInterfaceServer():
   '        show_msg(msg, 2);\r\n' \
   '      }\r\n' \
   '      function alt_join() {\r\n' \
+  '        const ex_foc = focused;\r\n' \
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
-  '        if (focused.substring(0, 3) == "seg") {\r\n' \
-  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
-  '        } else if (focused.substring(0, 5) == "point") {\r\n' \
-  '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
-  '          pt_foc = document.getElementById(focused + "cont");\r\n' \
-  '          seg_foc = pt_foc.parentNode;\r\n' \
-  '        } else {\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        if (! seg_foc.firstElementChild.checked || seg_foc.lastElementChild.id.indexOf("point") < 0) {return;}\r\n' \
-  '        let spans = Array.from(seg_foc.getElementsByTagName("span"));\r\n' \
   '        let stime = null;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        if (focused.startsWith("seg")) {\r\n' \
+  '          seg_foc = document.getElementById(focused);\r\n' \
+  '        } else if (focused.startsWith("point")) {\r\n' \
+  '          pt_foc = document.getElementById(focused);\r\n' \
+  '          if (pt_foc.hasAttribute("data-deleted") || pt_foc.hasAttribute("data-error")) {return;}\r\n' \
+  '          stime = Date.parse(pt_foc.getAttribute("data-time"));\r\n' \
+  '          if (isNaN(stime)) {return;}\r\n' \
+  '          seg_foc = pt_foc.parentNode;\r\n' \
+  '        } else {return;}\r\n' \
+  '        if (seg_foc.hasAttribute("data-deleted")) {return;}\r\n' \
+  '        const pts = Array.from(seg_foc.getElementsByClassName("point"));\r\n' \
+  '        if (pts.length == 0) {return;}\r\n' \
   '        let etime = null;\r\n' \
   '        let ralt = null;\r\n' \
   '        let sp = 0;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        for (let p=0; p<spans.length; p++) {\r\n' \
-  '          let pid = spans[p].id.slice(0, -5);\r\n' \
-  '          if (pt_foc != null && pt_foc.id.slice(0, -4) != pid && stime == null) {continue;}\r\n' \
-  '          if (document.getElementById(pid).checked && document.getElementById(pid).value != "error") {\r\n' \
-  '            ralt = parseFloat(document.getElementById(pid + "alt").value);\r\n' \
-  '            if (isNaN(ralt)) {continue;}\r\n' \
+  '        const ps = pt_foc ? pts.indexOf(pt_foc) : 0;\r\n' \
+  '        for (let p=pts.length-1; p>=ps; p--) {\r\n' \
+  '          const pt = pts[p];\r\n' \
+  '          if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '          ralt = parseFloat(pt.getAttribute("data-alt"));\r\n' \
+  '          if (! isNaN(ralt)) {\r\n' \
   '            if (pt_foc != null) {\r\n' \
-  '              let tim = Date.parse(document.getElementById(pid + "time").value);\r\n' \
-  '              if (stime == null) {\r\n' \
-  '                if (isNaN(tim)) {return;}\r\n' \
-  '                sp = p;\r\n' \
-  '                stime = tim;\r\n' \
-  '              }\r\n' \
-  '              etime = tim;\r\n' \
+  '              etime = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '              if (isNaN(etime)) {return;}\r\n' \
   '            }\r\n' \
+  '            break;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (ralt == null) {return;}\r\n' \
-  '        if (pt_foc != null) {\r\n' \
-  '          if (etime == null || stime == null) {return;}\r\n' \
-  '          if (stime >= etime) {return;}\r\n' \
-  '        }\r\n' \
+  '        if (pt_foc != null && (etime == null || stime >= etime)) {return;}\r\n' \
   '        let seg = seg_foc.nextElementSibling;\r\n' \
   '        while (seg) {\r\n' \
-  '          if (seg.firstElementChild.checked) {break;}\r\n' \
+  '          if (! seg.hasAttribute("data-deleted")) {break;}\r\n' \
   '          seg = seg.nextElementSibling;\r\n' \
   '        }\r\n' \
   '        if (! seg) {return;}\r\n' \
-  '        let pt = seg.firstElementChild.nextElementSibling.nextElementSibling.nextElementSibling;\r\n' \
-  '        while(pt) {\r\n' \
-  '          if (pt.firstElementChild.checked && pt.firstElementChild.value != "error") {break;}\r\n' \
-  '          pt = pt.nextElementSibling;\r\n' \
-  '        }\r\n' \
+  '        const pt = Array.prototype.find.call(seg.getElementsByClassName("point"), (pt) => ! (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")));\r\n' \
   '        if (! pt) {return;}\r\n' \
-  '        let talt = parseFloat(document.getElementById(pt.id.replace("cont", "alt")).value);\r\n' \
+  '        const talt = parseFloat(pt.getAttribute("data-alt"));\r\n' \
   '        if (isNaN(talt)) {return;}\r\n' \
-  '        let cor = null;\r\n' \
-  '        if (pt_foc != null) {\r\n' \
-  '          cor = (talt - ralt) / (etime - stime);\r\n' \
-  '        } else {\r\n' \
-  '          cor = talt - ralt;\r\n' \
-  '        }\r\n' \
-  '        let batch = ++hist_b;\r\n' \
-  '        for (let p=sp; p<spans.length; p++) {\r\n' \
-  '          let pid = spans[p].id.slice(0, -5);\r\n' \
-  '          let palt = parseFloat(document.getElementById(pid + "alt").value);\r\n' \
+  '        let cor = (pt_foc == null) ? talt - ralt : (talt - ralt) / (etime - stime);\r\n' \
+  '        const batch = ++hist_b;\r\n' \
+  '        for (let p=ps, l=pts.length; p<l; p++) {\r\n' \
+  '          const pt = pts[p];\r\n' \
+  '          const pt_data = pt.dataset;\r\n' \
+  '          const palt = parseFloat(pt_data.alt);\r\n' \
   '          if (! isNaN(palt)) {\r\n' \
   '            if (pt_foc != null) {\r\n' \
-  '              let ptime = Date.parse(document.getElementById(pid + "time").value);\r\n' \
+  '              const ptime = Date.parse(pt_data.time);\r\n' \
   '              if (! isNaN(ptime)) {\r\n' \
-  '                focused = pid;\r\n' \
+  '                focused = pt.id;\r\n' \
   '                save_old();\r\n' \
-  '                document.getElementById(pid + "alt").value = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
-  '                hist[0].push([focused, foc_old, batch]);\r\n' \
+  '                pt_data.alt = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
+  '                if (focused == ex_foc) {document.getElementById("pointalt").value = pt_data.alt;}\r\n' \
+  '                hist_push(batch);\r\n' \
   '                save_old();\r\n' \
-  '                for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '                  if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '                }\r\n' \
+  '                hist_trim();\r\n' \
   '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              focused = pid;\r\n' \
+  '              focused = pt.id;\r\n' \
   '              save_old();\r\n' \
-  '              document.getElementById(pid + "alt").value = (palt + cor).toFixed(1);\r\n' \
-  '              hist[0].push([focused, foc_old, batch]);\r\n' \
+  '              pt_data.alt = (palt + cor).toFixed(1);\r\n' \
+  '              hist_push(batch);\r\n' \
   '              save_old();\r\n' \
-  '              for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '                if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '              }\r\n' \
+  '              hist_trim();\r\n' \
   '              point_edit(false, false, false, false);\r\n' \
   '            }\r\n' \
+  '          \r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (pt_foc) {focused = pt_foc.id.slice(0, -4);}\r\n' \
-  '        if (! pt_foc) {focused = seg_foc.id.slice(0, -4);}\r\n' \
+  '        focused = ex_foc;\r\n' \
   '        calc_modified(seg_foc);\r\n' \
-  '        show_msg(((pt_foc==null)?"{#jmaltitudesjoin1#}":"{#jmaltitudesjoin2#}"), 2);\r\n' \
+  '        show_msg(((pt_foc == null) ? "{#jmaltitudesjoin1#}" : "{#jmaltitudesjoin2#}"), 2);\r\n' \
   '      }\r\n' \
   '      function datetime_interpolate(remove=false) {\r\n' \
-  '        let segs = [];\r\n' \
+  '        const ex_foc = focused;\r\n' \
+  '        let segs = null;\r\n' \
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
   '        if (focused == "") {\r\n' \
-  '          let segms = document.getElementById("pointsform").children;\r\n' \
-  '          for (let s=0; s<segms.length; s++) {\r\n' \
-  '            if (document.getElementById(segms[s].id.slice(0, -4)).checked) {segs.push(segms[s]);}\r\n' \
-  '          }\r\n' \
+  '          segs = Array.prototype.filter.call(document.getElementById("pointslist").getElementsByClassName("segment"), (seg) => ! seg.hasAttribute("data-deleted"));\r\n' \
   '          if (segs.length == 0 && ! remove) {return;}\r\n' \
   '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
-  '        } else if (focused.substring(0, 3) == "seg") {\r\n' \
-  '          if (! document.getElementById(focused).checked) {return;}\r\n' \
-  '          seg_foc = document.getElementById(focused + "cont");\r\n' \
+  '        } else if (focused.startsWith("seg")) {\r\n' \
+  '          seg_foc = document.getElementById(focused);\r\n' \
+  '          if (seg_foc.hasAttribute("data-deleted")) {return;}\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          if (scrollmode > 0) {scroll_to_track(document.getElementById("track" + seg_foc.id.slice(7, -4)), scrollmode == 2);}\r\n' \
-  '        } else if (focused.substring(0, 5) == "point" || (focused.substring(0, 8) == "waypoint" && remove)) {\r\n' \
-  '          if (! document.getElementById(focused).checked || document.getElementById(focused).value == "error") {return;}\r\n' \
-  '          pt_foc = focused;\r\n' \
-  '          document.getElementById(pt_foc + "cont").scrollIntoView({block:"nearest"});\r\n' \
-  '          seg_foc = focused.substring(0, 3) == "way" ? null : document.getElementById(pt_foc + "cont").parentNode;\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
+  '        } else if (focused.startsWith("point") || (focused.startsWith("way") && remove)) {\r\n' \
+  '          pt_foc = document.getElementById(focused);\r\n' \
+  '          if ((pt_foc.hasAttribute("data-deleted") && ! remove) || pt_foc.hasAttribute("data-error")) {return;}\r\n' \
+  '          pt_foc.scrollIntoView({block:"nearest"});\r\n' \
+  '          seg_foc = focused.startsWith("way") ? null : pt_foc.parentNode;\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.replace("point", "dot")), scrollmode == 2);}\r\n' \
-  '        } else {\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        let batch = ++hist_b;\r\n' \
+  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);}\r\n' \
+  '        } else {return;}\r\n' \
+  '        const batch = ++hist_b;\r\n' \
   '        if (remove) {\r\n' \
   '          let msg = null;\r\n' \
   '          if (focused == "") {\r\n' \
-  '            let spans = Array.from(document.getElementById("waypointsform").getElementsByTagName("span"));\r\n' \
-  '            for (let p=0; p<spans.length; p++) {\r\n' \
-  '              let wpt = spans[p].id.slice(0, -5);\r\n' \
-  '              if (document.getElementById(wpt).checked && document.getElementById(wpt).value != "error") {\r\n' \
-  '                if (document.getElementById(wpt + "time").value != "") {\r\n' \
-  '                  msg = "";\r\n' \
-  '                  focused = wpt;\r\n' \
-  '                  save_old();\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  document.getElementById(wpt + "time").value = "";\r\n' \
-  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
-  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
-  '                  }\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
-  '                }\r\n' \
+  '            const wpts = Array.from(document.getElementById("waypointslist").getElementsByClassName("waypoint"));\r\n' \
+  '            for (const wpt of wpts) {\r\n' \
+  '              if (! wpt.hasAttribute("data-error") && wpt.getAttribute("data-time") != "") {\r\n' \
+  '                msg = "";\r\n' \
+  '                focused = wpt.id;\r\n' \
+  '                save_old();\r\n' \
+  '                hist_push(batch);\r\n' \
+  '                wpt.setAttribute("data-time", "");\r\n' \
+  '                hist_trim();\r\n' \
+  '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            let spans = pt_foc==null?Array.from(segs[s].getElementsByTagName("span")):[document.getElementById(pt_foc + "focus")];\r\n' \
-  '            for (let p=0; p<spans.length; p++) {\r\n' \
-  '              let pt = spans[p].id.slice(0, -5);\r\n' \
-  '              if ((pt_foc == null && document.getElementById(pt).checked && document.getElementById(pt).value != "error") || pt_foc == pt) {\r\n' \
-  '                if (document.getElementById(pt + "time").value != "") {\r\n' \
-  '                  msg = "";\r\n' \
-  '                  focused = pt;\r\n' \
-  '                  save_old();\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  document.getElementById(pt + "time").value = "";\r\n' \
-  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
-  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
-  '                  }\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
-  '                }\r\n' \
+  '          for (const seg of segs) {\r\n' \
+  '            const pts = pt_foc == null ? Array.from(seg.getElementsByClassName("point")) : [pt_foc];\r\n' \
+  '            for (const pt of pts) {\r\n' \
+  '              if (! pt.hasAttribute("data-error") && pt.getAttribute("data-time") != "") {\r\n' \
+  '                msg = "";\r\n' \
+  '                focused = pt.id;\r\n' \
+  '                save_old();\r\n' \
+  '                hist_push(batch);\r\n' \
+  '                pt.setAttribute("data-time", "");\r\n' \
+  '                if (focused == ex_foc) {document.getElementById(seg == null ? "waypointtime" : "pointtime").value = "";}\r\n' \
+  '                hist_trim();\r\n' \
+  '                point_edit(false, false, false, false);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (msg != null) {\r\n' \
-  '            msg = pt_foc!=null?"{#jmdatetime4#}":(seg_foc!=null?"{#jmdatetime5#}":"{#jmdatetime6#}");\r\n' \
-  '            if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
-  '            if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
+  '            msg = pt_foc != null ? "{#jmdatetime4#}" : (seg_foc != null ? "{#jmdatetime5#}" : "{#jmdatetime6#}");\r\n' \
+  '            focused = ex_foc;\r\n' \
   '            if (segs.length > 0 && segs[0] != null) {calc_modified(...segs);}\r\n' \
   '            show_msg(msg, 2);\r\n' \
   '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          let spans = Array.from(segs[s].getElementsByTagName("span"));\r\n' \
-  '          let lc = -1;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        for (const seg of segs) {\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '          if (pts.length == 0) {continue;}\r\n' \
+  '          let lc = false;\r\n' \
   '          let pm = [];\r\n' \
   '          let pm_b = [];\r\n' \
-  '          let pt = "";\r\n' \
   '          let stime = null;\r\n' \
   '          let etime = null;\r\n' \
   '          let btime = null;\r\n' \
@@ -13693,236 +13977,203 @@ class GPXTweakerWebInterfaceServer():
   '          let pele = null;\r\n' \
   '          let ele = null;\r\n' \
   '          let inv_vit = 0;\r\n' \
-  '          let pp = 0;\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            pt = spans[p].id.slice(0, -5);\r\n' \
-  '            if (! document.getElementById(pt).checked || document.getElementById(pt).value == "error") {continue;}\r\n' \
-  '            etime = Date.parse(document.getElementById(pt + "time").value.trim());\r\n' \
-  '            ele = parseFloat(document.getElementById(pt + "alt").value);\r\n' \
+  '          let ptp_data = pts[0].dataset;\r\n' \
+  '          const ptl = pts.at(-1);\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            const pt_data = pt.dataset;\r\n' \
+  '            if (pt_data.hasOwnProperty("deleted") || pt_data.hasOwnProperty("error")) {continue;}\r\n' \
+  '            etime = Date.parse(pt_data.time);\r\n' \
+  '            ele = parseFloat(pt_data.ele);\r\n' \
   '            if (isNaN(ele)) {\r\n' \
-  '             ele = parseFloat(document.getElementById(pt + "ele").value);\r\n' \
+  '             ele = parseFloat(pt_data.ele);\r\n' \
   '            }\r\n' \
   '            if (isNaN(ele)) {ele = pele;}\r\n' \
   '            let valid = ! isNaN(etime);\r\n' \
   '            if (valid && stime != null) {valid = etime >= stime;}\r\n' \
   '            if (! valid) {\r\n' \
-  '              if (pm_b != null && lc == -1) {\r\n' \
-  '                dist_b += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '              if (pm_b != null && ! lc) {\r\n' \
+  '                dist_b += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));\r\n' \
   '                if (pt_foc == null || pt_foc == pt) {\r\n' \
-  '                  pm_b.push([p, dist_b]);\r\n' \
+  '                  pm_b.push([pt, dist_b]);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              if (lc != -1) {\r\n' \
-  '                dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
-  '              }\r\n' \
-  '              if (pt_foc == null || pt_foc == pt) {\r\n' \
-  '                pm.push([p, dist]);\r\n' \
-  '              }\r\n' \
-  '              if (p == spans.length - 1 && inv_vit > 0) {\r\n' \
-  '                for (let i=0; i<pm.length; i++) {\r\n' \
-  '                  focused = spans[pm[i][0]].id.slice(0, -5);\r\n' \
+  '              if (lc) {dist += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));}\r\n' \
+  '              if (pt_foc == null || pt_foc == pt) {pm.push([pt, dist]);}\r\n' \
+  '              if (pt == ptl && inv_vit > 0) {\r\n' \
+  '                for (let p=0; p<pm.length; p++) {\r\n' \
+  '                  focused = pm[p][0].id;\r\n' \
   '                  save_old();\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((stime + inv_vit * pm[i][1]) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
-  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
-  '                  }\r\n' \
+  '                  hist_push(batch);\r\n' \
+  '                  const t = (new Date(Math.round((stime + inv_vit * pm[p][1]) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
+  '                  pm[p][0].setAttribute("data-time", t);\r\n' \
+  '                  if (focused == ex_foc) {document.getElementById("pointtime").value = t;}\r\n' \
+  '                  hist_trim();\r\n' \
   '                  point_edit(false, false, false, false);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              dist += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
-  '              if (dist > 0 && lc != -1 && etime > stime) {inv_vit = (etime - stime) / dist;}\r\n' \
+  '              dist += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));\r\n' \
+  '              if (dist > 0 && lc && etime > stime) {inv_vit = (etime - stime) / dist;}\r\n' \
   '              if (pm_b != null) {\r\n' \
-  '                if (lc == -1) {\r\n' \
-  '                  dist_b += distance(document.getElementById(spans[pp].id.replace("focus", "lat")).value, document.getElementById(spans[pp].id.replace("focus", "lon")).value, pele==null?0:pele, document.getElementById(spans[p].id.replace("focus", "lat")).value, document.getElementById(spans[p].id.replace("focus", "lon")).value, pele==null?0:ele);\r\n' \
+  '                if (! lc) {\r\n' \
+  '                  dist_b += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));\r\n' \
   '                  btime = etime;\r\n' \
   '                }\r\n' \
   '                if (dist_b == 0 || inv_vit > 0) {\r\n' \
-  '                  for (let i=0; i<pm_b.length; i++) {\r\n' \
-  '                    focused = spans[pm_b[i][0]].id.slice(0, -5);\r\n' \
+  '                  for (let p=0; p<pm_b.length; p++) {\r\n' \
+  '                    focused = pm_b[p][0].id;\r\n' \
   '                    save_old();\r\n' \
-  '                    hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                    document.getElementById(spans[pm_b[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((dist_b==0?btime:(btime + inv_vit * (pm_b[i][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                    for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
-  '                      if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
-  '                    }\r\n' \
+  '                    hist_push(batch);\r\n' \
+  '                    const t = (new Date(Math.round((dist_b == 0 ? btime : (btime + inv_vit * (pm_b[p][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
+  '                    pm_b[p][0].setAttribute("data-time", t);\r\n' \
+  '                    if (focused == ex_foc) {document.getElementById("pointtime").value = t;}\r\n' \
+  '                    hist_trim();\r\n' \
   '                    point_edit(false, false, false, false);\r\n' \
   '                  }\r\n' \
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    save_old();\r\n' \
-  '                    calc_modified(segs[s]);\r\n' \
+  '                    calc_modified(seg);\r\n' \
   '                    show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
   '                  pm_b = null;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              if (pm.length > 0 && lc != -1) {\r\n' \
-  '                for (let i=0; i<pm.length; i++) {\r\n' \
-  '                  focused = spans[pm[i][0]].id.slice(0, -5);\r\n' \
+  '              if (pm.length > 0 && lc) {\r\n' \
+  '                for (let p=0; p<pm.length; p++) {\r\n' \
+  '                  focused = pm[p][0].id;\r\n' \
   '                  save_old();\r\n' \
-  '                  hist[0].push([focused, foc_old, batch]);\r\n' \
-  '                  document.getElementById(spans[pm[i][0]].id.replace("focus", "time")).value = (new Date(Math.round((stime + (etime - stime) * pm[i][1] / (dist>0?dist:1)) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                  for (let j=hist[1].length - 1; j>=0 ;j--) {\r\n' \
-  '                    if (hist[1][j][0] == focused) {hist[1].splice(j, 1);}\r\n' \
-  '                  }\r\n' \
+  '                  hist_push(batch);\r\n' \
+  '                  const t = (new Date(Math.round((stime + (etime - stime) * pm[p][1] / (dist > 0 ? dist : 1)) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
+  '                  pm[p][0].setAttribute("data-time", t);\r\n' \
+  '                  if (focused == ex_foc) {document.getElementById("pointtime").value = t;}\r\n' \
+  '                  hist_trim();\r\n' \
   '                  point_edit(false, false, false, false);\r\n' \
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
   '                  save_old();\r\n' \
-  '                  calc_modified(segs[s]);\r\n' \
+  '                  calc_modified(seg);\r\n' \
   '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              lc = p;\r\n' \
+  '              lc = true;\r\n' \
   '              pm = [];\r\n' \
   '              stime = etime;\r\n' \
   '              dist = 0;\r\n' \
   '            }\r\n' \
   '            pele = ele;\r\n' \
-  '            pp = p;\r\n' \
+  '            ptp_data = pt_data;\r\n' \
   '          }\r\n' \
   '          if (pt_foc != null) {\r\n' \
-  '            calc_modified(segs[s]);\r\n' \
+  '            calc_modified(seg);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let msg = focused.indexOf("point")<0?null:(seg_foc!=null?"{#jmdatetime2#}":"{#jmdatetime3#}");\r\n' \
-  '        if (pt_foc == null && seg_foc != null && focused.substring(0, 3) != "seg") {focused = seg_foc.id.slice(0, -4);}\r\n' \
-  '        if (pt_foc == null && seg_foc == null && focused != "") {focused = "";}\r\n' \
+  '        let msg = focused.indexOf("point") < 0 ? null : (seg_foc != null ? "{#jmdatetime2#}" : "{#jmdatetime3#}");\r\n' \
+  '        focused = ex_foc;\r\n' \
   '        calc_modified(...segs);\r\n' \
   '        if (msg) {show_msg(msg, 2);}\r\n' \
   '      }\r\n' \
-  '      function switch_dots() {\r\n' \
-  '        dots_visible = ! dots_visible;\r\n' \
-  '        let spans = document.getElementById("points").getElementsByTagName("span");\r\n' \
-  '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
-  '        spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
-  '        for (let i=0; i<spans.length; i++) {dot_style(spans[i].id.slice(0, -5), false);}\r\n' \
+  '      function switch_dots_arrows(dots=true, arrows=false) {\r\n' \
+  '        if (dots) {\r\n' \
+  '          dots_visible = ! dots_visible;\r\n' \
+  '          viewpane.style.setProperty("--ddis", dots_visible ? "block" : "none");\r\n' \
+  '          viewpane.style.setProperty("--wdstr", dots_visible ? "gray" : "red");\r\n' \
+  '        }\r\n' \
+  '        if (arrows) {\r\n' \
+  '          arrows_visible = ! arrows_visible;\r\n' \
+  '          viewpane.style.setProperty("--ardis", arrows_visible ? "inline" : "none");\r\n' \
+  '        }\r\n' \
   '      }\r\n' + HTML_GRAPH1_TEMPLATE + \
   '        graph_ip = [];\r\n' \
   '        if (wgpu_modified.size > 0) {\r\n' \
   '          graph_point();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        graph_px = Array(document.getElementById("points").getElementsByTagName("span").length);\r\n' \
-  '        let segs = document.getElementById("pointsform").children;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
-  '        for (let s=0; s<segs.length; s++) {\r\n' \
-  '          if (! segs[s].firstElementChild.checked) {continue;}\r\n' \
-  '          let seg_ind = parseInt(segs[s].id.slice(7, -4));\r\n' \
+  '        graph_px = Array(document.getElementById("pointslist").getElementsByClassName("point").length);\r\n' \
+  '        const segs = document.getElementById("pointslist").getElementsByClassName("segment");\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
+  '        for (const seg of segs) {\r\n' \
+  '          if (seg.hasAttribute("data-deleted")) {continue;}\r\n' \
+  '          const seg_ind = parseInt(seg.id.substring(7));\r\n' \
   '          if (stats[seg_ind].length == 0) {continue;}\r\n' \
   '          let stat = null;\r\n' \
-  '          let spans = segs[s].getElementsByTagName("span");\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '          if (gc[gc.length - 1] != graph_ip.length) {gc.push(graph_ip.length);}\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            let p_ind = parseInt(spans[p].id.slice(5, -5));\r\n' \
-  '            let st = point_stat[p_ind];\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            const p_ind = parseInt(pt.id.substring(5));\r\n' \
+  '            const st = point_stat[p_ind];\r\n' \
   '            if (st == null) {continue;}\r\n' \
   '            stat = stats[seg_ind][st];\r\n' \
   '            let ea = null;\r\n' \
-  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(document.getElementById(spans[p].id.replace("focus", gy_ind==1?"ele":"alt")).value);}\r\n' + HTML_GRAPH2_TEMPLATE + \
+  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt.getAttribute(gy_ind == 1 ? "data-ele" : "data-alt"));}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '      function error_pcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '      }\r\n' \
   '      function load_pcb(t, foc) {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (t.status != 200) {return false;}\r\n' \
-  '        let ex_foc = focused;\r\n' \
+  '        const ex_foc = focused;\r\n' \
   '        if (! t.response) {return false;}\r\n' \
-  '        let iti = t.response.split("\\r\\n");\r\n' \
+  '        const iti = t.response.split("\\r\\n");\r\n' \
   '        if (iti.length <= 0) {return false;}\r\n' \
-  '        if (focused == foc) {element_click(null, document.getElementById(foc + "desc"), false);}\r\n' \
-  '        let batch = ++hist_b;\r\n' \
-  '        let frag = document.createDocumentFragment();\r\n' \
-  '        let frag_dot = document.createDocumentFragment();\r\n' \
-  '        let pt = document.getElementById(foc).parentNode;\r\n' \
-  '        let seg = pt.parentNode;\r\n' \
-  '        let track = document.getElementById("track" + seg.id.slice(7, -4));\r\n' \
-  '        let path = document.getElementById("path" + seg.id.slice(7, -4));\r\n' \
-  '        let dot = document.getElementById(foc.replace("point", "dot"));\r\n' \
-  '        let spans = seg.getElementsByTagName("span");\r\n' \
-  '        let ind = 0;\r\n' \
-  '        while (spans[ind].id != foc + "focus") {ind++;}\r\n' \
-  '        ind++;\r\n' \
-  '        let d = path.getAttribute("d");\r\n' \
+  '        if (focused == foc) {element_click(null, document.getElementById(foc), false);}\r\n' \
+  '        const batch = ++hist_b;\r\n' \
+  '        const frag = document.createDocumentFragment();\r\n' \
+  '        const frag_dot = document.createDocumentFragment();\r\n' \
+  '        const pt = document.getElementById(foc);\r\n' \
+  '        const seg = pt.parentNode;\r\n' \
+  '        const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
+  '        const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
+  '        const dot = document.getElementById(foc.replace("point", "dot"));\r\n' \
+  '        const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '        let ind = pts.indexOf(pt) + 1;\r\n' \
+  '        const d = path.getAttribute("d");\r\n' \
   '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + ind.toString() + "}")[0];\r\n' \
   '        let d_right = " " + d.slice(d_left.length).replace("M", "L");\r\n' \
-  '        let l = document.getElementById("points").getElementsByTagName("span").length;\r\n' \
-  '        for (let p=iti.length - 1; p>=0; p--) {\r\n' \
-  '          let [lat, lon] = iti[p].split(",").map(Number);\r\n' \
-  '          let el_cont = pt.cloneNode(true);\r\n' \
-  '          let pref = "point" + (l + p).toString();\r\n' \
-  '          el_cont.id = pref + "cont";\r\n' \
-  '          let el_input = el_cont.firstElementChild;\r\n' \
-  '          el_input.id = pref;\r\n' \
-  '          el_input.name = pref;\r\n' \
-  '          el_input.checked = true;\r\n' \
-  '          el_input.value = "edited";\r\n' \
-  '          let el_label = el_input.nextElementSibling;\r\n' \
-  '          el_label.htmlFor = pref;\r\n' \
-  '          el_label.id = pref + "desc";\r\n' \
-  '          el_label.style.textDecorationLine = "inherit";\r\n' \
-  '          let el_span = el_label.nextElementSibling.nextElementSibling;\r\n' \
-  '          el_span.id = pref + "focus";\r\n' \
-  '          el_span.style="";\r\n' \
-  '          let el_span_children = el_span.children;\r\n' \
-  '          el_span_children[0].htmlFor = pref + "lat";\r\n' \
-  '          el_span_children[1].id = pref + "lat";\r\n' \
-  '          el_span_children[1].name = pref + "lat";\r\n' \
-  '          el_span_children[3].htmlFor = pref + "lon";\r\n' \
-  '          el_span_children[4].id = pref + "lon";\r\n' \
-  '          el_span_children[4].name = pref + "lon";\r\n' \
-  '          el_span_children[6].htmlFor = pref + "ele";\r\n' \
-  '          el_span_children[7].id = pref + "ele";\r\n' \
-  '          el_span_children[7].name = pref + "ele";\r\n' \
-  '          el_span_children[9].htmlFor = pref + "alt";\r\n' \
-  '          el_span_children[10].id = pref + "alt";\r\n' \
-  '          el_span_children[10].name = pref + "alt";\r\n' \
-  '          el_span_children[12].htmlFor = pref + "time";\r\n' \
-  '          el_span_children[13].id = pref + "time";\r\n' \
-  '          el_span_children[13].name = pref + "time";\r\n' \
-  '          el_span_children[1].value = lat.toFixed(6);\r\n' \
-  '          el_span_children[4].value = lon.toFixed(6);\r\n' \
-  '          el_span_children[7].value = "";\r\n' \
-  '          el_span_children[10].value = "";\r\n' \
-  '          el_span_children[13].value = "";\r\n' \
-  '          el_label.innerHTML = point_desc(el_span);\r\n' \
-  '          let wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {\r\n' \
-  '            el_input.disabled = true;\r\n' \
-  '            el_input.value = "error";\r\n' \
-  '            el_label.style.textDecoration = "line-through red";\r\n' \
-  '          }\r\n' \
-  '          frag.insertBefore(el_cont, frag.firstElementChild);\r\n' \
-  '          let el_dot = dot.cloneNode(true);\r\n' \
-  '          el_dot.id = pref.replace("point", "dot");\r\n' \
-  '          el_dot.style.stroke = "gray";\r\n' \
-  '          el_dot.style.display = (dots_visible && ! el_input.disabled)?"":"none";\r\n' \
-  '          el_dot.style.zIndex = "";\r\n' \
-  '          el_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
-  '          el_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, wm[1])), 3.5);\r\n' \
-  '          frag_dot.insertBefore(el_dot, frag_dot.firstElementChild);\r\n' \
-  '          if (el_input.disabled) {\r\n' \
+  '        const l = document.getElementById("pointslist").getElementsByClassName("point").length;\r\n' \
+  '        for (let p=iti.length-1; p>=0; p--) {\r\n' \
+  '          const [lat, lon] = iti[p].split(",").map(Number);\r\n' \
+  '          const elt = document.getElementById("point%s").cloneNode(true);\r\n' \
+  '          const pref = "point" + (l + p).toString();\r\n' \
+  '          elt.id = pref;\r\n' \
+  '          const elt_data = elt.dataset;\r\n' \
+  '          elt_data.edited = "";\r\n' \
+  '          elt_data.lat = lat.toFixed(6);\r\n' \
+  '          elt_data.lon = lon.toFixed(6);\r\n' \
+  '          elt_data.ele = "";\r\n' \
+  '          elt_data.alt = "";\r\n' \
+  '          elt_data.time = "";\r\n' \
+  '          point_desc(elt, true);\r\n' \
+  '          const wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {elt_data.deleted = ""}\r\n' \
+  '          frag.insertBefore(elt, frag.firstElementChild);\r\n' \
+  '          const elt_dot = document.getElementById("dot%s").cloneNode(true);\r\n' \
+  '          elt_dot.id = pref.replace("point", "dot");\r\n' \
+  '          elt_dot.style.display = elt_data.hasOwnProperty("deleted") ? "none" : "";\r\n' \
+  '          elt_dot.style.zIndex = "";\r\n' \
+  '          elt_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
+  '          elt_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, wm[1])), 3.5);\r\n' \
+  '          frag_dot.insertBefore(elt_dot, frag_dot.firstElementChild);\r\n' \
+  '          if (elt_data.hasOwnProperty("deleted")) {\r\n' \
   '            d_right = " m0 0" + d_right;\r\n' \
   '          } else {\r\n' \
-  '            let [x, y] = WGS84toWebMercator(parseFloat(el_span_children[1].value), parseFloat(el_span_children[4].value));\r\n' \
-  '            let c = rebase_track(x, y, track, false, true);\r\n' \
-  '            let np = (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
+  '            const [x, y] = WGS84toWebMercator(parseFloat(elt_data.lat), parseFloat(elt_data.lon));\r\n' \
+  '            const c = rebase_track(x, y, track, false, true);\r\n' \
+  '            const np = (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
   '            if (c != null) {\r\n' \
   '              for (let i=0; i<2; i++) {\r\n' \
-  '                let d_ = i==0?d_left.substring(4):d_right;\r\n' \
+  '                let d_ = i == 0 ? d_left.substring(4) : d_right;\r\n' \
   '                let points = d_.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
   '                d_ = "";\r\n' \
   '                if (points != null) {\r\n' \
-  '                  for (let point of points) {\r\n' \
+  '                  for (const point of points) {\r\n' \
   '                    if (point[0] != "m") {\r\n' \
-  '                      let [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
-  '                      d_ = d_ + " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
+  '                      const [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                      d_ += " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
   '                    } else {\r\n' \
-  '                      d_ = d_ + " " + point;\r\n' \
+  '                      d_ += " " + point;\r\n' \
   '                    }\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
@@ -13931,47 +14182,42 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            d_right = " L" + np + d_right;\r\n' \
   '          }\r\n' \
-  '          hist[0].push([pref, "", batch]);\r\n' \
+  '          hist_push([pref, "", batch]);\r\n' \
   '        }\r\n' \
   '        seg.insertBefore(frag, pt);\r\n' \
   '        handle.insertBefore(frag_dot, dot);\r\n' \
-  '        if (d_left.indexOf("M", 1) < 0) {d_right =  d_right.replace("L", "M");}\r\n' \
-  '        d = d_left.trimEnd() + d_right;\r\n' \
-  '        path.setAttribute("d", d);\r\n' \
+  '        if (d_left.indexOf("M", 1) < 0) {d_right = d_right.replace("L", "M");}\r\n' \
+  '        path.setAttribute("d", d_left.trimEnd() + d_right);\r\n' \
   '        calc_modified(seg);\r\n' \
-  '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc + "desc"), false);}\r\n' \
+  '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
-  '        return true;\r\n'\
+  '        return true;\r\n' \
   '      }\r\n' \
   '      function build_path() {\r\n' \
   '        if (iset < 0) {show_msg("{#jmpathno#}", 10); return;}\r\n' \
-  '        let foc = focused;\r\n' \
-  '        if (focused.substring(0, 5) != "point") {return;}\r\n' \
-  '        let pt_foc = document.getElementById(focused + "cont");\r\n' \
-  '        if (pt_foc.firstElementChild.value == "error" || ! pt_foc.firstElementChild.checked) {return;}\r\n' \
-  '        let lat_a = document.getElementById(focused + "lat").value;\r\n' \
-  '        let lon_a = document.getElementById(focused + "lon").value;\r\n' \
+  '        const foc = focused;\r\n' \
+  '        if (! focused.startsWith("point")) {return;}\r\n' \
+  '        const pt_foc = document.getElementById(focused);\r\n' \
+  '        const seg_foc = pt_foc.parentNode;\r\n' \
+  '        if (seg_foc.hasAttribute("data-deleted") || pt_foc.hasAttribute("data-deleted") || pt_foc.hasAttribute("data-error")) {return;}\r\n' \
+  '        const lat_a = pt_foc.getAttribute("data-lat");\r\n' \
+  '        const lon_a = pt_foc.getAttribute("data-lon");\r\n' \
   '        let lat_d = null;\r\n' \
   '        let lon_d = null;\r\n' \
-  '        let pt = pt_foc;\r\n' \
-  '        while (pt != null) {\r\n' \
-  '          pt = pt.previousElementSibling;\r\n' \
-  '          if (pt.id.indexOf("point") < 0) {\r\n' \
-  '            pt = null;\r\n' \
-  '          } else {\r\n' \
-  '            let pt_id = pt.id.slice(0, -4);\r\n' \
-  '            if (document.getElementById(pt_id).value != "error" && document.getElementById(pt_id).checked) {\r\n' \
-  '              lat_d = document.getElementById(pt_id + "lat").value;\r\n' \
-  '              lon_d = document.getElementById(pt_id + "lon").value;\r\n' \
-  '              break;\r\n' \
-  '            }\r\n' \
+  '        const pts = Array.from(seg_foc.getElementsByClassName("point"));\r\n' \
+  '        for (let p=pts.indexOf(pt_foc)-1; p>=0; p--) {\r\n' \
+  '          const pt = pts[p];\r\n' \
+  '          if (! (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error"))) {\r\n' \
+  '            lat_d = pt.getAttribute("data-lat");\r\n' \
+  '            lon_d = pt.getAttribute("data-lon");\r\n' \
+  '            break;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (lat_d == null || lon_d == null) {return;}\r\n' \
-  '        let b = lat_d + "," + lon_d + "\\r\\n" + lat_a + "," + lon_a;\r\n' \
-  '        let xhrp = new XMLHttpRequest();\r\n' \
-  '        let msgn = show_msg("{#jmpath1#}", 0);\r\n' \
-  '        xhrp.onload = (e) => {load_pcb(e.target, foc)?show_msg("{#jmpath2#}", 2, msgn):show_msg("{#jmpath3#}", 10, msgn);};\r\n' \
+  '        const b = lat_d + "," + lon_d + "\\r\\n" + lat_a + "," + lon_a;\r\n' \
+  '        const xhrp = new XMLHttpRequest();\r\n' \
+  '        const msgn = show_msg("{#jmpath1#}", 0);\r\n' \
+  '        xhrp.onload = (e) => {load_pcb(e.target, foc) ? show_msg("{#jmpath2#}", 2, msgn) : show_msg("{#jmpath3#}", 10, msgn);};\r\n' \
   '        xhrp.onerror = (e) => {error_pcb(); show_msg("{#jmpath3#}", 10, msgn);};\r\n' \
   '        xhrp.open("POST", "/path");\r\n' \
   '        xhrp.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -13999,7 +14245,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("iset").selectedIndex = iset;\r\n' \
   '      }\r\n' \
   '      function switch_itineraries(iset) {\r\n' \
-  '        let q = "iset=" + encodeURIComponent(iset.toString());\r\n' \
+  '        const q = "iset=" + encodeURIComponent(iset.toString());\r\n' \
   '        xhrip.onload = (e) => {load_ipcb(e.target)};\r\n' \
   '        xhrip.open("GET", "/itinerariesproviders/switch?" + q);\r\n' \
   '        xhrip.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -14032,42 +14278,45 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("save").disabled = true;\r\n' \
   '        document.getElementById("save").style.pointerEvents = "none";\r\n' \
   '        let body = document.getElementById("name_track").value + "\\r\\n=\\r\\n";\r\n' \
-  '        let spans = document.getElementById("waypoints").getElementsByTagName("span");\r\n' \
-  '        for (let p=0; p<spans.length; p++) {\r\n' \
-  '          let pt = spans[p].id.slice(0, -5);\r\n' \
-  '          if (document.getElementById(pt).checked && document.getElementById(pt).value != "error") {\r\n' \
-  '            body += pt.substring(8);\r\n' \
-  '            if (document.getElementById(pt).value == "edited") {\r\n' \
-  '              body += "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value) + "&" + encodeURIComponent(document.getElementById(pt + "name").value);\r\n' \
+  '        const wpts = document.getElementById("waypointslist").getElementsByClassName("waypoint");\r\n' \
+  '        for (let w=0, l=wpts.length; w<l; w++) {\r\n' \
+  '          const wpt = wpts[w];\r\n' \
+  '          const wpt_data = wpt.dataset;\r\n' \
+  '          if (! (wpt_data.hasOwnProperty("deleted") || wpt_data.hasOwnProperty("error"))) {\r\n' \
+  '            body += wpt.id.substring(8);\r\n' \
+  '            if (wpt_data.hasOwnProperty("edited")) {\r\n' \
+  '              body += "&" + wpt_data.lat + "&" + wpt_data.lon + "&" + wpt_data.ele + "&" + encodeURIComponent(wpt_data.time) + "&" + encodeURIComponent(wpt_data.name);\r\n' \
   '            }\r\n' \
   '            body += "\\r\\n";\r\n' \
   '           }\r\n' \
   '        }\r\n' \
   '        body += "=\\r\\n";\r\n' \
-  '        let segments = document.getElementById("pointsform").children;\r\n' \
-  '        for (let s=0; s<segments.length; s++) {\r\n' \
-  '          if (! segments[s].firstElementChild.checked) {continue;}\r\n' \
+  '        const segments = document.getElementById("pointslist").getElementsByClassName("segment");\r\n' \
+  '        for (let s=0, l=segments.length; s<l; s++) {\r\n' \
+  '          const seg = segments[s];\r\n' \
+  '          if (seg.hasAttribute("data-deleted")) {continue;}\r\n' \
   '          body += "-\\r\\n";\r\n' \
-  '          spans = segments[s].getElementsByTagName("span");\r\n' \
-  '          for (let p=0; p<spans.length; p++) {\r\n' \
-  '            let pt = spans[p].id.slice(0, -5);\r\n' \
-  '            if (document.getElementById(pt).checked && document.getElementById(pt).value != "error") {\r\n' \
-  '              body += pt.substring(5);\r\n' \
-  '              if (document.getElementById(pt).value == "edited") {\r\n' \
-  '                body += "&" + document.getElementById(pt + "lat").value + "&" + document.getElementById(pt + "lon").value + "&" + document.getElementById(pt + "ele").value + "&" + document.getElementById(pt + "alt").value + "&" + encodeURIComponent(document.getElementById(pt + "time").value);\r\n' \
+  '          const pts = seg.getElementsByClassName("point");\r\n' \
+  '          for (let p=0, l=pts.length; p<l; p++) {\r\n' \
+  '            const pt = pts[p];\r\n' \
+  '            const pt_data = pt.dataset;\r\n' \
+  '            if (! (pt_data.hasOwnProperty("deleted") || pt_data.hasOwnProperty("error"))) {\r\n' \
+  '              body += pt.id.substring(5);\r\n' \
+  '              if (pt_data.hasOwnProperty("edited")) {\r\n' \
+  '                body += "&" + pt_data.lat + "&" + pt_data.lon + "&" + pt_data.ele + "&" + pt_data.alt + "&" + encodeURIComponent(pt_data.time);\r\n' \
   '              }\r\n' \
   '              body += "\\r\\n";\r\n' \
   '             }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (mode3d) {\r\n' \
-  '          let msgn = show_msg("{#jm3dviewer1#}", 0);\r\n' \
-  '           xhr.onload = (e) => {load_cb(e.target, mode3d)?show_msg("{#jm3dviewer2#}", 2, msgn):show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
-  '           xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
-  '           xhr.open("POST", "/track?save=no");\r\n' \
+  '          const msgn = show_msg("{#jm3dviewer1#}", 0);\r\n' \
+  '          xhr.onload = (e) => {load_cb(e.target, mode3d) ? show_msg("{#jm3dviewer2#}", 2, msgn) : show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
+  '          xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jm3dviewer3#}", 10, msgn);};\r\n' \
+  '          xhr.open("POST", "/track?save=no");\r\n' \
   '        } else {\r\n' \
-  '          let msgn = show_msg("{#jmsave1#}", 0);\r\n' \
-  '          xhr.onload = (e) => {load_cb(e.target)?show_msg("{#jmsave2#}", 5, msgn):show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '          const msgn = show_msg("{#jmsave1#}", 0);\r\n' \
+  '          xhr.onload = (e) => {load_cb(e.target) ? show_msg("{#jmsave2#}", 5, msgn) : show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
   '          xhr.onerror = (e) => {error_cb(e.target); show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
   '          xhr.open("POST", "/track");\r\n' \
   '        }\r\n' \
@@ -14076,95 +14325,144 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing++;\r\n' \
   '        xhr.send(body);\r\n' \
   '      }\r\n' \
+  '      function track_over(e) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (e.target?.classList.contains("pos")) {point_over(e.target);}\r\n' \
+  '      }\r\n' \
+  '      function track_outside(e) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        if (e.target?.classList.contains("pos")) {point_outside(e.target);}\r\n' \
+  '      }\r\n' \
+  '      function track_click(e) {\r\n' \
+  '        e.stopPropagation();\r\n' \
+  '        const elt = e.target;\r\n' \
+  '        const elt_cl = elt?.classList;\r\n' \
+  '        if (elt_cl?.contains("pos")) {\r\n' \
+  '          if (e.offsetX >=0 ) {element_click(e, elt);} else {point_checkbox(elt);}\r\n' \
+  '        } else if (elt_cl?.contains("segmentdesc")) {\r\n' \
+  '          element_click(e, elt.parentNode, false);\r\n' \
+  '        } else if (elt_cl?.contains("segmentcollapse")) {\r\n' \
+  '          if (elt.parentNode.hasAttribute("data-collapsed")) {elt.parentNode.removeAttribute("data-collapsed");} else {elt.parentNode.setAttribute("data-collapsed", "");}\r\n' \
+  '        } else if (elt_cl?.contains("segmentdelete")) {\r\n' \
+  '          segment_checkbox(elt.parentNode);\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function track_change(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
-  '        let elt = e.target;\r\n' \
-  '        if (! elt) {return;}\r\n' \
-  '        let eid = elt.id.match(/(^.*[0-9]+)(.*)$/);\r\n' \
-  '        if (! eid) {return;}\r\n' \
-  '        switch (eid[2]) {\r\n' \
-  '          case "":\r\n' \
-  '            if (eid[1].substring(0, 7) == "segment") {segment_checkbox(elt);} else {point_checkbox(elt);}\r\n' \
-  '            break\r\n' \
+  '        const elt = e.target;\r\n' \
+  '        const elp = elt?.parentNode?.parentNode;\r\n' \
+  '        if (! elp || elp.id.startsWith("pattern")) {return;}\r\n' \
+  '        const elf = elt.id.split("point")[1];\r\n' \
+  '        switch (elf) {\r\n' \
   '          case "lat":\r\n' \
   '          case "lon":\r\n' \
-  '            point_edit_oc(eid[1], true, true);\r\n' \
+  '            elp.setAttribute("data-" + elf, elt.value);\r\n' \
+  '            point_edit_oc(elp.id, true, true);\r\n' \
   '            break\r\n' \
   '          case "ele":\r\n' \
   '          case "alt":\r\n' \
   '          case "time":\r\n' \
-  '            point_edit_oc(eid[1], true, false);\r\n' \
+  '            elp.setAttribute("data-" + elf, elt.value);\r\n' \
+  '            point_edit_oc(elp.id, true, false);\r\n' \
   '            break\r\n' \
   '          case "name":\r\n' \
-  '            point_edit_oc(eid[1], false, false);\r\n' \
+  '            elp.setAttribute("data-" + elf, elt.value);\r\n' \
+  '            point_edit_oc(elp.id, false, false);\r\n' \
   '            break\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      var xhr = new XMLHttpRequest();\r\n' \
-  '      var xhrt = new XMLHttpRequest();\r\n' \
+  '      const xhr = new XMLHttpRequest();\r\n' \
+  '      const xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
-  '      var xhrep = new XMLHttpRequest();\r\n' \
+  '      const xhrep = new XMLHttpRequest();\r\n' \
   '      xhrep.addEventListener("error", error_epcb);\r\n' \
-  '      var xhrip = new XMLHttpRequest();\r\n' \
+  '      const xhrip = new XMLHttpRequest();\r\n' \
   '      xhrip.addEventListener("error", error_ipcb);\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
-  '    <table style="width:98vw;">\r\n' \
-  '      <colgroup>\r\n' \
-  '        <col style="width:21em;">\r\n' \
-  '        <col style="width:calc(98vw - 21em);">\r\n' \
-  '      </colgroup>\r\n' \
-  '      <thead>\r\n' \
-  '        <tr>\r\n' \
-  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;">\r\n' \
-  '           <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '           <span style="display:inline-block;position:absolute;right:2vw;width:55em;overflow:hidden;text-align:right;font-size:80%;user-select:none;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="point_insert(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="point_insert(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;"onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;"onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jswitchpoints#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots())">&EmptySmallSquare;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3)):switch_graph()?gfence(refresh_graph):null">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
-  '           <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
-  '          </th>\r\n' \
-  '        </tr>\r\n' \
-  '      </thead>\r\n' \
-  '      <tbody>\r\n' \
-  '        <tr style="display:table-row;">\r\n' \
-  '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
-  '              <div id="pattern_waypoint" style="display:none;">\r\n '\
-  '                ##WAYPOINTTEMPLATE##\r\n' \
-  '              </div>\r\n' \
-  '              <div id="pattern_point" style="display:none;">\r\n '\
-  '                ##POINTTEMPLATE##\r\n' \
-  '              </div>\r\n' \
-  '              <div id="pattern_waydot" style="display:none;">\r\n '\
-  '                ##WAYDOTTEMPLATE##\r\n' \
-  '              </div>\r\n' \
-  '              <div id="pattern_dot" style="display:none;">\r\n '\
-  '                ##DOTTEMPLATE##\r\n' \
-  '              </div>\r\n' \
-  '              <div id="waypoints" style="overflow-y:scroll;overflow-x:hidden;height:12%;font-size:80%;border-bottom:1px darkgray solid;">\r\n' \
-  '                {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
-  '                <form id="waypointsform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);">\r\n                  #<#WAYPOINTS#>#\r\n' \
-  '                </form>\r\n' \
-  '              </div>\r\n' \
-  '              <div id="points" style="overflow-y:scroll;overflow-x:hidden;height:88%;font-size:80%">\r\n' \
-  '                {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg><br>\r\n' \
-  '                <form id="pointsform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);">\r\n                  #<#POINTS#>#\r\n' \
-  '                </form>\r\n' \
-  '              </div>\r\n' \
-  '            </div>\r\n' \
-  '          </td>\r\n' \
-  '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);pointer-events:none;"></div>\r\n' \
-  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">#<#PATHES#>#\r\n#<#WAYDOTS#>##<#DOTS#>#' \
-  '              </div>\r\n' \
-  '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
-  '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE + \
+  '  <body style="--mode:##MODE##" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
+  '    <div id="top_bar">\r\n' \
+  '      <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
+  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;" onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;" onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jdotsarrows#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots_arrows(! event.altKey, event.altKey))">&EmptySmallSquare;<span style="margin-left:-0.55em">&#8618;</span></button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?\'1\':(event.ctrlKey?\'2\':\'3\')):switch_graph()?gfence(refresh_graph):null">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
+  '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
+  '    </div>\r\n' \
+  '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
+  '    </div>\r\n' \
+  '    <div id="bottom_bar">\r\n' \
+  '      <span id="navigation" onmousedown="document.activeElement?.blur();event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();">\r\n' \
+  '       <button title="{#jnavca#}" onclick="points_navigate(\'ca\')">&#9193;&#xfe0e;</button><button title="{#jnavcc#}" style="margin-left:0.25em" onclick="points_navigate(\'cc\')">&#9205;</button><button title="{#jnavec#}" style="vertical-align:0.05em;margin-left:0.25em" onclick="points_navigate(\'ec\')">&#9207;</button><button title="{#jnavea#}" style="vertical-align:-0.05em;margin-left:0.25em" onclick="points_navigate(\'ea\')">&#9196;&#xfe0e;</button><button title="{#jnavsu#}" style="margin-left:0.75em" onclick="points_navigate(\'su\')">&#8892;</button><button title="{#jnavsd#}" style="margin-left:0.25em" onclick="points_navigate(\'sd\')">&#8891;</button><button title="{#jnavms#}" style="vertical-align:0.05em;margin-left:0.75em" onclick="points_navigate(\'ms\')">&#8859;</button><button title="{#jnavmg#}" style="vertical-align:0.05em;margin-left:0.25em" onclick="points_navigate(\'mg\')">&#10689;</button><button title="{#jnavsw#}" style="vertical-align:0.1em;margin-left:0.75em" onclick="points_navigate(\'sw\')">&#8616;</button>\r\n' \
+  '      </span>\r\n' \
+  '      <span id="message"></span>\r\n' \
+  '      <span title="{#jhelp#}" id="help">?</span>\r\n' \
+  '    </div>\r\n' \
+  '    <div id="patterns">\r\n' \
+  '      <div id="pattern_waypoint">\r\n '\
+  '##WAYPOINTTEMPLATE##' \
+  '        <form class="focus" id="waypointform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);" onmouseover="event.stopPropagation()" onmouseout="event.stopPropagation()" onclick="event.stopPropagation()">\r\n' \
+  '          <label for="waypointlat">{#jlat#}</label><input type="text" id="waypointlat" name="waypointlat" required="" pattern="[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
+  '          <label for="waypointlon">{#jlon#}</label><input type="text" id="waypointlon" name="waypointlon" required="" pattern="[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
+  '          <label for="waypointele">{#jele#}</label><input type="text" id="waypointele" name="waypointele" pattern="(?:[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))|" value=""><br>\r\n' \
+  '          <label for="waypointtime">{#jhor#}</label><input type="text" id="waypointtime" name="waypointtime" pattern="(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29).(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[\\+\\-](?:[01][0-9]|2[0-3]):[0-5][0-9])?)|" value=""><br>\r\n' \
+  '          <label for="waypointname">{#jname#}</label><input type="text" id="waypointname" name="waypointname" value=""><br>\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="pattern_segment">\r\n' \
+  '##SEGMENTTEMPLATE##' \
+  '      </div>\r\n' \
+  '      <div id="pattern_point">\r\n '\
+  '##POINTTEMPLATE##' \
+  '        <form class="focus" id="pointform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);" onmouseover="event.stopPropagation()" onmouseout="event.stopPropagation()" onclick="event.stopPropagation()">\r\n' \
+  '          <label for="pointlat">{#jlat#}</label><input type="text" id="pointlat" name="pointlat" required="" pattern="[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)" value=""><br>\r\n' \
+  '          <label for="pointlon">{#jlon#}</label><input type="text" id="pointlon" name="pointlon" required="" pattern="[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)" value=""><br>\r\n' \
+  '          <label for="pointele">{#jele#}</label><input type="text" id="pointele" name="pointele" pattern="(?:[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))|" value=""><br>\r\n' \
+  '          <label for="pointalt">{#jalt#}</label><input type="text" id="pointalt" name="pointalt" pattern="(?:[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))|" value=""><br>\r\n' \
+  '          <label for="pointtime">{#jhor#}</label><input type="text" id="pointtime" name="time" pattern="(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29).(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[\\+\\-](?:[01][0-9]|2[0-3]):[0-5][0-9])?)|" value=""><br>\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="pattern_track"> \r\n' \
+  '##TRACKTEMPLATE##' \
+  '      </div>\r\n' \
+  '      <div id="pattern_waydot">\r\n '\
+  '##WAYDOTTEMPLATE##' \
+  '      </div>\r\n' \
+  '      <div id="pattern_dot">\r\n '\
+  '##DOTTEMPLATE##' \
+  '      </div>\r\n' \
+  '    </div>\r\n' \
+  '    <div id="content" onclick="track_click(event)" onmouseover="track_over(event)" onmouseout="track_outside(event)">\r\n' \
+  '      <div id="waypoints" style="--wpth:10vh;">\r\n' \
+  '        {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
+  '        <div id="waypointslist">\r\n' \
+  '#<#WAYPOINTS#>#' \
+  '        </div>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="points">\r\n' \
+  '        {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg>\r\n' \
+  '        <div id="pointslist">\r\n' \
+  '#<#POINTS#>#' \
+  '        </div>\r\n' \
+  '      </div>\r\n' \
+  '    </div>\r\n' \
+  '    <script>\r\n' \
+  '      var point_data = new Float64Array(new ArrayBuffer(40 * document.getElementById("content").getElementsByClassName("point").length , {maxByteLength: 4000000}));\r\n' \
+  '      Array.prototype.forEach.call(document.getElementById("content").getElementsByClassName("pos"), function (pt) {point_desc(pt, true);});\r\n' \
+  '    </script>\r\n' \
+  '    <div id="view" style="--scale:1;--zoom:1;--wsp:6em;--filter:none;--magnify:1;--tprend:auto;--ddis:none;--wdstr:red;--ardis:inline" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '      <div id="background"></div>\r\n' \
+  '      <div id="handle">\r\n' \
+  '#<#PATHES#>#' \
+  '#<#WAYDOTS#>#' \
+  '#<#DOTS#>#' \
+  '      </div>\r\n' \
+  '      <div id="scrollbox">\r\n' \
+  '        <span id="scrollcross" title="{#jscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null)):scrollcross(event.ctrlKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '      </div>\r\n' + HTML_SSB_TEMPLATE + \
+  '    </div>\r\n' + HTML_PANELS_TEMPLATE + \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
-  '      var viewpane = document.getElementById("view");\r\n' \
-  '      var handle = document.getElementById("handle");\r\n' \
+  '      const viewpane = document.getElementById("view");\r\n' \
+  '      const handle = document.getElementById("handle");\r\n' \
   '      var targetmark = null;\r\n' \
   '      var hand = null;\r\n' \
   '      var hand_m = false;\r\n' \
@@ -14188,27 +14486,28 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
-  '        let elt = e.target;\r\n' \
+  '        const elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
   '        if (document.activeElement) {\r\n' \
-  '          if (document.activeElement.nodeName.toUpperCase() != "BODY" && (e.button == 2 || elt.id.indexOf("dot") < 0 || (document.activeElement.id || "").slice(0, -2) != elt.id.replace("dot", "point") + "l")) {document.activeElement.blur();}\r\n' \
+  '          if (document.activeElement.nodeName.toUpperCase() != "BODY" && (e.button == 2 || elt.id.indexOf("dot") < 0 || ! ((document.activeElement.id || "").slice(-3, -2) == "l" && focused == elt.id.replace("dot", "point")))) {document.activeElement.blur();}\r\n' \
   '        }\r\n' \
+  '        const bg = document.getElementById("background");\r\n' \
   '        if (e.button == 0) {\r\n' \
-  '          if (elt.id == "view") {\r\n' \
+  '          if (elt.id == "background") {\r\n' \
   '            hand = elt;\r\n' \
-  '            viewpane.style.cursor = "all-scroll";\r\n' \
-  '            viewpane.setPointerCapture(pointer_e);\r\n' \
+  '            bg.style.cursor = "all-scroll";\r\n' \
+  '            bg.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id.indexOf("dot") >= 0) {\r\n' \
-  '            let pt = document.getElementById(elt.id.replace("dot", "point") + "desc");\r\n' \
-  '            if (pt.htmlFor != focused) {\r\n' \
+  '            const pt = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
+  '            if (pt.id != focused) {\r\n' \
   '              element_click(null, pt);\r\n' \
   '              if (! dots_visible) {return;}\r\n' \
   '            }\r\n' \
   '            hand = elt;\r\n' \
   '            hand_m = false;\r\n' \
-  '            viewpane.style.cursor = "crosshair";\r\n' \
+  '            bg.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
-  '            viewpane.setPointerCapture(pointer_e);\r\n' \
+  '            bg.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
   '            hand = elt;\r\n' \
   '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
@@ -14221,21 +14520,20 @@ class GPXTweakerWebInterfaceServer():
   '            hand.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        } else if (e.button == 2) {\r\n' \
-  '          if (elt.id == "view") {\r\n' \
-  '            let p = viewpane.parentNode;\r\n' \
-  '            let x = e.pageX - p.offsetLeft;\r\n' \
-  '            let y = e.pageY - p.offsetTop;\r\n' \
-  '            let wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
+  '          if (elt.id == "background") {\r\n' \
+  '            const x = e.pageX - viewpane.offsetLeft;\r\n' \
+  '            const y = e.pageY - viewpane.offsetTop;\r\n' \
+  '            const wm = [(x - hpx) * tscale / zoom + htopx, htopy - (y - hpy) * tscale / zoom];\r\n' \
   '            if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
-  '            let coord = WebMercatortoWGS84(...wm);\r\n' \
+  '            const coord = WebMercatortoWGS84(...wm);\r\n' \
   '            point_insert("a", coord);\r\n' \
   '            point_edit(false, false, false, false);\r\n' \
   '            save_old();\r\n' \
   '            hand = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            hand_m = false;\r\n' \
-  '            viewpane.style.cursor = "crosshair";\r\n' \
+  '            bg.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
-  '            viewpane.setPointerCapture(pointer_e);\r\n' \
+  '            bg.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -14248,32 +14546,41 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
   '        if (hand) {\r\n' \
+  '          const bg = document.getElementById("background");\r\n' \
   '          if (mouse_out != null) {\r\n' \
   '            window.clearInterval(mouse_out);\r\n' \
   '            mouse_out = null;\r\n' \
   '          }\r\n' \
   '          if (hand.id.indexOf("dot") >= 0) {\r\n' \
-  '            viewpane.style.cursor = "";\r\n' \
-  '            viewpane.releasePointerCapture(pointer_e);\r\n' \
+  '            bg.style.cursor = "";\r\n' \
+  '            bg.releasePointerCapture(pointer_e);\r\n' \
   '            hand.style.cursor = "";\r\n' \
-  '            let d = 0;\r\n' \
+  '            const pt = document.getElementById(focused);\r\n' \
   '            if (hand_m || (e.shiftKey && ! e.altKey)) {\r\n' \
-  '              hist[0].push([focused, foc_old]);\r\n' \
-  '              let c = foc_old.split("\\r\\n");\r\n' \
-  '              let d = distance(parseFloat(c[0]), parseFloat(c[1]), 0, parseFloat(document.getElementById(focused + "lat").value), parseFloat(document.getElementById(focused + "lon").value), 0);\r\n' \
+  '              hist_push();\r\n' \
+  '              const c = foc_old.split("\\r\\n");\r\n' \
+  '              const d = distance(parseFloat(c[0]), parseFloat(c[1]), 0, parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")), 0);\r\n' \
   '              save_old();\r\n' \
-  '              for (let i=hist[1].length - 1; i>=0 ;i--) {\r\n' \
-  '                if (hist[1][i][0] == focused) {hist[1].splice(i, 1);}\r\n' \
-  '              }\r\n' \
+  '              hist_trim();\r\n' \
   '              if ((e.shiftKey || d > 25) && ! e.altKey) {\r\n' \
-  '                document.getElementById(focused + "ele").value = "";\r\n' \
-  '                if (focused.indexOf("way") < 0) {document.getElementById(focused + "alt").value = "";}\r\n' \
+  '                pt.setAttribute("data-ele", "");\r\n' \
+  '                if (focused.startsWith("way")) {\r\n' \
+  '                  if (pt.hasAttribute("data-focused")) {\r\n' \
+  '                    document.getElementById("waypointele").value = "";\r\n' \
+  '                  }\r\n' \
+  '                } else {\r\n' \
+  '                  pt.setAttribute("data-alt", "")\r\n' \
+  '                  if (pt.hasAttribute("data-focused")) {\r\n' \
+  '                    document.getElementById("pointele").value = "";\r\n' \
+  '                    document.getElementById("pointalt").value = "";\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
   '                point_edit(false, false, false, false);\r\n' \
   '                save_old();\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            if (hand.id.indexOf("way") < 0) {\r\n' \
-  '              calc_modified(document.getElementById(focused).parentNode.parentNode);\r\n' \
+  '            if (hand.id.startsWith("dot")) {\r\n' \
+  '              calc_modified(pt.parentNode);\r\n' \
   '              if (e.ctrlKey) {build_path();}\r\n' \
   '            } else {\r\n' \
   '              wpt_calc();\r\n' \
@@ -14283,8 +14590,8 @@ class GPXTweakerWebInterfaceServer():
   '            hand.setAttribute("stroke", "none");\r\n' \
   '            gfence(graph_point);\r\n' \
   '          } else {\r\n' \
-  '            viewpane.style.cursor = "";\r\n' \
-  '            viewpane.releasePointerCapture(pointer_e);\r\n' \
+  '            bg.style.cursor = "";\r\n' \
+  '            bg.releasePointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
   '          pointer_e = null;\r\n' \
@@ -14293,22 +14600,20 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let elt = e.target;\r\n' \
-  '        if (! (elt?elt.id:elt)) {\r\n' \
+  '        const elt = e.target;\r\n' \
+  '        if (! elt?.id) {\r\n' \
   '          mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (e.button == 2) {\r\n' \
   '          if (elt.id.indexOf("dot") >= 0) {\r\n' \
-  '            let cb = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
-  '            cb.checked = ! cb.checked;\r\n' \
-  '            point_checkbox(cb);\r\n' \
-  '            cb.scrollIntoView({block:"nearest"});\r\n' \
-  '          } else if (elt.id.substring(0, 4) == "path") {\r\n' \
-  '            let cb = document.getElementById(elt.id.replace("path", "segment"));\r\n' \
-  '            cb.checked = ! cb.checked;\r\n' \
-  '            segment_checkbox(cb);\r\n' \
-  '            cb.scrollIntoView({block:"nearest"});\r\n' \
+  '            const pt = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
+  '            point_checkbox(pt);\r\n' \
+  '            pt.scrollIntoView({block:"nearest"});\r\n' \
+  '          } else if (elt.id.startsWith("path")) {\r\n' \
+  '            const seg = document.getElementById(elt.id.replace("path", "segment"));\r\n' \
+  '            segment_checkbox(seg);\r\n' \
+  '            document.getElementById(seg.id + "desc").scrollIntoView({block:"nearest"});\r\n' \
   '          }\r\n' \
   '          mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '        }\r\n' \
@@ -14319,10 +14624,10 @@ class GPXTweakerWebInterfaceServer():
   '        document.oncontextmenu = null;\r\n' \
   '        if (mouse_ocm) {clearTimeout(mouse_ocm); mouse_ocm=null;}\r\n' \
   '        mouse_ocm = null;\r\n' \
-  '        let elt = e.target;\r\n' \
+  '        const elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
-  '        if (e.button == 0 && elt.id.substring(0, 4) == "path") {\r\n' \
-  '          let seg = document.getElementById(elt.id.replace("path", "segment") + "desc");\r\n' \
+  '        if (e.button == 0 && elt.id.startsWith("path")) {\r\n' \
+  '          const seg = document.getElementById(elt.id.replace("path", "segment"));\r\n' \
   '          element_click(null, seg);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -14330,23 +14635,22 @@ class GPXTweakerWebInterfaceServer():
   '        if (mouse_out == null) {return;}\r\n' \
   '        let dx = 0;\r\n' \
   '        let dy = 0;\r\n' \
-  '        let p = viewpane.parentNode;\r\n' \
-  '        let pl = p.offsetLeft;\r\n' \
-  '        let pr = pl + p.offsetWidth;\r\n' \
-  '        let pt = p.offsetTop;\r\n' \
-  '        let pb = pt + p.offsetHeight;\r\n' \
+  '        const pl = viewpane.offsetLeft;\r\n' \
+  '        const pr = pl + viewpane.offsetWidth;\r\n' \
+  '        const pt = viewpane.offsetTop;\r\n' \
+  '        const pb = pt + viewpane.offsetHeight;\r\n' \
   '        if (mousex < pl) {\r\n' \
-  '          dx = -Math.max(1, p.offsetWidth / 20);\r\n' \
+  '          dx = -Math.max(1, viewpane.offsetWidth / 20);\r\n' \
   '        } else if (mousex > pr) {\r\n' \
-  '          dx = Math.max(1, p.offsetWidth / 20);\r\n' \
+  '          dx = Math.max(1, viewpane.offsetWidth / 20);\r\n' \
   '        }\r\n' \
   '        if (mousey < pt) {\r\n' \
-  '          dy = -Math.max(1, p.offsetHeight / 20);\r\n' \
+  '          dy = -Math.max(1, viewpane.offsetHeight / 20);\r\n' \
   '        } else if (mousey > pb) {\r\n' \
-  '          dy = Math.max(1, p.offsetHeight / 20);\r\n' \
+  '          dy = Math.max(1, viewpane.offsetHeight / 20);\r\n' \
   '        }\r\n' \
   '        if (dx || dy) {\r\n' \
-  '          if (hand.id == "view") {\r\n' \
+  '          if (hand.id == "background") {\r\n' \
   '            scroll_dview(dx, dy);\r\n' \
   '          } else {\r\n' \
   '            scroll_dview(-dx, -dy);\r\n' \
@@ -14360,14 +14664,13 @@ class GPXTweakerWebInterfaceServer():
   '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
-  '          let p = viewpane.parentNode;\r\n' \
-  '          let pl = p.offsetLeft;\r\n' \
-  '          let pr = pl + p.offsetWidth;\r\n' \
-  '          let pt = p.offsetTop;\r\n' \
-  '          let pb = pt + p.offsetHeight;\r\n' \
-  '          let mx = e.pageX;\r\n' \
-  '          let my = e.pageY;\r\n' \
-  '          if (hand.id == "view") {\r\n' \
+  '          const pl = viewpane.offsetLeft;\r\n' \
+  '          const pr = pl + viewpane.offsetWidth;\r\n' \
+  '          const pt = viewpane.offsetTop;\r\n' \
+  '          const pb = pt + viewpane.offsetHeight;\r\n' \
+  '          const mx = e.pageX;\r\n' \
+  '          const my = e.pageY;\r\n' \
+  '          if (hand.id == "background") {\r\n' \
   '            cpx = cpy = null;\r\n' \
   '            scroll_dview(Math.min(Math.max(mx, pl), pr) - Math.min(Math.max(mousex, pl), pr), Math.min(Math.max(my, pt), pb) - Math.min(Math.max(mousey, pt), pb));\r\n' \
   '          } else if (hand.id.indexOf("dot") >= 0) {\r\n' \
@@ -14388,9 +14691,9 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
   '        e.preventDefault();\r\n' \
+  '        if (e.deltaY == 0) {return;}\r\n' \
   '        if (e.ctrlKey) {\r\n' \
-  '          let p = viewpane.parentNode;\r\n' \
-  '          (e.deltaY<0?zoom_inc:zoom_dec)(e.pageX - p.offsetLeft, e.pageY - p.offsetTop);\r\n' \
+  '          (e.deltaY < 0 ? zoom_inc : zoom_dec)(e.pageX - viewpane.offsetLeft, e.pageY - viewpane.offsetTop);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (! e.altKey) {\r\n' \
@@ -14414,13 +14717,11 @@ class GPXTweakerWebInterfaceServer():
   '            if (! dt) {return;}\r\n' \
   '            if (focused.indexOf("way") != dt.id.indexOf("way")) {return;}\r\n' \
   '            pt = document.getElementById(dt.id.replace("dot", "point"));\r\n' \
-  '          } while (pt.value == "error" || ! pt.checked || (focused.indexOf("way")>=0?false:!pt.parentNode.parentNode.firstElementChild.checked))\r\n' \
-  '          pt = document.getElementById(dt.id.replace("dot", "point") + "desc");\r\n' \
+  '          } while (pt.hasAttribute("data-error") || pt.hasAttribute("data-deleted") || (! focused.startsWith("way") && pt.parentNode.hasAttribute("data-deleted")));\r\n' \
   '          element_click(null, pt);\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(dt, scrollmode == 2);}\r\n' \
-  '        }\r\n' \
-  '        if (focused.indexOf("segment") >= 0) {\r\n' \
-  '          let seg = document.getElementById(focused + "cont")\r\n' \
+  '        } else if (focused.startsWith("segment")) {\r\n' \
+  '          let seg = document.getElementById(focused)\r\n' \
   '          do {\r\n' \
   '            if (e.deltaY > 0) {\r\n' \
   '              seg = seg.nextElementSibling;\r\n' \
@@ -14428,21 +14729,19 @@ class GPXTweakerWebInterfaceServer():
   '              seg = seg.previousElementSibling;\r\n' \
   '            }\r\n' \
   '            if (! seg) {return;}\r\n' \
-  '          } while (! seg.firstElementChild.checked)\r\n' \
-  '          seg = seg.firstElementChild.nextElementSibling;\r\n' \
+  '          } while (seg.hasAttribute("data-deleted"))\r\n' \
   '          element_click(null, seg);\r\n' \
-  '          if (scrollmode > 0) {scroll_to_track(document.getElementById(seg.id.slice(0, -4).replace("segment", "track")), scrollmode == 2);}\r\n' \
+  '          if (scrollmode > 0) {scroll_to_track(document.getElementById(seg.id.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function window_resize() {\r\n' \
-  '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '        rescale();\r\n' \
   '        if (webgpu) {\r\n' \
-  '          let graph = document.getElementById("graph");\r\n' \
-  '          if (graph.style.display == "none") {return;}\r\n' \
-  '          let graphc = document.getElementById("graphc");\r\n' \
-  '          let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
-  '          let gheight = graph.offsetHeight;\r\n' \
+  '          const graph = document.getElementById("graph");\r\n' \
+  '          if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph") {return;}\r\n' \
+  '          const graphc = document.getElementById("graphc");\r\n' \
+  '          const gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
+  '          const gheight = graph.offsetHeight;\r\n' \
   '          graphc.setAttribute("width", gwidth.toString());\r\n' \
   '          graphc.setAttribute("height", gheight.toString());\r\n' \
   '          graph_px = null;\r\n' \
@@ -14455,21 +14754,15 @@ class GPXTweakerWebInterfaceServer():
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
   '        return "{#junload#}";\r\n' \
   '      }\r\n' \
-  '      function page_load() {\r\n' \
-  '        if (navigator_firefox) {\r\n' \
-  '          if (! document.getElementById("waypoint0cont")) {\r\n' \
-  '            document.getElementById("waypoints").style.overflowY = "auto";\r\n' \
-  '            document.getElementById("waypoints").style.borderRight = "solid rgb(34,37,42) 17px";\r\n' \
-  '          }\r\n' \
-  '        }\r\n' + HTML_PAGE_LOAD_TEMPLATE + \
+  '      function page_load() {\r\n' + HTML_PAGE_LOAD_TEMPLATE + \
   '        if (prev_state != null) {\r\n' \
-  '          if (prev_state[4] == "true") {switch_dots();}\r\n' \
+  '          switch (prev_state[4]) {\r\n' \
+  '            case "1": switch_dots_arrows(); break;\r\n' \
+  '            case "2": switch_dots_arrows(false, true); break;\r\n' \
+  '            case "3": switch_dots_arrows(true, true); break;\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
-  '        point_desc();\r\n' \
   '        window.onresize = window_resize;\r\n' \
-  '        document.getElementById("waypoints").style.maxHeight = "10vh";\r\n' \
-  '        document.getElementById("waypoints").style.height = "";\r\n' \
-  '        document.getElementById("points").style.height = "calc(100% - " + document.getElementById("waypoints").offsetHeight.toString() + "px)";\r\n' \
   '        calc_modified();\r\n' \
   '        wpt_calc();\r\n' \
   '        window.onbeforeunload = page_unload;\r\n' \
@@ -14489,19 +14782,19 @@ class GPXTweakerWebInterfaceServer():
   '</html>'
   HTML_TEMPLATE = HTML_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTML_DECLARATIONS_TEMPLATE = \
-  '      var portmin = ##PORTMIN##;\r\n' \
-  '      var portmax = ##PORTMAX##;\r\n' \
+  '      const portmin = ##PORTMIN##;\r\n' \
+  '      const portmax = ##PORTMAX##;\r\n' \
   '      var gpucomp = ##GPUCOMP##;\r\n' \
   '      var webgpu = ##WEBGPU##;\r\n' \
   '      var webgpu3d = ##V3DWEBGPU##;\r\n' \
-  '      var sessionid = "##SESSIONID##";\r\n' \
-  '      var mode = "##MODE##";\r\n' \
-  '      var vminx = ##VMINX##;\r\n' \
-  '      var vminy = ##VMINY##;\r\n' \
-  '      var vmaxx = ##VMAXX##;\r\n' \
-  '      var vmaxy = ##VMAXY##;\r\n' \
-  '      var defx = ##DEFX##;\r\n' \
-  '      var defy = ##DEFY##;\r\n' \
+  '      const sessionid = "##SESSIONID##";\r\n' \
+  '      const mode = "##MODE##";\r\n' \
+  '      const vminx = ##VMINX##;\r\n' \
+  '      const vminy = ##VMINY##;\r\n' \
+  '      const vmaxx = ##VMAXX##;\r\n' \
+  '      const vmaxy = ##VMAXY##;\r\n' \
+  '      const defx = ##DEFX##;\r\n' \
+  '      const defy = ##DEFY##;\r\n' \
   '      var ttopx = ##TTOPX##;\r\n' \
   '      var ttopy = ##TTOPY##;\r\n' \
   '      var twidth = ##TWIDTH##;\r\n' \
@@ -14511,66 +14804,27 @@ class GPXTweakerWebInterfaceServer():
   '      var htopx = ##HTOPX##;\r\n' \
   '      var htopy = ##HTOPY##;\r\n' \
   '      var tholdsize = ##THOLDSIZE##;\r\n' \
-  '      var tlayers = new Map([##TLAYERS##]);\r\n' \
+  '      const tlayers = new Map([##TLAYERS##]);\r\n' \
   '      var tmaplibre = ##TMAPLIBRE##;'
   HTML_WAYPOINT_TEMPLATE = \
-  '<div id="waypoint%scont">\r\n' \
-  '                    <input type="checkbox" id="waypoint%s" checked name="waypoint%s" value="initial" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
-  '                    <label for="waypoint%s" id="waypoint%sdesc" onclick="element_click(event, this)" onmouseover="point_over(this)" onmouseout="point_outside(this)"><br></label><br>\r\n' \
-  '                    <span id="waypoint%sfocus">\r\n' \
-  '                      <label for="waypoint%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slat" name="waypoint%slat" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
-  '                      <label for="waypoint%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="waypoint%slon" name="waypoint%slon" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
-  '                      <label for="waypoint%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sele" name="waypoint%sele" pattern="([\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
-  '                      <label for="waypoint%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="waypoint%stime" name="waypoint%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[\\+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
-  '                      <label for="waypoint%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="waypoint%sname" name="waypoint%sname" value="%s"><br>\r\n' \
-  '                    </span>\r\n' \
-  '                  </div>'
-  HTML_WAYPOINT_TEMPLATE = HTML_WAYPOINT_TEMPLATE.format_map(LSTRINGS['interface'])
+  '<div class="waypoint pos" id="waypoint%s" data-lat="%s" data-lon="%s" data-ele="%s" data-time="%s" data-name="%s">&zwj;<br>&zwj;</div>\r\n'
   HTML_POINT_TEMPLATE = \
-  '<div id="point%scont">\r\n' \
-  '                    <input type="checkbox" id="point%s" checked name="point%s" value="initial" onmouseover="point_over(this)" onmouseout="point_outside(this)">\r\n' \
-  '                    <label for="point%s" id="point%sdesc" onclick="element_click(event, this)"  onmouseover="point_over(this)" onmouseout="point_outside(this)"></label><br>\r\n' \
-  '                    <span id="point%sfocus">\r\n' \
-  '                      <label for="point%slat">{jlat}</label>\r\n' \
-  '                      <input type="text" id="point%slat" name="point%slat" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value ="%f" ><br>\r\n' \
-  '                      <label for="point%slon">{jlon}</label>\r\n' \
-  '                      <input type="text" id="point%slon" name="point%slon" required pattern="[\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
-  '                      <label for="point%sele">{jele}</label>\r\n' \
-  '                      <input type="text" id="point%sele" name="point%sele" pattern="([\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
-  '                      <label for="point%salt">{jalt}</label>\r\n' \
-  '                      <input type="text" id="point%salt" name="point%salt" pattern="([\\+\\-]?([0-9]+([.][0-9]*)?|[.][0-9]+))|" value="%s"><br>\r\n' \
-  '                      <label for="point%stime">{jhor}</label>\r\n' \
-  '                      <input type="text" id="point%stime" name="point%stime" pattern="(([0-9]{{4}}-((01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])|(04|06|09|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))|(([02468][048]|[13579][26])00|[0-9][0-9](0[48]|[2468][048]|[13579][26]))-02-29).([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{{3}})?([Zz]|[\\+\\-]([01][0-9]|2[0-3]):[0-5][0-9])?)|" value="%s"><br>\r\n' \
-  '                    </span>\r\n' \
-  '                  </div>'
-  HTML_POINT_TEMPLATE = HTML_POINT_TEMPLATE.format_map(LSTRINGS['interface'])
-  HTML_SEGMENT_TEMPLATE = \
-  '<div id="segment%scont">\r\n' \
-  '                    <input type="checkbox" id="segment%s" checked name="segment%s" value="segment">\r\n' \
-  '                    <label for="segment%s" id="segment%sdesc" onclick="element_click(event, this, false)">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&nbsp;{jsegment} %s&nbsp;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</label>\r\n' \
-  '                    <br>'
-  HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE.format_map(LSTRINGS['interface'])
+  '<div class="point pos" id="point%s" data-lat="%s" data-lon="%s" data-ele="%s" data-alt="%s" data-time="%s">&zwj;</div>\r\n'
+  HTML_SEGMENT_TEMPLATE_S = \
+  '<div class="segment" id="segment%s">\r\n' \
+  '<span class="segmentcollapse"></span><span class="segmentdelete"></span><span class="segmentdesc"></span>\r\n'
+  HTML_SEGMENT_TEMPLATE_E = \
+  '</div>\r\n'
+  HTML_SEGMENT_TEMPLATE = HTML_SEGMENT_TEMPLATE_S + HTML_SEGMENT_TEMPLATE_E
   HTML_PATH_TEMPLATE = \
-  '\r\n' \
-  '              <svg id="track%s" viewbox="##VIEWBOX##" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '                <path id="path%s" d="%s"/>\r\n' \
-  '                <text dy="0.25em">\r\n' \
-  '                  <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
-  '                </text>\r\n' \
-  '              </svg>'
+  '<svg class="track" id="track%s" viewbox="##VIEWBOX##" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
+  '<path id="path%s" d="%s"/>\r\n' \
+  '<text class="arrows" dy="0.25em"><textPath href="#path%s">##ARROWS##</textPath></text>\r\n' \
+  '</svg>\r\n'
   HTML_WAYDOT_TEMPLATE = \
-  '              <svg id="waydot%s" width="8" height="8" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);">\r\n' \
-  '                <circle cx="4" cy="4" r="3" />\r\n' \
-  '              </svg>\r\n'
+  '<svg class="waydot" id="waydot%s" style="left:calc(%.1fpx / var(--scale) - 4px);top:calc(%.1fpx / var(--scale) - 4px);"><circle/></svg>\r\n'
   HTML_DOT_TEMPLATE = \
-  '              <svg id="dot%s" width="7" height="7" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);display:none;">\r\n' \
-  '                <rect x="1" y="1" width="5" height="5"/>\r\n' \
-  '              </svg>\r\n'
+  '<svg class="dot" id="dot%s" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);"><rect/></svg>\r\n'
   HTML_3D_STYLES_TEMPLATE = \
   '    <style type="text/css">\r\n' \
   '      table {\r\n' \
@@ -18094,233 +18348,430 @@ class GPXTweakerWebInterfaceServer():
   '  <head>\r\n' \
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXExplorer</title>\r\n' + HTML_STYLES_TEMPLATE + \
-  '      div[id$=cont] {\r\n' \
-  '        position:relative;\r\n' \
+  '      input[type=checkbox] {\r\n' \
+  '        appearance: none;\r\n' \
+  '        width: 1.25em;\r\n' \
+  '        height: 1.25em;\r\n' \
+  '        margin-left: 1px;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox]:checked::before {\r\n' \
+  '        content: "\\2713";\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 100%;\r\n' \
+  '        text-align: center;\r\n' \
+  '        font-weight: bold;\r\n' \
   '      }\r\n' \
   '      input[type=text]:invalid {\r\n' \
-  '        color:rgb(250,220,200);\r\n' \
+  '        color: rgb(250, 220, 200);\r\n' \
   '      }\r\n' \
-  '      input[id=tracksfilter] {\r\n' \
-  '        max-width:calc(98vw - 80em);\r\n' \
-  '        width:25em;\r\n' \
-  '        font-size:70%;\r\n' \
+  '      #tracksfilterform {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 25em;\r\n' \
+  '        max-width: calc(100% - 83em);\r\n' \
   '      }\r\n' \
-  '      form[id^=track] {\r\n' \
-  '        overflow:hidden;\r\n' \
-  '        margin-right: 4px;\r\n' \
-  '      }\r\n' \
-  '      input[id$=visible] {\r\n' \
-  '        margin-left:0.3%;\r\n' \
-  '        margin-right:2.2%;\r\n' \
-  '        margin-top:0;\r\n' \
-  '        margin-bottom:0.3em;\r\n' \
-  '        width:5.2%;\r\n' \
-  '      }\r\n' \
-  '      label[id$=desc] {\r\n' \
-  '        cursor:cell;\r\n' \
-  '        display:inline-block;\r\n' \
-  '        margin-bottom:0.3em;\r\n' \
-  '        width:92.3%;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        white-space:nowrap;\r\n' \
-  '        line-height:1.15em;\r\n' \
-  '      }\r\n' \
-  '      input[type=color] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        right:0;\r\n' \
-  '        top:calc(1em + 3px);\r\n' \
-  '        width:1em;\r\n' \
-  '        height:1em;\r\n' \
-  '        border:none;\r\n' \
-  '        padding:0;\r\n' \
-  '      }\r\n' \
-  '      input[type=color]::-webkit-color-swatch-wrapper{\r\n' \
-  '        padding:0;\r\n' \
-  '      }\r\n' \
-  '      input[type=color]::-webkit-color-swatch {\r\n' \
-  '        border:none;\r\n' \
-  '      }\r\n' \
-  '      input[type=color]::-moz-color-swatch {\r\n' \
-  '        border:none;\r\n' \
-  '      }\r\n' \
-  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content] {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        width:2em;\r\n' \
-  '        padding-left:0.8em;\r\n' \
-  '      }\r\n' \
-  '      input[id$=name], input[id$=file], input[id$=folder], input[id$=period], input[id$=content] {\r\n' \
-  '        height:1.35em;\r\n' \
-  '        width:80%;\r\n' \
-  '        font-size:100%;\r\n' \
-  '      }\r\n' \
-  '      span[id$=focus] {\r\n' \
-  '        display:none;\r\n' \
-  '      }\r\n' \
-  '      svg[id^=track] text {\r\n' \
-  '        display:none;\r\n' \
-  '      }\r\n' \
-  '      label[for^=folder] {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        white-space:nowrap;\r\n' \
-  '      }\r\n' \
-  '      svg[id*=waydots] {\r\n' \
-  '        stroke:white;\r\n' \
-  '        stroke-width:calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
-  '        paint-order:stroke;\r\n' \
-  '      }\r\n' \
-  '      svg circle {\r\n' \
-  '        r:calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
-  '        pointer-events:all;\r\n' \
+  '      #tracksfilter {\r\n' \
+  '        width: 100%;\r\n' \
   '      }\r\n' \
   '      #tracksfilter:not(:placeholder-shown) {\r\n' \
-  '        background-color:rgb(50,95,130);\r\n' \
+  '        background-color: rgb(50, 95, 130);\r\n' \
+  '      }\r\n' \
+  '      #cfbutton {\r\n' \
+  '        position: relative;\r\n' \
+  '        margin-left: 0.25em;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      #display {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 24.5em;\r\n' \
+  '        height: 1.6em;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        user-select: none;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      #display>select {\r\n' \
+  '        width: 12em;\r\n' \
+  '        height: 1.7em;\r\n' \
+  '        vertical-align: top;\r\n' \
+  '        font-size: 85%;\r\n' \
+  '      }\r\n' \
+  '      #actions {\r\n' \
+  '        width: 45.5em;\r\n' \
+  '      }\r\n' \
+  '      #message {\r\n' \
+  '        left: 2px;\r\n' \
+  '        width: calc(100% - 2.2em - 2px);\r\n' \
+  '      }\r\n' \
+  '      #tracks {\r\n' \
+  '        overflow: hidden scroll;\r\n' \
+  '        width: 100%;\r\n' \
+  '        height: 100%;\r\n' \
+  '      }\r\n' \
+  '      #tracksform {\r\n' \
+  '        contain: paint;\r\n' \
+  '        width: calc(100% - 5px);\r\n' \
+  '      }\r\n' \
+  '      div[id$=cont] {\r\n' \
+  '        position: relative;\r\n' \
+  '      }\r\n' \
+  '      input+label[id$=desc]:hover, input:hover+label[id$=desc] {\r\n' \
+  '        background-color:green;\r\n' \
+  '      }\r\n' \
+  '      input[id$=visible] {\r\n' \
+  '        width: 5.2%;\r\n' \
+  '        margin-left: 0.3%;\r\n' \
+  '        margin-right: 2.2%;\r\n' \
+  '        margin-top: 0;\r\n' \
+  '        margin-bottom: 0.3em;\r\n' \
+  '      }\r\n' \
+  '      label[id$=desc] {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 92.3%;\r\n' \
+  '        margin-bottom: 0.3em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        white-space nowrap;\r\n' \
+  '        line-height: 1.15em;\r\n' \
+  '        cursor: cell;\r\n' \
+  '      }\r\n' \
+  '      input[type=color] {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 0;\r\n' \
+  '        top: calc(1em + 3px);\r\n' \
+  '        width: 1em;\r\n' \
+  '        height: 1em;\r\n' \
+  '        border: none;\r\n' \
+  '        padding: 0;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-webkit-color-swatch-wrapper{\r\n' \
+  '        padding: 0;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-webkit-color-swatch {\r\n' \
+  '        border: none;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-moz-color-swatch {\r\n' \
+  '        border: none;\r\n' \
+  '      }\r\n' \
+  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content] {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 2em;\r\n' \
+  '        padding-left: 0.8em;\r\n' \
+  '      }\r\n' \
+  '      input[id$=name], input[id$=file], input[id$=folder], input[id$=period], input[id$=content] {\r\n' \
+  '        height: 1.35em;\r\n' \
+  '        width: 80%;\r\n' \
+  '        font-size: 100%;\r\n' \
+  '      }\r\n' \
+  '      span[id$=focus] {\r\n' \
+  '        display: none;\r\n' \
   '      }\r\n' \
   '      div [id=geomedia] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        pointer-events:none;\r\n' \
+  '        position: absolute;\r\n' \
+  '        pointer-events: none;\r\n' \
   '      }\r\n' \
   '      div[id=geomedia] * {\r\n' \
-  '        background:darkgray;\r\n' \
-  '        cursor:zoom-in;\r\n' \
-  '        pointer-events:initial;\r\n' \
+  '        background: darkgray;\r\n' \
+  '        cursor: zoom-in;\r\n' \
+  '        pointer-events: initial;\r\n' \
   '      }\r\n' \
   '      div[id=geomedia] img {\r\n' \
-  '        image-orientation:from-image;\r\n' \
+  '        image-orientation: from-image;\r\n' \
   '      }\r\n' \
   '      div[id=geomedia] *[id*=","] {\r\n' \
-  '        outline-offset:-3px;\r\n' \
-  '        outline:outset 3px lightgray;\r\n' \
+  '        outline-offset: -3px;\r\n' \
+  '        outline: outset 3px lightgray;\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
   '        div[id=geomedia]>img::before{\r\n' \
-  '          content:"";\r\n' \
-  '          position:absolute;\r\n' \
-  '          left:3px;\r\n' \
-  '          top:3px;\r\n' \
-  '          background:darkgray;\r\n' \
-  '          width:calc(100% - 6px);\r\n' \
-  '          height:calc(100% - 6px);\r\n' \
+  '          content: "";\r\n' \
+  '          position: absolute;\r\n' \
+  '          left: 3px;\r\n' \
+  '          top: 3px;\r\n' \
+  '          background: darkgray;\r\n' \
+  '          width: calc(100% - 6px);\r\n' \
+  '          height: calc(100% - 6px);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      #target_mark {\r\n' \
+  '        position: absolute;\r\n' \
+  '        z-index: 2;\r\n' \
+  '        width: 10px;\r\n' \
+  '        height:10px;\r\n' \
+  '        transform: translate(-50%,-50%) scale(calc(1 + var(--magnify)));\r\n' \
+  '        pointer-events: none;\r\n' \
+  '      }\r\n' \
   '      div[id^=media] {\r\n' \
-  '        width:100%;\r\n' \
-  '        background:rgb(30,30,35);\r\n' \
-  '        overflow-x:auto;\r\n' \
-  '        overflow-y:hidden;\r\n' \
-  '        white-space:nowrap;\r\n' \
-  '        line-height:0;\r\n' \
-  '        text-align:center;\r\n' \
-  '        user-select:none;\r\n' \
+  '        overflow: auto hidden;\r\n' \
+  '        background: rgb(30, 30, 35);\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        line-height: 0;\r\n' \
+  '        text-align: center;\r\n' \
+  '        user-select: none;\r\n' \
   '      }\r\n' \
-  '      div[id=mediapreview] {\r\n' \
-  '        position:relative;\r\n' \
-  '        height:25vh;\r\n' \
-  '        border-top:1px darkgray solid;\r\n' \
+  '      #lpanels[style*=mediapreview]>#mediapreview {\r\n' \
+  '        display: initial;\r\n' \
   '      }\r\n' \
-  '      div[id=mediaview] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        z-index:10;\r\n' \
-  '        height:100%;\r\n' \
-  '        bottom:0;\r\n' \
-  '        left:0;\r\n' \
+  '      #mediaview {\r\n' \
+  '        position: fixed;\r\n' \
+  '        z-index: 10;\r\n' \
+  '        left: 10px;\r\n' \
+  '        top: 5px;\r\n' \
+  '        width: calc(100vw - 20px)\r\n' \
+  '        height: calc(100vh - 10px);\r\n' \
   '      }\r\n' \
   '      div[id^=media]::before {\r\n' \
-  '        content:"";\r\n' \
-  '        display:inline-block;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        height:100%;\r\n' \
+  '        content: "";\r\n' \
+  '        display: inline-block;\r\n' \
+  '        height: 100%;\r\n' \
+  '        vertical-align: middle;\r\n' \
   '      }\r\n' \
   '      div[id^=media] * {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        max-height:100%;\r\n' \
-  '        max-width:100%;\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        object-fit:scale-down;\r\n' \
+  '        display: inline-block;\r\n' \
+  '        max-height: 100%;\r\n' \
+  '        max-width: 100%;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        object-fit: scale-down;\r\n' \
   '      }\r\n' \
   '      div[id^=media] img {\r\n' \
-  '        image-orientation:from-image;\r\n' \
-  '        cursor:nesw-resize;\r\n' \
-  '        font-size:0;\r\n' \
+  '        image-orientation: from-image;\r\n' \
+  '        cursor: nesw-resize;\r\n' \
+  '        font-size: 0;\r\n' \
   '      }\r\n' \
   '      div[id^=media] *:not(:last-child) {\r\n' \
-  '        margin-right:14px;\r\n' \
+  '        margin-right: 14px;\r\n' \
   '      }\r\n' \
-  '      div[id=searchpanel] {\r\n' \
-  '        position:relative;\r\n' \
-  '        width:100%;\r\n' \
-  '        height:25vh;\r\n' \
-  '        border-top:1px darkgray solid;\r\n' \
-  '        overflow: hidden;\r\n' \
+  '      #lpanels[style*=searchpanel][style*=mini] {\r\n' \
+  '        top: max(75vh - 6px, 100vh - 3em - 36px);\r\n' \
+  '        max-height: calc(3em + 30px);\r\n' \
   '      }\r\n' \
-  '      button[id=spdec], button[id=spinc] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        font-size:94%;\r\n' \
-  '        top:3px;\r\n' \
-  '        right:calc(2vw - 16px);\r\n' \
+  '      #lpanels[style*=mini]~#content, #lpanels[style*=mini]~#view {\r\n' \
+  '        min-height: calc(100vh - 7em - 46px);\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=mini]~#bottom_bar {\r\n' \
+  '        top: calc(100vh - 4.6em - 38px);\r\n' \
+  '      }\r\n' \
+  '      #searchpanel {\r\n' \
+  '        overflow: clip;\r\n' \
+  '        user-select:none;\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=searchpanel]>#searchpanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #searchform {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 54em;\r\n' \
+  '        max-width: calc(100% - 23.5em - 15px);\r\n' \
+  '        padding-top: 3px;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '      }\r\n' \
+  '      #squery {\r\n' \
+  '        width: calc(100% - 1.95em);\r\n' \
+  '        height: 1.65em;\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        font-size: 105%;\r\n' \
+  '      }\r\n' \
+  '      #searchform>button {\r\n' \
+  '        margin-left: 0.25em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      #gloc {\r\n' \
+  '        margin: 0em 0.5em 0.2em 1.5em;\r\n' \
+  '        font-size: 110%;\r\n' \
+  '      }\r\n' \
+  '      #gloc+label {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        vertical-align: bottom;\r\n' \
+  '        font-size: 130%;\r\n' \
+  '        font-weight: bold;\r\n' \
+  '      }\r\n' \
+  '      #gset {\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: inline-block;\r\n' \
+  '        right: calc(2em + 15px);\r\n' \
+  '        top: 3px;\r\n' \
+  '        width: 14em;\r\n' \
+  '        height: 1.7em;\r\n' \
+  '        font-size: 102%;\r\n' \
+  '      }\r\n' \
+  '      #spdec, #spinc {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 0;\r\n' \
+  '        top: 3px;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      #spinc {\r\n' \
+  '        display: none;\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=mini] #spdec {\r\n' \
+  '        display: none;\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=mini] #spinc {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #places {\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: block;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: calc(1.74em + 10px);\r\n' \
+  '        bottom: 0;\r\n' \
+  '        width: 100%;\r\n' \
+  '        overflow: scroll;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        user-select: text;\r\n' \
+  '      }\r\n' \
+  '      #plcont {\r\n' \
+  '        min-width: fit-content;\r\n' \
   '      }\r\n' \
   '      input[type=radio] {\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        margin:0.2em 0.5em 0.2em 0.5em;\r\n' \
-  '        accent-color:dodgerblue;\r\n' \
+  '        margin: 0.2em 0.5em 0.2em 0.5em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        accent-color: dodgerblue;\r\n' \
   '      }\r\n' \
   '      label[for^=place] {\r\n' \
-  '        vertical-align:middle;\r\n' \
+  '        vertical-align: middle;\r\n' \
   '      }\r\n' \
   '      input[type=radio]:checked+label[for^=place] {\r\n' \
-  '        color:dodgerblue\r\n' \
+  '        color: dodgerblue\r\n' \
   '      }\r\n' \
   '      #plcont div {\r\n' \
-  '        width:100%;\r\n' \
+  '        width: 100%;\r\n' \
   '      }\r\n' \
   '      #plcont div:first-of-type {\r\n' \
-  '        display:none;\r\n' \
+  '        display: none;\r\n' \
   '      }\r\n' \
   '      #plcont div:hover {\r\n' \
-  '        background-color:green;\r\n' \
+  '        background-color: green;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] span {\r\n' \
-  '        display:block;\r\n' \
-  '        line-height:2em;\r\n' \
+  '      #mtpanel {\r\n' \
+  '        right: calc(26.6em - var(--offset));\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] input {\r\n' \
-  '        width:9em;\r\n' \
-  '        height:1.8em;\r\n' \
+  '      #panels[style*=mtpanel]>#mtpanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #dpanels {\r\n' \
+  '        contain: strict;\r\n' \
+  '        position: fixed;\r\n' \
+  '        left: min(calc(25.3em + 10px), calc(100vw - 82.7em - 10px));\r\n' \
+  '        top: calc(2em + 6px);\r\n' \
+  '        width: max(calc(100vw - 64em - 20px), 44em);\r\n' \
+  '        height: calc(100vh - 3.6em - 12px);\r\n' \
+  '        pointer-events: none;\r\n' \
+  '      }\r\n' \
+  '      #dpanels>div {\r\n' \
+  '        contain: content;\r\n' \
+  '        overflow: auto;\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: none;\r\n' \
+  '        top: 0;\r\n' \
+  '        max-height: 100%;\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        padding: 5px;\r\n' \
+  '        background-color: rgb(40, 45, 50);\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '        pointer-events: initial;\r\n' \
+  '        user-select: none;\r\n' \
+  '      }\r\n' \
+  '      #cfilterpanel {\r\n' \
+  '        left: 0;\r\n' \
+  '        max-width: 100%;\r\n' \
+  '      }\r\n' \
+  '      #dpanels[style*=cfilterpanel]>#cfilterpanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #cfilterform {\r\n' \
+  '        font-size: 110%;\r\n' \
+  '      }\r\n' \
+  '      #cfilterform>div {\r\n' \
+  '        display: inline-block;\r\n' \
+  '      }\r\n' \
+  '      #cfilterform>div:first-of-type {\r\n' \
+  '        padding-right: 1em;\r\n' \
+  '      }\r\n' \
+  '      #cfilterform>div:last-of-type {\r\n' \
   '        text-align:right;\r\n' \
-  '        box-sizing:border-box;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] input[type=text] {\r\n' \
-  '        padding-right:2em;\r\n' \
+  '      #cfilterform span {\r\n' \
+  '        display: block;\r\n' \
+  '        line-height: 2em;\r\n' \
   '      }\r\n' \
-  '      input[type=date] {\r\n' \
-  '        border-width:0.5px;\r\n' \
+  '      #cfilterform input {\r\n' \
+  '        width: 9em;\r\n' \
+  '        height: 1.8em;\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        text-align: right;\r\n' \
   '      }\r\n' \
-  '      input[type=date]::-webkit-calendar-picker-indicator {\r\n' \
+  '      #cfilterform input[type=text] {\r\n' \
+  '        padding-right: 2em;\r\n' \
+  '      }\r\n' \
+  '      #cfilterform input[type=date] {\r\n' \
+  '        border-width: 0.5px;\r\n' \
+  '      }\r\n' \
+  '      #cfilterform input[type=date]::-webkit-calendar-picker-indicator {\r\n' \
   '       filter: invert(0.7);\r\n' \
-  '       padding-right:0.3em;\r\n' \
+  '       padding-right: 0.3em;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] button {\r\n' \
-  '        position:relative;\r\n' \
-  '        width:1.3em;\r\n' \
-  '        height:0.9em;\r\n' \
-  '        margin:0px 0px 0px -1.3em;\r\n' \
-  '        padding:0;\r\n' \
-  '        border:none;\r\n' \
-  '        color:rgb(150,150,150);\r\n' \
-  '        background-color:transparent;\r\n' \
-  '        line-height:0;\r\n' \
-  '        text-align:left;\r\n' \
+  '      #cfilterform button {\r\n' \
+  '        position: relative;\r\n' \
+  '        width: 1.3em;\r\n' \
+  '        height: 0.9em;\r\n' \
+  '        margin: 0px 0px 0px -1.3em;\r\n' \
+  '        padding: 0;\r\n' \
+  '        border: none;\r\n' \
+  '        color: rgb(150, 150, 150);\r\n' \
+  '        background-color: transparent;\r\n' \
+  '        line-height: 0;\r\n' \
+  '        text-align: left;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] input+button {\r\n' \
-  '        vertical-align:top;\r\n' \
+  '      #cfilterform input+button {\r\n' \
+  '        vertical-align: top;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] button+button {\r\n' \
-  '        vertical-align:bottom;\r\n' \
+  '      #cfilterform button+button {\r\n' \
+  '        vertical-align: bottom;\r\n' \
   '      }\r\n' \
-  '      form[id=cfilterform] span span {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        width:2em;\r\n' \
-  '        text-align:left;\r\n' \
+  '      #cfilterform span span {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 2em;\r\n' \
+  '        text-align: left;\r\n' \
+  '      }\r\n' \
+  '      #folderspanel {\r\n' \
+  '        left: 1.98em;\r\n' \
+  '        max-width: calc(100% - 2em);\r\n' \
+  '        max-height: 100%;\r\n' \
+  '      }\r\n' \
+  '      #dpanels[style*=folderspanel]>#folderspanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #foldersform {\r\n' \
+  '        font-size: 110%;\r\n' \
+  '      }\r\n' \
+  '      #foldersform>span {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        margin-left: 0.5em;\r\n' \
+  '        margin-bottom: 0.5em;\r\n' \
+  '        font-size: 105%;\r\n' \
+  '      }\r\n' \
+  '      #foldersform>label {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        white-space: nowrap;\r\n' \
+  '      }\r\n' \
+  '      .track text {\r\n' \
+  '        display: none;\r\n' \
+  '      }\r\n' \
+  '      .waydots {\r\n' \
+  '        position: absolute;\r\n' \
+  '        overflow: visible;\r\n' \
+  '        stroke: white;\r\n' \
+  '        stroke-width: calc(2px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
+  '        paint-order: stroke;\r\n' \
+  '        cursor: pointer;\r\n' \
+  '      }\r\n' \
+  '      .waydots circle {\r\n' \
+  '        r: calc(3px * var(--scale) * (var(--magnify) + 1) / 2);\r\n' \
+  '        pointer-events: all;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
@@ -18329,6 +18780,7 @@ class GPXTweakerWebInterfaceServer():
   '      var str_comp = new Intl.Collator().compare;\r\n' \
   '      var no_sort = null;\r\n' \
   '      var magnify = 1;\r\n' \
+  '      var arrows_visible = false;\r\n' \
   '      var smoothed = ##SMENABLED##;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_xys = null;\r\n' \
@@ -18379,7 +18831,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (mode == "map") {\r\n' \
   '            if (b == null) {return;}\r\n' \
-  '            let r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
+  '            const r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
   '            let z = eval(zooms.slice(-1)[0]);\r\n' \
   '            if (r > 0) {z = 1 / r / Math.min((viewpane.offsetWidth - 2) / (vmaxx - vminx), (viewpane.offsetHeight - 4) / (vmaxy - vminy));}\r\n' \
   '            let zoom_s_ex = zoom_s;\r\n' \
@@ -18397,7 +18849,8 @@ class GPXTweakerWebInterfaceServer():
   '        let q = "";\r\n' \
   '        let sto = false;\r\n' \
   '        if (nset != null) {\r\n' \
-  '          document.getElementById("opanel").style.display="none";\r\n' \
+  '          const ps = document.getElementById("panels").style;\r\n' \
+  '          if (ps.getPropertyValue("--panel") == "opanel") {ps.setProperty("--panel", "none");}\r\n' \
   '          if (nset == -1) {\r\n' \
   '            nset = 0;\r\n' \
   '            q = "set=" + encodeURIComponent(document.getElementById("tset").selectedIndex);\r\n' \
@@ -18412,7 +18865,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          sto = null;\r\n' \
   '          if (b == null) {\r\n' \
-  '            if (twidth || kzoom != true) {\r\n' \
+  '            if (twidth || kzoom !== true || tlevels.length == 0) {\r\n' \
   '              document.getElementById("tset").disabled = false;\r\n' \
   '              document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '              return;\r\n' \
@@ -18446,8 +18899,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (tracks_pts.length == 0) {return null;}\r\n' \
   '        if (tracks == null) {\r\n' \
   '          tracks = [];\r\n' \
-  '          let trks = document.getElementById("tracksform").children;\r\n' \
-  '          for (let t=0; t<trks.length; t++) {\r\n' \
+  '          const trks = document.getElementById("tracksform").children;\r\n' \
+  '          for (let t=0, l=trks.length; t<l; t++) {\r\n' \
   '            if (trks[t].firstElementChild.checked) {\r\n' \
   '              tracks.push(document.getElementById(trks[t].id.slice(0, -4)));\r\n' \
   '            }\r\n' \
@@ -18461,11 +18914,11 @@ class GPXTweakerWebInterfaceServer():
   '        let gminy = null;\r\n' \
   '        let gmaxx = null;\r\n' \
   '        let gmaxy = null;\r\n' \
-  '        for (let t=0; t<tracks.length; t++) {\r\n' \
-  '          let trind = parseInt(tracks[t].id.substring(5));\r\n' \
+  '        for (let t=0, l=tracks.length; t<l; t++) {\r\n' \
+  '          const trind = parseInt(tracks[t].id.substring(5));\r\n' \
   '          let empt = document.getElementById("waydots" + trind.toString()).childElementCount == 0;\r\n' \
   '          if (empt) {\r\n' \
-  '            for (let s=0; s<tracks_pts[trind].length; s++) {\r\n' \
+  '            for (let s=0, tl=tracks_pts[trind].length; s<tl; s++) {\r\n' \
   '              if (tracks_pts[trind][s].length > 0) {empt = false; break;}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -18494,7 +18947,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' + HTML_SCROLL_TEMPLATE + \
   '      function track_click(e, trk, scroll=true) {\r\n' \
   '        if (e != null) {e.preventDefault();}\r\n' \
-  '        let ex_foc = focused;\r\n' \
+  '        const ex_foc = focused;\r\n' \
   '        if (trk.htmlFor == ex_foc + "visible") {focused = "";} else {focused = trk.htmlFor.slice(0, -7);}\r\n' \
   '        if (ex_foc != "") {\r\n' \
   '          document.getElementById(ex_foc + "desc").style.color = "";\r\n' \
@@ -18527,17 +18980,17 @@ class GPXTweakerWebInterfaceServer():
   '        gfence(refresh_graph);\r\n' \
   '      }\r\n' \
   '      function track_over(trk) {\r\n' \
-  '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
+  '        const foc = trk.id.indexOf("color") < 0 ? ((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)) : trk.id.slice(0, -5);\r\n' \
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc).style.zIndex = "2";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = "inline";\r\n' \
   '        if (scrollmode == 2 && (document.getElementById(foc + "visible").checked || foc == focused) && document.getElementById("oset").selectedIndex != 8 && ! (document.getElementById("cfproxmin").value && document.getElementById("cfproxmin").checkValidity()) && ! (document.getElementById("cfproxmax").value && document.getElementById("cfproxmax").checkValidity()) && document.getElementById("vfbutton").style.backgroundColor == "") {scroll_to_track(document.getElementById(foc), false);}\r\n' \
   '      }\r\n' \
   '      function track_outside(trk) {\r\n' \
-  '        let foc = trk.id.indexOf("color")<0?((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)):trk.id.slice(0, -5);\r\n' \
-  '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = foc==focused?"1":"";\r\n' \
+  '        const foc = trk.id.indexOf("color") < 0 ? ((trk.id.indexOf("desc")<0?trk.id:trk.htmlFor).slice(0, -7)) : trk.id.slice(0, -5);\r\n' \
+  '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = foc == focused ? "1" : "";\r\n' \
   '        document.getElementById(foc).style.zIndex = foc==focused?"1":"";\r\n' \
-  '        document.getElementById(foc.replace("track", "patharrows")).style.display = foc==focused?"inline":"";\r\n' \
+  '        document.getElementById(foc.replace("track", "patharrows")).style.display = foc == focused ? "inline" : "";\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, seg_smoothed, smoothed_ch, seg_ind, stats, fpan=0, ind=null, teahs=null) {\r\n' \
   '        if (fpan == 0) {\r\n' \
@@ -19160,10 +19613,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function show_hide_tracks(show, others) {\r\n' \
-  '        let trks = document.getElementById("tracksform").children;\r\n' \
-  '        for (let t=0; t<trks.length; t++) {\r\n' \
-  '          if (trks[t].style.display != (others?"none":"")) {continue;}\r\n' \
-  '          let cb = trks[t].firstElementChild;\r\n' \
+  '        const trks = document.getElementById("tracksform").children;\r\n' \
+  '        for (let t=0, l=trks.length; t<l; t++) {\r\n' \
+  '          if (trks[t].style.display != (others ? "none" : "")) {continue;}\r\n' \
+  '          const cb = trks[t].firstElementChild;\r\n' \
   '          if (cb.checked != show) {\r\n' \
   '            cb.checked = show;\r\n' \
   '            track_checkbox(cb);\r\n' \
@@ -19181,18 +19634,18 @@ class GPXTweakerWebInterfaceServer():
   '          graph_point();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let tr_ind = parseInt(focused.substring(5));\r\n' \
+  '        const tr_ind = parseInt(focused.substring(5));\r\n' \
   '        graph_px = Array(tracks_xy_offsets[tr_ind + 1] - tracks_xy_offsets[tr_ind]);\r\n' \
-  '        let stats = tracks_stats[tr_ind];\r\n' \
+  '        const stats = tracks_stats[tr_ind];\r\n' \
   '        let p_ind = -1;\r\n' \
-  '        for (let s=0; s<stats.length; s++) {\r\n' \
+  '        for (let s=0, l=stats.length; s<l; s++) {\r\n' \
   '          if (stats[s].length == 0) {continue;}\r\n' \
   '          let stat = null;\r\n' \
   '          if (gc[gc.length - 1] != graph_ip.length) {gc.push(graph_ip.length);}\r\n' \
-  '          for (let p=0; p<stats[s].length; p++) {\r\n' \
+  '          for (let p=0, sl=stats[p].length; p<sl; p++) {\r\n' \
   '            p_ind++;\r\n' \
   '            stat = stats[s][p];\r\n' \
-  '            let pt = tracks_pts[tr_ind][s][p];\r\n' \
+  '            const pt = tracks_pts[tr_ind][s][p];\r\n' \
   '            let ea = null;\r\n' \
   '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt[gy_ind + 1]);}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '      function scroll_to_target(center=true, xy=null) {\r\n' \
@@ -19203,7 +19656,7 @@ class GPXTweakerWebInterfaceServer():
   '          hpx = viewpane.offsetWidth / 2 - xy[0] * zoom / tscale;\r\n' \
   '          hpy = viewpane.offsetHeight / 2 - xy[1] * zoom / tscale;\r\n' \
   '        } else {\r\n' \
-  '          let o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
+  '          const o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '          hpx = Math.max(Math.min(hpx, -o - xy[0] * zoom / tscale + viewpane.offsetWidth), o - xy[0] * zoom / tscale);\r\n' \
   '          hpy = Math.max(Math.min(hpy, -o - xy[1] * zoom / tscale + viewpane.offsetHeight), o - xy[1] * zoom / tscale);\r\n' \
   '        }\r\n' \
@@ -19224,10 +19677,10 @@ class GPXTweakerWebInterfaceServer():
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"), false);}\r\n' \
   '        document.getElementById("places").reset();\r\n' \
   '        if (document.getElementById("track" + track + "cont").style.display == "none") {return false;}\r\n' \
-  '        let wm = WGS84toWebMercator(lat, lon);\r\n' \
+  '        const wm = WGS84toWebMercator(lat, lon);\r\n' \
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return false;}\r\n' \
   '        track_click(null, document.getElementById("track" + track + "desc"), true);\r\n' \
-  '        let xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
+  '        const xy = [wm[0] - htopx, htopy - wm[1]];\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
   '        if (navigator_firefox) {window.alert("3D");}\r\n' \
@@ -19245,13 +19698,13 @@ class GPXTweakerWebInterfaceServer():
   '      function magnify_dec() {\r\n' \
   '        if (magnify > 1) {\r\n' \
   '          magnify--;\r\n' \
-  '          document.documentElement.style.setProperty("--magnify", magnify.toString());\r\n' \
+  '          viewpane.style.setProperty("--magnify", magnify.toString());\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function magnify_inc() {\r\n' \
   '        if (magnify < 3) {\r\n' \
   '          magnify++;\r\n' \
-  '          document.documentElement.style.setProperty("--magnify", magnify.toString());\r\n' \
+  '          viewpane.style.setProperty("--magnify", magnify.toString());\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function tracks_filter() {\r\n' \
@@ -19282,54 +19735,54 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      function tracks_cfilter() {\r\n' \
-  '        let cfilters = document.getElementById("cfilterform").getElementsByTagName("input");\r\n' \
+  '        const cfilters = document.getElementById("cfilterform").getElementsByTagName("input");\r\n' \
   '        for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] = true;};\r\n' \
-  '        let conv = [3600, 1000, 1, 1];\r\n' \
+  '        const conv = [3600, 1000, 1, 1];\r\n' \
   '        let cfc = null;\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
   '        for (let cf=0, cfd=0; cf<=3; cfd=2*++cf) {\r\n' \
   '          if (cfilters[cfd].value && cfilters[cfd].checkValidity()) {\r\n' \
-  '            let cfvmin = parseFloat(cfilters[cfd].value) * conv[cf];\r\n' \
+  '            const cfvmin = parseFloat(cfilters[cfd].value) * conv[cf];\r\n' \
   '            if (cfilters[cfd+1].value && cfilters[cfd+1].checkValidity()) {\r\n' \
-  '              let cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
-  '              cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p >= cfvmin && p <= cfvmax;};\r\n' \
+  '              const cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
+  '              cfc = function (t) {const p = tracks_props[t][cf]; return ! isNaN(p) && p >= cfvmin && p <= cfvmax;};\r\n' \
   '            } else {\r\n' \
-  '              cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p >= cfvmin;};\r\n' \
+  '              cfc = function (t) {const p = tracks_props[t][cf]; return ! isNaN(p) && p >= cfvmin;};\r\n' \
   '            }\r\n' \
   '          } else if (cfilters[cfd+1].value && cfilters[cfd+1].checkValidity()) {\r\n' \
-  '            let cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
-  '            cfc = function (t) {let p = tracks_props[t][cf]; return ! isNaN(p) && p <= cfvmax;};\r\n' \
+  '            const cfvmax = parseFloat(cfilters[cfd+1].value) * conv[cf];\r\n' \
+  '            cfc = function (t) {const p = tracks_props[t][cf]; return ! isNaN(p) && p <= cfvmax;};\r\n' \
   '          } else {continue;}\r\n' \
   '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] &&= cfc(t);};\r\n' \
   '        }\r\n' \
   '        if (cfilters[8].value && cfilters[8].checkValidity()) {\r\n' \
-  '          let cfvmin = cfilters[8].valueAsNumber;\r\n' \
+  '          const cfvmin = cfilters[8].valueAsNumber;\r\n' \
   '          if (cfilters[9].value && cfilters[9].checkValidity()) {\r\n' \
-  '            let cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
-  '            cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p >= cfvmin && p < cfvmax;};\r\n' \
+  '            const cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
+  '            cfc = function (t) {const p = tracks_props[t][4]; return ! isNaN(p) && p >= cfvmin && p < cfvmax;};\r\n' \
   '          } else {\r\n' \
-  '            cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p >= cfvmin;};\r\n' \
+  '            cfc = function (t) {const p = tracks_props[t][4]; return ! isNaN(p) && p >= cfvmin;};\r\n' \
   '          }\r\n' \
   '        } else if (cfilters[9].value && cfilters[9].checkValidity()) {\r\n' \
-  '          let cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
-  '          cfc = function (t) {let p = tracks_props[t][4]; return ! isNaN(p) && p < cfvmax;};\r\n' \
+  '          const cfvmax = cfilters[9].valueAsNumber + 86400000;\r\n' \
+  '          cfc = function (t) {const p = tracks_props[t][4]; return ! isNaN(p) && p < cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
   '        if (cfc != null) {\r\n' \
   '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] &&= cfc(t);};\r\n' \
   '        }\r\n' \
   '        if (cfilters[10].value && cfilters[10].checkValidity()) {\r\n' \
-  '          let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
-  '          let cfvmin = parseFloat(cfilters[10].value) * 1000;\r\n' \
+  '          const [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
+  '          const cfvmin = parseFloat(cfilters[10].value) * 1000;\r\n' \
   '          if (cfilters[11].value && cfilters[11].checkValidity()) {\r\n' \
-  '            let cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
-  '            cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d >= cfvmin && d <= cfvmax;};\r\n' \
+  '            const cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
+  '            cfc = function (t) {const lat = tracks_props[t][5][0]; const lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; const d = distance(clat, clon, 0, lat, lon, 0); return d >= cfvmin && d <= cfvmax;};\r\n' \
   '          } else {\r\n' \
-  '            cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d >= cfvmin;};\r\n' \
+  '            cfc = function (t) {const lat = tracks_props[t][5][0]; const lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; const d = distance(clat, clon, 0, lat, lon, 0); return d >= cfvmin;};\r\n' \
   '          }\r\n' \
   '        } else if (cfilters[11].value && cfilters[11].checkValidity()) {\r\n' \
-  '          let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
-  '          let cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
-  '          cfc = function (t) {let lat = tracks_props[t][5][0]; let lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; let d = distance(clat, clon, 0, lat, lon, 0); return d <= cfvmax;};\r\n' \
+  '          const [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
+  '          const cfvmax = parseFloat(cfilters[11].value) * 1000;\r\n' \
+  '          cfc = function (t) {const lat = tracks_props[t][5][0]; const lon = tracks_props[t][5][1]; if (isNaN(lat) || isNaN(lon)) {return false;}; const d = distance(clat, clon, 0, lat, lon, 0); return d <= cfvmax;};\r\n' \
   '        } else {cfc = null;}\r\n' \
   '        if (cfc != null) {\r\n' \
   '          for (let t=0; t<tracks_filts.length; t++) {tracks_filts[t][1] &&= cfc(t);};\r\n' \
@@ -19360,10 +19813,10 @@ class GPXTweakerWebInterfaceServer():
   '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      function input_history(input) {\r\n' \
-  '        let val = input.value;\r\n' \
+  '        const val = input.value;\r\n' \
   '        if (! val) {return;}\r\n' \
-  '        let hist = input.nextElementSibling;\r\n' \
-  '        let opts = Array.from(hist.getElementsByTagName("option"));\r\n' \
+  '        const hist = input.nextElementSibling;\r\n' \
+  '        const opts = Array.from(hist.getElementsByTagName("option"));\r\n' \
   '        let opt = null;\r\n' \
   '        for (let o=0; o<opts.length; o++) {\r\n' \
   '          if (opts[o].value.toLowerCase() == val.toLowerCase()) {\r\n' \
@@ -19379,13 +19832,13 @@ class GPXTweakerWebInterfaceServer():
   '        hist.insertBefore(opt, hist.firstElementChild);\r\n' \
   '      }\r\n' \
   '      function tracks_sort() {\r\n' \
-  '        let crit = document.getElementById("oset").selectedIndex;\r\n' \
-  '        let asc = document.getElementById("sortup").style.display != "none";\r\n' \
-  '        let trks = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
-  '        let n = function (a, b) {return no_sort[a] - no_sort[b]};\r\n' \
+  '        const crit = document.getElementById("oset").selectedIndex;\r\n' \
+  '        const asc = document.getElementById("sortup").style.display != "none";\r\n' \
+  '        const trks = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
+  '        const n = function (a, b) {return no_sort[a] - no_sort[b]};\r\n' \
   '        let c = n;\r\n' \
   '        let vals = [];\r\n' \
-  '        let isNaN = Number.isNaN;\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
   '        function comp_flt(a, b) {\r\n' \
   '          if (a == b || (isNaN(a) && isNaN(b))) {return 0;}\r\n' \
   '          if (isNaN(a)) {return 1;}\r\n' \
@@ -19394,14 +19847,14 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        function comp_name(a, b) {\r\n' \
   '          if (a == b) {return 0;}\r\n' \
-  '          let a_s = a.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
-  '          let b_s = b.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
+  '          const a_s = a.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
+  '          const b_s = b.match(/(.*?)(?:(\\d+)|(?:\\((\\d+)\\)))?$/);\r\n' \
   '          return (asc?1:-1) * (str_comp(a_s[1], b_s[1]) || ((a_s[2]==undefined?-1:parseInt(a_s[2])) - (b_s[2]==undefined?-1:parseInt(b_s[2]))) || ((a_s[3]==undefined?-1:parseInt(a_s[3])) - (b_s[3]==undefined?-1:parseInt(b_s[3]))));\r\n' \
   '        }\r\n' \
   '        function comp_filepath(a, b) {\r\n' \
   '          if (a == b) {return 0;}\r\n' \
-  '          let a_s = a.match(/(.*(?=\\\\)|)\\\\?(.*?)(?:\\.gpx)?$/i);\r\n' \
-  '          let b_s = b.match(/(.*(?=\\\\)|)\\\\?(.*?)(?:\\.gpx)?$/i);\r\n' \
+  '          const a_s = a.match(/(.*(?=\\\\)|)\\\\?(.*?)(?:\\.gpx)?$/i);\r\n' \
+  '          const b_s = b.match(/(.*(?=\\\\)|)\\\\?(.*?)(?:\\.gpx)?$/i);\r\n' \
   '          return (comp_name(a_s[1], b_s[1]) || comp_name(a_s[2], b_s[2]));\r\n' \
   '        }\r\n' \
   '        switch (crit) {\r\n' \
@@ -19423,14 +19876,14 @@ class GPXTweakerWebInterfaceServer():
   '            c = function (a, b) {return comp_flt(tracks_props[a][crit - 3], tracks_props[b][crit - 3]) || n(a, b);};\r\n' \
   '            break;\r\n' \
   '          case 8:\r\n' \
-  '            let [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
+  '            const [clat, clon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy + (hpy - viewpane.offsetHeight / 2) * tscale / zoom);\r\n' \
   '            vals = trks.map(function (t) {return (tracks_props[t][5][0]==null || tracks_props[t][5][1]==null)?NaN:distance(clat, clon, 0, tracks_props[t][5][0], tracks_props[t][5][1], 0);});\r\n' \
   '            c = function (a, b) {return comp_flt(vals[a], vals[b]) || n(a, b);};\r\n' \
   '            break;\r\n' \
   '        }\r\n' \
   '        trks.sort(c);\r\n' \
-  '        let frag = document.createDocumentFragment();\r\n' \
-  '        for (let t of trks) {frag.appendChild(document.getElementById("track" + t.toString() + "cont"));}\r\n' \
+  '        const frag = document.createDocumentFragment();\r\n' \
+  '        for (const t of trks) {frag.appendChild(document.getElementById("track" + t.toString() + "cont"));}\r\n' \
   '        document.getElementById("tracksform").appendChild(frag);\r\n' \
   '        if (focused) {\r\n' \
   '          document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
@@ -19438,19 +19891,18 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function switch_sortorder() {\r\n' \
-  '        let g = document.getElementById("sortup").style.display;\r\n' \
+  '        const g = document.getElementById("sortup").style.display;\r\n' \
   '        document.getElementById("sortup").style.display = document.getElementById("sortdown").style.display;\r\n' \
   '        document.getElementById("sortdown").style.display = g;\r\n' \
   '        gfence(tracks_sort);\r\n' \
   '      }\r\n' \
   '      function switch_cfilterpanel() {\r\n' \
-  '        let cfps = document.getElementById("cfilterpanel").style;\r\n' \
-  '        if (cfps.display == "none") {\r\n' \
-  '          document.getElementById("folderspanel").style.display = "none";\r\n' \
-  '          cfps.display = "";\r\n' \
-  '          document.getElementById("cfdurmin").focus();\r\n' \
+  '        const dps = document.getElementById("dpanels").style;\r\n' \
+  '        if (dps.getPropertyValue("--panel") == "cfilterpanel") {\r\n' \
+  '          dps.setProperty("--panel", "none");\r\n' \
   '        } else {\r\n' \
-  '          cfps.display = "none";\r\n' \
+  '          dps.setProperty("--panel", "cfilterpanel");\r\n' \
+  '          document.getElementById("cfdurmin").focus();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function cfilter_updown(button, step) {\r\n' \
@@ -19508,32 +19960,27 @@ class GPXTweakerWebInterfaceServer():
   '        return tracks_vfilter();\r\n' \
   '      }\r\n' \
   '      function switch_folderspanel() {\r\n' \
-  '        let fps = document.getElementById("folderspanel").style;\r\n' \
-  '        if (fps.display == "none") {\r\n' \
-  '          document.getElementById("cfilterpanel").style.display = "none";\r\n' \
-  '          fps.display = "";\r\n' \
-  '        } else {\r\n' \
-  '          fps.display = "none";\r\n' \
-  '        }\r\n' \
+  '        const dps = document.getElementById("dpanels").style;\r\n' \
+  '        dps.setProperty("--panel", dps.getPropertyValue("--panel") == "folderspanel" ? "none" : "folderspanel");\r\n' \
   '      }\r\n' \
   '      function folders_select() {\r\n' \
-  '        let folders = Array.from(document.getElementById("foldersform").getElementsByTagName("input"));\r\n' \
+  '        const folders = Array.from(document.getElementById("foldersform").getElementsByTagName("input"));\r\n' \
   '        if (folders.every((f) => f.checked)) {\r\n' \
   '          document.getElementById("ffbutton").style.backgroundColor = "";\r\n' \
   '        } else {\r\n' \
   '          document.getElementById("ffbutton").style.backgroundColor = "rgb(50,95,130)";\r\n' \
   '        }\r\n' \
-  '        for (let t=0, f=0; t<tracks_pts.length; t++) {\r\n' \
-  '          let tf = document.getElementById("track" + t.toString() + "folder").value.toLowerCase();\r\n' \
+  '        for (let t=0, f=0, l=tracks_pts.length; t<l; t++) {\r\n' \
+  '          const tf = document.getElementById("track" + t.toString() + "folder").value.toLowerCase();\r\n' \
   '          while (tf.indexOf(folders[f].value.toLowerCase()) < 0) {if (++f == folders.length) {f = 0;};}\r\n' \
   '          tracks_filts[t][2] = folders[f].checked;\r\n' \
   '        }\r\n' \
   '        tracks_filter();\r\n' \
   '      }\r\n' \
   '      function folders_whole(tick) {\r\n' \
-  '       let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
-  '       for (let f=0; f<folders.length; f++) {\r\n' \
-  '         folders[f].checked = tick;\r\n' \
+  '       const folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
+  '       for (const folder of folders) {\r\n' \
+  '         folder.checked = tick;\r\n' \
   '       }\r\n' \
   '       folders_select();\r\n' \
   '      }\r\n' \
@@ -19560,15 +20007,15 @@ class GPXTweakerWebInterfaceServer():
   '        if (c) {navigator.clipboard.writeText(msg);}\r\n' \
   '      }\r\n' \
   '      function tracks_smooth() {\r\n' \
-  '        let drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
+  '        const drange = parseFloat(document.getElementById("dfdist").innerHTML);\r\n' \
   '        tracks_xys_smoothed = tracks_xys.slice();\r\n' \
   '        let ind = 0;\r\n' \
-  '        for (let t=0; t<tracks_pts.length; t++) {\r\n' \
-  '          let segs = tracks_pts[t];\r\n' \
-  '          let tt = htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top);\r\n' \
-  '          let tdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
+  '        for (let t=0, l=tracks_pts.length; t<l; t++) {\r\n' \
+  '          const segs = tracks_pts[t];\r\n' \
+  '          const tt = htopy - prop_to_wmvalue(document.getElementById("track" + t.toString()).style.top);\r\n' \
+  '          const tdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          for (const seg of segs) {\r\n' \
-  '            let nind = ind + seg.length;\r\n' \
+  '            const nind = ind + seg.length;\r\n' \
   '            let dirx = null;\r\n' \
   '            let diry = null;\r\n' \
   '            let pp = null;\r\n' \
@@ -19665,9 +20112,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.response == "") {return error_trcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById(trk + "file").value = t.response;\r\n' \
-  '        let uri = document.getElementById(trk + "visible").value;\r\n' \
+  '        const uri = document.getElementById(trk + "visible").value;\r\n' \
   '        document.getElementById(trk + "visible").value = uri.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + t.response);\r\n' \
-  '        let ind = parseInt(trk.substring(5));\r\n' \
+  '        const ind = parseInt(trk.substring(5));\r\n' \
   '        let npos = no_sort[ind];\r\n' \
   '        for (let i=0; i<tracks_pts.length; i++) {\r\n' \
   '          if (document.getElementById("track" + i.toString() + "visible").value == uri) {\r\n' \
@@ -19708,10 +20155,10 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
-  '        let foc = focused;\r\n' \
+  '        const foc = focused;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
-  '        let msg = JSON.parse(t.response);\r\n' \
-  '        for (let n in msg) {\r\n' \
+  '        const msg = JSON.parse(t.response);\r\n' \
+  '        for (const n in msg) {\r\n' \
   '          let ch = null;\r\n' \
   '          if (n.indexOf("cont") >= 0) {\r\n' \
   '            ch = document.getElementById(n.replace("cont", "visible")).checked;\r\n' \
@@ -19762,31 +20209,31 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_incorporate_integrate(after=null) {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
-  '        let foc = focused;\r\n' \
+  '        const foc = focused;\r\n' \
   '        if (foc == "") {return;}\r\n' \
-  '        let ind1 = parseInt(foc.substring(5));\r\n' \
+  '        const ind1 = parseInt(foc.substring(5));\r\n' \
   '        let ind2 = null;\r\n' \
-  '        let trks = document.getElementById("tracksform").children;\r\n' \
+  '        const trks = document.getElementById("tracksform").children;\r\n' \
   '        for (let t=0; t<trks.length; t++) {\r\n' \
   '          if (t == ind1) {continue;}\r\n' \
-  '          let tr = document.getElementById("track" + t.toString() + "cont");\r\n' \
+  '          const tr = document.getElementById("track" + t.toString() + "cont");\r\n' \
   '          if (! tr.firstElementChild.checked || tr.style.display == "none") {continue;}\r\n' \
   '          if (ind2 != null) {show_msg(after==null?"{#jmincorporate4#}":"{#jmintegrate4#}", 10); return;}\r\n' \
   '          ind2 = t;\r\n' \
   '        }\r\n' \
   '        if (ind2 == null) {show_msg(after==null?"{#jmincorporate4#}":"{#jmintegrate4#}", 10); return;}\r\n' \
   '        if (after != null) {\r\n' \
-  '          let uri = document.getElementById("track" + ind2.toString() + "visible").value;\r\n' \
+  '          const uri = document.getElementById("track" + ind2.toString() + "visible").value;\r\n' \
   '          for (let i=0; i<tracks_pts.length; i++) {\r\n' \
   '            if (i != ind2 && document.getElementById("track" + i.toString() + "visible").value == uri) {show_msg("{#jmintegrate5#}", 10); return;}\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
-  '        let msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => gfence((e) => {let r = load_ticb(e.target, ind1, ind2); if (r) {show_msg(after==null?"{#jmincorporate2#}":"{#jmintegrate2#}", 5, msgn);} else {show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);}; return r;}, e);\r\n' \
-  '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null?"{#jmincorporate3#}":"{#jmintegrate3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("GET", (after==null?"/incorporate?":("/integrate" + (after?"after?":"before?"))) + encodeURIComponent(ind1.toString()) + "," + encodeURIComponent(ind2.toString()));\r\n' \
+  '        const msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
+  '        xhrtr.onload = (e) => gfence((e) => {const r = load_ticb(e.target, ind1, ind2); if (r) {show_msg(after==null ? "{#jmincorporate2#}" : "{#jmintegrate2#}", 5, msgn);} else {show_msg(after==null ? "{#jmincorporate3#}" : "{#jmintegrate3#}", 10, msgn);}; return r;}, e);\r\n' \
+  '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null ? "{#jmincorporate3#}" : "{#jmintegrate3#}", 10, msgn);};\r\n' \
+  '        xhrtr.open("GET", (after==null ? "/incorporate?" : ("/integrate" + (after?"after?" : "before?"))) + encodeURIComponent(ind1.toString()) + "," + encodeURIComponent(ind2.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
@@ -19796,21 +20243,21 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.response == "") {return error_trcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
-  '        let msg = JSON.parse(t.response);\r\n' \
-  '        for (let n in msg) {\r\n' \
+  '        const msg = JSON.parse(t.response);\r\n' \
+  '        for (const n in msg) {\r\n' \
   '          if (n.indexOf("cont") >= 0) {\r\n' \
-  '            let e = document.createElement("span");\r\n' \
+  '            const e = document.createElement("span");\r\n' \
   '            document.getElementById("tracksform").appendChild(e);\r\n' \
   '            e.outerHTML = msg[n];\r\n' \
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
-  '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
-  '            let w = document.getElementById("waydots0");\r\n' \
-  '            document.getElementById("handle").insertBefore(e, w==null?targetmark:w);\r\n' \
-  '            e.outerHTML = msg[n].substring(2) + "  ";\r\n' \
+  '            const e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
+  '            const w = document.getElementById("waydots0");\r\n' \
+  '            document.getElementById("handle").insertBefore(e, w == null ? targetmark : w);\r\n' \
+  '            e.outerHTML = msg[n];\r\n' \
   '          } else {\r\n' \
-  '            let e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
+  '            const e = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '            document.getElementById("handle").insertBefore(e, targetmark);\r\n' \
-  '            e.outerHTML = msg[n].substring(2) + "  ";\r\n' \
+  '            e.outerHTML = msg[n];\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        no_sort.push(tracks_pts.length);\r\n' \
@@ -19835,8 +20282,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_new() {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
-  '        let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
-  '        let t = 0;\r\n' \
+  '        const folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
   '        let f_ind = null;\r\n' \
   '        for (let f=0; f<folders.length; f++) {\r\n' \
   '          if (folders[f].checked) {\r\n' \
@@ -19847,7 +20293,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (f_ind == null) {return;}\r\n' \
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
-  '        let msgn = show_msg("{#jmnew1#}", 0);\r\n' \
+  '        const msgn = show_msg("{#jmnew1#}", 0);\r\n' \
   '        xhrtr.onload = (e) => gfence((e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
@@ -19860,26 +20306,23 @@ class GPXTweakerWebInterfaceServer():
   '        window.location.assign(window.location.href.replace("/GPXExplorer.html", "/edit?" + focused.substring(5) + "," + ((viewpane.offsetWidth / 2 - hpx) * tscale / zoom + htopx).toString() + "|" + (htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom).toString()));\r\n' \
   '      }\r\n' \
   '      function open_webmapping() {\r\n' \
-  '        let wmsel = document.getElementById("iset");\r\n' \
+  '        const wmsel = document.getElementById("iset");\r\n' \
   '        if (focused == "" || wmsel.options.length == 0 || wmsel.selectedIndex < 0) {return;}\r\n' \
-  '        let c = tracks_props[parseInt(focused.substring(5))][5];\r\n' \
+  '        const c = tracks_props[parseInt(focused.substring(5))][5];\r\n' \
   '        if (isNaN(c[0]) || isNaN(c[1])) {return;}\r\n' \
   '        window.open(wmsel.options[wmsel.selectedIndex].value.replace("{lat}", c[0].toString()).replace("{lon}", c[1].toString()));\r\n' \
   '      }\r\n' \
   '      function switch_mtpanel() {\r\n' \
-  '        if (document.getElementById("mtpanel").style.display != "initial") {\r\n' \
-  '          document.getElementById("mtpanel").style.display = "initial";\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("mtpanel").style.display = "none";\r\n' \
-  '        }\r\n' \
-  '        for (let fp of [document.getElementById("filterpanel1"), document.getElementById("filterpanel2"), document.getElementById("filterpanel3")]) {fp.style.display = "none";}\r\n' \
-  '        document.getElementById("v3Dpanel").style.display = "none";\r\n' \
+  '        const ps = document.getElementById("panels").style;\r\n' \
+  '        ps.setProperty("--panel", ps.getPropertyValue("--panel") == "mtpanel" ? "none" : "mtpanel");\r\n' \
   '      }\r\n' \
   '      function error_mcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
-  '        if (document.getElementById("mediapreview").style.display != "none") {switch_mediapreview();}\r\n' \
+  '        if (document.getElementById("lpanels").style.getPropertyValue("--panel") == "mediapreview") {switch_mediapreview();}\r\n' \
   '        document.getElementById("switchmedia").disabled = false;\r\n' \
   '        document.getElementById("switchmedia").style.pointerEvents = "";\r\n' \
+  '        if (media_uri_dt == null) {media_gps_ar = null;}\r\n' \
+  '        media_uri_dt = null;\r\n' \
   '        return false;\r\n' \
   '      }\r\n' \
   '      function load_mcb(t) {\r\n' \
@@ -19891,21 +20334,21 @@ class GPXTweakerWebInterfaceServer():
   '          media_corners = new Float64Array(media_gps_ar.length / 3 * 4);\r\n' \
   '        } else {\r\n' \
   '          media_uri_dt = t.response.split("|");\r\n' \
-  '          let rv = RegExp(/\\.mp4($|\\r)/, "i");\r\n' \
+  '          const rv = RegExp(/\\.mp4($|\\r)/, "i");\r\n' \
   '          media_isvid = media_uri_dt.map((s) => rv.test(s));\r\n' \
   '        }\r\n' \
   '        show_media();\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function media_process() {\r\n' \
-  '        let nm = media_gps_ar.length / 3;\r\n' \
+  '        const nm = media_gps_ar.length / 3;\r\n' \
   '        media_sides = [];\r\n' \
-  '        let zf = zoom / tscale;\r\n' \
-  '        let ts = parseFloat(document.getElementById("mtsize").innerHTML) / 2;\r\n' \
+  '        const zf = zoom / tscale;\r\n' \
+  '        const ts = parseFloat(document.getElementById("mtsize").innerHTML) / 2;\r\n' \
   '        for (let m=0; m<nm; m++) {\r\n' \
-  '          let mx = (media_gps_ar[3 * m] - htopx) * zf;\r\n' \
-  '          let my = (htopy - media_gps_ar[3 * m + 1]) * zf;\r\n' \
-  '          let mr = media_gps_ar[3 * m + 2];\r\n' \
+  '          const mx = (media_gps_ar[3 * m] - htopx) * zf;\r\n' \
+  '          const my = (htopy - media_gps_ar[3 * m + 1]) * zf;\r\n' \
+  '          const mr = media_gps_ar[3 * m + 2];\r\n' \
   '          if (mr >= 1) {\r\n' \
   '            media_corners.set([mx - ts, my - ts / mr, mx + ts, my + ts / mr], 4 * m);\r\n' \
   '          } else {\r\n' \
@@ -19922,16 +20365,16 @@ class GPXTweakerWebInterfaceServer():
   '        media_div.setAttribute("onmousedown", "event.stopPropagation();event.preventDefault();");\r\n' \
   '        media_div.setAttribute("onclick", "event.stopPropagation();event.preventDefault();enlarge_media(event.target.id.substring(6));");\r\n' \
   '        media_div.setAttribute("oncontextmenu", "event.stopPropagation();event.preventDefault();");\r\n' \
-  '        let nm = media_corners.length / 4;\r\n' \
-  '        let md = Array(nm);\r\n' \
+  '        const nm = media_corners.length / 4;\r\n' \
+  '        const md = Array(nm);\r\n' \
   '        md.fill([]);\r\n' \
-  '        let cs = [];\r\n' \
+  '        const cs = [];\r\n' \
   '        let xl = -hpx;\r\n' \
   '        let xr = xl + viewpane.offsetWidth;\r\n' \
   '        let yt = -hpy;\r\n' \
   '        let yb = yt + viewpane.offsetHeight;\r\n' \
-  '        for (let l of media_sides) {\r\n' \
-  '          let m = l.m;\r\n' \
+  '        for (const l of media_sides) {\r\n' \
+  '          const m = l.m;\r\n' \
   '          if (md[m] == null) {continue;}\r\n' \
   '          if (md[m].length == 0 && (media_corners[4 * m] >= xr || media_corners[4 * m + 2] <= xl || media_corners[4 * m + 1] >= yb || media_corners[4 * m + 3] <= yt)) {\r\n' \
   '            md[m] = null;\r\n' \
@@ -19944,7 +20387,7 @@ class GPXTweakerWebInterfaceServer():
   '            cs.push(m);\r\n' \
   '            continue;\r\n' \
   '          }\r\n' \
-  '          let mb = media_corners[4 * m + 3];\r\n' \
+  '          const mb = media_corners[4 * m + 3];\r\n' \
   '          if (mb <= media_corners[4 * cs[0] + 1]) {\r\n' \
   '            md[m] = [m];\r\n' \
   '            cs.splice(0, 0, m);\r\n' \
@@ -19970,14 +20413,14 @@ class GPXTweakerWebInterfaceServer():
   '            md[cs[s0]].push(m);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let media_ex_hold = media_hold;\r\n' \
+  '        const media_ex_hold = media_hold;\r\n' \
   '        media_hold = new Object;\r\n' \
   '        [xl, xr] = [2 * xl - xr, 2 * xr - xl];\r\n' \
   '        [yt, yb] = [2 * yt - yb, 2 * yb - yt];\r\n' \
   '        if (media_ex_hold) {\r\n' \
   '          for (const m in media_ex_hold) {\r\n' \
   '            if (md[m] || (media_corners[4 * m] < xr && media_corners[4 * m + 2] > xl && media_corners[4 * m + 1] < yb && media_corners[4 * m + 3] > yt)) {\r\n' \
-  '              let med = media_ex_hold[m];\r\n' \
+  '              const med = media_ex_hold[m];\r\n' \
   '              if (! (media_isvid[m]?med.videoWidth:med.naturalWidth)) {continue;}\r\n' \
   '              if (media_corners_updated) {\r\n' \
   '                med.style.width = (media_corners[4 * m + 2] - media_corners[4 * m]).toString() + "px";\r\n' \
@@ -19993,8 +20436,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (md[m] == null) {continue;}\r\n' \
   '          let med = media_hold[m];\r\n' \
   '          if (! med) {\r\n' \
-  '            med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
-  '            let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
+  '            med = document.createElement(media_isvid[m] ? "video" : "img");\r\n' \
+  '            const port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
   '            if (media_isvid[m]) {med.preload = "metadata"};\r\n' \
   '            med.src = "http://" + host + port.toString() + "/media?" + m.toString();\r\n' \
   '            med.alt = "";\r\n' \
@@ -20016,9 +20459,9 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("switchmedia").style.pointerEvents = "none";\r\n' \
   '        if (media_gps_ar == null) {\r\n' \
   '          media_gps_ar = [];\r\n' \
-  '          let xhrp = new XMLHttpRequest();\r\n' \
-  '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
-  '          xhrp.onload = (e) => {load_mcb(e.target)?show_msg("{#jmmedia1#}", 0.1, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '          const xhrp = new XMLHttpRequest();\r\n' \
+  '          const msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
+  '          xhrp.onload = (e) => {load_mcb(e.target) ? show_msg("{#jmmedia1#}", 0.1, msgn) : show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
   '          xhrp.onerror = (e) => {error_mcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
   '          xhrp.open("GET", "/media/gps_ar");\r\n' \
   '          xhrp.responseType = "arraybuffer";\r\n' \
@@ -20027,27 +20470,27 @@ class GPXTweakerWebInterfaceServer():
   '          xhrp.send();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        if (media_gps_ar.length == 0) {return;}\r\n' \
-  '        if (media_uri_dt == null) {\r\n' \
-  '          media_uri_dt = [];\r\n' \
-  '          let xhrp = new XMLHttpRequest();\r\n' \
-  '          let msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
-  '          xhrp.onload = (e) => {load_mcb(e.target)?show_msg("{#jmmedia2#}", 2, msgn):show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
-  '          xhrp.onerror = (e) => {error_mcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
-  '          xhrp.open("GET", "/media/uri_dt");\r\n' \
-  '          xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
-  '          xhr_ongoing++;\r\n' \
-  '          xhrp.send();\r\n' \
-  '          return;\r\n' \
+  '        if (media_gps_ar.length != 0) {\r\n' \
+  '          if (media_uri_dt == null) {\r\n' \
+  '            media_uri_dt = [];\r\n' \
+  '            const xhrp = new XMLHttpRequest();\r\n' \
+  '            const msgn = show_msg("{#jmmedia1#}", 0);\r\n' \
+  '            xhrp.onload = (e) => {load_mcb(e.target) ? show_msg("{#jmmedia2#}", 2, msgn) : show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '            xhrp.onerror = (e) => {error_mcb(); show_msg("{#jmmedia3#}", 10, msgn);};\r\n' \
+  '            xhrp.open("GET", "/media/uri_dt");\r\n' \
+  '            xhrp.setRequestHeader("If-Match", sessionid);\r\n' \
+  '            xhr_ongoing++;\r\n' \
+  '            xhrp.send();\r\n' \
+  '            return;\r\n' \
+  '          }\r\n' \
+  '          if (media_sides == null) {media_process();}\r\n' \
+  '          if (media_div == null) {media_gen();}\r\n' \
+  '          let svgs = document.getElementById("handle").getElementsByTagName("svg");\r\n' \
+  '          const ref = svgs.length > 0 ? svgs[0] : null;\r\n' \
+  '          svgs = null;\r\n' \
+  '          document.getElementById("handle").insertBefore(media_div, ref);\r\n' \
+  '          media_visible = true;\r\n' \
   '        }\r\n' \
-  '        if (media_sides == null) {media_process();}\r\n' \
-  '        if (media_div == null) {media_gen();}\r\n' \
-  '        let svgs = document.getElementById("handle").getElementsByTagName("svg");\r\n' \
-  '        let ref = null;\r\n' \
-  '        if (svgs.length > 0) {ref = svgs[0];}\r\n' \
-  '        svgs = null;\r\n' \
-  '        document.getElementById("handle").insertBefore(media_div, ref);\r\n' \
-  '        media_visible = true;\r\n' \
   '        document.getElementById("switchmedia").disabled = false;\r\n' \
   '        document.getElementById("switchmedia").style.pointerEvents = "";\r\n' \
   '      }\r\n' \
@@ -20071,22 +20514,22 @@ class GPXTweakerWebInterfaceServer():
   '      function show_hide_media() {\r\n' \
   '        if (media_visible) {\r\n' \
   '          hide_media();\r\n' \
-  '          if (document.getElementById("mediapreview").style.display != "none") {switch_mediapreview();}\r\n' \
+  '          if (document.getElementById("lpanels").style.getPropertyValue("--panel") == "mediapreview") {switch_mediapreview();}\r\n' \
   '        } else {\r\n' \
   '          show_media();\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function enlarge_media(mids) {\r\n' \
   '        let mview = document.getElementById("mediapreview");\r\n' \
-  '        if (mview.style.display == "none") {\r\n' \
+  '        if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "mediapreview") {\r\n' \
   '          mview = document.getElementById("mediaview");\r\n' \
   '          mview.style.display = "block";\r\n' \
   '        }\r\n' \
   '        mview.innerHTML = "";\r\n' \
   '        mview.dataset.sl = "0";\r\n' \
-  '        for (let m of mids.split(",")) {\r\n' \
-  '          let med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
-  '          let port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
+  '        for (const m of mids.split(",")) {\r\n' \
+  '          const med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
+  '          const port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
   '          if (media_isvid[m]) {\r\n' \
   '            med.preload = "metadata";\r\n' \
   '            med.controls = true;\r\n' \
@@ -20104,26 +20547,23 @@ class GPXTweakerWebInterfaceServer():
   '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
   '      }\r\n' \
   '      function switch_mediapreview(other=false) {\r\n' \
-  '        let mpview = document.getElementById("mediapreview");\r\n' \
-  '        if (mpview.style.display == "none") {\r\n' \
-  '          if (other) {return;}\r\n' \
-  '          if (document.getElementById("graph").style.display != "none") {switch_graph();}\r\n' \
-  '          switch_spanel(true);\r\n' \
-  '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          mpview.dataset.sl = "0";\r\n' \
-  '          mpview.style.display = "block";\r\n' \
-  '          rescale();\r\n' \
-  '          if (! media_visible) {show_media();}\r\n' \
-  '        } else {\r\n' \
+  '        const lps = document.getElementById("lpanels").style;\r\n' \
+  '        const lpsv = lps.getPropertyValue("--panel");\r\n' \
+  '        const mpview = document.getElementById("mediapreview");\r\n' \
+  '        if (lpsv == "mediapreview") {\r\n' \
+  '          lps.setProperty("--panel", "none");\r\n' \
   '          mpview.innerHTML = "";\r\n' \
-  '          mpview.style.display = "none";\r\n' \
   '          mpview.dataset.sl = "0";\r\n' \
-  '          if (! other) {\r\n' \
-  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            rescale();\r\n' \
-  '          }\r\n' \
+  '          if (! other) {rescale();}\r\n' \
+  '        } else {\r\n' \
+  '          if (other) {return;}\r\n' \
+  '          switch_graph(true);\r\n' \
+  '          switch_spanel(true);\r\n' \
+  '          lps.setProperty("--panel", "mediapreview");\r\n' \
+  '          const mpview = document.getElementById("mediapreview");\r\n' \
+  '          mpview.dataset.sl = "0";\r\n' \
+  '          if (lpsv == "none") {rescale();}\r\n' \
+  '          if (! media_visible) {show_media();}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function close_mediaview(e) {\r\n' \
@@ -20143,10 +20583,10 @@ class GPXTweakerWebInterfaceServer():
   '        let b = track_boundaries();\r\n' \
   '        if (b == null) {return;}\r\n' \
   '        if (displayed) {\r\n' \
-  '          b = [Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)) - htopx, Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.parentNode.offsetWidth - hpx) * tscale / zoom)) - htopx, -Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)) + htopy, -Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.parentNode.offsetHeight) * tscale / zoom)) + htopy];\r\n' \
+  '          b = [Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)) - htopx, Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.offsetWidth - hpx) * tscale / zoom)) - htopx, -Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)) + htopy, -Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.offsetHeight) * tscale / zoom)) + htopy];\r\n' \
   '        }\r\n' \
-  '        let cwidth = Math.ceil((b[1] - b[0]) / tscale * zoom);\r\n' \
-  '        let cheight = Math.ceil((b[3] - b[2]) / tscale * zoom);\r\n' \
+  '        const cwidth = Math.ceil((b[1] - b[0]) / tscale * zoom);\r\n' \
+  '        const cheight = Math.ceil((b[3] - b[2]) / tscale * zoom);\r\n' \
   '        if (cwidth > 11000 || cheight > 11000) {\r\n' \
   '          show_msg("{#jmdownmap7#}", 10);\r\n' \
   '          return;\r\n' \
@@ -20154,7 +20594,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").disabled = true;\r\n' \
   '        document.getElementById("tset").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmdownmap1#}", 0);\r\n' \
-  '        let mcnv2d = document.createElement("canvas");\r\n' \
+  '        const mcnv2d = document.createElement("canvas");\r\n' \
   '        let ctx = mcnv2d.getContext("2d");\r\n' \
   '        mcnv2d.width = cwidth;\r\n' \
   '        mcnv2d.height = cheight;\r\n' \
@@ -20165,24 +20605,23 @@ class GPXTweakerWebInterfaceServer():
   '        let prom = null;\r\n' \
   '        let prom_c = null;\r\n' \
   '        if (mode == "map") {\r\n' \
-  '          let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
-  '          let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
-  '          let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
-  '          let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
-  '          let rleft = parseInt(vleft / twidth);\r\n' \
-  '          let rright = parseInt(vright / twidth);\r\n' \
-  '          let rtop = parseInt(vtop / theight);\r\n' \
-  '          let rbottom = parseInt(vbottom / theight);\r\n' \
+  '          const vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '          const vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '          const vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '          const vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '          const rleft = parseInt(vleft / twidth);\r\n' \
+  '          const rright = parseInt(vright / twidth);\r\n' \
+  '          const rtop = parseInt(vtop / theight);\r\n' \
+  '          const rbottom = parseInt(vbottom / theight);\r\n' \
   '          prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '          prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '          let tile = new Image();\r\n' \
+  '          const tile = new Image();\r\n' \
   '          tile.onload = function (e) {ctx.drawImage(tile, Math.round(- vleft * zoom), Math.round(- vtop * zoom), Math.round((twidth - vleft) * zoom) - Math.round(- vleft * zoom), Math.round((theight - vtop) * zoom) - Math.round(- vtop * zoom)); prom_res();};\r\n' \
   '          tile.onerror = function (e) {prom_res();};\r\n' \
   '          tile.src = "/map/map" + text;\r\n' \
   '          await prom;\r\n' \
   '        } else {\r\n' \
-  '          for (let l=0; l<layers.length; l++) {\r\n' \
-  '            let layer = layers[l];\r\n' \
+  '          for (const layer of layers) {\r\n' \
   '            tmatrix = layer.matrix;\r\n' \
   '            ttopx = layer.topx;\r\n' \
   '            ttopy = layer.topy;\r\n' \
@@ -20190,14 +20629,14 @@ class GPXTweakerWebInterfaceServer():
   '            theight = layer.height;\r\n' \
   '            text = layer.ext;\r\n' \
   '            if (twidth == 0 || theight == 0) {continue;}\r\n' \
-  '            let vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
-  '            let vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
-  '            let vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
-  '            let vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
-  '            let rleft = parseInt(vleft / twidth);\r\n' \
-  '            let rright = parseInt(vright / twidth);\r\n' \
-  '            let rtop = parseInt(vtop / theight);\r\n' \
-  '            let rbottom = parseInt(vbottom / theight);\r\n' \
+  '            const vleft = (b[0] + htopx - ttopx) / tscale;\r\n' \
+  '            const vtop = (ttopy - htopy + b[2]) / tscale;\r\n' \
+  '            const vright = (b[1] + htopx - ttopx) / tscale;\r\n' \
+  '            const vbottom = (ttopy - htopy + b[3]) / tscale;\r\n' \
+  '            const rleft = parseInt(vleft / twidth);\r\n' \
+  '            const rright = parseInt(vright / twidth);\r\n' \
+  '            const rtop = parseInt(vtop / theight);\r\n' \
+  '            const rbottom = parseInt(vbottom / theight);\r\n' \
   '            if (tlayers.has(tset)) {\r\n' \
   '              ctx.globalAlpha = parseFloat(opacities.get(tset)[l]);\r\n' \
   '              if (tlayers.get(tset)[l][1].indexOf("x") >= 0) {\r\n' \
@@ -20212,7 +20651,7 @@ class GPXTweakerWebInterfaceServer():
   '            prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '            if (text == ".json") {\r\n' \
   '              if (tmaplibre != true) {continue;}\r\n' \
-  '              let cjdiv = document.createElement("div");\r\n' \
+  '              const cjdiv = document.createElement("div");\r\n' \
   '              cjdiv.style.visibility = "hidden";\r\n' \
   '              cjdiv.style.position = "absolute";\r\n' \
   '              cjdiv.style.top = "0px";\r\n' \
@@ -20220,13 +20659,13 @@ class GPXTweakerWebInterfaceServer():
   '              cjdiv.style.maxHeight = "10px";\r\n' \
   '              cjdiv.style.maxWidth = "10px";\r\n' \
   '              cjdiv.style.overflow = "hidden";\r\n' \
-  '              let jdiv = document.createElement("div");\r\n' \
+  '              const jdiv = document.createElement("div");\r\n' \
   '              cjdiv.appendChild(jdiv);\r\n' \
   '              document.body.append(cjdiv);\r\n' \
   '              jdiv.style.width = (cwidth / zoom).toString() + "px";\r\n' \
   '              jdiv.style.height = (cheight / zoom).toString() + "px";\r\n' \
   '              jdiv.backgroundColor = "rgba(0,0,0,0)";\r\n' \
-  '              let [lat, lon] = WebMercatortoWGS84((b[0] + b[1]) / 2 + htopx, -(b[2] + b[3]) / 2 + htopy);\r\n' \
+  '              const [lat, lon] = WebMercatortoWGS84((b[0] + b[1]) / 2 + htopx, -(b[2] + b[3]) / 2 + htopy);\r\n' \
   '              let jmap = null;\r\n' \
   '              try {\r\n' \
   '                jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, preserveDrawingBuffer: true, pixelRatio: zoom, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1});\r\n' \
@@ -20239,10 +20678,10 @@ class GPXTweakerWebInterfaceServer():
   '              document.body.removeChild(cjdiv);\r\n' \
   '            } else {\r\n' \
   '              prom_c = (rbottom - rtop + 1) * (rright - rleft + 1);\r\n' \
-  '              let tsuf = text + "?" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
+  '              const tsuf = text + "?" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
   '                for (let col=rleft; col<=rright; col++) {\r\n' \
-  '                  let tile = new Image();\r\n' \
+  '                  const tile = new Image();\r\n' \
   '                  tile.onload = function (e) {ctx.drawImage(tile, Math.round((col * twidth - vleft) * zoom), Math.round((row * theight - vtop) * zoom), Math.round(((col + 1) * twidth - vleft) * zoom) - Math.round((col * twidth - vleft) * zoom), Math.round(((row + 1) * theight - vtop) * zoom) - Math.round((row * theight - vtop) * zoom)); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '                  tile.onerror = function (e) {prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '                  tile.crossOrigin = "anonymous";\r\n' \
@@ -20257,15 +20696,15 @@ class GPXTweakerWebInterfaceServer():
   '            ctx.filter = "";\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let xs = new XMLSerializer;\r\n' \
+  '        const xs = new XMLSerializer;\r\n' \
   '        ctx.globalCompositeOperation = "source-over";\r\n' \
-  '        let scb = document.getElementById("scalebox");\r\n' \
-  '        let scl = document.getElementById("scaleline");\r\n' \
-  '        let scv = document.getElementById("scalevalue");\r\n' \
+  '        const scb = document.getElementById("scalebox");\r\n' \
+  '        const scl = document.getElementById("scaleline");\r\n' \
+  '        const scv = document.getElementById("scalevalue");\r\n' \
   '        ctx.fillStyle = "rgba(255,255,255,0.7)";\r\n' \
   '        ctx.fillRect(3, cheight - scb.offsetHeight - 3, scb.offsetWidth, scb.offsetHeight);\r\n' \
-  '        let scli = new Image;\r\n' \
-  '        let scliu = URL.createObjectURL(new Blob([xs.serializeToString(scl)], {type: "image/svg+xml"}));\r\n' \
+  '        const scli = new Image;\r\n' \
+  '        const scliu = URL.createObjectURL(new Blob([xs.serializeToString(scl)], {type: "image/svg+xml"}));\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        scli.onload = function (e) {URL.revokeObjectURL(scliu); ctx.drawImage(scli, 5, cheight - scl.getBoundingClientRect().height - 5); prom_res();};\r\n' \
   '        scli.onerror = function (e) {URL.revokeObjectURL(scliu); prom_res();};\r\n' \
@@ -20275,25 +20714,25 @@ class GPXTweakerWebInterfaceServer():
   '        ctx.fillStyle = "rgba(0,0,0,1)";\r\n' \
   '        ctx.fillText(scv.innerText, 9 + scl.getBoundingClientRect().width, cheight - 5);\r\n' \
   '        msgn = show_msg("{#jmdownmap2#}", 0, msgn);\r\n' \
-  '        let trks = document.getElementById("tracksform").children;\r\n' \
-  '        let trdata = [];\r\n' \
-  '        for (let t=0; t<trks.length; t++) {\r\n' \
-  '          if (trks[t].firstElementChild.checked) {\r\n' \
-  '            let trkid = trks[t].id.slice(5,-4);\r\n' \
-  '            let trck = document.getElementById("track" + trkid);\r\n' \
+  '        const trks = document.getElementById("tracksform").children;\r\n' \
+  '        const trdata = [];\r\n' \
+  '        for (const trk of trks) {\r\n' \
+  '          if (trk.firstElementChild.checked) {\r\n' \
+  '            const trkid = trk.id.slice(5,-4);\r\n' \
+  '            const trck = document.getElementById("track" + trkid);\r\n' \
   '            if (displayed) {\r\n' \
-  '              let trb = track_boundaries(trck);\r\n' \
+  '              const trb = track_boundaries(trck);\r\n' \
   '              if (trb == null || trb[0] > b[1] || trb[1] < b[0] || trb[2] > b[3] || trb[3] < b[2]) {continue;}\r\n' \
   '            }\r\n' \
-  '            let wpt = document.getElementById("waydots" + trkid);\r\n' \
-  '            let tcs = getComputedStyle(trck);\r\n' \
-  '            let pcs = getComputedStyle(document.getElementById("path" + trkid));\r\n' \
-  '            let acs = getComputedStyle(document.getElementById("patharrows" + trkid));\r\n' \
-  '            let wcs = getComputedStyle(wpt);\r\n' \
-  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?<text id=.*?) (dy=.*?<textPath) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"})), Math.round((prop_to_wmvalue(wpt.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(wpt.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(wpt).replace(/^(.*?)style=".*?"/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke=\\"none\\"").replaceAll("<circle", "<circle r=\\"" + (parseFloat(wcs["stroke-width"].replace("px", "")) * 1.5).toString() + "\\"")], {type: "image/svg+xml"})), URL.createObjectURL(new Blob([xs.serializeToString(wpt).replace(/^(.*?)fill=".*?"/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" fill=\\"black\\" stroke=\\"white\\" stroke-width=\\"" + wcs["stroke-width"].replace("px", "") + "\\" paint-order=\\"stroke\\"").replaceAll("<circle", "<circle r=\\"" + (parseFloat(wcs["stroke-width"].replace("px", "")) * 1.5).toString() + "\\"")], {type: "image/svg+xml"}))]);\r\n' \
+  '            const wpts = document.getElementById("waydots" + trkid);\r\n' \
+  '            const tcs = getComputedStyle(trck);\r\n' \
+  '            const pcs = getComputedStyle(document.getElementById("path" + trkid));\r\n' \
+  '            const acs = getComputedStyle(document.getElementById("patharrows" + trkid));\r\n' \
+  '            const wcs = getComputedStyle(wpts);\r\n' \
+  '            trdata.push([Math.round((prop_to_wmvalue(trck.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(trck.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(trck).replace(/^(.*?)style=".*?"(.*?path id=.*?) (d=.*?<text id=.*?) (dy=.*?<textPath) (href=)/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"$2 fill=\\"none\\" vector-effect=\\"non-scaling-stroke\\" stroke-width=\\"" + pcs["stroke-width"].replace("px", "") + "\\" $3 stroke-width=\\"" + acs["stroke-width"].replace("px", "") + "\\" font-size=\\"" + acs["font-size"].replace("px", "") + "\\" word-spacing=\\"" + acs["word-spacing"].replace("px", "") + "\\" $4 vector-effect=\\"non-scaling-stroke\\" $5")], {type: "image/svg+xml"})), Math.round((prop_to_wmvalue(wpts.style.left) - b[0]) * zoom / tscale), Math.round((prop_to_wmvalue(wpts.style.top) - b[2]) * zoom / tscale), URL.createObjectURL(new Blob([xs.serializeToString(wpts).replace(/^(.*?)style=".*?"/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" stroke=\\"none\\"").replaceAll("<circle", "<circle r=\\"" + (parseFloat(wcs["stroke-width"].replace("px", "")) * 1.5).toString() + "\\"")], {type: "image/svg+xml"})), URL.createObjectURL(new Blob([xs.serializeToString(wpts).replace(/^(.*?)fill=".*?"/is, "$1width=\\"" + tcs["width"].replace("px", "") + "\\" height=\\"" + tcs["height"].replace("px", "") + "\\" fill=\\"black\\" stroke=\\"white\\" stroke-width=\\"" + wcs["stroke-width"].replace("px", "") + "\\" paint-order=\\"stroke\\"").replaceAll("<circle", "<circle r=\\"" + (parseFloat(wcs["stroke-width"].replace("px", "")) * 1.5).toString() + "\\"")], {type: "image/svg+xml"}))]);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let cnv2d = document.createElement("canvas");\r\n' \
+  '        const cnv2d = document.createElement("canvas");\r\n' \
   '        ctx = cnv2d.getContext("2d");\r\n' \
   '        cnv2d.width = cwidth;\r\n' \
   '        cnv2d.height = cheight;\r\n' \
@@ -20301,7 +20740,7 @@ class GPXTweakerWebInterfaceServer():
   '        prom_c = trdata.length;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        for (const tdata of trdata) {\r\n' \
-  '          let trck = new Image();\r\n' \
+  '          const trck = new Image();\r\n' \
   '          trck.onload = function (e) {URL.revokeObjectURL(tdata[2]); ctx.drawImage(trck, tdata[0], tdata[1]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          trck.onerror = function (e) {URL.revokeObjectURL(tdata[2]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          trck.src = tdata[2];\r\n' \
@@ -20310,7 +20749,7 @@ class GPXTweakerWebInterfaceServer():
   '        prom_c = trdata.length;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        for (const tdata of trdata) {\r\n' \
-  '          let waypt = new Image();\r\n' \
+  '          const waypt = new Image();\r\n' \
   '          waypt.onload = function (e) {URL.revokeObjectURL(tdata[5]); ctx.drawImage(waypt, tdata[3], tdata[4]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          waypt.onerror = function (e) {URL.revokeObjectURL(tdata[5]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          waypt.src = tdata[5];\r\n' \
@@ -20320,7 +20759,7 @@ class GPXTweakerWebInterfaceServer():
   '        prom_c = trdata.length;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        for (const tdata of trdata) {\r\n' \
-  '          let waypt = new Image();\r\n' \
+  '          const waypt = new Image();\r\n' \
   '          waypt.onload = function (e) {URL.revokeObjectURL(tdata[6]); ctx.drawImage(waypt, tdata[3], tdata[4]); prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          waypt.onerror = function (e) {URL.revokeObjectURL(tdata[6]);prom_c--; if (prom_c == 0) {prom_res();};};\r\n' \
   '          waypt.src = tdata[6];\r\n' \
@@ -20330,7 +20769,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("tset").style.pointerEvents = "";\r\n' \
   '        msgn = show_msg("{#jmdownmap3#}", 0, msgn);\r\n' \
   '        ctx.globalCompositeOperation = "destination-over";\r\n' \
-  '        ctx.filter = document.documentElement.style.getPropertyValue("--filter") || "none";\r\n' \
+  '        ctx.filter = viewpane.style.getPropertyValue("--filter") || "none";\r\n' \
   '        ctx.drawImage(mcnv2d, 0, 0);\r\n' \
   '        mcnv2d.width = mcnv2d.height = 1;\r\n' \
   '        msgn = show_msg("{#jmdownmap4#}", 0, msgn);\r\n' \
@@ -20339,7 +20778,7 @@ class GPXTweakerWebInterfaceServer():
   '        cnv2d.toBlob(function (blob) {url = URL.createObjectURL(blob); prom_res();});\r\n' \
   '        await prom;\r\n' \
   '        if (url) {\r\n' \
-  '          let a = document.createElement("a");\r\n' \
+  '          const a = document.createElement("a");\r\n' \
   '          a.href = url;\r\n' \
   '          a.download = "map";\r\n' \
   '          show_msg("{#jmdownmap5#}".replace("%s", trdata.length.toString()).replace("%s", cnv2d.width.toString()).replace("%s", cnv2d.height.toString()), 5, msgn);\r\n' \
@@ -20353,18 +20792,18 @@ class GPXTweakerWebInterfaceServer():
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        let b = track_boundaries();\r\n' \
   '        if (b == null) {return;}\r\n' \
-  '        let tracklist = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
+  '        const tracklist = document.createElementNS("http://www.w3.org/2000/svg", "svg");\r\n' \
   '        tracklist.setAttribute("width", "0");\r\n' \
   '        tracklist.setAttribute("height", "0");\r\n' \
-  '        let txt = document.createElementNS("http://www.w3.org/2000/svg", "text");\r\n' \
+  '        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");\r\n' \
   '        txt.setAttribute("font-family", "Calibri, sans-serif");\r\n' \
   '        tracklist.appendChild(txt);\r\n' \
-  '        let trks = document.getElementById("tracksform").children;\r\n' \
-  '        for (let t=0; t<trks.length; t++) {\r\n' \
-  '          if (trks[t].firstElementChild.checked) {\r\n' \
-  '            let trkid = trks[t].id.slice(5,-4);\r\n' \
-  '            let name = document.getElementById("track" + trkid + "desc").textContent.match(/^(.*)\\((?!.*\\()(.*)\\)$/);\r\n' \
-  '            let color = document.getElementById("track" + trkid + "color").value;\r\n' \
+  '        const trks = document.getElementById("tracksform").children;\r\n' \
+  '        for (const trk of trks) {\r\n' \
+  '          if (trk.firstElementChild.checked) {\r\n' \
+  '            const trkid = trk.id.slice(5,-4);\r\n' \
+  '            const name = document.getElementById("track" + trkid + "desc").textContent.match(/^(.*)\\((?!.*\\()(.*)\\)$/);\r\n' \
+  '            const color = document.getElementById("track" + trkid + "color").value;\r\n' \
   '            let tsp = document.createElementNS("http://www.w3.org/2000/svg", "tspan");\r\n' \
   '            tsp.setAttribute("x", "10");\r\n' \
   '            tsp.setAttribute("dy", "28");\r\n' \
@@ -20383,33 +20822,33 @@ class GPXTweakerWebInterfaceServer():
   '              txt.appendChild(tsp);\r\n' \
   '            }\r\n' \
   '            if (waypoints) {\r\n' \
-  '              let wpt = document.getElementById("waydots" + trkid).getElementsByTagName("title");\r\n' \
-  '                for (let w=0; w<wpt.length; w++) {\r\n' \
+  '              const wpts = document.getElementById("waydots" + trkid).getElementsByTagName("title");\r\n' \
+  '                for (const wpt of wpts) {\r\n' \
   '                  tsp = document.createElementNS("http://www.w3.org/2000/svg", "tspan");\r\n' \
   '                  tsp.setAttribute("x", "40");\r\n' \
   '                  tsp.setAttribute("dy", "14");\r\n' \
   '                  tsp.setAttribute("font-size", "14");\r\n' \
-  '                  tsp.appendChild(document.createTextNode("● " + wpt[w].textContent));\r\n' \
+  '                  tsp.appendChild(document.createTextNode("● " + wpt.textContent));\r\n' \
   '                  txt.appendChild(tsp);\r\n' \
   '               }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let div = document.createElement("div");\r\n' \
+  '        const div = document.createElement("div");\r\n' \
   '        div.setAttribute("style", "z-index:-1;position:absolute;visibility:hidden;width:0;height:0");\r\n' \
   '        div.appendChild(tracklist);\r\n' \
   '        document.body.appendChild(div);\r\n' \
   '        b = txt.getBBox();\r\n' \
   '        document.body.removeChild(div);\r\n' \
-  '        let w = Math.ceil(2 * b.x + b.width);\r\n' \
-  '        let h = Math.ceil(2.5 * b.y + b.height);\r\n' \
+  '        const w = Math.ceil(2 * b.x + b.width);\r\n' \
+  '        const h = Math.ceil(2.5 * b.y + b.height);\r\n' \
   '        tracklist.setAttribute("viewBox", "0 0 " + w.toString() + " " + h.toString());\r\n' \
   '        tracklist.setAttribute("width", w.toString());\r\n' \
   '        tracklist.setAttribute("height", h.toString());\r\n' \
-  '        let xs = new XMLSerializer;\r\n' \
-  '        let url = URL.createObjectURL(new Blob([xs.serializeToString(tracklist)], {type: "image/svg+xml"}));\r\n' \
+  '        const xs = new XMLSerializer;\r\n' \
+  '        const url = URL.createObjectURL(new Blob([xs.serializeToString(tracklist)], {type: "image/svg+xml"}));\r\n' \
   '        if (url) {\r\n' \
-  '          let a = document.createElement("a");\r\n' \
+  '          const a = document.createElement("a");\r\n' \
   '          a.href = url;\r\n' \
   '          a.download = "tracklist";\r\n' \
   '          a.click();\r\n' \
@@ -20418,10 +20857,10 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      async function download_graph() {\r\n' \
   '        if (document.getElementById("edit").disabled || document.getElementById("graph").style.display == "none" || focused == "") {return;}\r\n' \
-  '        let graphc = document.getElementById("graphc");\r\n' \
-  '        let cnv2d = document.createElement("canvas");\r\n' \
-  '        let ctx = cnv2d.getContext("2d");\r\n' \
-  '        let ts = 2 * parseFloat(ctx.font);\r\n' \
+  '        const graphc = document.getElementById("graphc");\r\n' \
+  '        const cnv2d = document.createElement("canvas");\r\n' \
+  '        const ctx = cnv2d.getContext("2d");\r\n' \
+  '        const ts = 2 * parseFloat(ctx.font);\r\n' \
   '        cnv2d.width = graphc.width + ts + 5;\r\n' \
   '        cnv2d.height = graphc.height + ts;\r\n' \
   '        ctx.filter = "invert(100%) hue-rotate(180deg) saturate(1000%)";\r\n' \
@@ -20435,12 +20874,12 @@ class GPXTweakerWebInterfaceServer():
   '        ctx.rotate(1.5 * Math.PI);\r\n' \
   '        ctx.fillText(document.getElementById("graphy").options[document.getElementById("graphy").selectedIndex].textContent, -(cnv2d.height - 25) / 2 , 5);\r\n' \
   '        let prom_res = null;\r\n' \
-  '        let prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
+  '        const prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
   '        let url = null;\r\n' \
   '        cnv2d.toBlob(function (blob) {url = URL.createObjectURL(blob); prom_res();});\r\n' \
   '        await prom;\r\n' \
   '        if (url) {\r\n' \
-  '          let a = document.createElement("a");\r\n' \
+  '          const a = document.createElement("a");\r\n' \
   '          a.href = url;\r\n' \
   '          a.download = "graph";\r\n' \
   '          a.click();\r\n' \
@@ -20458,48 +20897,30 @@ class GPXTweakerWebInterfaceServer():
   '        xhrex.send();\r\n' \
   '      }\r\n' \
   '      function switch_spanel(other=false) {\r\n' \
-  '        let spanel = document.getElementById("searchpanel");\r\n' \
-  '        if (spanel.style.display == "none") {\r\n' \
-  '          if (other) {return;}\r\n' \
-  '          if (document.getElementById("graph").style.display != "none") {switch_graph();}\r\n' \
-  '          switch_mediapreview(true);\r\n' \
-  '          document.getElementById("content").style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          viewpane.style.height = "calc(74vh - 2.4em - 18px)";\r\n' \
-  '          spanel.style.display = "block";\r\n' \
-  '          document.getElementById("squery").select();\r\n' \
-  '          rescale();\r\n' \
-  '        } else {\r\n' \
-  '          spanel.style.display = "none";\r\n' \
+  '        const lps = document.getElementById("lpanels").style;\r\n' \
+  '        const lpsv = lps.getPropertyValue("--panel");\r\n' \
+  '        if (lpsv.startsWith("searchpanel")) {\r\n' \
+  '          lps.setProperty("--panel", "none");\r\n' \
   '          document.getElementById("places").reset();\r\n' \
-  '          if (document.getElementById("spdec").style.display == "none") {resize_spanel(1, false);}\r\n' \
-  '          if (! other) {\r\n' \
-  '            document.getElementById("content").style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            viewpane.style.height = "calc(99vh - 2.4em - 16px)";\r\n' \
-  '            rescale();\r\n' \
-  '          }\r\n' \
+  '          if (! other) {rescale();}\r\n' \
+  '        } else {\r\n' \
+  '          if (other) {return;}\r\n' \
+  '          switch_graph(true);\r\n' \
+  '          switch_mediapreview(true);\r\n' \
+  '          lps.setProperty("--panel", "searchpanel");\r\n' \
+  '          document.getElementById("squery").select();\r\n' \
+  '          if (lpsv == "none") {rescale();}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function resize_spanel(mode, resc=true) {\r\n' \
-  '        if (mode < 0) {\r\n' \
-  '          document.getElementById("spdec").style.display = "none";\r\n' \
-  '          document.getElementById("spinc").style.display = "";\r\n' \
-  '          document.getElementById("searchpanel").style.maxHeight = "calc(2em + 42px)";\r\n' \
-  '          document.getElementById("content").style.minHeight = "calc(99vh - 4.4em - 60px)";\r\n' \
-  '          viewpane.style.minHeight = "calc(99vh - 4.4em - 60px)";\r\n' \
-  '        } else {\r\n' \
-  '          document.getElementById("spdec").style.display = "";\r\n' \
-  '          document.getElementById("spinc").style.display = "none";\r\n' \
-  '          document.getElementById("searchpanel").style.maxHeight = "";\r\n' \
-  '          document.getElementById("content").style.minHeight = "";\r\n' \
-  '          viewpane.style.minHeight = "";\r\n' \
-  '        }\r\n' \
-  '        if (resc) {rescale();}\r\n' \
-  '        let pls = document.getElementById("plcont").getElementsByTagName("div");\r\n' \
+  '      function resize_spanel(mode) {\r\n' \
+  '        document.getElementById("lpanels").style.setProperty("--panel", (mode < 0 ? "searchpanelmini" : "searchpanel"));\r\n' \
+  '        rescale();\r\n' \
+  '        const pls = document.getElementById("plcont").getElementsByTagName("div");\r\n' \
   '        if (pls.length > 1) {\r\n' \
   '          pls[1].scrollIntoView({block:"start"});\r\n' \
   '          for (pl of pls) {\r\n' \
   '            if (pl.firstElementChild.checked) {\r\n' \
-  '              pl.scrollIntoView({block:(mode<0?"center":"nearest")});\r\n' \
+  '              pl.scrollIntoView({block: (mode <0 ? "center" : "nearest")});\r\n' \
   '              return;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -20513,21 +20934,21 @@ class GPXTweakerWebInterfaceServer():
   '        if (t.status != 200) {\r\n' \
   '          return null;\r\n' \
   '        }\r\n' \
-  '        let places = document.getElementById("plcont");\r\n' \
+  '        const places = document.getElementById("plcont");\r\n' \
   '        let pls = Array.from(places.getElementsByTagName("div"));\r\n' \
   '        for (let p=1; p<pls.length; p++) {places.removeChild(pls[p]);}\r\n' \
   '        set_target();\r\n' \
-  '        let plcs = JSON.parse(t.response);\r\n' \
+  '        const plcs = JSON.parse(t.response);\r\n' \
   '        if (plcs.length == 0) {\r\n' \
   '          return 0;\r\n' \
   '        }\r\n' \
   '        pls = [];\r\n' \
   '        for (let p=0; p<plcs.length; p++) {\r\n' \
-  '          let wm = WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
+  '          const wm = WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {continue;}\r\n' \
-  '          let pl = places.firstElementChild.cloneNode(true);\r\n' \
+  '          const pl = places.firstElementChild.cloneNode(true);\r\n' \
   '          pls.push(pl);\r\n' \
-  '          let ps = p.toString();\r\n' \
+  '          const ps = p.toString();\r\n' \
   '          let elt = pl.firstElementChild;\r\n' \
   '          elt.id += ps;\r\n' \
   '          elt.value = (wm[0] - htopx).toFixed(2) + "," + (htopy - wm[1]).toFixed(2);\r\n' \
@@ -20540,14 +20961,14 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function search_place() {\r\n' \
   '        let gset = document.getElementById("gset");\r\n' \
-  '        gset = gset.options.length>0?gset.selectedIndex:-1;\r\n' \
+  '        gset = gset.options.length > 0 ? gset.selectedIndex : -1;\r\n' \
   '        if (gset < 0) {show_msg("{#jmsearchno#}", 10); return;}\r\n' \
-  '        let squery = document.getElementById("squery").value;\r\n' \
+  '        const squery = document.getElementById("squery").value;\r\n' \
   '        if (squery.length < 2) {show_msg("{#jmsearchshort#}", 10); return;}\r\n' \
-  '        let b = {"query": squery};\r\n' \
+  '        const b = {"query": squery};\r\n' \
   '        if (document.getElementById("gloc").checked) {\r\n' \
   '          [b.maxlat, b.minlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)));\r\n' \
-  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.parentNode.offsetWidth - hpx) * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.parentNode.offsetHeight) * tscale / zoom)));\r\n' \
+  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.offsetWidth - hpx) * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.offsetHeight) * tscale / zoom)));\r\n' \
   '          b.lat = (b.minlat + b.maxlat) / 2;\r\n' \
   '          b.lon = (b.minlon + b.maxlon) / 2;\r\n' \
   '        } else {\r\n' \
@@ -20555,17 +20976,17 @@ class GPXTweakerWebInterfaceServer():
   '          [b.minlat, b.maxlon] = WebMercatortoWGS84(vmaxx, vminy);\r\n' \
   '          b.lat = b.lon = "";\r\n' \
   '        }\r\n' \
-  '        let xhrg = new XMLHttpRequest();\r\n' \
-  '        let msgn = show_msg("{#jmsearch1#}", 0);\r\n' \
+  '        const xhrg = new XMLHttpRequest();\r\n' \
+  '        const msgn = show_msg("{#jmsearch1#}", 0);\r\n' \
   '        xhrg.onerror = (e) => {error_gcb; show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
-  '        xhrg.onload = (e) => {let np = load_gcb(e.target); np!=null?show_msg("{#jmsearch2#}".replace("%s", np), 2, msgn):show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
+  '        xhrg.onload = (e) => {const np = load_gcb(e.target); np != null ? show_msg("{#jmsearch2#}".replace("%s", np), 2, msgn) : show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
   '        xhrg.open("POST", "/geocoding?gset=" + encodeURIComponent(gset.toString()));\r\n' \
   '        xhrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        xhrg.send(JSON.stringify(b));\r\n' \
   '      }\r\n' \
   '      function target_place(place) {\r\n' \
-  '        let xy = place.value.split(",").map(Number);\r\n' \
+  '        const xy = place.value.split(",").map(Number);\r\n' \
   '        set_target(xy);\r\n' \
   '        scroll_to_target(true, xy);\r\n' \
   '      }\r\n' \
@@ -20579,13 +21000,13 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (prop.id.slice(-4) == "file") {\r\n' \
-  '          let uri_ex = document.getElementById(prop.id.replace("file", "visible")).value;\r\n' \
-  '          let uri = uri_ex.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + prop.value);\r\n' \
-  '          let trks = document.getElementById("tracksform").children;\r\n' \
-  '          for (let t=0; t<trks.length; t++) {\r\n' \
-  '            if (trks[t].firstElementChild.value == uri_ex) {\r\n' \
-  '              trks[t].firstElementChild.value = uri;\r\n' \
-  '              document.getElementById(trks[t].id.replace("cont", "file")).value = prop.value;\r\n' \
+  '          const uri_ex = document.getElementById(prop.id.replace("file", "visible")).value;\r\n' \
+  '          const uri = uri_ex.replace(/(.*)(\\\\.*?)$/, "$1\\\\" + prop.value);\r\n' \
+  '          const trks = Array.from(document.getElementById("tracksform").children);\r\n' \
+  '          for (const trk of trks) {\r\n' \
+  '            if (trk.firstElementChild.value == uri_ex) {\r\n' \
+  '              trk.firstElementChild.value = uri;\r\n' \
+  '              document.getElementById(trk.id.replace("cont", "file")).value = prop.value;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (document.getElementById("oset").selectedIndex == 2) {tracks_sort();}\r\n' \
@@ -20596,8 +21017,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (document.getElementById("oset").selectedIndex == 1) {tracks_sort();}\r\n' \
   '          tracks_nfilter();\r\n' \
   '        } else if (prop.id.slice(-5) == "color") {\r\n' \
-  '          let trk = prop.id.slice(0, -5);\r\n' \
-  '          let col = prop.value.toUpperCase();\r\n' \
+  '          const trk = prop.id.slice(0, -5);\r\n' \
+  '          const col = prop.value.toUpperCase();\r\n' \
   '          document.getElementById(trk).setAttribute("stroke", col);\r\n' \
   '          document.getElementById(trk).setAttribute("fill", col);\r\n' \
   '          document.getElementById(trk.replace("track", "waydots")).setAttribute("fill", col);\r\n' \
@@ -20640,9 +21061,9 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        let body = prop.id + "=" + (prop.id.slice(-5)=="color"?prop.value.toUpperCase():prop.value);\r\n' \
-  '        let msgn = show_msg("{#jmsave1#}", 0);\r\n' \
-  '        xhr.onload = (e) => {load_cb(e.target, prop)?show_msg("{#jmsave2#}", 5, msgn):show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
+  '        const body = prop.id + "=" + (prop.id.slice(-5)=="color"?prop.value.toUpperCase():prop.value);\r\n' \
+  '        const msgn = show_msg("{#jmsave1#}", 0);\r\n' \
+  '        xhr.onload = (e) => {load_cb(e.target, prop) ? show_msg("{#jmsave2#}", 5, msgn) : show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
   '        xhr.onerror = (e) => {error_cb(e.target, prop); show_msg("{#jmsave3#}", 10, msgn);};\r\n' \
   '        xhr.open("POST", "/track");\r\n' \
   '        xhr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -20652,9 +21073,9 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_change(e) {\r\n' \
   '        e.stopPropagation();\r\n' \
-  '        let elt = e.target;\r\n' \
+  '        const elt = e.target;\r\n' \
   '        if (! elt) {return;}\r\n' \
-  '        let fld = elt.id.match(/[0-9]+(.*)$/);\r\n' \
+  '        const fld = elt.id.match(/[0-9]+(.*)$/);\r\n' \
   '        if (! fld) {return;}\r\n' \
   '        switch (fld[1]) {\r\n' \
   '          case "visible":\r\n' \
@@ -20670,107 +21091,98 @@ class GPXTweakerWebInterfaceServer():
   '            break\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      var xhr = new XMLHttpRequest();\r\n' \
-  '      var xhrt = new XMLHttpRequest();\r\n' \
+  '      const xhr = new XMLHttpRequest();\r\n' \
+  '      const xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
-  '      var xhrep = new XMLHttpRequest();\r\n' \
+  '      const xhrep = new XMLHttpRequest();\r\n' \
   '      xhrep.addEventListener("error", error_epcb);\r\n' \
-  '      var xhrtr = new XMLHttpRequest();\r\n' \
-  '      var xhrex = new XMLHttpRequest();\r\n' \
+  '      const xhrtr = new XMLHttpRequest();\r\n' \
+  '      const xhrex = new XMLHttpRequest();\r\n' \
   '    </script>\r\n' \
   '  </head>\r\n' \
-  '  <body style="background-color:rgb(40,45,50);color:rgb(225,225,225);margin-top:2px;margin-bottom:0;" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
-  '    <table style="width:98vw;">\r\n' \
-  '      <colgroup>\r\n' \
-  '        <col style="width:21em;">\r\n' \
-  '        <col style="width:calc(98vw - 21em);">\r\n' \
-  '      </colgroup>\r\n' \
-  '      <thead>\r\n' \
-  '        <tr>\r\n' \
-  '          <th colspan="2" style="text-align:left;font-size:120%;width:100%;border-bottom:1px darkgray solid;user-select:none;">\r\n' \
-  '            <form style="display:inline-block;" onsubmit="this.firstElementChild.blur();return false;">\r\n' \
-  '              <input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_nfilter();" onchange="input_history(this)">\r\n' \
-  '              <datalist id="tracksfilterhistory"></datalist>\r\n' \
-  '            </form>\r\n' \
-  '            <button id="cfbutton" style="position:relative;font-size:80%;" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?gfence(cfilter_reset):(event.shiftKey?gfence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-0.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button>\r\n' \
-  '            <span style="display:inline-block;position:absolute;overflow:hidden;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');gfence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="gfence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="gfence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
-  '            <span style="display:inline-block;position:absolute;right:2vw;width:45.5em;overflow:hidden;text-align:right;font-size:80%;" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix" style="display:none;width:1.5em;">--</span><button id="tlock" title="{#jlock#}" style="display:none;width:1em" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom" style="display:inline-block;width:2em;text-align:center;">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
-  '            <div id="ctset" style="display:none;position:absolute;right:calc(2vw + 7.55em);font-size:80%;line-height:0;" title="{#jctset#}" onclick="event.altKey?cancel_switch_tiles():null"><select id="noset" disabled="" style="visibility:hidden;"></select></div>\r\n' \
-  '            <div id="cfilterpanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:23em;box-sizing:border-box;padding:10px;overflow:hidden;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';gfence(tracks_cfilter);" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
-  '                <div style="display:inline-block;padding-right:1em;">\r\n' \
-  '                  <span>{#jsortduration#} :&nbsp;</span>\r\n' \
-  '                  <span>{#jsortdistance#} :&nbsp;</span>\r\n' \
-  '                  <span>{#jsortelegain#} :&nbsp;</span>\r\n' \
-  '                  <span>{#jsortaltgain#} :&nbsp;</span>\r\n' \
-  '                  <span>{#jsortdate#} :&nbsp;</span>\r\n' \
-  '                  <span>{#jsortproximity#} :&nbsp;</span>\r\n' \
-  '                </div>\r\n' \
-  '                <div style="display:inline-block;text-align:right;">\r\n' \
-  '                  <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfproxmax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span> \r\n' \
-  '                  <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
-  '                  <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="date" id="cfdatemin" name="cfdatemin" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfagmax\':\'cfdatemax\').focus();return false;}"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfdatemin\':\'cfproxmin\').focus();return false;}"><span>&nbsp;m</span></span> \r\n' \
-  '                  <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfdatemax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && ! event.shiftKey) {document.getElementById(\'cfdurmin\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
-  '                </div>\r\n' \
-  '              </form>\r\n' \
+  '  <body style="--mode:##MODE##" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
+  '    <div id="top_bar">\r\n' \
+  '      <form id="tracksfilterform" onsubmit="this.firstElementChild.blur();return false;"><input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_nfilter();" onchange="input_history(this)"><datalist id="tracksfilterhistory"></datalist></form>\r\n' \
+  '      <span id="display" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button id="cfbutton" style="margin-left:0.25em;" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?gfence(cfilter_reset):(event.shiftKey?gfence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');gfence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="gfence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="gfence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
+  '      <span id="actions" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
+  '    </div>\r\n' \
+  '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
+  '      <div id="mediapreview" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '      </div>\r\n' \
+  '      <div id="searchpanel" onclick="event.target.id==\'searchpanel\'?document.getElementById(\'places\').reset():null" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '        <form id="searchform" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
+  '          <input type="text" id="squery" name="searchquery" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null"><datalist id="searchqueryhistory"></datalist><button onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
+  '        </form>\r\n' \
+  '        <input type="checkbox" id="gloc" checked><label for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
+  '        <select id="gset" name="gset" title="{#jexpgset#}" autocomplete="off">##GSETS##</select>\r\n' \
+  '        <button id="spdec" title="{#jexpgdec#}" onclick="resize_spanel(-1)">&darr;</button><button id="spinc" title="{#jexpginc#}" onclick="resize_spanel(1)">&uarr;</button>\r\n' \
+  '        <form id="places" onsubmit="return false" onchange="target_place(event.target)" onreset="this.elements.place.value?set_target():null">\r\n' \
+  '          <div id="plcont">\r\n' \
+  '            <div onclick="this.firstElementChild.click()">\r\n' \
+  '              <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
   '            </div>\r\n' \
-  '            <div id="folderspanel" style="display:none;position:absolute;top:calc(1.6em + 10px);left:25em;box-sizing:border-box;max-width:calc(98vw - 25.1em);max-height:calc(99vh - 3.2em - 25px);padding:10px;overflow:auto;white-space:nowrap;background-color:rgb(40,45,50);z-index:20;font-size:80%;font-weight:normal;">\r\n' \
-  '              <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
-  '                <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button>\r\n' \
-  '                <span style="font-weight:bold;">{#jfoldersw#}</span><br>\r\n' \
+  '          </div>\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '    </div>\r\n' \
+  '    <div id="bottom_bar">\r\n' \
+  '      <span id="message"></span>\r\n' \
+  '      <span title="{#jexphelp#}" id="help">?</span>\r\n' \
+  '    </div>\r\n' \
+  '    <div id="content">\r\n' \
+  '      <div id="tracks" onmouseenter="!navigator_firefox?viewpane.style.setProperty(\'--tprend\',\'optimizeSpeed\'):null" onmouseleave="!navigator_firefox?viewpane.style.setProperty(\'--tprend\',\'auto\'):null">\r\n' \
+  '        {#jtracks#} (##NBTRACKS##)\r\n' \
+  '        <form id="tracksform" autocomplete="off" onchange="track_change(event)" onsubmit="return(false);">\r\n' \
+  '#<#TRACKS#>#' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '    </div>\r\n' \
+  '    <div id="view" style="--scale:1;--zoom:1;--wsp:6em;--filter:none;--magnify:1;--tprend:auto;--ardis:none" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '      <div id="background"></div>\r\n' \
+  '      <div id="handle">\r\n' \
+  '#<#PATHES#>#' \
+  '#<#WAYDOTS#>#' \
+  '        <svg id="target_mark" viewbox="-20 -20 40 40" stroke-width="2" stroke="blue" fill="yellow" style="display:none;top:0;left:0;">\r\n' \
+  '          <path d="M18 -7 Q10 -1 2 0 Q10 1 18 7 Z"></path>\r\n' \
+  '          <path d="M-18 -7 Q-10 -1 -2 0 Q-10 1 -18 7 Z"></path>\r\n' \
+  '          <path d="M-7 18 Q-1 10 0 2 Q1 10 7 18 Z"></path>\r\n' \
+  '          <path d="M-7 -18 Q-1 -10 0 -2 Q1 -10 7 -18 Z"></path>\r\n' \
+  '        </svg>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="scrollbox">\r\n' \
+  '        <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, 1)):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
+  '      </div>\r\n' + HTML_SSB_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
+  '    </div>\r\n' + HTML_PANELS_TEMPLATE + \
+  '    <div id="dpanels" style="--panel:none;">\r\n' \
+  '      <div id="cfilterpanel">\r\n' \
+  '        <form id="cfilterform" autocomplete="off" data-backup="" onsubmit="return(false);" onchange="document.getElementById(\'cfbutton\').style.backgroundColor=(Array.from(this.getElementsByTagName(\'input\')).some((i) => i.value && i.checkValidity()))?\'rgb(50,95,130)\':\'\';gfence(tracks_cfilter);" onreset="document.getElementById(\'cfbutton\').style.backgroundColor=\'\'">\r\n' \
+  '          <div>\r\n' \
+  '            <span>{#jsortduration#} :&nbsp;</span>\r\n' \
+  '            <span>{#jsortdistance#} :&nbsp;</span>\r\n' \
+  '            <span>{#jsortelegain#} :&nbsp;</span>\r\n' \
+  '            <span>{#jsortaltgain#} :&nbsp;</span>\r\n' \
+  '            <span>{#jsortdate#} :&nbsp;</span>\r\n' \
+  '            <span>{#jsortproximity#} :&nbsp;</span>\r\n' \
+  '          </div>\r\n' \
+  '          <div>\r\n' \
+  '            <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfproxmax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span> \r\n' \
+  '            <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
+  '            <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
+  '            <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
+  '            <span><input type="date" id="cfdatemin" name="cfdatemin" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfagmax\':\'cfdatemax\').focus();return false;}"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfdatemin\':\'cfproxmin\').focus();return false;}"><span>&nbsp;m</span></span> \r\n' \
+  '            <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfdatemax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+([.][0-9]*)?|[.][0-9]+))|" onkeydown="if (event.key==\'Tab\' && ! event.shiftKey) {document.getElementById(\'cfdurmin\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
+  '          </div>\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
+  '      <div id="folderspanel">\r\n' \
+  '        <form id="foldersform" autocomplete="off" onsubmit="return(false);" onchange="folders_select()">\r\n' \
+  '          <button style="margin-left:0.75em;" onclick="folders_whole(false)">&EmptySmallSquare;</button><button style="margin-left:0.25em;" onclick="folders_whole(true)">&FilledSmallSquare;</button><span>{#jfoldersw#}</span><br>\r\n' \
   '##FOLDERS##' \
-  '              </form>\r\n' \
-  '            </div>\r\n' + HTML_ATTENUATE_TEMPLATE + HTML_OPACITYPANEL_TEMPLATE + HTML_DFMTPANEL_TEMPLATE + HTML_FILTERPANEL_TEMPLATE + HTML_3DPANEL_TEMPLATE + \
-  '          </th>\r\n' \
-  '        </tr>\r\n' \
-  '      </thead>\r\n' \
-  '      <tbody>\r\n' \
-  '        <tr style="display:table-row;">\r\n' \
-  '          <td style="display:table-cell;vertical-align:top;">\r\n' \
-  '            <div id="content" style="height:calc(99vh - 2.4em - 16px);width: calc(21em - 2px);">\r\n' \
-  '              <div id="tracks" style="overflow-y:scroll;overflow-x:hidden;height:100%;font-size:80%" onmouseenter="!navigator_firefox?document.documentElement.style.setProperty(\'--tprend\',\'optimizeSpeed\'):null" onmouseleave="!navigator_firefox?document.documentElement.style.setProperty(\'--tprend\',\'auto\'):null">\r\n' \
-  '                {#jtracks#} (##NBTRACKS##)<br>\r\n' \
-  '                <form id="tracksform" autocomplete="off" onchange="track_change(event)" onsubmit="return(false);">\r\n                  #<#TRACKS#>#\r\n' \
-  '                </form>\r\n' \
-  '              </div>\r\n' \
-  '            </div>\r\n' \
-  '          </td>\r\n' \
-  '          <td style="display:table-cell;vertical-align:top;position:relative;">\r\n' \
-  '            <div id="view" style="overflow:hidden;position:absolute;width:100%;height:calc(99vh - 2.4em - 16px);line-height:0;user-select:none;" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
-  '              <div id="background" style="position:absolute;top:0px;left:0px;width:100%;height:100%;backdrop-filter:var(--filter);pointer-events:none;"></div>\r\n' \
-  '              <div id="handle" style="position:relative;top:0px;left:0px;width:100px;height:100px;pointer-events:none;">\r\n' \
-  '              #<#PATHES#>##<#WAYDOTS#>#  <svg id="target_mark" viewbox="-20 -20 40 40" pointer-events="none" style="display:none;position:absolute;top:0;left:0;width:10px;height:10px;z-index:2;transform:translate(-50%,-50%) scale(calc(1 + var(--magnify)))" stroke-width="2" stroke="blue" fill="yellow">\r\n' \
-  '                  <path d="M18 -7 Q10 -1 2 0 Q10 1 18 7 Z"></path>\r\n' \
-  '                  <path d="M-18 -7 Q-10 -1 -2 0 Q-10 1 -18 7 Z"></path>\r\n' \
-  '                  <path d="M-7 18 Q-1 10 0 2 Q1 10 7 18 Z"></path>\r\n' \
-  '                  <path d="M-7 -18 Q-1 -10 0 -2 Q1 -10 7 -18 Z"></path>\r\n' \
-  '                </svg>\r\n' \
-  '              </div>\r\n' \
-  '              <div id="scrollbox" style="left:0.1em;line-height:1em;">\r\n' \
-  '                <span id="scrollcross" title="{#jexpscrollcross#}" onclick="event.shiftKey?(document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, 1)):scrollcross(event.ctrlKey, event.altKey);event.stopPropagation()" onmousedown="event.stopPropagation()" onpointerdown="event.stopPropagation()" oncontextmenu="event.stopPropagation();event.preventDefault();" style="vertical-align:middle;color:rgb(90,90,90);cursor:pointer;">&#10012;</span>\r\n' \
-  '              </div>\r\n' + HTML_SSB_GRAPH_TEMPLATE.replace('{#jhelp#}', '{#jexphelp#}') + \
-  '    <div id="mediapreview" style="display:none" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '        </form>\r\n' \
+  '      </div>\r\n' \
   '    </div>\r\n' \
   '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
-  '    </div>\r\n' \
-  '    <div id="searchpanel" style="display:none;user-select:none;" onclick="event.target.id==\'searchpanel\'?document.getElementById(\'places\').reset():null" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
-  '      <form style="display:inline-block;padding-top:3px;" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
-  '        <input type="text" id="squery" name="searchquery" style="margin-left:2px;width:50em;max-width:calc(98vw - 26em);font-size:84%;" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null">\r\n' \
-  '        <datalist id="searchqueryhistory"></datalist>\r\n' \
-  '        <button style="font-size:94%;" onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
-  '      </form>\r\n' \
-  '      <input type="checkbox" id="gloc" style="margin:0em 0.5em 0.2em 1.5em;font-size:100%;" checked><label style="display:inline-block;vertical-align:middle;margin-bottom:0.2em;font-size:110%;font-weight:bold;" for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
-  '      <select id="gset" name="gset" title="{#jexpgset#}" style="position:absolute;display:inline-block;top:3px;right:calc(2vw + 2em);" autocomplete="off" style="margin-left:0.75em;margin-right:1em" >##GSETS##</select>\r\n' \
-  '      <button id="spdec" title="{#jexpgdec#}" onclick="resize_spanel(-1)">&darr;</button><button id="spinc" title="{#jexpginc#}" style="display:none;" onclick="resize_spanel(1)">&uarr;</button>\r\n' \
-  '      <form id="places" style="display:block;position:absolute;left:0;bottom:3px;width:98vw;height:calc(100% - 1.7em - 15px);overflow:scroll;font-size:80%;white-space:nowrap;user-select:text" onsubmit="return false" onchange="target_place(event.target)" onreset="this.elements.place.value?set_target():null">\r\n' \
-  '        <div id="plcont" style="min-width:fit-content">\r\n' \
-  '          <div onclick="this.firstElementChild.click()">\r\n' \
-  '            <input type="radio" id="place" name="place" value=""><label for="place"></label>\r\n' \
-  '          </div>\r\n' \
-  '        </div>\r\n' \
-  '      </form>\r\n' \
   '    </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
@@ -20802,8 +21214,8 @@ class GPXTweakerWebInterfaceServer():
   '        return m;\r\n' \
   '      }\r\n' \
   '      function mouse_down(e) {\r\n' \
-  '        if (e.button == 1 && e.target && (e.target.id == "view" || e.target.id.substring(0, 4) == "path" || e.target.parentNode.id.substring(0, 7) == "waydots")) {\r\n' \
-  '          let wm = [(e.pageX - viewpane.parentNode.offsetLeft - hpx) * tscale / zoom + htopx, htopy - (e.pageY - viewpane.parentNode.offsetTop - hpy) * tscale / zoom];\r\n' \
+  '        if (e.button == 1 && e.target && (e.target.id == "background" || e.target.id.substring(0, 4) == "path" || e.target.parentNode.id.substring(0, 7) == "waydots")) {\r\n' \
+  '          let wm = [(e.pageX - viewpane.offsetLeft - hpx) * tscale / zoom + htopx, htopy - (e.pageY - viewpane.offsetTop - hpy) * tscale / zoom];\r\n' \
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '          if (e.shiftKey) {\r\n'\
   '            if (eset < 0 || document.getElementById("eset").disabled) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
@@ -20843,12 +21255,13 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
+  '        const bg = document.getElementById("background");\r\n' \
   '        if (e.target && e.button == 0) {\r\n' \
-  '          if (e.target.id == "view") {\r\n' \
+  '          if (e.target.id == "background") {\r\n' \
   '            hand = e.target;\r\n' \
-  '            viewpane.style.cursor = "all-scroll";\r\n' \
-  '            viewpane.setPointerCapture(pointer_e);\r\n' \
-  '            if (! navigator_firefox) {document.documentElement.style.setProperty("--tprend", "optimizeSpeed");};\r\n' \
+  '            bg.style.cursor = "all-scroll";\r\n' \
+  '            bg.setPointerCapture(pointer_e);\r\n' \
+  '            if (! navigator_firefox) {viewpane.style.setProperty("--tprend", "optimizeSpeed");};\r\n' \
   '            media_ex_visible = media_visible;\r\n' \
   '            hide_media("m");\r\n' \
   '          } else if (e.target.id == "gbarc") {\r\n' \
@@ -20873,14 +21286,15 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
   '        if (hand) {\r\n' \
+  '          const bg = document.getElementById("background");\r\n' \
   '          if (mouse_out != null) {\r\n' \
   '            window.clearInterval(mouse_out);\r\n' \
   '            mouse_out = null;\r\n' \
   '          }\r\n' \
-  '          if (hand.id == "view") {\r\n' \
-  '            viewpane.style.cursor = "";\r\n' \
-  '            viewpane.releasePointerCapture(pointer_e);\r\n' \
-  '            if (! navigator_firefox) {setTimeout(function () {document.documentElement.style.setProperty("--tprend", "auto");}, 1);};\r\n' \
+  '          if (hand.id == "background") {\r\n' \
+  '            bg.style.cursor = "";\r\n' \
+  '            bg.releasePointerCapture(pointer_e);\r\n' \
+  '            if (! navigator_firefox) {setTimeout(function () {viewpane.style.setProperty("--tprend", "auto");}, 1);};\r\n' \
   '          } else {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
   '            hand.setAttribute("stroke", "none");\r\n' \
@@ -20935,20 +21349,19 @@ class GPXTweakerWebInterfaceServer():
   '        if (mouse_out == null) {return;}\r\n' \
   '        let dx = 0;\r\n' \
   '        let dy = 0;\r\n' \
-  '        let p = viewpane.parentNode;\r\n' \
-  '        let pl = p.offsetLeft;\r\n' \
-  '        let pr = pl + p.offsetWidth;\r\n' \
-  '        let pt = p.offsetTop;\r\n' \
-  '        let pb = pt + p.offsetHeight;\r\n' \
+  '        let pl = viewpane.offsetLeft;\r\n' \
+  '        let pr = pl + viewpane.offsetWidth;\r\n' \
+  '        let pt = viewpane.offsetTop;\r\n' \
+  '        let pb = pt + viewpane.offsetHeight;\r\n' \
   '        if (mousex < pl) {\r\n' \
-  '          dx = -Math.max(1, p.offsetWidth / 20);\r\n' \
+  '          dx = -Math.max(1, viewpane.offsetWidth / 20);\r\n' \
   '        } else if (mousex > pr) {\r\n' \
-  '          dx = Math.max(1, p.offsetWidth / 20);\r\n' \
+  '          dx = Math.max(1, viewpane.offsetWidth / 20);\r\n' \
   '        }\r\n' \
   '        if (mousey < pt) {\r\n' \
-  '          dy = -Math.max(1, p.offsetHeight / 20);\r\n' \
+  '          dy = -Math.max(1, viewpane.offsetHeight / 20);\r\n' \
   '        } else if (mousey > pb) {\r\n' \
-  '          dy = Math.max(1, p.offsetHeight / 20);\r\n' \
+  '          dy = Math.max(1, viewpane.offsetHeight / 20);\r\n' \
   '        }\r\n' \
   '        if (dx || dy) {\r\n' \
   '          scroll_dview(dx, dy);\r\n' \
@@ -20960,14 +21373,13 @@ class GPXTweakerWebInterfaceServer():
   '            gfence(graph_point, e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
-  '          let p = viewpane.parentNode;\r\n' \
-  '          let pl = p.offsetLeft;\r\n' \
-  '          let pr = pl + p.offsetWidth;\r\n' \
-  '          let pt = p.offsetTop;\r\n' \
-  '          let pb = pt + p.offsetHeight;\r\n' \
+  '          let pl = viewpane.offsetLeft;\r\n' \
+  '          let pr = pl + viewpane.offsetWidth;\r\n' \
+  '          let pt = viewpane.offsetTop;\r\n' \
+  '          let pb = pt + viewpane.offsetHeight;\r\n' \
   '          let mx = e.pageX;\r\n' \
   '          let my = e.pageY;\r\n' \
-  '          if (hand.id == "view") {\r\n' \
+  '          if (hand.id == "background") {\r\n' \
   '            cpx = cpy = null;\r\n' \
   '            scroll_dview(Math.min(Math.max(mx, pl), pr) - Math.min(Math.max(mousex, pl), pr), Math.min(Math.max(my, pt), pb) - Math.min(Math.max(mousey, pt), pb));\r\n' \
   '          } else {return;}\r\n' \
@@ -20986,8 +21398,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_wheel(e) {\r\n' \
   '        e.preventDefault();\r\n' \
   '        if (e.ctrlKey) {\r\n' \
-  '          let p = viewpane.parentNode;\r\n' \
-  '          (e.deltaY<0?zoom_inc:zoom_dec)(e.pageX - p.offsetLeft, e.pageY - p.offsetTop);\r\n' \
+  '          (e.deltaY<0?zoom_inc:zoom_dec)(e.pageX - viewpane.offsetLeft, e.pageY - viewpane.offsetTop);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        if (! e.altKey) {\r\n' \
@@ -21120,7 +21531,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (prev_state[8] == "true") {show_media();}\r\n' \
   '          smoothed = prev_state[9] == "true";\r\n' \
   '          magnify = parseInt(prev_state[10]);\r\n' \
-  '          document.documentElement.style.setProperty("--magnify", prev_state[10]);\r\n' \
+  '          viewpane.style.setProperty("--magnify", prev_state[10]);\r\n' \
   '          document.getElementById("cfilterform").dataset.backup = prev_state[11];\r\n' \
   '          if (webgpu && prev_state[12] == "t") {\r\n' \
   '            document.getElementById("vfbutton").style.backgroundColor = "rgb(50,95,130)";\r\n' \
@@ -21161,42 +21572,38 @@ class GPXTweakerWebInterfaceServer():
   '</html>'
   HTMLExp_TEMPLATE = HTMLExp_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTMLExp_FOLDER_TEMPLATE = \
-  '                <input id="folder%s" type="checkbox" checked="" name="folder%s" value="%s">\r\n' \
-  '                <label for="folder%s" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">%s</label><br>\r\n'
+  '              <input id="folder%s" type="checkbox" checked="" name="folder%s" value="%s">\r\n' \
+  '              <label for="folder%s" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">%s</label><br>\r\n'
   HTMLExp_FOLDER_TEMPLATE = HTMLExp_FOLDER_TEMPLATE.format_map(LSTRINGS['interface'])
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
-  '                    <input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
+  '<input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
   '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label>\r\n' \
-  '                    <input type="color" id="track%scolor" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
-  '                    <span id="track%sfocus">\r\n' \
-  '                      <label for="track%sname">{jname}</label>\r\n' \
-  '                      <input type="text" id="track%sname" name="track%sname" value="%s"><br>\r\n' \
-  '                      <label for="track%sfile" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">{jfile}</label>\r\n' \
-  '                      <input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s"><br>\r\n' \
-  '                      <label for="track%sfolder">{jfolder}</label>\r\n' \
-  '                      <input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
-  '                      <label for="track%speriod">{jperiod}</label>\r\n' \
-  '                      <input type="text" id="track%speriod" name="track%speriod" value="%s" readOnly><br>\r\n' \
-  '                      <label for="track%scontent">{jcontent}</label>\r\n' \
-  '                      <input type="text" id="track%scontent" name="track%scontent" value="%s" readOnly><br>\r\n' \
-  '                    </span>\r\n' \
-  '                  </div>'
+  '<input type="color" id="track%scolor" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
+  '<span id="track%sfocus">\r\n' \
+  '<label for="track%sname">{jname}</label>\r\n' \
+  '<input type="text" id="track%sname" name="track%sname" value="%s"><br>\r\n' \
+  '<label for="track%sfile" title="{jexplorer}" ondblclick="open_explorer(this.htmlFor)">{jfile}</label>\r\n' \
+  '<input type="text" id="track%sfile" name="track%sfile" required pattern="[^\\\\\\/\\?\\*:<>&quot;\\|]*(?<!\\s-\\s(original|backup)(\\.[Gg][Pp][Xx])?)" value="%s"><br>\r\n' \
+  '<label for="track%sfolder">{jfolder}</label>\r\n' \
+  '<input type="text" id="track%sfolder" name="track%sfolder" value="%s" readOnly><br>\r\n' \
+  '<label for="track%speriod">{jperiod}</label>\r\n' \
+  '<input type="text" id="track%speriod" name="track%speriod" value="%s" readOnly><br>\r\n' \
+  '<label for="track%scontent">{jcontent}</label>\r\n' \
+  '<input type="text" id="track%scontent" name="track%scontent" value="%s" readOnly><br>\r\n' \
+  '</span>\r\n' \
+  '</div>\r\n'
   HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
   HTMLExp_PATH_TEMPLATE = \
-  '  <svg id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '                  <path id="path%s" d="M0 0">\r\n' \
-  '                   <title>%s</title>;\r\n' \
-  '                  </path>\r\n' \
-  '                  <text id="patharrows%s" dy="0.25em">\r\n' \
-  '                    <textPath href="#path%s">##ARROWS##</textPath>\r\n' \
-  '                  </text>\r\n' \
-  '                </svg>\r\n              '
+  '<svg class="track" id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
+  '<path id="path%s" d="M0 0"><title>%s</title></path>\r\n' \
+  '<text id="patharrows%s" dy="0.25em"><textPath href="#path%s">##ARROWS##</textPath></text>\r\n' \
+  '</svg>\r\n'
   HTMLExp_WAYDOT_TEMPLATE = \
-  '                  <circle cx="%s" cy="%s"><title>%s</title></circle>\r\n'
+  '<circle cx="%.1f" cy="%.1f"><title>%s</title></circle>\r\n'
   HTMLExp_WAYDOTS_TEMPLATE = \
-  '  <svg id="waydots%s" viewbox="##VIEWBOX##" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
-  '                </svg>\r\n              '
+  '<svg class="waydots" id="waydots%s" viewbox="##VIEWBOX##" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n%s' \
+  '</svg>\r\n'
 
   @staticmethod
   def cpu_pcores_count():
@@ -22178,7 +22585,7 @@ class GPXTweakerWebInterfaceServer():
         rec = False
         if '://' in bmap or ':\\' in bmap:
           if not self.Map.LoadMap(bmap, *(WGS84WebMercator.WGS84toWebMercator(map_minlat, map_minlon) if not None in (map_minlat, map_minlon) else (None, None)), *(WGS84WebMercator.WGS84toWebMercator(map_maxlat, map_maxlon) if not None in (map_maxlat, map_maxlon) else (None, None)), resolution=map_resolution):
-            self.log(0, 'berror')
+            self.log(0, 'berror1')
             return None
           self.TilesSets = [['Map']]
         else:
@@ -22190,7 +22597,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'berror3', bmap)
             return None
           if not self.Map.FetchMap(self.MapSets[self.MapSet][1], clamp_lat(minlat - 0.014 if map_minlat is None else map_minlat), clamp_lat(maxlat + 0.014 if map_maxlat is None else map_maxlat), clamp_lon(minlon - 0.019 if map_minlon is None else map_minlon), clamp_lon(maxlon + 0.019 if map_maxlon is None else map_maxlon), map_maxheight, map_maxwidth, dpi=map_dpi, **self.MapSets[self.MapSet][2]):
-            self.log(0, 'berror')
+            self.log(0, 'berror1')
             return None
           self.TilesSets = [[self.MapSets[self.MapSet][0]]]
           rec = record_map is not None
@@ -22232,7 +22639,7 @@ class GPXTweakerWebInterfaceServer():
         self.MTopx = self.VMinx
         self.MTopy = self.VMaxy
       if self.VMaxx - self.VMinx <= 5 or self.VMaxy - self.VMiny <= 5:
-        self.log(0, 'berror')
+        self.log(0, 'berror1')
         return None
       self.Minx, self.Miny = WGS84WebMercator.WGS84toWebMercator(clamp_lat(minlat - 0.008), clamp_lon(minlon - 0.011))
       self.Maxx, self.Maxy = WGS84WebMercator.WGS84toWebMercator(clamp_lat(maxlat + 0.008), clamp_lon(maxlon + 0.011))
@@ -22365,7 +22772,7 @@ class GPXTweakerWebInterfaceServer():
             raise
         except:
           self.HTML = self.HTMLExp = None
-          self.log(0, 'berror')
+          self.log(0, 'berror1')
           return None
         print('')
         add = '%s/GPX%s.html' % (self.Addr, ('Tweaker' if uri is not None else 'Explorer'))
@@ -22391,7 +22798,7 @@ class GPXTweakerWebInterfaceServer():
       self.log(0, 'berrori')
       return None
     except:
-      self.log(0, 'berror')
+      self.log(0, 'berror1')
       return None
     finally:
       def _unlink():
@@ -22411,23 +22818,23 @@ class GPXTweakerWebInterfaceServer():
     def _coord_to_vb(x, y):
       return '%.1f %.1f' % (x - self.Minx, self.Maxy - y)
     pathes = ''
-    pathes = ''.join(GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('##ARROWS##', '&rsaquo; ' * 500) % (s, s, 'M0 0' + ''.join(' M' + _coord_to_vb(*pt[1]) for pt in self.Track.WebMercatorPts[s][0:1]) + ''.join(' L' + _coord_to_vb(*pt[1]) for pt in self.Track.WebMercatorPts[s][1:]), s) for s in range(len(self.Track.WebMercatorPts)))
+    pathes = ''.join(GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('##ARROWS##', '&rsaquo; ' * 500) % (s, s, 'M0 0' + ''.join(' M' + _coord_to_vb(*pt) for pt in self.Track.WebMercatorPts[s][0:1]) + ''.join(' L' + _coord_to_vb(*pt) for pt in self.Track.WebMercatorPts[s][1:]), s) for s in range(len(self.Track.WebMercatorPts)))
     return pathes
 
   def _build_waypoints(self):
-    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), (*pt[1][0:3], escape(pt[1][3]), escape(pt[1][4]))) for a in b))) for pt in self.Track.Wpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE % (pt[0], *pt[1][0:3], escape(pt[1][3]), escape(pt[1][4]))) for pt in self.Track.Wpts)
 
   def _build_points(self):
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE % (*([s] * 5), s + 1) + ''.join(GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (*([pt[0]] * 6), *(a for b in zip(*([[pt[0]] * 5] * 3), (*pt[1][0:4], escape(pt[1][4]))) for a in b)) for pt in self.Track.Pts[s]) + '</div>' for s in range(len(self.Track.Pts)))
+    return ''.join(l for s in range(len(self.Track.Pts)) for l in (GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE_S % s, *((GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE % (pt[0], *pt[1][0:4], escape(pt[1][4]))) for pt in self.Track.Pts[s]), GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE_E))
 
   def _build_waydots(self):
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for pt in self.Track.WebMercatorWpts)
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE % (p, pt[0] - self.Minx, self.Maxy - pt[1])) for p, pt in enumerate(self.Track.WebMercatorWpts))
 
   def _build_dots(self):
-    return ''.join(GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE % (pt[0], *(lambda x, y: (x - self.Minx, self.Maxy - y))(*pt[1])) for s in range(len(self.Track.WebMercatorPts)) for pt in self.Track.WebMercatorPts[s])
+    return ''.join((GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE % (p, pt[0] - self.Minx, self.Maxy - pt[1])) for p, pt in enumerate(pt for seg in self.Track.WebMercatorPts for pt in seg))
 
   def _build_tsets(self):
-    return ''.join('<option %svalue="%s">%s</option>' % (('' if (len(tset[-1]) > 1 and (self.JSONTiles or ((tset[1].get('format') != 'application/json') if isinstance(tset[1], dict) else all(self.TilesSets[tsos[0]][1].get('format') != 'application/json' for tsos in tset[1])))) else 'style="display:none;"'), *([escape(tset[0])] * 2)) for tset in self.TilesSets)
+    return ''.join('<option %svalue="%s">%s</option>' % (('' if (len(tset[-1]) > 1 and (self.JSONTiles or ((tset[1].get('format') != 'application/json') if isinstance(tset[1], dict) else all(self.TilesSets[tsos[0]][1].get('format') != 'application/json' for tsos in tset[1])))) else 'style="display:none;" '), *([escape(tset[0])] * 2)) for tset in self.TilesSets)
 
   def _build_esets(self):
     return ''.join('<option value="%s">%s</option>' % (*([escape(epro[0])] * 2),) for epro in self.ElevationsProviders)
@@ -22455,7 +22862,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE.replace('checked', '')).replace('##POINTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE.replace('checked', '')).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0 0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
@@ -22499,7 +22906,7 @@ class GPXTweakerWebInterfaceServer():
         maxx, maxy = WGS84WebMercator.WGS84toWebMercator(maxlat, maxlon)
         moyx = (minx + maxx) / 2
         moyy = (miny + maxy) / 2
-        self.HTML3DData = [b''.join(e for g in ((struct.pack('=L', len(self.Track.WebMercatorPts)),), ((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx), (pt[1][1] - moyy))))) for s in range(len(self.Track.WebMercatorPts)))) for e in g), wgpu_event]
+        self.HTML3DData = [b''.join(e for g in ((struct.pack('=L', len(self.Track.WebMercatorPts)),), ((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[0] - moyx), (pt[1] - moyy))))) for s in range(len(self.Track.WebMercatorPts)))) for e in g), wgpu_event]
         self.HTML3D = GPXTweakerWebInterfaceServer.HTML_3DS_WGPU_TEMPLATE.replace('##LOOPDUR##', str(self.V3DSubjLoopDuration)).replace('##TRREF##', '%f, %f' % (moyx, moyy)).replace('##DECLARATIONS##', declarations).replace('##TILEPATH##', tpath).replace('##TILEMAXPENDING##', str((self.TilesBufferThreads or 10) * 2)).replace('##RGSETS##', ''.join('<option value="%s">%s</option>' % (*([escape(rgpro[0])] * 2),) for rgpro in self.ReverseGeocodingsProviders))
       yield True
     if not self.Elevation.Map:
@@ -22652,9 +23059,9 @@ class GPXTweakerWebInterfaceServer():
     ay = den / (tmaxy - tminy)
     by = (moyy - tminy) / (tmaxy - tminy)
     if accel:
-      data = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+      data = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(ele * _cor - _minele for ele in eles))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[0] - moyx) / den, (pt[1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     else:
-      data = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[1][0] - moyx) / den, (pt[1][1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
+      data = b''.join((struct.pack('=L', ncol), struct.pack('=%df' % ncol, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat, tminlon + (px + 0.5) * scale)[0] - moyx) / den for px in lpx)), struct.pack('=L', nrow), struct.pack('=%df' % nrow, *((WGS84WebMercator.WGS84toWebMercator(tmaxlat - (py + 0.5) * scale, tminlon)[1] - moyy) / den for py in lpy)), struct.pack('=L', ncol * nrow), (eles if wgpu else struct.pack('=%df' % (nrow * ncol), *(eles[r][c] * _cor - _minele for r in range(nrow) for c in range(ncol)))), struct.pack('=L', len(self.Track.WebMercatorPts)), b''.join((struct.pack('=L%df' % (2 * len(self.Track.WebMercatorPts[s])), len(self.Track.WebMercatorPts[s]), *(v for pt in self.Track.WebMercatorPts[s] for v in ((pt[0] - moyx) / den, (pt[1] - moyy) / den)))) for s in range(len(self.Track.WebMercatorPts))), *((struct.pack('=4f', ax, ay, bx, by), struct.pack('=4L', minrow, mincol, maxrow, maxcol), struct.pack('=6d', xy_den, moyx, moyy, self.V3DMinValidEle, no_data_ele, cor)) if wgpu else ())))
     self.log(2, '3dmodeled', ncol * nrow, ncol, nrow, msource)
     if wgpu:
       self.HTML3DData[1] = data
@@ -22671,21 +23078,23 @@ class GPXTweakerWebInterfaceServer():
     return ''.join(GPXTweakerWebInterfaceServer.HTMLExp_FOLDER_TEMPLATE % (f, *([f, escape(self.Folders[f])] * 2)) for f in range(len(self.Folders)))
 
   def _build_path_exp(self, t):
-    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##ARROWS##', '&rsaquo; ' * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, escape(self.Tracks[t][1].Name or ''), t, t)
+    b = self.TracksBoundaries[t]
+    return GPXTweakerWebInterfaceServer.HTMLExp_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (b[1] - b[0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (b[3] - b[2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (b[0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - b[3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, b[1] - b[0], b[3] - b[2])).replace('##ARROWS##', '&rsaquo; ' * 500) % (t, *([self.Tracks[t][1].Color or '#000000'] * 2), t, escape(self.Tracks[t][1].Name or ''), t, t)
 
   def _build_pathes_exp(self):
     return ''.join(self._build_path_exp(t) for t in range(len(self.Tracks)))
 
   def _build_track_exp(self, t):
-    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), escape(self.Tracks[t][0]), *([t] * 2), *([escape(self.Tracks[t][1].Name or '')] * 2), t, self.Tracks[t][1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(escape, (self.Tracks[t][1].Name or '', *self.Tracks[t][0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(self.Tracks[t][1].Pts) , sum(len(s) for s in self.Tracks[t][1].Pts), len(self.Tracks[t][1].Wpts))))) for a in b))
+    tr = self.Tracks[t]
+    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), escape(tr[0]), *([t] * 2), *([escape(tr[1].Name or '')] * 2), t, tr[1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(escape, (tr[1].Name or '', *tr[0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(tr[1].Pts) , sum(len(s) for s in tr[1].Pts), len(tr[1].Wpts))))) for a in b))
 
   def _build_tracks_exp(self):
     return ''.join(self._build_track_exp(t) for t in range(len(self.Tracks)))
 
   def _build_waydots_exp(self, t):
-    def _coord_to_vb(x, y):
-      return '%.1f' % (x - self.TracksBoundaries[t][0]), '%.1f' % (self.TracksBoundaries[t][3] - y)
-    return GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (self.TracksBoundaries[t][0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.TracksBoundaries[t][3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.TracksBoundaries[t][1] - self.TracksBoundaries[t][0], self.TracksBoundaries[t][3] - self.TracksBoundaries[t][2])) % (t, (self.Tracks[t][1].Color or '#000000'), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (*_coord_to_vb(*WGS84Track.WGS84toWebMercator(*pt[1][0:2])), escape(pt[1][4] or '')) for pt in self.Tracks[t][1].Wpts))
+    tr = self.Tracks[t]
+    b = self.TracksBoundaries[t]
+    return GPXTweakerWebInterfaceServer.HTMLExp_WAYDOTS_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (b[1] - b[0])).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (b[3] - b[2])).replace('##LEFT##', 'calc(%.1fpx / var(--scale))' % (b[0] - self.Minx)).replace('##TOP##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - b[3])).replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, b[1] - b[0], b[3] - b[2])) % (t, (tr[1].Color or '#000000'), ''.join(GPXTweakerWebInterfaceServer.HTMLExp_WAYDOT_TEMPLATE % (ptc[0] - b[0], b[3] - ptc[1], escape(pt[1][4] or '')) for pt, ptc in zip(tr[1].Wpts, tr[1].WebMercatorWpts)))
 
   def _build_waydotss_exp(self):
     return ''.join(self._build_waydots_exp(t) for t in range(len(self.Tracks)))
@@ -22709,7 +23118,7 @@ class GPXTweakerWebInterfaceServer():
     esets = self._build_esets()
     wmsets = self._build_wmsets()
     gsets = self._build_gsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
@@ -22730,39 +23139,36 @@ class GPXTweakerWebInterfaceServer():
       pos = self.HTMLExp.find('<div id="track%dcont"' % t)
       n = self._build_track_exp(t)
       if pos >= 0:
-        n = n.strip('\r\n ')
-        self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</div>', pos) + 6:]
+        self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</div>', pos) + 8:]
       else:
-        pos = self.HTMLExp.find('\r\n                </form>', self.HTMLExp.find('<form id="tracksform"'))
+        pos = self.HTMLExp.find('        </form>', self.HTMLExp.find('<form id="tracksform"'))
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
-        pos = self.HTMLExp.find('<br>', self.HTMLExp.find('<div id="tracks"'))
+        pos = self.HTMLExp.rfind(')', 0, self.HTMLExp.find('<form id="tracksform"'))
         self.HTMLExp = self.HTMLExp[:self.HTMLExp.rfind('(', 0, pos)] + '(%d)' % len(self.Tracks) + self.HTMLExp[pos:]
       if retrieve is not None:
-        retrieve['track%dcont' % t] = n
+        retrieve['track%dcont' % t] = n.strip('\r\n ')
     if 'p' in elts:
-      pos = self.HTMLExp.find('<svg id="track%d"' % t)
+      pos = self.HTMLExp.find('<svg class="track" id="track%d"' % t)
       n = self._build_path_exp(t)
       if pos >= 0:
-        n = n.strip('\r\n ')
-        self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 6:]
+        self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 8:]
       else:
-        pos = self.HTMLExp.find('  <svg id="waydots')
+        pos = self.HTMLExp.find('<svg class="waydots"')
         if pos < 0:
-          pos = self.HTMLExp.find('  <svg id="target_mark')
+          pos = self.HTMLExp.find('        <svg id="target_mark')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
       if retrieve is not None:
-        retrieve['track%d' % t] = n
+        retrieve['track%d' % t] = n.strip('\r\n ')
     if 'w' in elts:
-      pos = self.HTMLExp.find('<svg id="waydots%d"' % t)
+      pos = self.HTMLExp.find('<svg class="waydots" id="waydots%d"' % t)
       n = self._build_waydots_exp(t)
       if pos >= 0:
-        n = n.strip('\r\n ')
-        self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 6:]
+        self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[self.HTMLExp.find('</svg>', pos) + 8:]
       else:
-        pos = self.HTMLExp.find('  <svg id="target_mark')
+        pos = self.HTMLExp.find('        <svg id="target_mark')
         self.HTMLExp = self.HTMLExp[:pos] + n + self.HTMLExp[pos:]
       if retrieve is not None:
-        retrieve['waydots%d' % t] = n
+        retrieve['waydots%d' % t] = n.strip('\r\n ')
     return True
 
   def EditMode(self, defx=None, defy=None):
@@ -22773,9 +23179,6 @@ class GPXTweakerWebInterfaceServer():
     self.Minx, self.Maxx, self.Miny, self.Maxy = self.TracksBoundaries[self.TrackInd]
     self.HTML = ''
     self.log(1, 'build')
-    if not self.Track.BuildWebMercator():
-      self.log(0, 'berror1')
-      return False
     if self.BuildHTML(defx, defy):
       self.log(1, 'built')
       return True
@@ -22794,8 +23197,6 @@ class GPXTweakerWebInterfaceServer():
         self.Track.ProcessGPX('a')
       del self.Track.OTrack
       self.Track.OTrack = self.Track.STrack
-      self.Track.WebMercatorWpts = None
-      self.Track.WebMercatorPts = None
       for t_ind in range(len(self.Tracks)):
         track = self.Tracks[t_ind]
         if track[0] == self.Uri:
@@ -22887,7 +23288,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.18.4 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.19.0 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
