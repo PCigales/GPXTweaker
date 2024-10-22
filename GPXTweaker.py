@@ -8280,7 +8280,7 @@ class GPXTweakerWebInterfaceServer():
   '        user-select: none;\r\n' \
   '      }\r\n' \
   '      #lpanels:not([style*=none])~#content, #lpanels:not([style*=none])~#view {\r\n' \
-  '        height: calc(75vh - 4em - 16px);\r\n' \
+  '        height: calc(75vh - 3.6em - 18px);\r\n' \
   '      }\r\n' \
   '      #panels {\r\n' \
   '        contain: strict;\r\n' \
@@ -8691,6 +8691,7 @@ class GPXTweakerWebInterfaceServer():
   '      var eset = -1;\r\n' \
   '      var iset = -1;\r\n' \
   '      var dots_visible = false;\r\n' \
+  '      var arrows_visible = true;\r\n' \
   '      var scrollmode = 2;\r\n' \
   '      var scrollmode_ex = scrollmode;\r\n' \
   '      var focused = "";\r\n' \
@@ -10061,8 +10062,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        jmaps = [];\r\n' \
   '        const [lat, lon] = WebMercatortoWGS84(htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom);\r\n' \
-  '        let tlays = null;\r\n' \
-  '        if (tlayers.has(tset)) {tlays = tlayers.get(tset);}\r\n' \
+  '        const tlays = tlayers.has(tset) ? tlayers.get(tset) : null;\r\n' \
   '        for (let l=0; l<layers.length; l++) {\r\n' \
   '          if (layers[l].ext != ".json") {continue;}\r\n' \
   '          const jdiv = document.createElement("div");\r\n' \
@@ -10108,10 +10108,10 @@ class GPXTweakerWebInterfaceServer():
   '          rescale();\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let msg = JSON.parse(t.response);\r\n' \
+  '        const msg = JSON.parse(t.response);\r\n' \
   '        if (nset == null) {\r\n' \
   '          if (treset == 2 && tmaplibre == false) {\r\n' \
-  '            if (msg.layers.some((l)=>l.ext==".json")) {\r\n' \
+  '            if (msg.layers.some((l) => l.ext == ".json")) {\r\n' \
   '              const sc = document.createElement("script");\r\n' \
   '              sc.src = "/jsontiles/maplibre_js/##TMAPLIBREJS##";\r\n' \
   '              const li = document.createElement("link");\r\n' \
@@ -10221,7 +10221,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (tset < 0) {\r\n' \
   '          tset = 0;\r\n' \
   '          if (! tlock) {switch_tlock(false);}\r\n' \
-  '          zoom_s = 1;\r\n' \
+  '          zoom_s = "1";\r\n' \
   '          document.getElementById("zoom").innerHTML = "1";\r\n' \
   '        }\r\n' \
   '        document.getElementById("tset").selectedIndex = tset;\r\n' \
@@ -10270,7 +10270,7 @@ class GPXTweakerWebInterfaceServer():
   '          Array.from(handle.getElementsByClassName("tlayer")).forEach((tl) => handle.removeChild(tl));\r\n' \
   '          for (let l=layers.length-1; l>=0; l--) {\r\n' \
   '            if (layers[l].ext == ".json") {continue;}\r\n' \
-  '            const tlayer = document.createElement("div");\r\n' \
+  '            const tlayer = document.createElement("slot");\r\n' \
   '            tlayer.id = "tlayer" + l.toString();\r\n' \
   '            tlayer.classList.add("tlayer");\r\n' \
   '            handle.insertBefore(tlayer, handle.firstElementChild);\r\n' \
@@ -10313,7 +10313,7 @@ class GPXTweakerWebInterfaceServer():
   '                tiles[t].remove();\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            const suf = text + "?" + (tlayers.has(document.getElementById("tset").selectedIndex)?tlayers.get(document.getElementById("tset").selectedIndex)[l][0]:document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
+  '            const suf = text + "?" + (tlayers.has(document.getElementById("tset").selectedIndex) ? tlayers.get(document.getElementById("tset").selectedIndex)[l][0] : document.getElementById("tset").selectedIndex).toString() + "," + tmatrix;\r\n' \
   '            const pref = "tile-" + l.toString() + "-";\r\n' \
   '            if (tiles_hold == null) {\r\n' \
   '              for (let row=rtop; row<=rbottom; row++) {\r\n' \
@@ -10356,11 +10356,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            cleft = rleft;\r\n' \
-  '            cright = rright;\r\n' \
-  '            ctop = rtop;\r\n' \
-  '            cbottom = rbottom;\r\n' \
-  '            layersc[l] = [cleft, cright, ctop, cbottom];\r\n' \
+  '            layersc[l] = [rleft, rright, rtop, rbottom];\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (treset == 1) {treset = 0;}\r\n' \
@@ -10407,11 +10403,7 @@ class GPXTweakerWebInterfaceServer():
   '        return parseFloat(s.match(/-?\\d+[.]?\\d*/)[0]);\r\n' \
   '      }\r\n' \
   '      function wmvalue_to_prop(v, o=0) {\r\n' \
-  '        if (o) {\r\n' \
-  '          return "calc(" + v.toFixed(1) + "px / var(--scale) - " + o.toString() + "px)";\r\n' \
-  '        } else {\r\n' \
-  '          return "calc(" + v.toFixed(1) + "px / var(--scale))";\r\n' \
-  '        }\r\n' \
+  '        return "calc(" + v.toFixed(1) + "px / var(--scale)" + (o ? " - " + o.toString() + "px)" : ")");\r\n' \
   '      }\r\n' \
   '      function scroll_dview(dx, dy) {\r\n' \
   '        hpx += dx;\r\n' \
@@ -10430,7 +10422,7 @@ class GPXTweakerWebInterfaceServer():
   '        return d;\r\n' \
   '      }\r\n' \
   '      function slope(gdist, heig) {\r\n' \
-  '        return gdist>0?(heig / gdist):(parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig==0?0:(heig>0?1:-1)));\r\n' \
+  '        return gdist > 0 ? (heig / gdist) : (parseFloat(document.getElementById("slmax").innerHTML) / 100 * (heig == 0 ? 0 : (heig > 0 ? 1 : -1)));\r\n' \
   '      }\r\n' \
   '      function escape(s) {\r\n' \
   '        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");\r\n' \
@@ -10757,7 +10749,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (seg_ind == segf_ind) {break;}\r\n' \
   '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                dur += stats[seg_ind][stats[seg_ind].length - 1][0];\r\n' \
+  '                dur += stats[seg_ind].at(-1)[0];\r\n' \
   '              }\r\n' \
   '              dur_s = dur % 60;\r\n' \
   '              dur_m = ((dur - dur_s) / 60) % 60;\r\n' \
@@ -10777,7 +10769,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (seg_ind == segf_ind) {break;}\r\n' \
   '                if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                dist += stats[seg_ind][stats[seg_ind].length - 1][6];\r\n' \
+  '                dist += stats[seg_ind].at(-1)[6];\r\n' \
   '              }\r\n' \
   '              graphpx.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
   '            }\r\n' \
@@ -10796,15 +10788,15 @@ class GPXTweakerWebInterfaceServer():
   '                  }\r\n' \
   '                  if (seg_ind == segf_ind) {break;}\r\n' \
   '                  if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                  dist += stats[seg_ind][stats[seg_ind].length - 1][6];\r\n' \
+  '                  dist += stats[seg_ind].at(-1)[6];\r\n' \
   '                }\r\n' \
   '                graphpy.innerHTML = (dist / 1000).toFixed(2) + "km<br>" + (dist_s / 1000).toFixed(2) + "km";\r\n' \
   '                break;\r\n' \
   '              case 1:\r\n' \
-  '                graphpy.innerHTML = (tr_ind == null ? document.getElementById(focused).getAttribute("data-ele") : segs[segf_ind][stat_ind][2]) + "m";\r\n' \
+  '                graphpy.innerHTML = (tr_ind == null ? point_data[5 * parseInt(focused.substring(5)) + 2] : segs[segf_ind][stat_ind][2]).toFixed(1) + "m";\r\n' \
   '                break\r\n' \
   '              case 2:\r\n' \
-  '                graphpy.innerHTML = (tr_ind == null ? document.getElementById(focused).getAttribute("data-alt") : segs[segf_ind][stat_ind][3]) + "m";\r\n' \
+  '                graphpy.innerHTML = (tr_ind == null ? point_data[5 * parseInt(focused.substring(5)) + 3] : segs[segf_ind][stat_ind][3]).toFixed(1) + "m";\r\n' \
   '                break\r\n' \
   '              case 3:\r\n' \
   '              case 4:\r\n' \
@@ -10820,7 +10812,7 @@ class GPXTweakerWebInterfaceServer():
   '                  }\r\n' \
   '                  if (seg_ind == segf_ind) {break;}\r\n' \
   '                  if (stats[seg_ind].length == 0) {continue;}\r\n' \
-  '                  g += stats[seg_ind][stats[seg_ind].length - 1][yi - 1];\r\n' \
+  '                  g += stats[seg_ind].at(-1)[yi - 1];\r\n' \
   '                }\r\n' \
   '                graphpy.innerHTML = g.toFixed(1) + "m<br>" + g_s.toFixed(1) + "m";\r\n' \
   '                break;\r\n' \
@@ -10889,8 +10881,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function refresh_graph(sw=false) {\r\n' \
   '        if (sw) {switch_graph();}\r\n' \
-  '        const graph = document.getElementById("graph");\r\n' \
   '        if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph") {return;}\r\n' \
+  '        const graph = document.getElementById("graph");\r\n' \
   '        const graphc = document.getElementById("graphc");\r\n' \
   '        const gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
   '        const gheight = graph.offsetHeight;\r\n' \
@@ -11137,7 +11129,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (targetmark.style.display != "none") {\r\n' \
   '                scroll_to_target(scrollmode == 2);\r\n' \
   '              }\r\n' \
-  '            } else {\r\n' \
+  '            } else if (! document.getElementById(focused).hasAttribute("data-error")) {\r\n' \
   '              scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
   '            }\r\n' \
   '          } else if (targetmark != null && targetmark.style.display != "none") {\r\n' \
@@ -11255,7 +11247,7 @@ class GPXTweakerWebInterfaceServer():
   '      function scrollcross(sw=false, target=false) {\r\n' \
   '        if (sw) {\r\n' \
   '          scrollmode = scrollmode_ex = (scrollmode + 1) % 3;\r\n' \
-  '          document.getElementById("scrollcross").style.color = scrollmode==0?"rgb(90,90,90)":(scrollmode == 1 ? "blue" : "green");\r\n' \
+  '          document.getElementById("scrollcross").style.color = scrollmode == 0 ? "rgb(90,90,90)" : (scrollmode == 1 ? "blue" : "green");\r\n' \
   '        } else {\r\n' \
   '          if (target) {\r\n' \
   '            if (targetmark.style.display != "none") {scroll_to_target(true);}\r\n' \
@@ -11263,7 +11255,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (! focused) {return;}\r\n' \
   '          if (focused.startsWith("seg")) {\r\n' \
-  '            document.getElementById(focused).scrollIntoView({block:"start"});\r\n' \
+  '            document.getElementById(focused).getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
   '            scroll_to_track(document.getElementById(focused.replace("segment", "track")), true);\r\n' \
   '          } else if (focused.startsWith("tra")) {\r\n' \
   '            document.getElementById(focused + "desc").scrollIntoView({block:"nearest"});\r\n' \
@@ -11278,7 +11270,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function points_navigate(cmd) {\r\n' \
-  '        let seg = null;\r\n' \
   '        switch (cmd) {\r\n' \
   '          case "ca":\r\n' \
   '            Array.prototype.forEach.call(document.getElementById("pointslist").getElementsByClassName("segment"), function(s) {s.setAttribute("data-collapsed", "");});\r\n' \
@@ -11307,26 +11298,24 @@ class GPXTweakerWebInterfaceServer():
   '            break;\r\n' \
   '          case "su":\r\n' \
   '            if (focused.startsWith("seg")) {\r\n' \
-  '              seg = document.getElementById(focused).previousElementSibling;\r\n' \
+  '              element_click(null, document.getElementById(focused).previousElementSibling);\r\n' \
   '            } else if (focused.startsWith("point")) {\r\n' \
-  '              seg = document.getElementById(focused).parentNode;\r\n' \
+  '              element_click(null, document.getElementById(focused).parentNode);\r\n' \
   '            }\r\n' \
-  '            if (seg) {element_click(null, seg);}\r\n' \
   '            break;\r\n' \
   '          case "sd":\r\n' \
   '            if (focused.startsWith("seg")) {\r\n' \
-  '              seg = document.getElementById(focused).nextElementSibling;\r\n' \
+  '              element_click(null, document.getElementById(focused).nextElementSibling);\r\n' \
   '            } else if (focused.startsWith("point")) {\r\n' \
-  '              seg = document.getElementById(focused).parentNode.nextElementSibling;\r\n' \
+  '              element_click(null, document.getElementById(focused).parentNode.nextElementSibling);\r\n' \
   '            }\r\n' \
-  '            if (seg) {element_click(null, seg);}\r\n' \
   '            break;\r\n' \
   '          case "ms":\r\n' \
   '            marked = focused;\r\n' \
   '            break;\r\n' \
   '          case "mg":\r\n' \
   '            if (marked) {\r\n' \
-  '              if (marked == focused) {element_click(null, document.getElementById(marked));}\r\n' \
+  '              if (marked == focused) {element_click(null, document.getElementById(marked), false);}\r\n' \
   '              element_click(null, document.getElementById(marked));\r\n' \
   '            }\r\n' \
   '            break;\r\n' \
@@ -11338,7 +11327,7 @@ class GPXTweakerWebInterfaceServer():
   '      function open_legend() {\r\n' \
   '        const msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then((fd) => {xhr_ongoing--;fd.forEach((e) => {const url=URL.createObjectURL(e);const w=open(url);URL.revokeObjectURL(url);w.onload=(ev)=>{ev.target.title=e.name;};w.document.title=e.name;});show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch((er) => {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);});\r\n' \
+  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then(function(fd) {fd.forEach(function(e) {const url = URL.createObjectURL(e); const w = open(url); URL.revokeObjectURL(url); w.onload = function(ev) {ev.target.title = e.name;}; w.document.title = e.name;}); show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch(function(er) {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);}).finally(function() {xhr_ongoing--;});\r\n' \
   '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
   '        const ps = document.getElementById("panels").style;\r\n' \
@@ -11516,8 +11505,10 @@ class GPXTweakerWebInterfaceServer():
   HTML_PAGE_LOAD_TEMPLATE = \
   '        history.scrollRestoration = "manual";\r\n' \
   '        let prev_state = sessionStorage.getItem("state");\r\n' \
-  '        if (prev_state != null) {prev_state = prev_state.split("|");}\r\n' \
-  '        if (prev_state != null) {zoom_s = prev_state[3];}\r\n' \
+  '        if (prev_state != null) {\r\n' \
+  '          prev_state = prev_state.split("|");\r\n' \
+  '          zoom_s = prev_state[3];\r\n' \
+  '        }\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        if (mode == "map") {\r\n' \
   '          add_tile();\r\n' \
@@ -11528,7 +11519,7 @@ class GPXTweakerWebInterfaceServer():
   '            tscale = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
   '          }\r\n' \
   '          if (prev_state == null) {\r\n' \
-  '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o)=>o.style.display!="none");\r\n' \
+  '            document.getElementById("tset").selectedIndex = Array.from(document.getElementById("tset").options).findIndex((o) => o.style.display != "none");\r\n' \
   '            switch_tiles(-1, 0);\r\n' \
   '          } else {\r\n' \
   '            document.getElementById("tset").selectedIndex = parseInt(prev_state[0]);\r\n' \
@@ -11769,44 +11760,45 @@ class GPXTweakerWebInterfaceServer():
   '        font-size: 100%;\r\n' \
   '      }\r\n' \
   '      .waydot, .dot {\r\n' \
-  '        position: absolute;\r\n' \
   '        stroke-width: 1.5;\r\n' \
   '        cursor: pointer;\r\n' \
   '        pointer-events: all;\r\n' \
   '      }\r\n' \
   '      .waydot {\r\n' \
+  '        position: absolute;\r\n' \
   '        width: 8px;\r\n' \
   '        height: 8px;\r\n' \
   '        stroke: var(--wdstr);\r\n' \
   '        fill: red;\r\n' \
   '      }\r\n' \
   '      .dot {\r\n' \
+  '        position: var(--dpos);\r\n' \
   '        display: var(--ddis);\r\n' \
+  '        visibility: var(--dvis);\r\n' \
   '        width: 7px;\r\n' \
   '        height: 7px;\r\n' \
   '        stroke: gray;\r\n' \
   '        fill: none;\r\n' \
   '      }\r\n' \
-  '      .waydot.deleted {\r\n' \
+  '      .waydot.deleted, .dot.deleted {\r\n' \
   '        visibility: hidden;\r\n' \
   '        fill: none;\r\n' \
-  '      }\r\n' \
-  '      .dot.deleted {\r\n' \
-  '        visibility: hidden;\r\n' \
   '      }\r\n' \
   '      .waydot.over, .dot.over {\r\n' \
   '        display: block;\r\n' \
   '        stroke: green;\r\n' \
-  '        zIndex: 2;\r\n' \
+  '        z-index: 2;\r\n' \
   '      }\r\n' \
   '      .waydot.focused, .dot.focused {\r\n' \
+  '        position: absolute;\r\n' \
   '        display: block;\r\n' \
   '        visibility: visible;\r\n' \
   '        stroke: blue;\r\n' \
-  '        zIndex: 1;\r\n' \
+  '        z-index: 1;\r\n' \
   '      }\r\n' \
   '      .waydot.error, .dot.error {\r\n' \
   '        visibility: hidden;\r\n' \
+  '        z-index: auto;\r\n' \
   '      }\r\n' \
   '      .waydot circle {\r\n' \
   '        cx: 4px;\r\n' \
@@ -11832,7 +11824,7 @@ class GPXTweakerWebInterfaceServer():
   '        visibility: visible;\r\n' \
   '        stroke: blue;\r\n' \
   '        fill: blue;\r\n' \
-  '        zIndex: 1;\r\n' \
+  '        z-index: 1;\r\n' \
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
@@ -11840,7 +11832,6 @@ class GPXTweakerWebInterfaceServer():
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
   '      var stats = [];\r\n' \
-  '      var arrows_visible = true;\r\n' \
   '      var smoothed = false;\r\n' \
   '      var point_stat = [];\r\n' \
   '      var gpu_part = gpucomp >= 1 ? true : false;\r\n' \
@@ -11852,8 +11843,7 @@ class GPXTweakerWebInterfaceServer():
   '            const b = track_boundaries();\r\n' \
   '            if (b == null) {return;}\r\n' \
   '            const r = Math.max((b[1] - b[0]) / viewpane.offsetWidth, (b[3] - b[2]) / viewpane.offsetHeight);\r\n' \
-  '            let z = eval(zooms.slice(-1)[0]);\r\n' \
-  '            if (r > 0) {z = 1 / r / Math.min((viewpane.offsetWidth - 2) / (vmaxx - vminx), (viewpane.offsetHeight - 4) / (vmaxy - vminy));}\r\n' \
+  '            const z = r > 0 ? 1 / r / Math.min((viewpane.offsetWidth - 2) / (vmaxx - vminx), (viewpane.offsetHeight - 4) / (vmaxy - vminy)) : eval(zooms.slice(-1)[0]);\r\n' \
   '            const zoom_s_ex = zoom_s;\r\n' \
   '            zoom_s = "1";\r\n' \
   '            for (let i=1; i<zooms.length; i++) {\r\n' \
@@ -11904,11 +11894,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (dot == null) {return;}\r\n' \
   '        const dl = prop_to_wmvalue(dot.style.left);\r\n' \
   '        const dt = prop_to_wmvalue(dot.style.top);\r\n' \
-  '        const o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '        if (center) {\r\n' \
   '          hpx = viewpane.offsetWidth / 2 - dl * zoom / tscale;\r\n' \
   '          hpy = viewpane.offsetHeight / 2 - dt * zoom / tscale;\r\n' \
   '        } else {\r\n' \
+  '          const o = Math.min(50, viewpane.offsetWidth / 2.5, viewpane.offsetHeight / 2.5);\r\n' \
   '          hpx = Math.max(Math.min(hpx, -o - dl * zoom / tscale + viewpane.offsetWidth), o - dl * zoom / tscale);\r\n' \
   '          hpy = Math.max(Math.min(hpy, -o - dt * zoom / tscale + viewpane.offsetHeight), o - dt * zoom / tscale);\r\n' \
   '        }\r\n' \
@@ -11924,12 +11914,10 @@ class GPXTweakerWebInterfaceServer():
   '       const pt = document.getElementById(focused);\r\n' \
   '       pt.setAttribute("data-lat", lat);\r\n' \
   '       pt.setAttribute("data-lon", lon);\r\n' \
-  '       if (pt.hasAttribute("data-focused")) {\r\n' \
-  '         const p = pt.id.startsWith("way") ? "waypoint" : "point";\r\n' \
-  '         document.getElementById(p + "lat").value = lat;\r\n' \
-  '         document.getElementById(p + "lon").value = lon;\r\n' \
-  '       }\r\n' \
-  '       point_edit(false, false, false, true);\r\n' \
+  '       const p = pt.id.startsWith("way") ? "waypoint" : "point";\r\n' \
+  '       document.getElementById(p + "lat").value = lat;\r\n' \
+  '       document.getElementById(p + "lon").value = lon;\r\n' \
+  '       point_edit(false, true, true);\r\n' \
   '      }\r\n' \
   '      function track_boundaries(track=null) {\r\n' \
   '        const tracks = [];\r\n' \
@@ -12007,29 +11995,6 @@ class GPXTweakerWebInterfaceServer():
   '          return [gminx - o, gmaxx + o, gminy - o, gmaxy + o];\r\n' \
   '        }\r\n' \
   '      }\r\n' + HTML_SCROLL_TEMPLATE + \
-  '      function dot_style(pt, over) {\r\n' \
-  '        if (pt.indexOf("point") < 0) {return;}\r\n' \
-  '        const dot = document.getElementById(pt.replace("point", "dot"));\r\n' \
-  '        if (dot == null) {return;}\r\n' \
-  '        const iswpt = pt.startsWith("way");\r\n' \
-  '        dot.setAttribute("class", iswpt ? "waydot" : "dot");\r\n' \
-  '        const isfoc = pt == focused;\r\n' \
-  '        pt = document.getElementById(pt);\r\n' \
-  '        const ptd = pt.hasAttribute("data-deleted");\r\n' \
-  '        const segd = iswpt ? false : pt.parentNode.hasAttribute("data-deleted");\r\n' \
-  '        if (pt.hasAttribute("data-error")) {\r\n' \
-  '          dot.classList.add("error");\r\n' \
-  '          return;\r\n' \
-  '        }\r\n' \
-  '        if (ptd || segd) {\r\n' \
-  '          dot.classList.add("deleted");\r\n' \
-  '        }\r\n' \
-  '        if (isfoc) {\r\n' \
-  '          dot.classList.add("focused");\r\n' \
-  '        } else if (over) {\r\n' \
-  '          dot.classList.add("over");\r\n' \
-  '        }\r\n' \
-  '      }\r\n' \
   '      function save_old() {\r\n' \
   '        if (focused.indexOf("point") < 0) {return;}\r\n' \
   '        const elt_data = document.getElementById(focused).dataset;\r\n' \
@@ -12048,6 +12013,11 @@ class GPXTweakerWebInterfaceServer():
   '        } else {\r\n' \
   '          hist[0].push([focused, foc_old, arg]);\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      function save_foc(batch=null) {\r\n' \
+  '        save_old();\r\n' \
+  '        hist_push(batch);\r\n' \
+  '        hist_trim();\r\n' \
   '      }\r\n' \
   '      function element_click(e, elt, scroll=true) {\r\n' \
   '        if (e == null) {\r\n' \
@@ -12069,7 +12039,7 @@ class GPXTweakerWebInterfaceServer():
   '            const elt_foc = document.getElementById(iswpt ? "waypointform" : "pointform");\r\n' \
   '            Array.prototype.forEach.call(elt_foc.getElementsByTagName("input"), function(i) {i.value = "";});\r\n' \
   '            document.getElementById(iswpt ? "pattern_waypoint" : "pattern_point").appendChild(elt_foc);\r\n' \
-  '            dot_style(ex_foc, focused == "");\r\n' \
+  '            document.getElementById(ex_foc.replace("point", "dot")).classList.remove("focused");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (focused) {\r\n' \
@@ -12094,26 +12064,29 @@ class GPXTweakerWebInterfaceServer():
   '              inputs[3].value = elt_data.alt;\r\n' \
   '              inputs[4].value = elt_data.time;\r\n' \
   '            }\r\n' \
-  '            save_old();\r\n' \
   '            elt.append(elt_foc);\r\n' \
-  '            dot_style(focused, false);\r\n' \
+  '            const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '            dot.classList.add("focused");\r\n' \
   '            if (scroll) {\r\n' \
-  '              if (focused.startsWith("point")) {elt.parentNode.removeAttribute("data-collapsed");}\r\n' \
+  '              if (! iswpt) {elt.parentNode.removeAttribute("data-collapsed");}\r\n' \
   '              elt.scrollIntoView({block:"nearest"});\r\n' \
   '              elt_foc.scrollIntoView({block:"nearest"});\r\n' \
   '              const par_d = iswpt ? false : elt.parentNode.hasAttribute("data-deleted");\r\n' \
-  '              if (scrollmode > 0 && ! elt.hasAttribute("data-error") && (elt.hasAttribute("data-deleted") || par_d || e)) {\r\n' \
-  '                scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);\r\n' \
-  '              }\r\n' \
+  '              if (scrollmode > 0 && ! elt.hasAttribute("data-error")) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        gfence(graph_point);\r\n' \
   '      }\r\n' \
   '      function point_to_position(pt) {\r\n' \
-  '        const wm = WGS84toWebMercator(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")));\r\n' \
-  '        const o = pt.id.startsWith("way") ? "4" : "3.5";\r\n' \
-  '        return [wmvalue_to_prop(wm[0] - htopx, o), wmvalue_to_prop(htopy - wm[1], o)];\r\n' \
+  '        if (pt.id.startsWith("way")) {\r\n' \
+  '          const wm = WGS84toWebMercator(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")));\r\n' \
+  '          return [wmvalue_to_prop(wm[0] - htopx, 4), wmvalue_to_prop(htopy - wm[1], 4)];\r\n' \
+  '        } else {\r\n' \
+  '          const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '          const wm = WGS84toWebMercator(point_data[ptd_ind], point_data[ptd_ind + 1]);\r\n' \
+  '          return [wmvalue_to_prop(wm[0] - htopx, 3.5), wmvalue_to_prop(htopy - wm[1], 3.5)];\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function rebase_track(x, y, track, exact=false, batch=false) {\r\n' \
   '        const path = track.firstElementChild;\r\n' \
@@ -12220,7 +12193,7 @@ class GPXTweakerWebInterfaceServer():
   '          pt.firstChild.nodeValue = "(" + lat + ", " + lon + ") " + ele + " " + alt + " " + time;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function point_edit(scroll=true, cancel=true, recalc=true, coord=true) {\r\n' \
+  '      function point_edit(recalc=true, coord=true, track=true) {\r\n' \
   '        const rll = new RegExp(/^[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)$/);\r\n' \
   '        const rea = new RegExp(/^(?:(?:[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+))|)$/);\r\n' \
   '        const rt = new RegExp(/^(?:(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29).(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[\\+\\-](?:[01][0-9]|2[0-3]):[0-5][0-9])?)|)$/);\r\n' \
@@ -12228,68 +12201,54 @@ class GPXTweakerWebInterfaceServer():
   '        const pt_data = pt.dataset;\r\n' \
   '        const iswpt = focused.startsWith("way");\r\n' \
   '        pt_data.edited = "";\r\n' \
-  '        if (cancel) {\r\n' \
-  '          hist_push();\r\n' \
-  '          save_old();\r\n' \
-  '          hist_trim();\r\n' \
-  '        }\r\n' \
-  '        let valid = rll.test(pt_data.lat) && rll.test(pt_data.lon) && rea.test(pt_data.ele) && rt.test(pt_data.time) && (iswpt || rea.test(pt_data.alt));\r\n' \
+  '        const plat = pt_data.lat;\r\n' \
+  '        const plon = pt_data.lon;\r\n' \
+  '        const pele = pt_data.ele;\r\n' \
+  '        const palt = iswpt ? null : pt_data.alt;\r\n' \
+  '        const ptime = pt_data.time;\r\n' \
+  '        let valid =  rll.test(plat) && rll.test(plon) && rea.test(pele) && rt.test(ptime) && (iswpt || rea.test(palt));\r\n' \
+  '        let p_lat = null;\r\n' \
+  '        let p_lon = null;\r\n' \
   '        if (valid) {\r\n' \
-  '          const wm = WGS84toWebMercator(parseFloat(pt_data.lat), parseFloat(pt_data.lon));\r\n' \
+  '          p_lat = parseFloat(plat);\r\n' \
+  '          p_lon = parseFloat(plon);\r\n' \
+  '          const wm = WGS84toWebMercator(p_lat, p_lon);\r\n' \
   '          valid = wm[0] > vminx && wm[0] < vmaxx && wm[1] > vminy && wm[1] < vmaxy;\r\n' \
   '        }\r\n' \
+  '        const err = pt_data.hasOwnProperty("error");\r\n' \
   '        if (valid) {\r\n' \
-  '          if (! iswpt) {\r\n' \
-  '            point_data.set([parseFloat(pt_data.lat), parseFloat(pt_data.lon), parseFloat(pt_data.ele), parseFloat(pt_data.alt), Date.parse(pt_data.time)], 5 * parseInt(focused.substring(5)));\r\n' \
-  '          }\r\n' \
+  '          if (! iswpt) {point_data.set([p_lat, p_lon, parseFloat(pele), parseFloat(palt), Date.parse(ptime)], 5 * parseInt(pt.id.substring(5)));}\r\n' \
   '          point_desc(pt);\r\n' \
-  '          pt_data.edited = "";\r\n' \
-  '          if (coord || pt_data.hasOwnProperty("error")) {\r\n' \
+  '          if (coord || err) {\r\n' \
   '            const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            [dot.style.left, dot.style.top] = point_to_position(pt);\r\n' \
-  '            if (pt_data.hasOwnProperty("error")) {\r\n' \
+  '            if (err) {\r\n' \
   '              delete pt_data.error;\r\n' \
-  '              if (pt_data.hasOwnProperty("deleted")) {dot_style(focused, true);} else {point_undelete(pt);}\r\n' \
-  '              if (scrollmode > 0) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
-  '            } else {\r\n' \
-  '              if (scroll && scrollmode > 0) {scroll_to_dot(dot, scrollmode == 2);}\r\n' \
-  '              if (! (iswpt || pt_data.hasOwnProperty("deleted"))) {\r\n' \
-  '                const seg = pt.parentNode;\r\n' \
-  '                const track = document.getElementById("track" + seg.id.substring(7));\r\n' \
-  '                const np = WGS84_to_viewbox(parseFloat(pt_data.lat), parseFloat(pt_data.lon), track);\r\n' \
-  '                const path = document.getElementById("path" + seg.id.substring(7));\r\n' \
-  '                const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
-  '                const d = path.getAttribute("d");\r\n' \
-  '                let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
-  '                let d_right = d.slice(d_left[0].length);\r\n' \
-  '                if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
-  '                path.setAttribute("d", d_left[0].slice(0, -d_left[1].length) + d_left[1][0] + np + d_right);\r\n' \
-  '              }\r\n' \
+  '              dot.classList.remove("error");\r\n' \
   '            }\r\n' \
+  '           if (track && ! (iswpt || pt_data.hasOwnProperty("deleted"))) {track_update_point(pt);}\r\n' \
   '          }\r\n' \
-  '        } else if (! pt_data.hasOwnProperty("error")) {\r\n' \
-  '            pt_data.error = "";\r\n' \
-  '            point_data.set([NaN, NaN, NaN, NaN, NaN], 5 * parseInt(focused.substring(5)));\r\n' \
-  '            if (pt_data.hasOwnProperty("deleted")) {dot_style(focused, true);} else {point_delete(pt);}\r\n' \
+  '        } else if (! err) {\r\n' \
+  '          if (! iswpt) {point_data.set([NaN, NaN, NaN, NaN, NaN], 5 * parseInt(pt.id.substring(5)));}\r\n' \
+  '          pt_data.error = "";\r\n' \
+  '          document.getElementById(focused.replace("point", "dot")).classList.add("error");\r\n' \
+  '          if (track && ! pt_data.hasOwnProperty("deleted")) {track_update_point(pt);}\r\n' \
   '        }\r\n' \
-  '        if (recalc && ! iswpt) {calc_modified(pt.parentNode);}\r\n' \
-  '      }\r\n' \
-  '      function point_edit_oc(point, recalc=true, coord=true) {\r\n' \
-  '        const ex_foc = focused;\r\n' \
-  '        focused = point;\r\n' \
-  '        point_edit(coord, true, recalc, coord);\r\n' \
-  '        focused = ex_foc;\r\n' \
+  '        if (recalc) {\r\n' \
+  '          if (iswpt) {wpt_calc();} else {calc_modified(pt.parentNode);}\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function point_over(pt) {\r\n' \
-  '        const foc = pt.id;\r\n' \
-  '        const par_d = foc.startsWith("way") ? false : pt.parentNode.hasAttribute("data-deleted");\r\n' \
-  '        dot_style(foc, true);\r\n' \
-  '        if ((! (pt.hasAttribute("data-deleted") || par_d) || foc == focused) && ! pt.hasAttribute("data-error") && scrollmode == 2) {\r\n' \
-  '          scroll_to_dot(document.getElementById(foc.replace("point", "dot")), false);\r\n' \
+  '        const pt_id = pt.id;\r\n' \
+  '        const par_d = pt_id.startsWith("way") ? false : pt.parentNode.hasAttribute("data-deleted");\r\n' \
+  '        const dot = document.getElementById(pt_id.replace("point", "dot"));\r\n' \
+  '        dot.classList.add("over");\r\n' \
+  '        if ((! (pt.hasAttribute("data-deleted") || par_d) || pt_id == focused) && ! pt.hasAttribute("data-error") && scrollmode == 2) {\r\n' \
+  '          scroll_to_dot(dot, false);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function point_outside(pt) {\r\n' \
-  '        dot_style(pt.id, false);\r\n' \
+  '        document.getElementById(pt.id.replace("point", "dot")).classList.remove("over");\r\n' \
   '      }\r\n' \
   '      function undo(redo, whole) {\r\n' \
   '        const s = redo ? 1 : 0;\r\n' \
@@ -12328,6 +12287,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (ind == null) {return;}\r\n' \
   '          histb = ++hist_b;\r\n' \
+  '          element_click(null, document.getElementById(focused), false);\r\n' \
   '        } else {\r\n' \
   '          for (let i=hist[s].length-1; i>=0; i--) {\r\n' \
   '            if (hist[s][i][0] == focused) {\r\n' \
@@ -12368,40 +12328,31 @@ class GPXTweakerWebInterfaceServer():
   '              elt_foc_data.alt = c[3];\r\n' \
   '              elt_foc_data.time = c[4];\r\n' \
   '            }\r\n' \
-  '            save_old();\r\n' \
-  '            point_edit(false, false, histb == 0, coord && histb == 0);\r\n' \
-  '            if (err && ! elt_foc_data.hasOwnProperty("error")) {\r\n' \
-  '              focused = "";\r\n' \
-  '              dot_style(hist[s][ind][0], false);\r\n' \
-  '              focused = hist[s][ind][0];\r\n' \
-  '            }\r\n' \
-  '            if (coord && histb != 0) {\r\n' \
+  '            point_edit(histb == 0, coord, histb == 0);\r\n' \
+  '            if (histb != 0 && (coord || err != elt_foc_data.error)) {\r\n' \
   '              if (segments == null) {\r\n' \
   '                segments = Array(document.getElementById("pointslist").getElementsByClassName("segment").length).fill(null);\r\n' \
   '                points = Array(document.getElementById("pointslist").getElementsByClassName("point").length).fill(null);\r\n' \
   '              }\r\n' \
   '              segments[parseInt(document.getElementById(focused).parentNode.id.substring(7))] = true;\r\n' \
   '              points[parseInt(focused.substring(5))] = ! (elt_foc_data.deleted || elt_foc_data.error);\r\n' \
-  '              const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
-  '              [dot.style.left, dot.style.top] = point_to_position(document.getElementById(focused));\r\n' \
   '            }\r\n' \
   '          } else {\r\n' \
   '            if (histb == 0) {\r\n' \
   '              hist[1-s].push([focused, ""]);\r\n' \
   '            } else {\r\n' \
   '              hist[1-s].push([focused, "", histb]);\r\n' \
+  '            }\r\n' \
+  '            elt_foc_data.deleted = redo;\r\n' \
+  '            point_checkbox(document.getElementById(hist[s][ind][0]), histb != 0);\r\n' \
+  '            if (histb != 0) {\r\n' \
   '              if (segments == null) {\r\n' \
   '                segments = Array(document.getElementById("pointslist").getElementsByClassName("segment").length).fill(null);\r\n' \
   '                points = Array(document.getElementById("pointslist").getElementsByClassName("point").length).fill(null);\r\n' \
   '              }\r\n' \
   '              segments[parseInt(document.getElementById(focused).parentNode.id.substring(7))] = true;\r\n' \
-  '              points[parseInt(focused.substring(5))] = redo;\r\n' \
+  '              points[parseInt(focused.substring(5))] = redo && ! elt_foc_data.error;\r\n' \
   '            }\r\n' \
-  '            elt_foc_data.deleted = redo;\r\n' \
-  '            focused = "";\r\n' \
-  '            point_checkbox(document.getElementById(hist[s][ind][0]), histb != 0);\r\n' \
-  '            if (histb == 0) {dot_style(hist[s][ind][0], false)};\r\n' \
-  '            focused = hist[s][ind][0];\r\n' \
   '          }\r\n' \
   '          hist[s].splice(ind, 1);\r\n' \
   '        }\r\n' \
@@ -12433,7 +12384,10 @@ class GPXTweakerWebInterfaceServer():
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        if (histb != 0) {calc_modified();}\r\n' \
+  '        if (histb != 0) {\r\n' \
+  '          wpt_calc();\r\n' \
+  '          calc_modified();\r\n' \
+  '        }\r\n' \
   '        const ex_foc_ = focused;\r\n' \
   '        focused = "";\r\n' \
   '        if (ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
@@ -12479,7 +12433,6 @@ class GPXTweakerWebInterfaceServer():
   '          if (document.getElementById(focused).hasAttribute("data-error")) {return;}\r\n' \
   '          ex_foc = focused;\r\n' \
   '          element_click(null, document.getElementById(focused), false);\r\n' \
-  '          dot_style(ex_foc, false);\r\n' \
   '        }\r\n' \
   '        let elt = null;\r\n' \
   '        let elt_dot = null;\r\n' \
@@ -12525,7 +12478,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (! elt) {\r\n' \
   '          ref = document.getElementById(ex_foc);\r\n' \
   '          par = ref.parentNode;\r\n' \
-  '          elt = document.getElementById(ex_foc).cloneNode(true);\r\n' \
+  '          elt = ref.cloneNode(true);\r\n' \
   '          elt.removeAttribute("data-deleted");\r\n' \
   '        }\r\n' \
   '        elt.id = pref;\r\n' \
@@ -12540,11 +12493,11 @@ class GPXTweakerWebInterfaceServer():
   '          elt_data.lon = lon.toFixed(6);\r\n' \
   '          elt_data.ele = "";\r\n' \
   '          elt_data.time = "";\r\n' \
-  '          if (ex_foc) {elt_data.alt = "";} else {elt_data.name = "";}\r\n' \
+  '          if (iswpt) {elt_data.name = "";} else {elt_data.alt = "";}\r\n' \
   '          point_desc(elt, true);\r\n' \
   '          const wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '          elt_dot.style.left = wmvalue_to_prop(wm[0] - htopx, (ex_foc ? 3.5 : 4));\r\n' \
-  '          elt_dot.style.top = wmvalue_to_prop(htopy - wm[1], (ex_foc ? 3.5 : 4));\r\n' \
+  '          elt_dot.style.left = wmvalue_to_prop(wm[0] - htopx, (iswpt ? 4 : 3.5));\r\n' \
+  '          elt_dot.style.top = wmvalue_to_prop(htopy - wm[1], (iswpt ? 4 : 3.5));\r\n' \
   '        }\r\n' \
   '        if (pos == "a") {ref = ref.nextElementSibling;}\r\n' \
   '        par.insertBefore(elt, ref);\r\n' \
@@ -12565,7 +12518,6 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (ref) {ref = document.getElementById(ref.id.replace("point", "dot"));}\r\n' \
   '        par.insertBefore(elt_dot, ref);\r\n' \
-  '        dot_style(pref, false);\r\n' \
   '        if (! iswpt) {\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
   '          const np = WGS84_to_viewbox(parseFloat(elt.getAttribute("data-lat")), parseFloat(elt.getAttribute("data-lon")), track);\r\n' \
@@ -12596,64 +12548,55 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        show_msg((focused.startsWith("way") ? "{#jminsert1#}" : "{#jminsert2#}"), 2);\r\n' \
   '      }\r\n' \
-  '      function point_delete(pt, batch=false) {\r\n' \
-  '        if (pt.id.startsWith("way")) {\r\n' \
-  '          wpt_calc();\r\n' \
-  '        } else if (! batch) {\r\n' \
-  '          const seg = pt.parentNode;\r\n' \
-  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
-  '          const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
-  '          let d = path.getAttribute("d");\r\n' \
-  '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
-  '          let d_right = d.slice(d_left[0].length);\r\n' \
-  '          if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
+  '      function track_update_point(pt) {\r\n' \
+  '        const seg = pt.parentNode;\r\n' \
+  '        const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
+  '        const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '        const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
+  '        let d = path.getAttribute("d");\r\n' \
+  '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
+  '        let d_right = d.slice(d_left[0].length);\r\n' \
+  '        if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
+  '        if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {\r\n' \
   '          if (d_left[1][0] == "M") {\r\n' \
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right.replace("L", "M");\r\n' \
   '          } else {\r\n' \
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
-  '          path.setAttribute("d", d);\r\n' \
-  '          calc_modified(seg);\r\n' \
-  '        }\r\n' \
-  '        dot_style(pt.id, ! batch);\r\n' \
-  '      }\r\n' \
-  '      function point_undelete(pt, batch=false) {\r\n' \
-  '        if (pt.id.startsWith("way")) {\r\n' \
-  '          wpt_calc();\r\n' \
-  '        } else if (! batch && ! pt.hasAttribute("data-error")) {\r\n' \
-  '          const seg = pt.parentNode;\r\n' \
+  '        } else {\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
-  '          const np = WGS84_to_viewbox(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")), track);\r\n' \
-  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
-  '          const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
-  '          let d = path.getAttribute("d");\r\n' \
-  '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
-  '          let d_right = d.slice(d_left[0].length);\r\n' \
-  '          if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
+  '          const np = WGS84_to_viewbox(point_data[ptd_ind], point_data[ptd_ind + 1], track);\r\n' \
   '          if (d_left[0].indexOf("M", 1) >= 0) {\r\n' \
   '            d = d_left[0].slice(0, -d_left[1].length) + " L" + np + d_right;\r\n' \
   '          } else {\r\n' \
   '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
-  '          path.setAttribute("d", d);\r\n' \
-  '          calc_modified(seg);\r\n' \
   '        }\r\n' \
-  '        dot_style(pt.id, ! batch);\r\n' \
+  '        path.setAttribute("d", d);\r\n' \
   '      }\r\n' \
   '      function point_checkbox(pt, batch=false) {\r\n' \
-  '        if (! pt.hasAttribute("data-error")) {\r\n' \
-  '          if (pt.hasAttribute("data-deleted")) {pt.removeAttribute("data-deleted");} else {pt.setAttribute("data-deleted", "");}\r\n' \
+  '        const dot = document.getElementById(pt.id.replace("point", "dot"));\r\n' \
+  '        const iswpt = pt.id.startsWith("way");\r\n' \
+  '        if (pt.hasAttribute("data-deleted")) {\r\n' \
+  '          pt.removeAttribute("data-deleted");\r\n' \
+  '          if (iswpt || ! pt.parentNode.hasAttribute("data-deleted")) {dot.classList.remove("deleted");}\r\n' \
+  '        } else {\r\n' \
+  '          pt.setAttribute("data-deleted", "");\r\n' \
+  '          dot.classList.add("deleted");\r\n' \
   '        }\r\n' \
-  '        if (pt.hasAttribute("data-deleted")) {point_delete(pt, batch);} else {point_undelete(pt, batch);}\r\n' \
+  '        if (! batch) {\r\n' \
+  '          if (iswpt) {\r\n' \
+  '            wpt_calc();\r\n' \
+  '          } else {\r\n' \
+  '            if (! pt.hasAttribute("data-error")) {track_update_point(pt);}\r\n' \
+  '            calc_modified(pt.parentNode);\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function pointed3d_waypoint(lat, lon) {\r\n' \
   '        const wm = WGS84toWebMercator(lat, lon);\r\n' \
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return false;}\r\n' \
-  '        if (focused) {\r\n' \
-  '          ex_foc = focused;\r\n' \
-  '          element_click(null, document.getElementById(focused), false);\r\n' \
-  '          dot_style(ex_foc, false);\r\n' \
-  '        }\r\n' \
+  '        if (focused) {element_click(null, document.getElementById(focused), false);}\r\n' \
   '        let wpt = Array.prototype.find.call(document.getElementById("waypointslist").getElementsByClassName("waypoint"), (w) => w.hasAttribute("data-deleted") && w.getAttribute("data-name") == "#### 3D ####")\r\n' \
   '        if (wpt) {\r\n' \
   '          const wpt_data = wpt.dataset;\r\n' \
@@ -12662,17 +12605,16 @@ class GPXTweakerWebInterfaceServer():
   '          wpt_data.ele = "";\r\n' \
   '          wpt_data.time = "";\r\n' \
   '          element_click(null, wpt, true);\r\n' \
-  '          point_edit(false, true, false, true);\r\n' \
+  '          point_edit(false, true, false);\r\n' \
   '        } else {\r\n' \
   '          point_insert("a", [lat, lon]);\r\n' \
   '          wpt = document.getElementById(focused);\r\n' \
   '          wpt.setAttribute("data-name", "#### 3D ####");\r\n' \
   '          document.getElementById("waypointname").value = "#### 3D ####";\r\n' \
-  '          point_edit(false, false, false, false);\r\n' \
+  '          point_edit(false, false, false);\r\n' \
   '          point_checkbox(wpt);\r\n' \
   '          scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
   '        }\r\n' \
-  '        save_old();\r\n' \
   '        if (navigator_firefox) {window.alert("3D");}\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
@@ -12789,12 +12731,12 @@ class GPXTweakerWebInterfaceServer():
   '        let nbpt = 0;\r\n' \
   '        for (let s=0; s<stats.length; s++) {\r\n' \
   '          if (stats[s].length == 0) {continue;}\r\n' \
-  '          nbpt = nbpt + stats[s].length;\r\n' \
-  '          let stat = stats[s][stats[s].length - 1];\r\n' \
-  '          dur = dur==null?stat[0]:dur+stat[0];\r\n' \
-  '          dist = dist==null?stat[6]:dist+stat[6];\r\n' \
-  '          ele = ele==null?stat[2]:ele+stat[2];\r\n' \
-  '          alt = alt==null?stat[3]:alt+stat[3];\r\n' \
+  '          nbpt += stats[s].length;\r\n' \
+  '          const stat = stats[s].at(-1);\r\n' \
+  '          dur = dur == null ? stat[0] : dur + stat[0];\r\n' \
+  '          dist = dist == null ? stat[6] : dist + stat[6];\r\n' \
+  '          ele = ele == null ? stat[2] : ele + stat[2];\r\n' \
+  '          alt = alt == null ? stat[3] : alt + stat[3];\r\n' \
   '        }\r\n' \
   '        let dur_c = "--h--mn--s";\r\n' \
   '        if (dur != null) {\r\n' \
@@ -12815,33 +12757,29 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function segments_calc(...args) {\r\n' \
   '        let fpan = 0;\r\n' \
-  '        let segs = [];\r\n' \
   '        if (args.length == 1) {\r\n' \
   '          if ((typeof args[0]).toLowerCase() != "object") {fpan = args[0];}\r\n' \
   '        }\r\n' \
-  '        if (args.length == 0 || fpan != 0) {\r\n' \
-  '          segs = Array.from(document.getElementById("pointslist").getElementsByClassName("segment"));\r\n' \
-  '        } else {\r\n' \
-  '          segs = args;\r\n' \
-  '        }\r\n' \
-  '        segs.sort((s1, s2) => parseInt(s1.id.slice(7, -4)) - parseInt(s2.id.slice(7, -4)));\r\n' \
+  '        const segs = (args.length == 0 || fpan != 0) ? Array.from(document.getElementById("pointslist").getElementsByClassName("segment")) : args;\r\n' \
+  '        segs.sort((s1, s2) => parseInt(s1.id.substring(7)) - parseInt(s2.id.substring(7)));\r\n' \
   '        let starts = null;\r\n' \
   '        let mmls = null;\r\n' \
   '        let teahs = null;\r\n' \
-  '        let max = Math.max;\r\n' \
-  '        let round = Math.round;\r\n' \
+  '        const max = Math.max;\r\n' \
+  '        const round = Math.round;\r\n' \
   '        if (fpan <= 1 || gpucomp == 0 || gpu_part) {\r\n' \
   '          starts = [0];\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            if (segs[s].hasAttribute("data-deleted")) {continue};\r\n' \
   '            let nbp = 0;\r\n' \
   '            if (fpan == 0) {\r\n' \
-  '              let pts = segs[s].getElementsByClassName("point");\r\n' \
-  '              for (let p=0; p<pts.length; p++) {\r\n' \
-  '                if (pts[p].hasAttribute("data-deleted") || pts[p].hasAttribute("data-error")) {\r\n' \
-  '                  point_stat[parseInt(pts[p].id.substring(5))] = null;\r\n' \
+  '              const pts = segs[s].getElementsByClassName("point");\r\n' \
+  '              for (let p=0, l=pts.length; p<l; p++) {\r\n' \
+  '                const pt = pts[p];\r\n' \
+  '                if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {\r\n' \
+  '                  point_stat[parseInt(pt.id.substring(5))] = null;\r\n' \
   '                } else {\r\n' \
-  '                  point_stat[parseInt(pts[p].id.substring(5))] = nbp;\r\n' \
+  '                  point_stat[parseInt(pt.id.substring(5))] = nbp;\r\n' \
   '                  nbp++;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -12851,15 +12789,15 @@ class GPXTweakerWebInterfaceServer():
   '            if (nbp != 0) {starts.push(starts[starts.length - 1] + nbp);}\r\n' \
   '          }\r\n' \
   '          if (gpucomp >= 1 && (fpan == 0 || gpu_part) && fpan != 1) {\r\n' \
-  '            mmls = new Float32Array(WebGLStats.pad(starts[starts.length - 1]) * 3);\r\n' \
-  '            teahs = new Float32Array(WebGLStats.pad(starts[starts.length - 1]) * 4);\r\n' \
+  '            mmls = new Float32Array(WebGLStats.pad(starts.at(-1)) * 3);\r\n' \
+  '            teahs = new Float32Array(WebGLStats.pad(starts.at(-1)) * 4);\r\n' \
   '          }\r\n' \
   '          let ind = 0;\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
   '            segment_calc(segs[s], fpan, ind, mmls, teahs);\r\n' \
   '            ind += stats[parseInt(segs[s].id.substring(7))].length;\r\n' \
   '          }\r\n' \
-  '          if (starts[starts.length - 1] == 0) {\r\n' \
+  '          if (starts.at(-1) == 0) {\r\n' \
   '            gpu_part = gpucomp >= 1;\r\n' \
   '            whole_calc();\r\n' \
   '            return;\r\n' \
@@ -12887,20 +12825,20 @@ class GPXTweakerWebInterfaceServer():
   '          gpustats.drange = max(0.01, parseFloat(document.getElementById("sldist").innerHTML)) / 2;\r\n' \
   '          gpustats.slmax = parseFloat(document.getElementById("slmax").innerHTML) / 100;\r\n' \
   '          gpustats.calc("tweaker");\r\n' \
-  '          let gs = gpustats.gs;\r\n' \
-  '          let ssss = gpustats.ssss;\r\n' \
-  '          let ss = gpustats.ss;\r\n' \
+  '          const gs = gpustats.gs;\r\n' \
+  '          const ssss = gpustats.ssss;\r\n' \
+  '          const ss = gpustats.ss;\r\n' \
   '          let i = 0;\r\n' \
-  '          let ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
+  '          const ftos = (v, d=0) => (round(round(v * 1000) * (10 ** (d - 3))) / (10 ** d)).toFixed(d);\r\n' \
   '          for (let s=0; s<segs.length; s++) {\r\n' \
-  '            let seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
-  '            for (let p=0; p<stats[seg_ind].length; p++) {\r\n' \
-  '              let stat = stats[seg_ind][p];\r\n' \
-  '              if (fpan == 0) {stat[1] = stats[seg_ind][p>0?p-1:0][1] + gs[i];}\r\n' \
+  '            const seg_ind = parseInt(segs[s].id.substring(7));\r\n' \
+  '            for (let p=0, l=stats[seg_ind].length; p<l; p++) {\r\n' \
+  '              const stat = stats[seg_ind][p];\r\n' \
+  '              if (fpan == 0) {stat[1] = stats[seg_ind][p > 0 ? p-1 : 0][1] + gs[i];}\r\n' \
   '              stat[7] = ss[i];\r\n' \
   '              stat[4] = ssss[3 * i];\r\n' \
   '              stat[5] = ssss[3 * i + 1];\r\n' \
-  '              stat[6] = p==0?0:(stats[seg_ind][p-1][6] + ssss[3 * i - 1]);\r\n' \
+  '              stat[6] = p == 0 ? 0 : (stats[seg_ind][p-1][6] + ssss[3 * i - 1]);\r\n' \
   '              if (gpucomp == 2 && fpan <= 2) {\r\n' \
   '                if (p == 0) {\r\n' \
   '                  stat[2] = 0;\r\n' \
@@ -12913,8 +12851,8 @@ class GPXTweakerWebInterfaceServer():
   '              i++;\r\n' \
   '            }\r\n' \
   '            if (stats[seg_ind].length > 0) {\r\n' \
-  '              let seg_desc = segs[s].getElementsByClassName("segmentdesc")[0];\r\n' \
-  '              let stat = stats[seg_ind][stats[seg_ind].length - 1];\r\n' \
+  '              const seg_desc = segs[s].getElementsByClassName("segmentdesc")[0];\r\n' \
+  '              const stat = stats[seg_ind].at(-1);\r\n' \
   '              if (gpucomp == 2 && fpan == 2) {\r\n' \
   '                seg_desc.innerHTML = seg_desc.innerHTML.replace(/\\d+m\\|/, "[eg]m|").replace(/\\d+m\\)/, "[ag]m)");\r\n' \
   '              }\r\n' \
@@ -12957,7 +12895,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (seg.hasAttribute("data-deleted")) {\r\n' \
   '                seg_nbps.set(seg_ind, 0);\r\n' \
   '                continue;\r\n' \
-  '              };\r\n' \
+  '              }\r\n' \
   '              const pts = seg.getElementsByClassName("point");\r\n' \
   '              for (let p=0, l=pts.length; p<l; p++) {\r\n' \
   '                const pt = pts[p];\r\n' \
@@ -13007,8 +12945,9 @@ class GPXTweakerWebInterfaceServer():
   '            let ap = null;\r\n' \
   '            let hp = null;\r\n' \
   '            for (let p=0, l=pts.length; p<l; p++) {\r\n' \
-  '              if (point_stat[parseInt(pts[p].id.substring(5))] == null) {continue;}\r\n' \
-  '              const p_d = point_data.subarray(5 * parseInt(pts[p].id.substring(5)));\r\n' \
+  '              const pt_ind = parseInt(pts[p].id.substring(5));\r\n' \
+  '              if (point_stat[pt_ind] == null) {continue;}\r\n' \
+  '              const p_d = point_data.subarray(5 * pt_ind);\r\n' \
   '              const lat = p_d[0] ;\r\n' \
   '              const lon = p_d[1];\r\n' \
   '              if (ind == 0) {\r\n' \
@@ -13060,7 +12999,7 @@ class GPXTweakerWebInterfaceServer():
   '                hp = h;\r\n' \
   '                cteahs[4 * ind + 3] = h;\r\n' \
   '              }\r\n' \
-  '              ind += 1;\r\n' \
+  '              ind++;\r\n' \
   '            }\r\n' \
   '            cmms = cmms.subarray(2 * ind);\r\n' \
   '            clats = clats.subarray(ind);\r\n' \
@@ -13198,12 +13137,13 @@ class GPXTweakerWebInterfaceServer():
   '      function segment_checkbox(seg) {\r\n' \
   '        if (seg.hasAttribute("data-deleted")) {\r\n' \
   '          seg.removeAttribute("data-deleted");\r\n' \
-  '          document.getElementById("track" + seg.id.substring(7)).classList.remove("deleted");\r\n' \
+  '          document.getElementById(seg.id.replace("segment", "track")).classList.remove("deleted");\r\n' \
+  '          Array.prototype.forEach.call(seg.getElementsByClassName("pos"), function(pt) {if (! pt.hasAttribute("data-deleted")) {document.getElementById(pt.id.replace("point", "dot")).classList.remove("deleted");};});\r\n' \
   '        } else {\r\n' \
   '          seg.setAttribute("data-deleted", "");\r\n' \
-  '          document.getElementById("track" + seg.id.substring(7)).classList.add("deleted");\r\n' \
+  '          document.getElementById(seg.id.replace("segment", "track")).classList.add("deleted");\r\n' \
+  '          Array.prototype.forEach.call(seg.getElementsByClassName("pos"), function(pt) {document.getElementById(pt.id.replace("point", "dot")).classList.add("deleted");});\r\n' \
   '        }\r\n' \
-  '        Array.from(seg.getElementsByClassName("pos")).forEach(function(pt) {dot_style(pt.id, false);});\r\n' \
   '        seg.scrollIntoView();\r\n' \
   '        calc_modified(seg);\r\n' \
   '      }\r\n' \
@@ -13224,7 +13164,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else {return;}\r\n' \
   '        seg.id = "segment" + document.getElementById("pointslist").getElementsByClassName("segment").length.toString();\r\n' \
   '        const track_foc = document.getElementById(seg_foc.id.replace("segment", "track"));\r\n' \
-  '        const path_foc = track_foc.firstElementChild;\r\n' \
+  '        const path_foc = document.getElementById(seg_foc.id.replace("segment", "path"));\r\n' \
   '        const track = track_foc.cloneNode(true);\r\n' \
   '        track.id = seg.id.replace("segment", "track");\r\n' \
   '        const path = track.firstElementChild;\r\n' \
@@ -13232,42 +13172,44 @@ class GPXTweakerWebInterfaceServer():
   '        path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
   '        if (focused.startsWith("seg")) {\r\n' \
-  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '          let pref_num = document.getElementById("pointslist").getElementsByClassName("point").length;\r\n' \
+  '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
+  '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
+  '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
+  '          const nelts = 5 * (pref_num + pts.length);\r\n' \
+  '          if (nelts > point_data.length) {point_data.buffer.resize(8 * (nelts + 2500));}\r\n' \
   '          const dot_ref = document.getElementById(pts.at(-1).id.replace("point", "dot")).nextElementSibling;\r\n' \
   '          let mintime = null;\r\n' \
   '          let maxtime = null;\r\n' \
   '          for (const pt of pts) {\r\n' \
   '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
-  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '            const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
-  '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '              mintime = mintime == null ? t : Math.min(mintime, t);\r\n' \
+  '              maxtime = maxtime == null ? t : Math.max(maxtime, t);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          const batch = (mintime != null && maxtime != null) ? ++hist_b : null;\r\n' \
   '          for (const pt of pts) {\r\n' \
+  '            const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '            point_data.copyWithin(5 * pref_num, ptd_ind, ptd_ind + 5);\r\n' \
   '            const dot = document.getElementById(pt.id.replace("point", "dot")).cloneNode(true);\r\n' \
   '            pt.id = "point" + pref_num.toString();\r\n' \
   '            pt.setAttribute("data-edited", "");\r\n' \
-  '            if (mintime != null && maxtime != null) {\r\n' \
-  '              const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
-  '              if (! isNaN(t)) {\r\n' \
-  '                focused = pt.id;\r\n' \
-  '                save_old();\r\n' \
-  '                hist_push(batch);\r\n' \
-  '                pt.setAttribute("data-time", (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,""));\r\n' \
-  '                hist_trim();\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
   '            dot.id = "dot" + pref_num.toString();\r\n' \
   '            handle.insertBefore(dot, dot_ref);\r\n' \
+  '            if (batch != null) {\r\n' \
+  '              const t = point_data[ptd_ind + 4];\r\n' \
+  '              if (! isNaN(t)) {\r\n' \
+  '                focused = pt.id;\r\n' \
+  '                save_foc(batch);\r\n' \
+  '                pt.setAttribute("data-time", (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,""));\r\n' \
+  '                point_edit(false, false, true);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
   '            pref_num++;\r\n' \
   '          }\r\n' \
   '          focused = seg_foc.id;\r\n' \
-  '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
-  '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
   '          calc_modified(seg);\r\n' \
   '          element_click(null, seg);\r\n' \
   '          show_msg("{#jmsegmentcut1#}", 2);\r\n' \
@@ -13315,10 +13257,10 @@ class GPXTweakerWebInterfaceServer():
   '            dot = dot_prev;\r\n' \
   '          }\r\n' \
   '          pts.forEach(function(pt) {seg_foc.appendChild(pt);});\r\n' \
-  '          const track_foc = document.getElementById("track" + seg_foc.id.substring(7));\r\n' \
-  '          const path_foc = track_foc.firstElementChild;\r\n' \
-  '          const track = document.getElementById("track" + seg.id.substring(7));\r\n' \
-  '          const path = track.firstElementChild;\r\n' \
+  '          const track_foc = document.getElementById(seg_foc.id.replace("segment", "track"));\r\n' \
+  '          const path_foc = document.getElementById(seg_foc.id.replace("segment", "path"));\r\n' \
+  '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
+  '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          const minx_foc = prop_to_wmvalue(track_foc.style.left) + htopx;\r\n' \
   '          const maxy_foc = htopy - prop_to_wmvalue(track_foc.style.top);\r\n' \
   '          const maxx_foc = minx_foc + prop_to_wmvalue(track_foc.style.width);\r\n' \
@@ -13364,35 +13306,34 @@ class GPXTweakerWebInterfaceServer():
   '          const isNaN = Number.isNaN;\r\n' \
   '          for (const pt of pts_foc) {\r\n' \
   '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
-  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '            const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              if (mintime_foc == null) {mintime_foc = t;} else {mintime_foc = Math.min(mintime_foc, t);}\r\n' \
-  '              if (maxtime_foc == null) {maxtime_foc = t;} else {maxtime_foc = Math.max(maxtime_foc, t);}\r\n' \
+  '              mintime_foc = mintime_foc == null ? t : Math.min(mintime_foc, t);\r\n' \
+  '              maxtime_foc = maxtime_foc == null ? t : maxtime_foc = Math.max(maxtime_foc, t);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          for (const pt of pts) {\r\n' \
   '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
-  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '            const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
-  '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '              mintime = mintime == null ? t : Math.min(mintime, t);\r\n' \
+  '              maxtime = maxtime == null ? t : Math.max(maxtime, t);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          document.getElementById("pointslist").insertBefore(seg_foc, seg);\r\n' \
+  '          handle.insertBefore(document.getElementById(seg_foc.id.replace("segment", "track")), document.getElementById(seg.id.replace("segment", "track")));\r\n' \
   '          if (mintime_foc != null && maxtime_foc != null && mintime != null && maxtime != null) {\r\n' \
   '            const batch = ++hist_b;\r\n' \
   '            let offset =  mintime - mintime_foc;\r\n' \
   '            for (const sp of [pts_foc, pts]) {\r\n' \
   '              for (const pt of sp) {\r\n' \
-  '                const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '                const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '                if (! isNaN(t)) {\r\n' \
   '                  focused = pt.id;\r\n' \
   '                  const new_time = (new Date(Math.round((t + offset) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                  save_old();\r\n' \
-  '                  hist_push(batch);\r\n' \
+  '                  save_foc(batch);\r\n' \
   '                  pt.setAttribute("data-time", new_time);\r\n' \
-  '                  hist_trim();\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
+  '                  point_edit(false, false, true);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              offset = maxtime_foc - maxtime;\r\n' \
@@ -13407,7 +13348,6 @@ class GPXTweakerWebInterfaceServer():
   '              dot_ref = dot;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          handle.insertBefore(document.getElementById(seg_foc.id.replace("segment", "track")), document.getElementById(seg.id.replace("segment", "track")));\r\n' \
   '          focused = seg_foc.id;\r\n' \
   '          calc_modified(seg_foc, seg);\r\n' \
   '          show_msg("{#jmelementup2#}", 2);\r\n' \
@@ -13441,6 +13381,7 @@ class GPXTweakerWebInterfaceServer():
   '          segs = [seg_foc];\r\n' \
   '          if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        } else {return;}\r\n' \
+  '        if (segs.length == 0) {return;}\r\n' \
   '        let mintime = null;\r\n' \
   '        let maxtime = null;\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
@@ -13450,43 +13391,39 @@ class GPXTweakerWebInterfaceServer():
   '          ptss.push(pts);\r\n' \
   '          for (const pt of pts) {\r\n' \
   '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
-  '            const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '            const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              if (mintime == null) {mintime = t;} else {mintime = Math.min(mintime, t);}\r\n' \
-  '              if (maxtime == null) {maxtime = t;} else {maxtime = Math.max(maxtime, t);}\r\n' \
+  '              mintime = mintime == null ? t : Math.min(mintime, t);\r\n' \
+  '              maxtime = maxtime == null ? t : Math.max(maxtime, t);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        const seg_ref = segs[0];\r\n' \
-  '        const track_ref = document.getElementById(seg_ref.id.replace("segment", "track"));\r\n' \
-  '        for (let s=segs.length-1; s>=0; s--) {\r\n' \
-  '          const seg = s > 0 ? pts_l.removeChild(segs[s]) : seg_ref;\r\n' \
-  '          const pts = ptss[s];\r\n' \
-  '          const pt_ref = pts.length > 0 ? pts[0] : null;\r\n' \
-  '          const dot_ref = pt_ref ? document.getElementById(pt_ref.id.replace("point", "dot")) : null;\r\n' \
-  '          for (let p=pts.length-1; p>=0; p--) {\r\n' \
-  '            const pt = p > 0 ? seg.removeChild(pts[p]) : pts[p];\r\n' \
-  '            if (mintime != null && maxtime != null) {\r\n' \
-  '              const t = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '        const seg_ref = segs.at(-1).nextElementSibling;\r\n' \
+  '        const track_ref = document.getElementById(segs[0].id.replace("segment", "track"));\r\n' \
+  '        if (mintime != null && maxtime != null) {\r\n' \
+  '          for (const pts of ptss) {\r\n' \
+  '            for (const pt of pts) {\r\n' \
+  '              const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '              if (! isNaN(t)) {\r\n' \
   '                const new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                pt.setAttribute("data-time", new_time);\r\n' \
   '                focused = pt.id;\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
+  '                point_edit(false, false, true);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            if (pt != pt_ref) {\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        for (let s=segs.length-1; s>=0; s--) {\r\n' \
+  '          const seg = pts_l.removeChild(segs[s]);\r\n' \
+  '          const pts = ptss[s];\r\n' \
+  '          if (pts.length > 1) {\r\n' \
+  '            const pt_ref = pts[0];\r\n' \
+  '            const dot_ref = document.getElementById(pt_ref.id.replace("point", "dot"));\r\n' \
+  '            for (let p=pts.length-1; p>0; p--) {\r\n' \
+  '              const pt = seg.removeChild(pts[p])\r\n' \
   '              seg.insertBefore(pt, pt_ref);\r\n' \
-  '              if (! whole){\r\n' \
-  '                handle.insertBefore(document.getElementById(pt.id.replace("point", "dot")), dot_ref);\r\n' \
-  '              }\r\n' \
+  '              if (! whole) {handle.insertBefore(document.getElementById(pt.id.replace("point", "dot")), dot_ref);}\r\n' \
   '            }\r\n' \
-  '          }\r\n' \
-  '          if (s > 0) {\r\n' \
-  '            pts_l.insertBefore(seg, seg_ref);\r\n' \
-  '            handle.insertBefore(document.getElementById(seg.id.replace("segment", "track")), track_ref);\r\n' \
-  '          }\r\n' \
-  '          if (pt_ref) {\r\n' \
   '            const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '            const d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
   '            let d_r = "M0 0";\r\n' \
@@ -13496,38 +13433,45 @@ class GPXTweakerWebInterfaceServer():
   '            d_r = d_r.replace("L", "M");\r\n' \
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
+  '            pts_l.insertBefore(seg, seg_ref);\r\n' \
+  '          if (s > 0) {handle.insertBefore(document.getElementById(seg.id.replace("segment", "track")), track_ref);}\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
   '        if (! whole) {\r\n' \
-  '          calc_modified(seg_ref);\r\n' \
+  '          calc_modified(segs[0]);\r\n' \
   '          show_msg("{#jmsegmentreverse1#}", 2);\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        const wpts = Array.from(wpts_l.getElementsByClassName("waypoint"));\r\n' \
-  '        const wpt_ref = wpts.length > 0 ? wpts[0] : null;\r\n' \
-  '        const wdot_ref = wpt_ref ? document.getElementById(wpt_ref.id.replace("point", "dot")) : null;\r\n' \
-  '        for (let p=wpts.length-1; p>=0; p--) {\r\n' \
-  '          const wpt = wpts[p];\r\n' \
-  '          if (mintime != null && maxtime != null) {\r\n' \
+  '        if (mintime != null && maxtime != null) {\r\n' \
+  '          for (const wpt of wpts) {\r\n' \
   '            const t = Date.parse(wpt.getAttribute("data-time"));\r\n' \
   '            if (! isNaN(t)) {\r\n' \
   '              const new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '              wpt.setAttribute("data-time", new_time);\r\n' \
   '              focused = wpt.id;\r\n' \
-  '              point_edit(false, false, false, false);\r\n' \
+  '              point_edit(false, false, false);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          if (wpt != wpt_ref) {\r\n' \
+  '        }\r\n' \
+  '        if (wpts.length > 1) {\r\n' \
+  '          const wpt_ref = wpts[0];\r\n' \
+  '          const wdot_ref = document.getElementById(wpt_ref.id.replace("point", "dot"));\r\n' \
+  '          for (let p=wpts.length-1; p>0; p--) {\r\n' \
+  '            const wpt = wpts[p];\r\n' \
   '            wpts_l.insertBefore(wpt, wpt_ref);\r\n' \
   '            handle.insertBefore(document.getElementById(wpt.id.replace("point", "dot")), wdot_ref);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
   '        const dots = Array.from(handle.getElementsByClassName("dot"));\r\n' \
-  '        const dot_ref = dots.length > 0 ? dots[0] : null;\r\n' \
-  '        for (let d=dots.length-1; d>0; d--) {\r\n' \
-  '          handle.insertBefore(dots[d], dot_ref);\r\n' \
+  '        if (dots.length > 1) {\r\n' \
+  '          const dot_ref = dots[0];\r\n' \
+  '          for (let d=dots.length-1; d>0; d--) {\r\n' \
+  '            handle.insertBefore(dots[d], dot_ref);\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
+  '        wpt_calc();\r\n' \
   '        calc_modified(...segs);\r\n' \
   '        show_msg("{#jmsegmentreverse2#}", 2);\r\n' \
   '      }\r\n' \
@@ -13551,7 +13495,7 @@ class GPXTweakerWebInterfaceServer():
   '        let nmod = 0;\r\n' \
   '        for (const seg of segs) {\r\n' \
   '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
-  '          const positions = Array.from(pts, (pt) => (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) ? null : WGS84toWebMercator(parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon"))));\r\n' \
+  '          const positions = Array.from(pts, (pt) => (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) ? null : WGS84toWebMercator(point_data[5 * parseInt(pt.id.substring(5))], point_data[5 * parseInt(pt.id.substring(5)) + 1]));\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
   '          const tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
   '          const tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
@@ -13563,7 +13507,8 @@ class GPXTweakerWebInterfaceServer():
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
   '          for (let p=0, l=positions.length; p<l; p++) {\r\n' \
-  '            const foc = pts[p].id;\r\n' \
+  '            const pt = pts[p];\r\n' \
+  '            const foc = pt.id;\r\n' \
   '            hist_trim();\r\n' \
   '            if (positions[p] == null) {\r\n' \
   '              d_f += " " + dots[p];\r\n' \
@@ -13627,17 +13572,15 @@ class GPXTweakerWebInterfaceServer():
   '                  }\r\n' \
   '                  if (pmod) {\r\n' \
   '                    focused = foc;\r\n' \
-  '                    save_old();\r\n' \
+  '                    save_foc(batch);\r\n' \
   '                    const [lat, lon] = WebMercatortoWGS84(...positions[p]);\r\n' \
-  '                    pts[p].setAttribute("data-lat", lat.toFixed(6));\r\n' \
-  '                    pts[p].setAttribute("data-lon", lon.toFixed(6));\r\n' \
-  '                    hist_push(batch);\r\n' \
-  '                    save_old();\r\n' \
-  '                    point_edit(false, false, false, false);\r\n' \
+  '                    pt.setAttribute("data-lat", lat.toFixed(6));\r\n' \
+  '                    pt.setAttribute("data-lon", lon.toFixed(6));\r\n' \
+  '                    point_edit(false, false, false);\r\n' \
   '                    const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '                    dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
   '                    dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
-  '                    d_f += " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
+  '                    d_f += pt.hasAttribute("data-error") ? " m0 0" : " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
   '                    nmod++;\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
@@ -13679,13 +13622,10 @@ class GPXTweakerWebInterfaceServer():
   '                if (r[1].replace(/(^\\s+)|(\\s+$)/g, "") != "") {\r\n' \
   '                  focused = ept;\r\n' \
   '                  const pt = document.getElementById(focused);\r\n' \
-  '                  save_old();\r\n' \
+  '                  save_foc(batch);\r\n' \
   '                  pt.setAttribute("data-ele", r[1]);\r\n' \
   '                  if (focused == ex_foc) {document.getElementById(focused.startsWith("way") ? "waypointele" : "pointele").value = r[1];} \r\n' \
-  '                  hist_push(batch);\r\n' \
-  '                  save_old();\r\n' \
-  '                  hist_trim();\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
+  '                  point_edit(false, false, true);\r\n' \
   '                  np++;\r\n' \
   '                  if (! ept.startsWith("way")) {\r\n' \
   '                    const seg_p = pt.parentNode;\r\n' \
@@ -13700,9 +13640,8 @@ class GPXTweakerWebInterfaceServer():
   '          ep++;\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
-  '        if (segs.length > 0) {\r\n' \
-  '          calc_modified(...segs);\r\n' \
-  '        }\r\n' \
+  '        wpt_calc();\r\n' \
+  '        if (segs.length > 0) {calc_modified(...segs);}\r\n' \
   '        return np;\r\n' \
   '      }\r\n' \
   '      function ele_adds(all=false, fromalt=false) {\r\n' \
@@ -13761,7 +13700,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("eset").disabled = true;\r\n' \
   '        document.getElementById("eset").style.pointerEvents = "none";\r\n' \
   '        const xhre = new XMLHttpRequest();\r\n' \
-  '        xhre.onload = (e) => {let np = load_ecb(e.target, epts); np?show_msg(msg.replace("%s", np.toString()).replace("%s", epts.length.toString()), 4, msgn):show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
+  '        xhre.onload = (e) => {let np = load_ecb(e.target, epts); np ? show_msg(msg.replace("%s", np.toString()).replace("%s", epts.length.toString()), 4, msgn) : show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
   '        xhre.onerror = (e) => {error_ecb(); show_msg("{#jmelevations6#}", 10, msgn);};\r\n' \
   '        xhre.open("POST", "/ele");\r\n' \
   '        xhre.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -13797,7 +13736,7 @@ class GPXTweakerWebInterfaceServer():
   '        for (const pt of pts) {\r\n' \
   '          const pt_data = pt.dataset;\r\n' \
   '          focused = pt.id;\r\n' \
-  '          save_old();\r\n' \
+  '          save_foc(batch);\r\n' \
   '          const g = pt_data.ele;\r\n' \
   '          pt_data.ele = pt_data.alt;\r\n' \
   '          pt_data.alt = g;\r\n' \
@@ -13805,10 +13744,7 @@ class GPXTweakerWebInterfaceServer():
   '            document.getElementById("pointele").value = pt_data.ele;\r\n' \
   '            document.getElementById("pointalt").value = pt_data.alt;\r\n' \
   '          }\r\n' \
-  '          hist_push(batch);\r\n' \
-  '          save_old();\r\n' \
-  '          hist_trim();\r\n' \
-  '          point_edit(false, false, false, false);\r\n' \
+  '          point_edit(false, false, false);\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
   '        if (seg != null) {\r\n' \
@@ -13829,7 +13765,7 @@ class GPXTweakerWebInterfaceServer():
   '        } else if (focused.startsWith("point")) {\r\n' \
   '          pt_foc = document.getElementById(focused);\r\n' \
   '          if (pt_foc.hasAttribute("data-deleted") || pt_foc.hasAttribute("data-error")) {return;}\r\n' \
-  '          stime = Date.parse(pt_foc.getAttribute("data-time"));\r\n' \
+  '          stime = point_data[5 * parseInt(pt_foc.id.substring(5)) + 4];\r\n' \
   '          if (isNaN(stime)) {return;}\r\n' \
   '          seg_foc = pt_foc.parentNode;\r\n' \
   '        } else {return;}\r\n' \
@@ -13843,10 +13779,11 @@ class GPXTweakerWebInterfaceServer():
   '        for (let p=pts.length-1; p>=ps; p--) {\r\n' \
   '          const pt = pts[p];\r\n' \
   '          if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
-  '          ralt = parseFloat(pt.getAttribute("data-alt"));\r\n' \
+  '          const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '          ralt = point_data[ptd_ind + 3];\r\n' \
   '          if (! isNaN(ralt)) {\r\n' \
   '            if (pt_foc != null) {\r\n' \
-  '              etime = Date.parse(pt.getAttribute("data-time"));\r\n' \
+  '              etime = point_data[ptd_ind + 4];\r\n' \
   '              if (isNaN(etime)) {return;}\r\n' \
   '            }\r\n' \
   '            break;\r\n' \
@@ -13862,35 +13799,30 @@ class GPXTweakerWebInterfaceServer():
   '        if (! seg) {return;}\r\n' \
   '        const pt = Array.prototype.find.call(seg.getElementsByClassName("point"), (pt) => ! (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")));\r\n' \
   '        if (! pt) {return;}\r\n' \
-  '        const talt = parseFloat(pt.getAttribute("data-alt"));\r\n' \
+  '        const talt = point_data[5 * parseInt(pt.id.substring(5)) + 3];\r\n' \
   '        if (isNaN(talt)) {return;}\r\n' \
-  '        let cor = (pt_foc == null) ? talt - ralt : (talt - ralt) / (etime - stime);\r\n' \
+  '        const cor = pt_foc == null ? talt - ralt : (talt - ralt) / (etime - stime);\r\n' \
   '        const batch = ++hist_b;\r\n' \
   '        for (let p=ps, l=pts.length; p<l; p++) {\r\n' \
   '          const pt = pts[p];\r\n' \
-  '          const pt_data = pt.dataset;\r\n' \
-  '          const palt = parseFloat(pt_data.alt);\r\n' \
+  '          const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '          const palt = point_data[ptd_ind + 3];\r\n' \
   '          if (! isNaN(palt)) {\r\n' \
   '            if (pt_foc != null) {\r\n' \
-  '              const ptime = Date.parse(pt_data.time);\r\n' \
+  '              const ptime = point_data[ptd_ind + 4];\r\n' \
   '              if (! isNaN(ptime)) {\r\n' \
   '                focused = pt.id;\r\n' \
-  '                save_old();\r\n' \
-  '                pt_data.alt = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
-  '                if (focused == ex_foc) {document.getElementById("pointalt").value = pt_data.alt;}\r\n' \
-  '                hist_push(batch);\r\n' \
-  '                save_old();\r\n' \
-  '                hist_trim();\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
+  '                save_foc(batch);\r\n' \
+  '                const nalt = (palt + cor * (ptime - stime)).toFixed(1);\r\n' \
+  '                pt.setAttribute("data-alt", nalt);\r\n' \
+  '                if (focused == ex_foc) {document.getElementById("pointalt").value = nalt;}\r\n' \
+  '                point_edit(false, false, false);\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
   '              focused = pt.id;\r\n' \
-  '              save_old();\r\n' \
-  '              pt_data.alt = (palt + cor).toFixed(1);\r\n' \
-  '              hist_push(batch);\r\n' \
-  '              save_old();\r\n' \
-  '              hist_trim();\r\n' \
-  '              point_edit(false, false, false, false);\r\n' \
+  '              save_foc(batch);\r\n' \
+  '              pt.setAttribute("data-alt", (palt + cor).toFixed(1));\r\n' \
+  '              point_edit(false, false, false);\r\n' \
   '            }\r\n' \
   '          \r\n' \
   '          }\r\n' \
@@ -13905,22 +13837,25 @@ class GPXTweakerWebInterfaceServer():
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
   '        if (focused == "") {\r\n' \
-  '          segs = Array.prototype.filter.call(document.getElementById("pointslist").getElementsByClassName("segment"), (seg) => ! seg.hasAttribute("data-deleted"));\r\n' \
+  '          segs = Array.prototype.filter.call(document.getElementById("pointslist").getElementsByClassName("segment"), (seg) => remove || ! seg.hasAttribute("data-deleted"));\r\n' \
   '          if (segs.length == 0 && ! remove) {return;}\r\n' \
   '          if (scrollmode > 0) {scroll_to_track();}\r\n' \
   '        } else if (focused.startsWith("seg")) {\r\n' \
   '          seg_foc = document.getElementById(focused);\r\n' \
-  '          if (seg_foc.hasAttribute("data-deleted")) {return;}\r\n' \
+  '          if (! remove && seg_foc.hasAttribute("data-deleted")) {return;}\r\n' \
   '          seg_foc.scrollIntoView({block:"start"});\r\n' \
   '          segs = [seg_foc];\r\n' \
   '          if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
+  '          element_click(null, document.getElementById(focused), false);\r\n' \
   '        } else if (focused.startsWith("point") || (focused.startsWith("way") && remove)) {\r\n' \
   '          pt_foc = document.getElementById(focused);\r\n' \
-  '          if ((pt_foc.hasAttribute("data-deleted") && ! remove) || pt_foc.hasAttribute("data-error")) {return;}\r\n' \
+  '          if (! remove && (pt_foc.hasAttribute("data-deleted") || pt_foc.hasAttribute("data-error"))) {return;}\r\n' \
   '          pt_foc.scrollIntoView({block:"nearest"});\r\n' \
   '          seg_foc = focused.startsWith("way") ? null : pt_foc.parentNode;\r\n' \
   '          segs = [seg_foc];\r\n' \
-  '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);}\r\n' \
+  '          document.getElementById(seg_foc == null ? "waypointform" : "pointform").scrollIntoView({block:"nearest"});\r\n' \
+  '          if (scrollmode > 0 && ! pt_foc.hasAttribute("data-error")) {scroll_to_dot(document.getElementById(focused.replace("point", "dot")), scrollmode == 2);}\r\n' \
+  '          element_click(null, document.getElementById(focused), false);\r\n' \
   '        } else {return;}\r\n' \
   '        const batch = ++hist_b;\r\n' \
   '        if (remove) {\r\n' \
@@ -13928,38 +13863,35 @@ class GPXTweakerWebInterfaceServer():
   '          if (focused == "") {\r\n' \
   '            const wpts = Array.from(document.getElementById("waypointslist").getElementsByClassName("waypoint"));\r\n' \
   '            for (const wpt of wpts) {\r\n' \
-  '              if (! wpt.hasAttribute("data-error") && wpt.getAttribute("data-time") != "") {\r\n' \
+  '              if (wpt.getAttribute("data-time") != "") {\r\n' \
   '                msg = "";\r\n' \
   '                focused = wpt.id;\r\n' \
-  '                save_old();\r\n' \
-  '                hist_push(batch);\r\n' \
+  '                save_foc(batch);\r\n' \
   '                wpt.setAttribute("data-time", "");\r\n' \
-  '                hist_trim();\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
+  '                point_edit(false, false, false);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          for (const seg of segs) {\r\n' \
   '            const pts = pt_foc == null ? Array.from(seg.getElementsByClassName("point")) : [pt_foc];\r\n' \
   '            for (const pt of pts) {\r\n' \
-  '              if (! pt.hasAttribute("data-error") && pt.getAttribute("data-time") != "") {\r\n' \
+  '              if (pt.getAttribute("data-time") != "") {\r\n' \
   '                msg = "";\r\n' \
   '                focused = pt.id;\r\n' \
-  '                save_old();\r\n' \
-  '                hist_push(batch);\r\n' \
+  '                save_foc(batch);\r\n' \
   '                pt.setAttribute("data-time", "");\r\n' \
-  '                if (focused == ex_foc) {document.getElementById(seg == null ? "waypointtime" : "pointtime").value = "";}\r\n' \
-  '                hist_trim();\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
+  '                point_edit(false, false, seg != null);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          if (msg != null) {\r\n' \
   '            msg = pt_foc != null ? "{#jmdatetime4#}" : (seg_foc != null ? "{#jmdatetime5#}" : "{#jmdatetime6#}");\r\n' \
-  '            focused = ex_foc;\r\n' \
+  '            wpt_calc();\r\n' \
   '            if (segs.length > 0 && segs[0] != null) {calc_modified(...segs);}\r\n' \
   '            show_msg(msg, 2);\r\n' \
   '          }\r\n' \
+  '          focused = "";\r\n' \
+  '          if (ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
@@ -13977,63 +13909,58 @@ class GPXTweakerWebInterfaceServer():
   '          let pele = null;\r\n' \
   '          let ele = null;\r\n' \
   '          let inv_vit = 0;\r\n' \
-  '          let ptp_data = pts[0].dataset;\r\n' \
+  '          let ptp_data = point_data.subarray(5 * parseInt(pts[0].id.substring(5)));\r\n' \
   '          const ptl = pts.at(-1);\r\n' \
   '          for (const pt of pts) {\r\n' \
-  '            const pt_data = pt.dataset;\r\n' \
-  '            if (pt_data.hasOwnProperty("deleted") || pt_data.hasOwnProperty("error")) {continue;}\r\n' \
-  '            etime = Date.parse(pt_data.time);\r\n' \
-  '            ele = parseFloat(pt_data.ele);\r\n' \
+  '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '            const pt_data = point_data.subarray(5 * parseInt(pt.id.substring(5)));\r\n' \
+  '            etime = pt_data[4];\r\n' \
+  '            ele = pt_data[3];\r\n' \
   '            if (isNaN(ele)) {\r\n' \
-  '             ele = parseFloat(pt_data.ele);\r\n' \
+  '             ele = pt_data[2];\r\n' \
   '            }\r\n' \
   '            if (isNaN(ele)) {ele = pele;}\r\n' \
   '            let valid = ! isNaN(etime);\r\n' \
   '            if (valid && stime != null) {valid = etime >= stime;}\r\n' \
   '            if (! valid) {\r\n' \
   '              if (pm_b != null && ! lc) {\r\n' \
-  '                dist_b += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));\r\n' \
+  '                dist_b += distance(ptp_data[0], ptp_data[1], (pele == null ? 0 : pele), pt_data[0], pt_data[1], (pele == null ? 0 : ele));\r\n' \
   '                if (pt_foc == null || pt_foc == pt) {\r\n' \
   '                  pm_b.push([pt, dist_b]);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
-  '              if (lc) {dist += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));}\r\n' \
+  '              if (lc) {dist += distance(ptp_data[0], ptp_data[1], (pele == null ? 0 : pele), pt_data[0], pt_data[1], (pele == null ? 0 : ele));}\r\n' \
   '              if (pt_foc == null || pt_foc == pt) {pm.push([pt, dist]);}\r\n' \
   '              if (pt == ptl && inv_vit > 0) {\r\n' \
   '                for (let p=0; p<pm.length; p++) {\r\n' \
   '                  focused = pm[p][0].id;\r\n' \
-  '                  save_old();\r\n' \
-  '                  hist_push(batch);\r\n' \
+  '                  save_foc(batch);\r\n' \
   '                  const t = (new Date(Math.round((stime + inv_vit * pm[p][1]) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
   '                  pm[p][0].setAttribute("data-time", t);\r\n' \
-  '                  if (focused == ex_foc) {document.getElementById("pointtime").value = t;}\r\n' \
-  '                  hist_trim();\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
+  '                  point_edit(false, false, true);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
-  '              dist += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));\r\n' \
+  '              dist += distance(ptp_data[0], ptp_data[1], (pele == null ? 0 : pele), pt_data[0], pt_data[1], (pele == null ? 0 : ele));\r\n' \
   '              if (dist > 0 && lc && etime > stime) {inv_vit = (etime - stime) / dist;}\r\n' \
   '              if (pm_b != null) {\r\n' \
   '                if (! lc) {\r\n' \
-  '                  dist_b += distance(ptp_data.lat, ptp_data.lon, (pele == null ? 0 : pele), pt_data.lat, pt_data.lon, (pele == null ? 0 : ele));\r\n' \
+  '                  dist_b += distance(ptp_data[0], ptp_data[1], (pele == null ? 0 : pele), pt_data[0], pt_data[1], (pele == null ? 0 : ele));\r\n' \
   '                  btime = etime;\r\n' \
   '                }\r\n' \
   '                if (dist_b == 0 || inv_vit > 0) {\r\n' \
   '                  for (let p=0; p<pm_b.length; p++) {\r\n' \
   '                    focused = pm_b[p][0].id;\r\n' \
-  '                    save_old();\r\n' \
-  '                    hist_push(batch);\r\n' \
+  '                    save_foc(batch);\r\n' \
   '                    const t = (new Date(Math.round((dist_b == 0 ? btime : (btime + inv_vit * (pm_b[p][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
   '                    pm_b[p][0].setAttribute("data-time", t);\r\n' \
-  '                    if (focused == ex_foc) {document.getElementById("pointtime").value = t;}\r\n' \
-  '                    hist_trim();\r\n' \
-  '                    point_edit(false, false, false, false);\r\n' \
+  '                    point_edit(false, false, true);\r\n' \
   '                  }\r\n' \
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
-  '                    save_old();\r\n' \
   '                    calc_modified(seg);\r\n' \
   '                    show_msg("{#jmdatetime1#}", 2);\r\n' \
+  '                    focused = "";\r\n' \
+  '                    element_click(null, document.getElementById(ex_foc), false);\r\n' \
   '                    return;\r\n' \
   '                  }\r\n' \
   '                  pm_b = null;\r\n' \
@@ -14042,18 +13969,16 @@ class GPXTweakerWebInterfaceServer():
   '              if (pm.length > 0 && lc) {\r\n' \
   '                for (let p=0; p<pm.length; p++) {\r\n' \
   '                  focused = pm[p][0].id;\r\n' \
-  '                  save_old();\r\n' \
-  '                  hist_push(batch);\r\n' \
+  '                  save_foc(batch);\r\n' \
   '                  const t = (new Date(Math.round((stime + (etime - stime) * pm[p][1] / (dist > 0 ? dist : 1)) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
   '                  pm[p][0].setAttribute("data-time", t);\r\n' \
-  '                  if (focused == ex_foc) {document.getElementById("pointtime").value = t;}\r\n' \
-  '                  hist_trim();\r\n' \
-  '                  point_edit(false, false, false, false);\r\n' \
+  '                  point_edit(false, false, true);\r\n' \
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
-  '                  save_old();\r\n' \
   '                  calc_modified(seg);\r\n' \
   '                  show_msg("{#jmdatetime1#}", 2);\r\n' \
+  '                  focused = "";\r\n' \
+  '                  element_click(null, document.getElementById(ex_foc), false);\r\n' \
   '                  return;\r\n' \
   '                }\r\n' \
   '              }\r\n' \
@@ -14067,18 +13992,31 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          if (pt_foc != null) {\r\n' \
   '            calc_modified(seg);\r\n' \
+  '            focused = "";\r\n' \
+  '            element_click(null, document.getElementById(ex_foc), false);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        let msg = focused.indexOf("point") < 0 ? null : (seg_foc != null ? "{#jmdatetime2#}" : "{#jmdatetime3#}");\r\n' \
-  '        focused = ex_foc;\r\n' \
+  '        focused = "";\r\n' \
+  '        if (ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
   '        calc_modified(...segs);\r\n' \
   '        if (msg) {show_msg(msg, 2);}\r\n' \
   '      }\r\n' \
   '      function switch_dots_arrows(dots=true, arrows=false) {\r\n' \
   '        if (dots) {\r\n' \
   '          dots_visible = ! dots_visible;\r\n' \
-  '          viewpane.style.setProperty("--ddis", dots_visible ? "block" : "none");\r\n' \
+  '          if (navigator_firefox) {\r\n' \
+  '            viewpane.style.setProperty("--ddis", dots_visible ? "block" : "none");\r\n' \
+  '          } else if (dots_visible) {\r\n' \
+  '            viewpane.style.setProperty("--ddis", "block");\r\n' \
+  '            viewpane.style.setProperty("--dpos", "absolute");\r\n' \
+  '            viewpane.style.setProperty("--dvis", "visible");\r\n' \
+  '          } else {\r\n' \
+  '            viewpane.style.setProperty("--dvis", "hidden");\r\n' \
+  '            viewpane.style.setProperty("--dpos", "relative");\r\n' \
+  '            setTimeout(function() {viewpane.style.setProperty("--ddis", dots_visible ? "block" : "none"); viewpane.style.setProperty("--dpos", "absolute"); viewpane.style.setProperty("--dvis", "visible");}, 1);\r\n' \
+  '          }\r\n' \
   '          viewpane.style.setProperty("--wdstr", dots_visible ? "gray" : "red");\r\n' \
   '        }\r\n' \
   '        if (arrows) {\r\n' \
@@ -14107,7 +14045,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (st == null) {continue;}\r\n' \
   '            stat = stats[seg_ind][st];\r\n' \
   '            let ea = null;\r\n' \
-  '            if (gy_ind == 1 || gy_ind == 2) {ea = parseFloat(pt.getAttribute(gy_ind == 1 ? "data-ele" : "data-alt"));}\r\n' + HTML_GRAPH2_TEMPLATE + \
+  '            if (gy_ind == 1 || gy_ind == 2) {ea = point_data[5 * p_ind + gy_ind + 1];}\r\n' + HTML_GRAPH2_TEMPLATE + \
   '      function error_pcb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '      }\r\n' \
@@ -14146,20 +14084,19 @@ class GPXTweakerWebInterfaceServer():
   '          elt_data.alt = "";\r\n' \
   '          elt_data.time = "";\r\n' \
   '          point_desc(elt, true);\r\n' \
-  '          const wm = WGS84toWebMercator(lat, lon);\r\n' \
-  '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {elt_data.deleted = ""}\r\n' \
+  '          const eltd_ind = 5 * parseInt(pref.substring(5));\r\n' \
+  '          const [x, y] = WGS84toWebMercator(point_data[eltd_ind], point_data[eltd_ind + 1]);\r\n' \
+  '          if (x <= vminx || x >= vmaxx || y <= vminy || y >= vmaxy) {elt_data.deleted = ""; elt_data.error = ""}\r\n' \
   '          frag.insertBefore(elt, frag.firstElementChild);\r\n' \
   '          const elt_dot = document.getElementById("dot%s").cloneNode(true);\r\n' \
   '          elt_dot.id = pref.replace("point", "dot");\r\n' \
-  '          elt_dot.style.display = elt_data.hasOwnProperty("deleted") ? "none" : "";\r\n' \
-  '          elt_dot.style.zIndex = "";\r\n' \
-  '          elt_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, wm[0])) - htopx, 3.5);\r\n' \
-  '          elt_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, wm[1])), 3.5);\r\n' \
+  '          if (elt_data.hasOwnProperty("deleted")) {elt_dot.classList.add("error");}\r\n' \
+  '          elt_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, x)) - htopx, 3.5);\r\n' \
+  '          elt_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, y)), 3.5);\r\n' \
   '          frag_dot.insertBefore(elt_dot, frag_dot.firstElementChild);\r\n' \
   '          if (elt_data.hasOwnProperty("deleted")) {\r\n' \
   '            d_right = " m0 0" + d_right;\r\n' \
   '          } else {\r\n' \
-  '            const [x, y] = WGS84toWebMercator(parseFloat(elt_data.lat), parseFloat(elt_data.lon));\r\n' \
   '            const c = rebase_track(x, y, track, false, true);\r\n' \
   '            const np = (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
   '            if (c != null) {\r\n' \
@@ -14292,7 +14229,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        body += "=\\r\\n";\r\n' \
   '        const segments = document.getElementById("pointslist").getElementsByClassName("segment");\r\n' \
-  '        for (let s=0, l=segments.length; s<l; s++) {\r\n' \
+  '        for (let s=0, ls=segments.length; s<ls; s++) {\r\n' \
   '          const seg = segments[s];\r\n' \
   '          if (seg.hasAttribute("data-deleted")) {continue;}\r\n' \
   '          body += "-\\r\\n";\r\n' \
@@ -14338,7 +14275,11 @@ class GPXTweakerWebInterfaceServer():
   '        const elt = e.target;\r\n' \
   '        const elt_cl = elt?.classList;\r\n' \
   '        if (elt_cl?.contains("pos")) {\r\n' \
-  '          if (e.offsetX >=0 ) {element_click(e, elt);} else {point_checkbox(elt);}\r\n' \
+  '          if (e.offsetX >=0 ) {\r\n' \
+  '            element_click(e, elt);\r\n' \
+  '          } else {\r\n' \
+  '            if (! elt.hasAttribute("data-error")) {point_checkbox(elt);}\r\n' \
+  '          }\r\n' \
   '        } else if (elt_cl?.contains("segmentdesc")) {\r\n' \
   '          element_click(e, elt.parentNode, false);\r\n' \
   '        } else if (elt_cl?.contains("segmentcollapse")) {\r\n' \
@@ -14353,22 +14294,16 @@ class GPXTweakerWebInterfaceServer():
   '        const elp = elt?.parentNode?.parentNode;\r\n' \
   '        if (! elp || elp.id.startsWith("pattern")) {return;}\r\n' \
   '        const elf = elt.id.split("point")[1];\r\n' \
-  '        switch (elf) {\r\n' \
-  '          case "lat":\r\n' \
-  '          case "lon":\r\n' \
-  '            elp.setAttribute("data-" + elf, elt.value);\r\n' \
-  '            point_edit_oc(elp.id, true, true);\r\n' \
-  '            break\r\n' \
-  '          case "ele":\r\n' \
-  '          case "alt":\r\n' \
-  '          case "time":\r\n' \
-  '            elp.setAttribute("data-" + elf, elt.value);\r\n' \
-  '            point_edit_oc(elp.id, true, false);\r\n' \
-  '            break\r\n' \
-  '          case "name":\r\n' \
-  '            elp.setAttribute("data-" + elf, elt.value);\r\n' \
-  '            point_edit_oc(elp.id, false, false);\r\n' \
-  '            break\r\n' \
+  '        const df = "data-" + elf;\r\n' \
+  '        if (elp.hasAttribute(df)) {\r\n' \
+  '          const ex_foc = focused;\r\n' \
+  '          focused = elp.id;\r\n' \
+  '          save_foc();\r\n' \
+  '          elp.setAttribute(df, elt.value);\r\n' \
+  '          const coord = (elf == "lat" || elf == "lon");\r\n' \
+  '          point_edit(elf != "name", coord, true);\r\n' \
+  '          if (coord && scrollmode > 0 && ! elp.hasAttribute("data-error")) {scroll_to_dot(document.getElementById(elp.id.replace("point", "dot")), scrollmode == 2);}\r\n' \
+  '          focused = ex_foc;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      const xhr = new XMLHttpRequest();\r\n' \
@@ -14396,7 +14331,7 @@ class GPXTweakerWebInterfaceServer():
   '      <span title="{#jhelp#}" id="help">?</span>\r\n' \
   '    </div>\r\n' \
   '    <div id="patterns">\r\n' \
-  '      <div id="pattern_waypoint">\r\n '\
+  '      <div id="pattern_waypoint">\r\n' \
   '##WAYPOINTTEMPLATE##' \
   '        <form class="focus" id="waypointform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);" onmouseover="event.stopPropagation()" onmouseout="event.stopPropagation()" onclick="event.stopPropagation()">\r\n' \
   '          <label for="waypointlat">{#jlat#}</label><input type="text" id="waypointlat" name="waypointlat" required="" pattern="[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)" value="%f"><br>\r\n' \
@@ -14409,7 +14344,7 @@ class GPXTweakerWebInterfaceServer():
   '      <div id="pattern_segment">\r\n' \
   '##SEGMENTTEMPLATE##' \
   '      </div>\r\n' \
-  '      <div id="pattern_point">\r\n '\
+  '      <div id="pattern_point">\r\n' \
   '##POINTTEMPLATE##' \
   '        <form class="focus" id="pointform" autocomplete="off" onchange="track_change(event);" onsubmit="return(false);" onmouseover="event.stopPropagation()" onmouseout="event.stopPropagation()" onclick="event.stopPropagation()">\r\n' \
   '          <label for="pointlat">{#jlat#}</label><input type="text" id="pointlat" name="pointlat" required="" pattern="[\\+\\-]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)" value=""><br>\r\n' \
@@ -14445,9 +14380,9 @@ class GPXTweakerWebInterfaceServer():
   '    </div>\r\n' \
   '    <script>\r\n' \
   '      var point_data = new Float64Array(new ArrayBuffer(40 * document.getElementById("content").getElementsByClassName("point").length , {maxByteLength: 4000000}));\r\n' \
-  '      Array.prototype.forEach.call(document.getElementById("content").getElementsByClassName("pos"), function (pt) {point_desc(pt, true);});\r\n' \
+  '      Array.prototype.forEach.call(document.getElementById("content").getElementsByClassName("pos"), function(pt) {point_desc(pt, true);});\r\n' \
   '    </script>\r\n' \
-  '    <div id="view" style="--scale:1;--zoom:1;--wsp:6em;--filter:none;--magnify:1;--tprend:auto;--ddis:none;--wdstr:red;--ardis:inline" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '    <div id="view" style="--scale:1;--zoom:1;--wsp:6em;--filter:none;--magnify:1;--tprend:auto;--dpos:absolute;--ddis:none;--dvis:visible;--wdstr:red;--ardis:inline" onmousedown="mouse_down(event)" onclick="mouse_click(event)" onwheel="mouse_wheel(event)" onpointerdown="pointer_down(event)">\r\n' \
   '      <div id="background"></div>\r\n' \
   '      <div id="handle">\r\n' \
   '#<#PATHES#>#' \
@@ -14463,6 +14398,7 @@ class GPXTweakerWebInterfaceServer():
   '      var mousey = null;\r\n' \
   '      const viewpane = document.getElementById("view");\r\n' \
   '      const handle = document.getElementById("handle");\r\n' \
+  '      const background = document.getElementById("background");\r\n' \
   '      var targetmark = null;\r\n' \
   '      var hand = null;\r\n' \
   '      var hand_m = false;\r\n' \
@@ -14491,23 +14427,23 @@ class GPXTweakerWebInterfaceServer():
   '        if (document.activeElement) {\r\n' \
   '          if (document.activeElement.nodeName.toUpperCase() != "BODY" && (e.button == 2 || elt.id.indexOf("dot") < 0 || ! ((document.activeElement.id || "").slice(-3, -2) == "l" && focused == elt.id.replace("dot", "point")))) {document.activeElement.blur();}\r\n' \
   '        }\r\n' \
-  '        const bg = document.getElementById("background");\r\n' \
   '        if (e.button == 0) {\r\n' \
   '          if (elt.id == "background") {\r\n' \
   '            hand = elt;\r\n' \
-  '            bg.style.cursor = "all-scroll";\r\n' \
-  '            bg.setPointerCapture(pointer_e);\r\n' \
+  '            background.style.cursor = "all-scroll";\r\n' \
+  '            background.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id.indexOf("dot") >= 0) {\r\n' \
   '            const pt = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
   '            if (pt.id != focused) {\r\n' \
   '              element_click(null, pt);\r\n' \
   '              if (! dots_visible) {return;}\r\n' \
   '            }\r\n' \
+  '            save_old();\r\n' \
   '            hand = elt;\r\n' \
   '            hand_m = false;\r\n' \
-  '            bg.style.cursor = "crosshair";\r\n' \
+  '            background.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
-  '            bg.setPointerCapture(pointer_e);\r\n' \
+  '            background.setPointerCapture(pointer_e);\r\n' \
   '          } else if (elt.id == "gbarc") {\r\n' \
   '            hand = elt;\r\n' \
   '            graph_point(parseFloat(document.getElementById("gbarc").style.left));\r\n' \
@@ -14527,13 +14463,13 @@ class GPXTweakerWebInterfaceServer():
   '            if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return;}\r\n' \
   '            const coord = WebMercatortoWGS84(...wm);\r\n' \
   '            point_insert("a", coord);\r\n' \
-  '            point_edit(false, false, false, false);\r\n' \
   '            save_old();\r\n' \
+  '            point_edit(false, false, true);\r\n' \
   '            hand = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '            hand_m = false;\r\n' \
-  '            bg.style.cursor = "crosshair";\r\n' \
+  '            background.style.cursor = "crosshair";\r\n' \
   '            hand.style.cursor = "crosshair";\r\n' \
-  '            bg.setPointerCapture(pointer_e);\r\n' \
+  '            background.setPointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
@@ -14546,37 +14482,30 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
   '        if (hand) {\r\n' \
-  '          const bg = document.getElementById("background");\r\n' \
   '          if (mouse_out != null) {\r\n' \
   '            window.clearInterval(mouse_out);\r\n' \
   '            mouse_out = null;\r\n' \
   '          }\r\n' \
   '          if (hand.id.indexOf("dot") >= 0) {\r\n' \
-  '            bg.style.cursor = "";\r\n' \
-  '            bg.releasePointerCapture(pointer_e);\r\n' \
+  '            background.style.cursor = "";\r\n' \
+  '            background.releasePointerCapture(pointer_e);\r\n' \
   '            hand.style.cursor = "";\r\n' \
   '            const pt = document.getElementById(focused);\r\n' \
   '            if (hand_m || (e.shiftKey && ! e.altKey)) {\r\n' \
   '              hist_push();\r\n' \
+  '              hist_trim();\r\n' \
   '              const c = foc_old.split("\\r\\n");\r\n' \
   '              const d = distance(parseFloat(c[0]), parseFloat(c[1]), 0, parseFloat(pt.getAttribute("data-lat")), parseFloat(pt.getAttribute("data-lon")), 0);\r\n' \
-  '              save_old();\r\n' \
-  '              hist_trim();\r\n' \
   '              if ((e.shiftKey || d > 25) && ! e.altKey) {\r\n' \
   '                pt.setAttribute("data-ele", "");\r\n' \
   '                if (focused.startsWith("way")) {\r\n' \
-  '                  if (pt.hasAttribute("data-focused")) {\r\n' \
-  '                    document.getElementById("waypointele").value = "";\r\n' \
-  '                  }\r\n' \
+  '                  document.getElementById("waypointele").value = "";\r\n' \
   '                } else {\r\n' \
   '                  pt.setAttribute("data-alt", "")\r\n' \
-  '                  if (pt.hasAttribute("data-focused")) {\r\n' \
-  '                    document.getElementById("pointele").value = "";\r\n' \
-  '                    document.getElementById("pointalt").value = "";\r\n' \
-  '                  }\r\n' \
+  '                  document.getElementById("pointele").value = "";\r\n' \
+  '                  document.getElementById("pointalt").value = "";\r\n' \
   '                }\r\n' \
-  '                point_edit(false, false, false, false);\r\n' \
-  '                save_old();\r\n' \
+  '                point_edit(false, false, false);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            if (hand.id.startsWith("dot")) {\r\n' \
@@ -14590,8 +14519,8 @@ class GPXTweakerWebInterfaceServer():
   '            hand.setAttribute("stroke", "none");\r\n' \
   '            gfence(graph_point);\r\n' \
   '          } else {\r\n' \
-  '            bg.style.cursor = "";\r\n' \
-  '            bg.releasePointerCapture(pointer_e);\r\n' \
+  '            background.style.cursor = "";\r\n' \
+  '            background.releasePointerCapture(pointer_e);\r\n' \
   '          }\r\n' \
   '          hand = null;\r\n' \
   '          pointer_e = null;\r\n' \
@@ -14609,7 +14538,14 @@ class GPXTweakerWebInterfaceServer():
   '          if (elt.id.indexOf("dot") >= 0) {\r\n' \
   '            const pt = document.getElementById(elt.id.replace("dot", "point"));\r\n' \
   '            point_checkbox(pt);\r\n' \
-  '            pt.scrollIntoView({block:"nearest"});\r\n' \
+  '            if (pt.hasAttribute("data-focused")) {\r\n' \
+  '              const iswpt = pt.id.startsWith("way");\r\n' \
+  '              if (! iswpt) {pt.parentNode.removeAttribute("data-collapsed");}\r\n' \
+  '              pt.scrollIntoView({block:"nearest"});\r\n' \
+  '              document.getElementById(iswpt ? "waypointform" : "pointform").scrollIntoView({block:"nearest"});\r\n' \
+  '            } else if (pt.id.startsWith("way") || ! pt.parentNode.hasAttribute("data-collapsed")) {\r\n' \
+  '              pt.scrollIntoView({block:"nearest"});\r\n' \
+  '            }\r\n' \
   '          } else if (elt.id.startsWith("path")) {\r\n' \
   '            const seg = document.getElementById(elt.id.replace("path", "segment"));\r\n' \
   '            segment_checkbox(seg);\r\n' \
@@ -14661,7 +14597,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            graph_point(e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            graph_point(e.pageX - document.getElementById("graph").offsetParent.offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          const pl = viewpane.offsetLeft;\r\n' \
@@ -14709,11 +14645,7 @@ class GPXTweakerWebInterfaceServer():
   '          let dt = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '          let pt = null;\r\n' \
   '          do {\r\n' \
-  '            if (e.deltaY > 0) {\r\n' \
-  '              dt = dt.nextElementSibling;\r\n' \
-  '            } else {\r\n' \
-  '              dt = dt.previousElementSibling;\r\n' \
-  '            }\r\n' \
+  '            dt = e.deltaY > 0 ? dt.nextElementSibling : dt.previousElementSibling;\r\n' \
   '            if (! dt) {return;}\r\n' \
   '            if (focused.indexOf("way") != dt.id.indexOf("way")) {return;}\r\n' \
   '            pt = document.getElementById(dt.id.replace("dot", "point"));\r\n' \
@@ -14721,13 +14653,9 @@ class GPXTweakerWebInterfaceServer():
   '          element_click(null, pt);\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(dt, scrollmode == 2);}\r\n' \
   '        } else if (focused.startsWith("segment")) {\r\n' \
-  '          let seg = document.getElementById(focused)\r\n' \
+  '          let seg = document.getElementById(focused);\r\n' \
   '          do {\r\n' \
-  '            if (e.deltaY > 0) {\r\n' \
-  '              seg = seg.nextElementSibling;\r\n' \
-  '            } else {\r\n' \
-  '              seg = seg.previousElementSibling;\r\n' \
-  '            }\r\n' \
+  '            seg = e.deltaY > 0 ? seg.nextElementSibling : seg.previousElementSibling;\r\n' \
   '            if (! seg) {return;}\r\n' \
   '          } while (seg.hasAttribute("data-deleted"))\r\n' \
   '          element_click(null, seg);\r\n' \
@@ -14737,8 +14665,8 @@ class GPXTweakerWebInterfaceServer():
   '      function window_resize() {\r\n' \
   '        rescale();\r\n' \
   '        if (webgpu) {\r\n' \
-  '          const graph = document.getElementById("graph");\r\n' \
   '          if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph") {return;}\r\n' \
+  '          const graph = document.getElementById("graph");\r\n' \
   '          const graphc = document.getElementById("graphc");\r\n' \
   '          const gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
   '          const gheight = graph.offsetHeight;\r\n' \
@@ -14756,11 +14684,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function page_load() {\r\n' + HTML_PAGE_LOAD_TEMPLATE + \
   '        if (prev_state != null) {\r\n' \
-  '          switch (prev_state[4]) {\r\n' \
-  '            case "1": switch_dots_arrows(); break;\r\n' \
-  '            case "2": switch_dots_arrows(false, true); break;\r\n' \
-  '            case "3": switch_dots_arrows(true, true); break;\r\n' \
-  '          }\r\n' \
+  '          const da = parseInt(prev_state[4]);\r\n' \
+  '          switch_dots_arrows(Boolean(da & 1), Boolean(da & 2));\r\n' \
   '        }\r\n' \
   '        window.onresize = window_resize;\r\n' \
   '        calc_modified();\r\n' \
@@ -18466,24 +18391,24 @@ class GPXTweakerWebInterfaceServer():
   '      span[id$=focus] {\r\n' \
   '        display: none;\r\n' \
   '      }\r\n' \
-  '      div [id=geomedia] {\r\n' \
+  '      #geomedia {\r\n' \
   '        position: absolute;\r\n' \
   '        pointer-events: none;\r\n' \
   '      }\r\n' \
-  '      div[id=geomedia] * {\r\n' \
+  '      #geomedia * {\r\n' \
   '        background: darkgray;\r\n' \
   '        cursor: zoom-in;\r\n' \
   '        pointer-events: initial;\r\n' \
   '      }\r\n' \
-  '      div[id=geomedia] img {\r\n' \
+  '      #geomedia img {\r\n' \
   '        image-orientation: from-image;\r\n' \
   '      }\r\n' \
-  '      div[id=geomedia] *[id*=","] {\r\n' \
+  '      #geomedia *[id*=","] {\r\n' \
   '        outline-offset: -3px;\r\n' \
   '        outline: outset 3px lightgray;\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
-  '        div[id=geomedia]>img::before{\r\n' \
+  '        #geomedia>img::before{\r\n' \
   '          content: "";\r\n' \
   '          position: absolute;\r\n' \
   '          left: 3px;\r\n' \
@@ -18541,15 +18466,15 @@ class GPXTweakerWebInterfaceServer():
   '      div[id^=media] *:not(:last-child) {\r\n' \
   '        margin-right: 14px;\r\n' \
   '      }\r\n' \
-  '      #lpanels[style*=searchpanel][style*=mini] {\r\n' \
+  '      #lpanels[style*=mini] {\r\n' \
   '        top: max(75vh - 6px, 100vh - 3em - 36px);\r\n' \
   '        max-height: calc(3em + 30px);\r\n' \
   '      }\r\n' \
-  '      #lpanels[style*=mini]~#content, #lpanels[style*=mini]~#view {\r\n' \
-  '        min-height: calc(100vh - 7em - 46px);\r\n' \
-  '      }\r\n' \
   '      #lpanels[style*=mini]~#bottom_bar {\r\n' \
-  '        top: calc(100vh - 4.6em - 38px);\r\n' \
+  '        top: max(calc(75vh - 1.6em - 8px), calc(100vh - 4.6em - 38px));\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=mini]~#content, #lpanels[style*=mini]~#view {\r\n' \
+  '        min-height: calc(100vh - 6.6em - 48px);\r\n' \
   '      }\r\n' \
   '      #searchpanel {\r\n' \
   '        overflow: clip;\r\n' \
@@ -18780,7 +18705,6 @@ class GPXTweakerWebInterfaceServer():
   '      var str_comp = new Intl.Collator().compare;\r\n' \
   '      var no_sort = null;\r\n' \
   '      var magnify = 1;\r\n' \
-  '      var arrows_visible = false;\r\n' \
   '      var smoothed = ##SMENABLED##;\r\n' \
   '      var tracks_pts = [];\r\n' \
   '      var tracks_xys = null;\r\n' \
@@ -21187,9 +21111,10 @@ class GPXTweakerWebInterfaceServer():
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
   '      var mousey = null;\r\n' \
-  '      var viewpane = document.getElementById("view");\r\n' \
-  '      var handle = document.getElementById("handle");\r\n' \
-  '      var targetmark = document.getElementById("target_mark");\r\n' \
+  '      const viewpane = document.getElementById("view");\r\n' \
+  '      const handle = document.getElementById("handle");\r\n' \
+  '      const background = document.getElementById("background");\r\n' \
+  '      const targetmark = document.getElementById("target_mark");\r\n' \
   '      var hand = null;\r\n' \
   '      var mouse_out = null;\r\n' \
   '      var pointer_e = null;\r\n' \
@@ -21255,12 +21180,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        scrollmode_ex = scrollmode;\r\n' \
   '        scrollmode = 0;\r\n' \
-  '        const bg = document.getElementById("background");\r\n' \
   '        if (e.target && e.button == 0) {\r\n' \
   '          if (e.target.id == "background") {\r\n' \
   '            hand = e.target;\r\n' \
-  '            bg.style.cursor = "all-scroll";\r\n' \
-  '            bg.setPointerCapture(pointer_e);\r\n' \
+  '            background.style.cursor = "all-scroll";\r\n' \
+  '            background.setPointerCapture(pointer_e);\r\n' \
   '            if (! navigator_firefox) {viewpane.style.setProperty("--tprend", "optimizeSpeed");};\r\n' \
   '            media_ex_visible = media_visible;\r\n' \
   '            hide_media("m");\r\n' \
@@ -21286,14 +21210,13 @@ class GPXTweakerWebInterfaceServer():
   '        document.onmouseup = null;\r\n' \
   '        scrollmode = scrollmode_ex;\r\n' \
   '        if (hand) {\r\n' \
-  '          const bg = document.getElementById("background");\r\n' \
   '          if (mouse_out != null) {\r\n' \
   '            window.clearInterval(mouse_out);\r\n' \
   '            mouse_out = null;\r\n' \
   '          }\r\n' \
   '          if (hand.id == "background") {\r\n' \
-  '            bg.style.cursor = "";\r\n' \
-  '            bg.releasePointerCapture(pointer_e);\r\n' \
+  '            background.style.cursor = "";\r\n' \
+  '            background.releasePointerCapture(pointer_e);\r\n' \
   '            if (! navigator_firefox) {setTimeout(function () {viewpane.style.setProperty("--tprend", "auto");}, 1);};\r\n' \
   '          } else {\r\n' \
   '            hand.releasePointerCapture(pointer_e);\r\n' \
@@ -21370,7 +21293,7 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_move(e) {\r\n' \
   '        if (mousex != null && mousey != null && hand != null) {\r\n' \
   '          if (hand.id == "gbarc") {\r\n' \
-  '            gfence(graph_point, e.pageX - document.getElementById("graph").offsetLeft);\r\n' \
+  '            gfence(graph_point, e.pageX - document.getElementById("graph").offsetParent.offsetLeft);\r\n' \
   '            return;\r\n' \
   '          }\r\n' \
   '          let pl = viewpane.offsetLeft;\r\n' \
@@ -21504,7 +21427,9 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (! await data_load()) {return;}\r\n' + HTML_PAGE_LOAD_TEMPLATE.replace('switch_tiles(-1, 0)', 'switch_tiles(-1, null)') + \
   '        if (prev_state != null) {\r\n' \
-  '          dots_visible = prev_state[4] == "true";\r\n' \
+  '          const da = parseInt(prev_state[4]);\r\n' \
+  '          dots_visible = Boolean(da & 1);\r\n' \
+  '          arrows_visible = ! Boolean(da & 2);\r\n' \
   '        }\r\n' \
   '        prev_state = sessionStorage.getItem("state_exp");\r\n' \
   '        if (prev_state != null) {\r\n' \
