@@ -10270,7 +10270,7 @@ class GPXTweakerWebInterfaceServer():
   '          Array.from(handle.getElementsByClassName("tlayer")).forEach((tl) => handle.removeChild(tl));\r\n' \
   '          for (let l=layers.length-1; l>=0; l--) {\r\n' \
   '            if (layers[l].ext == ".json") {continue;}\r\n' \
-  '            const tlayer = document.createElement("slot");\r\n' \
+  '            const tlayer = document.createElement("span");\r\n' \
   '            tlayer.id = "tlayer" + l.toString();\r\n' \
   '            tlayer.classList.add("tlayer");\r\n' \
   '            handle.insertBefore(tlayer, handle.firstElementChild);\r\n' \
