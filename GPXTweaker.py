@@ -11597,6 +11597,7 @@ class GPXTweakerWebInterfaceServer():
   '      #waypoints, #points {\r\n' \
   '        overflow: hidden scroll;\r\n' \
   '        width: 100%;\r\n' \
+  '        white-space: nowrap;\r\n' \
   '      }\r\n' \
   '      #waypoints {\r\n' \
   '        max-height: min(max(var(--wpth), 4.2em), max(100% - 4.2em, 50%));\r\n' \
@@ -12494,11 +12495,11 @@ class GPXTweakerWebInterfaceServer():
   '          elt_data.ele = "";\r\n' \
   '          elt_data.time = "";\r\n' \
   '          if (iswpt) {elt_data.name = "";} else {elt_data.alt = "";}\r\n' \
-  '          point_desc(elt, true);\r\n' \
   '          const wm = WGS84toWebMercator(lat, lon);\r\n' \
   '          elt_dot.style.left = wmvalue_to_prop(wm[0] - htopx, (iswpt ? 4 : 3.5));\r\n' \
   '          elt_dot.style.top = wmvalue_to_prop(htopy - wm[1], (iswpt ? 4 : 3.5));\r\n' \
   '        }\r\n' \
+  '        point_desc(elt, true);\r\n' \
   '        if (pos == "a") {ref = ref.nextElementSibling;}\r\n' \
   '        par.insertBefore(elt, ref);\r\n' \
   '        if (! elt_dot) {elt_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);}\r\n' \
@@ -12520,11 +12521,12 @@ class GPXTweakerWebInterfaceServer():
   '        par.insertBefore(elt_dot, ref);\r\n' \
   '        if (! iswpt) {\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
-  '          const np = WGS84_to_viewbox(parseFloat(elt.getAttribute("data-lat")), parseFloat(elt.getAttribute("data-lon")), track);\r\n' \
+  '          const p = 5 * parseInt(pref.substring(5));\r\n' \
+  '          const np = WGS84_to_viewbox(point_data[p], point_data[p + 1], track);\r\n' \
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          const ind = Array.prototype.indexOf.call(pts, elt) + 1;\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
-  '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + ind.toString() + "}");\r\n' \
+  '          let d_left = d.match("( *[LMm] *\\\\d+(\\.\\\\d*)? +\\\\d+(\\.\\\\d*)? *){" + ind.toString() + "}");\r\n' \
   '          let d_right = d.slice(d_left[0].length);\r\n' \
   '          if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
   '          if (d_left[0].indexOf("M", 1) >= 0) {\r\n' \
@@ -12551,10 +12553,9 @@ class GPXTweakerWebInterfaceServer():
   '      function track_update_point(pt) {\r\n' \
   '        const seg = pt.parentNode;\r\n' \
   '        const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
-  '        const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
   '        const ind = Array.prototype.indexOf.call(seg.getElementsByClassName("point"), pt);\r\n' \
   '        let d = path.getAttribute("d");\r\n' \
-  '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
+  '        let d_left = d.match("( *[LMm] *\\\\d+(\\.\\\\d*)? +\\\\d+(\\.\\\\d*)? *){" + (ind + 2).toString() + "}");\r\n' \
   '        let d_right = d.slice(d_left[0].length);\r\n' \
   '        if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
   '        if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {\r\n' \
@@ -12564,12 +12565,14 @@ class GPXTweakerWebInterfaceServer():
   '            d = d_left[0].slice(0, -d_left[1].length) + "m0 0" + d_right;\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
+  '          const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
   '          const np = WGS84_to_viewbox(point_data[ptd_ind], point_data[ptd_ind + 1], track);\r\n' \
-  '          if (d_left[0].indexOf("M", 1) >= 0) {\r\n' \
-  '            d = d_left[0].slice(0, -d_left[1].length) + " L" + np + d_right;\r\n' \
+  '          d_left = d_left[0].slice(0, -d_left[1].length);\r\n' \
+  '          if (d_left.indexOf("M", 1) >= 0) {\r\n' \
+  '            d = d_left + "L" + np + d_right;\r\n' \
   '          } else {\r\n' \
-  '            d = d_left[0].slice(0, -d_left[1].length) + " M" + np + d_right.replace("M", "L");\r\n' \
+  '            d = d_left + "M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        path.setAttribute("d", d);\r\n' \
@@ -13221,7 +13224,7 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          const ind = seg_foc.getElementsByClassName("point").length;\r\n' \
   '          const d = path.getAttribute("d");\r\n' \
-  '          let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + (ind + 1).toString() + "}");\r\n' \
+  '          let d_left = d.match("( *[LMm] *\\\\d+(\\.\\\\d*)? +\\\\d+(\\.\\\\d*)? *){" + (ind + 1).toString() + "}");\r\n' \
   '          let d_right = d.slice(d_left[0].length);\r\n' \
   '          if (d_right.indexOf("M") < 0) {d_right = d_right.replace("L", "M");}\r\n' \
   '          path.setAttribute("d", "M0 0 " + d_right);\r\n' \
@@ -13427,7 +13430,7 @@ class GPXTweakerWebInterfaceServer():
   '            const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '            const d = path.getAttribute("d").substring(4).replace("M", "L");\r\n' \
   '            let d_r = "M0 0";\r\n' \
-  '            const points = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '            const points = d.match(/[LMm] *\\d+(\\.\\d*)? +\\d+(\\.\\d*)?/g);\r\n' \
   '            points.reverse();\r\n' \
   '            for (const point of points) {d_r += " " + point};\r\n' \
   '            d_r = d_r.replace("L", "M");\r\n' \
@@ -13502,7 +13505,7 @@ class GPXTweakerWebInterfaceServer():
   '          const sdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
-  '          const dots = d.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g).slice(1);\r\n' \
+  '          const dots = d.match(/[LMm] *\\d+(\\.\\d*)? +\\d+(\\.\\d*)?/g).slice(1);\r\n' \
   '          let d_f = "M0 0";\r\n' \
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
@@ -14068,7 +14071,7 @@ class GPXTweakerWebInterfaceServer():
   '        const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '        let ind = pts.indexOf(pt) + 1;\r\n' \
   '        const d = path.getAttribute("d");\r\n' \
-  '        let d_left = d.match("( *[LMm] *\\\\d+([.]\\\\d*)? +\\\\d+([.]\\\\d*)? *){" + ind.toString() + "}")[0];\r\n' \
+  '        let d_left = d.match("( *[LMm] *\\\\d+(\\.\\\\d*)? +\\\\d+(\\.\\\\d*)? *){" + ind.toString() + "}")[0];\r\n' \
   '        let d_right = " " + d.slice(d_left.length).replace("M", "L");\r\n' \
   '        const l = document.getElementById("pointslist").getElementsByClassName("point").length;\r\n' \
   '        for (let p=iti.length-1; p>=0; p--) {\r\n' \
@@ -14102,12 +14105,12 @@ class GPXTweakerWebInterfaceServer():
   '            if (c != null) {\r\n' \
   '              for (let i=0; i<2; i++) {\r\n' \
   '                let d_ = i == 0 ? d_left.substring(4) : d_right;\r\n' \
-  '                let points = d_.match(/[LMm] *\\d+([.]\\d*)? +\\d+([.]\\d*)?/g);\r\n' \
+  '                let points = d_.match(/[LMm] *\\d+(\\.\\d*)? +\\d+(\\.\\d*)?/g);\r\n' \
   '                d_ = "";\r\n' \
   '                if (points != null) {\r\n' \
   '                  for (const point of points) {\r\n' \
   '                    if (point[0] != "m") {\r\n' \
-  '                      const [px, py] = point.match(/\\d+([.]\\d*)?/g);\r\n' \
+  '                      const [px, py] = point.match(/\\d+(\\.\\d*)?/g);\r\n' \
   '                      d_ += " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
   '                    } else {\r\n' \
   '                      d_ += " " + point;\r\n' \
