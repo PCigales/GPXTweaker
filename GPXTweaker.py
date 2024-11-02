@@ -12366,7 +12366,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            wmtvb.return();\r\n' \
-  '            if (d_r.indexOf("M", d_r.indexOf("M") + 1) < 0) {d_r = d_r.replace("L", "M");}\r\n' \
+  '            if (d_r.indexOf("M", 1) < 0) {d_r = d_r.replace("L", "M");}\r\n' \
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -12601,8 +12601,8 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("waypointname").value = "#### 3D ####";\r\n' \
   '          point_edit(false, false, false);\r\n' \
   '          point_checkbox(wpt);\r\n' \
-  '          scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
   '        }\r\n' \
+  '        scroll_to_dot(document.getElementById(focused.replace("point", "dot")), true);\r\n' \
   '        if (navigator_firefox) {window.alert("3D");}\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
@@ -13577,7 +13577,7 @@ class GPXTweakerWebInterfaceServer():
   '            pp = p;\r\n' \
   '          }\r\n' \
   '          wmtvb.return();\r\n' \
-  '          if (d_f.indexOf("M", d_f.indexOf("M") + 1) < 0) {d_f = d_f.replace("L", "M");}\r\n' \
+  '          if (d_f.indexOf("M", 1) < 0) {d_f = d_f.replace("L", "M");}\r\n' \
   '          path.setAttribute("d", d_f);\r\n' \
   '        }\r\n' \
   '        if (seg_foc != null) {focused = seg_foc.id;} else {focused = "";}\r\n' \
@@ -14090,7 +14090,7 @@ class GPXTweakerWebInterfaceServer():
   '        wmtvb.return();\r\n' \
   '        seg.insertBefore(frag, pt);\r\n' \
   '        handle.insertBefore(frag_dot, dot);\r\n' \
-  '        if (d_left.indexOf("M", d_left.indexOf("M") + 1) < 0) {d_right = d_right.replace("L", "M");}\r\n' \
+  '        if (d_left.indexOf("M", 1) < 0) {d_right = d_right.replace("L", "M");}\r\n' \
   '        path.setAttribute("d", d_left + d_right);\r\n' \
   '        calc_modified(seg);\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
