@@ -11938,14 +11938,14 @@ class GPXTweakerWebInterfaceServer():
   '        let gmaxx = -Infinity;\r\n' \
   '        let gmaxy = -Infinity;\r\n' \
   '        for (const trck of tracks) {\r\n' \
-  '          const d = trck.firstElementChild.getAttribute("d").match(/[LMm] *\\d+(\\.\\d*)? +\\d+(\\.\\d*)?/g);\r\n' \
+  '          const d = trck.firstElementChild.getAttribute("d").match(/[LMm][^LMm]*/g);\r\n' \
   '          let minx = Infinity;\r\n' \
   '          let miny = Infinity;\r\n' \
   '          let maxx = -Infinity;\r\n' \
   '          let maxy = -Infinity;\r\n' \
   '          for (let p=1, l=d.length; p<l; p++) {\r\n' \
   '            if (d[p][0] != "m") {\r\n' \
-  '              const pt = d[p].substring(1).split(/ +/).map(Number);\r\n' \
+  '              const pt = d[p].match(/[^LMm ,]+/g).map(Number);\r\n' \
   '              minx = min(minx, pt[0]);\r\n' \
   '              miny = min(miny, pt[1]);\r\n' \
   '              maxx = max(maxx, pt[0]);\r\n' \
@@ -11953,10 +11953,13 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '          if (isFinite(minx)) {\r\n' \
-  '            gminx = min(gminx, prop_to_wmvalue(trck.style.left) + minx);\r\n' \
-  '            gminy = min(gminy, prop_to_wmvalue(trck.style.top) + miny);\r\n' \
-  '            gmaxx = max(gmaxx, prop_to_wmvalue(trck.style.left) + maxx);\r\n' \
-  '            gmaxy = max(gmaxy, prop_to_wmvalue(trck.style.top) + maxy);\r\n' \
+  '            const vb = trck.getAttribute("viewBox").match(/[^ ,]+/g).map(Number);\r\n' \
+  '            const ox = prop_to_wmvalue(trck.style.left) - vb[0];\r\n' \
+  '            const oy = prop_to_wmvalue(trck.style.top) - vb[1];\r\n' \
+  '            gminx = min(gminx, ox + minx);\r\n' \
+  '            gminy = min(gminy, oy + miny);\r\n' \
+  '            gmaxx = max(gmaxx, ox + maxx);\r\n' \
+  '            gmaxy = max(gmaxy, oy + maxy);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (track == null) {\r\n' \
@@ -12060,78 +12063,87 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        gfence(graph_point);\r\n' \
   '      }\r\n' \
-  '      function rebase_track(x, y, track, exact=false, batch=false) {\r\n' \
+  '      function* wm_to_viewbox(track) {\r\n' \
+  '        const padding = 1000;\r\n' \
+  '        let tr_l = prop_to_wmvalue(track.style.left);\r\n' \
+  '        let tr_w = prop_to_wmvalue(track.style.width);\r\n' \
+  '        let tr_t = prop_to_wmvalue(track.style.top);\r\n' \
+  '        let tr_h = prop_to_wmvalue(track.style.height);\r\n' \
   '        const path = track.firstElementChild;\r\n' \
   '        let minx = wmb;\r\n' \
   '        let maxx = -wmb;\r\n' \
   '        let miny = wmb;\r\n' \
   '        let maxy = -wmb;\r\n' \
-  '        const d_ex = path.getAttribute("d");\r\n' \
-  '        if (RegExp(/([LMm] *\\d+(?:\\.\\d*)? +\\d+(?:\\.\\d*)? *){2}/).test(d_ex)) {\r\n' \
-  '          minx = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
-  '          maxy = htopy - prop_to_wmvalue(track.style.top);\r\n' \
-  '          maxx = minx + prop_to_wmvalue(track.style.width);\r\n' \
-  '          miny = maxy - prop_to_wmvalue(track.style.height);\r\n' \
+  '        const d = path.getAttribute("d");\r\n' \
+  '        let d_p = RegExp(/(?:[LMm][^LMm]*){2}/).test(d);\r\n' \
+  '        const vb = track.getAttribute("viewBox").match(/[^ ,]+/g);\r\n' \
+  '        let vb_l = 0;\r\n' \
+  '        let vb_t = 0;\r\n' \
+  '        if (d_p) {\r\n' \
+  '          minx = tr_l + htopx;\r\n' \
+  '          maxy = htopy - tr_t;\r\n' \
+  '          maxx = minx + tr_w;\r\n' \
+  '          miny = maxy - tr_h;\r\n' \
+  '          vb_l = parseFloat(vb[0]);\r\n' \
+  '          vb_t = parseFloat(vb[1]);\r\n' \
   '        }\r\n' \
-  '        const viewbox = track.getAttribute("viewBox").split(" ");\r\n' \
-  '        const minx_ex = minx;\r\n' \
-  '        const maxy_ex = maxy;\r\n' \
-  '        let vb = false;\r\n' \
-  '        const padding = exact ? 0 : 1000;\r\n' \
-  '        if (x < minx) {\r\n' \
-  '          minx = Math.max(vminx, -wmb, x - padding);\r\n' \
-  '          track.style.left = wmvalue_to_prop(minx - htopx);\r\n' \
-  '          track.style.width = wmvalue_to_prop(maxx - minx);\r\n' \
-  '          viewbox[2] = (maxx - minx).toFixed(1);\r\n' \
-  '          vb = true;\r\n' \
-  '        }\r\n' \
-  '        if (x > maxx) {\r\n' \
-  '          maxx = Math.min(vmaxx, wmb, x + padding);\r\n' \
-  '          track.style.width = wmvalue_to_prop(maxx - minx);\r\n' \
-  '          viewbox[2] = (maxx - minx).toFixed(1);\r\n' \
-  '          vb = true;\r\n' \
-  '        }\r\n' \
-  '        if (y > maxy) {\r\n' \
-  '          maxy = Math.min(vmaxy, wmb, y + padding);\r\n' \
-  '          track.style.top = wmvalue_to_prop(htopy - maxy);\r\n' \
-  '          track.style.height = wmvalue_to_prop(maxy - miny);\r\n' \
-  '          viewbox[3] = (maxy - miny).toFixed(1);\r\n' \
-  '          vb = true;\r\n' \
-  '        }\r\n' \
-  '        if (y < miny) {\r\n' \
-  '          miny = Math.max(vminy, -wmb, y - padding);\r\n' \
-  '          track.style.height = wmvalue_to_prop(maxy - miny);\r\n' \
-  '          viewbox[3] = (maxy - miny).toFixed(1);\r\n' \
-  '          vb = true;\r\n' \
-  '        }\r\n' \
-  '        if (vb) {track.setAttribute("viewBox", viewbox.join(" "));}\r\n' \
-  '        if (! batch) {\r\n' \
-  '          if (minx_ex != minx || maxy_ex != maxy) {\r\n' \
-  '            let d = "M0 0";\r\n' \
-  '            const points = d_ex.match(/[LMm] *\\d+(\\.\\d*)? +\\d+(\\.\\d*)?/g);\r\n' \
-  '            for (let p=1, l=points.length; p<l; p++) {\r\n' \
-  '              const point = points[p];\r\n' \
-  '              if (point[0] != "m") {\r\n' \
-  '                const [px, py] = point.match(/\\d+(?:\\.\\d*)?/g);\r\n' \
-  '                d += " " + point[0] + (parseFloat(px) + minx_ex - minx).toFixed(1) + " " + (parseFloat(py) + maxy - maxy_ex).toFixed(1);\r\n' \
-  '              } else {\r\n' \
-  '                d += " " + point;\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            path.setAttribute("d", d);\r\n' \
+  '        [x, y] = yield;\r\n' \
+  '        while (true) {\r\n' \
+  '          let vb_m = false;\r\n' \
+  '          if (x < minx) {\r\n' \
+  '            const tr_l_ex = tr_l;\r\n' \
+  '            track.style.left = wmvalue_to_prop(Math.max(vminx, -wmb, x - padding) - htopx);\r\n' \
+  '            tr_l = prop_to_wmvalue(track.style.left);\r\n' \
+  '            minx = tr_l + htopx;\r\n' \
+  '            if (d_p) {\r\n' \
+  '              tr_w += tr_l_ex - tr_l;\r\n' \
+  '              track.style.width = wmvalue_to_prop(tr_w);\r\n' \
+  '              maxx = minx + tr_w;\r\n' \
+  '              vb_l += tr_l - tr_l_ex;\r\n' \
+  '              vb[2] = tr_w.toFixed(1);\r\n' \
+  '            } else {d_p = true;}\r\n' \
+  '            vb[0] = vb_l.toFixed(1);\r\n' \
+  '            vb_m = true;\r\n' \
   '          }\r\n' \
-  '        } else {\r\n' \
-  '          if (minx_ex != minx || maxy_ex != maxy) {\r\n' \
-  '            return [minx_ex - minx, maxy - maxy_ex];\r\n' \
-  '          } else {\r\n' \
-  '            return null;\r\n' \
+  '          if (x > maxx) {\r\n' \
+  '            track.style.width = wmvalue_to_prop(Math.min(vmaxx, wmb, x + padding) - minx);\r\n' \
+  '            tr_w = prop_to_wmvalue(track.style.width);\r\n' \
+  '            maxx = minx + tr_w;\r\n' \
+  '            vb[2] = tr_w.toFixed(1);\r\n' \
+  '            vb_m = true;\r\n' \
   '          }\r\n' \
+  '          if (y > maxy) {\r\n' \
+  '            const tr_t_ex = tr_t;\r\n' \
+  '            track.style.top = wmvalue_to_prop(htopy - Math.min(vmaxy, wmb, y + padding));\r\n' \
+  '            tr_t = prop_to_wmvalue(track.style.top);\r\n' \
+  '            maxy = htopy - tr_t;\r\n' \
+  '            if (d_p) {\r\n' \
+  '              tr_h += tr_t_ex - tr_t;\r\n' \
+  '              track.style.height = wmvalue_to_prop(tr_h);\r\n' \
+  '              miny = maxy - tr_h;\r\n' \
+  '              vb_t += tr_t - tr_t_ex;\r\n' \
+  '              vb[3] = tr_h.toFixed(1);\r\n' \
+  '            } else {d_p = true;}\r\n' \
+  '            vb[1] = vb_t.toFixed(1);\r\n' \
+  '            vb_m = true;\r\n' \
+  '          }\r\n' \
+  '          if (y < miny) {\r\n' \
+  '            track.style.height = wmvalue_to_prop(maxy - Math.max(vminy, -wmb, y - padding));\r\n' \
+  '            tr_h = prop_to_wmvalue(track.style.height);\r\n' \
+  '            miny = maxy - tr_h;\r\n' \
+  '            vb[3] = tr_h.toFixed(1);\r\n' \
+  '            vb_m = true;\r\n' \
+  '          }\r\n' \
+  '          if (vb_m) {track.setAttribute("viewBox", vb.join(" "));}\r\n' \
+  '          [x, y] = yield (x - htopx - tr_l + vb_l).toFixed(1) + "," + (htopy - y - tr_t + vb_t).toFixed(1);\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function WGS84_to_viewbox(lat, lon, track) {\r\n' \
-  '        const [x, y] = WGS84toWebMercator(lat, lon);\r\n' \
-  '        rebase_track(x, y, track);\r\n' \
-  '        return (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
+  '        const wmtvb = wm_to_viewbox(track);\r\n' \
+  '        wmtvb.next();\r\n' \
+  '        const p = wmtvb.next(WGS84toWebMercator(lat, lon)).value;\r\n' \
+  '        wmtvb.return();\r\n' \
+  '        return p;\r\n' \
   '      }\r\n' \
   '      function point_desc(pt, add=false) {\r\n' \
   '        if (pt.id.substring(0, 3) == "way") {\r\n' \
@@ -12334,27 +12346,27 @@ class GPXTweakerWebInterfaceServer():
   '            if (! segments[s]) {continue;}\r\n' \
   '            const s_s = s.toString();\r\n' \
   '            const track = document.getElementById("track" + s_s);\r\n' \
-  '            const tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
-  '            const tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
+  '            const wmtvb = wm_to_viewbox(track);\r\n' \
+  '            wmtvb.next();\r\n' \
   '            const path = document.getElementById("path" + s_s);\r\n' \
   '            const pts = document.getElementById("segment" + s_s).getElementsByClassName("point");\r\n' \
   '            const d = path.getAttribute("d");\r\n' \
-  '            const dots = d.match(/[LMm] *\\d+(?:\\.\\d*)? +\\d+(?:\\.\\d*)?/g);\r\n' \
-  '            let d_r = "M0 0";\r\n' \
+  '            const dots = d.match(/[LMm][^LMm]*/g);\r\n' \
+  '            let d_r = "M0,0";\r\n' \
   '            for (let p=1, l=dots.length; p<l; p++) {\r\n' \
   '              const pt = pts[p - 1];\r\n' \
   '              const pt_ind = parseInt(pt.id.substring(5));\r\n' \
   '              const pt_s = points[pt_ind];\r\n' \
   '              if (pt_s == null) {\r\n' \
-  '                d_r += " " + dots[p];\r\n' \
+  '                d_r += dots[p];\r\n' \
   '              } else if (pt_s) {\r\n' \
-  '                const [x, y] = WGS84toWebMercator(point_data[5 * pt_ind], point_data[5 * pt_ind + 1]);\r\n' \
-  '                d_r += " L" + (x - tl).toFixed(1) + " " + (tt - y).toFixed(1);\r\n' \
+  '                d_r += "L" + wmtvb.next(WGS84toWebMercator(point_data[5 * pt_ind], point_data[5 * pt_ind + 1])).value;\r\n' \
   '              } else {\r\n' \
-  '                d_r += " m0 0";\r\n' \
+  '                d_r += "m0,0";\r\n' \
   '              }\r\n' \
   '            }\r\n' \
-  '            if (d_r.substring(1).indexOf("M") < 0) {d_r = d_r.replace("L", "M");}\r\n' \
+  '            wmtvb.return();\r\n' \
+  '            if (d_r.indexOf("M", d_r.indexOf("M") + 1) < 0) {d_r = d_r.replace("L", "M");}\r\n' \
   '            path.setAttribute("d", d_r);\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -12394,7 +12406,7 @@ class GPXTweakerWebInterfaceServer():
   '        track.id = seg.id.replace("segment", "track");\r\n' \
   '        const path = track.firstElementChild;\r\n' \
   '        path.id = seg.id.replace("segment", "path");\r\n' \
-  '        path.setAttribute("d", "M0 0");\r\n' \
+  '        path.setAttribute("d", "M0,0");\r\n' \
   '        path.nextElementSibling.firstElementChild.setAttribute("href", "#" + path.id);\r\n' \
   '        handle.insertBefore(track, pos == "b" ? track_foc : track_foc.nextElementSibling);\r\n' \
   '        calc_modified(seg);\r\n' \
@@ -12497,15 +12509,14 @@ class GPXTweakerWebInterfaceServer():
   '          const p = 5 * parseInt(pref.substring(5));\r\n' \
   '          const np = WGS84_to_viewbox(point_data[p], point_data[p + 1], track);\r\n' \
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
-  '          const ind = Array.prototype.indexOf.call(pts, elt) + 1;\r\n' \
+  '          const ind = Array.prototype.indexOf.call(pts, elt);\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
-  '          let d_left = RegExp("([LMm] *\\\\d+(?:\\\\.\\\\d*)? +\\\\d+(?:\\\\.\\\\d*)? *){" + ind.toString() + "}", "d").exec(d);\r\n' \
+  '          let d_left = RegExp("(?:[LMm][^LMm]*){" + (ind + 1).toString() + "}", "d").exec(d);\r\n' \
   '          let d_right = d.substring(d_left.indices[0][1]);\r\n' \
-  '          if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
   '          if (d_left[0].indexOf("M", 1) >= 0) {\r\n' \
-  '            d = d_left[0].trimEnd() + " L" + np + d_right;\r\n' \
+  '            d = d_left[0] + "L" + np + d_right;\r\n' \
   '          } else {\r\n' \
-  '            d = d_left[0].trimEnd() + " M" + np + d_right.replace("M", "L");\r\n' \
+  '            d = d_left[0] + "M" + np + d_right.replace("M", "L");\r\n' \
   '          }\r\n' \
   '          path.setAttribute("d", d);\r\n' \
   '        }\r\n' \
@@ -12531,15 +12542,14 @@ class GPXTweakerWebInterfaceServer():
   '        const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
   '        const np = pt_d ? null : WGS84_to_viewbox(point_data[ptd_ind], point_data[ptd_ind + 1], document.getElementById(seg.id.replace("segment", "track")));\r\n' \
   '        let d = path.getAttribute("d");\r\n' \
-  '        let d_left = RegExp("([LMm] *\\\\d+(?:\\\\.\\\\d*)? +\\\\d+(?:\\\\.\\\\d*)? *){" + (ind + 2).toString() + "}", "d").exec(d);\r\n' \
+  '        let d_left = RegExp("(?:[LMm][^LMm]*){" + (ind + 1).toString() + "}([LMm][^LMm]*)", "d").exec(d);\r\n' \
   '        let d_right = d.substring(d_left.indices[0][1]);\r\n' \
-  '        if (d_right.length > 0) {d_right = " " + d_right;}\r\n' \
   '        d = d_left[0].slice(0, -d_left[1].length);\r\n' \
   '        if (pt_d) {\r\n' \
   '          if (d_left[1][0] == "M") {\r\n' \
-  '            d += "m0 0" + d_right.replace("L", "M");\r\n' \
+  '            d += "m0,0" + d_right.replace("L", "M");\r\n' \
   '          } else {\r\n' \
-  '            d += "m0 0" + d_right;\r\n' \
+  '            d += "m0,0" + d_right;\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          if (d_left[1][0] != "m") {\r\n' \
@@ -13199,11 +13209,11 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          const ind = seg_foc.getElementsByClassName("point").length;\r\n' \
   '          const d = path.getAttribute("d");\r\n' \
-  '          let d_left = RegExp("([LMm] *\\\\d+(?:\\\\.\\\\d*)? +\\\\d+(?:\\\\.\\\\d*)? *){" + (ind + 1).toString() + "}", "d").exec(d);\r\n' \
+  '          let d_left = RegExp("(?:[LMm][^LMm]*){" + (ind + 1).toString() + "}", "d").exec(d);\r\n' \
   '          let d_right = d.substring(d_left.indices[0][1]);\r\n' \
   '          if (d_right.indexOf("M") < 0) {d_right = d_right.replace("L", "M");}\r\n' \
-  '          path.setAttribute("d", "M0 0 " + d_right);\r\n' \
-  '          path_foc.setAttribute("d", d_left[0].trimEnd());\r\n' \
+  '          path.setAttribute("d", "M0,0" + d_right);\r\n' \
+  '          path_foc.setAttribute("d", d_left[0]);\r\n' \
   '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
   '          if (scrollmode > 0) {scroll_to_dot(document.getElementById(pt_foc.id.replace("point", "dot")), scrollmode == 2);}\r\n' \
   '          calc_modified(seg_foc, seg);\r\n' \
@@ -13239,23 +13249,21 @@ class GPXTweakerWebInterfaceServer():
   '          const path_foc = document.getElementById(seg_foc.id.replace("segment", "path"));\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
-  '          const minx_foc = prop_to_wmvalue(track_foc.style.left) + htopx;\r\n' \
-  '          const maxy_foc = htopy - prop_to_wmvalue(track_foc.style.top);\r\n' \
-  '          const maxx_foc = minx_foc + prop_to_wmvalue(track_foc.style.width);\r\n' \
-  '          const miny_foc = maxy_foc - prop_to_wmvalue(track_foc.style.height);\r\n' \
-  '          const minx = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
-  '          const maxy = htopy - prop_to_wmvalue(track.style.top);\r\n' \
-  '          const maxx = minx + prop_to_wmvalue(track.style.width);\r\n' \
-  '          const miny = maxy - prop_to_wmvalue(track.style.height);\r\n' \
-  '          rebase_track(minx, miny, track_foc, true);\r\n' \
-  '          rebase_track(maxx, maxy, track_foc, true);\r\n' \
-  '          rebase_track(minx_foc, miny_foc, track, true);\r\n' \
-  '          rebase_track(maxx_foc, maxy_foc, track, true);\r\n' \
-  '          const d_foc = path_foc.getAttribute("d");\r\n' \
-  '          let d = path.getAttribute("d").replace(/ *M *0 +0/, "");\r\n' \
-  '          if (d_foc.substring(1).indexOf("M") >= 0) {d = d.replace("M", "L");}\r\n' \
-  '          path_foc.setAttribute("d", d_foc + d);\r\n' \
-  '          path.setAttribute("d", "M0 0");\r\n' \
+  '          const wmtvb = wm_to_viewbox(track_foc);\r\n' \
+  '          wmtvb.next();\r\n' \
+  '          let d_foc = path_foc.getAttribute("d");\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            if (pt.hasAttribute("data-error") || pt.hasAttribute("data-deleted")) {\r\n' \
+  '              d_foc += "m0,0";\r\n' \
+  '            } else {\r\n' \
+  '              const pt_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
+  '              d_foc += "L" + wmtvb.next(WGS84toWebMercator(point_data[pt_ind], point_data[pt_ind + 1])).value;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          wmtvb.return();\r\n' \
+  '          if (d_foc.indexOf("M", d_foc.indexOf("M") + 1) < 0) {d_foc = d_foc.replace("L", "M");}\r\n' \
+  '          path_foc.setAttribute("d", d_foc);\r\n' \
+  '          path.setAttribute("d", "M0,0");\r\n' \
   '        }\r\n' \
   '        if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        seg_foc.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
@@ -13403,15 +13411,13 @@ class GPXTweakerWebInterfaceServer():
   '              if (! whole) {handle.insertBefore(document.getElementById(pt.id.replace("point", "dot")), dot_ref);}\r\n' \
   '            }\r\n' \
   '            const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
-  '            const d = path.getAttribute("d").replace(/ *M *0 +0/, "").replace("M", "L");\r\n' \
-  '            let d_r = "M0 0";\r\n' \
-  '            const points = d.match(/[LMm] *\\d+(?:\\.\\d*)? +\\d+(?:\\.\\d*)?/g);\r\n' \
+  '            const points = path.getAttribute("d").match(/[LMm][^LMm]*/g);\r\n' \
+  '            let d = points.splice(0, 1);\r\n' \
   '            points.reverse();\r\n' \
-  '            for (const point of points) {d_r += " " + point};\r\n' \
-  '            d_r = d_r.replace("L", "M");\r\n' \
-  '            path.setAttribute("d", d_r);\r\n' \
+  '            d += points.join("").replace("M", "L").replace("L", "M");\r\n' \
+  '            path.setAttribute("d", d);\r\n' \
   '          }\r\n' \
-  '            pts_l.insertBefore(seg, seg_ref);\r\n' \
+  '          pts_l.insertBefore(seg, seg_ref);\r\n' \
   '          if (s > 0) {handle.insertBefore(document.getElementById(seg.id.replace("segment", "track")), track_ref);}\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
@@ -13475,13 +13481,14 @@ class GPXTweakerWebInterfaceServer():
   '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '          const positions = Array.from(pts, (pt) => (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) ? null : WGS84toWebMercator(point_data[5 * parseInt(pt.id.substring(5))], point_data[5 * parseInt(pt.id.substring(5)) + 1]));\r\n' \
   '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
-  '          const tl = prop_to_wmvalue(track.style.left) + htopx;\r\n' \
+  '          const wmtvb = wm_to_viewbox(track);\r\n' \
+  '          wmtvb.next();\r\n' \
   '          const tt = htopy - prop_to_wmvalue(track.style.top);\r\n' \
   '          const sdrange = drange * (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
-  '          const dots = d.match(/[LMm] *\\d+(?:\\.\\d*)? +\\d+(?:\\.\\d*)?/g).slice(1);\r\n' \
-  '          let d_f = "M0 0";\r\n' \
+  '          const dots = d.match(/[LMm][^LMm]*/g);\r\n' \
+  '          let d_f = dots.splice(0, 1);\r\n' \
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
   '          for (let p=0, l=positions.length; p<l; p++) {\r\n' \
@@ -13489,12 +13496,12 @@ class GPXTweakerWebInterfaceServer():
   '            const foc = pt.id;\r\n' \
   '            hist_trim();\r\n' \
   '            if (positions[p] == null) {\r\n' \
-  '              d_f += " " + dots[p];\r\n' \
+  '              d_f += dots[p];\r\n' \
   '              continue;\r\n' \
   '            }\r\n' \
   '            if (pp == null) {\r\n' \
   '              pp = p;\r\n' \
-  '              d_f += " " + dots[p];\r\n' \
+  '              d_f += dots[p];\r\n' \
   '              continue;\r\n' \
   '            }\r\n' \
   '            let pdir = [positions[p][0] - positions[pp][0], positions[p][1] - positions[pp][1]];\r\n' \
@@ -13558,7 +13565,7 @@ class GPXTweakerWebInterfaceServer():
   '                    const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
   '                    dot.style.left = wmvalue_to_prop(positions[p][0] - htopx, 3.5);\r\n' \
   '                    dot.style.top = wmvalue_to_prop(htopy - positions[p][1], 3.5);\r\n' \
-  '                    d_f += pt.hasAttribute("data-error") ? " m0 0" : " L" + (positions[p][0] - tl).toFixed(1) + " " + (tt - positions[p][1]).toFixed(1);\r\n' \
+  '                    d_f += pt.hasAttribute("data-error") ? "m0,0" : "L" + wmtvb.next(positions[p]).value;\r\n' \
   '                    nmod++;\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
@@ -13566,10 +13573,11 @@ class GPXTweakerWebInterfaceServer():
   '            } else {\r\n' \
   '              dir = [pdir[0] / pdirl, pdir[1] / pdirl];\r\n' \
   '            }\r\n' \
-  '            if (! pmod) {d_f += " " + dots[p];}\r\n' \
+  '            if (! pmod) {d_f += dots[p];}\r\n' \
   '            pp = p;\r\n' \
   '          }\r\n' \
-  '          if (d_f.substring(1).indexOf("M") < 0) {d_f = d_f.replace("L", "M");}\r\n' \
+  '          wmtvb.return();\r\n' \
+  '          if (d_f.indexOf("M", d_f.indexOf("M") + 1) < 0) {d_f = d_f.replace("L", "M");}\r\n' \
   '          path.setAttribute("d", d_f);\r\n' \
   '        }\r\n' \
   '        if (seg_foc != null) {focused = seg_foc.id;} else {focused = "";}\r\n' \
@@ -14045,12 +14053,14 @@ class GPXTweakerWebInterfaceServer():
   '        const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '        const dot = document.getElementById(foc.replace("point", "dot"));\r\n' \
   '        const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
-  '        let ind = pts.indexOf(pt) + 1;\r\n' \
+  '        let ind = pts.indexOf(pt);\r\n' \
   '        const d = path.getAttribute("d");\r\n' \
-  '        let d_left = RegExp("([LMm] *\\\\d+(?:\\\\.\\\\d*)? +\\\\d+(?:\\\\.\\\\d*)? *){" + ind.toString() + "}", "d").exec(d);\r\n' \
-  '        let d_right = " " + d.substring(d_left.indices[0][1]).replace("M", "L");\r\n' \
+  '        let d_left = RegExp("(?:[LMm][^LMm]*){" + (ind + 1).toString() + "}", "d").exec(d);\r\n' \
+  '        let d_right = d.substring(d_left.indices[0][1]).replace("M", "L");\r\n' \
   '        d_left = d_left[0];\r\n' \
   '        const l = document.getElementById("pointslist").getElementsByClassName("point").length;\r\n' \
+  '        const wmtvb = wm_to_viewbox(track);\r\n' \
+  '        wmtvb.next();\r\n' \
   '        for (let p=iti.length-1; p>=0; p--) {\r\n' \
   '          const [lat, lon] = iti[p].split(",").map(Number);\r\n' \
   '          const elt = document.getElementById("point%s").cloneNode(true);\r\n' \
@@ -14070,40 +14080,18 @@ class GPXTweakerWebInterfaceServer():
   '          frag.insertBefore(elt, frag.firstElementChild);\r\n' \
   '          const elt_dot = document.getElementById("dot%s").cloneNode(true);\r\n' \
   '          elt_dot.id = pref.replace("point", "dot");\r\n' \
-  '          if (elt_data.hasOwnProperty("deleted")) {elt_dot.classList.add("error");}\r\n' \
+  '          if (elt_data.hasOwnProperty("error")) {elt_dot.classList.add("error");}\r\n' \
   '          elt_dot.style.left = wmvalue_to_prop(Math.max(vminx, Math.min(vmaxx, x)) - htopx, 3.5);\r\n' \
   '          elt_dot.style.top = wmvalue_to_prop(htopy - Math.max(vminy, Math.min(vmaxy, y)), 3.5);\r\n' \
   '          frag_dot.insertBefore(elt_dot, frag_dot.firstElementChild);\r\n' \
-  '          if (elt_data.hasOwnProperty("deleted")) {\r\n' \
-  '            d_right = " m0 0" + d_right;\r\n' \
-  '          } else {\r\n' \
-  '            const c = rebase_track(x, y, track, false, true);\r\n' \
-  '            const np = (x - prop_to_wmvalue(track.style.left) - htopx).toFixed(1) + " " + (htopy - prop_to_wmvalue(track.style.top) - y).toFixed(1);\r\n' \
-  '            if (c != null) {\r\n' \
-  '              for (let i=0; i<2; i++) {\r\n' \
-  '                const points = (i == 0 ? d_left.replace(/ *M *0 +0/, "") : d_right).match(/[LMm] *\\d+(?:\\.\\d*)? +\\d+(?:\\.\\d*)?/g);\r\n' \
-  '                let d_ = "";\r\n' \
-  '                if (points != null) {\r\n' \
-  '                  for (const point of points) {\r\n' \
-  '                    if (point[0] != "m") {\r\n' \
-  '                      const [px, py] = point.match(/\\d+(?:\\.\\d*)?/g);\r\n' \
-  '                      d_ += " " + point[0] + (parseFloat(px) + c[0]).toFixed(1) + " " + (parseFloat(py) + c[1]).toFixed(1);\r\n' \
-  '                    } else {\r\n' \
-  '                      d_ += " " + point;\r\n' \
-  '                    }\r\n' \
-  '                  }\r\n' \
-  '                }\r\n' \
-  '                if (i == 0) {d_left = "M0 0" + d_;} else {d_right = d_;}\r\n' \
-  '              }\r\n' \
-  '            }\r\n' \
-  '            d_right = " L" + np + d_right;\r\n' \
-  '          }\r\n' \
+  '          d_right = (elt_data.hasOwnProperty("deleted") ? "m0,0" : "L" + wmtvb.next([x, y]).value) + d_right;\r\n' \
   '          hist_push([pref, "", batch]);\r\n' \
   '        }\r\n' \
+  '        wmtvb.return();\r\n' \
   '        seg.insertBefore(frag, pt);\r\n' \
   '        handle.insertBefore(frag_dot, dot);\r\n' \
-  '        if (d_left.indexOf("M", 1) < 0) {d_right = d_right.replace("L", "M");}\r\n' \
-  '        path.setAttribute("d", d_left.trimEnd() + d_right);\r\n' \
+  '        if (d_left.indexOf("M", d_left.indexOf("M") + 1) < 0) {d_right = d_right.replace("L", "M");}\r\n' \
+  '        path.setAttribute("d", d_left + d_right);\r\n' \
   '        calc_modified(seg);\r\n' \
   '        if (focused != ex_foc) {element_click(null, document.getElementById(ex_foc), false);}\r\n' \
   '        document.getElementById(ex_foc).scrollIntoView({block:"center"});\r\n' \
@@ -19128,10 +19116,10 @@ class GPXTweakerWebInterfaceServer():
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
   '          for (let ind=0, t=0; t<nbtracks; t++) {\r\n' \
   '            let segs = tracks_pts[t];\r\n' \
-  '            let d = "M0 0";\r\n' \
+  '            let d = "M0,0";\r\n' \
   '            for (let s=0; s<segs.length; s++) {\r\n' \
   '              for (let p=0; p<segs[s].length; p++, ind+=2) {\r\n' \
-  '                d += (p==0?" M":" L") + xys[ind].toFixed(1) + " " + xys[ind + 1].toFixed(1);\r\n' \
+  '                d += (p == 0 ? "M" : "L") + xys[ind].toFixed(1) + "," + xys[ind + 1].toFixed(1);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '            document.getElementById("path" + t.toString()).setAttribute("d", d);\r\n' \
@@ -19380,13 +19368,13 @@ class GPXTweakerWebInterfaceServer():
   '          let xys = smoothed?tracks_xys_smoothed:tracks_xys;\r\n' \
   '          for (let t=0; t<nbtracks; t++) {\r\n' \
   '            const segs = tracks_pts[t];\r\n' \
-  '            let d = "M0 0";\r\n' \
+  '            let d = "M0,0";\r\n' \
   '            for (const seg of segs) {\r\n' \
   '              const mind = 2 * seg.length;\r\n' \
   '              for (let ind=0; ind<mind; ind+=2) {\r\n' \
   '                const sx = round(10 * xys[ind]).toString();\r\n' \
   '                const sy = round(10 * xys[ind+1]).toString();\r\n' \
-  '                d += (ind == 0 ? " M" : " L") + (sx.slice(0, -1) || "0" ) + "." + sx.slice(-1) + " " + (sy.slice(0, -1) || "0" ) + "." + sy.slice(-1);\r\n' \
+  '                d += (ind == 0 ? "M" : "L") + (sx.slice(0, -1) || "0" ) + "." + sx.slice(-1) + "," + (sy.slice(0, -1) || "0" ) + "." + sy.slice(-1);\r\n' \
   '              }\r\n' \
   '              xys = xys.subarray(mind);\r\n' \
   '            }\r\n' \
@@ -21500,7 +21488,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
   HTMLExp_PATH_TEMPLATE = \
   '<svg class="track" id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
-  '<path id="path%s" d="M0 0"><title>%s</title></path>\r\n' \
+  '<path id="path%s" d="M0,0"><title>%s</title></path>\r\n' \
   '<text id="patharrows%s" dy="0.25em"><textPath href="#path%s">##ARROWS##</textPath></text>\r\n' \
   '</svg>\r\n'
   HTMLExp_WAYDOT_TEMPLATE = \
@@ -22720,9 +22708,9 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_pathes(self):
     def _coord_to_vb(x, y):
-      return '%.1f %.1f' % (x - self.Minx, self.Maxy - y)
+      return '%.1f,%.1f' % (x - self.Minx, self.Maxy - y)
     pathes = ''
-    pathes = ''.join(GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('##ARROWS##', '&rsaquo; ' * 500) % (s, s, 'M0 0' + ''.join(' M' + _coord_to_vb(*pt) for pt in self.Track.WebMercatorPts[s][0:1]) + ''.join(' L' + _coord_to_vb(*pt) for pt in self.Track.WebMercatorPts[s][1:]), s) for s in range(len(self.Track.WebMercatorPts)))
+    pathes = ''.join(GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('##ARROWS##', '&rsaquo; ' * 500) % (s, s, 'M0,0' + ''.join('M' + _coord_to_vb(*pt) for pt in self.Track.WebMercatorPts[s][0:1]) + ''.join('L' + _coord_to_vb(*pt) for pt in self.Track.WebMercatorPts[s][1:]), s) for s in range(len(self.Track.WebMercatorPts)))
     return pathes
 
   def _build_waypoints(self):
@@ -22766,7 +22754,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0 0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
