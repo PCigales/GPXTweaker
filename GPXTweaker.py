@@ -13333,7 +13333,6 @@ class GPXTweakerWebInterfaceServer():
   '              offset = maxtime_foc - maxtime;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          document.getElementById("pointslist").insertBefore(seg_foc, seg);\r\n' \
   '          seg_foc.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
   '          if (pts.length > 0) {\r\n' \
   '            let dot_ref = document.getElementById(pts[0].id.replace("point", "dot"))\r\n' \
