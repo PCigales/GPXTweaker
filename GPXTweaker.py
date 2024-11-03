@@ -13278,7 +13278,6 @@ class GPXTweakerWebInterfaceServer():
   '        show_msg("{#jmsegmentabsorb#}", 2);\r\n' \
   '      }\r\n' \
   '      function element_up() {\r\n' \
-    'const ti=performance.now();\r\n' \
   '        if (focused.startsWith("way")) {\r\n' \
   '          const pt_foc = document.getElementById(focused);\r\n' \
   '          const pt = pt_foc.previousElementSibling;\r\n' \
@@ -13346,7 +13345,6 @@ class GPXTweakerWebInterfaceServer():
   '          calc_modified(seg_foc, seg);\r\n' \
   '          show_msg("{#jmelementup2#}", 2);\r\n' \
   '        }\r\n' \
-    'console.log(performance.now()-ti);\r\n' \
   '      }\r\n' \
   '      function element_down() {\r\n' \
   '        if (focused.startsWith("seg") || focused.startsWith("way")) {\r\n' \
