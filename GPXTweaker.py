@@ -10682,14 +10682,14 @@ class GPXTweakerWebInterfaceServer():
   '        const gbar = document.getElementById("gbar");\r\n' \
   '        gbar.style.display = "none";\r\n' \
   '        const gbarc = document.getElementById("gbarc");\r\n' \
-  '        gbarc.style.display = "none";\r\n' \
+  '        gbarc.style.visibility = "hidden";\r\n' \
   '        const graphpx = document.getElementById("graphpx");\r\n' \
   '        const graphpy = document.getElementById("graphpy");\r\n' \
   '        const gpx = graphpx.innerHTML;\r\n' \
   '        const gpy = graphpy.innerHTML;\r\n' \
   '        graphpx.innerHTML = "";\r\n' \
   '        graphpy.innerHTML = "";\r\n' \
-  '        if (graph_ip.length < 2 || graph_px == null) {return;}\r\n' \
+  '        if (graph_ip.length < 2 || graph_px == null) {gbarc.style.display = "none"; return;}\r\n' \
   '        let segs = null;\r\n' \
   '        let segf = null;\r\n' \
   '        let segf_ind = null;\r\n' \
@@ -10711,7 +10711,7 @@ class GPXTweakerWebInterfaceServer():
   '            stats = window["stats"];\r\n' \
   '          } else if (focused.startsWith("track")) {\r\n' \
   '            tr_ind = parseInt(focused.substring(5));\r\n' \
-  '            if (focused_targeted == null) {return;}\r\n' \
+  '            if (focused_targeted == null) {gbarc.style.display = "none"; return;}\r\n' \
   '            foc_ind = graph_ip[focused_targeted];\r\n' \
   '            let xys_ind = 2 * (tracks_xy_offsets[tr_ind] + foc_ind);\r\n' \
   '            let xys = smoothed ? tracks_xys_smoothed : tracks_xys;\r\n' \
@@ -10725,7 +10725,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            stat_ind = foc_ind - nbpt + segs[segf_ind].length;\r\n' \
   '            stats = tracks_stats[tr_ind];\r\n' \
-  '          } else {return;}\r\n' \
+  '          } else {gbarc.style.display = "none"; return;}\r\n' \
   '          if (graph_px[foc_ind] != undefined) {\r\n' \
   '            gbar.style.left = (graph_px[foc_ind] + graphc.offsetLeft - 1).toString() + "px";\r\n' \
   '            if (gbarc.getAttribute("stroke") != "darkgray") {\r\n' \
@@ -10733,6 +10733,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            gbar.style.display = "";\r\n' \
   '            gbarc.style.display = "";\r\n' \
+  '            gbarc.style.visibility = "visible";\r\n' \
   '            if (document.getElementById("graphx").selectedIndex == 0) {\r\n' \
   '              let dur = Math.round(stats[segf_ind][stat_ind][0]);\r\n' \
   '              let dur_s = dur % 60;\r\n' \
@@ -10832,6 +10833,7 @@ class GPXTweakerWebInterfaceServer():
   '          let x = Math.max(Math.min(bx + 1, xr), xl);\r\n' \
   '          gbarc.style.left = (x - 1).toString() + "px";\r\n' \
   '          gbarc.style.display = "";\r\n' \
+  '          gbarc.style.visibility = "visible";\r\n' \
   '          let ind1 = 0;\r\n' \
   '          let ind2 = graph_ip.length - 1;\r\n' \
   '          x = x + 45 - xl;\r\n' \
@@ -10863,6 +10865,7 @@ class GPXTweakerWebInterfaceServer():
   '          lps.setProperty("--panel", "none");\r\n' \
   '          document.getElementById("gbar").style.display = "none";\r\n' \
   '          document.getElementById("gbarc").style.display = "none";\r\n' \
+  '          document.getElementById("gbarc").style.visibility = "hidden";\r\n' \
   '          document.getElementById("graphpx").innerHTML = "";\r\n' \
   '          document.getElementById("graphpy").innerHTML = "";\r\n' \
   '          graph_ip = null;\r\n' \
@@ -11495,7 +11498,7 @@ class GPXTweakerWebInterfaceServer():
   '        </div>\r\n' \
   '        <canvas id="graphc" width="100" height="25" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
   '        </canvas>\r\n' \
-  '        <svg id="gbarc" preserveAspectRatio="none" viewbox="0 0 3 100" stroke="none" style="display:none;left:20px;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
+  '        <svg id="gbarc" preserveAspectRatio="none" viewbox="0 0 3 100" stroke="none" style="display:none;visibility:hidden;left:20px;" onmousedown="mouse_down(event)" onpointerdown="pointer_down(event)">\r\n' \
   '          <line vector-effect="non-scaling-stroke" pointer-events="none" x1="1" y1="0" x2="1" y2="100"/>\r\n' \
   '        </svg>\r\n' \
   '        <svg id="gbar" preserveAspectRatio="none" viewbox="0 0 3 100" style="display:none;left:20px;">\r\n' \
@@ -13188,16 +13191,17 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          document.getElementById("pointslist").insertBefore(seg, seg_foc.nextElementSibling);\r\n' \
   '          handle.insertBefore(track, track_foc.nextElementSibling);\r\n' \
-  '          for (const pt of pts) {\r\n' \
-  '            if (batch != null) {\r\n' \
-  '              const ptd_ind = 5 * parseInt(pt.id.substring(5));\r\n' \
-  '              const t = point_data[ptd_ind + 4];\r\n' \
+  '          if (batch != null) {\r\n' \
+  '            let ptd_ind = 5 * parseInt(pts[0].id.substring(5)) + 4;\r\n' \
+  '            for (const pt of pts) {\r\n' \
+  '              const t = point_data[ptd_ind];\r\n' \
   '              if (! isNaN(t)) {\r\n' \
   '                focused = pt.id;\r\n' \
   '                save_foc(batch);\r\n' \
   '                pt.setAttribute("data-time", (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, ""));\r\n' \
   '                point_edit(false, false, true);\r\n' \
   '              }\r\n' \
+  '             ptd_ind += 5;\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '          focused = seg_foc.id;\r\n' \
@@ -18416,7 +18420,7 @@ class GPXTweakerWebInterfaceServer():
   '        z-index: 10;\r\n' \
   '        left: 10px;\r\n' \
   '        top: 5px;\r\n' \
-  '        width: calc(100vw - 20px)\r\n' \
+  '        width: calc(100vw - 20px);\r\n' \
   '        height: calc(100vh - 10px);\r\n' \
   '      }\r\n' \
   '      div[id^=media]::before {\r\n' \
