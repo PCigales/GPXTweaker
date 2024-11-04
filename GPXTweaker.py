@@ -12171,6 +12171,59 @@ class GPXTweakerWebInterfaceServer():
   '          if (iswpt) {wpt_calc();} else {calc_modified(pt.parentNode);}\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function point_edit_time(pt, nt, batch=null) {\r\n' \
+  '        focused = pt.id;\r\n' \
+  '        const iswpt = focused.startsWith("way");\r\n' \
+  '        const pt_data = pt.dataset;\r\n' \
+  '        const plat = pt_data.lat;\r\n' \
+  '        const plon = pt_data.lon;\r\n' \
+  '        const pele = pt_data.ele;\r\n' \
+  '        const palt = iswpt ? null : pt_data.alt;\r\n' \
+  '        if (batch) {\r\n' \
+  '          foc_old = plat + "\\r\\n" + plon + "\\r\\n" + pele + "\\r\\n" + (iswpt ? (pt_data.time + "\\r\\n" + pt_data.name) : (palt + "\\r\\n" + pt_data.time)) + "\\r\\n";\r\n' \
+  '          hist_push(batch);\r\n' \
+  '          hist_trim();\r\n' \
+  '        }\r\n' \
+  '        pt_data.edited = "";\r\n' \
+  '        const ptime = nt == null ? "" : (new Date(nt)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
+  '        pt_data.time = ptime;\r\n' \
+  '        const err = pt_data.hasOwnProperty("error");\r\n' \
+  '        const rt = new RegExp(/^(?:(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29).(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[\\+\\-](?:[01][0-9]|2[0-3]):[0-5][0-9])?)|)$/);\r\n' \
+  '        let valid = rt.test(ptime);\r\n' \
+  '        if (valid) {\r\n' \
+  '          if (err) {\r\n' \
+  '            const rll = new RegExp(/^[\\+\\-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)$/);\r\n' \
+  '            const rea = new RegExp(/^(?:(?:[\\+\\-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+))|)$/);\r\n' \
+  '            valid =  rll.test(plat) && rll.test(plon) && rea.test(pele) && (iswpt || rea.test(palt));\r\n' \
+  '            if (valid) {\r\n' \
+  '              const p_lat = parseFloat(plat);\r\n' \
+  '              const p_lon = parseFloat(plon);\r\n' \
+  '              const wm = WGS84toWebMercator(p_lat, p_lon);\r\n' \
+  '              valid = wm[0] > vminx && wm[0] < vmaxx && wm[1] > vminy && wm[1] < vmaxy;\r\n' \
+  '              if (valid) {\r\n' \
+  '                if (! iswpt) {point_data.set([p_lat, p_lon, parseFloat(pele), parseFloat(palt), (nt == null ? NaN : nt)], 5 * parseInt(focused.substring(5)));}\r\n' \
+  '                const dot = document.getElementById(focused.replace("point", "dot"));\r\n' \
+  '                dot.style.left = wmvalue_to_prop(wm[0] - htopx, (iswpt ? 4 : 3.5));\r\n' \
+  '                dot.style.top = wmvalue_to_prop(htopy - wm[1], (iswpt ? 4 : 3.5));\r\n' \
+  '                delete pt_data.error;\r\n' \
+  '                dot.classList.remove("error");\r\n' \
+  '                if (! (iswpt || pt_data.hasOwnProperty("deleted"))) {track_update_point(pt);}\r\n' \
+  '                point_desc(pt);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            if (! iswpt) {point_data[5 * parseInt(focused.substring(5)) + 4] = nt == null ? NaN : nt;}\r\n' \
+  '            const time = nt == null ? "" : time_conv.format(nt)  + "˙" + date_conv.format(nt);\r\n' \
+  '            const cn = pt.firstChild;\r\n' \
+  '            cn.replaceData(cn.data.lastIndexOf(" ") + 1, 50, time);\r\n' \
+  '          }\r\n' \
+  '        } else if (! err) {\r\n' \
+  '          if (! iswpt) {point_data.set([NaN, NaN, NaN, NaN, NaN], 5 * parseInt(focused.substring(5)));}\r\n' \
+  '          pt_data.error = "";\r\n' \
+  '          document.getElementById(focused.replace("point", "dot")).classList.add("error");\r\n' \
+  '          if (! (iswpt || pt_data.hasOwnProperty("deleted"))) {track_update_point(pt);}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      function undo(redo, whole) {\r\n' \
   '        const s = redo ? 1 : 0;\r\n' \
   '        if (hist[s].length == 0) {return;}\r\n' \
@@ -13097,6 +13150,7 @@ class GPXTweakerWebInterfaceServer():
   '        const isNaN = Number.isNaN;\r\n' \
   '        const min = Math.min;\r\n' \
   '        const max = Math.max;\r\n' \
+  '        const round = Math.round;\r\n' \
   '        if (focused.startsWith("seg")) {\r\n' \
   '          let pref_num = document.getElementById("pointslist").getElementsByClassName("point").length;\r\n' \
   '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
@@ -13131,10 +13185,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (const pt of pts) {\r\n' \
   '              const t = point_data[ptd_ind];\r\n' \
   '              if (! isNaN(t)) {\r\n' \
-  '                focused = pt.id;\r\n' \
-  '                save_foc(batch);\r\n' \
-  '                pt.setAttribute("data-time", (new Date(Math.round((maxtime + t - mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, ""));\r\n' \
-  '                point_edit(false, false, true);\r\n' \
+  '                point_edit_time(pt, round((maxtime + t - mintime) / 1000) * 1000, batch);\r\n' \
   '              }\r\n' \
   '             ptd_ind += 5;\r\n' \
   '            }\r\n' \
@@ -13238,6 +13289,7 @@ class GPXTweakerWebInterfaceServer():
   '          const isNaN = Number.isNaN;\r\n' \
   '          const min = Math.min;\r\n' \
   '          const max = Math.max;\r\n' \
+  '          const round = Math.round;\r\n' \
   '          for (const pt of pts_foc) {\r\n' \
   '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
   '            const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
@@ -13263,11 +13315,7 @@ class GPXTweakerWebInterfaceServer():
   '              for (const pt of sp) {\r\n' \
   '                const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '                if (! isNaN(t)) {\r\n' \
-  '                  focused = pt.id;\r\n' \
-  '                  const new_time = (new Date(Math.round((t + offset) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                  save_foc(batch);\r\n' \
-  '                  pt.setAttribute("data-time", new_time);\r\n' \
-  '                  point_edit(false, false, true);\r\n' \
+  '                  point_edit_time(pt, round((t + offset) / 1000) * 1000, batch);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '              offset = maxtime_foc - maxtime;\r\n' \
@@ -13321,6 +13369,7 @@ class GPXTweakerWebInterfaceServer():
   '        const isNaN = Number.isNaN;\r\n' \
   '        const min = Math.min;\r\n' \
   '        const max = Math.max;\r\n' \
+  '        const round = Math.round;\r\n' \
   '        const ptss = [];\r\n' \
   '        for (const seg of segs) {\r\n' \
   '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
@@ -13341,10 +13390,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (const pt of pts) {\r\n' \
   '              const t = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
   '              if (! isNaN(t)) {\r\n' \
-  '                const new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                pt.setAttribute("data-time", new_time);\r\n' \
-  '                focused = pt.id;\r\n' \
-  '                point_edit(false, false, true);\r\n' \
+  '                point_edit_time(pt, round((maxtime - t + mintime) / 1000) * 1000);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -13381,10 +13427,7 @@ class GPXTweakerWebInterfaceServer():
   '          for (const wpt of wpts) {\r\n' \
   '            const t = Date.parse(wpt.getAttribute("data-time"));\r\n' \
   '            if (! isNaN(t)) {\r\n' \
-  '              const new_time = (new Date(Math.round((maxtime - t + mintime) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '              wpt.setAttribute("data-time", new_time);\r\n' \
-  '              focused = wpt.id;\r\n' \
-  '              point_edit(false, false, false);\r\n' \
+  '              point_edit_time(wpt, round((maxtime - t + mintime) / 1000) * 1000);\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -13800,10 +13843,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (const wpt of wpts) {\r\n' \
   '              if (wpt.getAttribute("data-time") != "") {\r\n' \
   '                msg = "";\r\n' \
-  '                focused = wpt.id;\r\n' \
-  '                save_foc(batch);\r\n' \
-  '                wpt.setAttribute("data-time", "");\r\n' \
-  '                point_edit(false, false, false);\r\n' \
+  '                point_edit_time(wpt, null, batch);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -13812,10 +13852,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (const pt of pts) {\r\n' \
   '              if (pt.getAttribute("data-time") != "") {\r\n' \
   '                msg = "";\r\n' \
-  '                focused = pt.id;\r\n' \
-  '                save_foc(batch);\r\n' \
-  '                pt.setAttribute("data-time", "");\r\n' \
-  '                point_edit(false, false, seg != null);\r\n' \
+  '                point_edit_time(pt, null, batch);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -13830,6 +13867,7 @@ class GPXTweakerWebInterfaceServer():
   '          return;\r\n' \
   '        }\r\n' \
   '        const isNaN = Number.isNaN;\r\n' \
+  '        const round = Math.round;\r\n' \
   '        for (const seg of segs) {\r\n' \
   '          const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '          if (pts.length == 0) {continue;}\r\n' \
@@ -13869,11 +13907,7 @@ class GPXTweakerWebInterfaceServer():
   '              if (pt_foc == null || pt_foc == pt) {pm.push([pt, dist]);}\r\n' \
   '              if (pt == ptl && inv_vit > 0) {\r\n' \
   '                for (let p=0; p<pm.length; p++) {\r\n' \
-  '                  focused = pm[p][0].id;\r\n' \
-  '                  save_foc(batch);\r\n' \
-  '                  const t = (new Date(Math.round((stime + inv_vit * pm[p][1]) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
-  '                  pm[p][0].setAttribute("data-time", t);\r\n' \
-  '                  point_edit(false, false, true);\r\n' \
+  '                  point_edit_time(pm[p][0], round((stime + inv_vit * pm[p][1]) / 1000) * 1000, batch);\r\n' \
   '                }\r\n' \
   '              }\r\n' \
   '            } else {\r\n' \
@@ -13886,11 +13920,7 @@ class GPXTweakerWebInterfaceServer():
   '                }\r\n' \
   '                if (dist_b == 0 || inv_vit > 0) {\r\n' \
   '                  for (let p=0; p<pm_b.length; p++) {\r\n' \
-  '                    focused = pm_b[p][0].id;\r\n' \
-  '                    save_foc(batch);\r\n' \
-  '                    const t = (new Date(Math.round((dist_b == 0 ? btime : (btime + inv_vit * (pm_b[p][1] - dist_b))) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/, "");\r\n' \
-  '                    pm_b[p][0].setAttribute("data-time", t);\r\n' \
-  '                    point_edit(false, false, true);\r\n' \
+  '                    point_edit_time(pm_b[p][0], round((dist_b == 0 ? btime : (btime + inv_vit * (pm_b[p][1] - dist_b))) / 1000) * 1000, batch);\r\n' \
   '                  }\r\n' \
   '                  if (pt_foc != null && pm_b.length > 0) {\r\n' \
   '                    calc_modified(seg);\r\n' \
@@ -13904,11 +13934,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '              if (pm.length > 0 && lc) {\r\n' \
   '                for (let p=0; p<pm.length; p++) {\r\n' \
-  '                  focused = pm[p][0].id;\r\n' \
-  '                  save_foc(batch);\r\n' \
-  '                  const t = (new Date(Math.round((stime + (etime - stime) * pm[p][1] / (dist > 0 ? dist : 1)) / 1000) * 1000)).toISOString().replace(/\\.[0-9]*/,"");\r\n' \
-  '                  pm[p][0].setAttribute("data-time", t);\r\n' \
-  '                  point_edit(false, false, true);\r\n' \
+  '                  point_edit_time(pm[p][0], round((stime + (etime - stime) * pm[p][1] / (dist > 0 ? dist : 1)) / 1000) * 1000, batch);\r\n' \
   '                }\r\n' \
   '                if (pt_foc != null) {\r\n' \
   '                  calc_modified(seg);\r\n' \
