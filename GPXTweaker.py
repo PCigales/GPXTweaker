@@ -8406,7 +8406,7 @@ class GPXTweakerWebInterfaceServer():
   '        position: absolute;\r\n' \
   '        left: 2px;\r\n' \
   '        top: 2em;\r\n' \
-  '        bottom: 2em\r\n' \
+  '        bottom: 2em;\r\n' \
   '        width: 6em;\r\n' \
   '        color: dodgerblue;\r\n' \
   '        text-align: right;\r\n' \
@@ -11929,7 +11929,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' + HTML_SCROLL_TEMPLATE + \
   '      function save_old() {\r\n' \
-  '        if (focused.id.indexOf("point") < 0) {return;}\r\n' \
+  '        if (focused.indexOf("point") < 0) {return;}\r\n' \
   '        const elt_data = document.getElementById(focused).dataset;\r\n' \
   '        foc_old = elt_data.lat + "\\r\\n" + elt_data.lon + "\\r\\n" + elt_data.ele + "\\r\\n" + (focused.startsWith("way") ? (elt_data.time + "\\r\\n" + elt_data.name) : (elt_data.alt + "\\r\\n" + elt_data.time)) + "\\r\\n";\r\n' \
   '      }\r\n' \
