@@ -8179,7 +8179,7 @@ class GPXTweakerWebInterfaceServer():
   '        color: rgb(225, 225, 225);\r\n' \
   '        font-size: 80%\r\n' \
   '      }\r\n' \
-  '      input:focus-visible, select:focus, button:focus-visible {\r\n' \
+  '      input:focus-visible, select:focus, button:focus-visible, #actions>button:hover, #display>button:hover {\r\n' \
   '        outline: rgb(200, 250, 240) solid 1px;\r\n' \
   '        outline-offset: -1px;\r\n' \
   '      }\r\n' \
@@ -8462,7 +8462,7 @@ class GPXTweakerWebInterfaceServer():
   '        shape-rendering: var(--tprend);\r\n' \
   '      }\r\n' \
   '      .track path {\r\n' \
-  '        pointer-events: stroke;\r\n' \
+  '        pointer-events: initial;\r\n' \
   '        stroke-width: calc(2px * var(--magnify));\r\n' \
   '        fill: none;\r\n' \
   '        vector-effect: non-scaling-stroke;\r\n' \
@@ -11711,7 +11711,7 @@ class GPXTweakerWebInterfaceServer():
   '      .waydot, .dot {\r\n' \
   '        stroke-width: 1.5;\r\n' \
   '        cursor: pointer;\r\n' \
-  '        pointer-events: all;\r\n' \
+  '        pointer-events: initial;\r\n' \
   '      }\r\n' \
   '      .waydot {\r\n' \
   '        position: absolute;\r\n' \
@@ -13226,11 +13226,10 @@ class GPXTweakerWebInterfaceServer():
   '          seg = seg.nextElementSibling;\r\n' \
   '        }\r\n' \
   '        if (! seg) {return;}\r\n' \
-  '        segment_checkbox(seg);\r\n' \
   '        const ref = seg.nextElementSibling;\r\n' \
-  '        seg.remove();\r\n' \
   '        const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '        if (pts.length > 0) {\r\n' \
+  '          seg.remove();\r\n' \
   '          const dot_first = document.getElementById(pts_foc.at(-1).id.replace("point", "dot"));\r\n' \
   '          const dot_last = document.getElementById(pts[0].id.replace("point", "dot")).previousElementSibling;\r\n' \
   '          const dot_ref = document.getElementById(pts.at(-1).id.replace("point", "dot")).nextElementSibling;\r\n' \
@@ -13262,6 +13261,7 @@ class GPXTweakerWebInterfaceServer():
   '          path_foc.setAttribute("d", d_foc);\r\n' \
   '          path.setAttribute("d", "M0,0");\r\n' \
   '        }\r\n' \
+  '        segment_checkbox(seg);\r\n' \
   '        if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        seg_foc.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
   '        calc_modified(seg_foc, seg);\r\n' \
@@ -14554,7 +14554,7 @@ class GPXTweakerWebInterfaceServer():
   '          } else if (elt.id.startsWith("path")) {\r\n' \
   '            const seg = document.getElementById(elt.id.replace("path", "segment"));\r\n' \
   '            segment_checkbox(seg);\r\n' \
-  '            document.getElementById(seg.id + "desc").scrollIntoView({block:"nearest"});\r\n' \
+  '            seg.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"nearest"});\r\n' \
   '          }\r\n' \
   '          mouse_ocm = setTimeout(function() {if (mouse_ocm) {document.oncontextmenu=null; mouse_ocm=null;};}, 100);\r\n' \
   '        }\r\n' \
@@ -18309,7 +18309,8 @@ class GPXTweakerWebInterfaceServer():
   '      #cfbutton {\r\n' \
   '        position: relative;\r\n' \
   '        margin-left: 0.25em;\r\n' \
-  '        font-size: 120%;\r\n' \
+  '        vertical-align: top;\r\n' \
+  '        font-size: 110%;\r\n' \
   '      }\r\n' \
   '      #display {\r\n' \
   '        contain: strict;\r\n' \
@@ -21032,7 +21033,7 @@ class GPXTweakerWebInterfaceServer():
   '  <body style="--mode:##MODE##" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
   '    <div id="top_bar">\r\n' \
   '      <form id="tracksfilterform" onsubmit="this.firstElementChild.blur();return false;"><input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_nfilter();" onchange="input_history(this)"><datalist id="tracksfilterhistory"></datalist></form>\r\n' \
-  '      <span id="display" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button id="cfbutton" style="margin-left:0.25em;" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?gfence(cfilter_reset):(event.shiftKey?gfence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');gfence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="gfence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="gfence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
+  '      <span id="display" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button id="cfbutton" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?gfence(cfilter_reset):(event.shiftKey?gfence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');gfence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="gfence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="gfence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
   '      <span id="actions" onmousedown="event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
