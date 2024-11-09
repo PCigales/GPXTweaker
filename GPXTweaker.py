@@ -13226,6 +13226,7 @@ class GPXTweakerWebInterfaceServer():
   '          seg = seg.nextElementSibling;\r\n' \
   '        }\r\n' \
   '        if (! seg) {return;}\r\n' \
+  '        const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
   '        const ref = seg.nextElementSibling;\r\n' \
   '        const pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
   '        if (pts.length > 0) {\r\n' \
@@ -13243,7 +13244,6 @@ class GPXTweakerWebInterfaceServer():
   '          document.getElementById("pointslist").insertBefore(seg, ref);\r\n' \
   '          const track_foc = document.getElementById(seg_foc.id.replace("segment", "track"));\r\n' \
   '          const path_foc = document.getElementById(seg_foc.id.replace("segment", "path"));\r\n' \
-  '          const track = document.getElementById(seg.id.replace("segment", "track"));\r\n' \
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          const wmtvb = wm_to_viewbox(track_foc);\r\n' \
   '          wmtvb.next();\r\n' \
@@ -13261,7 +13261,8 @@ class GPXTweakerWebInterfaceServer():
   '          path_foc.setAttribute("d", d_foc);\r\n' \
   '          path.setAttribute("d", "M0,0");\r\n' \
   '        }\r\n' \
-  '        segment_checkbox(seg);\r\n' \
+  '        seg.setAttribute("data-deleted", "");\r\n' \
+  '        track.classList.add("deleted");\r\n' \
   '        if (scrollmode > 0) {scroll_to_track(document.getElementById(focused.replace("segment", "track")), scrollmode == 2);}\r\n' \
   '        seg_foc.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"start"});\r\n' \
   '        calc_modified(seg_foc, seg);\r\n' \
