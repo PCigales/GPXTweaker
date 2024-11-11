@@ -12386,6 +12386,8 @@ class GPXTweakerWebInterfaceServer():
   '          seg_foc = document.getElementById(focused);\r\n' \
   '        } else if (focused.startsWith("point")) {\r\n' \
   '          seg_foc = document.getElementById(focused).parentNode;\r\n' \
+  '        } else if (focused == "") {\r\n' \
+  '          seg_foc = Array.prototype.at.call(document.getElementById("pointslist").getElementsByClassName("segment"), (pos == "b" ? 0 : -1)) || null;\r\n' \
   '        } else {return;}\r\n' \
   '        const track_foc = document.getElementById(seg_foc.id.replace("segment", "track"));\r\n' \
   '        const seg = document.getElementById("segment%s").cloneNode(true);\r\n' \
@@ -13409,7 +13411,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '            const points = path.getAttribute("d").match(/[LMm][^LMm]*/g);\r\n' \
-  '            let d = points.splice(0, 1);\r\n' \
+  '            let d = points.splice(0, 1)[0];\r\n' \
   '            points.reverse();\r\n' \
   '            d += points.join("").replace("M", "L").replace("L", "M");\r\n' \
   '            path.setAttribute("d", d);\r\n' \
@@ -13482,7 +13484,7 @@ class GPXTweakerWebInterfaceServer():
   '          const path = document.getElementById(seg.id.replace("segment", "path"));\r\n' \
   '          let d = path.getAttribute("d");\r\n' \
   '          const dots = d.match(/[LMm][^LMm]*/g);\r\n' \
-  '          let d_f = dots.splice(0, 1);\r\n' \
+  '          let d_f = dots.splice(0, 1)[0];\r\n' \
   '          let dir = null;\r\n' \
   '          let pp = null;\r\n' \
   '          for (let p=0, l=positions.length; p<l; p++) {\r\n' \
