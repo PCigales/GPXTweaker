@@ -14655,7 +14655,7 @@ class GPXTweakerWebInterfaceServer():
   '          do {\r\n' \
   '            dt = e.deltaY > 0 ? dt.nextElementSibling : dt.previousElementSibling;\r\n' \
   '            if (! dt) {return;}\r\n' \
-  '            if (focused.indexOf("way") != dt.id.indexOf("way")) {return;}\r\n' \
+  '            if (dt.id.indexOf("dot") < 0 || focused.indexOf("way") != dt.id.indexOf("way")) {return;}\r\n' \
   '            pt = document.getElementById(dt.id.replace("dot", "point"));\r\n' \
   '          } while (pt.hasAttribute("data-error") || pt.hasAttribute("data-deleted") || (! focused.startsWith("way") && pt.parentNode.hasAttribute("data-deleted")));\r\n' \
   '          element_click(null, pt);\r\n' \
