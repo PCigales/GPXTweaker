@@ -13579,10 +13579,13 @@ class GPXTweakerWebInterfaceServer():
   '        calc_modified(...segs);\r\n' \
   '        show_msg((seg_foc != null ? "{#jmsegmentfilter1#}" : "{#jmsegmentfilter2#}").replace("%s", nmod.toString()), 2);\r\n' \
   '      }\r\n' \
-  '      function load_ecb(t, epts) {\r\n' \
+  '      function error_ecb() {\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        document.getElementById("eset").disabled = false;\r\n' \
   '        document.getElementById("eset").style.pointerEvents = "";\r\n' \
+  '      }\r\n' \
+  '      function load_ecb(t, epts) {\r\n' \
+  '        error_ecb();\r\n' \
   '        if (t.status != 200) {return 0;}\r\n' \
   '        if (t.response == "") {return 0;}\r\n' \
   '        const ex_foc = focused;\r\n' \
@@ -13639,6 +13642,7 @@ class GPXTweakerWebInterfaceServer():
   '            pts = document.getElementById(focused).getElementsByClassName("point");\r\n' \
   '            msg = "{#jmelevations3#}";\r\n' \
   '          } else {\r\n' \
+  '            if (focused.startsWith("way") && fromalt) {return;}\r\n' \
   '            pts = [document.getElementById(focused)];\r\n' \
   '            msg = "{#jmelevations2#}";\r\n' \
   '          }\r\n' \
@@ -13662,7 +13666,6 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '        if (b.length == 0) {return;}\r\n' \
-  '        const msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
   '        if (fromalt) {\r\n' \
   '          const t = new Object;\r\n' \
   '          t.status = 200;\r\n' \
@@ -13671,13 +13674,10 @@ class GPXTweakerWebInterfaceServer():
   '            t.response += ep + "," + document.getElementById(ep).getAttribute("data-alt") + "\\r\\n";\r\n' \
   '          }\r\n' \
   '          const np = load_ecb(t, epts);\r\n' \
-  '          if (np) {\r\n' \
-  '            show_msg(msg.replace("%s", np.toString()).replace("%s", epts.length.toString()), 4, msgn);\r\n' \
-  '          } else {\r\n' \
-  '            show_msg("{#jmelevations6#}", 10, msgn);\r\n' \
-  '          }\r\n' \
+  '          if (np) {show_msg(msg.replace("%s", np.toString()).replace("%s", epts.length.toString()), 4);}\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
+  '        const msgn = show_msg("{#jmelevations1#}", 0);\r\n' \
   '        document.getElementById("eset").disabled = true;\r\n' \
   '        document.getElementById("eset").style.pointerEvents = "none";\r\n' \
   '        const xhre = new XMLHttpRequest();\r\n' \
