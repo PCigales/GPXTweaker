@@ -20555,7 +20555,8 @@ class GPXTweakerWebInterfaceServer():
   '          tile.src = "/map/map" + text;\r\n' \
   '          await prom;\r\n' \
   '        } else {\r\n' \
-  '          for (const layer of layers) {\r\n' \
+  '          for (let l=0; l<layers.length; l++) {\r\n' \
+  '            const layer = layers[l];\r\n' \
   '            tmatrix = layer.matrix;\r\n' \
   '            ttopx = layer.topx;\r\n' \
   '            ttopy = layer.topy;\r\n' \
@@ -20602,7 +20603,7 @@ class GPXTweakerWebInterfaceServer():
   '              const [lat, lon] = WebMercatortoWGS84((b[0] + b[1]) / 2 + htopx, -(b[2] + b[3]) / 2 + htopy);\r\n' \
   '              let jmap = null;\r\n' \
   '              try {\r\n' \
-  '                jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, preserveDrawingBuffer: true, pixelRatio: zoom, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1});\r\n' \
+  '                jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, ...(parseInt(maplibregl.getVersion().split(".", 1)[0]) < 5 ? {preserveDrawingBuffer: true} : {canvasContextAttributes: {preserveDrawingBuffer: true},}), pixelRatio: zoom, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1});\r\n' \
   '              } catch(error) {\r\n' \
   '                continue;\r\n' \
   '              }\r\n' \
