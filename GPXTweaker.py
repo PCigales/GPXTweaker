@@ -9263,14 +9263,13 @@ class GPXTweakerWebInterfaceServer():
   '          this.bslsps = [];\r\n' \
   '          this.bslopestdistspeeds = [];\r\n' \
   '          this.btls = twmode ? null : [];\r\n' \
-  '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          const mpos = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '            @group(0) @binding(1) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(2) var<storage, read> lls: array<vec2f>;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
   '            @group(0) @binding(4) var<storage, read_write> xys: array<vec2f>;\r\n' \
-  '            ${override} ws: u32 = 64u;\r\n' \
+  '            override ws: u32 = 64u;\r\n' \
   '            @compute @workgroup_size(ws) fn pos(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              let pt: u32 = p + starts[0u];\r\n' \
@@ -9290,7 +9289,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglpos = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: mpos, entryPoint: "pos", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ppos = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglpos]}), compute: {module: mpos, entryPoint: "pos", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bgpos = twmode ? null : [];\r\n' \
   '          const mtsmooth = twmode ? null : this.device.createShaderModule({code: `\r\n' \
   '            @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
@@ -9301,8 +9300,8 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(5) var<storage, read_write> wns: array<u32>;\r\n' \
   '            @group(0) @binding(6) var<storage, read_write> wds: array<vec2f>;\r\n' \
   '            @group(0) @binding(7) var<storage, read_write> sxys: array<vec2f>;\r\n' \
-  '            ${override} ws1: u32 = 64u;\r\n' \
-  '            ${override} ws2: u32 = 8u;\r\n' \
+  '            override ws1: u32 = 64u;\r\n' \
+  '            override ws2: u32 = 8u;\r\n' \
   '            @compute @workgroup_size(ws1) fn tdir(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws1;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
@@ -9368,8 +9367,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgltsmooth = twmode ? null : this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 7, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: mtsmooth, entryPoint: "tdir", constants: navigator_firefox ? {} : {ws1: WebGPUStats.ptsws},},});\r\n' \
-  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: mtsmooth, entryPoint: "tsmooth", constants: navigator_firefox ? {} : {ws2: WebGPUStats.segsws},},});\r\n' \
+  '          this.ptdir = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: mtsmooth, entryPoint: "tdir", constants: {ws1: WebGPUStats.ptsws},},});\r\n' \
+  '          this.ptsmooth = twmode ? null : this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgltsmooth]}), compute: {module: mtsmooth, entryPoint: "tsmooth", constants: {ws2: WebGPUStats.segsws},},});\r\n' \
   '          this.bsmdrange = twmode ? null : this.device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgtsmooth = twmode ? null : [];\r\n' \
   '          const mgdist = this.device.createShaderModule({code: twmode ? `\r\n' \
@@ -9378,7 +9377,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(2) var<storage, read> lats: array<f32>;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> segs: array<u32>;\r\n' \
   '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
-  '            ${override} ws: u32 = 64u;\r\n' \
+  '            override ws: u32 = 64u;\r\n' \
   '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              let pt: u32 = p + starts[0u];\r\n' \
@@ -9403,7 +9402,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(2) var<storage, read> trlats: array<f32>;\r\n' \
   '            @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
   '            @group(0) @binding(4) var<storage, read_write> gdists: array<f32>;\r\n' \
-  '            ${override} ws: u32 = 64u;\r\n' \
+  '            override ws: u32 = 64u;\r\n' \
   '            @compute @workgroup_size(ws) fn gdist(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (p >= arrayLength(&segs)) {return;}\r\n' \
@@ -9415,7 +9414,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bglgdist = this.device.createBindGroupLayout({entries: twmode ? [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}] : [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: mgdist, entryPoint: "gdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pgdist = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglgdist]}), compute: {module: mgdist, entryPoint: "gdist", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bggdist = [];\r\n' \
   '          this.bgsgdist = twmode ? null : [];\r\n' \
   '          const meagain = this.device.createShaderModule({code: `\r\n' \
@@ -9423,7 +9422,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(1) var<storage, read> teahs: array<vec4f>;\r\n' \
   '            @group(0) @binding(2) var<uniform> eagainf: vec2f;\r\n' \
   '            @group(0) @binding(3) var<storage, read_write> eags: array<array<f32,2>>;\r\n' \
-  '            ${override} ws: u32 = 4u;\r\n' \
+  '            override ws: u32 = 4u;\r\n' \
   '            @compute @workgroup_size(ws, 1u, 2u) fn eagain(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let s: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '              if (s >= arrayLength(&starts) - 1u) {return;}\r\n' \
@@ -9475,7 +9474,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          `});\r\n' \
   '          this.bgleagain = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: meagain, entryPoint: "eagain", constants: navigator_firefox ? {} : {ws: WebGPUStats.segsws / 2},},});\r\n' \
+  '          this.peagain = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bgleagain]}), compute: {module: meagain, entryPoint: "eagain", constants: {ws: WebGPUStats.segsws / 2},},});\r\n' \
   '          this.beagainf = this.device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgeagain = [];\r\n' \
   '          const mslopestdistspeed = this.device.createShaderModule({code: `\r\n' \
@@ -9487,7 +9486,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(0) @binding(4) var<uniform> slopesspeedf: sfilters;\r\n' \
   '            @group(0) @binding(5) var<storage, read_write> slsps: array<vec4f>;\r\n' \
   '            @group(0) @binding(6) var<storage, read_write> slopestdistspeeds: array<vec4f>;\r\n' \
-  '            ${override} ws: u32 = 64u;\r\n' \
+  '            override ws: u32 = 64u;\r\n' \
   '            fn slope(d: f32, z: vec3f, m: vec3f) -> vec3f {\r\n' \
   '              return select(z / d, m * sign(z), d == 0.0);\r\n' \
   '            }\r\n' \
@@ -9612,10 +9611,10 @@ class GPXTweakerWebInterfaceServer():
   '          `});\r\n' \
   '          this.bglslopestdistspeed = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const plslopestdistspeed = this.device.createPipelineLayout({bindGroupLayouts: [this.bglslopestdistspeed]});\r\n' \
-  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "slopes1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "slopestdist", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed1", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
-  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopes1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "slopes1", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pslopestdist = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "slopestdist", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed1 = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed1", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
+  '          this.pspeed = this.device.createComputePipeline({layout: plslopestdistspeed, compute: {module: mslopestdistspeed, entryPoint: "speed", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          this.bslopesspeedf = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '          this.bgslopestdistspeed = [];\r\n' \
   '          this.bglvisib = null;\r\n' \
@@ -9752,7 +9751,6 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          const _tls = (a instanceof Float32Array) ? a : new Float32Array(a);\r\n' \
   '          if (this.pvisib == null) {\r\n' \
-  '            const override = navigator_firefox ? "const" : "override";\r\n' \
   '            const mvisib = this.device.createShaderModule({code: `\r\n' \
   '              @group(0) @binding(0) var<storage, read> starts: array<u32>;\r\n' \
   '              @group(0) @binding(1) var<storage, read> segs: array<u32>;\r\n' \
@@ -9760,7 +9758,7 @@ class GPXTweakerWebInterfaceServer():
   '              @group(0) @binding(3) var<storage, read> xys: array<vec2f>;\r\n' \
   '              @group(0) @binding(4) var<uniform> screen: vec4f;\r\n' \
   '              @group(0) @binding(5) var<storage, read_write> visibs: array<f32>;\r\n' \
-  '              ${override} ws: u32 = 64u;\r\n' \
+  '              override ws: u32 = 64u;\r\n' \
   '              @compute @workgroup_size(ws) fn visib(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '                let p: u32 = id.x + id.y * nw.x * ws;\r\n' \
   '                if (p >= arrayLength(&segs)) {return;}\r\n' \
@@ -9778,7 +9776,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            `});\r\n' \
   '            this.bglvisib = this.device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '            this.pvisib = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglvisib]}), compute: {module: mvisib, entryPoint: "visib", constants: navigator_firefox ? {} : {ws: WebGPUStats.ptsws},},});\r\n' \
+  '            this.pvisib = this.device.createComputePipeline({layout: this.device.createPipelineLayout({bindGroupLayouts: [this.bglvisib]}), compute: {module: mvisib, entryPoint: "visib", constants: {ws: WebGPUStats.ptsws},},});\r\n' \
   '          }\r\n' \
   '          if (this.bscreen == null) {\r\n' \
   '            this.bscreen = this.device.createBuffer({size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
@@ -16008,7 +16006,6 @@ class GPXTweakerWebInterfaceServer():
   '            data = fetch("/3D/data").then((r) => r.ok ? r.arrayBuffer() : null, () => null);\r\n' \
   '            yield true;\r\n' \
   '          }\r\n' \
-  '          const override = navigator_firefox ? "const" : "override";\r\n' \
   '          const bdynunifstride = Math.ceil(4 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment;\r\n' \
   '          const bgentries = (...buffers) => buffers.map(function (bu, bi) {return {binding: bi, resource: {buffer: bu, size: bu.size},};});\r\n' \
   '          const mground = device.createShaderModule({code: `\r\n' \
@@ -16021,7 +16018,7 @@ class GPXTweakerWebInterfaceServer():
   '            @group(1) @binding(1) var<uniform> stride: u32;\r\n' \
   '            @group(1) @binding(2) var<storage, read_write> zmins: array<f32>;\r\n' \
   '            @group(1) @binding(3) var<storage, read_write> zmaxs: array<f32>;\r\n' \
-  '            ${override} ws: u32 = 8u;\r\n' \
+  '            override ws: u32 = 8u;\r\n' \
   '            @compute @workgroup_size(ws * ws) fn zvalid(@builtin(num_workgroups) nw: vec3u, @builtin(global_invocation_id) id: vec3u) {\r\n' \
   '              let p: u32 = id.x + id.y * nw.x * ws * ws;\r\n' \
   '              if (p >= arrayLength(&gzs)) {return;}\r\n' \
@@ -16066,10 +16063,10 @@ class GPXTweakerWebInterfaceServer():
   '          `});\r\n' \
   '          const bglground = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
   '          const bglz = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: {type: "uniform", hasDynamicOffset: true},}, {binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}, {binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: {type: "storage"},}]});\r\n' \
-  '          const pzvalid = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zvalid", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
-  '          const pzminmax = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zminmax", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
-  '          const pzrel = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zrel", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
-  '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: navigator_firefox ? {} : {ws: wgs},},});\r\n' \
+  '          const pzvalid = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zvalid", constants: {ws: wgs},},});\r\n' \
+  '          const pzminmax = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zminmax", constants: {ws: wgs},},});\r\n' \
+  '          const pzrel = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground, bglz]}), compute: {module: mground, entryPoint: "zrel", constants: {ws: wgs},},});\r\n' \
+  '          const pground = device.createComputePipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglground]}), compute: {module: mground, entryPoint: "ground", constants: {ws: wgs},},});\r\n' \
   '          data = await data;\r\n' \
   '          if (data == null || ! data?.byteLength) {return false;}\r\n' \
   '          const lvx = (new Uint32Array(data, 0, 1))[0];\r\n' \
@@ -17956,12 +17953,11 @@ class GPXTweakerWebInterfaceServer():
   '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
   '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
   '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
-  '        const override = navigator_firefox ? "const" : "override";\r\n' \
   '        const msun = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> sratio: f32;\r\n' \
   '          @group(0) @binding(1) var<uniform> smatrix: mat4x4f;\r\n' \
-  '          ${override} snt: u32 = 36;\r\n' \
-  '          ${override} sa: f32 = 2.0 * 3.1415926536 / f32(snt);\r\n' \
+  '          override snt: u32 = 36u;\r\n' \
+  '          override sa: f32 = 2.0 * 3.1415926536 / f32(snt);\r\n' \
   '          @vertex fn vsun(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> @builtin(position) vec4f {\r\n' \
   '            var vposition = smatrix * vec4f(0.0, 0.0, 1.0, 1.0) + 0.01 * f32(1u - (vi >> 1u)) * vec4f(sratio * cos(f32(ii + vi) * sa), sin(f32(ii + vi) * sa), 0.0, 0.0);\r\n' \
   '            vposition.z *= vposition.w;\r\n' \
@@ -19576,7 +19572,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (stats[s].length == 0) {continue;}\r\n' \
   '          let stat = null;\r\n' \
   '          if (gc[gc.length - 1] != graph_ip.length) {gc.push(graph_ip.length);}\r\n' \
-  '          for (let p=0, sl=stats[p].length; p<sl; p++) {\r\n' \
+  '          for (let p=0, sl=stats[s].length; p<sl; p++) {\r\n' \
   '            p_ind++;\r\n' \
   '            stat = stats[s][p];\r\n' \
   '            const pt = tracks_pts[tr_ind][s][p];\r\n' \
