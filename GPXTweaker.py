@@ -970,11 +970,9 @@ class HTTPExplodedMessage():
     hck = self.header('Set-Cookie')
     domain = domain.lower()
     dom_ip = all(c in '.:[]0123456789' for c in domain)
-    path = path.rstrip('/') if (path != '/' and path[:1] == '/') else '/'
     ck = {}
     if hck is not None:
-      hck = map(str.strip, hck.split('\n'))
-      for co in hck:
+      for co in map(str.strip, hck.split('\n')):
         c = map(str.strip, co.split(';'))
         try:
           cn, cv = next(c).split('=', 1)
@@ -986,19 +984,18 @@ class HTTPExplodedMessage():
               can, cav = ca.split('=', 1)
             except:
               continue
-            if cd is None and can.lower() == 'domain' and cav:
-              cav = cav.lstrip('.').lower()
-              if (domain != cav) if dom_ip else (domain[-len(cav) - 1 :] not in (cav, '.' + cav)):
-                raise
-              cd = (cav, True)
-            if cp is None and can.lower() == 'path':
-              if path[: len(cav) + (1 if cav[-1:] != '/' else 0)] not in (cav, cav + '/'):
-                raise
+            if can.lower() == 'domain' and cav:
+              cd = (cav.lstrip('.').lower(), True)
+            if can.lower() == 'path' and cav[:1] == '/':
               cp = cav
           if cd is None:
             cd = (domain, False)
+          else:
+            cav = cd[0]
+            if (domain != cav) if dom_ip else (domain[-len(cav) - 1 :] not in (cav, '.' + cav)):
+              raise
           if cp is None:
-            cp = ''
+            cp = path.rstrip('/') if (path != '/' and path[:1] == '/') else '/'
           ck[(cd, cp, cn)] = cv
         except:
           pass
@@ -1346,7 +1343,7 @@ class HTTPBaseRequest():
       url_p = urllib.parse.urlsplit(url, allow_fragments=False)
       if headers is None:
         headers = {}
-      hitems = headers.items()
+      hitems = tuple((k.strip(), v) for k, v in headers.items())
       if pconnection is None:
         pconnection = [None, {}, []]
         hccl = True
@@ -11273,7 +11270,7 @@ class GPXTweakerWebInterfaceServer():
   '      function open_legend() {\r\n' \
   '        const msgn = show_msg("{#jmopenlegend1#}", 0);\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then(function(fd) {fd.forEach(function(e) {const url = URL.createObjectURL(e); const w = open(url); URL.revokeObjectURL(url); w.onload = function(ev) {ev.target.title = e.name;}; w.document.title = e.name;}); show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch(function(er) {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);}).finally(function() {xhr_ongoing--;});\r\n' \
+  '        fetch("/legend", {headers:{"If-Match": sessionid}, method: "GET"}).then((r) => r.formData()).then(function(fd) {fd.forEach(function(e) {const url = URL.createObjectURL(e); const w = open(url); w.onload = function(ev) {URL.revokeObjectURL(url); ev.target.title = e.name;}; w.document.title = e.name;}); show_msg("{#jmopenlegend2#}".replace("%s", Array.from(fd.keys()).length.toString()), 5, msgn);}).catch(function(er) {show_msg("{#jmopenlegend2#}".replace("%s", "0"), 10, msgn);}).finally(function() {xhr_ongoing--;});\r\n' \
   '      }\r\n' \
   '      function switch_sel(e, s) {\r\n' \
   '        const ps = document.getElementById("panels").style;\r\n' \
@@ -20706,7 +20703,7 @@ class GPXTweakerWebInterfaceServer():
   '        msgn = show_msg("{#jmdownmap4#}", 0, msgn);\r\n' \
   '        let url = null;\r\n' \
   '        prom = new Promise(function(resolve, reject) {prom_res = resolve;});\r\n' \
-  '        cnv2d.toBlob(function (blob) {url = URL.createObjectURL(blob); prom_res();});\r\n' \
+  '        cnv2d.toBlob(function (blob) {if (blob) {url = URL.createObjectURL(blob);}; prom_res();});\r\n' \
   '        await prom;\r\n' \
   '        if (url) {\r\n' \
   '          const a = document.createElement("a");\r\n' \
