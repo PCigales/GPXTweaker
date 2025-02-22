@@ -1035,9 +1035,9 @@ class HTTPMessage():
         header_name = header_name.strip().title()
         if header_name:
           header_value = header_value.strip()
-          if header_name not in ('Content-Length', 'Location', 'Host') and http_message.headers.get(header_name):
+          if header_name not in {'Content-Length', 'Location', 'Host'} and http_message.headers.get(header_name):
             if header_value:
-              http_message.headers[header_name] += ('\n' if header_name in ('Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate') else ', ') + header_value
+              http_message.headers[header_name] += ('\n' if header_name in {'Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate'} else ', ') + header_value
           else:
             http_message.headers[header_name] = header_value
         else:
@@ -1052,6 +1052,8 @@ class HTTPMessage():
       http_message.method = a.upper()
       http_message.path = b
       http_message.version = c.upper()
+    if 'Transfer-Encoding' in http_message.headers:
+      http_message.headers.pop('Content-Length', None)
     http_message.expect_close = http_message.in_header('Connection', 'close') or (http_message.version.upper() != 'HTTP/1.1' and not http_message.in_header('Connection', 'keep-alive'))
     return True
 
@@ -1066,12 +1068,12 @@ class HTTPMessage():
         return False
       header_name = header_name.strip().title()
       if header_name:
-        if header_name in ('Transfer-Encoding', 'Content-Length', 'Host', 'Content-Encoding', 'Location'):
+        if header_name in {'Transfer-Encoding', 'Content-Length', 'Host', 'Content-Encoding', 'Location'}:
           continue
         header_value = header_value.strip()
         if http_message.headers.get(header_name):
           if header_value:
-            http_message.headers[header_name] += ('\n' if header_name in ('Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate') else ', ') + header_value
+            http_message.headers[header_name] += ('\n' if header_name in {'Set-Cookie', 'Www-Authenticate', 'Proxy-Authenticate'} else ', ') + header_value
         else:
           http_message.headers[header_name] = header_value
       else:
@@ -1089,11 +1091,18 @@ class HTTPMessage():
     max_hlength = min(max_length, max_hlength)
     rem_length = max_hlength
     iss = isinstance(message, socket.socket)
-    if not iss:
-      msg = message[0]
-    else:
-      message.settimeout(timeout)
-      msg = b''
+    try:
+      if isinstance(message, (tuple, list)):
+        iss = isinstance(message[0], socket.socket)
+        msg = message[1 if iss else 0]
+        message = message[0]
+      else:
+        iss = isinstance(message, socket.socket)
+        msg = b'' if iss else message
+      if iss:
+        message.settimeout(timeout)
+    except:
+      return http_message
     while True:
       msg = msg.lstrip(b'\r\n')
       if msg and msg[0] < 0x20:
@@ -1120,10 +1129,10 @@ class HTTPMessage():
       return http_message.clear()
     if not iss:
       http_message.expect_close = True
-    if http_message.code in ('100', '101', '204', '304'):
+    if http_message.code in ('101', '204', '304'):
       http_message.body = b''
       return http_message
-    if not body:
+    if not body or http_message.code == '100':
       http_message.body = msg[body_pos:]
       return http_message
     rem_length += max_length - max_hlength
@@ -1145,7 +1154,7 @@ class HTTPMessage():
     if decompress and body_len != 0:
       hce = [e for h in (http_message.header('Content-Encoding', ''), http_message.header('Transfer-Encoding', '')) for e in map(str.strip, h.lower().split(',')) if not e in ('chunked', '', 'identity')]
       for ce in hce:
-        if ce not in ('deflate', 'gzip'):
+        if ce not in {'deflate', 'gzip'}:
           if http_message.method is not None and iss:
             try:
               message.sendall(('HTTP/1.1 415 Unsupported media type\r\nContent-Length: 0\r\nDate: %s\r\nCache-Control: no-cache, no-store, must-revalidate\r\n\r\n' % email.utils.formatdate(time.time(), usegmt=True)).encode('ISO-8859-1'))
@@ -1324,7 +1333,7 @@ class HTTPBaseRequest():
 
   @classmethod
   def connect(cls, url, url_p, headers, max_length, max_hlength, timeout, pconnection):
-    raise
+    raise TypeError('the class _HTTPBaseRequest is not intended to be instantiated directly')
 
   @staticmethod
   def _netloc_split(loc, def_port=''):
@@ -1355,7 +1364,7 @@ class HTTPBaseRequest():
         hexp = '100-continue' in (e.strip() for k, v in hitems if k.lower() == 'expect' for e in v.lower().split(','))
       else:
         hexp = False
-      headers = {k: v for k, v in hitems if not k.lower() in ('host', 'content-length', 'connection', 'expect')}
+      headers = {k: v for k, v in hitems if not k.lower() in {'host', 'content-length', 'connection', 'expect'}}
       if hexp:
         headers['Expect'] = '100-continue'
       if 'accept-encoding' not in (k.lower() for k, v in hitems):
@@ -1385,32 +1394,27 @@ class HTTPBaseRequest():
         path = cls.connect(url, url_p, headers, max_length, max_hlength, timeout, pconnection)
         try:
           code = '100'
-          msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join(k + ': ' + v + '\r\n' for k, v in (headers if not ck else {**headers, 'Cookie': '; '.join(k + '=' + v[0] for k, v in ck.items())}).items()))
+          rem = None
+          msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join('%s: %s\r\n' % kv for kv in (headers if not ck else {**headers, 'Cookie': '; '.join(k + '=' + v[0] for k, v in ck.items())}).items()))
           if hexp and data:
             pconnection[0].sendall(msg.encode('iso-8859-1'))
             resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=min(3, 3 if timeout is None else timeout), max_length=max_length, max_hlength=max_hlength, decompress=False)
             code = resp.code
-            if code is None:
+            if code == '100':
+              rem = resp.body
+            if code is None and exceeded != [True]:
               code = '100'
             if code == '100':
               pconnection[0].sendall(data)
           else:
             pconnection[0].sendall(msg.encode('iso-8859-1') + (data or b''))
         except:
-          if retried:
-            raise
-          retried = True
-          try:
-            pconnection[0].close()
-          except:
-            pass
-          pconnection[0] = None
-          pconnection[2].pop()
-          continue
+          code = None
         while code == '100':
-          resp = HTTPMessage(pconnection[0], body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=decompress, exceeded=exceeded)
+          resp = HTTPMessage((pconnection[0] if rem is None else (pconnection[0], rem)), body=(method.upper() != 'HEAD'), decode=None, timeout=timeout, max_length=max_length, max_hlength=max_hlength, decompress=decompress, exceeded=exceeded)
           code = resp.code
           if code == '100':
+            rem = resp.body
             redir += 1
             if redir > 5:
               raise
@@ -1458,7 +1462,7 @@ class HTTPBaseRequest():
                 method = 'GET'
               data = None
               for k in list(headers.keys()):
-                if k.lower() in ('transfer-encoding', 'content-length', 'content-type', 'expect'):
+                if k.lower() in {'transfer-encoding', 'content-length', 'content-type', 'expect'}:
                   del headers[k]
           else:
             raise
@@ -1552,7 +1556,7 @@ class NestedSSLContext(ssl.SSLContext):
       return self._sslobj.__getattribute__(name)
 
     def __setattr__(self, name, value):
-      if name in ('sslsocket', 'inc', 'out', '_sslobj'):
+      if name in {'sslsocket', 'inc', 'out', '_sslobj'}:
         object.__setattr__(self, name, value)
       else:
         self._sslobj.__setattr__(name, value)
