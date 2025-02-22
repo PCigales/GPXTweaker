@@ -1090,7 +1090,6 @@ class HTTPMessage():
       return http_message
     max_hlength = min(max_length, max_hlength)
     rem_length = max_hlength
-    iss = isinstance(message, socket.socket)
     try:
       if isinstance(message, (tuple, list)):
         iss = isinstance(message[0], socket.socket)
