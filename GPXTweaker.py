@@ -12337,8 +12337,8 @@ class GPXTweakerWebInterfaceServer():
   '            wmtvb.next();\r\n' \
   '            const path = document.getElementById("path" + s_s);\r\n' \
   '            const pts = document.getElementById("segment" + s_s).getElementsByClassName("point");\r\n' \
-  '            const d = path.getAttribute("d");\r\n' \
-  '            const dots = d.match(/[LMm][^LMm]*/g);\r\n' \
+  '            const d = path.getAttribute("d").replace("M", "L");\r\n' \
+  '            const dots = d.match(/[Lm][^Lm]*/g);\r\n' \
   '            let d_r = "M0,0";\r\n' \
   '            for (let p=1, l=dots.length; p<l; p++) {\r\n' \
   '              const pt = pts[p - 1];\r\n' \
@@ -12353,8 +12353,7 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '            wmtvb.return();\r\n' \
-  '            if (d_r.indexOf("M", 1) < 0) {d_r = d_r.replace("L", "M");}\r\n' \
-  '            path.setAttribute("d", d_r);\r\n' \
+  '            path.setAttribute("d", d_r.replace("L", "M"));\r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        if (histb != 0) {\r\n' \
