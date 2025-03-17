@@ -21372,7 +21372,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (media_fs[0] > 0) {\r\n' \
   '            media_fs[0] -= (navigator_firefox ? media_fs[0] : 1);\r\n' \
   '            if (media_fs[0] > 0) {\r\n' \
-  '              media_fs[1] = setTimeout(function () {media_fs = [0, null];}, 25);\r\n' \
+  '              media_fs[1] = setTimeout(function () {media_fs = [0, null];}, 40);\r\n' \
   '            } else if (media_fs[1] != null) {\r\n' \
   '              clearTimeout(media_fs[1]);\r\n' \
   '              media_fs[1] = null;\r\n' \
