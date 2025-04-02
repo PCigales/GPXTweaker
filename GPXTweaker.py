@@ -212,6 +212,7 @@ FR_STRINGS = {
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'jfconfirm': 'Lisser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
+    'jdesc': 'ouvrir / fermer le panneau de saisie de la description de la trace',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jinsertb': 'focus sur segment: insérer un point en début de segment&#13;&#10;focus sur point / point de cheminement: dupliquer le point / point de cheminement au-dessus&#13;&#10;pas de focus: insérer un point de cheminement au début&#13;&#10;+shift: insérer un segment au-dessus',
@@ -320,6 +321,7 @@ FR_STRINGS = {
     'jperiod': 'Péri',
     'jcontent': 'Cont',
     'jtrackcontent': '%d seg(s) | %d pt(s) | %d pt(s) de chem',
+    'jsdesc': 'déplier / replier la description de la trace',
     'jgraphdistance': 'distance',
     'jgraphelevation': 'élévation',
     'jgraphaltitude': 'altitude',
@@ -628,6 +630,7 @@ EN_STRINGS = {
     'jrconfirm': 'Reverse the whole track ?',
     'jfconfirm': 'Smooth the whole track ?',
     'junload': 'Warning, the data will be lost !',
+    'jdesc': 'open / close the track description input panel',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
     'jinsertb': 'focus on segment: insert a point at the start of the segment&#13;&#10;focus on point / waypoint: duplicate the point / waypoint above&#13;&#10;no focus: insert a waypoint at the start&#13;&#10;+shift: insert a segment above',
@@ -736,6 +739,7 @@ EN_STRINGS = {
     'jperiod': 'Peri',
     'jcontent': 'Cont',
     'jtrackcontent': '%d seg(s) | %d pt(s) | %d waypt(s)',
+    'jsdesc': 'fold / unfold the description of the track',
     'jgraphdistance': 'distance',
     'jgraphelevation': 'elevation',
     'jgraphaltitude': 'altitude',
@@ -5564,7 +5568,7 @@ class XMLCDATASection(XMLCharacterData):
     return XMLCDATASection(self.data)
 
   def writexml(self, writer, indent='', addindent='', newl=''):
-    writer.write(f'<![CDATA[{self.data or ""}]]>')
+    writer.write(f'<![CDATA[{(self.data or "").replace("]]>", "]]]]><![CDATA[>")}]]>')
 
 
 class XMLComment(XMLCharacterData):
@@ -5837,6 +5841,7 @@ class WGS84Track(WGS84WebMercator):
     self._tracks = [None, None, None]
     self.TrkId = None
     self.Name = None
+    self.Desc = None
     self.Color = None
     self.Wpts = None
     self.Pts = None
@@ -5991,6 +5996,7 @@ class WGS84Track(WGS84WebMercator):
         return False
     if mode in ('a', 't', 'e'):
       self.Name = ' '.join(trk.getChildrenText('name').splitlines())
+      self.Desc = '\n'.join(trk.getChildrenText('desc').splitlines())
       self.Color = ''
       ext = trk.getChildren('extensions')
       try:
@@ -6205,12 +6211,8 @@ class WGS84Track(WGS84WebMercator):
 
   def _XMLUpdateChildNodeText(self, node, localname, uri, prefix, text, predecessors='*', cdata=False):
     if text:
-      if cdata:
-        t = XMLCDATASection(text)
-      else:
-        t = XMLText(text)
       child = self._XMLNewNode(localname, uri, prefix)
-      child.appendChild(t)
+      child.appendChild((XMLCDATASection if cdata else XMLText)(text))
     else:
       child = None
     self._XMLUpdateChildNode(node, localname, child, predecessors, uri)
@@ -6283,13 +6285,14 @@ class WGS84Track(WGS84WebMercator):
           raise
       else:
         msgp = msg.split('=\r\n')
-        nmsg = msgp[0].split('\r\n')[:-1]
+        nmsg, dmsg = msgp[0].split('\r\n')[:-1]
         wpmsg = msgp[1].split('\r\n')[:-1]
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = r.removeChildren('wpt')
         segs = trk.removeChildren('trkseg')
         pts = [pt for seg in segs for pt in seg.removeChildren('trkpt')]
-        self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, ' '.join((nmsg or [''])[0].splitlines()), None, True)
+        self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, nmsg, None, True)
+        self._XMLUpdateChildNodeText(trk, 'desc', trkns, trkp, '\n'.join(dmsg.splitlines()), ('cmt', 'name'), True)
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
@@ -7845,8 +7848,8 @@ class WGS84TrackProxy():
   WebMercatorWpts = WGS84Track.WebMercatorWpts
   WebMercatorPts = WGS84Track.WebMercatorPts
 
-  def __init__(self, trkid, name, color, wpts, pts, retrieve):
-    for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts'):
+  def __init__(self, trkid, name, desc, color, wpts, pts, retrieve):
+    for att in ('TrkId', 'Name', 'Desc', 'Color', 'Wpts', 'Pts'):
       object.__setattr__(self, att, locals()[att.lower()])
     object.__setattr__(self, '_retrieve', retrieve)
     object.__setattr__(self, '_rlock', threading.Lock())
@@ -7859,13 +7862,13 @@ class WGS84TrackProxy():
         track = object.__new__(WGS84Track)
         track.ULock = ulock
         track._tracks = _tracks
-        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', '_WebMercatorWpts', '_WebMercatorPts'):
+        for att in ('TrkId', 'Name', 'Desc', 'Color', 'Wpts', 'Pts', '_WebMercatorWpts', '_WebMercatorPts'):
           setattr(track, att, getattr(self, att))
         track.intern_dict = intern_dict
         track._intern()
         track.log = partial(log, 'track')
         object.__setattr__(self, '_track', track)
-        for att in ('TrkId', 'Name', 'Color', 'Wpts', 'Pts', '_WebMercatorWpts', '_WebMercatorPts'):
+        for att in ('TrkId', 'Name', 'Desc', 'Color', 'Wpts', 'Pts', '_WebMercatorWpts', '_WebMercatorPts'):
           object.__delattr__(self, att)
     return self._track
 
@@ -7942,7 +7945,7 @@ class GPXLoader():
         ind, track, b = squeue.popleft()
         try:
           connection.send(ind)
-          connection.send(((track.TrkId, track.Name, track.Color, track.Wpts, track.Pts), b))
+          connection.send(((track.TrkId, track.Name, track.Desc, track.Color, track.Wpts, track.Pts), b))
           wlog(2, 'wsqueue', wname, uris[ind], track.TrkId)
         except BrokenPipeError:
           stop = True
@@ -8303,7 +8306,14 @@ class GPXTweakerWebInterfaceServer():
   '        font-size: 105%;\r\n' \
   '      }\r\n' \
   '      #name_track {\r\n' \
-  '        width: calc(100% - 64em - 6px);\r\n' \
+  '        width: calc(100% - 65.8em - 6px);\r\n' \
+  '        margin-right: 0.2em;\r\n' \
+  '      }\r\n' \
+  '      #name_track+button {\r\n' \
+  '        position: relative;\r\n' \
+  '        bottom: 1px;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '        font-size: 120%;\r\n' \
   '      }\r\n' \
   '      #actions, #navigation, #message, #help {\r\n' \
   '        contain: strict;\r\n' \
@@ -11533,12 +11543,40 @@ class GPXTweakerWebInterfaceServer():
   '  <head>\r\n' \
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker</title>\r\n' + HTML_STYLES_TEMPLATE + \
+  '      textarea {\r\n' \
+  '        margin: 0;\r\n' \
+  '        border-width: 0.5px;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: inherit;\r\n' \
+  '        font-family: inherit;\r\n' \
+  '      }\r\n' \
+  '      textarea:focus {\r\n' \
+  '        color: rgb(200, 250, 240);\r\n' \
+  '        outline: rgb(200, 250, 240) solid 1px;\r\n' \
+  '        outline-offset: -1px;\r\n' \
+  '      }\r\n' \
   '      #actions {\r\n' \
   '        width: 55em;\r\n' \
   '      }\r\n' \
   '      #message {\r\n' \
   '        left: calc(20.5em + 1px);\r\n' \
   '        width: calc(100% - 22.7em - 1px);\r\n' \
+  '      }\r\n' \
+  '      #lpanels[style*=dpanel]>#descpanel {\r\n' \
+  '        display: initial;\r\n' \
+  '      }\r\n' \
+  '      #descpanel {\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        overflow: clip;\r\n' \
+  '        padding-top: 3px;\r\n' \
+  '      }\r\n' \
+  '      #track_desc {\r\n' \
+  '        width: 100%;\r\n' \
+  '        height: 100%;\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        resize: none;\r\n' \
+  '        white-space: pre-wrap;\r\n' \
+  '        font-size: 110%;\r\n' \
   '      }\r\n' \
   '      #waypoints, #points {\r\n' \
   '        overflow: hidden scroll;\r\n' \
@@ -14153,7 +14191,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (! mode3d) {document.getElementById("save_icon").style.fontSize = "10%";}\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
   '        document.getElementById("save").style.pointerEvents = "none";\r\n' \
-  '        let body = document.getElementById("name_track").value + "\\r\\n=\\r\\n";\r\n' \
+  '        let body = document.getElementById("name_track").value.replace("\\r\\n", " ") + "\\r\\n" + document.getElementById("track_desc").value.replace("\\r\\n", "\\n").replace("\\r", "\\n") + "\\r\\n=\\r\\n";\r\n' \
   '        const wpts = document.getElementById("waypointslist").getElementsByClassName("waypoint");\r\n' \
   '        for (let w=0, l=wpts.length; w<l; w++) {\r\n' \
   '          const wpt = wpts[w];\r\n' \
@@ -14312,6 +14350,18 @@ class GPXTweakerWebInterfaceServer():
   '          focused = ex_foc;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function switch_dpanel(other=false) {\r\n' \
+  '        const lps = document.getElementById("lpanels").style;\r\n' \
+  '        const lpsv = lps.getPropertyValue("--panel");\r\n' \
+  '        if (lpsv == "dpanel") {\r\n' \
+  '          lps.setProperty("--panel", "none");\r\n' \
+  '          if (! other) {rescale();}\r\n' \
+  '        } else {\r\n' \
+  '          if (other) {return;}\r\n' \
+  '          lps.setProperty("--panel", "dpanel");\r\n' \
+  '          if (lpsv == "none") {rescale();} else {switch_graph(true);}\r\n' \
+  '        }\r\n' \
+  '      }\r\n' \
   '      const xhr = new XMLHttpRequest();\r\n' \
   '      const xhrt = new XMLHttpRequest();\r\n' \
   '      xhrt.addEventListener("error", error_tcb);\r\n' \
@@ -14323,11 +14373,14 @@ class GPXTweakerWebInterfaceServer():
   '  </head>\r\n' \
   '  <body style="--mode:##MODE##" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
   '    <div id="top_bar">\r\n' \
-  '      <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##">\r\n' \
-  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;" onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;" onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jdotsarrows#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots_arrows(! event.altKey, event.altKey))">&EmptySmallSquare;<span style="margin-left:-0.55em">&#8618;</span></button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="(event.shiftKey||event.ctrlKey||event.altKey)?switch_filterpanel(event.shiftKey?\'1\':(event.ctrlKey?\'2\':\'3\')):switch_graph()?gfence(refresh_graph):null">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
+  '      <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##"><button title="{#jdesc#}" onmousedown="document.activeElement?.blur();event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();" onclick="switch_dpanel()">&#128221;&#xfe0e;</button>\r\n' \
+  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;" onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;" onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jdotsarrows#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots_arrows(! event.altKey, event.altKey))">&EmptySmallSquare;<span style="margin-left:-0.55em">&#8618;</span></button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?\'1\':(event.ctrlKey?\'2\':\'3\'));} else {switch_dpanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
   '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
+  '      <div id="descpanel">\r\n' \
+  '        <textarea id="track_desc" name="track_desc" autocomplete="off">##DESC##</textarea>\r\n' \
+  '      </div>\r\n' \
   '    </div>\r\n' \
   '    <div id="bottom_bar">\r\n' \
   '      <span id="navigation" onmousedown="document.activeElement?.blur();event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();">\r\n' \
@@ -18383,10 +18436,13 @@ class GPXTweakerWebInterfaceServer():
   '      input[type=color]::-moz-color-swatch {\r\n' \
   '        border: none;\r\n' \
   '      }\r\n' \
-  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content] {\r\n' \
+  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content], label[for$=descr] {\r\n' \
   '        display: inline-block;\r\n' \
   '        width: 2em;\r\n' \
   '        padding-left: 0.8em;\r\n' \
+  '      }\r\n' \
+  '      input:read-only:focus {\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
   '      }\r\n' \
   '      input[id$=name], input[id$=file], input[id$=folder], input[id$=period], input[id$=content] {\r\n' \
   '        height: 1.35em;\r\n' \
@@ -18395,6 +18451,32 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      span[id$=focus] {\r\n' \
   '        display: none;\r\n' \
+  '      }\r\n' \
+  '      input[id$=content]+button {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 0;\r\n' \
+  '        width: 0.8em;\r\n' \
+  '        font-size: 120%;\r\n' \
+  '        cursor: row-resize;\r\n' \
+  '      }\r\n' \
+  '      input[id$=content]+button:empty {\r\n' \
+  '        display: none;\r\n' \
+  '      }\r\n' \
+  '      span[id$=descr] {\r\n' \
+  '        display: none;\r\n' \
+  '        overflow: hidden;\r\n' \
+  '        box-sizing: border-box;\r\n' \
+  '        margin-left: 0.3%;\r\n' \
+  '        margin-top: 1px;\r\n' \
+  '        padding: 2px;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        border: 0.5px solid darkgray;\r\n' \
+  '        white-space: pre-wrap;\r\n' \
+  '        font-size: 110%;\r\n' \
+  '      }\r\n' \
+  '      span[id$=descr]:focus {\r\n' \
+  '        outline: rgb(200, 250, 240) solid 1px;\r\n' \
+  '        outline-offset: -1px;\r\n' \
   '      }\r\n' \
   '      #geomedia {\r\n' \
   '        position: absolute;\r\n' \
@@ -18881,6 +18963,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (ex_foc != "") {\r\n' \
   '          document.getElementById(ex_foc + "desc").style.color = "";\r\n' \
   '          document.getElementById(ex_foc + "focus").style.display = "";\r\n' \
+  '          switch_desc(document.getElementById(ex_foc + "descr").previousElementSibling.previousElementSibling, true);\r\n' \
   '          if (! document.getElementById(ex_foc + "visible").checked) {\r\n' \
   '            document.getElementById(ex_foc.replace("track", "waydots")).style.display = "none";\r\n' \
   '            document.getElementById(ex_foc).style.display = "none";\r\n' \
@@ -18920,6 +19003,16 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById(foc.replace("track", "waydots")).style.zIndex = foc == focused ? "1" : "";\r\n' \
   '        document.getElementById(foc).style.zIndex = foc==focused?"1":"";\r\n' \
   '        document.getElementById(foc.replace("track", "patharrows")).style.display = foc == focused ? "inline" : "";\r\n' \
+  '      }\r\n' \
+  '      function switch_desc(trkds, hide=false) {\r\n' \
+  '        if (! trkds.innerText) {return;}\r\n' \
+  '        if (hide || trkds.innerText == "\\u2191") {\r\n' \
+  '          trkds.nextElementSibling.nextElementSibling.style.display = "none";\r\n' \
+  '          trkds.innerText = "\\u2193";\r\n' \
+  '        } else {\r\n' \
+  '          trkds.nextElementSibling.nextElementSibling.style.display = "block";\r\n' \
+  '          trkds.innerText = "\\u2191";\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, seg_smoothed, smoothed_ch, seg_ind, stats, fpan=0, ind=null, teahs=null) {\r\n' \
   '        if (fpan == 0) {\r\n' \
@@ -21521,7 +21614,8 @@ class GPXTweakerWebInterfaceServer():
   '<label for="track%speriod">{jperiod}</label>\r\n' \
   '<input type="text" id="track%speriod" name="track%speriod" value="%s" readOnly><br>\r\n' \
   '<label for="track%scontent">{jcontent}</label>\r\n' \
-  '<input type="text" id="track%scontent" name="track%scontent" value="%s" readOnly><br>\r\n' \
+  '<input type="text" id="track%scontent" name="track%scontent" value="%s" readOnly><button title="{jsdesc}" onclick="switch_desc(this)">%s</button><br>\r\n' \
+  '<span id="track%sdescr" tabindex="0">%s</span>\r\n' \
   '</span>\r\n' \
   '</div>\r\n'
   HTMLExp_TRACK_TEMPLATE = HTMLExp_TRACK_TEMPLATE.format_map(LSTRINGS['interface'])
@@ -22793,7 +22887,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace("##DESC##", escape(self.Track.Desc).replace('\n', '&#10;')).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
@@ -23017,7 +23111,7 @@ class GPXTweakerWebInterfaceServer():
 
   def _build_track_exp(self, t):
     tr = self.Tracks[t]
-    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (*([t] * 3), escape(tr[0]), *([t] * 2), *([escape(tr[1].Name or '')] * 2), t, tr[1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(escape, (tr[1].Name or '', *tr[0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(tr[1].Pts) , sum(len(s) for s in tr[1].Pts), len(tr[1].Wpts))))) for a in b))
+    return GPXTweakerWebInterfaceServer.HTMLExp_TRACK_TEMPLATE % (t, t, t, escape(tr[0]), t, t, *([escape(tr[1].Name or '')] * 2), t, tr[1].Color or '#000000', t, *(a for b in zip(*([[t] * 5] * 3), map(escape, (tr[1].Name or '', *tr[0].rpartition('\\')[::-2], '', '{jtrackcontent}'.format_map(LSTRINGS['interface']) % (len(tr[1].Pts) , sum(len(s) for s in tr[1].Pts), len(tr[1].Wpts))))) for a in b), ('&darr;' if tr[1].Desc else ''), t, escape(tr[1].Desc).replace('\n', '&#10;'))
 
   def _build_tracks_exp(self):
     return ''.join(self._build_track_exp(t) for t in range(len(self.Tracks)))
