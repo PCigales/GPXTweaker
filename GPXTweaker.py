@@ -18436,7 +18436,7 @@ class GPXTweakerWebInterfaceServer():
   '      input[type=color]::-moz-color-swatch {\r\n' \
   '        border: none;\r\n' \
   '      }\r\n' \
-  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content], label[for$=descr] {\r\n' \
+  '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content] {\r\n' \
   '        display: inline-block;\r\n' \
   '        width: 2em;\r\n' \
   '        padding-left: 0.8em;\r\n' \
