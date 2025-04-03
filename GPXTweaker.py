@@ -11687,6 +11687,7 @@ class GPXTweakerWebInterfaceServer():
   '      .waypoint {\r\n' \
   '        height: 2.25em;\r\n' \
   '        line-height: 0.7em;\r\n' \
+  '        white-space-collapse: preserve;\r\n' \
   '      }\r\n' \
   '      .pos::before {\r\n' \
   '        display: inline-block;\r\n' \
@@ -11734,6 +11735,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      #waypointform {\r\n' \
   '        margin-top: 0.6em;\r\n' \
+  '        white-space-collapse: collapse;\r\n' \
   '      }\r\n' \
   '      .focus>label {\r\n' \
   '        display: inline-block;\r\n' \
@@ -18414,7 +18416,7 @@ class GPXTweakerWebInterfaceServer():
   '        width: 92.3%;\r\n' \
   '        margin-bottom: 0.3em;\r\n' \
   '        vertical-align: middle;\r\n' \
-  '        white-space nowrap;\r\n' \
+  '        white-space: pre;\r\n' \
   '        line-height: 1.15em;\r\n' \
   '        cursor: cell;\r\n' \
   '      }\r\n' \
@@ -19006,12 +19008,14 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function switch_desc(trkds, hide=false) {\r\n' \
   '        if (! trkds.innerText) {return;}\r\n' \
+  '        const trkd = trkds.nextElementSibling.nextElementSibling;\r\n' \
   '        if (hide || trkds.innerText == "\\u2191") {\r\n' \
-  '          trkds.nextElementSibling.nextElementSibling.style.display = "none";\r\n' \
+  '          trkd.style.display = "none";\r\n' \
   '          trkds.innerText = "\\u2193";\r\n' \
   '        } else {\r\n' \
-  '          trkds.nextElementSibling.nextElementSibling.style.display = "block";\r\n' \
+  '          trkd.style.display = "block";\r\n' \
   '          trkds.innerText = "\\u2191";\r\n' \
+  '          trkd.scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, seg_smoothed, smoothed_ch, seg_ind, stats, fpan=0, ind=null, teahs=null) {\r\n' \
