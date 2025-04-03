@@ -18457,7 +18457,9 @@ class GPXTweakerWebInterfaceServer():
   '      input[id$=content]+button {\r\n' \
   '        position: absolute;\r\n' \
   '        right: 0;\r\n' \
-  '        width: 0.8em;\r\n' \
+  '        width: 0.75em;\r\n' \
+  '        height: calc(1.15em + 3px);\r\n' \
+  '        padding-top: 0px;\r\n' \
   '        font-size: 120%;\r\n' \
   '        cursor: row-resize;\r\n' \
   '      }\r\n' \
@@ -19017,6 +19019,7 @@ class GPXTweakerWebInterfaceServer():
   '          trkds.innerText = "\\u2191";\r\n' \
   '          trkd.scrollIntoView({block:"nearest"});\r\n' \
   '        }\r\n' \
+  '        document.getElementById(trkd.id.slice(0, -1)).scrollIntoView({block: "nearest"});\r\n' \
   '      }\r\n' \
   '      function segment_calc(seg, seg_smoothed, smoothed_ch, seg_ind, stats, fpan=0, ind=null, teahs=null) {\r\n' \
   '        if (fpan == 0) {\r\n' \
