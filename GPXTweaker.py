@@ -8343,8 +8343,8 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      #zoom {\r\n' \
   '        display: inline-block;\r\n' \
-  '        width:2em;\r\n' \
-  '        text-align:center;\r\n' \
+  '        width: 2em;\r\n' \
+  '        text-align: center;\r\n' \
   '      }\r\n' \
   '      #tlock {\r\n' \
   '        width: 1em;\r\n' \
@@ -18400,6 +18400,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      div[id$=cont] {\r\n' \
   '        position: relative;\r\n' \
+  '        white-space: nowrap;\r\n' \
   '      }\r\n' \
   '      input+label[id$=desc]:hover, input:hover+label[id$=desc] {\r\n' \
   '        background-color:green;\r\n' \
@@ -18416,18 +18417,18 @@ class GPXTweakerWebInterfaceServer():
   '        width: 92.3%;\r\n' \
   '        margin-bottom: 0.3em;\r\n' \
   '        vertical-align: middle;\r\n' \
-  '        white-space: pre;\r\n' \
+  '        white-space-collapse: preserve;\r\n' \
   '        line-height: 1.15em;\r\n' \
   '        cursor: cell;\r\n' \
   '      }\r\n' \
   '      input[type=color] {\r\n' \
-  '        position: absolute;\r\n' \
-  '        right: 0;\r\n' \
-  '        top: calc(1em + 3px);\r\n' \
   '        width: 1em;\r\n' \
   '        height: 1em;\r\n' \
+  '        margin-left: -1em;\r\n' \
+  '        margin-bottom: 0.3em;\r\n' \
   '        border: none;\r\n' \
   '        padding: 0;\r\n' \
+  '        vertical-align: bottom;\r\n' \
   '      }\r\n' \
   '      input[type=color]::-webkit-color-swatch-wrapper{\r\n' \
   '        padding: 0;\r\n' \
@@ -18453,6 +18454,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      span[id$=focus] {\r\n' \
   '        display: none;\r\n' \
+  '        white-space: initial;\r\n' \
   '      }\r\n' \
   '      input[id$=content]+button {\r\n' \
   '        position: absolute;\r\n' \
@@ -18476,6 +18478,7 @@ class GPXTweakerWebInterfaceServer():
   '        background-color: rgb(30, 30, 35);\r\n' \
   '        border: 0.5px solid darkgray;\r\n' \
   '        white-space: pre-wrap;\r\n' \
+  '        text-align: justify;\r\n' \
   '        font-size: 110%;\r\n' \
   '      }\r\n' \
   '      span[id$=descr]:focus {\r\n' \
@@ -18966,6 +18969,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (trk.htmlFor == ex_foc + "visible") {focused = "";} else {focused = trk.htmlFor.slice(0, -7);}\r\n' \
   '        if (ex_foc != "") {\r\n' \
   '          document.getElementById(ex_foc + "desc").style.color = "";\r\n' \
+  '          document.getElementById(ex_foc + "desc").style.textWrapMode = "";\r\n' \
   '          document.getElementById(ex_foc + "focus").style.display = "";\r\n' \
   '          switch_desc(document.getElementById(ex_foc + "descr").previousElementSibling.previousElementSibling, true);\r\n' \
   '          if (! document.getElementById(ex_foc + "visible").checked) {\r\n' \
@@ -18980,6 +18984,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (focused) {\r\n' \
   '          trk.style.color = "dodgerblue";\r\n' \
+  '          trk.style.textWrapMode = "wrap";\r\n' \
   '          document.getElementById(focused + "focus").style.display = "inline";\r\n' \
   '          document.getElementById(focused.replace("track", "waydots")).style.display = "";\r\n' \
   '          document.getElementById(focused).style.display = "";\r\n' \
@@ -20275,7 +20280,7 @@ class GPXTweakerWebInterfaceServer():
   '        const msg = JSON.parse(t.response);\r\n' \
   '        for (const n in msg) {\r\n' \
   '          if (n.indexOf("cont") >= 0) {\r\n' \
-  '            const e = document.createElement("span");\r\n' \
+  '            const e = document.createElement("div");\r\n' \
   '            document.getElementById("tracksform").appendChild(e);\r\n' \
   '            e.outerHTML = msg[n];\r\n' \
   '          } else if (n.indexOf("track") >= 0) {\r\n' \
@@ -21609,8 +21614,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_TRACK_TEMPLATE = \
   '<div id="track%scont">\r\n' \
   '<input type="checkbox" id="track%svisible" checked name="track%svisible" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">' \
-  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label>\r\n' \
-  '<input type="color" id="track%scolor" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
+  '<label for="track%svisible" id="track%sdesc" title="%s" onclick="track_click(event, this)" onmouseover="track_over(this)" onmouseout="track_outside(this)">%s<br>(--h--mn--s | -km | -m | -m)</label><input type="color" id="track%scolor" value="%s" onmouseover="track_over(this)" onmouseout="track_outside(this)">\r\n' \
   '<span id="track%sfocus">\r\n' \
   '<label for="track%sname">{jname}</label>\r\n' \
   '<input type="text" id="track%sname" name="track%sname" value="%s"><br>\r\n' \
