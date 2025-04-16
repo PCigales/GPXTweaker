@@ -22763,7 +22763,7 @@ class GPXTweakerWebInterfaceServer():
     self.DecimationEleFactor = 3
     self.DecimationAltFactor = 3
     self.DecimationSyncDistance = True
-    self.DecimationOpeningWindow = True
+    self.DecimationOpeningWindow = False
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
