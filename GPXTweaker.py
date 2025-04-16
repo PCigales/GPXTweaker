@@ -257,7 +257,7 @@ FR_STRINGS = {
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt: intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
-    'jtrackdecimate': 'engendrer une nouvelle trace par décimation de la trace&#13;&#10;+alt: afficher / masquer les critères de la décimation',
+    'jtrackdecimate': 'engendrer une nouvelle trace par décimation de la trace&#13;&#10;+ctrl: afficher / masquer les critères de décimation',
     'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+alt: télécharger une carte des traces cochées cadrée sur la zone affichée&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+shift+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
@@ -276,10 +276,12 @@ FR_STRINGS = {
     'jplus': 'zoomer&#13;&#10;+ctrl: réaccentuer&#13;&#10;+shift: réassombrir',
     'jexpplus': 'zoomer&#13;&#10;+ctrl: réaccentuer&#13;&#10;+shift: réassombrir&#13;&#10;+alt: épaissir',
     'jdecpanel': 'Critères de décimation',
-    'jdecmaxdist': 'Écart maximal',
+    'jdecmaxdev': 'Déviation maximale',
+    'jdecmaxdist': 'Distance maximale',
     'jdecelefact': 'Facteur élévation',
     'jdecaltfact': 'Facteur altitude',
-    'jdectimeratio': 'Suivant horodatage',
+    'jdecsyncdist': 'Distance synchrone',
+    'jdecopenwind': 'Fenêtre ouvrante',
     'jdfpanel': 'Plage lissage points',
     'jmtpanel': 'Taille des miniatures',
     'jpixels': '&nbsp;pixels',
@@ -688,7 +690,7 @@ EN_STRINGS = {
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt: integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
-    'jtrackdecimate': 'generate a new track by decimation of the track&#13;&#10;+alt: show / hide the decimation criteria',
+    'jtrackdecimate': 'generate a new track by decimation of the track&#13;&#10;+ctrl: show / hide the decimation criteria',
     'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+alt: download a map of the ticked tracks framed on the displayed area&#13;&#10;+shift: download the list of tracks&#13;&#10;+shift+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jwebmapping': 'display the starting point in the online mapping service',
@@ -707,10 +709,12 @@ EN_STRINGS = {
     'jplus': 'zoom in&#13;&#10;+ctrl: reaccentuate&#13;&#10;+shift: redarken',
     'jexpplus': 'zoom in&#13;&#10;+ctrl: reaccentuate&#13;&#10;+shift: redarken&#13;&#10;+alt: thicken',
     'jdecpanel': 'Decimation criteria',
-    'jdecmaxdist': 'Maximum deviation',
+    'jdecmaxdev': 'Maximum deviation',
+    'jdecmaxdist': 'Maximum distance',
     'jdecelefact': 'Elevation factor',
     'jdecaltfact': 'Altitude factor',
-    'jdectimeratio': 'Following timestamps',
+    'jdecsyncdist': 'Synchronous distance',
+    'jdecopenwind': 'Opening window',
     'jdfpanel': 'Range points smoothing',
     'jmtpanel': 'Thumbnails size',
     'jpixels': '&nbsp;pixels',
@@ -10030,18 +10034,18 @@ class GPXTweakerWebInterfaceServer():
   '          this.device.queue.submit([commands]);\r\n' \
   '          return smf;\r\n' \
   '        }\r\n' \
-  '        _get_result(rn) {\r\n' \
-  '          const nbpts = this.chunks.at(-1)[1];\r\n' \
-  '          if (nbpts == 0) {return Promise.resolve(new Float32Array());}\r\n' \
+  '        _get_result(rn, chi=1) {\r\n' \
+  '          const nbelts = this.chunks.at(-1)[chi];\r\n' \
+  '          if (nbelts == 0) {return Promise.resolve(new Float32Array());}\r\n' \
   '          const bs = this["b" + rn];\r\n' \
   '          const mbs = Array.from(bs, (b) => this.device.createBuffer({size: b.size, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST}));\r\n' \
   '          const encoder = this.device.createCommandEncoder();\r\n' \
   '          bs.forEach((b, c) => encoder.copyBufferToBuffer(b, 0, mbs[c], 0, b.size));\r\n' \
   '          const commands = encoder.finish();\r\n' \
   '          this.device.queue.submit([commands]);\r\n' \
-  '          const ru = bs.reduce((a, b) => a + b.size, 0) / nbpts / 4;\r\n' \
-  '          const r = new Float32Array(nbpts * ru);\r\n' \
-  '          const prom = Promise.all(mbs.map((mb, c) => mb.mapAsync(GPUMapMode.READ).then(() => {r.set(new Float32Array(mb.getMappedRange()), this.chunks[c][1] * ru); mb.unmap(); mb.destroy()}))).then(() => r);\r\n' \
+  '          const ru = bs.reduce((a, b) => a + b.size, 0) / nbelts / 4;\r\n' \
+  '          const r = new Float32Array(nbelts * ru);\r\n' \
+  '          const prom = Promise.all(mbs.map((mb, c) => mb.mapAsync(GPUMapMode.READ).then(() => {r.set(new Float32Array(mb.getMappedRange()), this.chunks[c][chi] * ru); mb.unmap(); mb.destroy()}))).then(() => r);\r\n' \
   '          return prom\r\n' \
   '        }\r\n' \
   '        get xys() {\r\n' \
@@ -10060,7 +10064,7 @@ class GPXTweakerWebInterfaceServer():
   '          return this._get_result("slopestdistspeeds");\r\n' \
   '        }\r\n' \
   '        get visibs() {\r\n' \
-  '          return this._get_result("visibs");\r\n' \
+  '          return this._get_result("visibs", 0);\r\n' \
   '        }\r\n' \
   '        _free() {\r\n' \
   '          this.timer = null;\r\n' \
@@ -11474,16 +11478,24 @@ class GPXTweakerWebInterfaceServer():
   '        <span>{#jdecpanel#}</span>\r\n' \
   '        <form autocomplete="off" onsubmit="return(false);">\r\n' \
   '          <div>\r\n' \
+  '            <label for="decmaxdev">{#jdecmaxdev#} :&nbsp;</label><br>\r\n' \
   '            <label for="decmaxdist">{#jdecmaxdist#} :&nbsp;</label><br>\r\n' \
   '            <label for="decelefact">{#jdecelefact#} :&nbsp;</label><br>\r\n' \
   '            <label for="decaltfact">{#jdecaltfact#} :&nbsp;</label><br>\r\n' \
-  '            <label for="dectimeratio">{#jdectimeratio#} :&nbsp;</label>\r\n' \
+  '            <label for="decsyncdist">{#jdecsyncdist#} :&nbsp;</label><br>\r\n' \
+  '            <label for="decopenwind">{#jdecopenwind#} :&nbsp;</label>\r\n' \
   '          </div>\r\n' \
   '          <div>\r\n' \
-  '            <input type="text" id="decmaxdist" name="decmaxdist" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="5" ><span>&nbsp;m</span><br>\r\n' \
-  '            <input type="text" id="decelefact" name="decelefact" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="2.5"><br>\r\n' \
-  '            <input type="text" id="decaltfact" name="decaltfact" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="5"><br>\r\n' \
-  '            <input type="checkbox" id="dectimeratio" name="dectimeratio" checked>\r\n' \
+  '            <input type="text" id="decmaxdev" name="decmaxdev" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="##DECMAXDEV##" ><br>\r\n' \
+  '            <input type="text" id="decmaxdist" name="decmaxdist" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="##DECMAXDIST##" ><br>\r\n' \
+  '            <input type="text" id="decelefact" name="decelefact" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="##DECELEFACT##"><br>\r\n' \
+  '            <input type="text" id="decaltfact" name="decaltfact" required pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" value="##DECALTFACT##"><br>\r\n' \
+  '            <input type="checkbox" id="decsyncdist" name="decsyncdist"##DECSYNCDIST##><br>\r\n' \
+  '            <input type="checkbox" id="decopenwind" name="decopenwind"##DECOPENWIND##>\r\n' \
+  '          </div>\r\n' \
+  '          <div>\r\n' \
+  '            <span>&nbsp;m</span><br>\r\n' \
+  '            <span>&nbsp;m</span><br>\r\n' \
   '          </div>\r\n' \
   '        </form>\r\n' \
   '      </div>\r\n' \
@@ -18796,7 +18808,11 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      #decpanel>form>div {\r\n' \
   '        display: inline-block;\r\n' \
-  '        line-height: 2em;\r\n' \
+  '        line-height: 2.1em;\r\n' \
+  '        vertical-align: top;\r\n' \
+  '      }\r\n' \
+  '      #decpanel>form>div+div {\r\n' \
+  '        text-align: right;\r\n' \
   '      }\r\n' \
   '      #decpanel>form>div>input[type=text] {\r\n' \
   '        width: 4em;\r\n' \
@@ -19273,7 +19289,6 @@ class GPXTweakerWebInterfaceServer():
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
   '          tracks_props = [];\r\n' \
-  '          tracks_filts = []\r\n' \
   '          tls = [];\r\n' \
   '          if (gpucomp >= 1) {\r\n' \
   '            starts = [0];\r\n' \
@@ -19285,7 +19300,7 @@ class GPXTweakerWebInterfaceServer():
   '            let segs = tracks_pts[t];\r\n' \
   '            tracks_stats.push([]);\r\n' \
   '            tracks_props.push([NaN, NaN, NaN, NaN, NaN, [NaN, NaN]]);\r\n' \
-  '            tracks_filts.push([true, true, true, true]);\r\n' \
+  '            if (tracks_filts.length <= t) {tracks_filts.push([true, true, true, true]);}\r\n' \
   '            for (const seg of segs) {\r\n' \
   '              let nbp = seg.length;\r\n' \
   '              if (nbp != 0) {\r\n' \
@@ -19494,7 +19509,6 @@ class GPXTweakerWebInterfaceServer():
   '          tracks_xys_smoothed = null;\r\n' \
   '          tracks_stats = [];\r\n' \
   '          tracks_props = [];\r\n' \
-  '          tracks_filts = [];\r\n' \
   '          starts = [0]\r\n' \
   '          tls = [];\r\n' \
   '          lls = new Float32Array(nbpt * 2);\r\n' \
@@ -19507,7 +19521,7 @@ class GPXTweakerWebInterfaceServer():
   '            tracks_stats.push(track_stats);\r\n' \
   '            const track_props = [NaN, NaN, NaN, NaN, NaN, [NaN, NaN]];\r\n' \
   '            tracks_props.push(track_props);\r\n' \
-  '            tracks_filts.push([true, true, true, true]);\r\n' \
+  '            if (tracks_filts.length <= t) {tracks_filts.push([true, true, true, true]);}\r\n' \
   '            let tl = null;\r\n' \
   '            let ts = null;\r\n' \
   '            let te = null;\r\n' \
@@ -20330,18 +20344,21 @@ class GPXTweakerWebInterfaceServer():
   '        const foc = focused;\r\n' \
   '        if (foc == "") {return;}\r\n' \
   '        const ind = parseInt(foc.substring(5));\r\n' \
+  '        const isNaN = Number.isNaN;\r\n' \
   '        if (Array.prototype.some.call(document.getElementById("decpanel").getElementsByTagName("input"), (i) => ! i.checkValidity())) {show_msg("{#jmdecimate4#}", 10); return;}\r\n' \
   '        const tt = htopy - prop_to_wmvalue(document.getElementById(foc).style.top);\r\n' \
   '        const cor = (Math.exp(tt / 6378137) + Math.exp(- tt / 6378137)) / 2;\r\n' \
-  '        const decdist2 = (parseFloat(document.getElementById("decmaxdist").value) * cor) ** 2;\r\n' \
+  '        const decmdev2 = (parseFloat(document.getElementById("decmaxdev").value) * cor) ** 2;\r\n' \
+  '        const decmdist2 = (parseFloat(document.getElementById("decmaxdist").value) * cor) ** 2;\r\n' \
   '        let decefact = parseFloat(document.getElementById("decelefact").value);\r\n' \
   '        let decafact = parseFloat(document.getElementById("decaltfact").value);\r\n' \
-  '        let dectr = document.getElementById("dectimeratio").checked;\r\n' \
-  '        const isNaN = Number.isNaN;\r\n' \
+  '        if (isNaN(decmdev2) || isNaN(decmdist2) || isNaN(decefact) || isNaN(decafact)) {show_msg("{#jmdecimate4#}", 10); return;}\r\n' \
+  '        let decsd = document.getElementById("decsyncdist").checked;\r\n' \
+  '        let decopw = document.getElementById("decopenwind").checked;\r\n' \
   '        const segs = tracks_pts[ind];\r\n' \
-  '        if (dectr) {\r\n' \
+  '        if (decsd) {\r\n' \
   '          if (segs.some((seg) => seg.some((p) => isNaN(p[4])))) {\r\n' \
-  '            if ((segs.every((seg) => seg.every((p) => isNaN(p[4]))))) {dectr = false;} else {show_msg("{#jmdecimate5#}", 10); return;}\r\n' \
+  '            if ((segs.every((seg) => seg.every((p) => isNaN(p[4]))))) {decsd = false;} else {show_msg("{#jmdecimate5#}", 10); return;}\r\n' \
   '          } else if (segs.some((seg) => seg.some((p, pt) => p[4] <= (pt ? seg[pt - 1][4] : 0)))) {show_msg("{#jmdecimate5#}", 10); return;}\r\n' \
   '        }\r\n' \
   '        if (decefact && segs.some((seg) => seg.some((p) => isNaN(p[2])))) {\r\n' \
@@ -20350,8 +20367,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (decafact && segs.some((seg) => seg.some((p) => isNaN(p[3])))) {\r\n' \
   '          if ((segs.every((seg) => seg.every((p) => isNaN(p[3]))))) {decafact = 0;} else {show_msg("{#jmdecimate7#}", 10); return;}\r\n' \
   '        }\r\n' \
-  '        const efact2 = decefact ? (decefact * cor) ** 2 : 0;\r\n' \
-  '        const afact2 = decafact ? (decafact * cor) ** 2 : 0;\r\n' \
+  '        const efact2 = (decefact * cor) ** 2;\r\n' \
+  '        const afact2 = (decafact * cor) ** 2;\r\n' \
   '        let xys = tracks_xys.subarray(tracks_xy_offsets[ind] * 2, tracks_xy_offsets[ind + 1] * 2);\r\n' \
   '        const dtptinds = [];\r\n' \
   '        for (const seg of segs) {\r\n' \
@@ -20365,50 +20382,57 @@ class GPXTweakerWebInterfaceServer():
   '            let pt1 = 0;\r\n' \
   '            let pt2 = nbp - 1;\r\n' \
   '            while (true) {\r\n' \
-  '              const t1 = dectr ? seg[pt1][4] : null;\r\n' \
-  '              const dt = dectr ? seg[pt2][4] - t1 : null;\r\n' \
+  '              const t1 = decsd ? seg[pt1][4] : null;\r\n' \
   '              const x1 = xys[2 * pt1];\r\n' \
   '              const y1 = xys[2 * pt1 + 1];\r\n' \
-  '              const dx = xys[2 * pt2] - x1;\r\n' \
-  '              const dy = xys[2 * pt2 + 1] - y1;\r\n' \
   '              const e1 = efact2 ? seg[pt1][2] : 0;\r\n' \
-  '              const de = efact2 ? seg[pt2][2] - e1 : 0;\r\n' \
   '              const a1 = afact2 ? seg[pt1][3] : 0;\r\n' \
-  '              const da = afact2 ? seg[pt2][3] - a1 : 0;\r\n' \
-  '              const dn2 = dectr ? null : dx ** 2 + dy ** 2 + (de ** 2) * efact2 + (da ** 2) * afact2;\r\n' \
-  '              let md2 = 0;\r\n' \
-  '              let ptm = null;\r\n' \
-  '              for (let pt=pt1+1; pt<pt2; pt++) {\r\n' \
-  '                let sd2;\r\n' \
-  '                const x = xys[2 * pt];\r\n' \
-  '                const y = xys[2 * pt + 1];\r\n' \
-  '                const e = efact2 ? seg[pt][2] : 0;\r\n' \
-  '                const a = afact2 ? seg[pt][3] : 0;\r\n' \
-  '                if (dectr) {\r\n' \
-  '                  const rt = (seg[pt][4] - t1) / dt;\r\n' \
-  '                  sd2 = (xys[2 * pt] - x1 - rt * dx) ** 2 + (xys[2 * pt + 1] - y1 - rt * dy) ** 2 + ((e - e1 - rt * de) ** 2) * efact2 + ((a - a1 - rt * da) ** 2) * afact2;\r\n' \
-  '                } else {\r\n' \
-  '                  const sp = (x - x1) * dx + (y - y1) * dy + (e - e1) * de * efact2 + (a - a1) * da * afact2;\r\n' \
-  '                  if (sp <= 0) {\r\n' \
-  '                    sd2 = (x - x1) ** 2 + (y - y1) ** 2 + ((e - e1) ** 2) * efact2 + ((a - a1) ** 2) * afact2;\r\n' \
-  '                  } else if (sp >= dn2) {\r\n' \
-  '                    sd2 = (x - x1 - dx) ** 2 + (y - y1 - dy) ** 2 + ((e - e1 - de) ** 2) * efact2 + ((a - a1 - da) ** 2) * afact2;\r\n' \
+  '              let ptw = Math.max(pt1 + 2, decopw ? 0 : pt2);\r\n' \
+  '              let me2 = 0;\r\n' \
+  '              let ptm = pt1 + 1;\r\n' \
+  '              while (ptw <= pt2) {\r\n' \
+  '                const dt = decsd ? seg[ptw][4] - t1 : null;\r\n' \
+  '                const dx = xys[2 * ptw] - x1;\r\n' \
+  '                const dy = xys[2 * ptw + 1] - y1;\r\n' \
+  '                const de = efact2 ? seg[ptw][2] - e1 : 0;\r\n' \
+  '                const da = afact2 ? seg[ptw][3] - a1 : 0;\r\n' \
+  '                const dn2 = dx ** 2 + dy ** 2 + (de ** 2) * efact2 + (da ** 2) * afact2;\r\n' \
+  '                for (let pt=pt1+1; pt<ptw; pt++) {\r\n' \
+  '                  let sd2;\r\n' \
+  '                  const x = xys[2 * pt];\r\n' \
+  '                  const y = xys[2 * pt + 1];\r\n' \
+  '                  const e = efact2 ? seg[pt][2] : 0;\r\n' \
+  '                  const a = afact2 ? seg[pt][3] : 0;\r\n' \
+  '                  if (decsd) {\r\n' \
+  '                    const rt = (seg[pt][4] - t1) / dt;\r\n' \
+  '                    sd2 = (x - x1 - rt * dx) ** 2 + (y - y1 - rt * dy) ** 2 + ((e - e1 - rt * de) ** 2) * efact2 + ((a - a1 - rt * da) ** 2) * afact2;\r\n' \
   '                  } else {\r\n' \
-  '                    const f = sp / dn2;\r\n' \
-  '                    sd2 = (x - x1 - f * dx) ** 2 + (y - y1 - f * dy) ** 2 + ((e - e1 - f * de) ** 2) * efact2 + ((a - a1 - f * da) ** 2) * afact2;\r\n' \
+  '                    const sp = (x - x1) * dx + (y - y1) * dy + (e - e1) * de * efact2 + (a - a1) * da * afact2;\r\n' \
+  '                    if (sp <= 0) {\r\n' \
+  '                      sd2 = (x - x1) ** 2 + (y - y1) ** 2 + ((e - e1) ** 2) * efact2 + ((a - a1) ** 2) * afact2;\r\n' \
+  '                    } else if (sp >= dn2) {\r\n' \
+  '                      sd2 = (x - x1 - dx) ** 2 + (y - y1 - dy) ** 2 + ((e - e1 - de) ** 2) * efact2 + ((a - a1 - da) ** 2) * afact2;\r\n' \
+  '                    } else {\r\n' \
+  '                      const f = sp / dn2;\r\n' \
+  '                      sd2 = (x - x1 - f * dx) ** 2 + (y - y1 - f * dy) ** 2 + ((e - e1 - f * de) ** 2) * efact2 + ((a - a1 - f * da) ** 2) * afact2;\r\n' \
+  '                    }\r\n' \
+  '                  }\r\n' \
+  '                  if (sd2 >= me2) {\r\n' \
+  '                    ptm = pt;\r\n' \
+  '                    me2 = sd2;\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
-  '                if (sd2 >= md2) {\r\n' \
-  '                  ptm = pt;\r\n' \
-  '                  md2 = sd2;\r\n' \
+  '                if (me2 > decmdev2 || (ptw == pt2 && dn2 > decmdist2)) {\r\n' \
+  '                  ptstack.push([ptm, pt2]);\r\n' \
+  '                  pt2 = ptm;\r\n' \
+  '                  ptw = pt2;\r\n' \
+  '                  break;\r\n' \
   '                }\r\n' \
+  '                ptw++;\r\n' \
   '              }\r\n' \
-  '              if (md2 <= decdist2) {\r\n' \
+  '              if (ptw > pt2) {\r\n' \
   '                dptinds.push(pt2);\r\n' \
   '                if (ptstack.length) {[pt1, pt2] = ptstack.pop();} else {break;}\r\n' \
-  '              } else {\r\n' \
-  '                ptstack.push([ptm, pt2]);\r\n' \
-  '                pt2 = ptm;\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -20417,13 +20441,13 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmdecimate1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => gfence((e) => {load_tdeccb(e.target, ind, dtptinds)?show_msg("{#jmdecimate2#}".replace("%s", dtptinds.reduce((a, dptinds) => a + dptinds.length, 0)).replace("%s", segs.reduce((a, seg) => a + seg.length, 0)), 5, msgn):show_msg("{#jmdecimate3#}", 10, msgn);}, e);\r\n' \
+  '        xhrtr.onload = (e) => gfence(function (e) {const r = load_tdeccb(e.target, ind, dtptinds); if (r) {show_msg("{#jmdecimate2#}".replace("%s", dtptinds.reduce((a, dptinds) => a + dptinds.length, 0)).replace("%s", segs.reduce((a, seg) => a + seg.length, 0)), 5, msgn);} else {show_msg("{#jmdecimate3#}", 10, msgn);} return r;}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdecimate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("POST", "/decimate?" + encodeURIComponent(foc.substring(5)));\r\n' \
   '        xhrtr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
-  '        xhrtr.send(dtptinds.map((dptinds) => dptinds.join(" ")).join(";"));\r\n' \
+  '        xhrtr.send(dtptinds.map((dptinds) => dptinds.join(" ")).join(","));\r\n' \
   '      }\r\n' \
   '      function load_tdcb(t, trk) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
@@ -20516,7 +20540,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        if (webgpu) {\r\n' \
-  '          return tracks_calc_wgpu(0).then(tracks_sort).then(function () {track_click(null, document.getElementById("track" + ind1.toString() + "desc"));}).then(tracks_cfilter).then(folders_select).then(tracks_cfilter).then(document.getElementById("vfbutton").style.backgroundColor == "" ? null : switch_vfilter);\r\n' \
+  '          return tracks_calc_wgpu(0).then(tracks_sort).then(function () {track_click(null, document.getElementById("track" + ind1.toString() + "desc"));}).then(tracks_nfilter).then(tracks_cfilter).then(folders_select).then(document.getElementById("vfbutton").style.backgroundColor == "" ? null : switch_vfilter);\r\n' \
   '        } else {\r\n' \
   '          tracks_calc(0);\r\n' \
   '          tracks_sort();\r\n' \
@@ -20551,7 +20575,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        const msgn = show_msg(after==null?"{#jmincorporate1#}":"{#jmintegrate1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => gfence((e) => {const r = load_ticb(e.target, ind1, ind2); if (r) {show_msg(after==null ? "{#jmincorporate2#}" : "{#jmintegrate2#}", 5, msgn);} else {show_msg(after==null ? "{#jmincorporate3#}" : "{#jmintegrate3#}", 10, msgn);}; return r;}, e);\r\n' \
+  '        xhrtr.onload = (e) => gfence(function (e) {const r = load_ticb(e.target, ind1, ind2); if (r) {show_msg(after==null ? "{#jmincorporate2#}" : "{#jmintegrate2#}", 5, msgn);} else {show_msg(after==null ? "{#jmincorporate3#}" : "{#jmintegrate3#}", 10, msgn);}; return r;}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg(after==null ? "{#jmincorporate3#}" : "{#jmintegrate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("GET", (after==null ? "/incorporate?" : ("/integrate" + (after?"after?" : "before?"))) + encodeURIComponent(ind1.toString()) + "," + encodeURIComponent(ind2.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
@@ -20590,14 +20614,15 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        document.getElementById("tracksfilter").parentNode.reset();\r\n' \
+  '        tracks_sort();\r\n' \
+  '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
   '        tracks_nfilter();\r\n' \
   '        cfilter_reset();\r\n' \
+  '        folders_select();\r\n' \
   '        if (document.getElementById("vfbutton").style.backgroundColor != "") {\r\n' \
   '          document.getElementById("vfbutton").style.backgroundColor = "";\r\n' \
   '          switch_vfilter();\r\n' \
   '        }\r\n' \
-  '        tracks_sort();\r\n' \
-  '        track_click(null, document.getElementById("track" + (tracks_pts.length - 1).toString() + "desc"));\r\n' \
   '        return true;\r\n' \
   '      }\r\n' \
   '      function track_new() {\r\n' \
@@ -21429,7 +21454,7 @@ class GPXTweakerWebInterfaceServer():
   '    <div id="top_bar">\r\n' \
   '      <form id="tracksfilterform" onsubmit="this.firstElementChild.blur();return false;"><input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_nfilter();" onchange="input_history(this)"><datalist id="tracksfilterhistory"></datalist></form>\r\n' \
   '      <span id="display" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button id="cfbutton" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?gfence(cfilter_reset):(event.shiftKey?gfence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');gfence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="gfence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="gfence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
-  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtrackdecimate#}" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_decpanel():track_decimate()">&because;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtrackdecimate#}" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_decpanel():track_decimate()">&#10776;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
   '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
@@ -21806,7 +21831,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function page_unload() {\r\n' + HTML_PAGE_UNLOAD_TEMPLATE + \
-  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#") + "|" + (document.getElementById("vfbutton").style.backgroundColor==""?"f":"t"));\r\n' \
+  '        sessionStorage.setItem("state_exp", document.getElementById("tracksfilter").value.replace(/&/g, "&amp;").replace(/\\|/g, "&;") + "|" + no_sort.join("-") + "|" + (document.getElementById("sortup").style.display == "").toString() + "|" + document.getElementById("oset").selectedIndex.toString() + "|" + Array.from(document.getElementById("foldersform").getElementsByTagName("input"), f => f.checked?"t":"f").join("-") + "|" + Array.from({length:document.getElementById("tracksform").children.length}, (v, k) => document.getElementById("track" + k.toString() + "visible").checked?"t":"f").join("-") + "|" + document.getElementById("iset").selectedIndex.toString() + "|" + document.getElementById("mtsize").innerHTML + "|" + media_visible.toString() + "|" + smoothed.toString() + "|" + magnify.toString() + "|" + Array.from(document.getElementById("cfilterform").getElementsByTagName("input"), (c) => c.checkValidity()?c.value:"").join("#") + "|" + (document.getElementById("vfbutton").style.backgroundColor==""?"f":"t") + "|" + Array.from(document.getElementById("decpanel").getElementsByTagName("input"), (i) => i.type.toLowerCase()=="checkbox"?(i.checked?"t":"f"):(i.checkValidity()?i.value:"")).join("#"));\r\n' \
   '      }\r\n' \
   '      async function data_load() {\r\n' \
   '        tracks_pts = await fetch("/GPXExplorer/data").then((r) => r.ok ? r.json() : null, () => null);\r\n' \
@@ -21837,15 +21862,17 @@ class GPXTweakerWebInterfaceServer():
   '          prev_state = prev_state.split("|");\r\n' \
   '          document.getElementById("tracksfilter").value = prev_state[0].replace(/\\&;/g, "|").replace(/&amp;/g, "&");\r\n' \
   '          input_history(document.getElementById("tracksfilter"));\r\n' \
-  '          no_sort = prev_state[1].split("-").map(Number);\r\n' \
+  '          let st = prev_state[1].split("-").map(Number);\r\n' \
+  '          let nbt = tracks_pts.length;\r\n' \
+  '          no_sort = st.length == nbt ? st : Array.from({length:nbt}, (v,k)=>k);\r\n' \
   '          document.getElementById("sortup").style.display = prev_state[2]=="true"?"":"none";\r\n' \
   '          document.getElementById("sortdown").style.display = prev_state[2]=="true"?"none":"";\r\n' \
   '          document.getElementById("oset").selectedIndex = parseInt(prev_state[3]);\r\n' \
   '          let folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
-  '          let st = prev_state[4].split("-");\r\n' \
+  '          st = prev_state[4].split("-");\r\n' \
   '          for (let f=0; f<folders.length; f++) {folders[f].checked = f >= st.length || st[f] == "t";}\r\n' \
   '          st = prev_state[5].split("-");\r\n' \
-  '          let nbt = Math.min(st.length, document.getElementById("tracksform").children.length);\r\n' \
+  '          nbt = Math.min(st.length, tracks_pts.length);\r\n' \
   '          for (let t=0; t<nbt; t++) {\r\n' \
   '            document.getElementById("track" + t.toString() + "visible").checked = st[t]=="t";\r\n' \
   '            track_checkbox(document.getElementById("track" + t.toString() + "visible"));\r\n' \
@@ -21862,6 +21889,8 @@ class GPXTweakerWebInterfaceServer():
   '          if (webgpu && prev_state[12] == "t") {\r\n' \
   '            document.getElementById("vfbutton").style.backgroundColor = "rgb(50,95,130)";\r\n' \
   '          }\r\n' \
+  '          st = prev_state[13].split("#");\r\n' \
+  '          Array.prototype.forEach.call(document.getElementById("decpanel").getElementsByTagName("input"), function (i, k) {if (i.type.toLowerCase() == "checkbox") {i.checked = st[k] == "t";} else if (st[k]) {i.value = st[k];};});\r\n' \
   '        } else {\r\n' \
   '          no_sort = Array.from({length:tracks_pts.length}, (v,k)=>k);\r\n' \
   '          magnify_inc();\r\n' \
@@ -22029,7 +22058,7 @@ class GPXTweakerWebInterfaceServer():
           hcur = hcur[:13].lower() + hcur[13:]
           self.GeocodingsProviders.append([hcur[13:].strip(), {}, {}])
           s = self.GeocodingsProviders[-1]
-        elif hcur.lower() in ('global', 'explorer'):
+        elif hcur.lower() in {'global', 'explorer'}:
           hcur = hcur.lower()
         else:
           self.log(0, 'cerror', hcur)
@@ -22038,7 +22067,7 @@ class GPXTweakerWebInterfaceServer():
       if l[0] == '[' and l[-1] == ']':
         scur = l[1:-1].lower()
         if hcur == 'global':
-          if not scur in ('interfaceserver', 'proxy', 'jsontiles', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'):
+          if scur not in {'interfaceserver', 'proxy', 'jsontiles', 'tilesbuffer', 'boundaries', 'statistics', '3dviewer'}:
             if scur[:8] == "browser ":
               b = ['']
               self.Browsers[scur[8:].strip()] = b
@@ -22046,24 +22075,24 @@ class GPXTweakerWebInterfaceServer():
               self.log(0, 'cerror', hcur + ' - ' + scur)
               return False
         elif hcur == 'explorer':
-          if not scur in ('loading', 'folders', 'statistics', 'media') and scur[:11] != 'webmapping ':
+          if scur not in {'loading', 'folders', 'statistics', 'decimation', 'media'} and scur[:11] != 'webmapping ':
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
           if scur[:11] == 'webmapping ':
             self.WebMappingServices.append([l[12:-1].strip(), {}])
             s = self.WebMappingServices[-1]
         elif hcur[:9] == 'maptiles ':
-          if not scur in ('infos', 'handling', 'legend', 'display'):
+          if scur not in {'infos', 'handling', 'legend', 'display'}:
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         elif hcur[:18] == 'maptilescomposite ':
           if scur == 'layer':
             s[1].append([len(self.TilesSets) - 1, '1.00', {}])
-          elif scur not in ('layers', 'display'):
+          elif scur not in {'layers', 'display'}:
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
-        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in ('elevationmap ', 'elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ' or hcur[:13] == 'geocodingapi ':
-          if not scur in ('infos', 'handling') and (hcur[:4] != 'map ' or scur != 'legend'):
+        elif hcur[:4] == 'map ' or hcur[:15] == 'elevationtiles ' or hcur[:13] in {'elevationmap ', 'elevationapi ', 'itineraryapi '} or hcur[:20] == 'reversegeocodingapi ' or hcur[:13] == 'geocodingapi ':
+          if scur not in {'infos', 'handling'} and (hcur[:4] != 'map ' or scur != 'legend'):
             self.log(0, 'cerror', hcur + ' - ' + scur)
             return False
         else:
@@ -22085,7 +22114,7 @@ class GPXTweakerWebInterfaceServer():
           elif value.lower() == 'none':
             value = None
           elif value.lower() == '':
-            value = None if scur in ('boundaries', 'statistics', '3dviewer', 'handling') else ''
+            value = None if scur in {'boundaries', 'statistics', 'decimation', '3dviewer', 'handling'} else ''
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
           return False
@@ -22133,10 +22162,10 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'jsontiles':
           if field == 'enable':
             self.JSONTiles = value
-          elif field in ('maplibrejs', 'maplibrecss'):
+          elif field in {'maplibrejs', 'maplibrecss'}:
             if '://' in value:
               value = urllib.parse.urlsplit(value, allow_fragments=False)
-              if value.scheme.lower() not in ('http', 'https'):
+              if value.scheme.lower() not in {'http', 'https'}:
                 self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
                 return False
               value = (value.scheme + '://' + value.netloc, value.path.lstrip('/') + ('?' + value.query if value.query else ''))
@@ -22217,11 +22246,11 @@ class GPXTweakerWebInterfaceServer():
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
-          if not None in (self.VMinLat, self.VMaxLat, self.DefLat):
+          if None not in (self.VMinLat, self.VMaxLat, self.DefLat):
             if self.DefLat <= self.VMinLat or self.DefLat >= self.VMaxLat:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          if not None in (self.VMinLon, self.VMaxLon, self.DefLon):
+          if None not in (self.VMinLon, self.VMaxLon, self.DefLon):
             if self.DefLon <= self.VMinLon or self.DefLon >= self.VMaxLon:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
@@ -22315,6 +22344,28 @@ class GPXTweakerWebInterfaceServer():
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
+        elif scur == 'decimation':
+          if field == 'max_deviation':
+            if value is not None:
+              self.DecimationMaxDeviation = max(0, float(value))
+          elif field == 'max_distance':
+            if value is not None:
+              self.DecimationMaxDistance = max(0, float(value))
+          elif field == 'ele_factor':
+            if value is not None:
+              self.DecimationEleFactor = max(0, float(value))
+          elif field == 'alt_factor':
+            if value is not None:
+              self.DecimationAltFactor = max(0, float(value))
+          elif field == 'sync_distance':
+            if value is not None:
+              self.DecimationSyncDistance = bool(value)
+          elif field == 'opening_window':
+            if value is not None:
+              self.DecimationOpeningWindow = bool(value)
+          else:
+            self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+            return False
         elif scur[:11] == 'webmapping ':
           if field == 'alias':
             s[1] = WebMapping.WMAlias(value)
@@ -22371,24 +22422,24 @@ class GPXTweakerWebInterfaceServer():
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'layer', 'matrixset', 'style', 'format') or (hcur[:15] == 'elevationtiles ' and field in ('matrix', 'nodata')):
+          elif field in {'source', 'layer', 'matrixset', 'style', 'format'} or (hcur[:15] == 'elevationtiles ' and field in {'matrix', 'nodata'}):
             s[1][field] = value
             if field == 'nodata':
               try:
                 s[1][field] = float(value) if '.' in value else int(value)
               except:
                 pass
-          elif field in ('basescale', 'topx', 'topy'):
+          elif field in {'basescale', 'topx', 'topy'}:
             try:
               s[1][field] = float(value)
             except:
               pass
-          elif field in ('width', 'height'):
+          elif field in {'width', 'height'}:
             try:
               s[1][field] = int(value)
             except:
               pass
-          elif field in ('overwrite_schemes', 'overwrite_names', 'slash_url') and hcur[:9] == 'maptiles ':
+          elif field in {'overwrite_schemes', 'overwrite_names', 'slash_url'} and hcur[:9] == 'maptiles ':
             s[1][field] = value
           elif field == 'replace_regex' and hcur[:9] == 'maptiles ':
             try:
@@ -22408,7 +22459,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'handling':
-          if field in ('key', 'referer', 'user_agent', 'local_pattern', 'local_store', 'only_local'):
+          if field in {'key', 'referer', 'user_agent', 'local_pattern', 'local_store', 'only_local'}:
             s[2][field] = value
           elif field == 'local_expiration':
             try:
@@ -22423,7 +22474,7 @@ class GPXTweakerWebInterfaceServer():
               s[2]['basic_auth'] = value[1:-1]
           elif field == 'extra_header':
             hn, hv = map(str.strip, value.partition('=')[::2])
-            if len(hn) < 1 or any(ord(c) <= 31 or c == '\x7f' or c in ('(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '{', '}', ' ', '\t') for c in hn) or len(hv) < 1 or hn in ('User-Agent', 'Referer', 'Host'):
+            if len(hn) < 1 or any(ord(c) <= 31 or c == '\x7f' or c in {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '{', '}', ' ', '\t'} for c in hn) or len(hv) < 1 or hn in {'User-Agent', 'Referer', 'Host'}:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
             s[2].setdefault('extra_headers', {})[hn.title()] = hv
@@ -22542,7 +22593,7 @@ class GPXTweakerWebInterfaceServer():
             if not s[1]:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-          elif field in ('source', 'layers', 'styles', 'format') or (hcur[:13] == 'elevationmap ' and field == 'nodata'):
+          elif field in {'source', 'layers', 'styles', 'format'} or (hcur[:13] == 'elevationmap ' and field == 'nodata'):
             s[1][field] = value
             if field == 'nodata':
               try:
@@ -22553,7 +22604,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'handling':
-          if field in ('key', 'referer', 'user_agent'):
+          if field in {'key', 'referer', 'user_agent'}:
             s[2][field] = value
           elif field == '"user_colon_password"':
             if value:
@@ -22563,7 +22614,7 @@ class GPXTweakerWebInterfaceServer():
               s[2]['basic_auth'] = value[1:-1]
           elif field == 'extra_header':
             hn, hv = map(str.strip, value.partition('=')[::2])
-            if len(hn) < 1 or any(ord(c) <= 31 or c == '\x7f' or c in ('(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '{', '}', ' ', '\t') for c in hn) or len(hv) < 1 or hn in ('User-Agent', 'Referer', 'Host'):
+            if len(hn) < 1 or any(ord(c) <= 31 or c == '\x7f' or c in {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '{', '}', ' ', '\t'} for c in hn) or len(hv) < 1 or hn in {'User-Agent', 'Referer', 'Host'}:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
             s[2].setdefault('extra_headers', {})[hn.title()] = hv
@@ -22585,7 +22636,7 @@ class GPXTweakerWebInterfaceServer():
         else:
           self.log(0, 'cerror', hcur + ' - ' + scur)
           return False
-      elif hcur[:13] in ('elevationapi ', 'itineraryapi ') or hcur[:20] == 'reversegeocodingapi ' or hcur[:13] == 'geocodingapi ':
+      elif hcur[:13] in {'elevationapi ', 'itineraryapi '} or hcur[:20] == 'reversegeocodingapi ' or hcur[:13] == 'geocodingapi ':
         if scur == 'infos':
           if field == 'alias':
             if hcur[:13] == 'elevationapi ':
@@ -22608,7 +22659,7 @@ class GPXTweakerWebInterfaceServer():
               s[1]['key'] = tuple(map(str.strip, value.split(',')))
           elif field == 'html_regex' and hcur[:20] == 'reversegeocodingapi ':
             s[1]['regex'] = value
-          elif field == 'source' or (field in ('separator', 'limit', 'parallel', 'nodata') and hcur[:13] == 'elevationapi '):
+          elif field == 'source' or (field in {'separator', 'limit', 'parallel', 'nodata'} and hcur[:13] == 'elevationapi '):
             s[1][field] = value
             if field == 'nodata':
               try:
@@ -22625,7 +22676,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif scur == 'handling':
-          if field in ('key', 'referer', 'user_agent'):
+          if field in {'key', 'referer', 'user_agent'}:
             s[2][field] = value
           elif field == '"user_colon_password"':
             if value:
@@ -22635,7 +22686,7 @@ class GPXTweakerWebInterfaceServer():
               s[2]['basic_auth'] = value[1:-1]
           elif field == 'extra_header':
             hn, hv = map(str.strip, value.partition('=')[::2])
-            if len(hn) < 1 or any(ord(c) <= 31 or c == '\x7f' or c in ('(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '{', '}', ' ', '\t') for c in hn) or len(hv) < 1 or hn in ('User-Agent', 'Referer', 'Host'):
+            if len(hn) < 1 or any(ord(c) <= 31 or c == '\x7f' or c in {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '{', '}', ' ', '\t'} for c in hn) or len(hv) < 1 or hn in {'User-Agent', 'Referer', 'Host'}:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
             s[2].setdefault('extra_headers', {})[hn.title()] = hv
@@ -22707,6 +22758,12 @@ class GPXTweakerWebInterfaceServer():
     self.V3DSubjLoopDuration = 5000
     self.SmoothTracks = False
     self.SmoothRange = 10
+    self.DecimationMaxDeviation = 10
+    self.DecimationMaxDistance = 100
+    self.DecimationEleFactor = 3
+    self.DecimationAltFactor = 3
+    self.DecimationSyncDistance = True
+    self.DecimationOpeningWindow = False
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
@@ -23444,7 +23501,7 @@ class GPXTweakerWebInterfaceServer():
     esets = self._build_esets()
     wmsets = self._build_wmsets()
     gsets = self._build_gsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##DECMAXDEV##', str(self.DecimationMaxDeviation)).replace('##DECMAXDIST##', str(self.DecimationMaxDistance)).replace('##DECELEFACT##', str(self.DecimationEleFactor)).replace('##DECALTFACT##', str(self.DecimationAltFactor)).replace('##DECSYNCDIST##', ' checked' if self.DecimationSyncDistance else '').replace('##DECOPENWIND##', ' checked' if self.DecimationOpeningWindow else '').replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
