@@ -20422,7 +20422,7 @@ class GPXTweakerWebInterfaceServer():
   '                    me2 = sd2;\r\n' \
   '                  }\r\n' \
   '                }\r\n' \
-  '                if (me2 > decmdev2 || (ptw == pt2 && dn2 > decmdist2)) {\r\n' \
+  '                if (me2 > decmdev2 || (ptw == pt2 && dn2 >= decmdist2)) {\r\n' \
   '                  ptstack.push([ptm, pt2]);\r\n' \
   '                  pt2 = ptm;\r\n' \
   '                  ptw = pt2;\r\n' \
@@ -22763,7 +22763,7 @@ class GPXTweakerWebInterfaceServer():
     self.DecimationEleFactor = 3
     self.DecimationAltFactor = 3
     self.DecimationSyncDistance = True
-    self.DecimationOpeningWindow = False
+    self.DecimationOpeningWindow = True
     self.Mode = None
     self.EMode = None
     self.TilesSets = []
