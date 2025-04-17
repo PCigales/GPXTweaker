@@ -257,7 +257,7 @@ FR_STRINGS = {
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt: intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
-    'jtrackdecimate': 'engendrer une nouvelle trace par décimation de la trace&#13;&#10;+ctrl: afficher / masquer les critères de décimation',
+    'jtrackdecimate': 'engendrer une nouvelle trace par décimation de la trace&#13;&#10;+shift: supprimer les points de cheminement&#13;&#10;+alt: produire un fichier gpx minimaliste&#13;&#10;+ctrl: afficher / masquer les critères de décimation',
     'jdownloadmap': 'télécharger une carte des traces cochées&#13;&#10;+alt: télécharger une carte des traces cochées cadrée sur la zone affichée&#13;&#10;+shift: télécharger la liste des traces&#13;&#10;+shift+alt: télécharger la liste des traces avec les points de cheminement&#13;&#10;+ctrl: télécharger le graphique affiché',
     'jswitchmedia': 'afficher / masquer les photos et vidéos&#13;&#10;+alt: ouvrir aussi / fermer le panneau de prévisualisation&#13;&#10;+ctrl: afficher / masquer les contrôles de taille de miniature',
     'jwebmapping': 'afficher le point de départ dans le service de cartographie en ligne',
@@ -690,7 +690,7 @@ EN_STRINGS = {
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt: integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
-    'jtrackdecimate': 'generate a new track by decimation of the track&#13;&#10;+ctrl: show / hide the decimation criteria',
+    'jtrackdecimate': 'generate a new track by decimation of the track#13;&#10;+shift: remove the waypoints&#13;&#10;+alt: produce a minimalist gpx file&#13;&#10;+ctrl: show / hide the decimation criteria',
     'jdownloadmap': 'download a map of the ticked tracks&#13;&#10;+alt: download a map of the ticked tracks framed on the displayed area&#13;&#10;+shift: download the list of tracks&#13;&#10;+shift+alt: download the list of tracks with the waypoints&#13;&#10;+ctrl: download the displayed graph',
     'jswitchmedia': 'show / hide the photos and videos&#13;&#10;+alt: open also / close the preview panel&#13;&#10;+ctrl: show / hide the controls of thumbnail size',
     'jwebmapping': 'display the starting point in the online mapping service',
@@ -5865,6 +5865,8 @@ GCMan = GCManager()
 
 class WGS84Track(WGS84WebMercator):
 
+  EMPTY_GPX = b'<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="GPXTweaker" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mytrails="http://www.frogsparks.com/mytrails" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd"></gpx>'
+
   def __init__(self, unlink_lock=None):
     self.ULock = unlink_lock
     self._tracks = [None, None, None]
@@ -6112,10 +6114,11 @@ class WGS84Track(WGS84WebMercator):
     self.XMLNS_MT = self.intern('xmlns:mytrails', 'xmlns:mytrails')
     self.MT_NAMESPACE = self.intern('http://www.frogsparks.com/mytrails', 'http://www.frogsparks.com/mytrails')
 
-  def LoadGPX(self, uri, trkid=None, source=None, builder=None):
+  def LoadGPX(self, uri=None, trkid=None, source=None, builder=None):
     if self.Track is not None:
       return False
-    self.log(1, 'load', uri + ((' <%s>' % trkid) if trkid is not None else ''))
+    if uri is not None:
+      self.log(1, 'load', uri + ((' <%s>' % trkid) if trkid is not None else ''))
     GCMan.disable()
     try:
       if source is not None and source is not self:
@@ -6123,7 +6126,11 @@ class WGS84Track(WGS84WebMercator):
         self.intern_dict = source.intern_dict
         self.Wpts = source.Wpts
       else:
-        if '://' in uri:
+        if uri is None:
+          if trkid:
+            raise
+          track = self.__class__.EMPTY_GPX
+        elif '://' in uri:
           rep = HTTPRequest(uri, 'GET')
           if rep.code != '200':
             raise
@@ -6135,7 +6142,7 @@ class WGS84Track(WGS84WebMercator):
           except:
             if trkid:
               raise
-            track = b'<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="GPXTweaker" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mytrails="http://www.frogsparks.com/mytrails" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd"></gpx>'
+            track = self.__class__.EMPTY_GPX
             self.log(0, 'new', uri)
           finally:
             try:
@@ -6151,7 +6158,8 @@ class WGS84Track(WGS84WebMercator):
       self._intern()
     except:
       self.__init__()
-      self.log(0, 'oerror', uri, color=31)
+      if uri is not None:
+        self.log(0, 'oerror', uri, color=31)
       GCMan.restore()
       return False
     self.TrkId = trkid or 0
@@ -6165,12 +6173,14 @@ class WGS84Track(WGS84WebMercator):
         self.__init__()
       else:
         self.OTrack = self.STrack = self.Track
-      self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''), color=31)
+      if uri is not None:
+        self.log(0, 'lerror', uri + ((' <%s>' % trkid) if trkid is not None else ''), color=31)
       GCMan.restore()
       return False
     if source is None or source is self:
       self.OTrack = self.STrack = self.Track
-    self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts), color=32)
+    if uri is not None:
+      self.log(0, 'loaded', uri + ((' <%s>' % trkid) if trkid is not None else ''), self.Name, len(self.Wpts), len(self.Pts), sum(len(seg) for seg in self.Pts), color=32)
     GCMan.restore()
     return True
 
@@ -6554,36 +6564,52 @@ class WGS84Track(WGS84WebMercator):
     return True
 
   @classmethod
-  def Simplified(cls, track, preserved, uri=None):
+  def Simplified(cls, track, preserved_points, preserve_waypoints=True, minimalist=False, uri=None, builder=None):
     self = WGS84Track(track.ULock)
-    self.intern_dict = track.intern_dict
-    self._intern()
-    GCMan.disable()
-    self.TrkId = 0
-    self.Track = track.OTrack.cloneNode()
-    r = self.Track.documentElement
-    trk = r.getChildren('trk')[track.TrkId]
-    trkns = trk.namespaceURI
-    trkp = trk.prefix
     nuri = None
     try:
-      self._XMLUpdateChildNode(r, 'trk', r.removeChild(trk))
-      segs = trk.removeChildren('trkseg')
-      pts = [[pt for pt in seg.removeChildren('trkpt')] for seg in segs] or [[]]
-      for s in segs:
-        s.unlink()
-      for s in preserved:
-        ns = self._XMLNewNode('trkseg', trkns, trkp)
-        spts = pts.pop(0)
-        for p in s:
-          ns.appendChild(spts[p])
-          spts[p] = None
-        for pt in spts:
-          if pt is not None:
-            pt.unlink()
-        trk.appendChild(ns)
-      if not self.ProcessGPX('a'):
-        raise
+      if minimalist:
+        if not self.LoadGPX(builder=builder):
+          raise
+        f_to_s6 = lambda f: ('%.6f' % f).rstrip('0').rstrip('.')
+        f_to_s1 = lambda f: '' if f == '' else ('%.1f' % f).rstrip('0').rstrip('.')
+        s, sp = track.Pts[0], preserved_points[0]
+        if not self.UpdateGPX('%s\r\n%s\r\n=\r\n%s=\r\n%s' % (track.Name, track.Desc, (''.join('%d&%s&%s&%s&%s&%s\r\n' % (i, f_to_s6(w[0]), f_to_s6(w[1]), f_to_s1(w[2]), urllib.parse.quote(w[3]), urllib.parse.quote(w[4])) for i, w in track.Wpts) if preserve_waypoints else ''), ''.join('-\r\n%s' % ''.join('%d&%s&%s&%s&%s&%s\r\n' % (i, f_to_s6(p[0]), f_to_s6(p[1]), f_to_s1(p[2]), f_to_s1(p[3]), urllib.parse.quote(p[4])) for i, p in (s[p] for p in sp)) for s, sp in zip(track.Pts, preserved_points)))):
+          raise
+        if track.Color:
+          self.OTrack = self.Track
+          if not self.UpdateGPX('color=%s' % track.Color):
+            raise
+      else:
+        self.intern_dict = track.intern_dict
+        self._intern()
+        GCMan.disable()
+        self.TrkId = 0
+        self.Track = track.Track.cloneNode()
+        r = self.Track.documentElement
+        trk = r.getChildren('trk')[track.TrkId]
+        trkns = trk.namespaceURI
+        trkp = trk.prefix
+        self._XMLUpdateChildNode(r, 'trk', r.removeChild(trk))
+        if not preserve_waypoints:
+          for wpt in r.removeChildren('wpt'):
+            wpt.unlink()
+        segs = trk.removeChildren('trkseg')
+        pts = [[pt for pt in seg.removeChildren('trkpt')] for seg in segs] or [[]]
+        for seg in segs:
+          seg.unlink()
+        for s in preserved_points:
+          ns = self._XMLNewNode('trkseg', trkns, trkp)
+          spts = pts.pop(0)
+          for p in s:
+            ns.appendChild(spts[p])
+            spts[p] = None
+          for pt in spts:
+            if pt is not None:
+              pt.unlink()
+          trk.appendChild(ns)
+        if not self.ProcessGPX('a'):
+          raise
       if uri:
         nuri = uri.rsplit('.', 1)[0] + ' - decim.gpx'
         suf = 0
@@ -7925,7 +7951,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                 raise
               tr_ind = int(req.path.split('?')[1])
               uri, track = self.server.Interface.Tracks[tr_ind]
-              trackd, urid = WGS84Track.Simplified(track, tuple(tuple(map(int, inds.split())) for inds in req.body.split(',')), uri)
+              trackd, urid = WGS84Track.Simplified(track, tuple(tuple(map(int, inds.split())) for inds in req.body.split(',')), (req.path[9:10].lower() != 'w'), (req.path[10:11].lower() == 'm'), uri, self.server.Interface.Builder)
               if not urid:
                 raise
             except:
@@ -19120,7 +19146,7 @@ class GPXTweakerWebInterfaceServer():
   '      function track_click(e, trk, scroll=true) {\r\n' \
   '        if (e != null) {e.preventDefault();}\r\n' \
   '        const ex_foc = focused;\r\n' \
-  '        if (trk.htmlFor == ex_foc + "visible") {focused = "";} else {focused = trk.htmlFor.slice(0, -7);}\r\n' \
+  '        focused = (trk.htmlFor == ex_foc + "visible" || document.getElementById(trk.htmlFor.replace("visible", "cont")).style.display == "none") ? "" : trk.htmlFor.slice(0, -7);\r\n' \
   '        if (ex_foc != "") {\r\n' \
   '          document.getElementById(ex_foc + "desc").style.color = "";\r\n' \
   '          document.getElementById(ex_foc + "desc").style.textWrapMode = "";\r\n' \
@@ -20328,7 +20354,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        if (webgpu) {\r\n' \
-  '          return tracks_calc_wgpu(0).then(tracks_sort).then(function () {track_click(null, document.getElementById("track" + dind.toString() + "desc"));}).then(tracks_nfilter).then(tracks_cfilter).then(folders_select).then(function () {if (document.getElementById("vfbutton").style.backgroundColor != "") {return switch_vfilter().then(function () {if (! tracks_filts[dind][3]) {document.getElementById("vfbutton").style.backgroundColor = ""; switch_vfilter();};});};});\r\n' \
+  '          return tracks_calc_wgpu(0).then(tracks_sort).then(function () {track_click(null, document.getElementById("track" + dind.toString() + "desc"));}).then(tracks_nfilter).then(tracks_cfilter).then(folders_select).then(function () {if (document.getElementById("vfbutton").style.backgroundColor != "") {return switch_vfilter().then(function () {if (! tracks_filts[dind][3]) {document.getElementById("vfbutton").style.backgroundColor = ""; switch_vfilter(); track_click(null, document.getElementById("track" + dind.toString() + "desc"));};});};});\r\n' \
   '        } else {\r\n' \
   '          tracks_calc(0);\r\n' \
   '          tracks_sort();\r\n' \
@@ -20339,7 +20365,7 @@ class GPXTweakerWebInterfaceServer():
   '          return true;\r\n' \
   '        }\r\n' \
   '      }\r\n' \
-  '      function track_decimate() {\r\n' \
+  '      function track_decimate(waypoints=false, minimalist=false) {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
   '        const foc = focused;\r\n' \
   '        if (foc == "") {return;}\r\n' \
@@ -20367,8 +20393,9 @@ class GPXTweakerWebInterfaceServer():
   '        if (decafact && segs.some((seg) => seg.some((p) => isNaN(p[3])))) {\r\n' \
   '          if ((segs.every((seg) => seg.every((p) => isNaN(p[3]))))) {decafact = 0;} else {show_msg("{#jmdecimate7#}", 10); return;}\r\n' \
   '        }\r\n' \
-  '        const efact2 = (decefact * cor) ** 2;\r\n' \
-  '        const afact2 = (decafact * cor) ** 2;\r\n' \
+  '        let efact2 = (decefact * cor) ** 2;\r\n' \
+  '        let afact2 = (decafact * cor) ** 2;\r\n' \
+  '        if (efact2 > 0 && afact2 > 0) {efact2 /= 2; afact2 /= 2;}\r\n' \
   '        let xys = tracks_xys.subarray(tracks_xy_offsets[ind] * 2, tracks_xy_offsets[ind + 1] * 2);\r\n' \
   '        const dtptinds = [];\r\n' \
   '        for (const seg of segs) {\r\n' \
@@ -20443,7 +20470,7 @@ class GPXTweakerWebInterfaceServer():
   '        let msgn = show_msg("{#jmdecimate1#}", 0);\r\n' \
   '        xhrtr.onload = (e) => gfence(function (e) {const r = load_tdeccb(e.target, ind, dtptinds); if (r) {show_msg("{#jmdecimate2#}".replace("%s", dtptinds.reduce((a, dptinds) => a + dptinds.length, 0)).replace("%s", segs.reduce((a, seg) => a + seg.length, 0)), 5, msgn);} else {show_msg("{#jmdecimate3#}", 10, msgn);} return r;}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdecimate3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("POST", "/decimate?" + encodeURIComponent(foc.substring(5)));\r\n' \
+  '        xhrtr.open("POST", `/decimate${waypoints ? "w" : "_"}${minimalist ? "m" : "_"}?${encodeURIComponent(foc.substring(5))}`);\r\n' \
   '        xhrtr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
@@ -20540,12 +20567,11 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        if (webgpu) {\r\n' \
-  '          return tracks_calc_wgpu(0).then(tracks_sort).then(function () {track_click(null, document.getElementById("track" + ind1.toString() + "desc"));}).then(tracks_nfilter).then(tracks_cfilter).then(folders_select).then(document.getElementById("vfbutton").style.backgroundColor == "" ? null : switch_vfilter);\r\n' \
+  '          return tracks_calc_wgpu(0).then(tracks_sort).then(function () {track_click(null, document.getElementById("track" + ind1.toString() + "desc"));}).then(tracks_cfilter).then(folders_select).then(function () {if (document.getElementById("vfbutton").style.backgroundColor != "") {return switch_vfilter().then(function () {if (! tracks_filts[ind1][3]) {document.getElementById("vfbutton").style.backgroundColor = ""; switch_vfilter(); track_click(null, document.getElementById("track" + ind1.toString() + "desc"));};});};});\r\n' \
   '        } else {\r\n' \
   '          tracks_calc(0);\r\n' \
   '          tracks_sort();\r\n' \
   '          track_click(null, document.getElementById("track" + ind1.toString() + "desc"));\r\n' \
-  '          tracks_nfilter();\r\n' \
   '          tracks_cfilter();\r\n' \
   '          folders_select();\r\n' \
   '          return true;\r\n' \
@@ -21454,7 +21480,7 @@ class GPXTweakerWebInterfaceServer():
   '    <div id="top_bar">\r\n' \
   '      <form id="tracksfilterform" onsubmit="this.firstElementChild.blur();return false;"><input type="text" id="tracksfilter" name="tracksfilter" autocomplete="off" list="tracksfilterhistory" placeholder="{#jfilterplaceholder#}" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'tracksfilterhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null" oninput="tracks_nfilter();" onchange="input_history(this)"><datalist id="tracksfilterhistory"></datalist></form>\r\n' \
   '      <span id="display" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button id="cfbutton" title="{#jcfilter#}" onmousedown="event.preventDefault();" onclick="event.ctrlKey?gfence(cfilter_reset):(event.shiftKey?gfence(cfilter_restore):switch_cfilterpanel())"><span style="position:relative;top:-.2em;">&#9660;</span><span style="position:absolute;left:0;right:0;bottom:0;">&#10073;</span></button><button id="ffbutton" title="{#jfolders#}" style="margin-left:0.25em;" onclick="switch_folderspanel()">&#128193;&#xfe0e;</button><button id="vfbutton" title="{#jvfilter#}" style="display:none;margin-left:0.25em;" onclick="this.style.backgroundColor=(this.style.backgroundColor==\'\'?\'rgb(50,95,130)\':\'\');gfence(switch_vfilter)">&#128437;</button><button title="{#jdescending#}" id="sortup" style="margin-left:0.75em;" onclick="switch_sortorder()">&#9699;</button><button title="{#jascending#}" id="sortdown" style="margin-left:0.75em;display:none;" onclick="switch_sortorder()">&#9700</button><select id="oset" name="oset" title="{#joset#}" autocomplete="off" style="width:12em;margin-left:0.25em;" onchange="gfence(tracks_sort)"><option value="none">{#jsortnone#}</option><option value="name">{#jsortname#}</option><option value="file path">{#jsortfilepath#}</option><option value="duration">{#jsortduration#}</option><option value="distance">{#jsortdistance#}</option><option value="elevation gain">{#jsortelegain#}</option><option value="altitude gain">{#jsortaltgain#}</option><option value="date">{#jsortdate#}</option><option value="proximity">{#jsortproximity#}</option></select><button title="{#jhidetracks#}" style="margin-left:0.75em;" onclick="show_hide_tracks(false, event.altKey)">&EmptySmallSquare;</button><button title="{#jshowtracks#}" style="margin-left:0.25em;" onclick="show_hide_tracks(true, event.altKey)">&FilledSmallSquare;</button><button title="{#jzoomall#}" style="margin-left:0.75em;" onclick="document.getElementById(\'tset\').disabled?null:switch_tiles(null, null, event.altKey?0:(event.shiftKey?1:2))">&target;</button><button title="{#jtot#}" style="margin-left:0.75em;" onclick="gfence(tracks_tot, event.altKey, event.ctrlKey)">Σ</button></span>\r\n' \
-  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtrackdecimate#}" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_decpanel():track_decimate()">&#10776;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
+  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jtrackedit#}" id="edit" style="margin-left:0em;" onclick="track_edit()">&#9998;</button><button title="{#jtracknew#}" style="margin-left:0.75em;" onclick="track_new()">+</button><button title="{#jtrackdetach#}" style="margin-left:0.75em;" onclick="track_detach()">&#128228;&#xfe0e;</button><button title="{#jtrackintegrate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate(event.altKey)">&#128229;&#xfe0e;</button><button title="{#jtrackincorporate#}" style="margin-left:0.25em;" onclick="track_incorporate_integrate()">&LeftTeeArrow;</button><button title="{#jtrackdecimate#}" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_decpanel():track_decimate(event.shiftKey, event.altKey)">&#10776;</button><button title="{#jdownloadmap#}" style="margin-left:1em;" onclick="event.shiftKey?gfence(download_tracklist,event.altKey):(event.ctrlKey?gfence(download_graph):gfence(download_map, event.altKey))">&#9113;</button><button title="{#jswitchmedia#}" id="switchmedia" style="margin-left:0.75em;" onclick="event.ctrlKey?switch_mtpanel():(event.altKey?switch_mediapreview():show_hide_media())">&#128247;&#xfe0e;</button><button title="{#jwebmapping#}" style="margin-left:0.75em;" onclick="gfence(open_webmapping)">&#10146;</button><button title="{#jsearch#}" style="margin-left:0.75em;" onclick="switch_spanel()">&#128269;&#xfe0e;</button><button id="swsm" title="{#jswitchsmooth#}" style="margin-left:1em;letter-spacing:-0.2em" onclick="event.ctrlKey?switch_dfpanel():gfence(switch_smooth)">&homtht;&homtht;</button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?1:(event.ctrlKey?2:3))} else {switch_mediapreview(true);switch_spanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jexptset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jexpeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="wmset" title="{#jexpiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)">##WMSETS##</select><button title="{#jexpminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):(event.altKey?magnify_dec():zoom_dec()))">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jexpplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):(event.altKey?magnify_inc():zoom_inc()))">+</button></span>\r\n' \
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
   '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
@@ -22347,16 +22373,16 @@ class GPXTweakerWebInterfaceServer():
         elif scur == 'decimation':
           if field == 'max_deviation':
             if value is not None:
-              self.DecimationMaxDeviation = max(0, float(value))
+              self.DecimationMaxDeviation = max(0, float(value) if '.' in value else int(value))
           elif field == 'max_distance':
             if value is not None:
-              self.DecimationMaxDistance = max(0, float(value))
+              self.DecimationMaxDistance = max(0, float(value) if '.' in value else int(value))
           elif field == 'ele_factor':
             if value is not None:
-              self.DecimationEleFactor = max(0, float(value))
+              self.DecimationEleFactor = max(0, float(value) if '.' in value else int(value))
           elif field == 'alt_factor':
             if value is not None:
-              self.DecimationAltFactor = max(0, float(value))
+              self.DecimationAltFactor = max(0, float(value) if '.' in value else int(value))
           elif field == 'sync_distance':
             if value is not None:
               self.DecimationSyncDistance = bool(value)
@@ -22761,7 +22787,7 @@ class GPXTweakerWebInterfaceServer():
     self.DecimationMaxDeviation = 10
     self.DecimationMaxDistance = 100
     self.DecimationEleFactor = 3
-    self.DecimationAltFactor = 3
+    self.DecimationAltFactor = 4
     self.DecimationSyncDistance = True
     self.DecimationOpeningWindow = False
     self.Mode = None
