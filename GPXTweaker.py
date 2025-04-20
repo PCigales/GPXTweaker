@@ -12473,7 +12473,7 @@ class GPXTweakerWebInterfaceServer():
   '          ind = inds[ind_];\r\n' \
   '          focused = hist[s][ind][0];\r\n' \
   '          const elt_foc = document.getElementById(focused);\r\n' \
-  '          const elt_foc_data = elt_foc.dataset\r\n' \
+  '          const elt_foc_data = elt_foc.dataset;\r\n' \
   '          const err = elt_foc_data.hasOwnProperty("error");\r\n' \
   '          if (hist[s][ind][1] != "") {\r\n' \
   '            const c = hist[s][ind][1].split("\\r\\n");\r\n' \
@@ -12531,11 +12531,11 @@ class GPXTweakerWebInterfaceServer():
   '            wmtvb.next();\r\n' \
   '            const path = document.getElementById("path" + s_s);\r\n' \
   '            const pts = document.getElementById("segment" + s_s).getElementsByClassName("point");\r\n' \
-  '            const d = path.getAttribute("d").replace("M", "L");\r\n' \
+  '            const d = path.getAttribute("d").replace(/(?<=M.*)M/, "L");\r\n' \
   '            const dots = d.match(/[Lm][^Lm]*/g);\r\n' \
   '            let d_r = "M0,0";\r\n' \
-  '            for (let p=1, l=dots.length; p<l; p++) {\r\n' \
-  '              const pt = pts[p - 1];\r\n' \
+  '            for (let p=0, l=dots.length; p<l; p++) {\r\n' \
+  '              const pt = pts[p];\r\n' \
   '              const pt_ind = parseInt(pt.id.substring(5));\r\n' \
   '              const pt_s = points[pt_ind];\r\n' \
   '              if (pt_s == null) {\r\n' \
