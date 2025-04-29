@@ -702,7 +702,7 @@ EN_STRINGS = {
     'jexptset': 'select the set of tiles&#13;&#10;+shift: selection of the elevations provider&#13;&#10;+ctrl: selection of the online mapping service&#13;&#10;in superposition of tiles sets mode, right click: show / hide the controls of layer transparency&#13;&#10;alt + right click: display the legend if available',
     'jexpeset': 'select the elevations provider&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+ctrl: selection of the online mapping service',
     'jexpiset': 'select the online mapping service&#13;&#10;+alt: selection of the set of tiles&#13;&#10;+shift: selection of the elevations provider',
-    'jctset': '+alt: stop the configuration of the tileset',
+    'jctset': '+alt: stop the configuration of the tiles set',
     'jminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+shift: lighten',
     'jexpminus': 'zoom out&#13;&#10;+ctrl: attenuate&#13;&#10;+shift: lighten&#13;&#10;+alt: thin',
     'jlock': 'lock / unlock the set of tiles',
@@ -1390,7 +1390,7 @@ class HTTPBaseRequest():
         hccl = True
       else:
         l = len(pconnection)
-        pconnection[0:3] = [pconnection[0] if l >= 1 else None, pconnection[1] if l >= 2 else {}, []]
+        pconnection[0:3] = (pconnection[0] if l >= 1 else None), (pconnection[1] if l >= 2 else {}), []
         hccl = 'close' in (e.strip() for k, v in hitems if k.lower() == 'connection' for e in v.lower().split(','))
       if data:
         hexp = '100-continue' in (e.strip() for k, v in hitems if k.lower() == 'expect' for e in v.lower().split(','))
@@ -2579,8 +2579,8 @@ class BaseMap(WGS84WebMercator):
       if 'width' not in infos and 'height' not in infos:
         infos['width'] = infos['height'] = 3600 if hgt else 256
       if 'topx' not in infos and 'topy' not in infos:
-        infos['topx'] = -180 if hgt else WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
-        infos['topy'] = 90 if hgt else WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
+        infos['topx'] = -180 if hgt or self.CRS == 'EPSG:4326' else WGS84WebMercator.WGS84toWebMercator(0, -180)[0]
+        infos['topy'] = 90 if hgt or self.CRS == 'EPSG:4326' else WGS84WebMercator.WGS84toWebMercator(0, 180)[0]
       try:
         infos['scale'] = infos.setdefault('basescale', WGS84WebMercator.WGS84toWebMercator(0, 360)[0] /  infos['width'] / (360 if hgt else (2 if self.CRS == 'EPSG:4326' else 1))) / (2 ** int(infos['matrix']))
         if lat is not None and lon is not None :
@@ -2945,61 +2945,49 @@ class BaseMap(WGS84WebMercator):
 
   def RetrieveTile(self, infos, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection=None, action=None, only_save=False):
     self.log(2, 'tileretrieve', infos)
-    tile = None
     local_tile = None
     expired = True
     if isinstance(action, list):
-      if len(action) == 0:
-        action.append('failed')
-      else:
-        action[0] = 'failed'
+      action[0:1] = 'failed'
     try:
       if local_pattern is not None:
         last_mod = self.ReadKnownTile(local_pattern, infos, just_lookup=True)
         if last_mod != False:
           self.log(2, 'tilelfound', infos)
-          if only_save:
-            tile = True
-          else:
-            tile = self.ReadKnownTile(local_pattern, infos)
-          if tile:
-            if local_expiration is not None:
-              if local_expiration > max(time.time() - last_mod, 0) / 86400:
-                if isinstance(action, list):
-                  action[0] = 'read_from_local'
-                expired = False
-              else:
-                if only_save:
-                  tile = self.ReadKnownTile(local_pattern, infos)
-                local_tile = tile
-                self.log(2, 'tilelexpired', infos)
-            else:
+          tile = True if only_save else self.ReadKnownTile(local_pattern, infos)
+          if tile is not None:
+            if local_expiration is None or local_expiration > max(time.time() - last_mod, 0) / 86400:
               if isinstance(action, list):
                 action[0] = 'read_from_local'
               expired = False
+            else:
+              local_tile = self.ReadKnownTile(local_pattern, infos) if only_save else tile
+              self.log(2, 'tilelexpired', infos)
       if expired:
         if only_local:
           tile = None
         else:
           self.log(2, 'tilefetch', infos)
           tile = self.GetKnownTile(infos, key, referer, user_agent, basic_auth, extra_headers, pconnection)
-          if tile and isinstance(action, list):
-            action[0] = 'read_from_server'
-        if tile is not None and local_pattern is not None:
-          if tile != local_tile:
-            if local_store:
+          if tile is not None:
+            if isinstance(action, list):
+              action[0] = 'read_from_server'
+            if local_pattern is not None and local_store:
               try:
-                if self.SaveTile(local_pattern, infos, tile, match_json=False):
-                  if isinstance(action, list):
-                    action[0] = 'written_to_local'
+                if tile != local_tile:
+                  if self.SaveTile(local_pattern, infos, tile, match_json=False):
+                    expired = False
+                    if isinstance(action, list):
+                      action[0] = 'written_to_local'
+                else:
+                  if self.SaveTile(local_pattern, infos, tile, match_json=False, just_refresh=True):
+                    expired = False
+                    if isinstance(action, list):
+                      action[0] = 'refreshed_on_local'
               except:
                 pass
-          elif local_store:
-            self.SaveTile(local_pattern, infos, tile, match_json=False, just_refresh=True)
-            if isinstance(action, list):
-              action[0] = 'refreshed_on_local'
           if only_save:
-            tile = True
+            tile = None if expired else True
     except:
       self.log(1, 'tilerfail', infos)
       return None
@@ -3018,13 +3006,9 @@ class BaseMap(WGS84WebMercator):
     if infos_completed is None:
       infos_completed = {}
     if (False in (k in infos_completed for k in ('source', 'layer',  'format', 'matrix', 'scale', 'topx', 'topy', 'width', 'height'))) or (False in (k in infos_completed for k in (('matrixset', 'style') if '{wmts}' in infos_completed.get('source', '') else ('basescale', )))):
-      infos_set = False
       infos_completed.update(infos_base)
       try:
-        if local_pattern is not None:
-          if self.ReadTileInfos(local_pattern, infos_completed, matrix, update_json=local_store):
-            infos_set = True
-        if not infos_set:
+        if local_pattern is None or not self.ReadTileInfos(local_pattern, infos_completed, matrix, update_json=local_store):
           if only_local:
             return None
           if not self.GetTileInfos(infos_completed, matrix, None, None, key, referer, user_agent, basic_auth, extra_headers, next((pconnection for pconnection in pconnections if pconnection[0] is not None), pconnections[0]), infos_greedy):
@@ -3098,12 +3082,8 @@ class BaseMap(WGS84WebMercator):
   def RetrieveTiles(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, memory_store=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, threads=10):
     if not local_store and memory_store is None:
       return False
-    infos_set = False
     try:
-      if local_pattern is not None:
-        if self.ReadTileInfos(local_pattern, infos, matrix, update_json=local_store):
-          infos_set = True
-      if not infos_set:
+      if local_pattern is None or not self.ReadTileInfos(local_pattern, infos, matrix, update_json=local_store):
         if only_local:
           return False
         if not self.GetTileInfos(infos, matrix, None, None, key, referer, user_agent, basic_auth, extra_headers):
@@ -3129,7 +3109,7 @@ class BaseMap(WGS84WebMercator):
         memory_store.append([None] * (maxrow + 1 - minrow))
     box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
     lock = threading.Lock()
-    progress = {'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow +1 - minrow), 'downloaded': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event':threading.Event(), 'process_event':threading.Event()}
+    progress = {'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'downloaded': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
     def downloader():
       pconnection = [None]
       def update_progress(result):
@@ -3159,10 +3139,8 @@ class BaseMap(WGS84WebMercator):
         except:
           with lock:
             update_progress('failed')
-          pass
-    downloaders = [threading.Thread(target=downloader, daemon=True) for t in range(threads)]
-    for downloader in downloaders:
-      downloader.start()
+    for t in range(threads):
+      threading.Thread(target=downloader, daemon=True).start()
     return progress
 
   def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=10):
@@ -5334,6 +5312,353 @@ class MapLegend():
     else:
       self.log(2, 'legendretrieved2', infos)
     return f_l
+
+
+class MGMapsStoredMap():
+
+  LOCALSTORE_DEFAULT_PATTERN = r'{name}\{name}_{matrix}\{x}_{y}.mgm'
+
+  def __new__(cls, name, local_pattern, tiles_per_file=None):
+    self = object.__new__(cls)
+    self.name = name
+    self.pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN)).replace('{name}', name)
+    confpath = self.pattern
+    while '{matrix}' in confpath:
+      confpath = os.path.dirname(confpath)
+    confpath = os.path.join(confpath, 'cache.conf')
+    self.confpath = confpath
+    self.tiles_per_file = tiles_per_file
+    try:
+      if os.path.isfile(confpath):
+        f = open(confpath, 'rt', encoding='utf-8', newline='')
+        for l in f:
+          n, e, v = map(str.strip, l.partition('='))
+          if e == '=':
+            if n == 'hash_size':
+              if v != '1':
+                raise
+            elif n == 'tiles_per_file':
+              self.tiles_per_file = int(v)
+              if tiles_per_file is not None and self.tiles_per_file != tiles_per_file:
+                raise
+            elif n == 'format':
+              if v != 'mgmaps':
+                raise
+        if self.tiles_per_file is None or self.tiles_per_file.bit_count() != 1 or self.tiles_per_file > 65536:
+          raise
+      else:
+        Path(os.path.dirname(confpath)).mkdir(parents=True, exist_ok=True)
+        if tiles_per_file is None or tiles_per_file.bit_count() != 1 or tiles_per_file > 65536:
+          raise
+        f = open(confpath, 'wt', encoding='utf-8', newline='')
+        t = time.localtime()
+        z = time.strftime('%z', t)
+        t = time.asctime(t).rsplit(' ', 1)
+        f.writelines((('#%s GMT%s:%s %s\r\n' % (t[0], z[:-2], z[-2:], t[1])), 'version=3\r\n', ('tiles_per_file=%d\r\n' % tiles_per_file), 'hash_size=1\r\n'))
+        self.tiles_per_file = tiles_per_file
+    except:
+      return None
+    finally:
+      try:
+        f.close()
+      except:
+        return None
+    p = self.tiles_per_file.bit_length() - 1
+    self.tiles_per_file_y = p // 2
+    self.tiles_per_file_x = p - self.tiles_per_file_y
+    self.tiles_per_file_x = 1 << self.tiles_per_file_x
+    self.tiles_per_file_y = 1 << self.tiles_per_file_y
+    return self
+
+  def ReadTile(self, matrix, row, col, cache=None):
+    try:
+      if cache is None:
+        filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
+        if not os.path.isfile(filepath):
+          return None
+        f = open(filepath, 'rb')
+      else:
+        f = cache
+        f.seek(0)
+      col %= self.tiles_per_file_x
+      row %= self.tiles_per_file_y
+      n = int.from_bytes(f.read(2), 'big')
+      o1 = o2 = 6 * self.tiles_per_file + 2
+      for i in range(n):
+        dx, dy, o2 = struct.unpack('>BBL', f.read(6))
+        if dx == col and dy == row:
+          f.seek(o1)
+          return f.read(o2 - o1)
+        o1 = o2
+      else:
+        return None
+    except:
+      return None
+    finally:
+      if cache is None:
+        try:
+          f.close()
+        except:
+          pass
+
+  def SaveTile(self, matrix, row, col, tile, cache=None):
+    try:
+      if cache is None:
+        matrixpath = self.pattern
+        while '{matrix}' in os.path.dirname(matrixpath):
+          matrixpath = os.path.dirname(matrixpath)
+        matrixpath = matrixpath.format_map({'matrix': matrix})
+        if not os.path.exists(matrixpath):
+          Path(matrixpath).mkdir(parents=True, exist_ok=True)
+        if tile is None:
+          return True
+        filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
+        f = open(filepath, 'rb+') if os.path.isfile(filepath) else open(filepath, 'wb')
+      else:
+        f = cache
+      f.seek(0, os.SEEK_END)
+      if f.tell():
+        f.seek(0)
+        n = int.from_bytes(f.read(2), 'big')
+      else:
+        f.write(b'\x00' * (self.tiles_per_file * 6 + 2))
+        f.seek(2)
+        n = 0
+      col %= self.tiles_per_file_x
+      row %= self.tiles_per_file_y
+      o1 = o2 = 6 * self.tiles_per_file + 2
+      for i in range(n):
+        dx, dy, o2 = struct.unpack('>BBL', f.read(6))
+        if dx == col and dy == row:
+          s = o2 - o1
+          o2 = o1
+          for j in range(i + 1, n):
+            dx, dy, o2 = struct.unpack('>BBL', f.read(6))
+            o2 -= s
+            f.seek(-12, os.SEEK_CUR)
+            f.write(struct.pack('>BBL', dx, dy, o2))
+            f.seek(6, os.SEEK_CUR)
+          f.seek(o1 + s)
+          b = f.read()
+          f.seek(o1)
+          f.write(b)
+          f.truncate()
+          n -= 1
+          f.seek(0)
+          f.write(n.to_bytes(2, 'big'))
+          o1 = o2
+          break
+        o1 = o2
+      n += 1
+      o2 += len(tile)
+      if o2 > 4294967295:
+        return False
+      f.seek(0)
+      f.write(n.to_bytes(2, 'big'))
+      f.seek(n * 6 - 4)
+      f.write(struct.pack('>BBL', col, row, o2))
+      f.seek(o1)
+      f.write(tile)
+      return True
+    except:
+      return False
+    finally:
+      if cache is None:
+        try:
+          f.close()
+        except:
+          pass
+
+  def ImportTiles(self, tile_generator_builder, minlat, maxlat, minlon, maxlon, max_threads=16):
+    threads = min(max_threads, self.tiles_per_file)
+    if threads < 1:
+      return None
+    comps = (threads - 1) // self.tiles_per_file + 2
+    gens = tile_generator_builder(number=threads)
+    if gens is None:
+      return None
+    if threads == 1:
+      gens = [gens]
+    matrix = gens[0]()['matrix']
+    try:
+      (minrow, mincol), (maxrow, maxcol) = gens[0](minlat, maxlat, minlon, maxlon, just_box=True)
+    except:
+      return None
+    if minrow > maxrow or mincol > maxcol:
+      return None
+    cond = threading.Condition()
+    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'imported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
+    col1 = col2 = mincol
+    row1 = row2 = minrow
+    box = iter(())
+    compc = {'f': None, 'created': None, 'cache': None, 'remaining': None, 'imported': 0, 'skipped': 0, 'failed': 0}
+    def importer(gen):
+      nonlocal col1, col2, row1, row2, box
+      nonlocal comps, compc
+      while True:
+        with cond:
+          comp = compc
+          try:
+            row, col = next(box)
+          except StopIteration:
+            if not comps:
+              cond.wait()
+              continue
+            if col2 <= maxcol:
+              col1 = col2
+            elif row2 <= maxrow:
+              col1 = mincol
+              row1 = row2
+            else:
+              try:
+                gen(close_connection=True)
+              except:
+                pass
+              break
+            col2 = min(maxcol + 1, (col1 // self.tiles_per_file_x + 1) * self.tiles_per_file_x)
+            row2 = min(maxrow + 1, (row1 // self.tiles_per_file_y + 1) * self.tiles_per_file_y)
+            box = ((row, col) for col in range(col1, col2) for row in range(row1, row2))
+            comps -= 1
+            compc = {'f': None, 'created': False, 'cache': None, 'remaining': (col2 - col1) * (row2 - row1), 'imported': 0, 'skipped': 0, 'failed': 0}
+            continue
+        try:
+          with cond:
+            if comp['created'] is None:
+              raise
+          tile = gen(None, None, row, col)['tile']
+          with cond:
+            if comp['created'] is None or tile is None:
+              raise
+            if comp['f'] is None:
+              try:
+                if not self.SaveTile(matrix, row, col, None):
+                  raise
+                filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
+                if os.path.isfile(filepath):
+                  comp['f'] = open(filepath, 'rb+')
+                  comp['cache'] = BytesIO(comp['f'].read())
+                else:
+                  comp['f'] = open(filepath, 'wb')
+                  comp['cache'] = BytesIO()
+                  comp['created'] = True
+              except:
+                comp['f'] = None
+                comp['created'] = None
+                raise
+            if comp['created'] or tile != self.ReadTile(matrix, row, col, comp['cache']):
+              if self.SaveTile(matrix, row, col, tile, comp['cache']):
+                comp['imported'] += 1
+              else:
+                raise
+            else:
+              comp['skipped'] += 1
+        except:
+          with cond:
+            comp['failed'] += 1
+        finally:
+          with cond:
+            comp['remaining'] -= 1
+            if comp['remaining'] == 0:
+              comp['remaining'] = None
+              if (f := comp['f']) is not None:
+                try:
+                  if comp['imported']:
+                    if not comp['created']:
+                      f.seek(0)
+                      f.truncate()
+                    f.write(comp['cache'].getbuffer())
+                    comp['cache'].truncate(0)
+                except:
+                  comp['failed'] += comp['imported'] + comp['skipped']
+                  comp['imported'] = comp['skipped'] = 0
+                finally:
+                  try:
+                    f.close()
+                  except:
+                    pass
+              comps += 1
+              cond.notify_all()
+              progress['imported'] += comp['imported']
+              progress['skipped'] += comp['skipped']
+              progress['failed'] += comp['failed']
+              percent = '%2i%%' % int((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 / progress['total'])
+              if tot == progress['total']:
+                progress['finish_event'].set()
+              if comp['failed'] or percent != progress['percent']:
+                progress['percent'] = percent
+                progress['process_event'].set()
+    for gen in gens:
+      threading.Thread(target=importer, args=(gen,), daemon=True).start()
+    return progress
+
+  def ImportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_threads=16, tiles_class=WebMercatorMap):
+    inf = {k: v for k, v in infos.items() if k != 'matrix'}
+    infs = {}
+    m = tiles_class()
+    for matrix in map(str, matrices):
+      tile_generator_builder = partial(m.TileGenerator, inf, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, only_local=only_local, infos_completed=infs.get(matrix), infos_greedy=infs)
+      yield self.ImportTiles(tile_generator_builder, minlat, maxlat, minlon, maxlon, max_threads)
+
+  def ExportTiles(self, tile_saver, minlat, maxlat, minlon, maxlon):
+    conv, matrix = tile_saver()
+    try:
+      (minrow, mincol), (maxrow, maxcol) = conv(minlat, maxlat, minlon, maxlon)
+    except:
+      return None
+    if minrow > maxrow or mincol > maxcol:
+      return None
+    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'exported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
+    def exporter():
+      for row in range(minrow, maxrow + 1):
+        for col in range(mincol, maxcol + 1):
+          try:
+            if (tile := self.ReadTile(matrix, row, col)) is None:
+              raise
+            if (res := tile_saver(row, col, tile)) is True:
+              progress['exported'] += 1
+            elif res is False:
+              progress['skipped'] += 1
+            else:
+              raise
+          except:
+            progress['failed'] += 1
+            progress['process_event'].set()
+          percent = '%2i%%' % int((tot := progress['exported'] + progress['skipped'] + progress['failed']) * 100 / progress['total'])
+          if tot == progress['total']:
+            progress['finish_event'].set()
+          if percent != progress['percent']:
+            progress['percent'] = percent
+            progress['process_event'].set()
+    threading.Thread(target=exporter, daemon=True).start()
+    return progress
+
+  def ExportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, local_pattern, tiles_class=WebMercatorMap):
+    m = tiles_class()
+    inf = {k: v for k, v in infos.items() if k != 'matrix'}
+    inf.setdefault('alias', self.name)
+    inf.setdefault('source', self.confpath)
+    inf.setdefault('format', WebMercatorMap.EXT_MIME.get(inf['source'].replace('.zip', '').rsplit('.', 1)[-1][0:3], 'image'))
+    hgt = inf['format'] == 'image/hgt' or '{hgt}' in inf['source']
+    inf.setdefault('width', (3600 if hgt else 256))
+    inf.setdefault('height', (3600 if hgt else 256))
+    inf.setdefault('topx', (-180 if hgt or m.CRS == 'EPSG:4326' else WGS84WebMercator.WGS84toWebMercator(0, -180)[0]))
+    inf.setdefault('topy', (90 if hgt or m.CRS == 'EPSG:4326' else WGS84WebMercator.WGS84toWebMercator(0, 180)[0]))
+    basescale = inf.get('basescale', WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / (inf['width'] or (3600 if hgt else 256)) / (360 if hgt else (2 if m.CRS == 'EPSG:4326' else 1)))
+    if '{wmts}' not in inf['source']:
+      inf.setdefault('basescale', basescale)
+    if m == WGS84Elevation:
+      inf.setdefault('nodata', -99999)
+    for matrix in map(str, matrices):
+      info = {**infos}
+      if not m.ReadTileInfos(local_pattern, info, matrix=matrix, update_json=True):
+        info = inf | {'matrix': matrix, 'scale': inf.get('scale', basescale / (2 ** int(matrix)))}
+        if not m.SaveTile(local_pattern, info):
+          info = None
+      if info is None:
+        yield None
+      else:
+        tile_saver = lambda row=None, col=None, tile=None: (partial(m.WGS84BoxtoTileBox, info), matrix) if tile is None else (not skipped if m.SaveTile(local_pattern, (info_ := info | {'row': row, 'col': col}), tile, match_json=False, just_refresh=(skipped := tile == m.ReadKnownTile(local_pattern, info_))) else None)
+        yield self.ExportTiles(tile_saver, minlat, maxlat, minlon, maxlon)
 
 
 class XMLNode():
