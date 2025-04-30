@@ -3006,8 +3006,7 @@ class BaseMap(WGS84WebMercator):
             mgm.SaveTile(infos['matrix'], infos['row'], infos['col'], tile, compressor=compressor)
           except:
             pass
-    except Exception as e:
-      print(e)
+    except:
       return None
     return tile
 
