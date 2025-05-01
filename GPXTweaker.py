@@ -5472,9 +5472,7 @@ class MGMapsStoredMap():
         filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
         with self.condition:
           while self.locks.get(filepath, 0) % 2:
-            print('rw')
             self.condition.wait()
-            print('rn')
           self.locks[filepath] = self.locks.get(filepath, 0) + 2
           locked = True
         if not os.path.isfile(filepath):
@@ -5532,15 +5530,11 @@ class MGMapsStoredMap():
         filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
         with self.condition:
           while self.locks.get(filepath, 0) % 2:
-            print('ww')
             self.condition.wait()
-            print('wn')
           self.locks[filepath] = self.locks.get(filepath, 0) + 1
           locked = True
           while self.locks[filepath] != 1:
-            print('ww2')
             self.condition.wait()
-            print('wn2')
         f = open(filepath, 'rb+') if os.path.isfile(filepath) else open(filepath, 'wb')
       else:
         f = cache
