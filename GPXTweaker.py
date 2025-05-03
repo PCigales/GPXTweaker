@@ -5683,7 +5683,7 @@ class MGMapsStoredMap():
                 comp['f'] = None
                 comp['created'] = None
                 raise
-          if comp['created'] or tile != self.ReadTile(matrix, row, col, cache=comp['cache'], decompressor=decompressor):
+          if comp['created'] or only_missing or tile != self.ReadTile(matrix, row, col, cache=comp['cache'], decompressor=decompressor):
             if self.SaveTile(matrix, row, col, tile, cache=comp['cache'], compressor=compressor):
               with cond:
                 comp['imported'] += 1
