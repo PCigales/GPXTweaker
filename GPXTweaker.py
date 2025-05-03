@@ -3198,12 +3198,12 @@ class BaseMap(WGS84WebMercator):
         memory_store.append([None] * (maxrow + 1 - minrow))
     box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
     lock = threading.Lock()
-    progress = {'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'downloaded': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
+    progress = {'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'downloaded': 0, 'skipped': 0, 'failed': 0, 'percent': '  0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
     def downloader():
       pconnection = [None]
       def update_progress(result):
         progress[result] += 1
-        percent = '%2i%%' % int((progress['downloaded'] + progress['skipped'] + progress['failed']) * 100 / progress['total'])
+        percent = '%3i%%' % int((progress['downloaded'] + progress['skipped'] + progress['failed']) * 100 / progress['total'])
         if progress['downloaded'] + progress['skipped'] + progress['failed'] == progress['total']:
           progress['finish_event'].set()
         if result == 'failed' or percent != progress['percent']:
@@ -3235,8 +3235,8 @@ class BaseMap(WGS84WebMercator):
   def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=16):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, threads=threads)
 
-  def ImportTilesIntoMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, max_threads=16, callback=None):
-    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, key, referer, user_agent, basic_auth, extra_headers, False, complete_infos=False)) is None else next(res[0].ImportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=only_missing, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, max_threads=max_threads, tiles_class=self.__class__, callback=callback))
+  def ImportTilesIntoMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=False, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, max_threads=16, callback=None):
+    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, key, referer, user_agent, basic_auth, extra_headers, False, complete_infos=False)) is None else next(res[0].ImportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=only_missing, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, max_threads=max_threads, tiles_class=self.__class__, callback=callback))
 
   def ExportTilesFromMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, max_threads=16):
     return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, None, None, None, None, None, None, complete_infos=False)) is None else next(res[0].ExportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=(os.path.dirname(res[0].confpath) if local_pattern is None else local_pattern), max_threads=max_threads, tiles_class=self.__class__))
@@ -5623,7 +5623,7 @@ class MGMapsStoredMap():
     if minrow > maxrow or mincol > maxcol:
       return None
     cond = threading.Condition()
-    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'imported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
+    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'imported': 0, 'skipped': 0, 'failed': 0, 'percent': '  0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
     col1 = col2 = mincol
     row1 = row2 = minrow
     box = iter(())
@@ -5722,7 +5722,7 @@ class MGMapsStoredMap():
             progress['imported'] += comp['imported']
             progress['skipped'] += comp['skipped']
             progress['failed'] += comp['failed']
-            percent = '%2i%%' % ((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
+            percent = '%3i%%' % ((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
             if tot == progress['total']:
               progress['finish_event'].set()
             if percent != progress['percent']:
@@ -5760,7 +5760,7 @@ class MGMapsStoredMap():
     if minrow > maxrow or mincol > maxcol:
       return None
     lock = threading.Lock()
-    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'exported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
+    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'exported': 0, 'skipped': 0, 'failed': 0, 'percent': '  0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
     box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
     def exporter():
       while True:
@@ -5784,7 +5784,7 @@ class MGMapsStoredMap():
           with lock:
             progress['failed'] += 1
         with lock:
-          percent = '%2i%%' % ((tot := progress['exported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
+          percent = '%3i%%' % ((tot := progress['exported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
           if tot == progress['total']:
             progress['finish_event'].set()
           if percent != progress['percent']:
