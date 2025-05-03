@@ -44,7 +44,7 @@ import pickle
 locale.setlocale(locale.LC_TIME, '')
 
 FR_STRINGS = {
-  'tilescache': {
+  'tilescache': (tc := {
     '_id': 'Cache de tuiles',
     'init': 'initialisation (taille: %s, fils: %s)',
     'get': 'tuile (%s, %s) demandée',
@@ -61,6 +61,9 @@ FR_STRINGS = {
     'fail': 'échec de la configuration (jeu de tuiles: %s, matrice: %s)',
     'cancelled': 'annulation de la configuration (jeu de tuiles: %s, matrice: %s)',
     'close': 'fermeture'
+  }),
+  'eletilescache': tc | {
+    '_id': 'Cache de tuiles d\'élévation',
   },
   'map': {
     '_id': 'Gestionnaire de carte',
@@ -477,7 +480,7 @@ FR_STRINGS = {
    }
 }
 EN_STRINGS = {
-  'tilescache': {
+  'tilescache': (tc := {
     '_id': 'Tiles cache',
     'init': 'initialization (size: %s, threads: %s)',
     'get': 'tile (%s, %s) requested',
@@ -494,6 +497,9 @@ EN_STRINGS = {
     'fail': 'failure of configuration (tiles set: %s, matrix: %s)',
     'cancelled': 'cancelling of configuration (tiles set: %s, matrix: %s)',
     'close': 'shutdown'
+  }),
+  'eletilescache': tc | {
+    '_id': 'Elevation tiles cache',
   },
   'map': {
     '_id': 'Map handler',
@@ -1780,7 +1786,8 @@ class TilesCache():
     self.Infos = None
     self.Closed = False
     self.Cancel = False
-    self.log = partial(log, 'tilescache')
+    if not hasattr(self, 'log'):
+      self.log = partial(log, 'tilescache')
     self.log(2, 'init', size, threads)
 
   def _getitem(self, rid, pos):
@@ -2924,7 +2931,7 @@ class BaseMap(WGS84WebMercator):
         lon = infos['col'] - 180
         hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
       try:
-        filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''),'ext': ext, 'hgt': hgt}})
+        filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''), 'ext': ext, 'hgt': hgt}})
         if just_refresh:
           os.utime(filepath, (time.time(),) * 2)
         else:
@@ -3069,7 +3076,7 @@ class BaseMap(WGS84WebMercator):
           else:
             tpf = None
             ca = None
-          local_pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)).replace('{name}', name)
+          local_pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)).format_map({'name': name, 'matrix': '{matrix}', 'x': '{x}', 'y': '{y}'})
           if (mgm := MGMapsStoredMap(name, local_pattern, tpf, ca)) is None:
             return None
       except:
@@ -3227,6 +3234,12 @@ class BaseMap(WGS84WebMercator):
 
   def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=16):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, threads=threads)
+
+  def ImportTilesIntoMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, max_threads=16, callback=None):
+    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, key, referer, user_agent, basic_auth, extra_headers, False, complete_infos=False)) is None else next(res[0].ImportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=only_missing, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, max_threads=max_threads, tiles_class=self.__class__, callback=callback))
+
+  def ExportTilesFromMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, max_threads=16):
+    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, None, None, None, None, None, None, complete_infos=False)) is None else next(res[0].ExportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=(os.path.dirname(res[0].confpath) if local_pattern is None else local_pattern), max_threads=max_threads, tiles_class=self.__class__))
 
   def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, threads=10, tiles_cache=None):
     tiles = []
@@ -4377,6 +4390,7 @@ class ElevationTilesCache(TilesCache):
 
   def __init__(self, size=None, threads=None):
     if size is not None:
+      self.log = partial(log, 'eletilescache')
       super().__init__(size, threads, False)
       self.Weights = {}
       self.Buffer = ElevationTilesCache._dict()
@@ -5361,7 +5375,7 @@ class MapLegend():
       if local_pattern is not None:
         if (lp := local_pattern.rpartition('|'))[1] == '|':
           local_pattern = lp[0]
-          local_pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)).replace('{name}', infos.get('alias') or infos.get('layer', ''))
+          local_pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)).format_map({'name': infos.get('alias') or infos.get('layer', ''), 'matrix': '{matrix}', 'x': '{x}', 'y': '{y}'})
         last_mod = self.ReadTilesLegend(local_pattern, infos, just_lookup=True)
         if last_mod is not None:
           self.log(2, 'legendlfound', infos)
@@ -5407,7 +5421,7 @@ class MGMapsStoredMap():
   def __new__(cls, name, local_pattern, tiles_per_file=None, compression_allowed=None):
     self = object.__new__(cls)
     self.name = name
-    self.pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN)).replace('{name}', name)
+    self.pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN)).format_map({'name': name, 'matrix': '{matrix}', 'x': '{x}', 'y': '{y}'})
     confpath = self.pattern
     while '{matrix}' in confpath:
       confpath = os.path.dirname(confpath)
@@ -5468,22 +5482,17 @@ class MGMapsStoredMap():
   def ReadTile(self, matrix, row, col, cache=None, decompressor=None):
     locked = False
     try:
-      if cache is None:
-        filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
-        with self.condition:
-          while self.locks.get(filepath, 0) % 2:
-            self.condition.wait()
-          self.locks[filepath] = self.locks.get(filepath, 0) + 2
-          locked = True
-        if not os.path.isfile(filepath):
-          return None
-        f = open(filepath, 'rb')
-      else:
-        f = cache
-        f.seek(0)
+      filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
+      with self.condition:
+        while (self.locks.get(filepath, 0) % 2) if cache is None else self.locks.get(filepath, 0):
+          self.condition.wait()
+        self.locks[filepath] = self.locks.get(filepath, 0) + 2
+        locked = True
+      f = open(filepath, 'rb') if cache is None else cache
+      f.seek(0)
+      n = int.from_bytes(f.read(2), 'big')
       col %= self.tiles_per_file_x
       row %= self.tiles_per_file_y
-      n = int.from_bytes(f.read(2), 'big')
       o1 = o2 = 6 * self.tiles_per_file + 2
       for i in range(n):
         dx, dy, o2 = struct.unpack('>BBL', f.read(6))
@@ -5502,13 +5511,13 @@ class MGMapsStoredMap():
           f.close()
         except:
           pass
-        if locked:
-          with self.condition:
-            self.locks[filepath] -=  2
-            if self.locks[filepath] <= 1:
-              if self.locks[filepath] == 0:
-                del self.locks[filepath]
-              self.condition.notify_all()
+      if locked:
+        with self.condition:
+          self.locks[filepath] -=  2
+          if self.locks[filepath] <= 1:
+            if self.locks[filepath] == 0:
+              del self.locks[filepath]
+            self.condition.notify_all()
     if self.compression_allowed and decompressor:
       tile = decompressor(tile)
     return tile
@@ -5527,17 +5536,15 @@ class MGMapsStoredMap():
           Path(matrixpath).mkdir(parents=True, exist_ok=True)
         if tile is None:
           return True
-        filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
-        with self.condition:
-          while self.locks.get(filepath, 0) % 2:
-            self.condition.wait()
-          self.locks[filepath] = self.locks.get(filepath, 0) + 1
-          locked = True
-          while self.locks[filepath] != 1:
-            self.condition.wait()
-        f = open(filepath, 'rb+') if os.path.isfile(filepath) else open(filepath, 'wb')
-      else:
-        f = cache
+      filepath = self.pattern.format_map({'matrix': matrix, 'x': col // self.tiles_per_file_x, 'y': row // self.tiles_per_file_y})
+      with self.condition:
+        while self.locks.get(filepath, 0) % 2:
+          self.condition.wait()
+        self.locks[filepath] = self.locks.get(filepath, 0) + 1
+        locked = True
+        while self.locks[filepath] != 1:
+          self.condition.wait()
+      f = open(filepath, ('rb+' if os.path.isfile(filepath) else 'wb')) if cache is None else cache
       f.seek(0, os.SEEK_END)
       if f.tell():
         f.seek(0)
@@ -5590,26 +5597,25 @@ class MGMapsStoredMap():
           f.close()
         except:
           pass
-        if locked:
-          with self.condition:
-            del self.locks[filepath]
-            self.condition.notify_all()
+      if locked:
+        with self.condition:
+          del self.locks[filepath]
+          self.condition.notify_all()
 
-  def ImportTiles(self, tile_generator_builder, minlat, maxlat, minlon, maxlon, max_threads=16):
-    threads = min(max_threads, self.tiles_per_file)
-    if threads < 1:
+  def ImportTiles(self, tile_generator_builder, minlat, maxlat, minlon, maxlon, only_missing=False, max_threads=16, callback=None):
+    if max_threads < 1:
       return None
-    comps = (threads - 1) // self.tiles_per_file + 2
-    gens = tile_generator_builder(number=threads)
+    comps = (max_threads - 1) // self.tiles_per_file + 2
+    gens = tile_generator_builder(number=max_threads)
     if gens is None:
       return None
-    if threads == 1:
+    if max_threads == 1:
       gens = [gens]
     inf = gens[0]()
     matrix = inf['matrix']
     if not self.SaveTile(matrix, None, None):
       raise
-    compressor, decompressor = ((lambda tile: lzma.compress(tile, format=lzma.FORMAT_XZ, filters=({'id': lzma.FILTER_DELTA, 'dist': (4 if ext == 'bil.xz' else 2)}, {'id': lzma.FILTER_LZMA2, 'preset': 4}))), (lambda tile: lzma.decompress(tile, format=lzma.FORMAT_XZ))) if (ext := BaseMap.MIME_EXT.get(inf['format'], 'img')) in ('bil.xz', 'hgt.xz') else (None, None)
+    compressor, decompressor = ((lambda tile: lzma.compress(tile, format=lzma.FORMAT_XZ, filters=({'id': lzma.FILTER_DELTA, 'dist': (4 if ext == 'bil.xz' else 2)}, {'id': lzma.FILTER_LZMA2, 'preset': 4}))), (None if only_missing else (lambda tile: lzma.decompress(tile, format=lzma.FORMAT_XZ)))) if (ext := BaseMap.MIME_EXT.get(inf['format'], 'img')) in ('bil.xz', 'hgt.xz') else (None, None)
     try:
       (minrow, mincol), (maxrow, maxcol) = gens[0](minlat, maxlat, minlon, maxlon, just_box=True)
     except:
@@ -5617,7 +5623,7 @@ class MGMapsStoredMap():
     if minrow > maxrow or mincol > maxcol:
       return None
     cond = threading.Condition()
-    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'imported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
+    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'imported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
     col1 = col2 = mincol
     row1 = row2 = minrow
     box = iter(())
@@ -5652,12 +5658,16 @@ class MGMapsStoredMap():
             compc = {'f': None, 'created': False, 'cache': None, 'remaining': (col2 - col1) * (row2 - row1), 'imported': 0, 'skipped': 0, 'failed': 0}
             continue
         try:
+          if comp['created'] is None:
+            raise
+          if only_missing and self.ReadTile(matrix, row, col, cache=comp['cache']) is not None:
+            with cond:
+              comp['skipped'] += 1
+            continue
+          if (tile := gen(None, None, row, col)['tile']) is None:
+            raise
           with cond:
             if comp['created'] is None:
-              raise
-          tile = gen(None, None, row, col)['tile']
-          with cond:
-            if comp['created'] is None or tile is None:
               raise
             if comp['f'] is None:
               try:
@@ -5673,12 +5683,14 @@ class MGMapsStoredMap():
                 comp['f'] = None
                 comp['created'] = None
                 raise
-            if comp['created'] or tile != self.ReadTile(matrix, row, col, cache=comp['cache'], decompressor=decompressor):
-              if self.SaveTile(matrix, row, col, tile, cache=comp['cache'], compressor=compressor):
+          if comp['created'] or tile != self.ReadTile(matrix, row, col, cache=comp['cache'], decompressor=decompressor):
+            if self.SaveTile(matrix, row, col, tile, cache=comp['cache'], compressor=compressor):
+              with cond:
                 comp['imported'] += 1
-              else:
-                raise
             else:
+              raise
+          else:
+            with cond:
               comp['skipped'] += 1
         except:
           with cond:
@@ -5686,40 +5698,46 @@ class MGMapsStoredMap():
         finally:
           with cond:
             comp['remaining'] -= 1
-            if comp['remaining'] == 0:
-              comp['remaining'] = None
-              if (f := comp['f']) is not None:
-                try:
-                  if comp['imported']:
-                    if not comp['created']:
-                      f.seek(0)
-                      f.truncate()
-                    f.write(comp['cache'].getbuffer())
-                    comp['cache'].truncate(0)
-                except:
-                  comp['failed'] += comp['imported'] + comp['skipped']
-                  comp['imported'] = comp['skipped'] = 0
-                finally:
-                  try:
-                    f.close()
-                  except:
-                    pass
-              comps += 1
-              cond.notify_all()
-              progress['imported'] += comp['imported']
-              progress['skipped'] += comp['skipped']
-              progress['failed'] += comp['failed']
-              percent = '%2i%%' % int((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 / progress['total'])
-              if tot == progress['total']:
-                progress['finish_event'].set()
-              if comp['failed'] or percent != progress['percent']:
-                progress['percent'] = percent
-                progress['process_event'].set()
+            if comp['remaining'] != 0:
+              continue
+          if (f := comp['f']) is not None:
+            try:
+              if comp['imported']:
+                if not comp['created']:
+                  f.seek(0)
+                  f.truncate()
+                f.write(comp['cache'].getbuffer())
+                comp['cache'].truncate(0)
+            except:
+              comp['failed'] += comp['imported'] + comp['skipped']
+              comp['imported'] = comp['skipped'] = 0
+            finally:
+              try:
+                f.close()
+              except:
+                pass
+          with cond:
+            comps += 1
+            cond.notify_all()
+            progress['imported'] += comp['imported']
+            progress['skipped'] += comp['skipped']
+            progress['failed'] += comp['failed']
+            percent = '%2i%%' % ((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
+            if tot == progress['total']:
+              progress['finish_event'].set()
+            if percent != progress['percent']:
+              progress['percent'] = percent
+              progress['percent_event'].set()
+          if f is not None and (comp['imported'] or comp['skipped']) and callback is not None:
+            try:
+              callback(f.name, bool(comp['imported']))
+            except:
+              pass
     for gen in gens:
       threading.Thread(target=importer, args=(gen,), daemon=True).start()
     return progress
 
-  def ImportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_threads=16, tiles_class=WebMercatorMap):
+  def ImportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, only_missing=False, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_threads=16, tiles_class=WebMercatorMap, callback=None):
     if isinstance(matrices, (int, str)):
       matrices = (matrices,)
     inf = {k: v for k, v in infos.items() if k != 'matrix'}
@@ -5727,9 +5745,11 @@ class MGMapsStoredMap():
     m = tiles_class()
     for matrix in map(str, matrices):
       tile_generator_builder = partial(m.TileGenerator, inf, matrix, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, only_local=only_local, infos_completed=infs.get(matrix), infos_greedy=infs)
-      yield self.ImportTiles(tile_generator_builder, minlat, maxlat, minlon, maxlon, max_threads)
+      yield self.ImportTiles(tile_generator_builder, minlat, maxlat, minlon, maxlon, only_missing, max_threads, callback)
 
-  def ExportTiles(self, tile_saver, minlat, maxlat, minlon, maxlon):
+  def ExportTiles(self, tile_saver, minlat, maxlat, minlon, maxlon, max_threads=16):
+    if max_threads < 1:
+      return None
     conv, inf = tile_saver()
     decompressor = (lambda tile: lzma.decompress(tile, format=lzma.FORMAT_XZ)) if BaseMap.MIME_EXT.get(inf['format'], 'img') in ('bil.xz', 'hgt.xz') else None
     try:
@@ -5739,29 +5759,39 @@ class MGMapsStoredMap():
       return None
     if minrow > maxrow or mincol > maxcol:
       return None
-    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'exported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'process_event': threading.Event()}
+    lock = threading.Lock()
+    progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'exported': 0, 'skipped': 0, 'failed': 0, 'percent': '0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
+    box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
     def exporter():
-      for row in range(minrow, maxrow + 1):
-        for col in range(mincol, maxcol + 1):
+      while True:
+        with lock:
           try:
-            if (tile := self.ReadTile(matrix, row, col, decompressor=decompressor)) is None:
-              raise
-            if (res := tile_saver(row, col, tile)) is True:
+            row, col = next(box)
+          except StopIteration:
+            break
+        try:
+          if (tile := self.ReadTile(matrix, row, col, decompressor=decompressor)) is None:
+            raise
+          if (res := tile_saver(row, col, tile)) is True:
+            with lock:
               progress['exported'] += 1
-            elif res is False:
+          elif res is False:
+            with lock:
               progress['skipped'] += 1
-            else:
-              raise
-          except:
+          else:
+            raise
+        except:
+          with lock:
             progress['failed'] += 1
-            progress['process_event'].set()
-          percent = '%2i%%' % int((tot := progress['exported'] + progress['skipped'] + progress['failed']) * 100 / progress['total'])
+        with lock:
+          percent = '%2i%%' % ((tot := progress['exported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
           if tot == progress['total']:
             progress['finish_event'].set()
           if percent != progress['percent']:
             progress['percent'] = percent
-            progress['process_event'].set()
-    threading.Thread(target=exporter, daemon=True).start()
+            progress['percent_event'].set()
+    for i in range(min(max_threads, progress['total'])):
+      threading.Thread(target=exporter, daemon=True).start()
     return progress
 
   def CompleteInfos(self, infos, matrix=None, tiles_class=WebMercatorMap):
@@ -5785,7 +5815,7 @@ class MGMapsStoredMap():
     else:
       return basescale
 
-  def ExportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, local_pattern, tiles_class=WebMercatorMap):
+  def ExportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, local_pattern, max_threads=16, tiles_class=WebMercatorMap):
     if isinstance(matrices, (int, str)):
       matrices = (matrices,)
     m = tiles_class()
@@ -5801,7 +5831,7 @@ class MGMapsStoredMap():
         yield None
       else:
         tile_saver = lambda row=None, col=None, tile=None: (m.WGS84BoxtoTileBox, info) if tile is None else (not skipped if m.SaveTile(local_pattern, (info_ := info | {'row': row, 'col': col}), tile, match_json=False, just_refresh=(skipped := tile == m.ReadKnownTile(local_pattern, info_))) else None)
-        yield self.ExportTiles(tile_saver, minlat, maxlat, minlon, maxlon)
+        yield self.ExportTiles(tile_saver, minlat, maxlat, minlon, maxlon, max_threads)
 
 
 class XMLNode():
