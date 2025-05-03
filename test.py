@@ -117,8 +117,13 @@ tiles=[]
 key = "ortho"
 referer = ""
 infos = WebMercatorMap.TSAlias('IGN_PHOTOS')
-pr=m.RetrieveTiles(infos, matrix, lat, lat+0.16, lon, lon+0.22, key=key, referer=referer, memory_store=tiles, local_pattern=p, local_store=True, threads=4)
 print(infos)
+pr = m.ImportTilesIntoMGMaps(p + '|16', infos, matrix, lat, lat+0.16, lon, lon+0.22, key=key, referer=referer, max_threads=16)
+while True:
+  print(pr['percent'], end='\b' * 4, flush=True)
+  if pr['percent_event'].wait() and pr['finish_event'].is_set():
+    break
+pr=m.RetrieveTiles(infos, matrix, lat, lat+0.16, lon, lon+0.22, memory_store=tiles, local_pattern=p + '|16', only_local=True, threads=4)
 pr['finish_event'].wait()
 t=time.time()
 map = m.MergeTiles(infos, tiles)
