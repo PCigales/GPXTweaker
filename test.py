@@ -123,7 +123,7 @@ while True:
   print(pr['percent'], end='\b' * 4, flush=True)
   if pr['percent_event'].wait() and pr['finish_event'].is_set():
     break
-pr=m.RetrieveTiles(infos, matrix, lat, lat+0.16, lon, lon+0.22, memory_store=tiles, local_pattern=p + '|16', only_local=True, threads=4)
+pr = m.RetrieveTiles(infos, matrix, lat, lat+0.16, lon, lon+0.22, memory_store=tiles, local_pattern=p + '|16', only_local=True, threads=4)
 pr['finish_event'].wait()
 t=time.time()
 map = m.MergeTiles(infos, tiles)
