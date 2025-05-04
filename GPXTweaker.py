@@ -5623,6 +5623,7 @@ class MGMapsStoredMap():
     if minrow > maxrow or mincol > maxcol:
       return None
     cond = threading.Condition()
+    barr = threading.Barrier(max_threads + 1)
     progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'imported': 0, 'skipped': 0, 'failed': 0, 'percent': '  0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
     col1 = col2 = mincol
     row1 = row2 = minrow
@@ -5631,6 +5632,7 @@ class MGMapsStoredMap():
     def importer(gen):
       nonlocal col1, col2, row1, row2, box
       nonlocal comps, compc
+      barr.wait()
       while True:
         with cond:
           comp = compc
@@ -5735,6 +5737,7 @@ class MGMapsStoredMap():
               pass
     for gen in gens:
       threading.Thread(target=importer, args=(gen,), daemon=True).start()
+    barr.wait()
     return progress
 
   def ImportTilesGenerator(self, infos, matrices, minlat, maxlat, minlon, maxlon, only_missing=False, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_threads=16, tiles_class=WebMercatorMap, callback=None):
@@ -5760,9 +5763,11 @@ class MGMapsStoredMap():
     if minrow > maxrow or mincol > maxcol:
       return None
     lock = threading.Lock()
+    barr = threading.Barrier(max_threads + 1)
     progress = {'matrix': matrix, 'box': ((minrow, mincol), (maxrow, maxcol)), 'total': (maxcol + 1 - mincol) * (maxrow + 1 - minrow), 'exported': 0, 'skipped': 0, 'failed': 0, 'percent': '  0%', 'finish_event': threading.Event(), 'percent_event': threading.Event()}
     box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
     def exporter():
+      barr.wait()
       while True:
         with lock:
           try:
@@ -5790,8 +5795,9 @@ class MGMapsStoredMap():
           if percent != progress['percent']:
             progress['percent'] = percent
             progress['percent_event'].set()
-    for i in range(min(max_threads, progress['total'])):
+    for i in range(max_threads):
       threading.Thread(target=exporter, daemon=True).start()
+    barr.wait()
     return progress
 
   def CompleteInfos(self, infos, matrix=None, tiles_class=WebMercatorMap):
