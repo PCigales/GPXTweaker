@@ -1,4 +1,4 @@
-# GPXTweaker v1.19.2 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.19.3 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -21,9 +21,22 @@ from pathlib import Path
 import re
 import json
 import base64
-import zlib
-import gzip
-import lzma
+try:
+  from compression import zlib
+except:
+  import zlib
+try:
+  from compression import gzip
+except:
+  import gzip
+try:
+  from compression import zstd
+except:
+  zstd = None
+try:
+  from compression import lzma
+except:
+  import lzma
 import zipfile
 from io import BytesIO, StringIO
 import ctypes, ctypes.wintypes
@@ -1193,7 +1206,7 @@ class HTTPMessage():
     if decompress and body_len != 0:
       hce = [e for h in (http_message.header('Content-Encoding', ''), http_message.header('Transfer-Encoding', '')) for e in map(str.strip, h.lower().split(',')) if not e in ('chunked', '', 'identity')]
       for ce in hce:
-        if ce not in {'deflate', 'gzip'}:
+        if ce not in ({'deflate', 'gzip', 'zstd'} if zstd else {'deflate', 'gzip'}):
           if http_message.method is not None and iss:
             try:
               message.sendall(('HTTP/1.1 415 Unsupported media type\r\nContent-Length: 0\r\nDate: %s\r\nCache-Control: no-cache, no-store, must-revalidate\r\n\r\n' % email.utils.formatdate(time.time(), usegmt=True)).encode('ISO-8859-1'))
@@ -1343,6 +1356,8 @@ class HTTPMessage():
               http_message.body = zlib.decompress(http_message.body, wbits=-15)
           elif ce == 'gzip':
             http_message.body = gzip.decompress(http_message.body)
+          elif zstd and ce == 'zstd':
+            http_message.body = zstd.decompress(http_message.body)
           else:
             raise
       if decode:
@@ -1406,7 +1421,7 @@ class HTTPBaseRequest():
       if hexp:
         headers['Expect'] = '100-continue'
       if 'accept-encoding' not in (k.lower() for k, v in hitems):
-        headers['Accept-Encoding'] = 'identity, deflate, gzip' if decompress else 'identity'
+        headers['Accept-Encoding'] = ('identity, deflate, gzip, zstd' if zstd else 'identity, deflate, gzip') if decompress else 'identity'
       if data is not None:
         if 'chunked' not in (e.strip() for k, v in hitems if k.lower() == 'transfer-encoding' for e in v.lower().split(',')):
           headers['Content-Length'] = str(len(data))
@@ -2305,8 +2320,8 @@ class BaseMap(WGS84WebMercator):
   MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/vnd.mapbox-vector-tile': 'mvt', 'application/geo+json': 'geojson', 'application/json': 'json', 'image/svg+xml': 'svg'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
-  LOCALSTORE_DEFAULT_PATTERN = r'{alias|layer}\{matrix}\{row:0>}\{alias|layer}-{matrix}-{row:0>}-{col:0>}.{ext}'
-  LOCALSTORE_HGT_DEFAULT_PATTERN = r'{alias|layer}\{hgt}.{ext}'
+  LOCALSTORE_DEFAULT_PATTERN = r'{name}\{matrix}\{row:0>}\{name}-{matrix}-{row:0>}-{col:0>}.{ext}'
+  LOCALSTORE_HGT_DEFAULT_PATTERN = r'{name}\{hgt}.{ext}'
   WMS_PATTERN = {'GetCapabilities': '?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
   WMTS_PATTERN = {'GetCapabilities': '?SERVICE=WMTS&REQUEST=GetCapabilities', 'GetTile': '?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER={layer}&STYLE={style}&FORMAT={format}&TILEMATRIXSET={matrixset}&TILEMATRIX={matrix}&TILEROW={row}&TILECOL={col}'}
 
@@ -2717,7 +2732,7 @@ class BaseMap(WGS84WebMercator):
         cap.unlink()
       except:
         pass
-    if '' in map(lambda k: infos.get(k) or '', ('scale', 'topx', 'topy', 'width', 'height')):
+    if not all(map(infos.get, ('scale', 'topx', 'topy', 'width', 'height'))):
       return False
     if lat is not None and lon is not None :
       try:
@@ -2736,20 +2751,14 @@ class BaseMap(WGS84WebMercator):
       headers.update(extra_headers)
     try:
       if '{wmts}' not in infos['source']:
-        if '{quadkey}' in infos['source']:
-          quadkey = ''.join(map(lambda p: str(int(p[0]+p[1], 2)), zip(bin(int(infos['row']))[2:].rjust(int(infos['matrix']), '0'), bin(int(infos['col']))[2:].rjust(int(infos['matrix']), '0'))))
-        else:
-          quadkey = ''
+        quadkey = ''.join(map(lambda p: str(int(p[0] + p[1], 2)), zip(bin(int(infos['row']))[2:].rjust(int(infos['matrix']), '0'), bin(int(infos['col']))[2:].rjust(int(infos['matrix']), '0')))) if '{quadkey}' in infos['source'] else ''
         if '{hgt}' in infos['source']:
           lat = 89 - infos['row']
           lon = infos['col'] - 180
           hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
         else:
           hgt = ''
-        if '{invrow}' in infos['source']:
-          invrow = str(round(infos['topy'] / infos['scale'] / infos['height'] * 2 - infos['row'] - 1))
-        else:
-          invrow = ''
+        invrow = str(round(infos['topy'] / infos['scale'] / infos['height'] * 2 - infos['row'] - 1)) if '{invrow}' in infos['source'] else ''
         uri = infos['source'].format_map({**infos, 'quadkey': quadkey, 'hgt': hgt, 'invrow': invrow, 'key': key or ''})
       else:
         uri = infos['source'].format_map({'wmts': self.WMTS_PATTERN['GetTile'], 'key': key or ''}).format_map(infos)
@@ -2777,10 +2786,9 @@ class BaseMap(WGS84WebMercator):
     try:
       if not self.GetTileInfos(infos, matrix, lat, lon, key, referer, user_agent, basic_auth, extra_headers, pconnection):
         return None
-      tile = self.GetKnownTile(infos, key, referer, user_agent, basic_auth, extra_headers, pconnection)
+      return self.GetKnownTile(infos, key, referer, user_agent, basic_auth, extra_headers, pconnection)
     except:
       return None
-    return tile
 
   def _match_infos(self, pattern, infos, update_dict=False, update_json=False):
     if '{' not in pattern:
@@ -2789,7 +2797,7 @@ class BaseMap(WGS84WebMercator):
     while '{matrix}' in os.path.dirname(infopattern) or '{hgt}' in infopattern:
       infopattern = os.path.dirname(infopattern)
     try:
-      infopath = os.path.join(infopattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'infos.json')
+      infopath = os.path.join(infopattern.format_map({**infos, 'name': infos.get('alias') or infos.get('layer', '')}), 'infos.json')
     except:
       return False
     if not os.path.exists(infopath):
@@ -2806,11 +2814,10 @@ class BaseMap(WGS84WebMercator):
       try:
         f = open(infopath, 'rt', encoding='utf-8')
         inf = json.load(f)
-        if False in (k not in infos or infos.get(k, '') == inf.get(k, '') for k in ('layer', 'matrixset', 'style', 'format', 'matrix')):
+        if any(k in infos and infos.get(k, '') != inf.get(k, '') for k in ('layer', 'matrixset', 'style', 'format', 'matrix')):
           return False
-        if 'alias' in infos and 'alias' in inf:
-          if infos['alias'] != inf['alias']:
-            return False
+        if 'alias' in infos and 'alias' in inf and infos['alias'] != inf['alias']:
+          return False
       except:
         return False
       finally:
@@ -2847,19 +2854,18 @@ class BaseMap(WGS84WebMercator):
   def ReadTileInfos(self, pattern, infos, matrix=None, lat=None, lon=None, update_json=False):
     if matrix is not None:
       infos['matrix'] = str(matrix)
-    if '{hgt}' in infos.get('source', '') or infos.get('format') == 'image/hgt':
+    hgt = '{hgt}' in infos.get('source', '') or infos.get('format') == 'image/hgt'
+    if hgt:
       infos['matrix'] = '0'
     if 'matrix' not in infos:
       return False
     if '{' not in pattern:
-      pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN if (infos.get('format') != 'image/hgt' and '{hgt}' not in infos.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN))
+      pattern = os.path.join(pattern, self.LOCALSTORE_HGT_DEFAULT_PATTERN if hgt else self.LOCALSTORE_DEFAULT_PATTERN)
     if not self._match_infos(pattern, infos, update_dict=True, update_json=update_json):
       return False
+    if not all(map(infos.get, ('source', 'layer', 'topx', 'topy', 'width', 'height'))):
+      return False
     try:
-      if not infos.get('source'):
-        return False
-      if '' in map(lambda k: infos.get(k) or '', ('layer', 'topx', 'topy', 'width', 'height')):
-        return False
       if not infos.get('scale'):
         if '{wmts}' in infos['source']:
           return False
@@ -2883,7 +2889,7 @@ class BaseMap(WGS84WebMercator):
         lat = 89 - infos['row']
         lon = infos['col'] - 180
         hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
-      filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''), 'ext': ext, 'hgt': hgt}})
+      filepath = pattern.format_map({**infos, 'name': (infos.get('alias') or infos.get('layer', '')), 'ext': ext, 'hgt': hgt})
       if just_lookup:
         if os.path.exists(filepath):
           return os.path.getmtime(filepath)
@@ -2898,7 +2904,7 @@ class BaseMap(WGS84WebMercator):
           f = open(filepath[:-3], 'rb')
       else:
         f = open(filepath, 'rb')
-      tile = f.read()
+      return f.read()
     except:
       return False if just_lookup else None
     finally:
@@ -2906,24 +2912,21 @@ class BaseMap(WGS84WebMercator):
         f.close()
       except:
         pass
-    return tile
 
   def ReadTile(self, pattern, infos, matrix, lat, lon):
     try:
       if not self.ReadTileInfos(pattern, infos, matrix, lat, lon):
         return None
-      tile = self.ReadKnownTile(pattern, infos)
+      return self.ReadKnownTile(pattern, infos)
     except:
       return None
-    return tile
 
   def SaveTile(self, pattern, infos, tile=None, match_json=True, just_refresh=False):
     if '{' not in pattern:
       pattern = os.path.join(pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if (infos.get('format') != 'image/hgt' and '{hgt}' not in infos.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
     ext = BaseMap.MIME_EXT.get(infos['format'], 'img')
-    if match_json:
-      if not self._match_infos(pattern, infos, update_json=True):
-        return False
+    if match_json and not self._match_infos(pattern, infos, update_json=True):
+      return False
     if tile is not None:
       hgt = ''
       if ext == 'hgt.xz' or '{hgt}' in pattern:
@@ -2931,7 +2934,7 @@ class BaseMap(WGS84WebMercator):
         lon = infos['col'] - 180
         hgt = ('N' if lat >= 0 else 'S') + ('%02i' % abs(lat)) + ('E' if lon >= 0 else 'O') + ('%03i' % abs(lon))
       try:
-        filepath = pattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', ''), 'ext': ext, 'hgt': hgt}})
+        filepath = pattern.format_map({**infos, 'name': (infos.get('alias') or infos.get('layer', '')), 'ext': ext, 'hgt': hgt})
         if just_refresh:
           os.utime(filepath, (time.time(),) * 2)
         else:
@@ -3076,7 +3079,8 @@ class BaseMap(WGS84WebMercator):
           else:
             tpf = None
             ca = None
-          local_pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)).format_map({'name': name, 'matrix': '{matrix}', 'x': '{x}', 'y': '{y}'})
+          if '{' not in local_pattern:
+            local_pattern = os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)
           if (mgm := MGMapsStoredMap(name, local_pattern, tpf, ca)) is None:
             return None
       except:
@@ -3100,8 +3104,13 @@ class BaseMap(WGS84WebMercator):
       except:
         return None
     try:
-      if local_pattern is not None and not mgm and '{' not in local_pattern:
-        local_pattern = os.path.join(local_pattern, (self.LOCALSTORE_DEFAULT_PATTERN.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))) if (infos.get('format') != 'image/hgt' and '{hgt}' not in infos.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
+      if local_pattern is not None and not mgm:
+        if (infos.get('format') != 'image/hgt' and '{hgt}' not in infos.get('source', '')):
+          if '{' not in local_pattern:
+            local_pattern = os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN)
+          local_pattern = local_pattern.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['height'] / infos['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / infos['width'] / infos['scale']))))
+        elif '{' not in local_pattern:
+          local_pattern = os.path.join(local_pattern, self.LOCALSTORE_HGT_DEFAULT_PATTERN)
     except:
       return None
     if infos_greedy is not None:
@@ -3214,7 +3223,7 @@ class BaseMap(WGS84WebMercator):
         try:
           with lock:
             row, col = next(box)
-          tile = self.RetrieveMGMapsTile({**infos, **{'row': row, 'col': col}}, mgm, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection, action, memory_store is None) if mgm else self.RetrieveTile({**infos, **{'row': row, 'col': col}}, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection, action, memory_store is None)
+          tile = self.RetrieveMGMapsTile({**infos, 'row': row, 'col': col}, mgm, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection, action, memory_store is None) if mgm else self.RetrieveTile({**infos, 'row': row, 'col': col}, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection, action, memory_store is None)
           if memory_store is not None:
             memory_store[col - mincol][row - minrow] = tile
           with lock:
@@ -3236,10 +3245,10 @@ class BaseMap(WGS84WebMercator):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, threads=threads)
 
   def ImportTilesIntoMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=False, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, max_threads=16, callback=None):
-    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, key, referer, user_agent, basic_auth, extra_headers, False, complete_infos=False)) is None else next(res[0].ImportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=only_missing, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, max_threads=max_threads, tiles_class=self.__class__, callback=callback))
+    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, key, referer, user_agent, basic_auth, extra_headers, False, complete_infos=False)) is None or res[0] is None else next(res[0].ImportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=only_missing, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, max_threads=max_threads, tiles_class=self.__class__, callback=callback))
 
   def ExportTilesFromMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, max_threads=16):
-    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, None, None, None, None, None, None, complete_infos=False)) is None else next(res[0].ExportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=(os.path.dirname(res[0].confpath) if local_pattern is None else local_pattern), max_threads=max_threads, tiles_class=self.__class__))
+    return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, None, None, None, None, None, None, complete_infos=False)) is None or res[0] is None else next(res[0].ExportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=(os.path.dirname(res[0].confpath) if local_pattern is None else local_pattern), max_threads=max_threads, tiles_class=self.__class__))
 
   def AssembleMap(self, infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, threads=10, tiles_cache=None):
     tiles = []
@@ -3980,7 +3989,7 @@ class TIFFHandler(metaclass=TIFFHandlerMeta):
 
 class JSONTiles():
 
-  LOCALSTORE_DEFAULT_PATTERN = r'{alias|layer}\{resource}'
+  LOCALSTORE_DEFAULT_PATTERN = r'{name}\{resource}'
 
   def __init__(self, tset_id_mult):
     self.TilesSetIdMult = tset_id_mult
@@ -4087,7 +4096,7 @@ class JSONTiles():
           pattern = os.path.join(pattern, '{resource}')
         a_l = infos.get('alias') or infos.get('layer', '')
         a_ls = infos.get('alias') or '_'.join(filter(None, (infos.get('layer', ''), infos.get('style', ''))))
-        pattern = pattern.format_map({**infos,  'alias|layer': a_l, 'resource': '{resource}'})
+        pattern = pattern.format_map({**infos,  'name': a_l, 'resource': '{resource}'})
         infopath = pattern.replace('{resource}',  a_ls + ' - infos.json')
         if os.path.exists(infopath):
           f = open(infopath, 'rt', encoding='utf-8')
@@ -5320,7 +5329,7 @@ class MapLegend():
       legendpattern = os.path.dirname(pattern)
       while '{matrix}' in os.path.dirname(legendpattern):
         legendpattern = os.path.dirname(legendpattern)
-      legendpath = legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}})
+      legendpath = legendpattern.format_map({**infos, 'name': infos.get('alias') or infos.get('layer', '')})
       legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
       if legendpath is None:
         return None
@@ -5344,7 +5353,7 @@ class MapLegend():
       while '{matrix}' in os.path.dirname(legendpattern):
         legendpattern = os.path.dirname(legendpattern)
       ext = BaseMap.MIME_DOTEXT.get(format, '.img')
-      legendpath = os.path.join(legendpattern.format_map({**infos, **{'alias|layer': infos.get('alias') or infos.get('layer', '')}}), 'legend' + ext)
+      legendpath = os.path.join(legendpattern.format_map({**infos, 'name': infos.get('alias') or infos.get('layer', '')}), 'legend' + ext)
       if just_refresh:
         os.utime(legendpath, (time.time(),) * 2)
       else:
@@ -5375,7 +5384,6 @@ class MapLegend():
       if local_pattern is not None:
         if (lp := local_pattern.rpartition('|'))[1] == '|':
           local_pattern = lp[0]
-          local_pattern = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, MGMapsStoredMap.LOCALSTORE_DEFAULT_PATTERN)).format_map({'name': infos.get('alias') or infos.get('layer', ''), 'matrix': '{matrix}', 'x': '{x}', 'y': '{y}'})
         last_mod = self.ReadTilesLegend(local_pattern, infos, just_lookup=True)
         if last_mod is not None:
           self.log(2, 'legendlfound', infos)
@@ -5827,6 +5835,8 @@ class MGMapsStoredMap():
     m = tiles_class()
     inf = {k: v for k, v in infos.items() if k != 'matrix'}
     basescale = self.CompleteInfos(inf, tiles_class=tiles_class)
+    if '{' not in local_pattern:
+      local_pattern = os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN if (inf.get('format') != 'image/hgt' and '{hgt}' not in inf.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
     for matrix in map(str, matrices):
       info = {**infos}
       if not m.ReadTileInfos(local_pattern, info, matrix=matrix, update_json=True):
@@ -5836,6 +5846,7 @@ class MGMapsStoredMap():
       if info is None:
         yield None
       else:
+        local_pattern = local_pattern.replace('{row:0>}', '{row:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / info['height'] / info['scale'])))).replace('{col:0>}', '{col:0>%s}' % len(str(int(math.pi * WGS84WebMercator.R * 2 / info['width'] / info['scale']))))
         tile_saver = lambda row=None, col=None, tile=None: (m.WGS84BoxtoTileBox, info) if tile is None else (not skipped if m.SaveTile(local_pattern, (info_ := info | {'row': row, 'col': col}), tile, match_json=False, just_refresh=(skipped := tile == m.ReadKnownTile(local_pattern, info_))) else None)
         yield self.ExportTiles(tile_saver, minlat, maxlat, minlon, maxlon, max_threads)
 
@@ -24199,7 +24210,7 @@ class GPXTweakerWebInterfaceServer():
 
 
 if __name__ == '__main__':
-  print('GPXTweaker v1.19.2 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
+  print('GPXTweaker v1.19.3 (https://github.com/PCigales/GPXTweaker)    Copyright © 2022 PCigales')
   print(LSTRINGS['parser']['license'])
   print('')
   formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=50, width=119)
