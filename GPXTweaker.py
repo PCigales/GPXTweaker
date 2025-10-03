@@ -2732,7 +2732,7 @@ class BaseMap(WGS84WebMercator):
         cap.unlink()
       except:
         pass
-    if not all(map(infos.get, ('scale', 'topx', 'topy', 'width', 'height'))):
+    if not all(map(infos.get, ('scale', 'width', 'height'))) or infos.get('topx') is None or infos.get('topy') is None:
       return False
     if lat is not None and lon is not None :
       try:
@@ -2863,7 +2863,7 @@ class BaseMap(WGS84WebMercator):
       pattern = os.path.join(pattern, self.LOCALSTORE_HGT_DEFAULT_PATTERN if hgt else self.LOCALSTORE_DEFAULT_PATTERN)
     if not self._match_infos(pattern, infos, update_dict=True, update_json=update_json):
       return False
-    if not all(map(infos.get, ('source', 'layer', 'topx', 'topy', 'width', 'height'))):
+    if not all(map(infos.get, ('source', 'layer', 'width', 'height'))) or infos.get('topx') is None or infos.get('topy') is None:
       return False
     try:
       if not infos.get('scale'):
@@ -5836,7 +5836,7 @@ class MGMapsStoredMap():
     inf = {k: v for k, v in infos.items() if k != 'matrix'}
     basescale = self.CompleteInfos(inf, tiles_class=tiles_class)
     if '{' not in local_pattern:
-      local_pattern = os.path.join(local_pattern, self.LOCALSTORE_DEFAULT_PATTERN if (inf.get('format') != 'image/hgt' and '{hgt}' not in inf.get('source', '')) else self.LOCALSTORE_HGT_DEFAULT_PATTERN)
+      local_pattern = os.path.join(local_pattern, tiles_class.LOCALSTORE_DEFAULT_PATTERN if (inf.get('format') != 'image/hgt' and '{hgt}' not in inf.get('source', '')) else tiles_class.LOCALSTORE_HGT_DEFAULT_PATTERN)
     for matrix in map(str, matrices):
       info = {**infos}
       if not m.ReadTileInfos(local_pattern, info, matrix=matrix, update_json=True):
