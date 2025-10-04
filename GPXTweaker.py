@@ -19021,7 +19021,7 @@ class GPXTweakerWebInterfaceServer():
   '      #tracksfilterform {\r\n' \
   '        display: inline-block;\r\n' \
   '        width: 25em;\r\n' \
-  '        max-width: calc(100% - 85.6em);\r\n' \
+  '        max-width: calc(100% - 86.5em);\r\n' \
   '      }\r\n' \
   '      #tracksfilter {\r\n' \
   '        width: 100%;\r\n' \
@@ -19039,7 +19039,7 @@ class GPXTweakerWebInterfaceServer():
   '        contain: strict;\r\n' \
   '        position: absolute;\r\n' \
   '        display: inline-block;\r\n' \
-  '        width: 24.5em;\r\n' \
+  '        width: 26em;\r\n' \
   '        height: 1.6em;\r\n' \
   '        white-space: nowrap;\r\n' \
   '        user-select: none;\r\n' \
