@@ -5477,7 +5477,9 @@ class MGMapsStoredMap():
       try:
         f.close()
       except:
-        return None
+        f = None
+    if f is None:
+      return None
     p = self.tiles_per_file.bit_length() - 1
     self.tiles_per_file_y = p // 2
     self.tiles_per_file_x = p - self.tiles_per_file_y
@@ -5708,41 +5710,41 @@ class MGMapsStoredMap():
         finally:
           with cond:
             comp['remaining'] -= 1
-            if comp['remaining'] != 0:
-              continue
-          if (f := comp['f']) is not None:
-            try:
-              if comp['imported']:
-                if not comp['created']:
-                  f.seek(0)
-                  f.truncate()
-                f.write(comp['cache'].getbuffer())
-                comp['cache'].truncate(0)
-            except:
-              comp['failed'] += comp['imported'] + comp['skipped']
-              comp['imported'] = comp['skipped'] = 0
-            finally:
+            end = comp['remaining'] == 0
+          if end:
+            if (f := comp['f']) is not None:
               try:
-                f.close()
+                if comp['imported']:
+                  if not comp['created']:
+                    f.seek(0)
+                    f.truncate()
+                  f.write(comp['cache'].getbuffer())
+                  comp['cache'].truncate(0)
+              except:
+                comp['failed'] += comp['imported'] + comp['skipped']
+                comp['imported'] = comp['skipped'] = 0
+              finally:
+                try:
+                  f.close()
+                except:
+                  pass
+            with cond:
+              comps += 1
+              cond.notify_all()
+              progress['imported'] += comp['imported']
+              progress['skipped'] += comp['skipped']
+              progress['failed'] += comp['failed']
+              percent = '%3i%%' % ((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
+              if tot == progress['total']:
+                progress['finish_event'].set()
+              if percent != progress['percent']:
+                progress['percent'] = percent
+                progress['percent_event'].set()
+            if f is not None and (comp['imported'] or comp['skipped']) and callback is not None:
+              try:
+                callback(f.name, bool(comp['imported']))
               except:
                 pass
-          with cond:
-            comps += 1
-            cond.notify_all()
-            progress['imported'] += comp['imported']
-            progress['skipped'] += comp['skipped']
-            progress['failed'] += comp['failed']
-            percent = '%3i%%' % ((tot := progress['imported'] + progress['skipped'] + progress['failed']) * 100 // progress['total'])
-            if tot == progress['total']:
-              progress['finish_event'].set()
-            if percent != progress['percent']:
-              progress['percent'] = percent
-              progress['percent_event'].set()
-          if f is not None and (comp['imported'] or comp['skipped']) and callback is not None:
-            try:
-              callback(f.name, bool(comp['imported']))
-            except:
-              pass
     for gen in gens:
       threading.Thread(target=importer, args=(gen,), daemon=True).start()
     barr.wait()
