@@ -9348,7 +9348,6 @@ class GPXTweakerWebInterfaceServer():
   '      var iset = -1;\r\n' \
   '      var dots_visible = false;\r\n' \
   '      var arrows_visible = true;\r\n' \
-  '      var scrollmode = 2;\r\n' \
   '      var scrollmode_ex = scrollmode;\r\n' \
   '      var focused = "";\r\n' \
   '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
@@ -15461,6 +15460,7 @@ class GPXTweakerWebInterfaceServer():
   '      var htopx = ##HTOPX##;\r\n' \
   '      var htopy = ##HTOPY##;\r\n' \
   '      var tholdsize = ##THOLDSIZE##;\r\n' \
+  '      var scrollmode = ##SCROLLMODE##;\r\n' \
   '      const tlayers = new Map([##TLAYERS##]);\r\n' \
   '      var tmaplibre = ##TMAPLIBRE##;'
   HTML_WAYPOINT_TEMPLATE = \
@@ -22786,6 +22786,11 @@ class GPXTweakerWebInterfaceServer():
             self.DefLat = None if value is None else float(value)
           elif field == 'def_lon':
             self.DefLon = None if value is None else float(value)
+          elif field == 'auto_scroll':
+            self.AutoScroll = {'': 0, None: 0, '0': 0, 'gray': 0, 'grey': 0, '1': 1, 'select': 1, 'blue': 1, '2': 2, 'hover': 2, 'green': 2}.get(value and value.rstrip())
+            if self.AutoScroll is None:
+              self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
+              return False
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -23274,6 +23279,7 @@ class GPXTweakerWebInterfaceServer():
     self.VMaxLon = 180
     self.DefLat = None
     self.DefLon = None
+    self.AutoScroll = 1;
     self.Browsers = {}
     self.ExplorerLoadingWorkers = 1
     self.ExplorerLoadingRepatriation = True
@@ -23769,12 +23775,15 @@ class GPXTweakerWebInterfaceServer():
   def _build_tlayers(self):
     return ', '.join('[%s, [%s]]' % (i, ', '.join('[%s, "%s"]' % (to[0], to[1]) for to in t[1])) for i, t in enumerate(self.TilesSets) if len(t) >= 2 and isinstance(t[1], list))
 
+  def _build_declarations(self, defx, defy):
+    return GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (BaseMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##SCROLLMODE##', str(self.AutoScroll)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+
   def BuildHTML(self, defx=None, defy=None):
     if self.HTML is None:
       return False
     if defx is None or defy is None:
       defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (BaseMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = self._build_declarations(defx, defy)
     pathes = self._build_pathes()
     waydots = self._build_waydots()
     dots = self._build_dots()
@@ -24033,7 +24042,7 @@ class GPXTweakerWebInterfaceServer():
     if self.HTMLExp is None:
       return False
     defx, defy = WGS84WebMercator.WGS84toWebMercator(self.DefLat, self.DefLon)
-    declarations = GPXTweakerWebInterfaceServer.HTML_DECLARATIONS_TEMPLATE.replace('##PORTMIN##', str(self.Ports[0])).replace('##PORTMAX##', str(self.Ports[1])).replace('##GPUCOMP##', str(self.GpuComp)).replace('##WEBGPU##', str(bool(self.PreferWebGpu)).lower()).replace('##V3DWEBGPU##', str(bool(self.V3DPreferWebGpu)).lower()).replace('##MODE##', self.Mode).replace('##VMINX##', str(self.VMinx)).replace('##VMAXX##', str(self.VMaxx)).replace('##VMINY##', str(self.VMiny)).replace('##VMAXY##', str(self.VMaxy)).replace('##DEFX##', str(defx)).replace('##DEFY##', str(defy)).replace('##TTOPX##', str(self.MTopx)).replace('##TTOPY##', str(self.MTopy)).replace('##TWIDTH##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['width'])).replace('##THEIGHT##', '0' if self.Mode == 'tiles' else str(self.Map.MapInfos['height'])).replace('##TEXT##', '' if self.Mode == 'tiles' else (BaseMap.MIME_DOTEXT.get(self.Map.MapInfos.get('format'), '.img'))).replace('##TSCALE##', '1' if self.Mode =='tiles' else str(self.Map.MapResolution)).replace('##HTOPX##', str(self.Minx)).replace('##HTOPY##', str(self.Maxy)).replace('##THOLDSIZE##', str(self.TilesHoldSize)).replace('##TLAYERS##', self._build_tlayers()).replace('##TMAPLIBRE##', 'false' if self.JSONTiles else 'null')
+    declarations = self._build_declarations(defx, defy)
     folders = self._build_folders_exp()
     pathes = self._build_pathes_exp()
     waydots = self._build_waydotss_exp()
