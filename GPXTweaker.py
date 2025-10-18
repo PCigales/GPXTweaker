@@ -3446,7 +3446,7 @@ class WebMercatorMap(BaseMap):
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_CYCLE = {'alias': 'THUNDERFOREST_CYCLE', 'source': TS_THUNDERFOREST_SOURCE + '/cycle/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.CYCLE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
-  TS_THUNDERFOREST_ATLAS = {'alias': 'THUNDERFOREST_ATLAS', 'source': 'https://api.thunderforest.com/styles/{style}/style.json?apikey={key}', 'layer':'KTHUNDERFOREST.ATLAS', 'style': 'atlas', 'format': 'application/json'}
+  TS_THUNDERFOREST_ATLAS = {'alias': 'THUNDERFOREST_ATLAS', 'source': 'https://api.thunderforest.com/styles/{style}/style.json?apikey={key}', 'layer':'THUNDERFOREST.ATLAS', 'style': 'atlas', 'format': 'application/json'}
   WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts{wmts}'
   TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
   TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/{layer}.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}'
@@ -4352,7 +4352,7 @@ class JSONTiles():
       rep = HTTPRequest(uri_, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
         try:
-          uri_ = urllib.parse.urlsplit(uri.format_map({'key': handling['key'] or ''}))
+          uri_ = urllib.parse.urlsplit(uri)
           uri_ = urllib.parse.urlunsplit(uri_._replace(path=uri_.path + scale + '.' + target))
         except:
           self.log(1, 'sprite%sfail' % target, tid, scale)
