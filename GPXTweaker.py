@@ -4246,7 +4246,7 @@ class JSONTiles():
         if desc['type'] == 'geojson':
           continue
         sid += 1
-        desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1][0:4], tid + self.TilesSetIdMult * sid)]
+        desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(desc['tiles'][0])[1][0:4], tid + self.TilesSetIdMult * sid)]
       self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layerstyle': (a_ls if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local})
     except:
       self.log(1, 'stylefail', infos)
