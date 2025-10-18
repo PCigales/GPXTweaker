@@ -3446,6 +3446,7 @@ class WebMercatorMap(BaseMap):
   TS_THUNDERFOREST_LANDSCAPE = {'alias': 'THUNDERFOREST_LANDSCAPE', 'source': TS_THUNDERFOREST_SOURCE + '/landscape/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.LANDSCAPE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_OUTDOORS = {'alias': 'THUNDERFOREST_OUTDOORS', 'source': TS_THUNDERFOREST_SOURCE + '/outdoors/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.OUTDOORS', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
   TS_THUNDERFOREST_CYCLE = {'alias': 'THUNDERFOREST_CYCLE', 'source': TS_THUNDERFOREST_SOURCE + '/cycle/{matrix}/{col}/{row}.png?apikey={key}', 'layer':'THUNDERFOREST.CYCLE', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256}
+  TS_THUNDERFOREST_ATLAS = {'alias': 'THUNDERFOREST_ATLAS', 'source': 'https://api.thunderforest.com/styles/{style}/style.json?apikey={key}', 'layer':'KTHUNDERFOREST.ATLAS', 'style': 'atlas', 'format': 'application/json'}
   WMTS_EUROGEOGRAPHICS_SOURCE = 'https://www.mapsforeurope.org/maps/wmts{wmts}'
   TS_EUROGEOGRAPHICS_EUROREGIONALMAP = {'alias': 'EUROGEOGRAPHICS_EUROREGIONALMAP', 'source': WMTS_EUROGEOGRAPHICS_SOURCE + '&token={key}', 'layer': 'erm', 'matrixset': 'euro_3857', 'style': 'default', 'format': 'image/png'}
   TS_HEREBASE_SOURCE = 'https://1.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/{layer}.day/{matrix}/{col}/{row}/256/png8?pois&apiKey={key}'
@@ -3455,6 +3456,7 @@ class WebMercatorMap(BaseMap):
   TS_HERE_TERRAIN = {'alias': 'HERE_TERRAIN', 'source': TS_HEREAERIAL_SOURCE, 'layer':'terrain', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE, 'layer':'satellite', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE, 'layer':'hybrid', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
+  TS_KOMOOT_OSM = {'alias': 'KOMOOT_OSM', 'source': 'https://tiles-api.maps.komoot.net/v1/style.json', 'layer':'KOMOOT.OSM', 'style': 'osm', 'format': 'application/json'}
 
   def LinkLegend(self, legend):
     self.Legend = legend
@@ -4201,6 +4203,8 @@ class JSONTiles():
       names = map(str.strip, infos.get('overwrite_names', '').split(','))
       for name, desc in style['sources'].items():
         if desc['type'] not in ('vector', 'raster', 'raster-dem'):
+          if desc['type'] == 'geojson':
+            sources[name] = {'type': 'geojson', 'data': ('' if isinstance(desc.get('data', ''), str) else desc['data'])}
           continue
         if 'url' in desc:
           uri_b = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['url']))
@@ -4239,6 +4243,8 @@ class JSONTiles():
         style['sprite'] = '{netloc}/jsontiles/sprite/%s/sprite' % tid
       sid = 0
       for name, desc in style['sources'].items():
+        if desc['type'] == 'geojson':
+          continue
         sid += 1
         desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(tiles)[1][0:4], tid + self.TilesSetIdMult * sid)]
       self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layerstyle': (a_ls if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local})
@@ -4338,14 +4344,23 @@ class JSONTiles():
       if handling['extra_headers'] is not None:
         headers.update(handling['extra_headers'])
       try:
-        uri = uri.format_map({'key': handling['key'] or ''}) + scale + '.' + target
+        uri = uri.format_map({'key': handling['key'] or ''})
+        uri_ = uri + scale + '.' + target
       except:
         self.log(1, 'sprite%sfail' % target, tid, scale)
         return None
-      rep = HTTPRequest(uri, 'GET', headers, basic_auth=handling['basic_auth'])
+      rep = HTTPRequest(uri_, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
-        self.log(1, 'sprite%sfail' % target, tid, scale)
-        return None
+        try:
+          uri_ = urllib.parse.urlsplit(uri.format_map({'key': handling['key'] or ''}))
+          uri_ = urllib.parse.urlunsplit(uri_._replace(path=uri_.path + scale + '.' + target))
+        except:
+          self.log(1, 'sprite%sfail' % target, tid, scale)
+          return None
+        rep = HTTPRequest(uri_, 'GET', headers, basic_auth=handling['basic_auth'])
+        if rep.code != '200':
+          self.log(1, 'sprite%sfail' % target, tid, scale)
+          return None
       sprite = rep.body
     if handling['pattern'] is not None and handling['local_store']:
       JSONTiles._put_resource(spritepath, False, exp, updt, loc_sprite, sprite)
