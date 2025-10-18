@@ -1356,7 +1356,7 @@ class HTTPMessage():
               http_message.body = zlib.decompress(http_message.body, wbits=-15)
           elif ce == 'gzip':
             http_message.body = gzip.decompress(http_message.body)
-          elif zstd and ce == 'zstd':
+          elif ce == 'zstd':
             http_message.body = zstd.decompress(http_message.body)
           else:
             raise
