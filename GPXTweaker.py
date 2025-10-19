@@ -3380,8 +3380,6 @@ class WebMercatorMap(BaseMap):
   CRS = 'EPSG:3857'
   CRS_MPU = 1
   WMS_BBOX = '{minx},{miny},{maxx},{maxy}'
-  # WMS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms{wms}'
-  # WMS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/r/wms{wms}'
   WMS_IGN_SOURCE = 'https://data.geopf.fr/wms-r{wms}'
   WMS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wms-r{wms}'
   MS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMS_IGN_SOURCE, 'layers':'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'format': 'image/png', 'styles': ''}
@@ -3391,8 +3389,6 @@ class WebMercatorMap(BaseMap):
   MS_IGN_PHOTOS = {'alias': 'IGN_PHOTOS', 'source': WMS_IGN_SOURCE, 'layers': 'ORTHOIMAGERY.ORTHOPHOTOS', 'format': 'image/png', 'styles': ''}
   WMS_OSM_SOURCE = 'https://ows.terrestris.de/osm/service{wms}'
   MS_OSM = {'alias': 'OSM', 'source': WMS_OSM_SOURCE, 'layers':'OSM-WMS', 'format': 'image/png', 'styles': ''}
-  # WMTS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/wmts{wmts}'
-  # WMTS_IGN_LIMITED_SOURCE = 'https://wxs.ign.fr/{key}/wmts{wmts}'
   WMTS_IGN_SOURCE = 'https://data.geopf.fr/wmts{wmts}'
   WMTS_IGN_LIMITED_SOURCE = 'https://data.geopf.fr/private/wmts{wmts}'
   TS_IGN_PLANV2 = {'alias': 'IGN_PLANV2', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
@@ -3404,7 +3400,6 @@ class WebMercatorMap(BaseMap):
   TS_IGN_PENTESMONTAGNE = {'alias': 'IGN_PENTESMONTAGNE', 'source': WMTS_IGN_SOURCE, 'layer': 'GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN', 'matrixset': 'PM', 'style': 'normal', 'format': 'image/png'}
   TC_IGN_RELIEF = [['IGN_PLANV2', '100%'], ['IGN_PENTESMONTAGNE', '80%', {'18':'17', '19':'17'}], ['IGN_CONTOUR', '100%', {'19':'18'}]]
   TS_IGN_OMBRAGE = {'alias': 'IGN_OMBRAGE', 'source': WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'matrixset': 'PM', 'style': 'estompage_grayscale', 'format': 'image/png'}
-  # TS_IGN_VECTOR_SOURCE = 'https://wxs.ign.fr/{key}/static/vectorTiles/styles/{layer}/{style}.json'
   TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/{layer}/{style}.json'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
@@ -4454,7 +4449,6 @@ class ElevationTilesCache(TilesCache):
 
 class WGS84Elevation(WGS84Map):
 
-  # AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://wxs.ign.fr/{key}/alti/rest/elevation.json?lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 200, 'parallel': True}
   AS_IGN_ALTI = {'alias': 'IGN_ALTI', 'source': 'https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?resource=ign_rge_alti_wld&lat={lat}&lon={lon}&zonly=true', 'separator': '|', 'key': ('elevations', ), 'nodata': -99999, 'limit': 100, 'parallel': True}
   TS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMTS_IGN_SOURCE, 'layer': 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'matrixset': 'WGS84G', 'style': 'normal', 'format': 'image/x-bil;bits=32', 'nodata': -99999}
   MS_IGN_RGEALTI = {'alias': 'IGN_RGEALTI', 'source': WebMercatorMap.WMS_IGN_SOURCE, 'layers':'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES', 'format': 'image/x-bil;bits=32', 'styles': '', 'nodata': -99999}
@@ -4834,8 +4828,6 @@ class WGS84Itinerary():
   URLSAFEBASE64_TABLE = {**{chr(i + 65): i for i in range(26)}, **{chr(i + 71): i for i in range(26, 52)}, **{chr(i - 4): i for i in range(52, 62)}, '-': 62, '_': 63}
   POLYLINE_RE =  re.compile(r'^{(flexible_)polyline}$|^{polyline(\d+)?}$', re.ASCII).match
 
-  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/{key}/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
-  # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://wxs.ign.fr/calcul/geoportail/itineraire/rest/1.0.0/route?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
   AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://data.geopf.fr/navigation/itineraire?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=geojson&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', 'coordinates')}
   # AS_IGN_ITI = {'alias': 'IGN_ITI', 'source': 'https://data.geopf.fr/navigation/itineraire?resource=bdtopo-pgr&profile=pedestrian&optimization=shortest&start={lons},{lats}&end={lone},{late}&intermediates=&constraints={{"constraintType":"prefer","key":"importance","operator":">=","value":5}}&geometryFormat=polyline&getSteps=false&getBbox=false&crs=' + WGS84Map.CRS, 'key': ('geometry', '{polyline5}')}
   AS_OSRM = {'alias': 'OSRM', 'source': 'https://router.project-osrm.org/route/v1/foot/{lons},{lats};{lone},{late}?geometries=geojson&skip_waypoints=true&steps=false&overview=full', 'key': ('routes', 0, 'geometry', 'coordinates')}
@@ -4942,11 +4934,7 @@ class WGS84Itinerary():
 
 class WGS84ReverseGeocoding():
 
-  # AS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/reverse'
   AS_IGN_SOURCE = 'https://data.geopf.fr/geocodage/reverse'
-  # AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
-  # AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
-  # AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'extrafields', 'names')}
   AS_IGN_GEOCODAGE_50 = {'alias': 'IGN_GEOCODAGE_50', 'source': AS_IGN_SOURCE +  '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":50}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'name')}
   AS_IGN_GEOCODAGE = AS_IGN_GEOCODAGE_150 = {'alias': 'IGN_GEOCODAGE_150', 'source': AS_IGN_SOURCE + '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":150}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'name')}
   AS_IGN_GEOCODAGE_250 = {'alias': 'IGN_GEOCODAGE_250', 'source': AS_IGN_SOURCE + '?index=poi&searchgeom={{"type":"Circle","coordinates":[{lon},{lat}],"radius":250}}&lon={lon}&lat={lat}', 'key': ('features', 'properties', 'name')}
@@ -5008,9 +4996,7 @@ class WGS84ReverseGeocoding():
 
 class WGS84Geocoding():
 
-  # AS_IGN_SOURCE = 'https://wxs.ign.fr/{key}/geoportail/geocodage/rest/0.1/search'
   AS_IGN_SOURCE = 'https://data.geopf.fr/geocodage/search'
-  # AS_IGN_GEOCODAGE_POI = {'alias': 'IGN_GEOCODAGE_POI', 'source': AS_IGN_SOURCE + '?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'extrafields', 'names', '|'), ('features', '*', 'properties', 'city', '|'), ('features', '*', 'properties', 'category', '|'))}
   AS_IGN_GEOCODAGE_POI = {'alias': 'IGN_GEOCODAGE_POI', 'source': AS_IGN_SOURCE + '?index=poi&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'name', '|'), ('features', '*', 'properties', 'city', '|'), ('features', '*', 'properties', 'category', '|'))}
   AS_IGN_GEOCODAGE_ADDRESS = {'alias': 'IGN_GEOCODAGE_ADDRESS', 'source': AS_IGN_SOURCE + '?index=address&q={query}&limit=20{location}', 'location': ('&lat={lat}&lon={lon}',), 'key': (('features', '*', 'geometry', 'coordinates', 1), ('features', '*', 'geometry', 'coordinates', 0), ('features', '*', 'properties', 'label'))}
   AS_OSM_NOMINATIM_POI = {'alias': 'OSM_NOMINATIM_POI', 'source': 'https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2&limit=40&layer=natural,poi{location}', 'location': ('&viewbox={lon1},{lat1},{lon2},{lat2}',), 'key': (('*', 'lat'), ('*', 'lon'), ('*', 'display_name'), ('*', 'category'), ('*', 'type'))}
@@ -5083,11 +5069,12 @@ class WGS84Geocoding():
 
 class MapLegend():
 
-  ML_IGN_PLANV2 = {'*': 'https://wxs.ign.fr/static/legends/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
-  TL_IGN_PLANV2 = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_{matrix}-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
-  TL_IGN_CARTES = {'9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.MAPS/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
-  TL_IGN_NOMS = {'8': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-1M-10M.png', '9': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '10': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '11': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '12': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '13': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '14': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '15': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '16': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '17': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '18': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALNAMES.NAMES/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png'}
-  TL_IGN_PENTESMONTAGNE = {'*': 'https://www.geoportail.gouv.fr/depot/layers/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN/legendes/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN-legend.png'}
+  ML_IGN_PLANV2 = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
+  ML_IGN_CARTES = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png'}
+  TL_IGN_PLANV2 = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_{matrix}-legend.png', '17': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
+  TL_IGN_CARTES = {'9': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
+  TL_IGN_NOMS = {'8': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-1M-10M.png', '9': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '10': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '11': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '12': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '13': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '14': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '15': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '16': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '17': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '18': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png'}
+  TL_IGN_PENTESMONTAGNE = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN-legend.png'}
   TL_CYCLOSM = {'*': 'https://veillecarto2-0.fr/wp-content/uploads/2019/10/extrait_le%CC%81gende.png'}
   TL_THUNDERFOREST_CYCLE = {'*': 'https://www.cyclestreets.net/images/general/mapkeyopencyclemap.png'}
 
