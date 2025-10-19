@@ -4013,7 +4013,7 @@ class JSONTiles():
     return url
 
   @staticmethod
-  def _get_resource(rpath, rjson, local_expiration, local_store):
+  def _get_resource(rpath, rjson, local_expiration, local_store, spath=None):
     updt = False
     exp = False
     loc_res = None
@@ -4030,7 +4030,13 @@ class JSONTiles():
           loc_res = f.read()
         if local_expiration is not None:
           lmod = os.path.getmtime(rpath)
-          if local_expiration > max(time.time() - lmod, 0) / 86400:
+          smod = None
+          if spath:
+            try:
+              smod = os.path.getmtime(spath)
+            except:
+              pass
+          if local_expiration > max(time.time() - lmod, 0) / 86400 and (smod is None or smod <= lmod):
             res = loc_res
           else:
             exp = True
@@ -4231,6 +4237,7 @@ class JSONTiles():
         if maxzoom is not None:
           sources[name]['maxzoom'] = maxzoom
       style['sources'] = sources
+      style['layers'] = [layer for layer in style['layers'] if 'source' not in layer or layer['source'] in sources]
     except:
       self.log(1, 'stylefail', infos)
       return False
@@ -4240,14 +4247,14 @@ class JSONTiles():
       if 'glyphs' in style:
         style['glyphs'] = '{netloc}/jsontiles/glyphs/%s/{fontstack}/{range}.pbf' % tid
       if 'sprite' in style:
-        style['sprite'] = '{netloc}/jsontiles/sprite/%s/sprite' % tid
+        style['sprite'] = ('{netloc}/jsontiles/sprite/%s/0/sprite' % tid) if isinstance(sprite, str) else [{**sprit, 'url': '{netloc}/jsontiles/sprite/%s/%d/sprite' % (tid, s)} for s, sprit in enumerate(sprite)]
       sid = 0
       for name, desc in style['sources'].items():
         if desc['type'] == 'geojson':
           continue
         sid += 1
         desc['tiles'] = ['{netloc}/tiles/tile-{y}-{x}%s?%d,{z}' % (os.path.splitext(desc['tiles'][0])[1][0:4], tid + self.TilesSetIdMult * sid)]
-      self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)), {'pattern': (pattern if loc else None), 'alias_layerstyle': (a_ls if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local})
+      self.StylesCache[tid] = (json.dumps(style).encode('utf-8'), JSONTiles.normurl(urllib.parse.urljoin(infos['source'], glyphs)), ((JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprite)),) if isinstance(sprite, str) else tuple(JSONTiles.normurl(urllib.parse.urljoin(infos['source'], sprit.get('url', ''))) for sprit in sprite)), {'pattern': (pattern if loc else None), 'alias_layerstyle': (a_ls if loc else None), 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local})
     except:
       self.log(1, 'stylefail', infos)
       return False
@@ -4311,33 +4318,41 @@ class JSONTiles():
     self.log(1, 'glyphretrieved', tid, fontstack, fontrange)
     return glyph
 
-  def _sprite(self, tid, target, scale):
+  def _sprite(self, tid, sind, target, scale):
     target= target.lower()
-    self.log(2, 'sprite%sretrieve' % target, tid, scale)
-    s = getattr(self, 'Sprites%sCache' % target.upper()).get((tid, scale))
+    self.log(2, 'sprite%sretrieve' % target, ('%d-%d' % (tid, sind)), scale)
+    s = getattr(self, 'Sprites%sCache' % target.upper()).get((tid, sind, scale))
     if s is not None:
-      self.log(2, 'sprite%scretrieved' % target, tid, scale)
+      self.log(2, 'sprite%scretrieved' % target, ('%d-%d' % (tid, sind)), scale)
       return s
     uri, handling = self.StylesCache.get(tid, (None,) * 4)[2:4]
-    if uri is None:
-      self.log(1, 'sprite%sfail' % target, tid, scale)
+    if uri is None or sind >= len(uri):
+      self.log(1, 'sprite%sfail' % target, ('%d-%d' % (tid, sind)), scale)
       return None
+    uri = uri[sind]
     sprite = None
     if handling['pattern'] is not None:
       try:
-        spritepath = handling['pattern'].replace('{resource}',  handling['alias_layerstyle'] + ' - sprite%s.%s' % (scale, target.lower()))
+        spritepath = handling['pattern'].replace('{resource}', handling['alias_layerstyle'] + ' - sprite%d%s.%s' % (sind, scale, target.lower()))
       except:
         spritepath = ''
-      exp, updt, loc_sprite, sprite = JSONTiles._get_resource(spritepath, False, handling['local_expiration'], handling['local_store'])
+      if handling['local_expiration'] is None:
+        stylepath = ''
+      else:
+        try:
+          stylepath = handling['pattern'].replace('{resource}',  handling['alias_layerstyle'] + ' - style.json')
+        except:
+          stylepath = ''
+      exp, updt, loc_sprite, sprite = JSONTiles._get_resource(spritepath, False, handling['local_expiration'], handling['local_store'], stylepath)
       if loc_sprite is not None:
-        self.log(2, 'sprite%slfound' % target, tid, scale)
+        self.log(2, 'sprite%slfound' % target, ('%d-%d' % (tid, sind)), scale)
         if sprite is None:
-          self.log(2, 'sprite%slexpired' % target, tid, scale)
+          self.log(2, 'sprite%slexpired' % target, ('%d-%d' % (tid, sind)), scale)
     if sprite is None:
       if handling['only_local']:
-        self.log(1, 'sprite%sfail' % target, tid, scale)
+        self.log(1, 'sprite%sfail' % target, ('%d-%d' % (tid, sind)), scale)
         return None
-      self.log(2, 'sprite%sfetch' % target, tid, scale)
+      self.log(2, 'sprite%sfetch' % target, ('%d-%d' % (tid, sind)), scale)
       headers = {'User-Agent': handling['user_agent']}
       if handling['referer']:
         headers['Referer'] = handling['referer']
@@ -4345,34 +4360,30 @@ class JSONTiles():
         headers.update(handling['extra_headers'])
       try:
         uri = uri.format_map({'key': handling['key'] or ''})
-        uri_ = uri + scale + '.' + target
+        uri_ = urllib.parse.urlsplit(uri)
+        uri_ = urllib.parse.urlunsplit(uri_._replace(path=uri_.path + scale + '.' + target))
       except:
-        self.log(1, 'sprite%sfail' % target, tid, scale)
+        self.log(1, 'sprite%sfail' % target, ('%d-%d' % (tid, sind)), scale)
         return None
       rep = HTTPRequest(uri_, 'GET', headers, basic_auth=handling['basic_auth'])
       if rep.code != '200':
-        try:
-          uri_ = urllib.parse.urlsplit(uri)
-          uri_ = urllib.parse.urlunsplit(uri_._replace(path=uri_.path + scale + '.' + target))
-        except:
-          self.log(1, 'sprite%sfail' % target, tid, scale)
-          return None
+        uri_ = uri + scale + '.' + target
         rep = HTTPRequest(uri_, 'GET', headers, basic_auth=handling['basic_auth'])
         if rep.code != '200':
-          self.log(1, 'sprite%sfail' % target, tid, scale)
+          self.log(1, 'sprite%sfail' % target, ('%d-%d' % (tid, sind)), scale)
           return None
       sprite = rep.body
     if handling['pattern'] is not None and handling['local_store']:
       JSONTiles._put_resource(spritepath, False, exp, updt, loc_sprite, sprite)
-    getattr(self, 'Sprites%sCache' % target.upper())[(tid, scale)] = sprite
-    self.log(2, 'sprite%sretrieved' % target, tid, scale)
+    getattr(self, 'Sprites%sCache' % target.upper())[(tid, sind, scale)] = sprite
+    self.log(2, 'sprite%sretrieved' % target, ('%d-%d' % (tid, sind)), scale)
     return sprite
 
-  def SpriteJSON(self, tid, scale=''):
-    return self._sprite(tid, 'json', scale)
+  def SpriteJSON(self, tid, sind, scale=''):
+    return self._sprite(tid, sind, 'json', scale)
 
-  def SpritePNG(self, tid, scale=''):
-    return self._sprite(tid, 'png', scale)
+  def SpritePNG(self, tid, sind, scale=''):
+    return self._sprite(tid, sind, 'png', scale)
 
 
 class ElevationTilesCache(TilesCache):
@@ -7905,19 +7916,19 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             try:
               if not self.server.Interface.Map.JSONTiles:
                 raise
-              tid = int(req.path[18:].split('/', 1)[0])
+              tid, sind = map(int, req.path[18:].split('/', 2)[0:2])
               if isinstance(self.server.Interface.TilesSets[self.server.Interface.TilesSet][1], dict):
                 if tid != self.server.Interface.TilesSet:
                   raise
               elif not any(tid == tsos[0] for tsos in self.server.Interface.TilesSets[self.server.Interface.TilesSet][1]):
                 raise
-              s, e = req.path[18:].split('/', 1)[1].rsplit('.', 1)
+              s, e = req.path[18:].split('/', 2)[2].rsplit('.', 1)
               if s[:6] != 'sprite':
                 raise
               if e == 'json':
-                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, s[6:]) or ''
+                resp_body = self.server.Interface.Map.JSONTiles.SpriteJSON(tid, sind, s[6:]) or ''
               elif e == 'png':
-                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, s[6:]) or ''
+                resp_body = self.server.Interface.Map.JSONTiles.SpritePNG(tid, sind, s[6:]) or ''
               else:
                 raise
               if resp_body:
