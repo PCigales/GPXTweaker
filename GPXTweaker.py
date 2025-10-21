@@ -11780,7 +11780,20 @@ class GPXTweakerWebInterfaceServer():
   '        if (mode != "map") {\r\n' \
   '          if (jmaps.length > 0) {\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
-  '              jmap.setPixelRatio(Math.max(zoom, Math.min(1.5 * zoom, 1)));\r\n' \
+  '              const cpr = jmap.getPixelRatio();\r\n' \
+  '              const npr = Math.max(zoom, Math.min(1.5 * zoom, 1));\r\n' \
+  '              jmap.setPixelRatio(npr);\r\n' \
+  '              if (cpr <= 1 != npr <= 1) {\r\n' \
+  '                try {\r\n' \
+  '                  if (navigator_firefox) {\r\n' \
+  '                    const s = jmap.getStyle();\r\n' \
+  '                    if (s) {jmap.setStyle(s, {diff: false, validate: false});}\r\n' \
+  '                  } else {\r\n' \
+  '                    const s = jmap.getSprite();\r\n' \
+  '                    if (s) {jmap.setSprite(s, {validate: false});}\r\n' \
+  '                  }\r\n' \
+  '                } catch(error) {} \r\n' \
+  '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
