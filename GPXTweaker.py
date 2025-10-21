@@ -2,7 +2,7 @@
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
-from functools import partial
+from functools import partial, reduce
 import urllib.parse
 import socket
 import selectors
@@ -2814,7 +2814,7 @@ class BaseMap(WGS84WebMercator):
       try:
         f = open(infopath, 'rt', encoding='utf-8')
         inf = json.load(f)
-        if any(k in infos and infos.get(k, '') != inf.get(k, '') for k in ('layer', 'matrixset', 'style', 'format', 'matrix')):
+        if any(k in infos and infos[k] != inf.get(k, '') for k in ('layer', 'matrixset', 'style', 'format', 'matrix')):
           return False
         if 'alias' in infos and 'alias' in inf and infos['alias'] != inf['alias']:
           return False
@@ -2828,7 +2828,7 @@ class BaseMap(WGS84WebMercator):
       needs_update = False
       if update_json:
         for k in ('alias', 'source'):
-          if k in infos and infos.get(k, '') != inf.get(k, ''):
+          if k in infos and infos[k] != inf.get(k, ''):
             inf[k] = infos[k]
             needs_update = True
       if update_dict:
@@ -3403,7 +3403,7 @@ class WebMercatorMap(BaseMap):
   TS_IGN_VECTOR_SOURCE = 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/{layer}/{style}.json'
   TS_IGN_PLAN = {'alias': 'IGN_PLAN', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'standard', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_PLANESTOMPÉ = [['IGN_PLAN', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17': '15', '18':'15', '19': '15'}]]
-  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz', 'replace_regex': (r'("fill-color"\040*?:[^,]*?,\040*?)"line-opacity"\040*?:[^}]*?}', r'\1"fill-opacity":\0400.4', 0)}
+  TS_IGN_TOPONYMES = {'alias': 'IGN_TOPONYMES', 'source': TS_IGN_VECTOR_SOURCE, 'layer': 'PLAN.IGN', 'style': 'toponymes', 'format': 'application/json', 'overwrite_schemes': 'xyz'}
   TC_IGN_HYBRIDE_TOPO = [['IGN_PHOTOS', '1'], ['IGN_TOPONYMES', '1']]
   TS_OSM = {'alias': 'OSM', 'source': 'https://a.tile.openstreetmap.org/{matrix}/{col}/{row}.png', 'layer':'OSM', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': 256, 'height': 256}
   TC_OSM_ESTOMPÉ = [['OSM', '100%'], ['IGN_OMBRAGE', 'x80%', {'16':'15', '17':'15', '18':'15', '19':'15'}]]
@@ -3452,6 +3452,8 @@ class WebMercatorMap(BaseMap):
   TS_HERE_SATELLITE = {'alias': 'HERE_SATELLITE', 'source': TS_HEREAERIAL_SOURCE, 'layer':'satellite', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_HERE_HYBRID = {'alias': 'HERE_HYBRID', 'source': TS_HEREAERIAL_SOURCE, 'layer':'hybrid', 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / 256, 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0],'width': 256, 'height': 256, 'format': 'image/png'}
   TS_KOMOOT_OSM = {'alias': 'KOMOOT_OSM', 'source': 'https://tiles-api.maps.komoot.net/v1/style.json', 'layer':'KOMOOT.OSM', 'style': 'osm', 'format': 'application/json'}
+  TS_MAPBOX_SOURCE = 'https://api.mapbox.com'
+  TS_MAPBOX_OUTDOORS = {'alias': 'MAPBOX_OUTDOORS', 'source': TS_MAPBOX_SOURCE + '/styles/v1/mapbox/outdoors-v12?access_token={key}', 'layer':'MAPBOX.OUTDOORS', 'style': 'outdoors', 'format': 'application/json', 'replace_regex': [(r'("projection"\040*?:\040*?{[^}]*?)(?:,\040*?)?"name"[^,}]*?([,}])', r'\1\2', 0, 0), (r'"mapbox://sprites([^"]*?)"', r'"https://api.mapbox.com/styles/v1\1/sprite?access_token={key}"', 0, 0), (r'"mapbox://fonts([^"]*?)"', r'"https://api.mapbox.com/fonts/v1\1?access_token={key}"', 0, 0), (r'"mapbox://tiles([^"]*?)"', r'"https://a.tiles.mapbox.com/v4\1?access_token={key}"', 0, 0), (r'"mapbox://([^"]*?)"', r'"https://api.mapbox.com/v4/\1.json?access_token={key}"', 0, 0)]}
 
   def LinkLegend(self, legend):
     self.Legend = legend
@@ -4104,11 +4106,10 @@ class JSONTiles():
         if os.path.exists(infopath):
           f = open(infopath, 'rt', encoding='utf-8')
           inf = json.load(f)
-          if False in (k not in infos or infos.get(k) == inf.get(k) for k in ('source', 'layer', 'format', 'slash_url')):
+          if any(k in infos and infos[k] != inf.get(k) for k in ('source', 'layer', 'format', 'slash_url')):
             raise
-          if 'alias' in infos and 'alias' in inf:
-            if infos['alias'] != inf['alias']:
-              raise
+          if 'alias' in infos and 'alias' in inf and infos['alias'] != inf['alias']:
+            raise
           if local_store:
             for k in ('alias', 'width', 'height', 'basescale', 'topx', 'topy', 'overwrite_schemes', 'overwrite_names'):
               if k in infos and infos[k] != inf.get(k):
@@ -4170,11 +4171,7 @@ class JSONTiles():
           self.log(1, 'stylefail', infos)
           return False
         try:
-          rr = infos.get('replace_regex')
-          if rr:
-            style = json.loads(re.sub(rr[0].encode('utf-8'), rr[1].encode('utf-8'), rep.body, count=rr[2]))
-          else:
-            style = json.loads(rep.body)
+          style = json.loads(reduce(lambda s, rr: re.sub(rr[0].encode('utf-8'), rr[1].encode('utf-8'), s, count=rr[2], flags=rr[3]), infos.get('replace_regex', ()), rep.body))
         except:
           self.log(1, 'stylefail', infos)
           return False
@@ -4182,11 +4179,7 @@ class JSONTiles():
         self.log(2, 'stylefetch', infos)
         try:
           f = open(infos['source'].format_map(infos), 'rt', encoding='utf-8')
-          rr = infos.get('replace_regex')
-          if rr:
-            style = json.loads(re.sub(rr[0], rr[1], f.read(), count=rr[2]))
-          else:
-            style = json.load(f)
+          style = json.loads(reduce(lambda s, rr: re.sub(rr[0], rr[1], s, count=rr[2], flags=rr[3]), infos.get('replace_regex', ()), f.read()))
         except:
           self.log(1, 'stylefail', infos)
           return False
@@ -4216,20 +4209,23 @@ class JSONTiles():
           src = json.loads(rep.body)
           tiles = JSONTiles.normurl(urllib.parse.urljoin(((uri_b.rstrip('/') + '/') if infos.get('slash_url') else uri_b), src['tiles'][0]))
           scheme = src.get('scheme', desc.get('scheme'))
-          minzoom = src.get('minzoom', None)
-          maxzoom = src.get('maxzoom', None)
+          minzoom = src.get('minzoom')
+          maxzoom = src.get('maxzoom')
         else:
           tiles = JSONTiles.normurl(urllib.parse.urljoin(infos['source'], desc['tiles'][0]))
           scheme = desc.get('scheme')
-          minzoom = desc.get('minzoom', None)
-          maxzoom = desc.get('maxzoom', None)
-        self.TilesInfosHandlingCache[tid].append(({'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if (next(schemes, '') or scheme) == 'tms' else '{row}')), 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0,-180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512), **({'minmat': minzoom} if minzoom is not None else {}), **({'maxmat': maxzoom} if maxzoom is not None else {})}, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local}))
+          minzoom = desc.get('minzoom')
+          maxzoom = desc.get('maxzoom')
+        tinfos = {'source': tiles.replace('{z}', '{matrix}').replace('{x}', '{col}').replace('{y}', ('{invrow}' if (next(schemes, '') or scheme) == 'tms' else '{row}')), 'layer': next(names, '') or name, 'basescale': WGS84WebMercator.WGS84toWebMercator(0, 360)[0] / desc.get('tileSize', 512), 'topx': WGS84WebMercator.WGS84toWebMercator(0, -180)[0], 'topy': -WGS84WebMercator.WGS84toWebMercator(0, -180)[0], 'width': desc.get('tileSize', 512), 'height': desc.get('tileSize', 512)}
+        self.TilesInfosHandlingCache[tid].append((tinfos, {'local_pattern': local_pattern, 'local_expiration': local_expiration, 'local_store': local_store, 'key': key, 'referer': referer, 'user_agent': user_agent, 'basic_auth': basic_auth, 'extra_headers': extra_headers, 'only_local': only_local}))
         sources[name] = {'type': desc['type'], 'tiles': [tiles]}
         if 'tileSize' in desc:
           sources[name]['tileSize'] = desc['tileSize']
         if minzoom is not None:
+          tinfos['minmat'] = minzoom
           sources[name]['minzoom'] = minzoom
         if maxzoom is not None:
+          tinfos['maxmat'] = maxzoom
           sources[name]['maxzoom'] = maxzoom
       style['sources'] = sources
       style['layers'] = [layer for layer in style['layers'] if 'source' not in layer or layer['source'] in sources]
@@ -4335,7 +4331,7 @@ class JSONTiles():
         stylepath = ''
       else:
         try:
-          stylepath = handling['pattern'].replace('{resource}',  handling['alias_layerstyle'] + ' - style.json')
+          stylepath = handling['pattern'].replace('{resource}', handling['alias_layerstyle'] + ' - style.json')
         except:
           stylepath = ''
       exp, updt, loc_sprite, sprite = JSONTiles._get_resource(spritepath, False, handling['local_expiration'], handling['local_store'], stylepath)
@@ -10742,7 +10738,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          viewpane.insertBefore(jdiv, handle);\r\n' \
   '          try {\r\n' \
-  '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1}));\r\n' \
+  '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, validateStyle: ##TMAPLIBREVALSTL##, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1}));\r\n' \
   '          } catch(error) {\r\n' \
   '            viewpane.removeChild(jdiv);\r\n' \
   '          }\r\n' \
@@ -11785,7 +11781,6 @@ class GPXTweakerWebInterfaceServer():
   '          if (jmaps.length > 0) {\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
   '              jmap.setPixelRatio(Math.max(zoom, Math.min(1.5 * zoom, 1)));\r\n' \
-  '              jmap.resize();\r\n' \
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -21574,7 +21569,7 @@ class GPXTweakerWebInterfaceServer():
   '              const [lat, lon] = WebMercatortoWGS84((b[0] + b[1]) / 2 + htopx, -(b[2] + b[3]) / 2 + htopy);\r\n' \
   '              let jmap = null;\r\n' \
   '              try {\r\n' \
-  '                jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, ...(parseInt(maplibregl.getVersion().split(".", 1)[0]) < 5 ? {preserveDrawingBuffer: true} : {canvasContextAttributes: {preserveDrawingBuffer: true},}), pixelRatio: zoom, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1});\r\n' \
+  '                jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, ...(parseInt(maplibregl.getVersion().split(".", 1)[0]) < 5 ? {preserveDrawingBuffer: true} : {canvasContextAttributes: {preserveDrawingBuffer: true},}), pixelRatio: zoom, validateStyle: ##TMAPLIBREVALSTL##, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: parseInt(document.getElementById("matrix").innerHTML) - 1});\r\n' \
   '              } catch(error) {\r\n' \
   '                continue;\r\n' \
   '              }\r\n' \
@@ -22731,6 +22726,8 @@ class GPXTweakerWebInterfaceServer():
               self.JSONTilesJS = value
             else:
               self.JSONTilesCSS = value
+          elif field == 'validate_styles':
+            self.JSONTilesValStl = value
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -23004,18 +23001,15 @@ class GPXTweakerWebInterfaceServer():
             s[1][field] = value
           elif field == 'replace_regex' and hcur[:9] == 'maptiles ':
             try:
-              r = list(map(str.strip, value.split(' ')))
-              if len(r) == 2:
-                r.append(0)
-              elif len(r) == 3:
-                r[2] = int(r[2])
-              else:
+              r = tuple(map(str.strip, value.split(' ')))
+              rl = len(r)
+              if rl > 4:
                 raise
-              re.compile(r[0], r[2])
+              s[1].setdefault(field, []).append((r[0], r[1], (int(r[2]) if rl >= 3 else 0), (int(r[3]) if rl == 4 else 0)))
+              re.compile(*s[1][field][-1][0:4:3])
             except:
               self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
               return False
-            s[1][field] = tuple(r)
           else:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
@@ -23281,6 +23275,7 @@ class GPXTweakerWebInterfaceServer():
     self.JSONTiles = False
     self.JSONTilesJS = ('https://unpkg.com', 'maplibre-gl@latest/dist/maplibre-gl.js')
     self.JSONTilesCSS = ('https://unpkg.com', 'maplibre-gl@latest/dist/maplibre-gl.css')
+    self.JSONTilesValStl = False
     self.JSONTilesLib = {}
     self.TilesBufferSize = None
     self.TilesBufferThreads = None
@@ -23808,7 +23803,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onunload', '        window.onunload').replace('//      document.addEventListener("DOMContentLoaded"', '      document.addEventListener("DOMContentLoaded"')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace("##DESC##", escape(self.Track.Desc).replace('\n', '&#10;')).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBREVALSTL##', str(bool(self.JSONTilesValStl)).lower()).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace("##DESC##", escape(self.Track.Desc).replace('\n', '&#10;')).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
@@ -24064,7 +24059,7 @@ class GPXTweakerWebInterfaceServer():
     esets = self._build_esets()
     wmsets = self._build_wmsets()
     gsets = self._build_gsets()
-    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##DECMAXDEV##', str(self.DecimationMaxDeviation)).replace('##DECMAXDIST##', str(self.DecimationMaxDistance)).replace('##DECELEFACT##', str(self.DecimationEleFactor)).replace('##DECALTFACT##', str(self.DecimationAltFactor)).replace('##DECSYNCDIST##', ' checked' if self.DecimationSyncDistance else '').replace('##DECOPENWIND##', ' checked' if self.DecimationOpeningWindow else '').replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
+    self.HTMLExp = GPXTweakerWebInterfaceServer.HTMLExp_TEMPLATE.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBREVALSTL##', str(bool(self.JSONTilesValStl)).lower()).replace('##MPORTMIN##', str(self.MediaPorts[0])).replace('##MPORTMAX##', str(self.MediaPorts[1])).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##FOLDERS##', folders).replace('##WMSETS##', wmsets).replace('##GSETS##', gsets).replace('##THUMBSIZE##', str(self.MediaThumbSize)).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMENABLED##', str(self.SmoothTracks).lower()).replace('##WEBGPUPERS##', str(self.WebGpuPersistence)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##DECMAXDEV##', str(self.DecimationMaxDeviation)).replace('##DECMAXDIST##', str(self.DecimationMaxDistance)).replace('##DECELEFACT##', str(self.DecimationEleFactor)).replace('##DECALTFACT##', str(self.DecimationAltFactor)).replace('##DECSYNCDIST##', ' checked' if self.DecimationSyncDistance else '').replace('##DECOPENWIND##', ' checked' if self.DecimationOpeningWindow else '').replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NBTRACKS##', str(len(self.Tracks))).replace('#<#WAYDOTS#>#', waydots).replace('#<#TRACKS#>#', tracks).replace('#<#PATHES#>#', pathes)
     self.log(2, 'builtexp')
     return True
 
