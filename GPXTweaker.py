@@ -5313,7 +5313,7 @@ class MapLegend():
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
     if rep.code != '200':
       return None
-    return (rep.header('content-type') or f_h[0], rep.body)
+    return ('text/html; charset=utf-8' if uri.startswith("https://gist.githubusercontent.com") else (rep.header('content-type') or f_h[0]), rep.body)
 
   def GetTilesLegend(self, infos, url=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None):
     if url is None:
