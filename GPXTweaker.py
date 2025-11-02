@@ -5067,13 +5067,16 @@ class WGS84Geocoding():
 
 class MapLegend():
 
+  DOTEXT_MIME = {**BaseMap.DOTEXT_MIME, '.html': 'text/html', '.txt': 'text/plain'}
+  MIME_DOTEXT = {**BaseMap.MIME_DOTEXT, 'text/html': '.html', 'text/plain': '.txt'}
+
   ML_IGN_PLANV2 = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2-legend.png'}
   ML_IGN_CARTES = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png'}
   TL_IGN_PLANV2 = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_{matrix}-legend.png', '17': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
   TL_IGN_CARTES = {'9': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '10': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_1000k-legend.png', '11': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '12': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_REG-legend.png', '13': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '14': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_100k-legend.png', '15': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '16': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.MAPS_25k-legend.png', '17': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png', '18': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2_17-18-legend.png'}
   TL_IGN_NOMS = {'8': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-1M-10M.png', '9': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '10': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '11': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-200k-1M.png', '12': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '13': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '14': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '15': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-20k-200k.png', '16': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '17': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png', '18': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALNAMES.NAMES-legend-100-20k.png'}
   TL_IGN_PENTESMONTAGNE = {'*': 'https://data.geopf.fr/annexes/ressources/legendes/GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN-legend.png'}
-  TL_OSM = {'*': 'https://gist.githubusercontent.com/PCigales/94bd8e297c718f9f9f23788a8adbdacb/raw/5b5c3180a3545a006a464a0e8e0844ba014f41dd/OSM%2520-%2520legend.html'}
+  TL_OSM = {'*': 'https://gist.githubusercontent.com/PCigales/94bd8e297c718f9f9f23788a8adbdacb/raw/5b5c3180a3545a006a464a0e8e0844ba014f41dd/OSM%2520-%2520legend.html', 'format': 'text/html'}
   TL_OTM = {'*': 'https://gist.githubusercontent.com/PCigales/94bd8e297c718f9f9f23788a8adbdacb/raw/5b5c3180a3545a006a464a0e8e0844ba014f41dd/OpenTopoMap%2520-%2520legend.html'}
   TL_CYCLOSM = {'*': 'https://gist.githubusercontent.com/PCigales/94bd8e297c718f9f9f23788a8adbdacb/raw/5b5c3180a3545a006a464a0e8e0844ba014f41dd/CyclOSM%2520-%2520legend.html'}
   TL_THUNDERFOREST_CYCLE = {'*': 'https://www.cyclestreets.net/images/general/mapkeyopencyclemap.png'}
@@ -5229,6 +5232,10 @@ class MapLegend():
       self.log(2, 'legendfail', infos)
       return {}
     if f_l:
+      format = urls.get('format')
+      if format:
+        for l_s, _l in f_l.items():
+          f_l[l_s] = (format, _l[1])
       self.log(2, 'legendretrieved1', infos, len(f_l))
     else:
       self.log(2, 'legendfail', infos)
@@ -5318,7 +5325,7 @@ class MapLegend():
     rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
     if rep.code != '200':
       return None
-    return ('text/html; charset=utf-8' if uri.startswith("https://gist.githubusercontent.com") else (rep.header('content-type') or f_h[0]), rep.body)
+    return (rep.header('content-type') or f_h[0], rep.body)
 
   def GetTilesLegend(self, infos, url=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None):
     if url is None:
@@ -5335,7 +5342,7 @@ class MapLegend():
       f_l = self.GetKnownTilesLegend(infos, [((0, float('inf')), ('', url))], key, referer, user_agent, basic_auth, extra_headers)
     return f_l
 
-  def ReadTilesLegend(self, pattern, infos, just_lookup=False):
+  def ReadTilesLegend(self, pattern, infos, format=None, just_lookup=False):
     if not infos.get('source') or not infos.get('layer') or not infos.get('matrix') or '{hgt}' in infos['source'] or infos.get('format') == 'image/hgt':
       return None
     if '{' not in pattern:
@@ -5345,7 +5352,7 @@ class MapLegend():
       while '{matrix}' in os.path.dirname(legendpattern):
         legendpattern = os.path.dirname(legendpattern)
       legendpath = legendpattern.format_map({**infos, 'name': infos.get('alias') or infos.get('layer', '')})
-      legendpath = next((e for e in Path(legendpath).glob('legend.*') if e.is_file()), None)
+      legendpath = next((e for e in Path(legendpath).glob('legend' + MapLegend.MIME_DOTEXT.get(format, '.*')) if e.is_file()), None)
       if legendpath is None:
         return None
     except:
@@ -5353,7 +5360,7 @@ class MapLegend():
     try:
       if just_lookup:
         return os.path.getmtime(legendpath)
-      f_l = (BaseMap.DOTEXT_MIME.get(legendpath.suffix.lower(), 'image'), legendpath.read_bytes())
+      f_l = (MapLegend.DOTEXT_MIME.get(legendpath.suffix.lower(), 'image'), legendpath.read_bytes())
     except:
       return None
     return f_l
@@ -5367,7 +5374,7 @@ class MapLegend():
       legendpattern = os.path.dirname(pattern)
       while '{matrix}' in os.path.dirname(legendpattern):
         legendpattern = os.path.dirname(legendpattern)
-      ext = BaseMap.MIME_DOTEXT.get(format, '.img')
+      ext = MapLegend.MIME_DOTEXT.get(format, '.img')
       legendpath = os.path.join(legendpattern.format_map({**infos, 'name': infos.get('alias') or infos.get('layer', '')}), 'legend' + ext)
       if just_refresh:
         os.utime(legendpath, (time.time(),) * 2)
@@ -5390,8 +5397,9 @@ class MapLegend():
     local_f_l = None
     expired = True
     last_mod = False
-    format = 'image'
+    format = None
     if isinstance(url, dict):
+      format = url.get('format')
       url = url.get(infos['matrix'], url.get('*'))
     if url is not None:
       url = url.format_map({**infos, 'key': key or ''})
@@ -5399,10 +5407,10 @@ class MapLegend():
       if local_pattern is not None:
         if (lp := local_pattern.rpartition('|'))[1] == '|':
           local_pattern = lp[0]
-        last_mod = self.ReadTilesLegend(local_pattern, infos, just_lookup=True)
+        last_mod = self.ReadTilesLegend(local_pattern, infos, format, just_lookup=True)
         if last_mod is not None:
           self.log(2, 'legendlfound', infos)
-          f_l = self.ReadTilesLegend(local_pattern, infos)
+          f_l = self.ReadTilesLegend(local_pattern, infos, format)
           if f_l:
             if local_expiration is not None:
               if local_expiration > max(time.time() - last_mod, 0) / 86400:
@@ -5418,6 +5426,8 @@ class MapLegend():
         else:
           self.log(2, 'legendfetch', infos)
           f_l = self.GetTilesLegend(infos, url, key, referer, user_agent, basic_auth, extra_headers)
+          if f_l is not None and format:
+            f_l = (format, f_l[1])
         if f_l is not None and local_pattern is not None:
           if f_l != local_f_l:
             if local_store:
@@ -23056,6 +23066,7 @@ class GPXTweakerWebInterfaceServer():
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
             return False
         elif hcur[:9] == 'maptiles ' and scur == 'legend':
+          field = field.lower()
           value = value.rstrip()
           if value:
             s[3][field] = value
@@ -23195,7 +23206,9 @@ class GPXTweakerWebInterfaceServer():
             return False
         elif hcur[:4] == 'map ' and scur == 'legend':
           try:
-            if field != '*':
+            if field.lower() == 'format':
+              field = 'format'
+            elif field != '*':
               field = tuple(field.split(','))
           except:
             self.log(0, 'cerror', hcur + ' - ' + scur + ' - ' + l)
