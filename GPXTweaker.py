@@ -5360,7 +5360,7 @@ class MapLegend():
     try:
       if just_lookup:
         return os.path.getmtime(legendpath)
-      f_l = (MapLegend.DOTEXT_MIME.get(legendpath.suffix.lower(), 'image'), legendpath.read_bytes())
+      f_l = (MapLegend.DOTEXT_MIME.get(legendpath.suffix.lower(), format or 'image'), legendpath.read_bytes())
     except:
       return None
     return f_l
@@ -5393,10 +5393,8 @@ class MapLegend():
 
   def RetrieveTilesLegend(self, infos, url=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False):
     self.log(2, 'legendretrieve', infos)
-    f_l = None
     local_f_l = None
     expired = True
-    last_mod = False
     format = None
     if isinstance(url, dict):
       format = url.get('format')
@@ -5426,24 +5424,17 @@ class MapLegend():
         else:
           self.log(2, 'legendfetch', infos)
           f_l = self.GetTilesLegend(infos, url, key, referer, user_agent, basic_auth, extra_headers)
-          if f_l is not None and format:
-            f_l = (format, f_l[1])
-        if f_l is not None and local_pattern is not None:
-          if f_l != local_f_l:
-            if local_store:
+          if f_l is not None:
+            if format:
+              f_l = (format, f_l[1])
+            if local_pattern is not None and local_store:
               try:
-                self.SaveTilesLegend(local_pattern, infos, *f_l)
+                self.SaveTilesLegend(local_pattern, infos, *f_l, just_refresh=(f_l == local_f_l))
               except:
                 pass
-          elif local_store:
-            self.SaveTilesLegend(local_pattern, infos, *f_l, just_refresh=True)
     except:
-      self.log(2, 'legendfail', infos)
-      return None
-    if f_l is None:
-      self.log(2, 'legendfail', infos)
-    else:
-      self.log(2, 'legendretrieved2', infos)
+      f_l = None
+    self.log(2, ('legendfail' if f_l is None else 'legendretrieved2'), infos)
     return f_l
 
 
@@ -9002,7 +8993,6 @@ class GPXTweakerWebInterfaceServer():
   '      #actions>select {\r\n' \
   '        width: 14em;\r\n' \
   '        height: 1.7em;\r\n' \
-  '        vertical-align: top\r\n' \
   '        font-size: 85%;\r\n' \
   '      }\r\n' \
   '      #matrix {\r\n' \
