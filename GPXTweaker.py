@@ -10744,7 +10744,9 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          viewpane.insertBefore(jdiv, handle);\r\n' \
   '          try {\r\n' \
-  '            jmaps.push(new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, validateStyle: ##TMAPLIBREVALSTL##, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1}));\r\n' \
+  '            const jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, validateStyle: ##TMAPLIBREVALSTL##, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1});\r\n' \
+  '            if (! Object.hasOwn(jmap.style, "tileManagers")) {Object.defineProperty(jmap.style, "tileManagers", {get() {return this.sourceCaches;},});}\r\n' \
+  '            jmaps.push(jmap);\r\n' \
   '          } catch(error) {\r\n' \
   '            viewpane.removeChild(jdiv);\r\n' \
   '          }\r\n' \
@@ -10764,7 +10766,7 @@ class GPXTweakerWebInterfaceServer():
   '            if (treset == 2) {set_jmaps();}\r\n' \
   '            for (const jmap of jmaps) {\r\n' \
   '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
-  '              for (const e of Object.entries(jmap.style.sourceCaches)) {\r\n' \
+  '              for (const e of Object.entries(jmap.style.tileManagers)) {\r\n' \
   '                try {e[1].clearTiles();} catch(error) {null;}\r\n' \
   '              };\r\n' \
   '            }\r\n' \
@@ -10812,7 +10814,7 @@ class GPXTweakerWebInterfaceServer():
   '            for (const jmap of jmaps) {\r\n' \
   '              jmap.setZoom(tlevels[tlevel][0] - 1);\r\n' \
   '              jmap.setCenter([lon, lat]);\r\n' \
-  '              for (const e of Object.entries(jmap.style.sourceCaches)) {\r\n' \
+  '              for (const e of Object.entries(jmap.style.tileManagers)) {\r\n' \
   '                try {\r\n' \
   '                  e[1].clearTiles();\r\n' \
   '                  jmap.getSource(e[0]).load();\r\n' \
