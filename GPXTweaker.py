@@ -10745,7 +10745,7 @@ class GPXTweakerWebInterfaceServer():
   '          viewpane.insertBefore(jdiv, handle);\r\n' \
   '          try {\r\n' \
   '            const jmap = new maplibregl.Map({container: jdiv, interactive: false, attributionControl: false, trackResize: false, renderWorldCopies: false, validateStyle: ##TMAPLIBREVALSTL##, style: "jsontiles/style/" + (tlayers.has(tset)?tlayers.get(tset)[l][0]:tset).toString() + "/style.json", center: [lon, lat], zoom: tlevels[tlevel][0] - 1});\r\n' \
-  '            if (! Object.hasOwn(jmap.style, "tileManagers")) {Object.defineProperty(jmap.style, "tileManagers", {get() {return this.sourceCaches;},});}\r\n' \
+  '            if (! Object.hasOwn(jmap.style, "tileManagers") && Object.hasOwn(jmap.style, "sourceCaches")) {Object.defineProperty(jmap.style, "tileManagers", {get() {return this.sourceCaches;},});}\r\n' \
   '            jmaps.push(jmap);\r\n' \
   '          } catch(error) {\r\n' \
   '            viewpane.removeChild(jdiv);\r\n' \
