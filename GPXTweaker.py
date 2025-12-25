@@ -6254,8 +6254,13 @@ class ExpatGPXBuilder:
         raise
       if not r.hasAttribute(self.XMLNS, self.XMLNS_NAMESPACE):
         r.setAttribute(self.XMLNS, self.GPX_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+      xsi = r.getAttribute(self.XSI, self.XMLNS_NAMESPACE)
       r.setAttribute(self.XSI, self.XSI_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_XSI)
-      sl = r.getAttribute('schemaLocation', self.XSI_NAMESPACE) or ''
+      if xsi and xsi != self.XSI_NAMESPACE:
+        sl = r.getAttribute('schemaLocation', xsi) or ''
+        r.removeAttribute('schemaLocation', xsi)
+      else:
+        sl = r.getAttribute('schemaLocation', self.XSI_NAMESPACE) or ''
       if self.GPX_NAMESPACE not in sl:
         sl = (sl + ' http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd').lstrip()
       if self.GPXSTYLE_NAMESPACE not in sl:
