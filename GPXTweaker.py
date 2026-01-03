@@ -1444,8 +1444,8 @@ class HTTPBaseRequest():
             if ((domain[-len(k[0][0]) - 1 :] in (k[0][0], '.' + k[0][0])) if (k[0][1] and not dom_ip) else (domain == k[0][0])) and path[: len(k[1]) + (1 if k[1][-1:] != '/' else 0)] in (k[1], k[1] + '/'):
               if (k[2] not in ck) or (len(k[0][0]) > len(ck[k[2]][1]) or (len(k[0][0]) == len(ck[k[2]][1]) and len(k[1]) >= len(ck[k[2]][2]))):
                 ck[k[2]] = (v, k[0][0], k[1])
-        path = cls.connect(url, url_p, headers, max_length, max_hlength, timeout, pconnection)
         try:
+          path = cls.connect(url, url_p, headers, max_length, max_hlength, timeout, pconnection)
           code = '100'
           rem = None
           msg = cls.RequestPattern % (method, path, url_p.netloc, ''.join('%s: %s\r\n' % kv for kv in (headers if not ck else {**headers, 'Cookie': '; '.join(k + '=' + v[0] for k, v in ck.items())}).items()))
