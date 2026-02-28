@@ -13206,6 +13206,7 @@ class GPXTweakerWebInterfaceServer():
   '          const [lat, lon] = coord ? coord : WebMercatortoWGS84(Math.max(vminx, Math.min(vmaxx, htopx + (viewpane.offsetWidth / 2 - hpx) * tscale / zoom)), Math.max(vminy, Math.min(vmaxy, htopy - (viewpane.offsetHeight / 2 - hpy) * tscale / zoom)));\r\n' \
   '          if (! elt_dot) {\r\n' \
   '            elt_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);\r\n' \
+  '            elt_dot.classList.remove("deleted");\r\n' \
   '          }\r\n' \
   '          elt_data.lat = lat.toFixed(6);\r\n' \
   '          elt_data.lon = lon.toFixed(6);\r\n' \
@@ -13219,7 +13220,10 @@ class GPXTweakerWebInterfaceServer():
   '        point_desc(elt, true);\r\n' \
   '        if (pos == "a") {ref = ref.nextElementSibling;}\r\n' \
   '        par.insertBefore(elt, ref);\r\n' \
-  '        if (! elt_dot) {elt_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);}\r\n' \
+  '        if (! elt_dot) {\r\n' \
+  '          elt_dot = document.getElementById(ex_foc.replace("point", "dot")).cloneNode(true);\r\n' \
+  '          elt_dot.classList.remove("deleted");\r\n' \
+  '        }\r\n' \
   '        elt_dot.id = pref.replace("point", "dot");\r\n' \
   '        par = handle;\r\n' \
   '        ref = elt.nextElementSibling;\r\n' \
@@ -24298,7 +24302,7 @@ if __name__ == '__main__':
       k = msvcrt.getch()
       k = b''
     if k.upper() == b'S':
-        break
+      break
   GPXTweakerInterface.shutdown()
 else:
   gen_HTTPRequest()
