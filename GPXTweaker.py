@@ -463,6 +463,7 @@ FR_STRINGS = {
     'jpace': 'Progression:',
     'jvfov': 'Champ de vue vertical:',
     'jheight': 'Hauteur de vue:',
+    'jpanorama': 'Vue panorama:',
     'jminimap': 'clic sur la mini-carte pour l\'agrandir / la réduire&#13;&#10;clic droit sur la mini-carte pour afficher / masquer le panneau d\'informations, et lorsqu\'il est visible:&#13;&#10;clic droit sur la vue 3D pour afficher la description du point&#13;&#10;alt + clic droit sur la vue 3D pour afficher la description du point et son géocodage inversé&#13;&#10;clic sur l\'oeil ou la cible pour créer ou déplacer à cet emplacement le point de cheminement dédié dans l\'onglet d\'édition de trace&#13;&#10;alt + clic sur l\'oeil ou la cible pour compléter la description du point par son géocodage inversé&#13;&#10;ctrl + clic droit sur la mini-carte pour afficher / masquer le panneau de sélection du fournisseur de géocodages inversés',
     'jplat': 'lat:',
     'jplon': 'lon:',
@@ -899,6 +900,7 @@ EN_STRINGS = {
     'jpace': 'Progression:',
     'jvfov': 'Vertical field of view:',
     'jheight': 'Height of view:',
+    'jpanorama': 'Panorama view:',
     'jminimap': 'click on the mini-map to enlarge / reduce it&#13;&#10;right click on the mini-map to show / hide the informations panel, and when it is visible:&#13;&#10;right click on the 3D view to display the description of the point&#13;&#10;alt + right click on the 3D view to display the description of the point and its reverse geocoding&#13;&#10;click on the eye or the target to create or move to this location the dedicated waypoint in the track edition tab&#13;&#10;alt + click on the eye or the target to complete the description of the point with its reverse geocoding&#13;&#10;ctrl + right click on the mini-map to show / hide the reverse geocodings provider panel',
     'jplat': 'lat:',
     'jplon': 'lon:',
@@ -9373,8 +9375,8 @@ class GPXTweakerWebInterfaceServer():
   '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
   '      var tiles_hold = null;\r\n' \
   '      if (tholdsize > 0 && ! navigator_firefox) {tiles_hold = new Map();}\r\n' \
-  '      const date_conv = new Intl.DateTimeFormat("default",{year: "numeric", month:"2-digit", day:"2-digit"});\r\n' \
-  '      const time_conv = new Intl.DateTimeFormat("default",{hour12:false, hour: "2-digit", minute:"2-digit", second:"2-digit"});\r\n' \
+  '      const date_conv = new Intl.DateTimeFormat("default", {year: "numeric", month: "2-digit", day: "2-digit"});\r\n' \
+  '      const time_conv = new Intl.DateTimeFormat("default", {hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit"});\r\n' \
   '      var xhr_ongoing = 0;\r\n' \
   '      var graph_ip = null;\r\n' \
   '      var graph_px = null;\r\n'
@@ -15522,142 +15524,286 @@ class GPXTweakerWebInterfaceServer():
   '<svg class="dot" id="dot%s" style="left:calc(%.1fpx / var(--scale) - 3.5px);top:calc(%.1fpx / var(--scale) - 3.5px);"><rect/></svg>\r\n'
   HTML_3D_STYLES_TEMPLATE = \
   '    <style type="text/css">\r\n' \
-  '      table {\r\n' \
-  '        border: none;\r\n' \
-  '        border-collapse:collapse;\r\n' \
-  '        width:100vw;\r\n' \
-  '        table-layout:fixed;\r\n' \
-  '        padding:0;\r\n' \
-  '        margin:0;\r\n' \
-  '      }\r\n' \
-  '      td {\r\n' \
-  '        padding:0;\r\n' \
-  '      }\r\n' \
-  '      button {\r\n' \
-  '        border:none;\r\n' \
-  '        background-color:transparent;\r\n' \
-  '        vertical-align:top;\r\n' \
-  '        padding-left: 4px;\r\n' \
-  '        padding-right: 4px;\r\n' \
-  '        color:inherit;\r\n' \
-  '        font-size:inherit;\r\n' \
-  '      }\r\n' \
-  '      button:enabled {\r\n' \
-  '        cursor:pointer;\r\n' \
-  '      }\r\n' \
-  '      button:disabled {\r\n' \
-  '        cursor:inherit;\r\n' \
-  '      }\r\n' \
-  '      input {\r\n' \
-  '        background-color:rgb(30,30,35);\r\n' \
-  '        color:inherit;\r\n' \
-  '        font-size:inherit;\r\n' \
-  '        margin-left:0.7em;\r\n' \
-  '      }\r\n' \
-  '      input:enabled {\r\n' \
-  '        cursor:pointer;\r\n' \
-  '      }\r\n' \
-  '      input:disabled {\r\n' \
-  '        cursor:inherit;\r\n' \
-  '      }\r\n' \
-  '      label {\r\n' \
-  '        cursor:inherit;\r\n' \
-  '      }\r\n' \
-  '      input[type=range] {\r\n' \
-  '        width:9em;\r\n' \
-  '      }\r\n' \
-  '      span {\r\n' \
-  '        display:inline-block;\r\n' \
-  '        text-align:center;\r\n' \
-  '      }\r\n' \
-  '      br+span {\r\n' \
-  '        width:1.4em;\r\n' \
-  '      }\r\n' \
-  '      br+span+span {\r\n' \
-  '        width:6em;\r\n' \
-  '        margin-left:0.8em;\r\n' \
-  '      }\r\n' \
-  '      input:focus+br+span+span, input:focus+button+br+span+span, input:focus+input+br+span+span  {\r\n' \
-  '        color:rgb(200,250,240);\r\n' \
-  '      }\r\n' \
-  '      br+span+span+span {\r\n' \
-  '        width:3em;\r\n' \
-  '      }\r\n' \
-  '      input[type=radio] {\r\n' \
-  '        vertical-align:middle;\r\n' \
-  '        margin-bottom:0.4em;\r\n' \
-  '      }\r\n' \
-  '      input[type=checkbox] {\r\n' \
-  '        appearance:none;\r\n' \
-  '        position:absolute;\r\n' \
-  '        left:10.5em;\r\n' \
-  '        vertical-align:top;\r\n' \
-  '        width:1.2em;\r\n' \
-  '        height:1.2em;\r\n' \
-  '        margin-left:0.1em;\r\n' \
-  '      }\r\n' \
-  '      input[type=checkbox]:checked::before {\r\n' \
-  '        content:"\\2714";\r\n' \
-  '        display:inline-block;\r\n' \
-  '        text-align:center;\r\n' \
-  '        width:100%;\r\n' \
-  '        font-size:90%;\r\n' \
-  '        font-weight:bold;\r\n' \
-  '      }\r\n' \
-  '      label[for$=cursor_zoom] {\r\n' \
-  '        font-size:120%;\r\n' \
-  '      }\r\n' \
-  '      #cursor_zoom:enabled+label {\r\n' \
-  '        cursor:all-scroll;\r\n' \
-  '      }\r\n' \
-  '      input[id$=_info] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        left:1.5em;\r\n' \
-  '        width:calc(100vw - 10vh - 20em);\r\n' \
-  '        margin:0;\r\n' \
-  '        opacity:inherit;\r\n' \
-  '        background-color:inherit;\r\n' \
-  '        border:none;\r\n' \
-  '        outline:none;\r\n' \
-  '        cursor:initial;\r\n' \
-  '      }\r\n' \
-  '      label[for$=_info] {\r\n' \
-  '        position:absolute;\r\n' \
-  '        left:2px;\r\n' \
-  '        width:1em;\r\n' \
-  '        text-align:center;\r\n' \
+  '      body {\r\n' \
+  '        margin: 0;\r\n' \
+  '        background-color: rgb(40, 45, 50);\r\n' \
+  '        color: rgb(225, 225, 225);\r\n' \
+  '        user-select: none;\r\n' \
   '      }\r\n' \
   '      @supports not (selector(*::-moz-color-swatch)) {\r\n' \
   '        body {\r\n' \
-  '          scrollbar-color: rgb(121,123,126) rgb(34,37,43);\r\n' \
+  '          scrollbar-color: rgb(121, 123, 126) rgb(34, 37, 43);\r\n' \
   '        }\r\n' \
+  '      }\r\n' \
+  '      table {\r\n' \
+  '        border: none;\r\n' \
+  '        border-collapse: collapse;\r\n' \
+  '        width: 100vw;\r\n' \
+  '        table-layout: fixed;\r\n' \
+  '        padding: 0;\r\n' \
+  '        margin: 0;\r\n' \
+  '      }\r\n' \
+  '      col:first-child {\r\n' \
+  '        width: calc(100vw - 14em);\r\n' \
+  '      }\r\n' \
+  '      col:last-child {\r\n' \
+  '        width: 14em;\r\n' \
+  '      }\r\n' \
+  '      td {\r\n' \
+  '        position: relative;\r\n' \
+  '        height: 100vh;\r\n' \
+  '        padding: 0;\r\n' \
+  '        vertical-align: top;\r\n' \
+  '      }\r\n' \
+  '      #pano>div:first-child {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '        width: 100%;\r\n' \
+  '        height: 100%;\r\n' \
+  '        overflow: auto;\r\n' \
+  '      }\r\n' \
+  '      #pano>div:last-child {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: calc(1.5em + 24px);\r\n' \
+  '        top: 4px;\r\n' \
+  '        width: calc(4.5em + 2px);\r\n' \
+  '        height: calc(1.5em + 6px);\r\n' \
+  '        overflow: hidden;\r\n' \
+  '        transform: rotate(-90deg);\r\n' \
+  '        transform-origin: top right;\r\n' \
+  '        background-color: rgba(40, 45, 50, 0.5);\r\n' \
+  '      }\r\n' \
+  '      #subj {\r\n' \
+  '        overflow: hidden;\r\n' \
+  '        user-select: none;\r\n' \
+  '      }\r\n' \
+  '      #panel_param {\r\n' \
+  '        border-left: 2px solid dimgray;\r\n' \
+  '      }\r\n' \
+  '      #canvas {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '        bottom: 0;\r\n' \
+  '        margin-top: auto;\r\n' \
+  '        margin-bottom: auto;\r\n' \
+  '      }\r\n' \
+  '      #panel_infos {\r\n' \
+  '        display: none;\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 5px;\r\n' \
+  '        top: 5px;\r\n' \
+  '        width: calc(100vw - 10vh - 18em);\r\n' \
+  '        height: 3em;\r\n' \
+  '        background-color: rgba(210, 210, 210, 0.85);\r\n' \
+  '        color: black;\r\n' \
+  '        font-size: 90%;\r\n' \
+  '      }\r\n' \
+  '      #panel_infos>form {\r\n' \
+  '        position: relative;\r\n' \
+  '        height: 3em;\r\n' \
+  '        overflow: hidden;\r\n' \
+  '      }\r\n' \
+  '      label[for=eye_info] {\r\n' \
+  '        top: 2px;\r\n' \
+  '      }\r\n' \
+  '      label[for=target_info] {\r\n' \
+  '        bottom:2px;\r\n' \
+  '      }\r\n' \
+  '      #target_mark {\r\n' \
+  '        position: absolute;\r\n' \
+  '        width: 2vh;\r\n' \
+  '        height: 2vh;\r\n' \
+  '      }\r\n' \
+  '      #mini_map {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 2px;\r\n' \
+  '        top: 2px;\r\n' \
+  '        width: 10vh;\r\n' \
+  '        height: 10vh;\r\n' \
+  '        cursor: zoom-in;\r\n' \
+  '      }\r\n' \
+  '      #panel_rg {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 2px;\r\n' \
+  '        top: 10vh;\r\n' \
+  '        width: 11.7em;\r\n' \
+  '        height: 1.9em;\r\n' \
+  '        font-size: 80%;\r\n' \
+  '      }\r\n' \
+  '      #select_rg {\r\n' \
+  '        width: 11.5em;\r\n' \
+  '        height: 1.7em;\r\n' \
+  '        background-color: lightgray;\r\n' \
+  '      }\r\n' \
+  '      button {\r\n' \
+  '        border: none;\r\n' \
+  '        padding-left: 4px;\r\n' \
+  '        padding-right: 4px;\r\n' \
+  '        background-color: transparent;\r\n' \
+  '        color: inherit;\r\n' \
+  '        vertical-align: top;\r\n' \
+  '        font-size: inherit;\r\n' \
+  '      }\r\n' \
+  '      button:enabled {\r\n' \
+  '        cursor: pointer;\r\n' \
+  '      }\r\n' \
+  '      button:disabled {\r\n' \
+  '        cursor: inherit;\r\n' \
+  '      }\r\n' \
+  '      #help {\r\n' \
+  '        position: absolute;\r\n' \
+  '        display: inline-block;\r\n' \
+  '        z-index: 10;\r\n' \
+  '        right: 20px;\r\n' \
+  '        top: 1px;\r\n' \
+  '        width: 1.4em;\r\n' \
+  '        height: 1.2em;\r\n' \
+  '        background-color: lightgray;\r\n' \
+  '        color: black;\r\n' \
+  '        text-align: center;\r\n' \
+  '        font-weight: bold;\r\n' \
+  '        cursor: help;\r\n' \
+  '      }\r\n' \
+  '      #panel_param>form {\r\n' \
+  '        position: relative;\r\n' \
+  '        height: 100%;\r\n' \
+  '        padding-left: 0.3em;\r\n' \
+  '        overflow: auto;\r\n' \
+  '      }\r\n' \
+  '      p {\r\n' \
+  '        margin-block-start: 1em;\r\n' \
+  '        margin-block-end: 0.7em;\r\n' \
+  '      }\r\n' \
+  '      p:first-of-type {\r\n' \
+  '        margin-block-start: 0.5em;\r\n' \
+  '      }\r\n' \
+  '      #panorama>p {\r\n' \
+  '        margin-block-start: 1em;\r\n' \
+  '        margin-block-end: 0.5em;\r\n' \
+  '      }\r\n' \
+  '      input {\r\n' \
+  '        margin-left: 0.7em;\r\n' \
+  '        background-color: rgb(30, 30, 35);\r\n' \
+  '        color: inherit;\r\n' \
+  '        font-size: inherit;\r\n' \
+  '      }\r\n' \
+  '      input:enabled {\r\n' \
+  '        cursor: pointer;\r\n' \
+  '      }\r\n' \
+  '      input:disabled {\r\n' \
+  '        cursor: inherit;\r\n' \
+  '      }\r\n' \
+  '      label {\r\n' \
+  '        cursor: inherit;\r\n' \
+  '      }\r\n' \
+  '      input[type=range] {\r\n' \
+  '        width: 9em;\r\n' \
+  '      }\r\n' \
+  '      span {\r\n' \
+  '        display: inline-block;\r\n' \
+  '        text-align: center;\r\n' \
+  '      }\r\n' \
+  '      br+span {\r\n' \
+  '        width: 1.4em;\r\n' \
+  '      }\r\n' \
+  '      br+span+span {\r\n' \
+  '        width: 6em;\r\n' \
+  '        margin-left: 0.8em;\r\n' \
+  '      }\r\n' \
+  '      input:focus+br+span+span, input:focus+button+br+span+span, input:focus+input+br+span+span  {\r\n' \
+  '        color: rgb(200, 250, 240);\r\n' \
+  '      }\r\n' \
+  '      br+span+span+span {\r\n' \
+  '        width: 3em;\r\n' \
+  '      }\r\n' \
+  '      input[type=radio] {\r\n' \
+  '        margin-bottom: 0.4em;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox] {\r\n' \
+  '        appearance: none;\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 10.5em;\r\n' \
+  '        width: 1.2em;\r\n' \
+  '        height: 1.2em;\r\n' \
+  '        margin-left: 0.1em;\r\n' \
+  '        vertical-align: top;\r\n' \
+  '      }\r\n' \
+  '      input[type=checkbox]:checked::before {\r\n' \
+  '        content: "\\2714";\r\n' \
+  '        display: inline-block;\r\n' \
+  '        width: 100%;\r\n' \
+  '        text-align: center;\r\n' \
+  '        font-size: 90%;\r\n' \
+  '        font-weight: bold;\r\n' \
+  '      }\r\n' \
+  '      label[for$=cursor_zoom] {\r\n' \
+  '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      #cursor_zoom {\r\n' \
+  '        position: absolute;\r\n' \
+  '        right: 0;\r\n' \
+  '        top: 0;\r\n' \
+  '        width: 3em;\r\n' \
+  '        height: 1.5em;\r\n' \
+  '      }\r\n' \
+  '      #cursor_zoom:enabled+label {\r\n' \
+  '        cursor: all-scroll;\r\n' \
+  '      }\r\n' \
+  '      label[for=checkbox_pace] {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 8.15em;\r\n' \
+  '        padding-top: 0.2em;\r\n' \
+  '        font-size: 130%;\r\n' \
+  '      }\r\n' \
+  '      #checkbox_pano {\r\n' \
+  '        margin-top: 0;\r\n' \
+  '      }\r\n' \
+  '      input[id$=_info] {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 1.5em;\r\n' \
+  '        width: calc(100vw - 10vh - 20em);\r\n' \
+  '        margin: 0;\r\n' \
+  '        opacity: inherit;\r\n' \
+  '        background-color: inherit;\r\n' \
+  '        border: none;\r\n' \
+  '        outline: none;\r\n' \
+  '        cursor: initial;\r\n' \
+  '      }\r\n' \
+  '      label[for$=_info] {\r\n' \
+  '        position: absolute;\r\n' \
+  '        left: 2px;\r\n' \
+  '        width: 1em;\r\n' \
+  '        text-align: center;\r\n' \
   '      }\r\n' \
   '    </style>\r\n'
   HTML_3D_FORM1_TEMPLATE = \
-  '            <br><br>\r\n' \
-  '            <p><label for="cursor_rangle">{#jrotation#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" disabled oninput="set_param(\'r\')">&nbsp;&nbsp;<button id="button_rangle" disabled onclick="toggle_rotation()">&#9199;</button>\r\n' \
-  '            <br><span>0</span><span id="cursorv_rangle">0</span><span>360</span>\r\n' \
-  '            <br><br>\r\n'
+  '              <br><br>\r\n' \
+  '              <p><label for="cursor_rangle">{#jrotation#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_rangle" min="0" max="360" step="any" value="0" disabled oninput="set_param(\'r\')">&nbsp;&nbsp;<button id="button_rangle" disabled onclick="toggle_rotation()">&#9199;</button>\r\n' \
+  '              <br><span>0</span><span id="cursorv_rangle">0</span><span>360</span>\r\n' \
+  '              <br><br>\r\n'
   HTML_3D_FORM2_TEMPLATE = \
-  '            <br><br>\r\n' \
-  '            <p>{#jtexture#}</p>\r\n' \
-  '            <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)"><label for="radio_yiso">{#jtextureyiso#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)"><label for="radio_ziso">{#jtextureziso#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)"><label for="radio_map">{#jtexturemap#}</label>\r\n' \
-  '            <br><br>\r\n' \
-  '            <p>{#jdimming#}</p>\r\n' \
-  '            <input type="radio" id="radio_dimn" name="dimming" disabled onclick="toggle_dimming(0)"><label for="radio_dimn">{#jdimmingnone#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_dimz" name="dimming" disabled onclick="toggle_dimming(1)"><label for="radio_dimz">{#jdimmingz#}</label><br>\r\n'
+  '              <br><br>\r\n' \
+  '              <p>{#jtexture#}</p>\r\n' \
+  '              <input type="radio" id="radio_yiso" name="texture" checked disabled onclick="toggle_filling(0)"><label for="radio_yiso">{#jtextureyiso#}</label><br>\r\n' \
+  '              <input type="radio" id="radio_ziso" name="texture" disabled onclick="toggle_filling(1)"><label for="radio_ziso">{#jtextureziso#}</label><br>\r\n' \
+  '              <input type="radio" id="radio_map" name="texture" disabled onclick="toggle_filling(2)"><label for="radio_map">{#jtexturemap#}</label>\r\n' \
+  '              <br><br>\r\n' \
+  '              <p>{#jdimming#}</p>\r\n' \
+  '              <input type="radio" id="radio_dimn" name="dimming" disabled onclick="toggle_dimming(0)"><label for="radio_dimn">{#jdimmingnone#}</label><br>\r\n' \
+  '              <input type="radio" id="radio_dimz" name="dimming" disabled onclick="toggle_dimming(1)"><label for="radio_dimz">{#jdimmingz#}</label><br>\r\n'
   HTML_3D_FORM3_TEMPLATE = \
-  '            <br><br>\r\n' \
-  '            <p><label for="cursor_ltangle">{#jltilt#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_ltangle" min="0" max="90" step="any" value ="0" disabled oninput="set_param(\'lt\')">\r\n' \
-  '            <br><span>0</span><span id="cursorv_ltangle">0</span><span>90</span>\r\n' \
-  '            <br><br>\r\n' \
-  '            <p><label for="cursor_lrangle">{#jlrotation#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
-  '            <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
+  '              <br><br>\r\n' \
+  '              <p><label for="cursor_ltangle">{#jltilt#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_ltangle" min="0" max="90" step="any" value ="0" disabled oninput="set_param(\'lt\')">\r\n' \
+  '              <br><span>0</span><span id="cursorv_ltangle">0</span><span>90</span>\r\n' \
+  '              <br><br>\r\n' \
+  '              <p><label for="cursor_lrangle">{#jlrotation#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_lrangle" min="0" max="360" step="any" value ="0" disabled oninput="set_param(\'lr\')">&nbsp;&nbsp;<button id="button_lrangle" disabled onclick="toggle_lrotation()">&#9199;</button>\r\n' \
+  '              <br><span>0</span><span id="cursorv_lrangle">0</span><span>360</span>\r\n'
   HTML_3D_CGLOBALVARS_TEMPLATE = \
   '      const host = window.location.hostname + ":";\r\n' \
   '      const navigator_firefox = navigator.userAgent.toLowerCase().indexOf("firefox") >= 0;\r\n' \
@@ -16173,35 +16319,36 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker 3DViewer Panoramic</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
   '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);user-select:none;">\r\n' \
+  '  <body>\r\n' \
   '    <table>\r\n' \
   '      <colgroup>\r\n' \
-  '        <col style="width:calc(100vw - 14em);">\r\n' \
-  '        <col style="width:14em;">\r\n' \
+  '        <col>\r\n' \
+  '        <col>\r\n' \
   '      </colgroup>\r\n' \
   '      <tbody>\r\n' \
-  '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;">\r\n' \
-  '          <div style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:auto;">\r\n' \
-  '            <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;"></canvas>\r\n' \
-  '          </div>\r\n' \
-  '          <div style="position:absolute;top:4px;right:calc(1.5em + 24px);width:calc(4.5em + 2px);height:calc(1.5em + 6px);overflow:hidden;transform:rotate(-90deg);transform-origin:top right;background-color:rgba(40,45,50,0.5)">\r\n' \
-  '            <input type="range" id="cursor_zoom" min="0" max="4" step="1" value="0" disabled style="position:absolute;top:0;right:0;width:3em;height:1.5em;" oninput="set_param(\'zo\')">\r\n' \
-  '            <label for="cursor_zoom">&#128270;&#xfe0e;</label>\r\n' \
-  '          </div>\r\n' \
-  '        </td>\r\n' \
-  '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
-  '          <form autocomplete="off" onsubmit="return(false)" style="overflow:auto;max-height:100vh;padding-left:0.3em;">\r\n' \
-  '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_tangle" min="0" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
-  '            <br><span>0</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
-  '            <p><label for="cursor_zfact">{#jzscale#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" disabled oninput="set_param(\'zs\')">\r\n' \
-  '            <br><span>{#jzscaleiso#}</span><span id="cursorv_zfact"></span><span>{#jzscalemax#}</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
-  '            <input type="radio" id="radio_dimd" name="dimming" checked disabled onclick="toggle_dimming(2)"><label for="radio_dimd">{#jdimmingdeclivity#}</label><br>\r\n' \
-  '            <input type="radio" id="radio_dims" name="dimming" disabled onclick="toggle_dimming(3)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
-  '          </form>\r\n' \
-  '        </td>\r\n' \
+  '        <tr>\r\n' \
+  '          <td id="pano">\r\n' \
+  '            <div>\r\n' \
+  '              <canvas id="canvas" width="100" height="100"></canvas>\r\n' \
+  '            </div>\r\n' \
+  '            <div>\r\n' \
+  '              <input type="range" id="cursor_zoom" min="0" max="4" step="1" value="0" disabled oninput="set_param(\'zo\')">\r\n' \
+  '              <label for="cursor_zoom">&#128270;&#xfe0e;</label>\r\n' \
+  '            </div>\r\n' \
+  '          </td>\r\n' \
+  '          <td id="panel_param">\r\n' \
+  '            <form autocomplete="off" onsubmit="return(false)">\r\n' \
+  '              <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_tangle" min="0" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
+  '              <br><span>0</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
+  '              <p><label for="cursor_zfact">{#jzscale#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_zfact" min="1" max="1" step="any" value="1" disabled oninput="set_param(\'zs\')">\r\n' \
+  '              <br><span>{#jzscaleiso#}</span><span id="cursorv_zfact"></span><span>{#jzscalemax#}</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
+  '              <input type="radio" id="radio_dimd" name="dimming" checked disabled onclick="toggle_dimming(2)"><label for="radio_dimd">{#jdimmingdeclivity#}</label><br>\r\n' \
+  '              <input type="radio" id="radio_dims" name="dimming" disabled onclick="toggle_dimming(3)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
+  '            </form>\r\n' \
+  '          </td>\r\n' \
+  '        </tr>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n'
@@ -16623,7 +16770,7 @@ class GPXTweakerWebInterfaceServer():
   HTML_3DP_TEMPLATE = HTML_3DP_TEMPLATE.replace('{', '{{').replace('}', '}}').replace('{{#', '{').replace('#}}', '}').format_map(LSTRINGS['interface']).replace('{{', '{').replace('}}', '}')
   HTML_3D_WGPU_DECLARATIONS_TEMPLATE = \
   '      var portmin = ##PORTMIN##;\r\n' \
-  '      var portmax = ##PORTMAX##;\r\n'
+  '      var portmax = ##PORTMAX##;'
   HTML_3D_WGPU_GLOBALVARS_TEMPLATE = HTML_3D_CGLOBALVARS_TEMPLATE + \
   '      var context = null;\r\n' \
   '      var adapter = null;\r\n' \
@@ -17164,7 +17311,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `});\r\n' \
   '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 6, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 7, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
-  '        const pview = ["0", "1", "2", "3"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, }));\r\n' \
+  '        const pview = ["0", "1", "2", "3"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"},}));\r\n' \
   '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
   '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
@@ -17197,7 +17344,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `});\r\n' \
   '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
-  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
+  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"},});\r\n' \
   '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const mline = device.createShaderModule({code: `\r\n' \
   '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcolor: vec4f};\r\n' \
@@ -17217,7 +17364,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `});\r\n' \
   '        const bglline = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]});\r\n' \
-  '        const pline = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglline]}), vertex: {module: mline, entryPoint: "vline", buffers: [{attributes: [{shaderLocation: 0, format: "float32x3", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 12}], arrayStride: 24, stepMode: "instance"}, {attributes: [{shaderLocation: 2, format: "float32x2", offset: 0}], arrayStride: 8, stepMode: "vertex"}]}, fragment: {module: mline, entryPoint: "fline", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"}, });\r\n' \
+  '        const pline = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglline]}), vertex: {module: mline, entryPoint: "vline", buffers: [{attributes: [{shaderLocation: 0, format: "float32x3", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 12}], arrayStride: 24, stepMode: "instance"}, {attributes: [{shaderLocation: 2, format: "float32x2", offset: 0}], arrayStride: 8, stepMode: "vertex"}]}, fragment: {module: mline, entryPoint: "fline", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth16unorm"},});\r\n' \
   '        const baxispositions = device.createBuffer({size: 120, usage: GPUBufferUsage.VERTEX, mappedAtCreation: true});\r\n' \
   '        new Float32Array(baxispositions.getMappedRange()).set([0, 0, -1, 1.225, 0, -1, 0, 0, -1, 0, 1.225, -1, 0, 1.225, -1, -0.05, 1.125, -1, 0, 1.225, -1, 0.05, 1.125, -1, 0, 0, -1, 0, 0, 1.225]);\r\n' \
   '        baxispositions.unmap();\r\n' \
@@ -17257,7 +17404,7 @@ class GPXTweakerWebInterfaceServer():
   '        bmappos.forEach((b) => b.unmap());\r\n' \
   '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bviewmatrix, blightmatrix, bmappos[tm], bgxs, bgys), {binding: 6, resource: image_sampler,}, {binding: 7, resource: track_texture.createView(),}, {binding: 8, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 9, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 10, resource: (tm <= 1 ? patternff_texture : mapff_texture).createView(),}, {binding: 11, resource: depth_sampler,}, {binding: 12, resource: ldepth_texture.createView(),}]}));\r\n' \
   '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
-  '        const bgline = device.createBindGroup({layout: bglline, entries: [{binding: 0, resource: {buffer: blinematrix, size: 64}, }, {binding: 1, resource: {buffer: blinewidth}, }, {binding: 2, resource: {buffer: blinetype, size: 4},}]});\r\n' \
+  '        const bgline = device.createBindGroup({layout: bglline, entries: [{binding: 0, resource: {buffer: blinematrix, size: 64},}, {binding: 1, resource: {buffer: blinewidth},}, {binding: 2, resource: {buffer: blinetype, size: 4},}]});\r\n' \
   '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth16unorm"});\r\n' \
   '        bencoder.setPipeline(pshadow);\r\n' \
   '        bencoder.setBindGroup(0, bgshadow);\r\n' \
@@ -17425,62 +17572,67 @@ class GPXTweakerWebInterfaceServer():
   '    <meta charset="utf-8">\r\n' \
   '    <title>GPXTweaker 3DViewer Subjective</title>\r\n' + HTML_3D_STYLES_TEMPLATE + \
   '  </head>\r\n' \
-  '  <body style="margin:0;background-color:rgb(40,45,50);color:rgb(225,225,225);user-select:none;">\r\n' \
+  '  <body>\r\n' \
   '    <table>\r\n' \
   '      <colgroup>\r\n' \
-  '        <col style="width:calc(100vw - 14em);">\r\n' \
-  '        <col style="width:14em;">\r\n' \
+  '        <col>\r\n' \
+  '        <col>\r\n' \
   '      </colgroup>\r\n' \
   '      <tbody>\r\n' \
-  '        <tr style="display:table-row;">\r\n' \
-  '        <td style="display:table-cell;position:relative;vertical-align:top;height:100vh;overflow:hidden;user-select:none;" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();" onwheel="mouse_wheel(event)">\r\n' \
-  '          <canvas id="canvas" width="100" height="100" style="position:absolute;top:0;left:0;" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" onmousedown="mouse_down(event)" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
-  '          <div id="panel_infos" style="display:none;position:absolute;top:5px;left:5px;width:calc(100vw - 10vh - 18em);height:3em;font-size:90%;color:black;background-color:rgba(210,210,210,0.85);">\r\n' \
-  '            <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:hidden;height:3em;">\r\n' \
-  '              <label for="eye_info" style="top:2px;" onclick="event.altKey?complete_infos(event):update_pointer(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly style="top:2px;"><br>\r\n' \
-  '              <label for="target_info" style="bottom:2px;" onclick="event.altKey?complete_infos(event):update_pointer(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly style="bottom:2px;">\r\n' \
+  '        <tr>\r\n' \
+  '          <td id="subj" oncontextmenu="if (event.target.id == \'mini_map\') {event.ctrlKey?toggle_reversegeocodingswitch():toggle_infos();}; event.preventDefault();event.stopPropagation();" onwheel="mouse_wheel(event)">\r\n' \
+  '            <canvas id="canvas" width="100" height="100" tabindex="0" onkeydown="process_key(event)" ondblclick="process_key({key:\'enter\'})" onmousedown="mouse_down(event)" oncontextmenu="show_infos?update_infos(event):event.preventDefault()"></canvas>\r\n' \
+  '            <div id="panel_infos" style="display:none;">\r\n' \
+  '              <form autocomplete="off" onsubmit="return(false)">\r\n' \
+  '                <label for="eye_info" onclick="event.altKey?complete_infos(event):update_pointer(event)">&#128065;</label><input type="text" id="eye_info" name="eye_info" readOnly><br>\r\n' \
+  '                <label for="target_info" onclick="event.altKey?complete_infos(event):update_pointer(event)">&target;</label><input type="text" id="target_info" name="target_info" readOnly>\r\n' \
+  '              </form>\r\n' \
+  '            </div>\r\n' \
+  '            <svg id="target_mark" viewbox="-1 -1 2 2" pointer-events="none" stroke-width="1" style="display:none;top:0%;left:0%;" fill="none">\r\n' \
+  '              <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '              <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black""/>\r\n' \
+  '              <line x1="-0.9" y1="0" x2="0.9" y2="0" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '              <line x1="-0.9" y1="0" x2="0.9" y2="0" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
+  '              <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
+  '              <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
+  '            </svg>\r\n' \
+  '            <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="display:none;" onclick="toggle_minimap_magnification()">\r\n' \
+  '              <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
+  '              <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
+  '                <textPath pointer-events="none" href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
+  '              </text>\r\n' \
+  '              <path pointer-events="none" id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" fill-opacity="1" transform="scale(1) rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 l0.15 -0.1 l0.15 0.1 l-0.15 -0.4"/>\r\n' \
+  '            <title>{#jminimap#}</title>\r\n' \
+  '            </svg>\r\n' \
+  '            <div id="panel_rg" style="display:none;">\r\n' \
+  '              <select id="select_rg" name="select_rg" autocomplete="off" onchange="rgset=this.selectedIndex">##RGSETS##</select>\r\n' \
+  '            </div>\r\n' \
+  '          </td>\r\n' \
+  '          <td id="panel_param">\r\n' \
+  '            <div id="help" title="{#jhelp3d#}">?</div>\r\n' \
+  '            <form autocomplete="off" onsubmit="return(false)" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)" onwheel="process_key({key:\'form\'})">\r\n' \
+  '              <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
+  '              <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
+  '              <p><label for="cursor_pace">{#jpace#}</label><label for="checkbox_pace">&orarr;</label></p>\r\n' \
+  '              <input type="range" id="cursor_pace" min="0" max="0" step="1" value="0" disabled oninput="set_param(\'p\')">&nbsp;&nbsp;<input type="checkbox" id="checkbox_pace" checked disabled onclick="toggle_auto_rotation()">\r\n' \
+  '              <br><span>0</span><span id="cursorv_pace">0</span><span>0</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
+  '              <input type="radio" id="radio_dims" name="dimming" checked disabled onclick="toggle_dimming(2)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
+  '              <br><br>\r\n' \
+  '              <p><label for="cursor_vfov">{#jvfov#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_vfov" min="10" max="150" step="any" value="55" disabled oninput="set_param(\'f\')">\r\n' \
+  '              <br><span>10</span><span id="cursorv_vfov">55</span><span>150</span>\r\n' \
+  '              <br><br>\r\n' \
+  '              <p><label for="cursor_height">{#jheight#}</label></p>\r\n' \
+  '              <input type="range" id="cursor_height" min="0" max="100" step="any" value="4" disabled oninput="set_param(\'h\')">\r\n' \
+  '              <br><span>0.2</span><span id="cursorv_height">2</span><span>1000</span>\r\n' \
+  '              <div id="panorama" style="display:none">\r\n' \
+  '                <br>\r\n' \
+  '                <p><label for="checkbox_pano">{#jpanorama#}</label><input type="checkbox" id="checkbox_pano" disabled onclick="toggle_panorama(this.checked)"></p>\r\n' \
+  '              </div>\r\n' \
   '            </form>\r\n' \
-  '          </div>\r\n' \
-  '          <svg id="target_mark" viewbox="-1 -1 2 2" pointer-events="none" stroke-width="1" style="display:none;position:absolute;top:0%;left:0%;width:2vh;height:2vh;" fill="none">\r\n' \
-  '            <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
-  '            <circle cx="0" cy="0" r="0.5" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black""/>\r\n' \
-  '            <line x1="-0.9" y1="0" x2="0.9" y2="0" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
-  '            <line x1="-0.9" y1="0" x2="0.9" y2="0" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
-  '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="3" stroke="lightgray"/>\r\n' \
-  '            <line x1="0" y1="-0.9" x2="0" y2="0.9" vector-effect="non-scaling-stroke" stroke-width="1.5" stroke="black"/>\r\n' \
-  '          </svg>\r\n' \
-  '          <svg id="mini_map" viewbox="-1 -1 2 2" stroke="red" fill="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="roundstyle" style="display:none;position:absolute;top:2px;right:2px;width:10vh;height:10vh;cursor:zoom-in;" onclick="toggle_minimap_magnification()">\r\n' \
-  '            <path id="track" pointer-events="none" vector-effect="non-scaling-stroke" fill="none" d="M0 0" />\r\n' \
-  '            <text pointer-events="none" dy="0.25em" style="font-size:2.5%;word-spacing:1.5em;" >\r\n' \
-  '              <textPath pointer-events="none" href="#track" stroke="none">&rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; &rsaquo; </textPath>\r\n' \
-  '            </text>\r\n' \
-  '            <path pointer-events="none" id="eye" vector-effect="non-scaling-stroke" stroke="slategray" fill="darkslategray" fill-opacity="1" transform="scale(1) rotate(0) translate(0)" d="M0 -0.2 l-0.15 0.4 l0.15 -0.1 l0.15 0.1 l-0.15 -0.4"/>\r\n' \
-  '          <title>{#jminimap#}</title>\r\n' \
-  '          </svg>\r\n' \
-  '          <div id="panel_rg" style="display:none;position:absolute;top:10vh;right:2px;width:11.7em;height:1.9em;font-size:80%;">\r\n' \
-  '            <select id="select_rg" name="select_rg" autocomplete="off" style="width:11.5em;height:1.7em;background-color:lightgray;" onchange="rgset=this.selectedIndex">##RGSETS##</select>\r\n' \
-  '          </div>\r\n' \
-  '        </td>\r\n' \
-  '        <td style="display:table-cell;vertical-align:top;border-left:2px solid dimgray;">\r\n' \
-  '          <div title="{#jhelp3d#}" style="position:absolute;z-index:10;right:20px;top:1px;width:1.4em;height:1.2em;display:inline-block;text-align:center;background-color:lightgray;color:black;font-weight:bold;cursor:help;">?</div>\r\n' \
-  '          <form autocomplete="off" onsubmit="return(false)" style="position:relative;overflow:auto;max-height:100vh;padding-left:0.3em;" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)" onwheel="process_key({key:\'form\'})">\r\n' \
-  '            <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
-  '            <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
-  '            <p><label for="cursor_pace">{#jpace#}</label><label for="checkbox_pace" style="position:absolute;left:8.15em;padding-top:0.4em;font-size:130%;">&orarr;</label></p>\r\n' \
-  '            <input type="range" id="cursor_pace" min="0" max="0" step="1" value="0" disabled oninput="set_param(\'p\')">&nbsp;&nbsp;<input type="checkbox" id="checkbox_pace" checked disabled onclick="toggle_auto_rotation()">\r\n' \
-  '            <br><span>0</span><span id="cursorv_pace">0</span><span>0</span>\r\n' + HTML_3D_FORM2_TEMPLATE + \
-  '            <input type="radio" id="radio_dims" name="dimming" checked disabled onclick="toggle_dimming(2)"><label for="radio_dims">{#jdimmingshadow#}</label>\r\n' + HTML_3D_FORM3_TEMPLATE + \
-  '            <br><br>\r\n' \
-  '            <p><label for="cursor_vfov">{#jvfov#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_vfov" min="10" max="150" step="any" value="55" disabled oninput="set_param(\'f\')">\r\n' \
-  '            <br><span>10</span><span id="cursorv_vfov">55</span><span>150</span>\r\n' \
-  '            <br><br>\r\n' \
-  '            <p><label for="cursor_height">{#jheight#}</label></p>\r\n' \
-  '            <input type="range" id="cursor_height" min="0" max="100" step="any" value="4" disabled oninput="set_param(\'h\')">\r\n' \
-  '            <br><span>0.2</span><span id="cursorv_height">2</span><span>1000</span>\r\n' \
-  '          </form>\r\n' \
-  '        </td>\r\n' \
+  '          </td>\r\n' \
+  '        </tr>\r\n' \
   '      </tbody>\r\n' \
   '    </table>\r\n' \
   '    <script>\r\n'
@@ -17505,7 +17657,7 @@ class GPXTweakerWebInterfaceServer():
   '      var trscale = null;\r\n' \
   '      var mzoom = 1;\r\n' \
   '      var show_infos = false;\r\n' \
-  '      var rgset = (s_rg.options.length > 0)?s_rg.selectedIndex:-1;\r\n' \
+  '      var rgset = (s_rg.options.length > 0) ? s_rg.selectedIndex : -1;\r\n' \
   '      var click_r = null;\r\n' \
   '      var click_t = null;\r\n' \
   '      var click_cr = null;\r\n' \
@@ -17542,20 +17694,26 @@ class GPXTweakerWebInterfaceServer():
   '            rd = true;\r\n' \
   '            break;\r\n' \
   '          case "pageup":\r\n' \
-  '            set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
-  '            rd = true;\r\n' \
+  '            if (! c_tangle.disabled) {\r\n' \
+  '              set_param("t", Math.min(parseFloat(c_tangle.value) + (e.shiftKey?5:(e.repeat?2:1)), 90));\r\n' \
+  '              rd = true;\r\n' \
+  '            }\r\n' \
   '            break;\r\n' \
   '          case "pagedown":\r\n' \
-  '            set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
-  '            rd = true;\r\n' \
+  '            if (! c_tangle.disabled) {\r\n' \
+  '              set_param("t", Math.max(parseFloat(c_tangle.value) - (e.shiftKey?5:(e.repeat?2:1)), -90));\r\n' \
+  '              rd = true;\r\n' \
+  '            }\r\n' \
   '            break;\r\n' \
   '          case "delete":\r\n' \
   '            cb_pace.checked = ! cb_pace.checked;\r\n' \
   '            toggle_auto_rotation();\r\n' \
   '            break;\r\n' \
   '          case "insert":\r\n' \
-  '            set_param("t", 0);\r\n' \
-  '            rd = true;\r\n' \
+  '            if (! c_tangle.disabled) {\r\n' \
+  '              set_param("t", 0);\r\n' \
+  '              rd = true;\r\n' \
+  '            }\r\n' \
   '            break;\r\n' \
   '          case "-":\r\n' \
   '            c_height.value = Math.max(parseFloat(c_height.value) - 1, 0).toString();\r\n' \
@@ -17567,6 +17725,9 @@ class GPXTweakerWebInterfaceServer():
   '            break;\r\n' \
   '          case "enter":\r\n' \
   '            if (document.fullscreenElement) {document.exitFullscreen();} else {canvas.parentNode.requestFullscreen();}\r\n' \
+  '            break;\r\n' \
+  '          case " ":\r\n' \
+  '            if (! cb_pano.disabled) {cb_pano.click();}\r\n' \
   '            break;\r\n' \
   '          case "form":\r\n' \
   '            break;\r\n' \
@@ -17682,17 +17843,26 @@ class GPXTweakerWebInterfaceServer():
   '        if (c_pace.disabled) {return;}\r\n' \
   '        if (e.target.nodeName.toUpperCase() == "CANVAS") {\r\n' \
   '          if (e.button == 1) {\r\n' \
-  '            process_key({key:"delete"});\r\n'\
+  '            process_key({key: "delete"});\r\n'\
+  '            return;\r\n' \
+  '          } else if (e.button == 2) {\r\n' \
+  '            process_key({key: " "});\r\n' \
   '            return;\r\n' \
   '          } else if (e.button != 0) {return;}\r\n' \
   '          canvas.parentNode.onmousemove = mouse_move;\r\n' \
   '          mini_map.setAttribute("pointer-events", "none");\r\n' \
   '          p_infos.style.pointerEvents = "none";\r\n' \
   '          canvas.parentNode.style.cursor = "all-scroll";\r\n' \
-  '          click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
-  '          click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '          if (panorama_mode) {\r\n' \
+  '            click_r = e.offsetX;\r\n' \
+  '            click_t = e.offsetY;\r\n' \
+  '          } else {\r\n' \
+  '            click_r = Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '            click_t = Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov);\r\n' \
+  '          }\r\n' \
   '          click_cr = parseFloat(c_rangle.value);\r\n' \
   '          click_ct = parseFloat(c_tangle.value);\r\n' \
+  '          cb_pano.disabled = true;\r\n' \
   '        } else if (e.button != 0) {return;}\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
   '        document.body.onmouseleave = mouse_up;\r\n' \
@@ -17708,11 +17878,16 @@ class GPXTweakerWebInterfaceServer():
   '        p_infos.style.pointerEvents = "";\r\n' \
   '        document.onmouseup = null;\r\n' \
   '        document.body.onmouseleave = null;\r\n' \
+  '        cb_pano.disabled = false;\r\n' \
   '        if (loop_dur != 0) {loop_rd = performance.now();}\r\n' \
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
-  '        set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
-  '        set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '        if (panorama_mode) {\r\n' \
+  '          set_param("r", (360 + (click_cr + (click_r - e.offsetX) * 360 / canvas.clientWidth)) % 360);\r\n' \
+  '        } else {\r\n' \
+  '          set_param("r", (360 + click_cr - (Math.atan((e.offsetX - (canvas.parentNode.offsetWidth - 1) / 2) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_r) * 180 / Math.PI) % 360);\r\n' \
+  '          set_param("t", Math.max(Math.min(click_ct - (Math.atan(((canvas.parentNode.offsetHeight - 1) / 2 - e.offsetY) * 2 / (canvas.parentNode.offsetHeight - 1) / vfov) - click_t) * 180 / Math.PI, 90), -90));\r\n' \
+  '        }\r\n' \
   '        if (loop_dur == 0) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      function mouse_wheel(e) {\r\n' \
@@ -18342,13 +18517,29 @@ class GPXTweakerWebInterfaceServer():
   '      var eposition = null;\r\n' \
   '      var beposition = null;\r\n' \
   '      var bsunratio = null;\r\n' \
-  '      var bsunmatrix = null;\r\n' \
+  '      var bsunposition = null;\r\n' \
   '      var rpdposition = null;\r\n' \
   '      var rbsun = null;\r\n' \
   '      var rbposition = null;\r\n' \
   '      const snt = 36;\r\n' \
   '      var position_texture = null;\r\n' \
   '      var pdepth_texture = null;\r\n' \
+  '      var cb_pano = document.getElementById("checkbox_pano");\r\n' \
+  '      cb_pano.parentElement.parentElement.style.display = "";\r\n' \
+  '      var panorama_mode = false;\r\n' \
+  '      var rpdpanoramasun = null;\r\n' \
+  '      var rpdpanoramaview = null;\r\n' \
+  '      var rpdpanoramaposition = null;\r\n' \
+  '      var rpdpanorama = null;\r\n' \
+  '      var bglpanorama = null;\r\n' \
+  '      var ppanorama = null;\r\n' \
+  '      var bgpanorama = null;\r\n' \
+  '      var rbpanoramasun = null;\r\n' \
+  '      var rbpanoramaview = null;\r\n' \
+  '      var rbpanoramaposition = null;\r\n' \
+  '      var rbpanorama = null;\r\n' \
+  '      var resolved_view_texture = null;\r\n' \
+  '      var panoramaposition_texture = null;\r\n' \
   '      function set_param(p, v=null) {\r\n' \
   '        if (p == "p") {\r\n' \
   '          if (v != null) {c_pace.value = v.toString();}\r\n' \
@@ -18370,7 +18561,13 @@ class GPXTweakerWebInterfaceServer():
   '          cv_vfov.innerHTML = Math.round(parseFloat(c_vfov.value)).toString();\r\n' \
   '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
   '          modified.add("v");\r\n' \
+  '          modified.add("s");\r\n' \
   '          if (show_infos) {clear_tinfos();}\r\n' \
+  '          if (panorama_mode) {\r\n' \
+  '            vfov = vfov / Math.sqrt(2);\r\n' \
+  '            canvas_resize();\r\n' \
+  '            context.getCurrentTexture();\r\n' \
+  '          }\r\n' \
   '        } else if (p == "h") {\r\n' \
   '          if (v != null) {\r\n' \
   '            c_height.value = (Math.min(v, 10) * 2 + Math.min(Math.max(v - 10, 0), 40) / 2 + Math.min(Math.max(v - 50, 0), 150) / 7.5 + Math.min(Math.max(v - 200, 0), 300) / 15 + Math.max(v - 500, 0) / 25).toString();\r\n' \
@@ -18437,7 +18634,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function mat4_perspective() {\r\n' \
   '        return new Float32Array([\r\n' \
-  '          vfov / 4 / canvas.clientWidth * canvas.clientHeight, 0, 0, 0,\r\n' \
+  '          vfov / 4 * color_texture.height / color_texture.width, 0, 0, 0,\r\n' \
   '          0, vfov / 4, 0, 0,\r\n' \
   '          0, 0, 1/4, 0,\r\n' \
   '          0, 0, 1/4, 0,\r\n' \
@@ -18447,29 +18644,78 @@ class GPXTweakerWebInterfaceServer():
   '        const cpn = canvas.parentNode;\r\n' \
   '        const ss = Math.min(ssampling, Math.max(1, Math.floor(c_msize / Math.max(cpn.offsetWidth, cpn.offsetHeight))));\r\n' \
   '        const osize = [cpn.offsetWidth, cpn.offsetHeight];\r\n' \
-  '        const size = [osize[0] * ss, osize[1] * ss];\r\n' \
-  '        canvas.setAttribute("width", size[0].toString());\r\n' \
-  '        canvas.setAttribute("height", size[1].toString());\r\n' \
-  '        canvas.style.width = osize[0].toString() + "px";;\r\n' \
-  '        canvas.style.height = osize[1].toString() + "px";\r\n' \
+  '        const size = [];\r\n' \
+  '        let psize;\r\n' \
+  '        if (panorama_mode) {\r\n' \
+  '          size.push(Math.round(osize[1] * vfov), osize[1]);\r\n' \
+  '          psize = [osize[0], Math.round(osize[0] / (vfov * Math.PI * Math.sqrt(2)))];\r\n' \
+  '          if (psize[1] > osize[1]) {\r\n' \
+  '            psize[0] = Math.round(osize[1] * vfov * Math.PI * Math.sqrt(2));\r\n' \
+  '            psize[1] = osize[1];\r\n' \
+  '          }\r\n' \
+  '          canvas.setAttribute("width", psize[0].toString());\r\n' \
+  '          canvas.setAttribute("height", psize[1].toString());\r\n' \
+  '          canvas.style.width = psize[0].toString() + "px";;\r\n' \
+  '          canvas.style.height = psize[1].toString() + "px";\r\n' \
+  '        } else {\r\n' \
+  '          size.push(osize[0] * ss, osize[1] * ss);\r\n' \
+  '          canvas.setAttribute("width", size[0].toString());\r\n' \
+  '          canvas.setAttribute("height", size[1].toString());\r\n' \
+  '          canvas.style.width = osize[0].toString() + "px";;\r\n' \
+  '          canvas.style.height = osize[1].toString() + "px";\r\n' \
+  '        }\r\n' \
   '        modified.add("v");\r\n' \
   '        modified.add("s");\r\n' \
   '        if (show_infos) {clear_tinfos();}\r\n' \
   '        if (color_texture != null) {queue[0].then(color_texture.destroy.bind(color_texture));}\r\n' \
   '        color_texture = device.createTexture({size: size, format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '        if (panorama_mode) {\r\n' \
+  '          if (resolved_view_texture != null) {queue[0].then(resolved_view_texture.destroy.bind(resolved_view_texture));}\r\n' \
+  '          resolved_view_texture = device.createTexture({size: size, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING});\r\n' \
+  '          rpdpanoramaview.colorAttachments[0].resolveTarget = resolved_view_texture.createView();\r\n' \
+  '        } else if (resolved_view_texture != null) {\r\n' \
+  '          queue[0].then(resolved_view_texture.destroy.bind(resolved_view_texture));\r\n' \
+  '          resolved_view_texture = null;\r\n' \
+  '          rpdpanoramaview.colorAttachments[0].resolveTarget = null;\r\n' \
+  '        }\r\n' \
   '        if (depth_texture != null) {queue[0].then(depth_texture.destroy.bind(depth_texture));}\r\n' \
   '        depth_texture = device.createTexture({size: size, format: "depth32float", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
-  '        if (position_texture != null) {\r\n' \
-  '          queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
-  '          position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '        if (position_texture != null) {queue[0].then(position_texture.destroy.bind(position_texture));}\r\n' \
+  '        if (pdepth_texture != null) {queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));}\r\n' \
+  '        if (panorama_mode) {\r\n' \
+  '          rpdpanoramaview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '          rpdpanoramaview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '          if (panoramaposition_texture != null) {queue[0].then(panoramaposition_texture.destroy.bind(panoramaposition_texture));}\r\n' \
+  '          position_texture = device.createTexture({size: size, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING});\r\n' \
   '          rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
-  '        }\r\n' \
-  '        if (pdepth_texture != null) {\r\n' \
-  '          queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
-  '          pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '          pdepth_texture = device.createTexture({size: size, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
   '          rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '          bgpanorama[1] = device.createBindGroup({layout: bglpanorama[1], entries: [{binding: 0, resource: resolved_view_texture.createView(),}, {binding: 1, resource: position_texture.createView(),}]});\r\n' \
+  '          panoramaposition_texture = device.createTexture({size: psize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '          rpdpanoramasun.colorAttachments[1].view = panoramaposition_texture.createView();\r\n' \
+  '          rpdpanorama.colorAttachments[1].view = rpdpanoramasun.colorAttachments[1].view;\r\n' \
+  '          const bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat, "rg16sint"]});\r\n' \
+  '          bencoder.setPipeline(ppanorama);\r\n' \
+  '          bencoder.setBindGroup(0, bgpanorama[0]);\r\n' \
+  '          bencoder.setBindGroup(1, bgpanorama[1]);\r\n' \
+  '          bencoder.draw(3);\r\n' \
+  '          rbpanorama = bencoder.finish();\r\n' \
+  '        } else {\r\n' \
+  '          rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
+  '          rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
+  '          if (panoramaposition_texture != null) {\r\n' \
+  '            queue[0].then(panoramaposition_texture.destroy.bind(panoramaposition_texture));\r\n' \
+  '            panoramaposition_texture = null;\r\n' \
+  '            bgpanorama[1] = null;\r\n' \
+  '            rpdpanoramasun.colorAttachments[1].view = null;\r\n' \
+  '            rpdpanorama.colorAttachments[1].view = null;\r\n' \
+  '          }          \r\n' \
+  '          if (show_infos) {\r\n' \
+  '            position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '            rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '            pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '            rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function get_pz(px, py) {\r\n' \
@@ -18493,7 +18739,7 @@ class GPXTweakerWebInterfaceServer():
   '        const cy = (py - gys[iy - 1]) / (gys[iy] - gys[iy - 1]);\r\n' \
   '        return cx + cy <= 1 ? (1 - cx - cy) * gzs[ix - 1 + (iy - 1) * lvx] + cx * gzs[ix + (iy - 1) * lvx] + cy  * gzs[ix - 1 + iy * lvx] : (1 - cy) * gzs[ix + (iy - 1) * lvx] + (1 - cx) * gzs[ix - 1 + iy * lvx] + (cx + cy - 1) * gzs[ix + iy * lvx];\r\n' \
   '      }\r\n' \
-  '      async function init() {\r\n' \
+  '      async function *init() {\r\n' \
   '        document.body.style.cursor = "wait";\r\n' \
   '        adapter = await navigator.gpu?.requestAdapter();\r\n' \
   '        device = await adapter?.requestDevice({requiredLimits:{maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize, maxBufferSize: adapter.limits.maxBufferSize, maxTextureDimension2D: adapter.limits.maxTextureDimension2D},});\r\n' \
@@ -18597,7 +18843,7 @@ class GPXTweakerWebInterfaceServer():
   '        const trref = [##TRREF##];\r\n' \
   '        const trpos = new Float64Array(4);\r\n' \
   '        const track_texture = device.createTexture({size: [tr_size, tr_size], format: "r8unorm", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST});\r\n' \
-  '        if (! await data_wait) {\r\n' \
+  '        if (! (await data_wait).value) {\r\n' \
   '          window.alert("{#jdatafail#}");\r\n' \
   '          document.body.innerHTML = "";\r\n' \
   '          document.head.innerHTML = "";\r\n' \
@@ -18609,14 +18855,14 @@ class GPXTweakerWebInterfaceServer():
   '        data_wait = dload.next();\r\n' \
   '        const ppositionw = (navigator_firefox ? "pposition.w" : "1.0 / pposition.w");\r\n' \
   '        const mview = device.createShaderModule({code: `\r\n' \
-  '          @group(0) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
-  '          @group(0) @binding(1) var<uniform> radius: f32;\r\n' \
-  '          @group(0) @binding(2) var<uniform> viewmatrix: mat4x4f;\r\n' \
-  '          @group(0) @binding(3) var<uniform> lightmatrix: mat4x4f;\r\n' \
-  '          @group(0) @binding(4) var<uniform> eposition: vec2f;\r\n' \
-  '          @group(0) @binding(5) var<uniform> mappos: mat4x4f;\r\n' \
-  '          @group(0) @binding(6) var<storage, read> gxs: array<f32>;\r\n' \
-  '          @group(0) @binding(7) var<storage, read> gys: array<f32>;\r\n' \
+  '          @group(0) @binding(0) var<uniform> radius: f32;\r\n' \
+  '          @group(0) @binding(1) var<uniform> lightmatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(2) var<uniform> eposition: vec2f;\r\n' \
+  '          @group(0) @binding(3) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(4) var<storage, read> gys: array<f32>;\r\n' \
+  '          @group(1) @binding(0) var<uniform> viewmatrix: mat4x4f;\r\n' \
+  '          @group(2) @binding(0) var<uniform> dimfact: vec2f;\r\n' \
+  '          @group(2) @binding(1) var<uniform> mappos: mat4x4f;\r\n' \
   '          struct vout0 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f};\r\n' \
   '          struct vout1 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vmz: f32};\r\n' \
   '          struct vout2 {@builtin(position) vposition: vec4f, @location(0) vcoords: vec4f, @location(1) vnormal: vec3f, @location(2) vlcoord: vec2f, @location(3) vldepth: f32};\r\n' \
@@ -18655,25 +18901,26 @@ class GPXTweakerWebInterfaceServer():
   '            out.vldepth = vlposition.z / vlposition.w - 0.002;\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
-  '          @group(0) @binding(8) var trcksampler: sampler;\r\n' \
-  '          @group(0) @binding(9) var trcktex: texture_2d<f32>;\r\n' \
-  '          @group(0) @binding(10) var grsampler: sampler;\r\n' \
-  '          @group(0) @binding(11) var grtex: texture_2d<f32>;\r\n' \
-  '          @group(0) @binding(12) var depthsampler: sampler_comparison;\r\n' \
-  '          @group(0) @binding(13) var ldepthtex: texture_depth_2d;\r\n' \
+  '          @group(0) @binding(5) var trcksampler: sampler;\r\n' \
+  '          @group(0) @binding(6) var trcktex: texture_2d<f32>;\r\n' \
+  '          override trckts: f32 = 0.3;\r\n' \
+  '          @group(0) @binding(7) var depthsampler: sampler_comparison;\r\n' \
+  '          @group(0) @binding(8) var ldepthtex: texture_depth_2d;\r\n' \
+  '          @group(2) @binding(2) var grsampler: sampler;\r\n' \
+  '          @group(2) @binding(3) var grtex: texture_2d<f32>;\r\n' \
   '          struct fout {@builtin(frag_depth) pdepth: f32, @location(0) pcolor: vec4f};\r\n' \
   '          @fragment fn fview0(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f) -> fout {\r\n' \
   '            var out: fout;\r\n' \
   '            out.pdepth = ${ppositionw};\r\n' \
   '            let pdim: f32 = dimfact.x;\r\n' \
-  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= trckts);\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
   '          @fragment fn fview1(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pmz: f32) -> fout {\r\n' \
   '            var out: fout;\r\n' \
   '            out.pdepth = ${ppositionw};\r\n' \
   '            let pdim: f32 = pow(pmz, 0.7);\r\n' \
-  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= trckts);\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
   '          @fragment fn fview2(@builtin(position) pposition: vec4f, @location(0) pcoords: vec4f, @location(1) pnormal: vec3f, @location(2) plcoord: vec2f, @location(3) pldepth: f32) -> fout {\r\n' \
@@ -18681,15 +18928,15 @@ class GPXTweakerWebInterfaceServer():
   '            out.pdepth = ${ppositionw};\r\n' \
   '            let cinc: f32 = dot(normalize(pnormal), vec3f(lightmatrix[0].z, lightmatrix[1].z, lightmatrix[2].z)) * -2.0;\r\n' \
   '            let pdim: f32 = select(0.2, mix(0.2 , fma(0.8, abs(cinc), 0.2), textureSampleCompare(ldepthtex, depthsampler, plcoord, fma(0.0015, cinc, pldepth))), cinc > 0.0);\r\n' \
-  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= 0.3);\r\n' \
+  '            out.pcolor = select(textureSample(grtex, grsampler, pcoords.zw) * vec4(vec3(pdim), 1.0), vec4f(1.0, 0.0, 0.0, 1.0), textureSample(trcktex, trcksampler, pcoords.xy).r >= trckts);\r\n' \
   '            return out;\r\n' \
   '          }\r\n' \
   '        `});\r\n' \
-  '        const bglview = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 5, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 6, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 7, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 9, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 10, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 11, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 12, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 13, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]});\r\n' \
-  '        const pview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglview]}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, }));\r\n' \
+  '        const bglview = [device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 5, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 6, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 7, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "comparison"},}, {binding: 8, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "depth", multisampled: false},}]}), device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}]}), device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}, {binding: 3, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}]})];\r\n' \
+  '        const pview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglview}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},}));\r\n' \
   '        const bdimfact = ["0", "1", "2"].map((tm) => device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
   '        const bradius = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true});\r\n' \
-  '        bviewmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        bviewmatrix = device.createBuffer({size: 64 + 4 * Math.ceil(64 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        blightmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        beposition = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        const bmappos = ["0", "1", "2"].map((tm) => device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM, mappedAtCreation: true}));\r\n' \
@@ -18714,15 +18961,16 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `});\r\n' \
   '        const bglshadow = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
-  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
+  '        const pshadow = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglshadow]}), vertex: {module: mshadow, entryPoint: "vshadow", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},});\r\n' \
   '        rpdshadow = {colorAttachments: [], depthStencilAttachment: {view: ldepth_texture.createView(), depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const msun = device.createShaderModule({code: `\r\n' \
-  '          @group(0) @binding(0) var<uniform> sratio: f32;\r\n' \
-  '          @group(0) @binding(1) var<uniform> smatrix: mat4x4f;\r\n' \
+  '          @group(0) @binding(0) var<uniform> sratio: vec2f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> sposition: vec4f;\r\n' \
   '          override snt: u32 = 36u;\r\n' \
   '          override sa: f32 = 2.0 * 3.1415926536 / f32(snt);\r\n' \
   '          @vertex fn vsun(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> @builtin(position) vec4f {\r\n' \
-  '            var vposition = smatrix * vec4f(0.0, 0.0, 1.0, 1.0) + 0.01 * f32(1u - (vi >> 1u)) * vec4f(sratio * cos(f32(ii + vi) * sa), sin(f32(ii + vi) * sa), 0.0, 0.0);\r\n' \
+  '            let ang : f32 = f32(ii + vi) * sa;\r\n' \
+  '            var vposition = sposition + 0.005 * f32(1u - (vi >> 1u)) * vec4f(sratio * vec2f(cos(ang), sin(ang)), 0.0, 0.0);\r\n' \
   '            vposition.z *= vposition.w;\r\n' \
   '            return vposition;\r\n' \
   '          }\r\n' \
@@ -18735,15 +18983,15 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        `});\r\n' \
   '        const bglsun = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}]});\r\n' \
-  '        const psun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglsun]}), vertex: {module: msun, entryPoint: "vsun", buffers: []}, fragment: {module: msun, entryPoint: "fsun", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-list"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less-equal", format: "depth32float"}, });\r\n' \
-  '        bsunratio = device.createBuffer({size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
-  '        bsunmatrix = device.createBuffer({size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const psun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglsun]}), vertex: {module: msun, entryPoint: "vsun", buffers: [], constants: {snt},}, fragment: {module: msun, entryPoint: "fsun", targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-list"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less-equal", format: "depth32float"},});\r\n' \
+  '        bsunratio = device.createBuffer({size: 8, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
+  '        bsunposition = device.createBuffer({size: 16 + Math.ceil(16 / device.limits.minUniformBufferOffsetAlignment) * device.limits.minUniformBufferOffsetAlignment, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST});\r\n' \
   '        const mposition = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> radius: f32;\r\n' \
-  '          @group(0) @binding(1) var<uniform> viewmatrix: mat4x4f;\r\n' \
-  '          @group(0) @binding(2) var<uniform> eposition: vec2f;\r\n' \
-  '          @group(0) @binding(3) var<storage, read> gxs: array<f32>;\r\n' \
-  '          @group(0) @binding(4) var<storage, read> gys: array<f32>;\r\n' \
+  '          @group(0) @binding(1) var<uniform> eposition: vec2f;\r\n' \
+  '          @group(0) @binding(2) var<storage, read> gxs: array<f32>;\r\n' \
+  '          @group(0) @binding(3) var<storage, read> gys: array<f32>;\r\n' \
+  '          @group(1) @binding(0) var<uniform> viewmatrix: mat4x4f;\r\n' \
   '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
   '          @vertex fn vposition(@builtin(vertex_index) vi: u32, @location(0) gz: f32) -> vout {\r\n' \
   '            var out: vout;\r\n' \
@@ -18763,12 +19011,12 @@ class GPXTweakerWebInterfaceServer():
   '            return out;\r\n' \
   '          }\r\n' \
   '        `});\r\n' \
-  '        const bglposition = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 4, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]});\r\n' \
-  '        const pposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglposition]}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"}, });\r\n' \
+  '        const bglposition = [device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 2, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}, {binding: 3, visibility: GPUShaderStage.VERTEX, buffer: {type: "read-only-storage"},}]}), device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}]})];\r\n' \
+  '        const pposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglposition}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},});\r\n' \
   '        rpdposition = {colorAttachments: [{view: null, clearValue: [-32768, -32768, 0, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const cmap = create_map();\r\n' \
   '        cmap.next();\r\n' \
-  '        if (! await data_wait) {\r\n' \
+  '        if (! (await data_wait).value) {\r\n' \
   '          window.alert("{#jdatafail#}");\r\n' \
   '          document.body.innerHTML = "";\r\n' \
   '          document.head.innerHTML = "";\r\n' \
@@ -18787,10 +19035,10 @@ class GPXTweakerWebInterfaceServer():
   '        new Float32Array(bmappos[1].getMappedRange()).set([trpos[0], 0, 0, 0, 0, trpos[1], 0, 0, 0, 0, 0, scale / 50, trpos[2], trpos[3], 0.5, scale / 50]);\r\n' \
   '        new Float32Array(bmappos[2].getMappedRange()).set([trpos[0], 0, mpos[0], 0, 0, trpos[1], 0, mpos[1], 0, 0, 0, 0, trpos[2], trpos[3], mpos[2], mpos[3]]);\r\n' \
   '        bmappos.forEach((b) => b.unmap());\r\n' \
-  '        const bgview = [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview, entries: [...bgentries(bdimfact[tm], bradius, bviewmatrix, blightmatrix, beposition, bmappos[tm], bgxs, bgys), {binding: 8, resource:image_sampler,}, {binding: 9, resource: track_texture.createView(),}, {binding: 10, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 11, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}, {binding: 12, resource: depth_sampler,}, {binding: 13, resource: ldepth_texture.createView(),}]}));\r\n' \
+  '        const bgview = [device.createBindGroup({layout: bglview[0], entries: [...bgentries(bradius, blightmatrix, beposition, bgxs, bgys), {binding: 5, resource:image_sampler,}, {binding: 6, resource: track_texture.createView(),}, {binding: 7, resource: depth_sampler,}, {binding: 8, resource: ldepth_texture.createView(),}]}), device.createBindGroup({layout: bglview[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]}), [0, 1, 2].map((tm) => device.createBindGroup({layout: bglview[2], entries: [...bgentries(bdimfact[tm], bmappos[tm]), {binding: 2, resource: tm <= 1 ? pattern_sampler : image_sampler,}, {binding: 3, resource: (tm <= 1 ? pattern_texture : map_texture).createView(),}]}))];\r\n' \
   '        const bgshadow = device.createBindGroup({layout: bglshadow, entries: bgentries(blightmatrix, bgxs, bgys)});\r\n' \
-  '        const bgsun = device.createBindGroup({layout: bglsun, entries: bgentries(bsunratio, bsunmatrix)});\r\n' \
-  '        const bgposition = device.createBindGroup({layout: bglposition, entries: bgentries(bradius, bviewmatrix, beposition, bgxs, bgys)});\r\n' \
+  '        const bgsun = device.createBindGroup({layout: bglsun, entries: bgentries(bsunratio, bsunposition)});\r\n' \
+  '        const bgposition = [device.createBindGroup({layout: bglposition[0], entries: bgentries(bradius, beposition, bgxs, bgys)}), device.createBindGroup({layout: bglposition[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]})];\r\n' \
   '        let bencoder = device.createRenderBundleEncoder({colorFormats: [], depthStencilFormat: "depth32float"});\r\n' \
   '        bencoder.setPipeline(pshadow);\r\n' \
   '        bencoder.setBindGroup(0, bgshadow);\r\n' \
@@ -18803,7 +19051,9 @@ class GPXTweakerWebInterfaceServer():
   '          for (let tm=0; tm<3; tm++) {\r\n' \
   '            bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth32float"});\r\n' \
   '            bencoder.setPipeline(pview[dm]);\r\n' \
-  '            bencoder.setBindGroup(0, bgview[tm]);\r\n' \
+  '            bencoder.setBindGroup(0, bgview[0]);\r\n' \
+  '            bencoder.setBindGroup(1, bgview[1]);\r\n' \
+  '            bencoder.setBindGroup(2, bgview[2][tm]);\r\n' \
   '            bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
   '            bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
   '            bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
@@ -18817,7 +19067,8 @@ class GPXTweakerWebInterfaceServer():
   '        rbsun = bencoder.finish();\r\n' \
   '        bencoder = device.createRenderBundleEncoder({colorFormats: ["rg16sint"], depthStencilFormat: "depth32float"});\r\n' \
   '        bencoder.setPipeline(pposition);\r\n' \
-  '        bencoder.setBindGroup(0, bgposition);\r\n' \
+  '        bencoder.setBindGroup(0, bgposition[0]);\r\n' \
+  '        bencoder.setBindGroup(1, bgposition[1]);\r\n' \
   '        bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
   '        bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
   '        bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
@@ -18847,6 +19098,7 @@ class GPXTweakerWebInterfaceServer():
   '        b_lrangle.disabled = false;\r\n' \
   '        c_vfov.disabled = false;\r\n' \
   '        c_height.disabled = false;\r\n' \
+  '        cb_pano.disabled = false;\r\n' \
   '        document.body.style.cursor = "";\r\n' \
   '        canvas.focus();\r\n' \
   '        canvas.style.outline = "none";\r\n' \
@@ -18854,14 +19106,106 @@ class GPXTweakerWebInterfaceServer():
   '          window.requestAnimationFrame(loop_redraw);\r\n' \
   '          loop_rd = performance.now();\r\n' \
   '        }\r\n' \
+  '        yield;\r\n' \
+  '        const bglpanoramaview = [bglview[0], device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]}), bglview[2]];\r\n' \
+  '        const ppanoramaview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanoramaview}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, constants: {trckts: 2}, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},}));   \r\n' \
+  '        const bgpanoramaview = [bgview[0], device.createBindGroup({layout: bglpanoramaview[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]}), bgview[2]];\r\n' \
+  '        rpdpanoramaview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};        \r\n' \
+  '        const mpanoramasun = device.createShaderModule({code: `\r\n' \
+  '          @group(0) @binding(0) var<uniform> sratio: vec2f;\r\n' \
+  '          @group(0) @binding(1) var<uniform> sposition: vec4f;\r\n' \
+  '          override snt: u32 = 36;\r\n' \
+  '          override sa: f32 = 2.0 * 3.1415926536 / f32(snt);\r\n' \
+  '          @vertex fn vsun(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> @builtin(position) vec4f {\r\n' \
+  '            let ang : f32 = f32(ii + vi) * sa;\r\n' \
+  '            return sposition + 0.003 * f32(1u - (vi >> 1u)) * vec4f(sratio * vec2f(cos(ang), sin(ang)), 0.0, 0.0);\r\n' \
+  '          }\r\n' \
+  '          struct fout {@location(0) pcolor: vec4f, @location(1) pposition: vec2i};\r\n' \
+  '          @fragment fn fsun() -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            out.pcolor = vec4f(1.0, 1.0, 0.0, 1.0);\r\n' \
+  '            out.pposition = vec2i(-32768, -32768);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        const bglpanoramasun = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]});\r\n' \
+  '        const ppanoramasun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglpanoramasun]}), vertex: {module: mpanoramasun, entryPoint: "vsun", buffers: [], constants: {snt},}, fragment: {module: mpanoramasun, entryPoint: "fsun", targets: [{format: pcolorformat}, {format: "rg16sint"}]}, primitive: {topology: "triangle-list"},});\r\n' \
+  '        rpdpanoramasun = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 1], loadOp: "clear", storeOp: "store"}, {view: null, clearValue: [-32768, -32768, 0, 0], loadOp: "clear", storeOp: "store"}]};\r\n' \
+  '        const bglpanoramaposition = [bglposition[0], device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]})];\r\n' \
+  '        const ppanoramaposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanoramaposition}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},});\r\n' \
+  '        const mpanorama = device.createShaderModule({code: `\r\n' \
+  '          struct vout {@builtin(position) vposition: vec4f, @location(0) vcoord: vec2f};\r\n' \
+  '          @vertex fn vpanorama(@builtin(vertex_index) vi: u32) -> vout  {\r\n' \
+  '            var out: vout;\r\n' \
+  '            out.vcoord = vec2f(f32(vi & 2u) - 0.5, f32((vi << 1u) & 2u) - 0.5);\r\n' \
+  '            out.vposition = vec4f(vec2f(2.0, -2.0) * out.vcoord, 0.5, 1.0);\r\n' \
+  '            out.vcoord *= vec2f(1.57079633, 0.70710678);\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '          @group(0) @binding(0) var samp: sampler;\r\n' \
+  '          @group(1) @binding(0) var tex: texture_2d<f32>;\r\n' \
+  '          @group(1) @binding(1) var ptex: texture_2d<i32>;\r\n' \
+  '          struct fout {@location(0) pcolor: vec4f, @location(1) pposition: vec2i};\r\n' \
+  '          @fragment fn fpanorama(@location(0) pcoord: vec2f) -> fout {\r\n' \
+  '            var out: fout;\r\n' \
+  '            let coords: vec2f = vec2f(tan(pcoord.x) / 2.0 + 0.5, pcoord.y / cos(pcoord.x) + 0.5);\r\n' \
+  '            out.pcolor = textureSample(tex, samp, coords);\r\n' \
+  '            out.pposition = textureLoad(ptex, vec2i(round(vec2f(textureDimensions(ptex)) * coords)), 0u).xy;\r\n' \
+  '            return out;\r\n' \
+  '          }\r\n' \
+  '        `});\r\n' \
+  '        bglpanorama = [device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: {type: "filtering"},}]}), device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "float", multisampled: false},}, {binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {sampleType: "sint", multisampled: false},}]})];\r\n' \
+  '        ppanorama = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanorama}), vertex: {module: mpanorama, entryPoint: "vpanorama", buffers: []}, fragment: {module: mpanorama, entryPoint: "fpanorama", targets: [{format: pcolorformat, blend: {color: {operation: "add", srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha"}, alpha: {operation: "add", srcFactor: "zero", dstFactor: "one"},},}, {format: "rg16sint"}]}, primitive: {topology: "triangle-list"},});\r\n' \
+  '        rpdpanorama = {colorAttachments: [{view: null, loadOp: "load", storeOp: "store"}, {view: null, loadOp: "load", storeOp: "store"}],};\r\n' \
+  '        const bgpanoramasun = device.createBindGroup({layout: bglpanoramasun, entries: [{binding: 0, resource: {buffer: bsunratio, size: 8},}, {binding: 1, resource: {buffer: bsunposition, size: 16},}]});\r\n' \
+  '        const bgpanoramaposition = [device.createBindGroup({layout: bglpanoramaposition[0], entries: bgentries(bradius, beposition, bgxs, bgys)}), device.createBindGroup({layout: bglpanoramaposition[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]})];\r\n' \
+  '        bgpanorama = [device.createBindGroup({layout: bglpanorama[0], entries: [{binding: 0, resource: image_sampler,}]}), null];\r\n' \
+  '        rbpanoramaview = [];\r\n' \
+  '        let bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
+  '        for (let dm=0; dm<3; dm++) {\r\n' \
+  '          for (let tm=0; tm<3; tm++) {\r\n' \
+  '            const rbpv = [];\r\n' \
+  '            rbpanoramaview.push(rbpv);\r\n' \
+  '            for (let i=0; i<4; i++) {\r\n' \
+  '              bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat], sampleCount: 4, depthStencilFormat: "depth32float"});\r\n' \
+  '              bencoder.setPipeline(ppanoramaview[dm]);\r\n' \
+  '              bencoder.setBindGroup(0, bgpanoramaview[0]);\r\n' \
+  '              bencoder.setBindGroup(1, bgpanoramaview[1], [bdynunifstride * i]);\r\n' \
+  '              bencoder.setBindGroup(2, bgpanoramaview[2][tm]);\r\n' \
+  '              bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '              bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '              bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '              rbpv.push(bencoder.finish());\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        rbpanoramasun = []\r\n' \
+  '        bdynunifstride = bsunposition.size - 16;\r\n' \
+  '        for (let i=0; i<2; i++) {\r\n' \
+  '          bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat, "rg16sint"]});\r\n' \
+  '          bencoder.setPipeline(ppanoramasun);\r\n' \
+  '          bencoder.setBindGroup(0, bgpanoramasun, [bdynunifstride * i]);\r\n' \
+  '          bencoder.draw(3, snt);\r\n' \
+  '          rbpanoramasun.push(bencoder.finish());\r\n' \
+  '        }\r\n' \
+  '        rbpanoramaposition = []\r\n' \
+  '        bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
+  '        for (let i=0; i<4; i++) {\r\n' \
+  '          bencoder = device.createRenderBundleEncoder({colorFormats: ["rg16sint"], depthStencilFormat: "depth32float"});\r\n' \
+  '          bencoder.setPipeline(ppanoramaposition);\r\n' \
+  '          bencoder.setBindGroup(0, bgpanoramaposition[0]);\r\n' \
+  '          bencoder.setBindGroup(1, bgpanoramaposition[1], [bdynunifstride * i]);\r\n' \
+  '          bencoder.setVertexBuffer(0, bgrznorms);\r\n' \
+  '          bencoder.setIndexBuffer(bgrinds, "uint32");\r\n' \
+  '          bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
+  '          rbpanoramaposition.push(bencoder.finish());\r\n' \
+  '        }\r\n' \
+  '        return device.queue.onSubmittedWorkDone();\r\n' \
   '      }\r\n' \
   '      function _canvas_redraw() {\r\n' \
   '        const encoder = device.createCommandEncoder();\r\n' \
   '        if (modified.has("e")) {\r\n' \
   '          device.queue.writeBuffer(beposition, 0, eposition);\r\n' \
-  '        }\r\n' \
-  '        if (modified.has("s")) {\r\n' \
-  '          device.queue.writeBuffer(bsunratio, 0, new Float32Array([canvas.clientHeight / canvas.clientWidth]));\r\n' \
   '        }\r\n' \
   '        if (modified.has("l") && dim_mode == 2) {\r\n' \
   '          const lmatrix = mat4_zscale(1);\r\n' \
@@ -18875,37 +19219,92 @@ class GPXTweakerWebInterfaceServer():
   '          pass.executeBundles([rbshadow]);\r\n' \
   '          pass.end();\r\n' \
   '        }\r\n' \
-  '        if (modified.has("v")) {\r\n' \
-  '          const vmatrix = mat4_zscale(1);\r\n' \
-  '          mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
-  '          mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
-  '          mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
-  '          mat4_mult(mat4_perspective(), vmatrix);\r\n' \
-  '          mat4_flip(vmatrix);\r\n' \
-  '          device.queue.writeBuffer(bviewmatrix, 0, vmatrix);\r\n' \
-  '        }\r\n' \
-  '        if (modified.has("l") || modified.has("v") || modified.has("m")) {\r\n' \
-  '          const rbs = [rbview[3 * dim_mode + tex_mode]];\r\n' \
-  '          rpdview.colorAttachments[0].resolveTarget = context.getCurrentTexture().createView();\r\n' \
-  '          const pass = encoder.beginRenderPass(rpdview);\r\n' \
-  '          if ((modified.has("l") || modified.has("v")) && dim_mode == 2) {\r\n' \
+  '        if (panorama_mode) {\r\n' \
+  '          if (modified.has("s")) {\r\n' \
+  '            device.queue.writeBuffer(bsunratio, 0, new Float32Array([1, canvas.clientWidth / canvas.clientHeight]));\r\n' \
+  '          }\r\n' \
+  '          const context_texture = context.getCurrentTexture();\r\n' \
+  '          rpdpanoramasun.colorAttachments[0].view = context_texture.createView();\r\n' \
+  '          rpdpanorama.colorAttachments[0].view = rpdpanoramasun.colorAttachments[0].view;\r\n' \
+  '          let pass = encoder.beginRenderPass(rpdpanoramasun);\r\n' \
+  '          if (dim_mode == 2) {\r\n' \
   '            const smatrix = mat4_zscale(1);\r\n' \
   '            mat4_mult(mat4_tilt(cltangle, -sltangle), smatrix);\r\n' \
-  '            mat4_mult(mat4_rotation(crangle, srangle), smatrix);\r\n' \
-  '            mat4_mult(mat4_rotation(clrangle, -slrangle), smatrix);\r\n' \
   '            mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
   '            mat4_mult(mat4_perspective(), smatrix);\r\n' \
   '            mat4_flip(smatrix);\r\n' \
-  '            device.queue.writeBuffer(bsunmatrix, 0, smatrix);\r\n' \
-  '            rbs.push(rbsun);\r\n' \
+  '            smatrix[8] = (-parseFloat(c_rangle.value) + parseFloat(c_lrangle.value) + 360) % 360 / 180 * smatrix[11] ;\r\n' \
+  '            smatrix[9] = smatrix[9] * Math.sqrt(2);\r\n' \
+  '            device.queue.writeBuffer(bsunposition, 0, smatrix, 8, 4);\r\n' \
+  '            smatrix[8] = smatrix[8] - 2 * smatrix[11];\r\n' \
+  '            device.queue.writeBuffer(bsunposition, bsunposition.size - 16, smatrix, 8, 4);\r\n' \
+  '            pass.executeBundles(rbpanoramasun);\r\n' \
   '          }\r\n' \
-  '          pass.executeBundles(rbs);\r\n' \
   '          pass.end();\r\n' \
-  '        }\r\n' \
-  '        if ((modified.has("p") || modified.has("v")) && show_infos) {\r\n' \
-  '          const pass = encoder.beginRenderPass(rpdposition);\r\n' \
-  '          pass.executeBundles([rbposition]);\r\n' \
-  '          pass.end();\r\n' \
+  '          const bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
+  '          const rbpv = rbpanoramaview[3 * dim_mode + tex_mode];\r\n' \
+  '          const rangle = parseFloat(c_rangle.value);\r\n' \
+  '          for (let i=0; i<4; i++) {\r\n' \
+  '            const angle = (225 + 90 * i + rangle) % 360 * Math.PI / -180;\r\n' \
+  '            crangle = Math.cos(angle);\r\n' \
+  '            srangle = Math.sin(angle);\r\n' \
+  '            const vmatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '            mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '            mat4_flip(vmatrix);\r\n' \
+  '            device.queue.writeBuffer(bviewmatrix, bdynunifstride * i, vmatrix);\r\n' \
+  '            pass = encoder.beginRenderPass(rpdpanoramaview);\r\n' \
+  '            pass.executeBundles([rbpv[i]]);\r\n' \
+  '            pass.end();\r\n' \
+  '            pass = encoder.beginRenderPass(rpdposition);\r\n' \
+  '            if (show_infos) {pass.executeBundles([rbpanoramaposition[i]]);}\r\n' \
+  '            pass.end();\r\n' \
+  '            pass = encoder.beginRenderPass(rpdpanorama);\r\n' \
+  '            pass.setViewport(Math.round(context_texture.width * i / 4), 0, Math.round(context_texture.width * (i + 1) / 4) - Math.round(context_texture.width * i / 4), context_texture.height, 0, 1);\r\n' \
+  '            pass.executeBundles([rbpanorama]);\r\n' \
+  '            pass.end();\r\n' \
+  '          }\r\n' \
+  '          const angle = rangle * Math.PI / -180;\r\n' \
+  '          crangle = Math.cos(angle);\r\n' \
+  '          srangle = Math.sin(angle);\r\n' \
+  '        } else {\r\n' \
+  '          if (modified.has("s")) {\r\n' \
+  '            device.queue.writeBuffer(bsunratio, 0, new Float32Array([vfov * canvas.clientHeight / canvas.clientWidth, vfov]));\r\n' \
+  '          }\r\n' \
+  '          if (modified.has("v")) {\r\n' \
+  '            const vmatrix = mat4_zscale(1);\r\n' \
+  '            mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
+  '            mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '            mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '            mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '            mat4_flip(vmatrix);\r\n' \
+  '            device.queue.writeBuffer(bviewmatrix, 0, vmatrix);\r\n' \
+  '          }\r\n' \
+  '          if (modified.has("l") || modified.has("v") || modified.has("m")) {\r\n' \
+  '            const rbs = [rbview[3 * dim_mode + tex_mode]];\r\n' \
+  '            rpdview.colorAttachments[0].resolveTarget = context.getCurrentTexture().createView();\r\n' \
+  '            const pass = encoder.beginRenderPass(rpdview);\r\n' \
+  '            if ((modified.has("l") || modified.has("v")) && dim_mode == 2) {\r\n' \
+  '              const smatrix = mat4_zscale(1);\r\n' \
+  '              mat4_mult(mat4_tilt(cltangle, -sltangle), smatrix);\r\n' \
+  '              mat4_mult(mat4_rotation(crangle, srangle), smatrix);\r\n' \
+  '              mat4_mult(mat4_rotation(clrangle, -slrangle), smatrix);\r\n' \
+  '              mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
+  '              mat4_mult(mat4_perspective(), smatrix);\r\n' \
+  '              mat4_flip(smatrix);\r\n' \
+  '              device.queue.writeBuffer(bsunposition, 0, smatrix, 8, 4);\r\n' \
+  '              rbs.push(rbsun);\r\n' \
+  '            }\r\n' \
+  '            pass.executeBundles(rbs);\r\n' \
+  '            pass.end();\r\n' \
+  '          }\r\n' \
+  '          if ((modified.has("p") || modified.has("v")) && show_infos) {\r\n' \
+  '            const pass = encoder.beginRenderPass(rpdposition);\r\n' \
+  '            pass.executeBundles([rbposition]);\r\n' \
+  '            pass.end();\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
@@ -18918,7 +19317,8 @@ class GPXTweakerWebInterfaceServer():
   '        if (force) {modified.add("v");}\r\n' \
   '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
-  '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
+  '      var panorama_init = [init(), null];\r\n' \
+  '      panorama_init[0].next();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
   '      function toggle_filling(mode) {\r\n' \
   '        if (mode == tex_mode) {return;};\r\n' \
   '        tex_mode = mode;\r\n' \
@@ -18947,6 +19347,42 @@ class GPXTweakerWebInterfaceServer():
   '          modified.add("m");\r\n' \
   '        }\r\n' \
   '        if (loop_rd === false) {canvas_redraw();}\r\n' \
+  '      }\r\n' \
+  '      function _toggle_panorama(mode) {\r\n' \
+  '        if (mode == panorama_mode) {return;}\r\n' \
+  '        panorama_mode = mode;\r\n' \
+  '        if (mode) {\r\n' \
+  '          vfov = vfov / Math.sqrt(2);\r\n' \
+  '          set_param("t", 0);\r\n' \
+  '          c_tangle.disabled = true;\r\n' \
+  '        } else {\r\n' \
+  '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
+  '          c_tangle.disabled = false;\r\n' \
+  '          rpdpanoramaview.colorAttachments[0].view = null;\r\n' \
+  '          rpdpanoramaview.depthStencilAttachment.view = null;\r\n' \
+  '          if (! show_infos) {\r\n' \
+  '            if (position_texture != null) {\r\n' \
+  '              queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
+  '              position_texture = null;\r\n' \
+  '              rpdposition.colorAttachments[0].view = null;\r\n' \
+  '            }\r\n' \
+  '            if (pdepth_texture != null) {\r\n' \
+  '              queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
+  '              pdepth_texture = null;\r\n' \
+  '              rpdposition.depthStencilAttachment.view = null;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        context.configure({alphaMode: "opaque", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
+  '        canvas_resize();\r\n' \
+  '        canvas_redraw();\r\n' \
+  '      }\r\n' \
+  '      function toggle_panorama(mode) {\r\n' \
+  '        if (panorama_init[0]) {\r\n' \
+  '          panorama_init[1] = panorama_init[0].next();\r\n' \
+  '          panorama_init[0] = null;\r\n' \
+  '        }\r\n' \
+  '        panorama_init[1].then(function () {_toggle_panorama(mode);})\r\n' \
   '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
@@ -18954,27 +19390,31 @@ class GPXTweakerWebInterfaceServer():
   '          p_infos.style.display = "none";\r\n' \
   '          e_info.value = "";\r\n' \
   '          clear_tinfos();\r\n' \
-  '          if (position_texture != null) {\r\n' \
-  '            queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
-  '            position_texture = null;\r\n' \
-  '            rpdposition.colorAttachments[0].view = null;\r\n' \
-  '          }\r\n' \
-  '          if (pdepth_texture != null) {\r\n' \
-  '            queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
-  '            pdepth_texture = null;\r\n' \
-  '            rpdposition.depthStencilAttachment.view =null;\r\n' \
+  '          if (! panorama_mode) {\r\n' \
+  '            if (position_texture != null) {\r\n' \
+  '              queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
+  '              position_texture = null;\r\n' \
+  '              rpdposition.colorAttachments[0].view = null;\r\n' \
+  '            }\r\n' \
+  '            if (pdepth_texture != null) {\r\n' \
+  '              queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
+  '              pdepth_texture = null;\r\n' \
+  '              rpdposition.depthStencilAttachment.view = null;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
   '          show_infos = true;\r\n' \
   '          p_infos.style.display = "block";\r\n' \
-  '          const osize = [canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight];\r\n' \
-  '          if (position_texture == null) {\r\n' \
-  '            position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
-  '            rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
-  '          }\r\n' \
-  '          if (pdepth_texture == null) {\r\n' \
-  '            pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '            rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '          if (! panorama_mode) {\r\n' \
+  '            const osize = [canvas.parentNode.offsetWidth, canvas.parentNode.offsetHeight];\r\n' \
+  '            if (position_texture == null) {\r\n' \
+  '              position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
+  '              rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
+  '            }\r\n' \
+  '            if (pdepth_texture == null) {\r\n' \
+  '              pdepth_texture = device.createTexture({size: osize, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
+  '              rpdposition.depthStencilAttachment.view = pdepth_texture.createView();\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
   '          modified.add("p");\r\n' \
   '          canvas_redraw();\r\n' \
@@ -18988,13 +19428,13 @@ class GPXTweakerWebInterfaceServer():
   '        t_mark.style.top = "0%";\r\n' \
   '      }\r\n' \
   '      async function _update_infos(x, y, ci) {\r\n' \
-  '        const bpxy = device.createBuffer({size: 16, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
+  '        const bpxy = device.createBuffer({size: 8, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});\r\n' \
   '        const encoder = device.createCommandEncoder();\r\n' \
-  '        encoder.copyTextureToBuffer({texture: position_texture, origin: {x: x, y: y},}, {buffer: bpxy}, {width: 1, height: 1});\r\n' \
+  '        encoder.copyTextureToBuffer({texture: panorama_mode ? panoramaposition_texture : position_texture, origin: {x: x, y: y},}, {buffer: bpxy}, {width: 1, height: 1});\r\n' \
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        await bpxy.mapAsync(GPUMapMode.READ);\r\n' \
-  '        const pxy = new Int16Array(bpxy.getMappedRange());\r\n' \
+  '        const pxy = new Int16Array(bpxy.getMappedRange(), 0, 2);\r\n' \
   '        if (pxy[0] != -32768 && pxy[1] != -32768) {\r\n' \
   '          let px = pxy[0] / 32767;\r\n' \
   '          let py = pxy[1] / 32767;\r\n' \
@@ -19005,7 +19445,7 @@ class GPXTweakerWebInterfaceServer():
   '          let pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
   '          t_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m dist: " + pdist.toFixed(0) + "m";\r\n' \
   '          t_mark.style.left = `calc(${x * 100 / canvas.parentNode.offsetWidth}% - 1vh)`;\r\n' \
-  '          t_mark.style.top = `calc(${y * 100 / canvas.parentNode.offsetHeight}% - 1vh)`;\r\n' \
+  '          t_mark.style.top = `calc(${(y + canvas.offsetTop) * 100 / canvas.parentNode.offsetHeight}% - 1vh)`;\r\n' \
   '          t_mark.style.display = "block";\r\n' \
   '          if (ci) {complete_infos();}\r\n' \
   '        } else {\r\n' \
