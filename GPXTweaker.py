@@ -9080,7 +9080,7 @@ class GPXTweakerWebInterfaceServer():
   '        top: 2px;\r\n' \
   '      }\r\n' \
   '      #graphp {\r\n' \
-  '        overflow: auto; \r\n' \
+  '        overflow: auto;\r\n' \
   '        position: absolute;\r\n' \
   '        left: 2px;\r\n' \
   '        top: 2em;\r\n' \
@@ -9113,7 +9113,7 @@ class GPXTweakerWebInterfaceServer():
   '      #gbarc, #gbar {\r\n' \
   '        position: absolute;\r\n' \
   '        top: 10px;\r\n' \
-  '        width: 3px; \r\n' \
+  '        width: 3px;\r\n' \
   '        height: calc(100% - 25px);\r\n' \
   '        stroke-width: 1px;\r\n' \
   '        fill: none;\r\n' \
@@ -11807,7 +11807,7 @@ class GPXTweakerWebInterfaceServer():
   '                    const s = jmap.getSprite();\r\n' \
   '                    if (s) {jmap.setSprite(s, {validate: false});}\r\n' \
   '                  }\r\n' \
-  '                } catch(error) {} \r\n' \
+  '                } catch(error) {}\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
@@ -14355,7 +14355,7 @@ class GPXTweakerWebInterfaceServer():
   '                  const pt = document.getElementById(focused);\r\n' \
   '                  save_foc(batch);\r\n' \
   '                  pt.setAttribute("data-ele", r[1]);\r\n' \
-  '                  if (focused == ex_foc) {document.getElementById(focused.startsWith("way") ? "waypointele" : "pointele").value = r[1];} \r\n' \
+  '                  if (focused == ex_foc) {document.getElementById(focused.startsWith("way") ? "waypointele" : "pointele").value = r[1];}\r\n' \
   '                  point_edit(false, false, true);\r\n' \
   '                  np++;\r\n' \
   '                  if (! ept.startsWith("way")) {\r\n' \
@@ -14552,7 +14552,6 @@ class GPXTweakerWebInterfaceServer():
   '              pt.setAttribute("data-alt", (palt + cor).toFixed(1));\r\n' \
   '              point_edit(false, false, false);\r\n' \
   '            }\r\n' \
-  '          \r\n' \
   '          }\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
@@ -15125,7 +15124,7 @@ class GPXTweakerWebInterfaceServer():
   '          <label for="pointtime">{#jhor#}</label><input type="text" id="pointtime" name="time" pattern="(?:(?:[0-9]{4}-(?:(?:01|03|05|07|08|10|12)-(?:0[1-9]|[12][0-9]|3[01])|(?:04|06|09|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8]))|(?:(?:[02468][048]|[13579][26])00|[0-9][0-9](?:0[48]|[2468][048]|[13579][26]))-02-29).(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{3})?(?:[Zz]|[\\+\\-](?:[01][0-9]|2[0-3]):[0-5][0-9])?)|" value=""><br>\r\n' \
   '        </form>\r\n' \
   '      </div>\r\n' \
-  '      <div id="pattern_track"> \r\n' \
+  '      <div id="pattern_track">\r\n' \
   '##TRACKTEMPLATE##' \
   '      </div>\r\n' \
   '      <div id="pattern_waydot">\r\n '\
@@ -15605,10 +15604,10 @@ class GPXTweakerWebInterfaceServer():
   '        height: 3em;\r\n' \
   '        overflow: hidden;\r\n' \
   '      }\r\n' \
-  '      label[for=eye_info] {\r\n' \
+  '      label[for=eye_info], #eye_info {\r\n' \
   '        top: 2px;\r\n' \
   '      }\r\n' \
-  '      label[for=target_info] {\r\n' \
+  '      label[for=target_info], #target_info {\r\n' \
   '        bottom:2px;\r\n' \
   '      }\r\n' \
   '      #target_mark {\r\n' \
@@ -17744,14 +17743,14 @@ class GPXTweakerWebInterfaceServer():
   '        } else if (rd) {canvas_redraw();}\r\n' \
   '      }\r\n' \
   '      function toggle_minimap_magnification() {\r\n' \
-  '        mzoom = (mzoom==1)?5:1;\r\n' \
+  '        mzoom = mzoom == 1 ? 5 : 1;\r\n' \
   '        mini_map.style.width = (mzoom * 10).toString() + "vh";\r\n' \
   '        mini_map.style.height = (mzoom * 10).toString() + "vh";\r\n' \
   '        eye.setAttribute("transform", `translate(${eposition[0]} ${-eposition[1]}) rotate(${parseFloat(c_rangle.value)}) scale(${trscale / mzoom})`);\r\n' \
   '        eye.setAttribute("fill-opacity", `${1.075 - 0.075 * mzoom}`);\r\n' \
   '        track.nextElementSibling.style.fontSize=`${2.5 * trscale / (0.5 * mzoom + 0.5)}%`;\r\n' \
   '        track.nextElementSibling.style.wordSpacing=`${1.5 * mzoom}em`;\r\n' \
-  '        mini_map.style.cursor = (mzoom==1)?"zoom-in":"zoom-out";\r\n' \
+  '        mini_map.style.cursor = mzoom ==1 ? "zoom-in" : "zoom-out";\r\n' \
   '      }\r\n'
   HTML_3DS_INF_MOUSE_TEMPLATE = \
   '      function update_pointer(e) {\r\n' \
@@ -17780,22 +17779,17 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function toggle_reversegeocodingswitch() {\r\n' \
   '        if (s_rg.options.length > 0) {\r\n' \
-  '          if (p_rg.style.display == "none") {\r\n' \
-  '            p_rg.style.display = "block";\r\n' \
-  '          } else {\r\n' \
-  '            p_rg.style.display = "none";\r\n' \
-  '          }\r\n' \
+  '          p_rg.style.display = p_rg.style.display == "none" ? "block" : "none";\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function load_rgcb(t, f, c) {\r\n' \
   '        if (t.status != 200) {\r\n' \
   '          return;\r\n' \
   '        }\r\n' \
-  '        let c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        if (! c_) {return;}\r\n' \
-  '        if (c_.length != 3) {return;}\r\n' \
+  '        const c_ = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        if (! c_ || c_.length != 3) {return;}\r\n' \
   '        if (c_[1] != c[0] || c_[2] != c[1]) {return;}\r\n' \
-  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        const dpos = f.value.indexOf(" | ");\r\n' \
   '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
   '        f.value = f.value + " | " + t.response;\r\n' \
   '      }\r\n' \
@@ -17812,21 +17806,18 @@ class GPXTweakerWebInterfaceServer():
   '          f = t_info;\r\n' \
   '        }\r\n' \
   '        if (rgset < 0) {return;}\r\n' \
-  '        let c = null;\r\n' \
-  '        let dpos = f.value.indexOf(" | ");\r\n' \
+  '        const dpos = f.value.indexOf(" | ");\r\n' \
   '        if (dpos > 0) {f.value = f.value.substring(0, dpos);}\r\n' \
-  '        c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
-  '        if (c) {\r\n' \
-  '          if (c.length == 3) {\r\n' \
-  '            let plat = parseFloat(c[1]);\r\n' \
-  '            let plon = parseFloat(c[2]);\r\n' \
-  '            let xhrrg = new XMLHttpRequest();\r\n' \
-  '            xhrrg.onerror = error_rgcb;\r\n' \
-  '            xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
-  '            xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
-  '            xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
-  '            xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
-  '          }\r\n' \
+  '        const c = f.value.match(/lat: ([0-9\\.]*?)° lon: ([0-9\\.]*?)° /);\r\n' \
+  '        if (c && c.length == 3) {\r\n' \
+  '          const plat = parseFloat(c[1]);\r\n' \
+  '          const plon = parseFloat(c[2]);\r\n' \
+  '          const xhrrg = new XMLHttpRequest();\r\n' \
+  '          xhrrg.onerror = error_rgcb;\r\n' \
+  '          xhrrg.onload = (e_) => {load_rgcb(e_.target, f, [plat, plon])};\r\n' \
+  '          xhrrg.open("POST", "/reversegeocoding?rgset=" + encodeURIComponent(rgset.toString()));\r\n' \
+  '          xhrrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '          xhrrg.send(plat.toString() + "," + plon.toString());\r\n' \
   '        }\r\n' \
   '      }\r\n' \
   '      function loop_redraw(c) {\r\n' \
@@ -17844,9 +17835,6 @@ class GPXTweakerWebInterfaceServer():
   '        if (e.target.nodeName.toUpperCase() == "CANVAS") {\r\n' \
   '          if (e.button == 1) {\r\n' \
   '            process_key({key: "delete"});\r\n'\
-  '            return;\r\n' \
-  '          } else if (e.button == 2) {\r\n' \
-  '            process_key({key: " "});\r\n' \
   '            return;\r\n' \
   '          } else if (e.button != 0) {return;}\r\n' \
   '          canvas.parentNode.onmousemove = mouse_move;\r\n' \
@@ -17893,12 +17881,12 @@ class GPXTweakerWebInterfaceServer():
   '      function mouse_wheel(e) {\r\n' \
   '        if (e.deltaY > 0) {;\r\n' \
   '          if (pace < parseInt(c_pace.max)) {\r\n' \
-  '            set_param("p", Math.min(pace + (e.shiftKey?10:1), parseInt(c_pace.max)));\r\n' \
+  '            set_param("p", Math.min(pace + (e.shiftKey ? 10 : 1), parseInt(c_pace.max)));\r\n' \
   '            if (loop_dur == 0) {canvas_redraw();}\r\n' \
   '          }\r\n' \
   '        } else if (e.deltaY < 0) {;\r\n' \
   '          if (pace > 0) {\r\n' \
-  '            set_param("p", Math.max(pace - (e.shiftKey?10:1), 0));\r\n' \
+  '            set_param("p", Math.max(pace - (e.shiftKey ? 10 : 1), 0));\r\n' \
   '            if (loop_dur == 0) {canvas_redraw();}\r\n' \
   '          }\r\n' \
   '        }\r\n' \
@@ -18564,7 +18552,7 @@ class GPXTweakerWebInterfaceServer():
   '          modified.add("s");\r\n' \
   '          if (show_infos) {clear_tinfos();}\r\n' \
   '          if (panorama_mode) {\r\n' \
-  '            vfov = vfov / Math.sqrt(2);\r\n' \
+  '            vfov /= Math.sqrt(2);\r\n' \
   '            canvas_resize();\r\n' \
   '            context.getCurrentTexture();\r\n' \
   '          }\r\n' \
@@ -18574,15 +18562,15 @@ class GPXTweakerWebInterfaceServer():
   '            cv_height.innerHTML = (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10).toString();\r\n' \
   '            zoff = v / scale;\r\n' \
   '          } else {\r\n' \
-  '            let hv = parseFloat(c_height.value);\r\n' \
-  '            let height = Math.max(Math.min(hv, 20) / 2, 0.2) + Math.min(Math.max(hv - 20, 0), 20) * 2 + Math.min(Math.max(hv - 40, 0), 20) * 7.5 + Math.min(Math.max(hv - 60, 0), 20) * 15 + Math.max(hv - 80, 0) * 25;\r\n' \
+  '            const hv = parseFloat(c_height.value);\r\n' \
+  '            const height = Math.max(Math.min(hv, 20) / 2, 0.2) + Math.min(Math.max(hv - 20, 0), 20) * 2 + Math.min(Math.max(hv - 40, 0), 20) * 7.5 + Math.min(Math.max(hv - 60, 0), 20) * 15 + Math.max(hv - 80, 0) * 25;\r\n' \
   '            cv_height.innerHTML = (height >= 10 ? Math.round(height) : Math.round(height * 10) / 10).toString();\r\n' \
   '            zoff = height / scale;\r\n' \
   '          }\r\n' \
   '          modified.add("v");\r\n' \
   '          if (show_infos) {update_infos();}\r\n' \
   '        } else {\r\n' \
-  '          let angle = null;\r\n' \
+  '          let angle;\r\n' \
   '          switch (p) {\r\n' \
   '            case "t":\r\n' \
   '              if (v != null) {c_tangle.value = v.toString();}\r\n' \
@@ -18624,7 +18612,7 @@ class GPXTweakerWebInterfaceServer():
   '      var radius = null;\r\n' \
   '      var pace_length = null;\r\n' \
   '      var zoff = null;\r\n' + HTML_3D_WGPU_MAT_TEMPLATE + \
-  '        function mat4_translation(xt, yt, zt) {\r\n' \
+  '      function mat4_translation(xt, yt, zt) {\r\n' \
   '        return new Float32Array([\r\n' \
   '          1, 0, 0, xt,\r\n' \
   '          0, 1, 0, yt,\r\n' \
@@ -18709,7 +18697,7 @@ class GPXTweakerWebInterfaceServer():
   '            bgpanorama[1] = null;\r\n' \
   '            rpdpanoramasun.colorAttachments[1].view = null;\r\n' \
   '            rpdpanorama.colorAttachments[1].view = null;\r\n' \
-  '          }          \r\n' \
+  '          }\r\n' \
   '          if (show_infos) {\r\n' \
   '            position_texture = device.createTexture({size: osize, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC});\r\n' \
   '            rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
@@ -19107,10 +19095,6 @@ class GPXTweakerWebInterfaceServer():
   '          loop_rd = performance.now();\r\n' \
   '        }\r\n' \
   '        yield;\r\n' \
-  '        const bglpanoramaview = [bglview[0], device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]}), bglview[2]];\r\n' \
-  '        const ppanoramaview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanoramaview}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, constants: {trckts: 2}, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},}));   \r\n' \
-  '        const bgpanoramaview = [bgview[0], device.createBindGroup({layout: bglpanoramaview[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]}), bgview[2]];\r\n' \
-  '        rpdpanoramaview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};        \r\n' \
   '        const mpanoramasun = device.createShaderModule({code: `\r\n' \
   '          @group(0) @binding(0) var<uniform> sratio: vec2f;\r\n' \
   '          @group(0) @binding(1) var<uniform> sposition: vec4f;\r\n' \
@@ -19131,6 +19115,9 @@ class GPXTweakerWebInterfaceServer():
   '        const bglpanoramasun = device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"},}, {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]});\r\n' \
   '        const ppanoramasun = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: [bglpanoramasun]}), vertex: {module: mpanoramasun, entryPoint: "vsun", buffers: [], constants: {snt},}, fragment: {module: mpanoramasun, entryPoint: "fsun", targets: [{format: pcolorformat}, {format: "rg16sint"}]}, primitive: {topology: "triangle-list"},});\r\n' \
   '        rpdpanoramasun = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 1], loadOp: "clear", storeOp: "store"}, {view: null, clearValue: [-32768, -32768, 0, 0], loadOp: "clear", storeOp: "store"}]};\r\n' \
+  '        const bglpanoramaview = [bglview[0], device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]}), bglview[2]];\r\n' \
+  '        const ppanoramaview = ["0", "1", "2"].map((dm) => device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanoramaview}), vertex: {module: mview, entryPoint: "vview" + dm, buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}, {shaderLocation: 1, format: "float32x3", offset: 4}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mview, entryPoint: "fview" + dm, constants: {trckts: 2}, targets: [{format: pcolorformat}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, multisample: {count: 4}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},}));\r\n' \
+  '        rpdpanoramaview = {colorAttachments: [{view: null, clearValue: [0.46, 0.68, 0.95, 0], loadOp: "clear", storeOp: "store"}], depthStencilAttachment: {view: null, depthClearValue: 1.0, depthLoadOp: "clear", depthStoreOp: "store"},};\r\n' \
   '        const bglpanoramaposition = [bglposition[0], device.createBindGroupLayout({entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true},}]})];\r\n' \
   '        const ppanoramaposition = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanoramaposition}), vertex: {module: mposition, entryPoint: "vposition", buffers: [{attributes: [{shaderLocation: 0, format: "float32", offset: 0}], arrayStride: 16, stepMode: "vertex"}]}, fragment: {module: mposition, entryPoint: "fposition", targets: [{format: "rg16sint"}]}, primitive: {topology: "triangle-strip", stripIndexFormat: "uint32"}, depthStencil: {depthWriteEnabled: true, depthCompare: "less", format: "depth32float"},});\r\n' \
   '        const mpanorama = device.createShaderModule({code: `\r\n' \
@@ -19158,10 +19145,20 @@ class GPXTweakerWebInterfaceServer():
   '        ppanorama = device.createRenderPipeline({layout: device.createPipelineLayout({bindGroupLayouts: bglpanorama}), vertex: {module: mpanorama, entryPoint: "vpanorama", buffers: []}, fragment: {module: mpanorama, entryPoint: "fpanorama", targets: [{format: pcolorformat, blend: {color: {operation: "add", srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha"}, alpha: {operation: "add", srcFactor: "zero", dstFactor: "one"},},}, {format: "rg16sint"}]}, primitive: {topology: "triangle-list"},});\r\n' \
   '        rpdpanorama = {colorAttachments: [{view: null, loadOp: "load", storeOp: "store"}, {view: null, loadOp: "load", storeOp: "store"}],};\r\n' \
   '        const bgpanoramasun = device.createBindGroup({layout: bglpanoramasun, entries: [{binding: 0, resource: {buffer: bsunratio, size: 8},}, {binding: 1, resource: {buffer: bsunposition, size: 16},}]});\r\n' \
+  '        const bgpanoramaview = [bgview[0], device.createBindGroup({layout: bglpanoramaview[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]}), bgview[2]];\r\n' \
   '        const bgpanoramaposition = [device.createBindGroup({layout: bglpanoramaposition[0], entries: bgentries(bradius, beposition, bgxs, bgys)}), device.createBindGroup({layout: bglpanoramaposition[1], entries: [{binding: 0, resource: {buffer: bviewmatrix, size: 64},}]})];\r\n' \
   '        bgpanorama = [device.createBindGroup({layout: bglpanorama[0], entries: [{binding: 0, resource: image_sampler,}]}), null];\r\n' \
+  '        rbpanoramasun = []\r\n' \
+  '        let bdynunifstride = bsunposition.size - 16;\r\n' \
+  '        for (let i=0; i<2; i++) {\r\n' \
+  '          bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat, "rg16sint"]});\r\n' \
+  '          bencoder.setPipeline(ppanoramasun);\r\n' \
+  '          bencoder.setBindGroup(0, bgpanoramasun, [bdynunifstride * i]);\r\n' \
+  '          bencoder.draw(3, snt);\r\n' \
+  '          rbpanoramasun.push(bencoder.finish());\r\n' \
+  '        }\r\n' \
   '        rbpanoramaview = [];\r\n' \
-  '        let bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
+  '        bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
   '        for (let dm=0; dm<3; dm++) {\r\n' \
   '          for (let tm=0; tm<3; tm++) {\r\n' \
   '            const rbpv = [];\r\n' \
@@ -19178,15 +19175,6 @@ class GPXTweakerWebInterfaceServer():
   '              rbpv.push(bencoder.finish());\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '        }\r\n' \
-  '        rbpanoramasun = []\r\n' \
-  '        bdynunifstride = bsunposition.size - 16;\r\n' \
-  '        for (let i=0; i<2; i++) {\r\n' \
-  '          bencoder = device.createRenderBundleEncoder({colorFormats: [pcolorformat, "rg16sint"]});\r\n' \
-  '          bencoder.setPipeline(ppanoramasun);\r\n' \
-  '          bencoder.setBindGroup(0, bgpanoramasun, [bdynunifstride * i]);\r\n' \
-  '          bencoder.draw(3, snt);\r\n' \
-  '          rbpanoramasun.push(bencoder.finish());\r\n' \
   '        }\r\n' \
   '        rbpanoramaposition = []\r\n' \
   '        bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
@@ -19233,10 +19221,11 @@ class GPXTweakerWebInterfaceServer():
   '            mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
   '            mat4_mult(mat4_perspective(), smatrix);\r\n' \
   '            mat4_flip(smatrix);\r\n' \
+  '            smatrix[9] *= Math.sqrt(2);\r\n' \
+  '            smatrix[10] = 0.5 * smatrix[11];\r\n' \
   '            smatrix[8] = (-parseFloat(c_rangle.value) + parseFloat(c_lrangle.value) + 360) % 360 / 180 * smatrix[11] ;\r\n' \
-  '            smatrix[9] = smatrix[9] * Math.sqrt(2);\r\n' \
   '            device.queue.writeBuffer(bsunposition, 0, smatrix, 8, 4);\r\n' \
-  '            smatrix[8] = smatrix[8] - 2 * smatrix[11];\r\n' \
+  '            smatrix[8] -= 2 * smatrix[11];\r\n' \
   '            device.queue.writeBuffer(bsunposition, bsunposition.size - 16, smatrix, 8, 4);\r\n' \
   '            pass.executeBundles(rbpanoramasun);\r\n' \
   '          }\r\n' \
@@ -19352,9 +19341,11 @@ class GPXTweakerWebInterfaceServer():
   '        if (mode == panorama_mode) {return;}\r\n' \
   '        panorama_mode = mode;\r\n' \
   '        if (mode) {\r\n' \
-  '          vfov = vfov / Math.sqrt(2);\r\n' \
+  '          vfov /= Math.sqrt(2);\r\n' \
   '          set_param("t", 0);\r\n' \
   '          c_tangle.disabled = true;\r\n' \
+  '          rpdview.colorAttachments[0].view = null;\r\n' \
+  '          rpdview.depthStencilAttachment.view = null;\r\n' \
   '        } else {\r\n' \
   '          vfov = 1 / Math.tan(parseFloat(c_vfov.value) / 360 * Math.PI);\r\n' \
   '          c_tangle.disabled = false;\r\n' \
@@ -19373,8 +19364,8 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        }\r\n' \
-  '        context.configure({alphaMode: "opaque", colorSpace: "srgb", device: device, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT, viewFormats: []});\r\n' \
   '        canvas_resize();\r\n' \
+  '        context.getCurrentTexture();\r\n' \
   '        canvas_redraw();\r\n' \
   '      }\r\n' \
   '      function toggle_panorama(mode) {\r\n' \
@@ -19436,13 +19427,13 @@ class GPXTweakerWebInterfaceServer():
   '        await bpxy.mapAsync(GPUMapMode.READ);\r\n' \
   '        const pxy = new Int16Array(bpxy.getMappedRange(), 0, 2);\r\n' \
   '        if (pxy[0] != -32768 && pxy[1] != -32768) {\r\n' \
-  '          let px = pxy[0] / 32767;\r\n' \
-  '          let py = pxy[1] / 32767;\r\n' \
-  '          let pz = get_pz(px, py);\r\n' \
-  '          let plat = (2 * Math.atan(Math.exp((py * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
-  '          let plon = (px * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
-  '          let pele = (pz + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
-  '          let pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
+  '          const px = pxy[0] / 32767;\r\n' \
+  '          const py = pxy[1] / 32767;\r\n' \
+  '          const pz = get_pz(px, py);\r\n' \
+  '          const plat = (2 * Math.atan(Math.exp((py * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          const plon = (px * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          const pele = (pz + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          const pdist = ppos[0] / ppos[4] * Math.sqrt((px - eposition[0]) ** 2 + (py - eposition[1]) ** 2);\r\n' \
   '          t_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m dist: " + pdist.toFixed(0) + "m";\r\n' \
   '          t_mark.style.left = `calc(${x * 100 / canvas.parentNode.offsetWidth}% - 1vh)`;\r\n' \
   '          t_mark.style.top = `calc(${(y + canvas.offsetTop) * 100 / canvas.parentNode.offsetHeight}% - 1vh)`;\r\n' \
@@ -19464,9 +19455,9 @@ class GPXTweakerWebInterfaceServer():
   '            queue[1] = queue[1].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          let plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
-  '          let plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
-  '          let pele = (trpaces[pace][2] + zoff + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
+  '          const plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
+  '          const plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
+  '          const pele = (trpaces[pace][2] + zoff + 1) * ppos[0] / ppos[4] + ppos[3];\r\n' \
   '          e_info.value = "lat: " + plat.toFixed(6) + "° lon: " + plon.toFixed(6) + "° ele: " + pele.toFixed(1) + "m";\r\n' \
   '          clear_tinfos();\r\n' \
   '        }\r\n' \
@@ -22537,12 +22528,12 @@ class GPXTweakerWebInterfaceServer():
   '            <span>{#jsortproximity#} :&nbsp;</span>\r\n' \
   '          </div>\r\n' \
   '          <div>\r\n' \
-  '            <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfproxmax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span> \r\n' \
-  '            <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
-  '            <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
-  '            <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span> \r\n' \
-  '            <span><input type="date" id="cfdatemin" name="cfdatemin" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfagmax\':\'cfdatemax\').focus();return false;}"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfdatemin\':\'cfproxmin\').focus();return false;}"><span>&nbsp;m</span></span> \r\n' \
-  '            <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfdatemax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" onkeydown="if (event.key==\'Tab\' && ! event.shiftKey) {document.getElementById(\'cfdurmin\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span> \r\n' \
+  '            <span><input type="text" id="cfdurmin" name="cfdurmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfproxmax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdurmax" name="cfdurmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 0.5)">&#65088;</button><span>&nbsp;h</span></span>\r\n' \
+  '            <span><input type="text" id="cfdistmin" name="cfdistmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfdistmax" name="cfdistmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 2)">&#65088;</button><span>&nbsp;km</span></span>\r\n' \
+  '            <span><input type="text" id="cfegmin" name="cfegmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfegmax" name="cfegmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span>\r\n' \
+  '            <span><input type="text" id="cfagmin" name="cfagmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfagmax" name="cfagmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|"><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 100)">&#65088;</button><span>&nbsp;m</span></span>\r\n' \
+  '            <span><input type="date" id="cfdatemin" name="cfdatemin" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfagmax\':\'cfdatemax\').focus();return false;}"><span>&nbsp;m</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="date" id="cfdatemax" name="cfdatemax" onkeydown="if (event.key==\'Tab\') {document.getElementById(event.shiftKey?\'cfdatemin\':\'cfproxmin\').focus();return false;}"><span>&nbsp;m</span></span>\r\n' \
+  '            <span><input type="text" id="cfproxmin" name="cfproxmin" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" onkeydown="if (event.key==\'Tab\' && event.shiftKey) {document.getElementById(\'cfdatemax\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span>&nbsp{#jto#}&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" id="cfproxmax" name="cfproxmax" pattern="(([0-9]+(\\.[0-9]*)?|\\.[0-9]+))|" onkeydown="if (event.key==\'Tab\' && ! event.shiftKey) {document.getElementById(\'cfdurmin\').focus();return false;}"><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65087;</button><button tabindex="-1" onclick="cfilter_updown(this, 5)">&#65088;</button><span>&nbsp;km</span></span>\r\n' \
   '          </div>\r\n' \
   '        </form>\r\n' \
   '      </div>\r\n' \
