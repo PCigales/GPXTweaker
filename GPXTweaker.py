@@ -17652,10 +17652,12 @@ class GPXTweakerWebInterfaceServer():
   '      var p_rg = document.getElementById("panel_rg");\r\n' \
   '      var s_rg = document.getElementById("select_rg");\r\n' \
   '      var minimap = document.getElementById("mini_map");\r\n' \
+  '      var cb_pano = document.getElementById("checkbox_pano");\r\n' \
   '      var trpaces = null;\r\n' \
   '      var trscale = null;\r\n' \
   '      var mzoom = 1;\r\n' \
   '      var show_infos = false;\r\n' \
+  '      var panorama_mode = null;\r\n' \
   '      var rgset = (s_rg.options.length > 0) ? s_rg.selectedIndex : -1;\r\n' \
   '      var click_r = null;\r\n' \
   '      var click_t = null;\r\n' \
@@ -17850,7 +17852,7 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '          click_cr = parseFloat(c_rangle.value);\r\n' \
   '          click_ct = parseFloat(c_tangle.value);\r\n' \
-  '          cb_pano.disabled = true;\r\n' \
+  '          if (panorama_mode != null) {cb_pano.disabled = true;}\r\n' \
   '        } else if (e.button != 0) {return;}\r\n' \
   '        document.onmouseup = mouse_up;\r\n' \
   '        document.body.onmouseleave = mouse_up;\r\n' \
@@ -17866,7 +17868,7 @@ class GPXTweakerWebInterfaceServer():
   '        p_infos.style.pointerEvents = "";\r\n' \
   '        document.onmouseup = null;\r\n' \
   '        document.body.onmouseleave = null;\r\n' \
-  '        cb_pano.disabled = false;\r\n' \
+  '        if (panorama_mode != null) {cb_pano.disabled = false;}\r\n' \
   '        if (loop_dur != 0) {loop_rd = performance.now();}\r\n' \
   '      }\r\n' \
   '      function mouse_move(e) {\r\n' \
@@ -18512,9 +18514,8 @@ class GPXTweakerWebInterfaceServer():
   '      const snt = 36;\r\n' \
   '      var position_texture = null;\r\n' \
   '      var pdepth_texture = null;\r\n' \
-  '      var cb_pano = document.getElementById("checkbox_pano");\r\n' \
   '      cb_pano.parentElement.parentElement.style.display = "";\r\n' \
-  '      var panorama_mode = false;\r\n' \
+  '      panorama_mode = false;\r\n' \
   '      var rpdpanoramasun = null;\r\n' \
   '      var rpdpanoramaview = null;\r\n' \
   '      var rpdpanoramaposition = null;\r\n' \
