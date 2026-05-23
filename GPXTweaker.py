@@ -4619,8 +4619,10 @@ class WGS84Elevation(WGS84Map):
       _w = infos['width'] * 4
       _mw = mw * 4
       _mw_r = infos['height'] * _mw
-      _nd = struct.pack('<f', infos.get('nodata', 0)) * infos['width'] * infos['height']
-      _tiles = [[memoryview(tiles[c][r] or _nd) for r in _r_l] for c in _c_l]
+      _s = infos['width'] * infos['height']
+      _nd = struct.pack('<f', infos.get('nodata', 0)) * _s
+      _s *= 4
+      _tiles = [[memoryview(_t if len(_t := tiles[c][r] or b'') == _s else _nd) for r in _r_l] for c in _c_l]
       _l = [(l * _mw, l * _w, (l + 1) * _w) for l in range(infos['height'])]
       for r in _r_l:
         _r = r * _mw_r
@@ -4637,8 +4639,10 @@ class WGS84Elevation(WGS84Map):
       _w = infos['width'] * 2
       _mw = mw * 2
       _mw_r = infos['height'] * _mw
-      _nd = struct.pack('>h', infos.get('nodata', 0)) * (infos['width'] + 1) * (infos['height'] + 1)
-      _tiles = [[memoryview(tiles[c][r] or _nd) for r in _r_l] for c in _c_l]
+      _s = (infos['width'] +1) * (infos['height'] + 1)
+      _nd = struct.pack('>h', infos.get('nodata', 0)) * _s
+      _s *= 2
+      _tiles = [[memoryview(_t if len(_t := tiles[c][r] or b'') == _s else _nd) for r in _r_l] for c in _c_l]
       _l = [(l * _mw, l * (_w + 2), (l + 1) * (_w + 2) - 2) for l in range(infos['height'])]
       for r in _r_l:
         _r = r * _mw_r
@@ -15585,6 +15589,8 @@ class GPXTweakerWebInterfaceServer():
   '        left: 0;\r\n' \
   '        top: 0;\r\n' \
   '        bottom: 0;\r\n' \
+  '      }\r\n' \
+  '      #subj #canvas {\r\n' \
   '        margin-top: auto;\r\n' \
   '        margin-bottom: auto;\r\n' \
   '      }\r\n' \
@@ -22219,7 +22225,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      async function download_graph() {\r\n' \
-  '        if (document.getElementById("edit").disabled || document.getElementById("graph").style.display == "none" || focused == "") {return;}\r\n' \
+  '        if (document.getElementById("edit").disabled || document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph" || focused == "") {return;}\r\n' \
   '        const graphc = document.getElementById("graphc");\r\n' \
   '        const cnv2d = document.createElement("canvas");\r\n' \
   '        const ctx = cnv2d.getContext("2d");\r\n' \
@@ -22785,7 +22791,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          tr = document.getElementById(focused + "cont");\r\n' \
+  '          let tr = document.getElementById(focused + "cont");\r\n' \
   '          do {\r\n' \
   '            if (e.deltaY > 0) {\r\n' \
   '              tr = tr.nextElementSibling;\r\n' \
@@ -22817,8 +22823,8 @@ class GPXTweakerWebInterfaceServer():
   '          } else {\r\n' \
   '            rescale();\r\n' \
   '            if (webgpu) {\r\n' \
+  '              if (document.getElementById("lpanels").style.getPropertyValue("--panel") != "graph") {return;};\r\n' \
   '              let graph = document.getElementById("graph");\r\n' \
-  '              if (graph.style.display == "none") {return;}\r\n' \
   '              let graphc = document.getElementById("graphc");\r\n' \
   '              let gwidth = graph.offsetWidth - graphc.offsetLeft;\r\n' \
   '              let gheight = graph.offsetHeight;\r\n' \
