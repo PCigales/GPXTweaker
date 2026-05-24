@@ -221,10 +221,9 @@ FR_STRINGS = {
     'jdatafail': 'Le chargement des données a échoué !',
     'jwebgpuno': 'API WebGPU pas prise en charge par le navigateur, repli sur l\'API WebGL 2...',
     'jserror': 'La sauvegarde a échoué: ',
-    'jesconfirm': 'Remplacer toutes les données d\'élévation du segment ?',
     'jeconfirm': 'Remplacer toutes les données d\'élévation de la trace ?',
-    'jeasconfirm': 'Intervertir les données d\'élévation et d\'altitude du segment ?',
     'jeaconfirm': 'Intervertir les données d\'élévation et d\'altitude de la trace ?',
+    'jraconfirm': 'Supprimer les données d\'altitude de la trace ?',
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'jfconfirm': 'Lisser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
@@ -240,9 +239,9 @@ FR_STRINGS = {
     'jsegmentabsorb': 'fusionner le segment qui a le focus avec le segment suivant',
     'jsegmentreverse': 'focus sur segment / pas de focus: inverser le segment / la trace',
     'jelevationsadd': 'focus sur segment ou point / pas de focus: ajouter les élévations manquantes à l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude',
-    'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude&#13;&#10;+shift: intervertir avec les données d\'altitude',
+    'jelevationsreplace': 'focus sur segment ou point / pas de focus: remplacer les élévations de l\'élément / la trace&#13;&#10;+alt: à partir des données d\'altitude&#13;&#10;+shift: intervertir avec les données d\'altitude&#13;&#10;+ctrl: supprimer les données d\'altitude',
     'jaltitudesjoin': 'focus sur segment: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage uniforme de tout le segment&#13;&#10;focus sur point: égaliser l\'altitude du dernier point avec celle du premier point du segment suivant par décalage progressif du segment à partir du point qui a le focus',
-    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace&#13;&#10;+shift: supprimer l\'horodatage',
+    'jdatetime': 'focus sur segment ou point / pas de focus: compléter par inter/extra polation l\'horodatage de l\'élément / la trace&#13;&#10;+ctrl: supprimer l\'horodatage&#13;&#10;+shift: vérifier les horodatages des segments de la trace',
     'jsave': 'sauvegarder la trace&#13;&#10;(puis recharger la page pour éliminer irréversiblement les éléments désactivés)',
     'jdotsarrows': 'afficher / masquer les marques de point et point de cheminement&#13;&#10;+alt: afficher / masquer les flèches de sens de cheminement&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de lissage&#13;&#10;+shift: lisser le segment / la trace (attention, une valeur de plage de distance de filtrage élevée ou une application répétée du lissage altèrera probablement la trace)',
     'jgraph': 'afficher / masquer le graphique&#13;&#10;+shift: afficher / masquer les contrôles du filtre de calcul de dénivelé&#13;&#10;+ctrl: afficher / masquer les contrôles du filtre de calcul de pente&#13;&#10;+alt: afficher / masquer les contrôles du filtre de calcul de vitesse',
@@ -269,7 +268,7 @@ FR_STRINGS = {
     'jzoomall': 'recadrer sur toutes les traces cochées et listées&#13;&#10;+alt: recadrer sur toutes les traces cochées&#13;&#10;+shift: recadrer sur la trace qui a le focus',
     'jtot': 'afficher les données cumulées des traces listées&#13;&#10;+alt: uniquement pour les traces affichées&#13;&#10;+ctrl: les copier dans le presse-papier',
     'jtrackedit': 'éditer la trace',
-    'jtracknew': 'créer une nouvelle trace vide dans le premier répertoire coché',
+    'jtracknew': 'focus sur trace: dupliquer la trace&#13;&#10;pas de focus: créer une nouvelle trace vide dans le premier répertoire coché',
     'jtrackdetach': 'détacher la trace (d\'un fichier multi-traces)',
     'jtrackintegrate': 'intégrer l\'autre trace cochée avant (dans un fichier multi-traces)&#13;&#10;+alt: intégrer l\'autre trace cochée après (dans un fichier multi-traces)',
     'jtrackincorporate': 'incorporer les points de cheminement et segments de l\'autre trace cochée',
@@ -330,7 +329,9 @@ FR_STRINGS = {
     'jexpginc': 'restaurer',
     'jhelp3d': 'survol souris de la mini-carte pour afficher sa légende&#13;&#10;clic sur la vue 3d puis :&#13;&#10;flèche haut / bas ou roulette souris pour avancer / reculer&#13;&#10;flèche gauche / droite ou clic-glisse horizontal pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante  ou clic-glisse vertical pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression ou clic roulette pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
     'jwaypoints': 'Points de cheminement',
+    'jwaydotmark': 'clic gauche pour inclure tous les points de cheminement&#13;&#10;clic droit pour exclure tous les points de cheminement',
     'jpoints': 'Points',
+    'jdotmark':  'clic gauche pour inclure tous les segments&#13;&#10;clic droit pour exclure tous les segments',
     'jlat': 'Lat',
     'jlon': 'Lon',
     'jhor': 'Hor',
@@ -388,6 +389,9 @@ FR_STRINGS = {
     'jmelealt1': 'Élévation et altitude du point interverties',
     'jmelealt2': 'Élévations et altitudes du segment interverties',
     'jmelealt3': 'Élévations et altitudes de la trace interverties',
+    'jmelealt4': 'Altitude du point supprimée',
+    'jmelealt5': 'Altitudes du segment supprimées',
+    'jmelealt6': 'Altitudes de la trace supprimées',
     'jmaltitudesjoin1': 'Altitudes égalisées par décalage uniforme',
     'jmaltitudesjoin2': 'Altitudes égalisées par décalage progressif',
     'jmdatetime1': 'Horodatage du point mis à jour',
@@ -396,6 +400,8 @@ FR_STRINGS = {
     'jmdatetime4': 'Horodatage du point supprimé',
     'jmdatetime5': 'Horodatages du segment supprimés',
     'jmdatetime6': 'Horodatages de la trace supprimés',
+    'jmdatetime7': 'Aucun horodatage anormal détecté',
+    'jmdatetime8': 'Horodatage anormal détecté',
     'jmsave1': 'Sauvegarde en cours...',
     'jmsave2': 'Sauvegarde effectuée',
     'jmsave3': 'Échec de la sauvegarde',
@@ -438,6 +444,9 @@ FR_STRINGS = {
     'jmnew1': 'Création en cours...',
     'jmnew2': 'Création effectuée',
     'jmnew3': 'Échec de la création',
+    'jmdup1': 'Duplication en cours...',
+    'jmdup2': 'Duplication effectuée',
+    'jmdup3': 'Échec de la duplication',
     'jmsearchno': 'Aucun fournisseur de géocodages configuré',
     'jmsearchshort': 'Chaîne de requête trop courte (au moins deux caractères requis)',
     'jmsearch1': 'Récupération des lieux en cours...',
@@ -658,10 +667,9 @@ EN_STRINGS = {
     'jdatafail': 'The loading of the data has failed !',
     'jwebgpuno': 'WebGPU API not supported by the browser, fallback on the WebGL 2 API...',
     'jserror': 'The backup has failed: ',
-    'jesconfirm': 'Replace all elevation data of the segment ?',
     'jeconfirm': 'Replace all elevation data of the track ?',
-    'jeasconfirm': 'Switch the elevation and altitude data of the segment ?',
     'jeaconfirm': 'Switch the elevation and altitude data of the track ?',
+    'jraconfirm': 'Remove the altitude data of the track ?',
     'jrconfirm': 'Reverse the whole track ?',
     'jfconfirm': 'Smooth the whole track ?',
     'junload': 'Warning, the data will be lost !',
@@ -677,9 +685,9 @@ EN_STRINGS = {
     'jsegmentabsorb': 'merge the focused segment with the next segment',
     'jsegmentreverse': 'focus on segment / no focus: reverse the segment / the track',
     'jelevationsadd': 'focus on segment or point / no focus: add the missing elevations to the element / the track&#13;&#10;+alt: from the altitude data',
-    'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track#13;&#10;+alt: from the altitude data&#13;&#10;+shift: switch with the altitude data',
+    'jelevationsreplace': 'focus on segment or point / no focus: replace the elevations of the element / the track&#13;&#10;+alt: from the altitude data&#13;&#10;+shift: switch with the altitude data&#13;&#10;+ctrl: remove the altitude data',
     'jaltitudesjoin': 'focus on segment: equalize the altitude of the last point with the one of the first point of the next segment by uniform offset of the whole segment&#13;&#10;focus on point: equalize the altitude of the last point with the one of the first point of the next segment by progressive offset of the segment from the focused point',
-    'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track&#13;&#10;+shift: remove the timestamp(s)',
+    'jdatetime': 'focus on segment or point / no focus: complete by inter/extra polation the timestamps of the element / the track&#13;&#10;+ctrl: remove the timestamp(s)&#13;&#10;+shift: check the timestamps of the segments of the track',
     'jsave': 'backup the track&#13;&#10;(then reload the page to irreversibly eliminate the disabled elements)',
     'jdotsarrows': 'show / hide the marks of point and waypoint&#13;&#10;+alt: show / hide the arrows of direction of travel+ctrl: show / hide the controls of the smoothing filter&#13;&#10;+shift: smooth the segment / the track (be careful, a high value of filter distance range or a repeated application of the smoothing will probably alter the track)',
     'jgraph': 'show / hide the graph&#13;&#10;+shift: show / hide the controls of the filter of calculation of the elevation gain&#13;&#10;+ctrl: show / hide the controls of the filter of calculation of the slope&#13;&#10;+alt: show / hide the controls of the filter of calculation of the speed',
@@ -706,7 +714,7 @@ EN_STRINGS = {
     'jzoomall': 'reframe on all ticked and listed tracks&#13;&#10;+alt: reframe on all ticked tracks&#13;&#10;+shift: reframe on the focused track',
     'jtot': 'display the cumulative data of the listed tracks&#13;&#10;+alt: only for the displayed tracks&#13;&#10;+ctrl: copy them to the clipboard',
     'jtrackedit': 'edit the track',
-    'jtracknew': 'create a new empty track in the first ticked folder',
+    'jtracknew': 'focus on track: duplicate the track&#13;&#10;no focus: create a new empty track in the first ticked folder',
     'jtrackdetach': 'detach the track (from a multi-tracks files)',
     'jtrackintegrate': 'integrate the track before (in a multi-tracks files)&#13;&#10;+alt: integrate the track after (in a multi-tracks files)',
     'jtrackincorporate': 'incorporate the waypoints and segments of the other ticked track',
@@ -767,7 +775,9 @@ EN_STRINGS = {
     'jexpginc': 'restore',
     'jhelp3d': 'mouse over the mini-map to display its legend&#13;&#10;click on the 3d view then :&#13;&#10;arrow up / down or mouse wheel to move forward / backward&#13;&#10;arrow left / right or horizontal click-drag to rotate left / right&#13;&#10;page up / down or vertical click-drag to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete or wheel click to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
     'jwaypoints': 'Waypoints',
+    'jwaydotmark': 'left click to include all the waypoints&#13;&#10;right click to exclude all the waypoints',
     'jpoints': 'Points',
+    'jdotmark':  'left click to include all the segments&#13;&#10;right click to exclude all the segments',
     'jlat': 'Lat',
     'jlon': 'Lon',
     'jhor': 'Hor',
@@ -825,6 +835,9 @@ EN_STRINGS = {
     'jmelealt1': 'Elevation and altitude of the point switched',
     'jmelealt2': 'Elevations and altitudes of the segment switched',
     'jmelealt3': 'Elevations and altitudes of the track switched',
+    'jmelealt4': 'Altitude of the point removed',
+    'jmelealt5': 'Altitudes of the segment removed',
+    'jmelealt6': 'Altitudes of the track removed',
     'jmaltitudesjoin1': 'Altitudes equalized by uniform offset',
     'jmaltitudesjoin2': 'Altitudes equalized by progressive offset',
     'jmdatetime1': 'Timestamp of the point updated',
@@ -833,6 +846,8 @@ EN_STRINGS = {
     'jmdatetime4': 'Timestamp of the point removed',
     'jmdatetime5': 'Timestamps of the segment removed',
     'jmdatetime6': 'Timestamps of the track removed',
+    'jmdatetime7': 'No abnormal timestamp detected',
+    'jmdatetime8': 'Abnormal timestamp detected',
     'jmsave1': 'Backup in progress...',
     'jmsave2': 'Backup completed',
     'jmsave3': 'Failure of the backup',
@@ -871,6 +886,9 @@ EN_STRINGS = {
     'jmnew1': 'Creation in progress...',
     'jmnew2': 'Creation completed',
     'jmnew3': 'Failure of the creation',
+    'jmdup1': 'Duplication in progress...',
+    'jmdup2': 'Duplication completed',
+    'jmdup3': 'Failure of the duplication',
     'jmsearchno': 'No geocodings provider configured',
     'jmsearchshort': 'Query string too short (at least two characters required)',
     'jmsearch1': 'Retrieval of the places in progress...',
@@ -932,7 +950,7 @@ EN_STRINGS = {
 }
 LSTRINGS = EN_STRINGS
 try:
-  if locale.getlocale()[0][:2].lower() == 'fr':
+  if locale.getlocale()[0][:2].lower() == 'fra':
     LSTRINGS = FR_STRINGS
 except:
   pass
@@ -7108,6 +7126,37 @@ class WGS84Track(WGS84WebMercator):
     return True
 
   @classmethod
+  def Duplicated(cls, track, uri=None, builder=None):
+    self = WGS84Track(track.ULock)
+    nuri = None
+    try:
+      self.intern_dict = track.intern_dict
+      self._intern()
+      GCMan.disable()
+      self.TrkId = 0
+      self.Track = track.Track.cloneNode()
+      r = self.Track.documentElement
+      self._XMLUpdateChildNode(r, 'trk', r.removeChild(r.getChildren('trk')[track.TrkId]))
+      if not self.ProcessGPX('a'):
+        raise
+      if uri:
+        nuri = uri.rsplit('.', 1)[0] + ' - dup.gpx'
+        suf = 0
+        while os.path.exists(nuri):
+          suf += 1
+          nuri = uri.rsplit('.', 1)[0] + ' - dup (%d).gpx' % suf
+        if not self.SaveGPX(nuri, False):
+          raise
+    except:
+      del self.Track
+      self.__init__()
+      GCMan.restore()
+      return None, False
+    self.OTrack = self.Track
+    GCMan.restore()
+    return self, (nuri or True)
+
+  @classmethod
   def Simplified(cls, track, preserved_points, preserve_waypoints=True, minimalist=False, uri=None, builder=None):
     self = WGS84Track(track.ULock)
     nuri = None
@@ -8279,6 +8328,31 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
               _send_err_fail()
               self.server.Interface.SLock.release()
               continue
+            resp_body = {}
+            self.server.Interface.UpdateHTMLExp(len(self.server.Interface.Tracks) - 1, 'tpw', resp_body)
+            resp_body = json.dumps(resp_body).encode('utf-8')
+            _send_resp('application/json; charset=utf-8')
+            self.server.Interface.SLock.release()
+          elif req.path.lower()[:10] == '/duplicate':
+            if req.header('If-Match', '') != self.server.Interface.SessionId:
+              _send_err_bad()
+              continue
+            self.server.Interface.SLock.acquire()
+            try:
+              if self.server.Interface.HTMLExp is None:
+                raise
+              tr_ind = int(req.path.split('?')[1])
+              uri, track = self.server.Interface.Tracks[tr_ind]
+              trackd, urid = WGS84Track.Duplicated(track, uri, self.server.Interface.Builder)
+              if not urid:
+                raise
+            except:
+              _send_err_fail()
+              self.server.Interface.SLock.release()
+              continue
+            self.server.Interface.Tracks.append([urid, trackd])
+            self.server.Interface.TracksBoundaries.append(self.server.Interface.TracksBoundaries[tr_ind])
+            self.server.Interface.UpdateTrackBoundaries(len(self.server.Interface.Tracks) - 1)
             resp_body = {}
             self.server.Interface.UpdateHTMLExp(len(self.server.Interface.Tracks) - 1, 'tpw', resp_body)
             resp_body = json.dumps(resp_body).encode('utf-8')
@@ -13323,6 +13397,25 @@ class GPXTweakerWebInterfaceServer():
   '          }\r\n' \
   '        }\r\n' \
   '      }\r\n' \
+  '      function waypoints_checkbox(check) {\r\n' \
+  '        let mod = false;\r\n' \
+  '        for (const wpt of document.getElementById("waypointslist").getElementsByClassName("waypoint")) {\r\n' \
+  '          if (check) {\r\n' \
+  '            if (wpt.hasAttribute("data-deleted")) {\r\n' \
+  '              wpt.removeAttribute("data-deleted");\r\n' \
+  '              document.getElementById(wpt.id.replace("point", "dot")).classList.remove("deleted");\r\n' \
+  '              mod = true;\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            if (! wpt.hasAttribute("data-deleted")) {\r\n' \
+  '              wpt.setAttribute("data-deleted", "");\r\n' \
+  '              document.getElementById(wpt.id.replace("point", "dot")).classList.add("deleted");\r\n' \
+  '              mod = true;\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        } \r\n' \
+  '        if (mod) {wpt_calc();}\r\n' \
+  '      }\r\n' \
   '      function pointed3d_waypoint(lat, lon) {\r\n' \
   '        const wm = WGS84toWebMercator(lat, lon);\r\n' \
   '        if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {return false;}\r\n' \
@@ -13877,6 +13970,27 @@ class GPXTweakerWebInterfaceServer():
   '        seg.getElementsByClassName("segmentdesc")[0].scrollIntoView({block:"nearest"});\r\n' \
   '        calc_modified(seg);\r\n' \
   '      }\r\n' \
+  '      function segments_checkbox(check) {\r\n' \
+  '        const mods = [];\r\n' \
+  '        for (const seg of document.getElementById("pointslist").getElementsByClassName("segment")) {\r\n' \
+  '          if (check) {\r\n' \
+  '            if (seg.hasAttribute("data-deleted")) {\r\n' \
+  '              seg.removeAttribute("data-deleted");\r\n' \
+  '              document.getElementById(seg.id.replace("segment", "track")).classList.remove("deleted");\r\n' \
+  '              Array.prototype.forEach.call(seg.getElementsByClassName("pos"), function(pt) {if (! pt.hasAttribute("data-deleted")) {document.getElementById(pt.id.replace("point", "dot")).classList.remove("deleted");};});\r\n' \
+  '              mods.push(seg);\r\n' \
+  '            }\r\n' \
+  '          } else {\r\n' \
+  '            if (! seg.hasAttribute("data-deleted")) {\r\n' \
+  '              seg.setAttribute("data-deleted", "");\r\n' \
+  '              document.getElementById(seg.id.replace("segment", "track")).classList.add("deleted");\r\n' \
+  '              Array.prototype.forEach.call(seg.getElementsByClassName("pos"), function(pt) {document.getElementById(pt.id.replace("point", "dot")).classList.add("deleted");});\r\n' \
+  '              mods.push(seg);\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '        }\r\n' \
+  '        if (mods.length) {calc_modified(...mods);}\r\n' \
+  '      }\r\n' \
   '      function segment_cut() {\r\n' \
   '        let seg_foc = null;\r\n' \
   '        let pt_foc = null;\r\n' \
@@ -14379,7 +14493,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (segs.length > 0) {calc_modified(...segs);}\r\n' \
   '        return np;\r\n' \
   '      }\r\n' \
-  '      function ele_adds(all=false, fromalt=false) {\r\n' \
+  '      function ele_add(all=false, fromalt=false) {\r\n' \
   '        if (! fromalt && (eset < 0 || document.getElementById("eset").disabled)) {show_msg("{#jmelevationsno#}", 10); return;}\r\n' \
   '        let pts = null;\r\n' \
   '        const epts = [];\r\n' \
@@ -14387,9 +14501,6 @@ class GPXTweakerWebInterfaceServer():
   '        let msg = "";\r\n' \
   '        if (focused) {\r\n' \
   '          if (focused.startsWith("seg")) {\r\n' \
-  '            if (all) {\r\n' \
-  '              if (! window.confirm("{#jesconfirm#}")) {return;}\r\n' \
-  '            }\r\n' \
   '            pts = document.getElementById(focused).getElementsByClassName("point");\r\n' \
   '            msg = "{#jmelevations3#}";\r\n' \
   '          } else {\r\n' \
@@ -14440,43 +14551,56 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing++;\r\n' \
   '        xhre.send(b);\r\n' \
   '      }\r\n' \
-  '      function ele_alt_switch() {\r\n' \
+  '      function ele_alt_switch(remove=false) {\r\n' \
   '        const ex_foc = focused;\r\n' \
   '        let seg = null;\r\n' \
   '        let pts = null;\r\n' \
   '        let msg = "";\r\n' \
   '        if (ex_foc) {\r\n' \
   '          if (ex_foc.startsWith("seg")) {\r\n' \
-  '            if (! window.confirm("{#jeasconfirm#}")) {return;}\r\n' \
   '            seg = document.getElementById(ex_foc);\r\n' \
   '            pts = Array.from(seg.getElementsByClassName("point"));\r\n' \
-  '            msg = "{#jmelealt2#}";\r\n' \
+  '            msg = remove ? "{#jmelealt5#}" : "{#jmelealt2#}";\r\n' \
   '          } else if (ex_foc.startsWith("way")) {\r\n' \
   '            return;\r\n' \
   '          } else {\r\n' \
   '            pts = [document.getElementById(ex_foc)];\r\n' \
-  '            msg = "{#jmelealt1#}";\r\n' \
+  '            msg = remove ? "{#jmelealt4#}" : "{#jmelealt1#}";\r\n' \
   '            seg = pts[0].parentNode;\r\n' \
   '          }\r\n' \
   '        } else {\r\n' \
-  '          if (! window.confirm("{#jeaconfirm#}")) {return;}\r\n' \
+  '          if (! window.confirm(remove ? "{#jraconfirm#}" : "{#jeaconfirm#}")) {return;}\r\n' \
   '          pts = Array.from(document.getElementById("points").getElementsByClassName("point"));\r\n' \
-  '          msg = "{#jmelealt3#}";\r\n' \
+  '          msg = remove ? "{#jmelealt6#}" : "{#jmelealt3#}";\r\n' \
   '        }\r\n' \
   '        if (pts.length == 0) {return;}\r\n' \
   '        const batch = ++hist_b;\r\n' \
-  '        for (const pt of pts) {\r\n' \
-  '          const pt_data = pt.dataset;\r\n' \
-  '          focused = pt.id;\r\n' \
-  '          save_foc(batch);\r\n' \
-  '          const g = pt_data.ele;\r\n' \
-  '          pt_data.ele = pt_data.alt;\r\n' \
-  '          pt_data.alt = g;\r\n' \
-  '          if (focused == ex_foc) {\r\n' \
-  '            document.getElementById("pointele").value = pt_data.ele;\r\n' \
-  '            document.getElementById("pointalt").value = pt_data.alt;\r\n' \
+  '        if (remove) {\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            if (pt.getAttribute("data-alt")) {\r\n' \
+  '              focused = pt.id;\r\n' \
+  '              save_foc(batch);\r\n' \
+  '              pt.setAttribute("data-alt", "");\r\n' \
+  '              if (focused == ex_foc) {\r\n' \
+  '                document.getElementById("pointalt").value = "";\r\n' \
+  '              }\r\n' \
+  '              point_edit(false, false, false);\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
-  '          point_edit(false, false, false);\r\n' \
+  '        } else {\r\n' \
+  '          for (const pt of pts) {\r\n' \
+  '            const pt_data = pt.dataset;\r\n' \
+  '            focused = pt.id;\r\n' \
+  '            save_foc(batch);\r\n' \
+  '            const g = pt_data.ele;\r\n' \
+  '            pt_data.ele = pt_data.alt;\r\n' \
+  '            pt_data.alt = g;\r\n' \
+  '            if (focused == ex_foc) {\r\n' \
+  '              document.getElementById("pointele").value = pt_data.ele;\r\n' \
+  '              document.getElementById("pointalt").value = pt_data.alt;\r\n' \
+  '            }\r\n' \
+  '            point_edit(false, false, false);\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        focused = ex_foc;\r\n' \
   '        if (seg != null) {\r\n' \
@@ -14561,6 +14685,40 @@ class GPXTweakerWebInterfaceServer():
   '        focused = ex_foc;\r\n' \
   '        calc_modified(seg_foc);\r\n' \
   '        show_msg(((pt_foc == null) ? "{#jmaltitudesjoin1#}" : "{#jmaltitudesjoin2#}"), 2);\r\n' \
+  '      }\r\n' \
+  '      function datetime_check() {\r\n' \
+  '        if (focused) {element_click(null, document.getElementById(focused), false);}\r\n' \
+  '        let pt_a = null;\r\n' \
+  '        let ptime = 0;\r\n' \
+  '        for (const seg of document.getElementById("pointslist").getElementsByClassName("segment")) {\r\n' \
+  '          if (seg.hasAttribute("data-deleted")) {continue;}\r\n' \
+  '          let pt_nt = null;\r\n' \
+  '          for (const pt of seg.getElementsByClassName("point")) {\r\n' \
+  '            if (pt.hasAttribute("data-deleted") || pt.hasAttribute("data-error")) {continue;}\r\n' \
+  '            const pt_time = point_data[5 * parseInt(pt.id.substring(5)) + 4];\r\n' \
+  '            if (isNaN(pt_time)) {\r\n' \
+  '              if (! (pt_nt ??= pt)) {\r\n' \
+  '                pt_a = pt;\r\n' \
+  '                break;\r\n' \
+  '              }\r\n' \
+  '            } else {\r\n' \
+  '              if (pt_nt || pt_time <= ptime) {\r\n' \
+  '                pt_a = pt_nt ? pt_nt : pt;\r\n' \
+  '                break;\r\n' \
+  '              } else {\r\n' \
+  '                pt_nt = false;\r\n' \
+  '                ptime = pt_time\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          if (pt_a) {break;}\r\n' \
+  '        }\r\n' \
+  '        if (pt_a) {\r\n' \
+  '          element_click(null, pt_a, true);\r\n' \
+  '          show_msg("{#jmdatetime8#}", 2);\r\n' \
+  '        } else {\r\n' \
+  '          show_msg("{#jmdatetime7#}", 2);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function datetime_interpolate(remove=false) {\r\n' \
   '        const ex_foc = focused;\r\n' \
@@ -15089,7 +15247,7 @@ class GPXTweakerWebInterfaceServer():
   '  <body style="--mode:##MODE##" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
   '    <div id="top_bar">\r\n' \
   '      <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##"><button title="{#jdesc#}" onmousedown="document.activeElement?.blur();event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();" onclick="switch_dpanel()">&#128221;&#xfe0e;</button>\r\n' \
-  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;" onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;" onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_adds(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():ele_adds(true, event.altKey)"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="datetime_interpolate(event.shiftKey?true:false)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jdotsarrows#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots_arrows(! event.altKey, event.altKey))">&EmptySmallSquare;<span style="margin-left:-0.55em">&#8618;</span></button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?\'1\':(event.ctrlKey?\'2\':\'3\'));} else {switch_dpanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
+  '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;" onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;" onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_add(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():(event.ctrlKey?ele_alt_switch(true):ele_add(true, event.altKey))"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="event.shiftKey?datetime_check():datetime_interpolate(event.ctrlKey)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jdotsarrows#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots_arrows(! event.altKey, event.altKey))">&EmptySmallSquare;<span style="margin-left:-0.55em">&#8618;</span></button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?\'1\':(event.ctrlKey?\'2\':\'3\'));} else {switch_dpanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
   '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
@@ -15140,13 +15298,13 @@ class GPXTweakerWebInterfaceServer():
   '    </div>\r\n' \
   '    <div id="content" onclick="track_click(event)" onmouseover="track_over(event)" onmouseout="track_outside(event)">\r\n' \
   '      <div id="waypoints" style="--wpth:10vh;">\r\n' \
-  '        {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none"><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
+  '        {#jwaypoints#}&nbsp;<svg width="8" height="8" stroke="green" stroke-width="1.5" fill="none" cursor="pointer" onclick="event.stopPropagation();event.preventDefault();waypoints_checkbox(true)" oncontextmenu="event.stopPropagation();event.preventDefault();waypoints_checkbox(false)"><title>{#jwaydotmark#}</title><circle cx="4" cy="4" r="3"/></svg><br>\r\n' \
   '        <div id="waypointslist">\r\n' \
   '#<#WAYPOINTS#>#' \
   '        </div>\r\n' \
   '      </div>\r\n' \
   '      <div id="points">\r\n' \
-  '        {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none"><rect x="1" y="1" width="5" height="5"/></svg>\r\n' \
+  '        {#jpoints#}&nbsp;<svg width="7" height="7" stroke="green" stroke-width="1.5" fill="none" cursor="pointer" onclick="event.stopPropagation();event.preventDefault();segments_checkbox(true)" oncontextmenu="event.stopPropagation();event.preventDefault();segments_checkbox(false)"><title>{#jdotmark#}</title><rect x="1" y="1" width="5" height="5"/></svg>\r\n' \
   '        <div id="pointslist">\r\n' \
   '#<#POINTS#>#' \
   '        </div>\r\n' \
@@ -21312,14 +21470,13 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
   '        return false;\r\n' \
   '      }\r\n' \
-  '      function load_tdeccb(t, ind, dtptinds) {\r\n' \
+  '      function load_tdupdeccb(t, ind, dtptinds=null) {\r\n' \
   '        if (t.status != 200) {return error_trcb();}\r\n' \
   '        if (t.response == "") {return error_trcb();}\r\n' \
   '        xhr_ongoing--;\r\n' \
   '        if (focused) {track_click(null, document.getElementById(focused + "desc"));}\r\n' \
   '        const msg = JSON.parse(t.response);\r\n' \
   '        for (const n in msg) {\r\n' \
-  '          let ch = null;\r\n' \
   '          if (n.indexOf("cont") >= 0) {\r\n' \
   '            const e = document.createElement("div");\r\n' \
   '            document.getElementById("tracksform").appendChild(e);\r\n' \
@@ -21342,7 +21499,11 @@ class GPXTweakerWebInterfaceServer():
   '          if (no_sort[i] > no_sort[ind]) {no_sort[i]++;}\r\n' \
   '        }\r\n' \
   '        no_sort.push(no_sort[ind] + 1);\r\n' \
-  '        tracks_pts.push(dtptinds.map(function (dptinds, s) {const seg = tracks_pts[ind][s]; return dptinds.map((dptind) => seg[dptind])}));\r\n' \
+  '        if (dtptinds == null) {\r\n' \
+  '          tracks_pts.push(tracks_pts[ind].map((seg) => seg.slice()));\r\n' \
+  '        } else {\r\n' \
+  '          tracks_pts.push(dtptinds.map(function (dptinds, s) {const seg = tracks_pts[ind][s]; return dptinds.map((dptind) => seg[dptind])}));\r\n' \
+  '        }\r\n' \
   '        tracks_normnames.push(tracks_normnames[ind]);\r\n' \
   '        document.getElementById("edit").disabled = false;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "";\r\n' \
@@ -21461,7 +21622,7 @@ class GPXTweakerWebInterfaceServer():
   '        document.getElementById("edit").disabled = true;\r\n' \
   '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
   '        let msgn = show_msg("{#jmdecimate1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => gfence(function (e) {const r = load_tdeccb(e.target, ind, dtptinds); if (r) {show_msg("{#jmdecimate2#}".replace("%s", dtptinds.reduce((a, dptinds) => a + dptinds.length, 0)).replace("%s", segs.reduce((a, seg) => a + seg.length, 0)), 5, msgn);} else {show_msg("{#jmdecimate3#}", 10, msgn);} return r;}, e);\r\n' \
+  '        xhrtr.onload = (e) => gfence(function (e) {const r = load_tdupdeccb(e.target, ind, dtptinds); if (r) {show_msg("{#jmdecimate2#}".replace("%s", dtptinds.reduce((a, dptinds) => a + dptinds.length, 0)).replace("%s", segs.reduce((a, seg) => a + seg.length, 0)), 5, msgn);} else {show_msg("{#jmdecimate3#}", 10, msgn);} return r;}, e);\r\n' \
   '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdecimate3#}", 10, msgn);};\r\n' \
   '        xhrtr.open("POST", `/decimate${waypoints ? "w" : "_"}${minimalist ? "m" : "_"}?${encodeURIComponent(foc.substring(5))}`);\r\n' \
   '        xhrtr.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
@@ -21646,21 +21807,32 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      function track_new() {\r\n' \
   '        if (document.getElementById("edit").disabled) {return;}\r\n' \
-  '        const folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
-  '        let f_ind = null;\r\n' \
-  '        for (let f=0; f<folders.length; f++) {\r\n' \
-  '          if (folders[f].checked) {\r\n' \
-  '            f_ind = f;\r\n' \
-  '            break;\r\n' \
+  '        const foc = focused;\r\n' \
+  '        if (foc == "") {\r\n' \
+  '          const folders = document.getElementById("foldersform").getElementsByTagName("input");\r\n' \
+  '          let f_ind = null;\r\n' \
+  '          for (let f=0; f<folders.length; f++) {\r\n' \
+  '            if (folders[f].checked) {\r\n' \
+  '              f_ind = f;\r\n' \
+  '              break;\r\n' \
+  '            }\r\n' \
   '          }\r\n' \
+  '          if (f_ind == null) {return;}\r\n' \
+  '          document.getElementById("edit").disabled = true;\r\n' \
+  '          document.getElementById("edit").style.pointerEvents = "none";\r\n' \
+  '          const msgn = show_msg("{#jmnew1#}", 0);\r\n' \
+  '          xhrtr.onload = (e) => gfence((e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);}, e);\r\n' \
+  '          xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
+  '          xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
+  '        } else {\r\n' \
+  '          const ind = parseInt(foc.substring(5));\r\n' \
+  '          document.getElementById("edit").disabled = true;\r\n' \
+  '          document.getElementById("edit").style.pointerEvents = "none";\r\n' \
+  '          const msgn = show_msg("{#jmdup1#}", 0);\r\n' \
+  '          xhrtr.onload = (e) => gfence(function (e) {const r = load_tdupdeccb(e.target, ind); if (r) {show_msg("{#jmdup2#}", 5, msgn);} else {show_msg("{#jmdup3#}", 10, msgn);} return r;}, e);\r\n' \
+  '          xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmdup3#}", 10, msgn);};\r\n' \
+  '          xhrtr.open("GET", "/duplicate?" + encodeURIComponent(foc.substring(5)));\r\n' \
   '        }\r\n' \
-  '        if (f_ind == null) {return;}\r\n' \
-  '        document.getElementById("edit").disabled = true;\r\n' \
-  '        document.getElementById("edit").style.pointerEvents = "none";\r\n' \
-  '        const msgn = show_msg("{#jmnew1#}", 0);\r\n' \
-  '        xhrtr.onload = (e) => gfence((e) => {load_tncb(e.target)?show_msg("{#jmnew2#}", 5, msgn):show_msg("{#jmnew3#}", 10, msgn);}, e);\r\n' \
-  '        xhrtr.onerror = (e) => {error_trcb(); show_msg("{#jmnew3#}", 10, msgn);};\r\n' \
-  '        xhrtr.open("GET", "/new?" + encodeURIComponent(f_ind.toString()));\r\n' \
   '        xhrtr.setRequestHeader("If-Match", sessionid);\r\n' \
   '        xhr_ongoing++;\r\n' \
   '        xhrtr.send();\r\n' \
