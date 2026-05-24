@@ -950,7 +950,7 @@ EN_STRINGS = {
 }
 LSTRINGS = EN_STRINGS
 try:
-  if locale.getlocale()[0][:2].lower() == 'fra':
+  if locale.getlocale()[0][:2].lower() == 'fr':
     LSTRINGS = FR_STRINGS
 except:
   pass
