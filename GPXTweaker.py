@@ -256,8 +256,8 @@ FR_STRINGS = {
     'jsortdistance': 'Distance',
     'jsortelegain': 'Dénivelé élévation',
     'jsortaltgain': 'Dénivelé altitude',
-    'jsortdate': 'Date',
-    'jsortproximity': 'Proximité',
+    'jsortdate': 'Date de début',
+    'jsortproximity': 'Proximité du départ',
     'jfilterplaceholder': 'filtrer sur le nom contient...',
     'jcfilter': 'afficher / masquer le panneau de filtre avancé&#13;&#10;+ctrl: réinitialiser le filtre avancé&#13;&#10;+shift: restaurer le filtre avancé tel qu\'avant réinitialisation',
     'jvfilter': 'activer / désactiver le filtrage sur le franchissement de l\'écran par le tracé de la trace',
@@ -702,8 +702,8 @@ EN_STRINGS = {
     'jsortdistance': 'Distance',
     'jsortelegain': 'Elevation gain',
     'jsortaltgain': 'Altitude gain',
-    'jsortdate': 'Date',
-    'jsortproximity': 'Proximity',
+    'jsortdate': 'Date of beginning',
+    'jsortproximity': 'Proximity of start',
     'jfilterplaceholder': 'filter on the name contains...',
     'jcfilter': 'show / hide the panel of advanced filter&#13;&#10;+ctrl: reset the advanced filter&#13;&#10;+shift: restore the advanced filter as before reset',
     'jvfilter': 'toggle the filtering on the crossing of the screen by the plot of the track',
@@ -7126,13 +7126,36 @@ class WGS84Track(WGS84WebMercator):
     return True
 
   @classmethod
+  def New(cls, folder=None, unlink_lock=None, builder=None):
+    self = WGS84Track(unlink_lock)
+    nuri = None
+    try:
+      if not self.LoadGPX(builder=builder):
+        raise
+      if folder:
+        nuri = os.path.join(folder, 'new.gpx')
+        suf = 0
+        while os.path.exists(nuri):
+          suf += 1
+          nuri = os.path.join(folder, 'new (%d).gpx' % suf)
+        self.log(0, 'new', nuri)
+        if not self.SaveGPX(nuri, False):
+          raise
+    except:
+      del self.Track
+      self.__init__()
+      return None, False
+    self.OTrack = self.Track
+    return self, (nuri or True)
+
+  @classmethod
   def Duplicated(cls, track, uri=None, builder=None):
     self = WGS84Track(track.ULock)
     nuri = None
+    GCMan.disable()
     try:
       self.intern_dict = track.intern_dict
       self._intern()
-      GCMan.disable()
       self.TrkId = 0
       self.Track = track.Track.cloneNode()
       r = self.Track.documentElement
@@ -7145,21 +7168,23 @@ class WGS84Track(WGS84WebMercator):
         while os.path.exists(nuri):
           suf += 1
           nuri = uri.rsplit('.', 1)[0] + ' - dup (%d).gpx' % suf
+        self.log(0, 'new', nuri)
         if not self.SaveGPX(nuri, False):
           raise
     except:
       del self.Track
       self.__init__()
-      GCMan.restore()
       return None, False
+    finally:
+      GCMan.restore()
     self.OTrack = self.Track
-    GCMan.restore()
     return self, (nuri or True)
 
   @classmethod
   def Simplified(cls, track, preserved_points, preserve_waypoints=True, minimalist=False, uri=None, builder=None):
     self = WGS84Track(track.ULock)
     nuri = None
+    GCMan.disable()
     try:
       if minimalist:
         if not self.LoadGPX(builder=builder):
@@ -7176,7 +7201,6 @@ class WGS84Track(WGS84WebMercator):
       else:
         self.intern_dict = track.intern_dict
         self._intern()
-        GCMan.disable()
         self.TrkId = 0
         self.Track = track.Track.cloneNode()
         r = self.Track.documentElement
@@ -7209,15 +7233,16 @@ class WGS84Track(WGS84WebMercator):
         while os.path.exists(nuri):
           suf += 1
           nuri = uri.rsplit('.', 1)[0] + ' - decim (%d).gpx' % suf
+        self.log(0, 'new', nuri)
         if not self.SaveGPX(nuri, False):
           raise
     except:
       del self.Track
       self.__init__()
-      GCMan.restore()
       return None, False
+    finally:
+      GCMan.restore()
     self.OTrack = self.Track
-    GCMan.restore()
     return self, (nuri or True)
 
 
@@ -8302,7 +8327,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             resp_body = json.dumps(resp_body).encode('utf-8')
             _send_resp('application/json; charset=utf-8')
             self.server.Interface.SLock.release()
-          elif req.path.lower()[:4] == '/new':
+          elif (new := req.path.lower()[:4] == '/new') or req.path.lower()[:10] == '/duplicate':
             if req.method != 'GET' or req.header('If-Match', '') != self.server.Interface.SessionId:
               _send_err_bad()
               continue
@@ -8310,48 +8335,21 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             try:
               if self.server.Interface.HTMLExp is None:
                 raise
-              f_ind = int(req.path.split('?')[1])
-              uri = os.path.join(self.server.Interface.Folders[f_ind], 'new.gpx')
-              suf = 0
-              while os.path.exists(uri):
-                suf += 1
-                uri = os.path.join(self.server.Interface.Folders[f_ind], 'new (%d).gpx' % suf)
-              track = WGS84Track(self.server.Interface.SLock)
-              if not track.LoadGPX(uri, None, None, self.server.Interface.Builder):
-                raise
-              if not track.SaveGPX(uri):
-                raise
-              self.server.Interface.Tracks.append([uri, track])
-              self.server.Interface.TracksBoundaries.append((self.server.Interface.Minx, self.server.Interface.Maxx, self.server.Interface.Miny, self.server.Interface.Maxy))
-              self.server.Interface.UpdateTrackBoundaries(len(self.server.Interface.Tracks) - 1)
-            except:
-              _send_err_fail()
-              self.server.Interface.SLock.release()
-              continue
-            resp_body = {}
-            self.server.Interface.UpdateHTMLExp(len(self.server.Interface.Tracks) - 1, 'tpw', resp_body)
-            resp_body = json.dumps(resp_body).encode('utf-8')
-            _send_resp('application/json; charset=utf-8')
-            self.server.Interface.SLock.release()
-          elif req.path.lower()[:10] == '/duplicate':
-            if req.header('If-Match', '') != self.server.Interface.SessionId:
-              _send_err_bad()
-              continue
-            self.server.Interface.SLock.acquire()
-            try:
-              if self.server.Interface.HTMLExp is None:
-                raise
-              tr_ind = int(req.path.split('?')[1])
-              uri, track = self.server.Interface.Tracks[tr_ind]
-              trackd, urid = WGS84Track.Duplicated(track, uri, self.server.Interface.Builder)
-              if not urid:
+              if new:
+                f_ind = int(req.path.split('?')[1])
+                ntrack, nuri = WGS84Track.New(self.server.Interface.Folders[f_ind], self.server.Interface.SLock, self.server.Interface.Builder)
+              else:
+                tr_ind = int(req.path.split('?')[1])
+                uri, track = self.server.Interface.Tracks[tr_ind]
+                ntrack, nuri = WGS84Track.Duplicated(track, uri, self.server.Interface.Builder)
+              if not nuri:
                 raise
             except:
               _send_err_fail()
               self.server.Interface.SLock.release()
               continue
-            self.server.Interface.Tracks.append([urid, trackd])
-            self.server.Interface.TracksBoundaries.append(self.server.Interface.TracksBoundaries[tr_ind])
+            self.server.Interface.Tracks.append([nuri, ntrack])
+            self.server.Interface.TracksBoundaries.append((self.server.Interface.Minx, self.server.Interface.Maxx, self.server.Interface.Miny, self.server.Interface.Maxy) if new else self.server.Interface.TracksBoundaries[tr_ind])
             self.server.Interface.UpdateTrackBoundaries(len(self.server.Interface.Tracks) - 1)
             resp_body = {}
             self.server.Interface.UpdateHTMLExp(len(self.server.Interface.Tracks) - 1, 'tpw', resp_body)
