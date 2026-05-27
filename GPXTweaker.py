@@ -1800,6 +1800,206 @@ class WGS84WebMercator():
     return (math.degrees(2 * math.atan(math.exp(y / WGS84WebMercator.R)) - math.pi / 2), math.degrees(x / WGS84WebMercator.R))
 
 
+class WGS84LambertMeta(type):
+
+  M = 10
+
+  class Ellipsoid():
+
+    def __init__(self, a, b):
+      self.a = a
+      self.b = b
+      self.e = math.sqrt(1 - (b * b) / (a * a))
+
+    def GeotoCarto(self, lat_r, lon_r, h=0):
+      s = self.e * math.sin(lat_r)
+      n = self.a / math.sqrt(1 - s * s)
+      r = (n + h) * math.cos(lat_r)
+      return r * math.cos(lon_r), r * math.sin(lon_r), (n * (1 - self.e * self.e) + h) * s / self.e
+
+    def CartotoGeo(self, x, y, z=0):
+      r = math.hypot(x, y)
+      zr = z / r
+      ae2 = self.a * self.e * self.e
+      _lat_r = math.atan(zr / math.sqrt(1 - ae2 / math.hypot(r, z)))
+      for i in range(WGS84LambertMeta.M):
+        s = self.e * math.sin(_lat_r)
+        lat_r = math.atan(zr / (1 - ae2  * math.cos(_lat_r) / (r * math.sqrt(1 - s * s))))
+        if lat_r == _lat_r:
+          break
+        _lat_r = lat_r
+      s = self.e * math.sin(lat_r)
+      return lat_r, math.atan2(y, x), r / math.cos(lat_r) - self.a / math.sqrt(1 - s * s)
+
+  Projections = {}
+
+  @staticmethod
+  def TangentConstants(a, e, lat0, k0, x0, y0):
+    s = math.sin(math.radians(lat0))
+    l = (math.log((1 + s) / (1 - s)) - e * math.log((1 + e * s) / (1 - e * s))) / 2
+    r0 = k0 * a * math.sqrt((1 - s * s) / (1 - e * e * s * s)) / s
+    return s, r0 * math.exp(s * l), x0, y0 + r0
+
+  @staticmethod
+  def SecantConstants(a, e, lat1, lat2, x0, y0):
+    s1 = math.sin(math.radians(lat1))
+    l1 = (math.log((1 + s1) / (1 - s1)) - e * math.log((1 + e * s1) / (1 - e * s1))) / 2
+    s2 = math.sin(math.radians(lat2))
+    l2 = (math.log((1 + s2) / (1 - s2)) - e * math.log((1 + e * s2) / (1 - e * s2))) / 2
+    n = math.log((1 - e * e * s1 * s1) / (1 - s1 * s1) * (1 - s2 * s2) / (1 - e * e * s2 * s2)) / (2 * (l1 - l2))
+    c = a * math.sqrt((1 - s1 * s1) / (1 - e * e * s1 * s1)) / n * math.exp(n * l1)
+    lat0 = (lat1 + lat2) / 2
+    s0 = math.sin(math.radians(lat0))
+    if s0 < 1:
+      l0 = (math.log((1 + s0) / (1 - s0)) - e * math.log((1 + e * s0) / (1 - e * s0))) / 2
+      return n, c, x0, y0 + c * math.exp(-n * l0)
+    else:
+      return n, c, x0, y0
+
+  def __getattr__(cls, name):
+    if (lcls := WGS84LambertMeta.Projections.get(name)) and issubclass(lcls, cls):
+      return lcls(*lcls.Constants[name])
+    raise AttributeError('"WGS84LambertMeta" object "%s" has no attribute "%s"' % (cls.__name__, name))
+
+
+class WGS84Lambert(metaclass=WGS84LambertMeta):
+
+  _WGS84Ellipsoid = (6378137.0, 6378137.0 * (1 - 1 / 298.257223563))
+
+  def __new__(cls, n, c, xs, ys):
+    if cls is WGS84Lambert:
+      raise TypeError('the class WGS84Lambert is not intended to be instantiated directly')
+    return object.__new__(cls)
+
+  def __init__(self, n, c, xs, ys):
+    self.n = n
+    self.c = c
+    self.xs = xs
+    self.ys = ys
+
+  @classmethod
+  def __init_subclass__(cls):
+    WGS84LambertMeta.Projections.update({l: cls for l in cls._Constants})
+
+  @WGS84LambertMeta.__call__
+  class WGS84Ellipsoid():
+    def __get__(self, obj, cls):
+      WGS84Lambert.WGS84Ellipsoid = (e := WGS84LambertMeta.Ellipsoid(*WGS84Lambert._WGS84Ellipsoid))
+      del WGS84Lambert._WGS84Ellipsoid
+      return e
+
+  @WGS84LambertMeta.__call__
+  class Ellipsoid():
+    def __get__(self, obj, cls):
+      cls.Ellipsoid = (e := WGS84LambertMeta.Ellipsoid(*cls._Ellipsoid))
+      del cls._Ellipsoid
+      return e
+
+  @WGS84LambertMeta.__call__
+  class Constants():
+    def __get__(self, obj, cls):
+      cls.Constants = (cs := cls._Constants)
+      del cls._Constants
+      for p, c in cs.items():
+        if len(c) == 2:
+          cs[p] = c[0](cls.a, cls.e, *c[1])
+      return cs
+
+  class EllipsoidProperty:
+    def __set_name__(self, cls, name):
+      self.name = name
+    def __get__(self, obj, cls):
+      return getattr(cls.Ellipsoid, self.name)
+
+  a = EllipsoidProperty()
+  b = EllipsoidProperty()
+  e = EllipsoidProperty()
+  GeotoCarto = EllipsoidProperty()
+  CartotoGeo = EllipsoidProperty()
+
+  del EllipsoidProperty
+
+  def CartotoLamb(self, lat_r, lon_r):
+    e = self.e
+    s = e * math.sin(lat_r)
+    l = (math.log((e + s) / (e - s)) - e * math.log((1 + s) / (1 - s))) / 2
+    g = (lon_r - self.lon0) * self.n
+    r = self.c * math.exp(-self.n * l)
+    return self.xs + r * math.sin(g), self.ys - r * math.cos(g)
+
+  def LambtoCarto(self, x, y):
+    el = (self.c / math.hypot(x - self.xs, y - self.ys)) ** (1 / self.n)
+    e = self.e
+    e2 = e / 2
+    p = math.pi / 2
+    _lat_r = 2 * math.atan(el) - math.pi / 2
+    for i in range(WGS84Lambert.M):
+      s = e * math.sin(_lat_r)
+      lat_r = 2 * math.atan(el * ((1 + s) / (1 - s)) ** e2) - p
+      if lat_r == _lat_r:
+        break
+      _lat_r = lat_r
+    return lat_r, self.lon0 + math.atan2(x - self.xs, self.ys - y) / self.n
+
+  def WGS84toLambert(self, lat, lon):
+    lat, lon, h = self.WGS84toCarto(math.radians(lat), math.radians(lon))
+    return self.CartotoLamb(lat, lon)
+
+  def LamberttoWGS84(self, x, y):
+    lat, lon, h = self.CartotoWGS84(*self.LambtoCarto(x, y))
+    return math.degrees(lat), math.degrees(lon)
+
+
+class WGS84LambertNTF(WGS84Lambert):
+
+  _Ellipsoid = (6378249.2, 6356515.0)
+  lon0 = math.radians((2 + 20 / 60 + 14.025 / 3600))
+  _Constants = {
+    'Lambert1': (0.7604059656, 11603796.98, 600000.0, 5657616.674),
+    'Lambert1C': (0.7604059656, 11603796.98, 600000.0, 6657616.674),
+    'Lambert2': (0.7289686274, 11745793.39, 600000.0, 6199695.768),
+    'Lambert2C': (0.7289686274, 11745793.39, 600000.0, 8199695.768),
+    'Lambert3': (0.6959127966, 11947992.52, 600000.0, 6791905.085),
+    'Lambert3C': (0.6959127966, 11947992.52, 600000.0, 9791905.085),
+    'Lambert4': (0.6712679322, 12136281.99, 234.358, 7239161.542),
+    'Lambert4C': (0.6712679322, 12136281.99, 234.358, 11239161.542),
+    'Lambert2E': (WGS84LambertMeta.TangentConstants, (52 * 0.9, 0.99987742, 600000, 2200000)),
+    'LambertGC': (WGS84LambertMeta.SecantConstants, (45, 49, 600000, 600000))
+  }
+
+  def WGS84toCarto(self, lat_r, lon_r, h=0):
+    x, y, z = WGS84Lambert.WGS84Ellipsoid.GeotoCarto(lat_r, lon_r, h)
+    return self.Ellipsoid.CartotoGeo(x + 168, y + 60, z - 320)
+
+  def CartotoWGS84(self, lat_r, lon_r, h=0):
+    x, y, z = self.Ellipsoid.GeotoCarto(lat_r, lon_r, h)
+    return WGS84Lambert.WGS84Ellipsoid.CartotoGeo(x - 168, y - 60, z + 320)
+
+
+class WGS84LambertRGF93(WGS84Lambert):
+
+  _Ellipsoid = (6378137.0, 6378137.0 * (1 - 1 / 298.257222101))
+  lon0 = math.radians(3)
+  _Constants = {
+    'Lambert93': (WGS84LambertMeta.SecantConstants, (44, 49, 700000, 6600000)),
+    'LambertCC42': (WGS84LambertMeta.SecantConstants, (41.25, 42.75, 1700000, 1200000)),
+    'LambertCC43': (WGS84LambertMeta.SecantConstants, (42.25, 43.75, 1700000, 2200000)),
+    'LambertCC44': (WGS84LambertMeta.SecantConstants, (43.25, 44.75, 1700000, 3200000)),
+    'LambertCC45': (WGS84LambertMeta.SecantConstants, (44.25, 45.75, 1700000, 4200000)),
+    'LambertCC46': (WGS84LambertMeta.SecantConstants, (45.25, 46.75, 1700000, 5200000)),
+    'LambertCC47': (WGS84LambertMeta.SecantConstants, (46.25, 47.75, 1700000, 6200000)),
+    'LambertCC48': (WGS84LambertMeta.SecantConstants, (47.25, 48.75, 1700000, 7200000)),
+    'LambertCC49': (WGS84LambertMeta.SecantConstants, (48.25, 49.75, 1700000, 8200000)),
+    'LambertCC50': (WGS84LambertMeta.SecantConstants, (49.25, 50.75, 1700000, 9200000))
+  }
+
+  def WGS84toCarto(self, lat_r, lon_r, h=0):
+    return self.CartotoGeo(*WGS84Lambert.WGS84Ellipsoid.GeotoCarto(lat_r, lon_r, h))
+
+  def CartotoWGS84(self, lat_r, lon_r, h=0):
+    return WGS84Lambert.WGS84Ellipsoid.CartotoGeo(*self.GeotoCarto(lat_r, lon_r, h))
+
+
 class TilesCache():
 
   def __init__(self, size, threads, preload=None):
@@ -17771,7 +17971,7 @@ class GPXTweakerWebInterfaceServer():
   '          </td>\r\n' \
   '          <td id="panel_param">\r\n' \
   '            <div id="help" title="{#jhelp3d#}">?</div>\r\n' \
-  '            <form autocomplete="off" onsubmit="return(false)" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)" onwheel="process_key({key:\'form\'})">\r\n' \
+  '            <form autocomplete="off" onsubmit="return(false)" onkeydown="process_key({key:\'form\'})" onmousedown="mouse_down(event)">\r\n' \
   '              <p><label for="cursor_tangle">{#jtilt#}</label></p>\r\n' \
   '              <input type="range" id="cursor_tangle" min="-90" max="90" step="any" value="0" disabled oninput="set_param(\'t\')">\r\n' \
   '              <br><span>-90</span><span id="cursorv_tangle">0</span><span>90</span>\r\n' + HTML_3D_FORM1_TEMPLATE + \
