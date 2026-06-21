@@ -4872,11 +4872,11 @@ class WGS84Elevation(WGS84Map):
           if c < tw - 1:
             for _l_p, _l_0, _l_1 in _l:
               pos = _r + _l_p + _c
-              m[pos: pos + _w] = _tiles[c][r][_l_0: _l_1]
+              _m[pos: pos + _w] = _tiles[c][r][_l_0: _l_1]
           else:
             for _l_p, _l_0, _l_1 in _l:
               pos = _r + _l_p + _c
-              m[pos: pos + _w + 2] = _tiles[c][r][_l_0: _l_1 + 2]
+              _m[pos: pos + _w + 2] = _tiles[c][r][_l_0: _l_1 + 2]
     return m
 
   def RequestElevation(self, infos, points, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=10):
