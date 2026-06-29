@@ -11,6 +11,18 @@ matrix = 16
 lat = 43.20403
 lon = 5.49404
 
+print(lat, lon)
+print((WGS84WebMercator.WGS84toWebMercator(lat, lon)))
+print(WGS84WebMercator.WebMercatortoWGS84(*WGS84WebMercator.WGS84toWebMercator(lat, lon)))
+c = WGS84Lambert.Lambert2E
+print(c.WGS84toLambert(lat, lon))
+print(c.LamberttoWGS84(*c.WGS84toLambert(lat, lon)))
+c = WGS84Lambert.Lambert93
+print(c.WGS84toLambert(lat, lon))
+print(c.LamberttoWGS84(*c.WGS84toLambert(lat, lon)))
+del c
+# exit()
+
 infos = WebMercatorMap.TSAlias('OSM')
 m.GetTileInfos(infos, matrix, None, None)
 print(infos)
