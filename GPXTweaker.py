@@ -16393,8 +16393,7 @@ class GPXTweakerWebInterfaceServer():
   '          if (cb_utc.checked) {\r\n' \
   '            const d = p_date.valueAsDate;\r\n' \
   '            const t = p_time.valueAsDate;\r\n' \
-  '            dt = (new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), t.getUTCHours(), t.getUTCMinutes(), t.getUTCSeconds())).getTime();\r\n' \
-  '            p_date.valueAsNumber = p_time.valueAsNumber = dt;\r\n' \
+  '            p_date.valueAsNumber = p_time.valueAsNumber = (new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), t.getUTCHours(), t.getUTCMinutes(), t.getUTCSeconds())).getTime();\r\n' \
   '          } else {\r\n' \
   '            const dt = new Date(p_date.valueAsNumber + p_time.valueAsNumber);\r\n' \
   '            p_date.valueAsNumber = p_time.valueAsNumber = Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours(), dt.getMinutes(), dt.getSeconds());\r\n' \
