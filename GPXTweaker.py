@@ -12819,6 +12819,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '    </style>\r\n' \
   '    <script>\r\n' + HTML_GLOBALVARS_TEMPLATE + \
+  '      const datetime_local = (function () {try {return `^${(new Intl.DateTimeFormat("default", {year: "numeric", month: "2-digit", day: "2-digit", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit"})).formatToParts(new Date(0)).map(({type, value}) => type == "literal" ? RegExp.escape(value) : `(?<${type}>[0-9]\\{1,${type == "year" ? 4 : 2}\\})`).join("")}$`;} catch {return null;};})()\r\n' \
   '      var hist = [[], []];\r\n' \
   '      var hist_b = 0;\r\n' \
   '      var foc_old = null;\r\n' \
@@ -15436,8 +15437,31 @@ class GPXTweakerWebInterfaceServer():
   '          const ex_foc = focused;\r\n' \
   '          focused = elp.id;\r\n' \
   '          save_foc();\r\n' \
-  '          elp.setAttribute(df, elt.value);\r\n' \
   '          const coord = (elf == "lat" || elf == "lon");\r\n' \
+  '          if (! elt.checkValidity()) {\r\n' \
+  '            if (coord) {\r\n' \
+  '              const g = new RegExp(`^(?<sign>[+-]?)(?<deg>[0-9]+)°(?<min>[0-9]+)\'(?<sec>[0-9]+(?:\\\\.[0-9]*)?)"(?<dir>[${elf == "lat" ? "NnSs" : "EeWw"}]?)$`).exec(elt.value)?.groups;\r\n' \
+  '              if (g) {\r\n' \
+  '                const l = (parseFloat(g.deg) + parseFloat(g.min) / 60 + parseFloat(g.sec) / 3600) * (g.sign == "-" ? -1 : 1) * (g.dir.toUpperCase() == "S" ? -1 : 1) * (g.dir.toUpperCase() == "W" ? -1 : 1);\r\n' \
+  '                if (! isNaN(l)) {\r\n' \
+  '                  const v = elt.value;\r\n' \
+  '                  elt.value = l.toFixed(6);\r\n' \
+  '                  if (! elt.checkValidity()) {elt.value = v;}\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            } else if (elf == "time" && datetime_local) {\r\n' \
+  '              const g = new RegExp(datetime_local).exec(elt.value)?.groups;\r\n' \
+  '              if (g) {\r\n' \
+  '                const d = new Date(parseInt(g.year), parseInt(g.month) - 1, parseInt(g.day), parseInt(g.hour), parseInt(g.minute), parseInt(g.second));\r\n' \
+  '                if (! isNaN(d.valueOf())) {\r\n' \
+  '                  const v = elt.value;\r\n' \
+  '                  elt.value = d.toISOString().replace(/\\.[0-9]*/, "");\r\n' \
+  '                  if (! elt.checkValidity()) {elt.value = v;}\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          elp.setAttribute(df, elt.value);\r\n' \
   '          point_edit(elf != "name", coord, true);\r\n' \
   '          if (coord && scrollmode > 0 && ! elp.hasAttribute("data-error")) {scroll_to_dot(document.getElementById(elp.id.replace("point", "dot")), scrollmode == 2);}\r\n' \
   '          focused = ex_foc;\r\n' \
