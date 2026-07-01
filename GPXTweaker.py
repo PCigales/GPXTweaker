@@ -17285,7 +17285,8 @@ class GPXTweakerWebInterfaceServer():
   '      const ssampling = 2;\r\n' \
   '      var c_msize = null;\r\n' \
   '      var modified = new Set();\r\n' \
-  '      var queue = [Promise.resolve(null), null];\r\n'
+  '      const queue_max = 10;\r\n' \
+  '      var queue = [Promise.resolve(null), 0];\r\n'
   HTML_3D_WGPU_MAT_TEMPLATE = \
   '      function mat4_mult(p, m) {\r\n' \
   '        const q = m.slice();\r\n' \
@@ -17367,11 +17368,7 @@ class GPXTweakerWebInterfaceServer():
   '          const mlevels = Math.floor(Math.log2(Math.max(mwidth, mheight))) + 1;\r\n' \
   '          function map_complete() {\r\n' \
   '            device.queue.copyExternalImageToTexture({source: cnv2d, flipY: true}, {texture: map_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: mwidth, height: mheight, depthOrArrayLayers: 1});\r\n' \
-  '            if (queue[1] == null) {\r\n' \
-  '              queue[0] = queue[0].then(gen_mipmap);\r\n' \
-  '            } else {\r\n' \
-  '              queue[1] = queue[1].then(gen_mipmap);\r\n' \
-  '            }\r\n' \
+  '            queue[0] = queue[0].then(gen_mipmap);\r\n' \
   '          }\r\n' \
   '          function gen_mipmap() {\r\n' \
   '            const encoder = device.createCommandEncoder();\r\n' \
@@ -17746,10 +17743,10 @@ class GPXTweakerWebInterfaceServer():
   '        canvas.setAttribute("width", size.toString());\r\n' \
   '        canvas.setAttribute("height", size.toString());\r\n' \
   '        cpn.scrollTo((cpn.scrollWidth - cpn.clientWidth) / 2, (cpn.scrollHeight * (1 + (1 - zfact / zfactmax) * stangle / 1.733) - cpn.clientHeight) / 2);\r\n' \
-  '        if (color_texture != null) {queue[0].then(color_texture.destroy.bind(color_texture));}\r\n' \
+  '        if (color_texture != null) {color_texture.destroy();}\r\n' \
   '        color_texture = device.createTexture({size: [size, size], format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
   '        rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
-  '        if (depth_texture != null) {queue[0].then(depth_texture.destroy.bind(depth_texture));}\r\n' \
+  '        if (depth_texture != null) {depth_texture.destroy();}\r\n' \
   '        depth_texture = device.createTexture({size: [size, size], format: "depth16unorm", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
   '        rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
   '      }\r\n' \
@@ -17969,7 +17966,7 @@ class GPXTweakerWebInterfaceServer():
   '        canvas_resize();\r\n' \
   '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
   '        canvas_redraw();\r\n' \
-  '        queue[1].then(cmap.next.bind(cmap));\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(cmap.next.bind(cmap));\r\n' \
   '        c_zoom.disabled = false;\r\n' \
   '        c_zoom.nextElementSibling.onclick = function () {set_param("zo");}\r\n' \
   '        c_tangle.disabled = false;\r\n' \
@@ -18062,12 +18059,10 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        queue[0] = queue[1];\r\n' \
-  '        queue[1] = null;\r\n' \
-  '        return device.queue.onSubmittedWorkDone();\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(function () {if (queue[1]-- == queue_max) {canvas_redraw(); queue[1] = queue_max - 1};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw() {\r\n' \
-  '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
+  '        if (queue[1]++ <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
   '      function toggle_filling(mode) {\r\n' \
@@ -19218,25 +19213,25 @@ class GPXTweakerWebInterfaceServer():
   '        modified.add("v");\r\n' \
   '        modified.add("s");\r\n' \
   '        if (show_infos) {clear_tinfos();}\r\n' \
-  '        if (color_texture != null) {queue[0].then(color_texture.destroy.bind(color_texture));}\r\n' \
+  '        if (color_texture != null) {color_texture.destroy();}\r\n' \
   '        color_texture = device.createTexture({size: size, format: pcolorformat, sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
   '        if (panorama_mode) {\r\n' \
-  '          if (resolved_view_texture != null) {queue[0].then(resolved_view_texture.destroy.bind(resolved_view_texture));}\r\n' \
+  '          if (resolved_view_texture != null) {resolved_view_texture.destroy();}\r\n' \
   '          resolved_view_texture = device.createTexture({size: size, format: pcolorformat, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING});\r\n' \
   '          rpdpanoramaview.colorAttachments[0].resolveTarget = resolved_view_texture.createView();\r\n' \
   '        } else if (resolved_view_texture != null) {\r\n' \
-  '          queue[0].then(resolved_view_texture.destroy.bind(resolved_view_texture));\r\n' \
+  '          resolved_view_texture.destroy();\r\n' \
   '          resolved_view_texture = null;\r\n' \
   '          rpdpanoramaview.colorAttachments[0].resolveTarget = null;\r\n' \
   '        }\r\n' \
-  '        if (depth_texture != null) {queue[0].then(depth_texture.destroy.bind(depth_texture));}\r\n' \
+  '        if (depth_texture != null) {depth_texture.destroy();}\r\n' \
   '        depth_texture = device.createTexture({size: size, format: "depth32float", sampleCount: 4, usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
-  '        if (position_texture != null) {queue[0].then(position_texture.destroy.bind(position_texture));}\r\n' \
-  '        if (pdepth_texture != null) {queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));}\r\n' \
+  '        if (position_texture != null) {position_texture.destroy();}\r\n' \
+  '        if (pdepth_texture != null) {pdepth_texture.destroy();}\r\n' \
   '        if (panorama_mode) {\r\n' \
   '          rpdpanoramaview.colorAttachments[0].view = color_texture.createView();\r\n' \
   '          rpdpanoramaview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
-  '          if (panoramaposition_texture != null) {queue[0].then(panoramaposition_texture.destroy.bind(panoramaposition_texture));}\r\n' \
+  '          if (panoramaposition_texture != null) {panoramaposition_texture.destroy();}\r\n' \
   '          position_texture = device.createTexture({size: size, format: "rg16sint", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING});\r\n' \
   '          rpdposition.colorAttachments[0].view = position_texture.createView();\r\n' \
   '          pdepth_texture = device.createTexture({size: size, format: "depth32float", usage: GPUTextureUsage.RENDER_ATTACHMENT});\r\n' \
@@ -19255,7 +19250,7 @@ class GPXTweakerWebInterfaceServer():
   '          rpdview.colorAttachments[0].view = color_texture.createView();\r\n' \
   '          rpdview.depthStencilAttachment.view = depth_texture.createView();\r\n' \
   '          if (panoramaposition_texture != null) {\r\n' \
-  '            queue[0].then(panoramaposition_texture.destroy.bind(panoramaposition_texture));\r\n' \
+  '            panoramaposition_texture.destroy();\r\n' \
   '            panoramaposition_texture = null;\r\n' \
   '            bgpanorama[1] = null;\r\n' \
   '            rpdpanoramasun.colorAttachments[1].view = null;\r\n' \
@@ -19645,7 +19640,7 @@ class GPXTweakerWebInterfaceServer():
   '        set_param("h", 2);\r\n' \
   '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
   '        canvas_redraw();\r\n' \
-  '        queue[1].then(cmap.next.bind(cmap));\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(cmap.next.bind(cmap));\r\n' \
   '        c_tangle.disabled = false;\r\n' \
   '        c_rangle.disabled = false;\r\n' \
   '        b_rangle.disabled = false;\r\n' \
@@ -19878,13 +19873,11 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        queue[0] = queue[1];\r\n' \
-  '        queue[1] = null;\r\n' \
-  '        return device.queue.onSubmittedWorkDone();\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(function () {if (queue[1]-- == queue_max) {canvas_redraw(); queue[1] = queue_max - 1};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw(force=false) {\r\n' \
   '        if (force) {modified.add("v");}\r\n' \
-  '        if (queue[1] == null) {queue[1] = queue[0].then(_canvas_redraw);}\r\n' \
+  '        if (queue[1]++ <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      var panorama_init = [init(), null];\r\n' \
   '      panorama_init[0].next();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
@@ -19929,12 +19922,12 @@ class GPXTweakerWebInterfaceServer():
   '          rpdpanoramaview.depthStencilAttachment.view = null;\r\n' \
   '          if (! show_infos) {\r\n' \
   '            if (position_texture != null) {\r\n' \
-  '              queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
+  '              position_texture.destroy();\r\n' \
   '              position_texture = null;\r\n' \
   '              rpdposition.colorAttachments[0].view = null;\r\n' \
   '            }\r\n' \
   '            if (pdepth_texture != null) {\r\n' \
-  '              queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
+  '              pdepth_texture.destroy();\r\n' \
   '              pdepth_texture = null;\r\n' \
   '              rpdposition.depthStencilAttachment.view = null;\r\n' \
   '            }\r\n' \
@@ -19959,12 +19952,12 @@ class GPXTweakerWebInterfaceServer():
   '          clear_tinfos();\r\n' \
   '          if (! panorama_mode) {\r\n' \
   '            if (position_texture != null) {\r\n' \
-  '              queue[0].then(position_texture.destroy.bind(position_texture));\r\n' \
+  '              position_texture.destroy();\r\n' \
   '              position_texture = null;\r\n' \
   '              rpdposition.colorAttachments[0].view = null;\r\n' \
   '            }\r\n' \
   '            if (pdepth_texture != null) {\r\n' \
-  '              queue[0].then(pdepth_texture.destroy.bind(pdepth_texture));\r\n' \
+  '              pdepth_texture.destroy();\r\n' \
   '              pdepth_texture = null;\r\n' \
   '              rpdposition.depthStencilAttachment.view = null;\r\n' \
   '            }\r\n' \
@@ -20025,11 +20018,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (e) {\r\n' \
   '          e.preventDefault();\r\n' \
   '          e.stopPropagation();\r\n' \
-  '          if (queue[1] == null) {\r\n' \
-  '            queue[0] = queue[0].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
-  '          } else {\r\n' \
-  '            queue[1] = queue[1].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
-  '          }\r\n' \
+  '          queue[0] = queue[0].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
   '        } else {\r\n' \
   '          const plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
   '          const plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
