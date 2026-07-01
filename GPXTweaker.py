@@ -19808,54 +19808,56 @@ class GPXTweakerWebInterfaceServer():
   '          if (modified.has("s")) {\r\n' \
   '            device.queue.writeBuffer(bsunratio, 0, new Float32Array([1, canvas.clientWidth / canvas.clientHeight]));\r\n' \
   '          }\r\n' \
-  '          const context_texture = context.getCurrentTexture();\r\n' \
-  '          rpdpanoramasun.colorAttachments[0].clearValue = day ? [0.46, 0.68, 0.95, 1.0] : [0.05, 0.02, 0.33, 1.0];\r\n' \
-  '          rpdpanoramasun.colorAttachments[0].view = context_texture.createView();\r\n' \
-  '          rpdpanorama.colorAttachments[0].view = rpdpanoramasun.colorAttachments[0].view;\r\n' \
-  '          let pass = encoder.beginRenderPass(rpdpanoramasun);\r\n' \
-  '          if (dim_mode == 2 && day) {\r\n' \
-  '            const smatrix = mat4_zscale(1);\r\n' \
-  '            mat4_mult(mat4_tilt(cltangle, -sltangle), smatrix);\r\n' \
-  '            mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
-  '            mat4_mult(mat4_perspective(), smatrix);\r\n' \
-  '            mat4_flip(smatrix);\r\n' \
-  '            smatrix[9] *= Math.sqrt(2);\r\n' \
-  '            smatrix[10] = 0.5 * smatrix[11];\r\n' \
-  '            smatrix[8] = (-c_rangle.valueAsNumber + c_lrangle.valueAsNumber + 360) % 360 / 180 * smatrix[11] ;\r\n' \
-  '            device.queue.writeBuffer(bsunposition, 0, smatrix, 8, 4);\r\n' \
-  '            smatrix[8] -= 2 * smatrix[11];\r\n' \
-  '            device.queue.writeBuffer(bsunposition, bsunposition.size - 16, smatrix, 8, 4);\r\n' \
-  '            pass.executeBundles(rbpanoramasun);\r\n' \
-  '          }\r\n' \
-  '          pass.end();\r\n' \
-  '          const bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
-  '          const rbpv = rbpanoramaview[3 * dim_mode + tex_mode];\r\n' \
-  '          const rangle = c_rangle.valueAsNumber;\r\n' \
-  '          for (let i=0; i<4; i++) {\r\n' \
-  '            const angle = (225 + 90 * i + rangle) % 360 * Math.PI / -180;\r\n' \
+  '          if (modified.has("l") || modified.has("p") || modified.has("v") || modified.has("m")) {\r\n' \
+  '            const context_texture = context.getCurrentTexture();\r\n' \
+  '            rpdpanoramasun.colorAttachments[0].clearValue = day ? [0.46, 0.68, 0.95, 1.0] : [0.05, 0.02, 0.33, 1.0];\r\n' \
+  '            rpdpanoramasun.colorAttachments[0].view = context_texture.createView();\r\n' \
+  '            rpdpanorama.colorAttachments[0].view = rpdpanoramasun.colorAttachments[0].view;\r\n' \
+  '            let pass = encoder.beginRenderPass(rpdpanoramasun);\r\n' \
+  '            if (dim_mode == 2 && day) {\r\n' \
+  '              const smatrix = mat4_zscale(1);\r\n' \
+  '              mat4_mult(mat4_tilt(cltangle, -sltangle), smatrix);\r\n' \
+  '              mat4_mult(mat4_tilt(ctangle, stangle), smatrix);\r\n' \
+  '              mat4_mult(mat4_perspective(), smatrix);\r\n' \
+  '              mat4_flip(smatrix);\r\n' \
+  '              smatrix[9] *= Math.sqrt(2);\r\n' \
+  '              smatrix[10] = 0.5 * smatrix[11];\r\n' \
+  '              smatrix[8] = (-c_rangle.valueAsNumber + c_lrangle.valueAsNumber + 360) % 360 / 180 * smatrix[11] ;\r\n' \
+  '              device.queue.writeBuffer(bsunposition, 0, smatrix, 8, 4);\r\n' \
+  '              smatrix[8] -= 2 * smatrix[11];\r\n' \
+  '              device.queue.writeBuffer(bsunposition, bsunposition.size - 16, smatrix, 8, 4);\r\n' \
+  '              pass.executeBundles(rbpanoramasun);\r\n' \
+  '            }\r\n' \
+  '            pass.end();\r\n' \
+  '            const bdynunifstride = (bviewmatrix.size - 64) >> 2;\r\n' \
+  '            const rbpv = rbpanoramaview[3 * dim_mode + tex_mode];\r\n' \
+  '            const rangle = c_rangle.valueAsNumber;\r\n' \
+  '            for (let i=0; i<4; i++) {\r\n' \
+  '              const angle = (225 + 90 * i + rangle) % 360 * Math.PI / -180;\r\n' \
+  '              crangle = Math.cos(angle);\r\n' \
+  '              srangle = Math.sin(angle);\r\n' \
+  '              const vmatrix = mat4_zscale(1);\r\n' \
+  '              mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
+  '              mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
+  '              mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
+  '              mat4_mult(mat4_perspective(), vmatrix);\r\n' \
+  '              mat4_flip(vmatrix);\r\n' \
+  '              device.queue.writeBuffer(bviewmatrix, bdynunifstride * i, vmatrix);\r\n' \
+  '              pass = encoder.beginRenderPass(rpdpanoramaview);\r\n' \
+  '              pass.executeBundles([rbpv[i]]);\r\n' \
+  '              pass.end();\r\n' \
+  '              pass = encoder.beginRenderPass(rpdposition);\r\n' \
+  '              if (show_infos) {pass.executeBundles([rbpanoramaposition[i]]);}\r\n' \
+  '              pass.end();\r\n' \
+  '              pass = encoder.beginRenderPass(rpdpanorama);\r\n' \
+  '              pass.setViewport(Math.round(context_texture.width * i / 4), 0, Math.round(context_texture.width * (i + 1) / 4) - Math.round(context_texture.width * i / 4), context_texture.height, 0, 1);\r\n' \
+  '              pass.executeBundles([rbpanorama]);\r\n' \
+  '              pass.end();\r\n' \
+  '            }\r\n' \
+  '            const angle = rangle * Math.PI / -180;\r\n' \
   '            crangle = Math.cos(angle);\r\n' \
   '            srangle = Math.sin(angle);\r\n' \
-  '            const vmatrix = mat4_zscale(1);\r\n' \
-  '            mat4_mult(mat4_translation(-eposition[0], -eposition[1], trpaces[pace][2] + zoff), vmatrix);\r\n' \
-  '            mat4_mult(mat4_rotation(crangle, srangle), vmatrix);\r\n' \
-  '            mat4_mult(mat4_tilt(ctangle, stangle), vmatrix);\r\n' \
-  '            mat4_mult(mat4_perspective(), vmatrix);\r\n' \
-  '            mat4_flip(vmatrix);\r\n' \
-  '            device.queue.writeBuffer(bviewmatrix, bdynunifstride * i, vmatrix);\r\n' \
-  '            pass = encoder.beginRenderPass(rpdpanoramaview);\r\n' \
-  '            pass.executeBundles([rbpv[i]]);\r\n' \
-  '            pass.end();\r\n' \
-  '            pass = encoder.beginRenderPass(rpdposition);\r\n' \
-  '            if (show_infos) {pass.executeBundles([rbpanoramaposition[i]]);}\r\n' \
-  '            pass.end();\r\n' \
-  '            pass = encoder.beginRenderPass(rpdpanorama);\r\n' \
-  '            pass.setViewport(Math.round(context_texture.width * i / 4), 0, Math.round(context_texture.width * (i + 1) / 4) - Math.round(context_texture.width * i / 4), context_texture.height, 0, 1);\r\n' \
-  '            pass.executeBundles([rbpanorama]);\r\n' \
-  '            pass.end();\r\n' \
   '          }\r\n' \
-  '          const angle = rangle * Math.PI / -180;\r\n' \
-  '          crangle = Math.cos(angle);\r\n' \
-  '          srangle = Math.sin(angle);\r\n' \
   '        } else {\r\n' \
   '          if (modified.has("s")) {\r\n' \
   '            device.queue.writeBuffer(bsunratio, 0, new Float32Array([vfov * canvas.clientHeight / canvas.clientWidth, vfov]));\r\n' \
@@ -19900,7 +19902,7 @@ class GPXTweakerWebInterfaceServer():
   '        device.queue.onSubmittedWorkDone().then(function () {if (--queue[1] == queue_max) {queue[1] = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw(force=false) {\r\n' \
-  '        if (force) {modified.add("v");}\r\n' \
+  '        if (force && queue[1] <= 1) {modified.add("v");}\r\n' \
   '        if (++queue[1] <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      var panorama_init = [init(), null];\r\n' \
