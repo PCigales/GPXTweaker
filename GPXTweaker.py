@@ -18083,10 +18083,10 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        device.queue.onSubmittedWorkDone().then(function () {if (queue[1]-- == queue_max) {canvas_redraw(); queue[1] = queue_max - 1};});\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue[1] == queue_max) {queue[1] = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw() {\r\n' \
-  '        if (queue[1]++ <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
+  '        if (++queue[1] <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
   '      function toggle_filling(mode) {\r\n' \
@@ -19897,11 +19897,11 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        device.queue.onSubmittedWorkDone().then(function () {if (queue[1]-- == queue_max) {canvas_redraw(); queue[1] = queue_max - 1};});\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue[1] == queue_max) {queue[1] = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw(force=false) {\r\n' \
   '        if (force) {modified.add("v");}\r\n' \
-  '        if (queue[1]++ <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
+  '        if (++queue[1] <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      var panorama_init = [init(), null];\r\n' \
   '      panorama_init[0].next();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
