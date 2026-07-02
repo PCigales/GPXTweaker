@@ -17310,7 +17310,7 @@ class GPXTweakerWebInterfaceServer():
   '      var c_msize = null;\r\n' \
   '      var modified = new Set();\r\n' \
   '      const queue_max = 10;\r\n' \
-  '      var queue = [Promise.resolve(null), 0];\r\n'
+  '      var queue = 0;\r\n'
   HTML_3D_WGPU_MAT_TEMPLATE = \
   '      function mat4_mult(p, m) {\r\n' \
   '        const q = m.slice();\r\n' \
@@ -17392,7 +17392,7 @@ class GPXTweakerWebInterfaceServer():
   '          const mlevels = Math.floor(Math.log2(Math.max(mwidth, mheight))) + 1;\r\n' \
   '          function map_complete() {\r\n' \
   '            device.queue.copyExternalImageToTexture({source: cnv2d, flipY: true}, {texture: map_texture, mipLevel: 0, colorSpace: "srgb", premultipliedAlpha: false}, {width: mwidth, height: mheight, depthOrArrayLayers: 1});\r\n' \
-  '            queue[0] = queue[0].then(gen_mipmap);\r\n' \
+  '            device.queue.onSubmittedWorkDone().then(gen_mipmap);\r\n' \
   '          }\r\n' \
   '          function gen_mipmap() {\r\n' \
   '            const encoder = device.createCommandEncoder();\r\n' \
@@ -17407,7 +17407,7 @@ class GPXTweakerWebInterfaceServer():
   '            }\r\n' \
   '            const commands = encoder.finish();\r\n' \
   '            device.queue.submit([commands]);\r\n' \
-  '            return device.queue.onSubmittedWorkDone().then(() => {r_map.nextElementSibling.innerHTML = "{#jtexturemap#}"; r_map.disabled = false;});\r\n' \
+  '            device.queue.onSubmittedWorkDone().then(function() {r_map.nextElementSibling.innerHTML = "{#jtexturemap#}"; r_map.disabled = false;});\r\n' \
   '          }\r\n' \
   '          yield {size: [mwidth, mheight], mipLevelCount: mlevels};\r\n' \
   '          setTimeout(add_row_tile, 1);\r\n' \
@@ -17988,7 +17988,7 @@ class GPXTweakerWebInterfaceServer():
   '        });\r\n' \
   '        window.onresize = (e) => {canvas_resize(); canvas_redraw();};\r\n' \
   '        canvas_resize();\r\n' \
-  '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
+  '        await device.queue.onSubmittedWorkDone();\r\n' \
   '        canvas_redraw();\r\n' \
   '        device.queue.onSubmittedWorkDone().then(cmap.next.bind(cmap));\r\n' \
   '        c_zoom.disabled = false;\r\n' \
@@ -18083,10 +18083,10 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue[1] == queue_max) {queue[1] = queue_max - 1; canvas_redraw();};});\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue == queue_max) {queue = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw() {\r\n' \
-  '        if (++queue[1] <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
+  '        if (++queue <= queue_max) {_canvas_redraw();} else {queue = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
   '      function toggle_filling(mode) {\r\n' \
@@ -19662,7 +19662,7 @@ class GPXTweakerWebInterfaceServer():
   '        eposition = new Float32Array(2);\r\n' \
   '        set_param("p", 0);\r\n' \
   '        set_param("h", 2);\r\n' \
-  '        queue[0] = queue[0].then(device.queue.onSubmittedWorkDone.bind(device.queue));\r\n' \
+  '        await device.queue.onSubmittedWorkDone();\r\n' \
   '        canvas_redraw();\r\n' \
   '        device.queue.onSubmittedWorkDone().then(cmap.next.bind(cmap));\r\n' \
   '        c_tangle.disabled = false;\r\n' \
@@ -19783,7 +19783,6 @@ class GPXTweakerWebInterfaceServer():
   '          bencoder.drawIndexed(bgrinds.size / 4);\r\n' \
   '          rbpanoramaposition.push(bencoder.finish());\r\n' \
   '        }\r\n' \
-  '        return device.queue.onSubmittedWorkDone();\r\n' \
   '      }\r\n' \
   '      function _canvas_redraw() {\r\n' \
   '        const day = Boolean(c_ltangle.valueAsNumber);\r\n' \
@@ -19899,14 +19898,16 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue[1] == queue_max) {queue[1] = queue_max - 1; canvas_redraw();};});\r\n' \
+  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue == queue_max) {queue = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw(force=false) {\r\n' \
-  '        if (force && queue[1] <= 1) {modified.add("v");}\r\n' \
-  '        if (++queue[1] <= queue_max) {queue[0] = queue[0].then(_canvas_redraw);} else {queue[1] = queue_max + 1;}\r\n' \
+  '        if (force) {\r\n' \
+  '          if (queue <= 1) {modified.add("v");} else if (! modified.size) {return;}\r\n' \
+  '        }\r\n' \
+  '        if (++queue <= queue_max) {_canvas_redraw();} else {queue = queue_max + 1;}\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
-  '      var panorama_init = [init(), null];\r\n' \
-  '      panorama_init[0].next();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
+  '      var panorama_init = init();\r\n' \
+  '      panorama_init.next();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
   '      function toggle_filling(mode) {\r\n' \
   '        if (mode == tex_mode) {return;};\r\n' \
   '        tex_mode = mode;\r\n' \
@@ -19932,7 +19933,11 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n' \
-  '      function _toggle_panorama(mode) {\r\n' \
+  '      function toggle_panorama(mode) {\r\n' \
+  '        if (panorama_init) {\r\n' \
+  '          panorama_init.next();\r\n' \
+  '          panorama_init = null;\r\n' \
+  '        }\r\n' \
   '        if (mode == panorama_mode) {return;}\r\n' \
   '        panorama_mode = mode;\r\n' \
   '        if (mode) {\r\n' \
@@ -19961,14 +19966,7 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        canvas_resize();\r\n' \
   '        context.getCurrentTexture();\r\n' \
-  '        canvas_redraw();\r\n' \
-  '      }\r\n' \
-  '      function toggle_panorama(mode) {\r\n' \
-  '        if (panorama_init[0]) {\r\n' \
-  '          panorama_init[1] = panorama_init[0].next();\r\n' \
-  '          panorama_init[0] = null;\r\n' \
-  '        }\r\n' \
-  '        panorama_init[1].then(function () {_toggle_panorama(mode);})\r\n' \
+  '        if (loop_rd === false) {canvas_redraw();}\r\n' \
   '      }\r\n' + HTML_3DS_KEY_MINIMAP_TEMPLATE + \
   '      function toggle_infos() {\r\n' \
   '        if (show_infos) {\r\n' \
@@ -20044,7 +20042,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (e) {\r\n' \
   '          e.preventDefault();\r\n' \
   '          e.stopPropagation();\r\n' \
-  '          queue[0] = queue[0].then(() => _update_infos(e.offsetX, e.offsetY, e.altKey));\r\n' \
+  '          _update_infos(e.offsetX, e.offsetY, e.altKey);\r\n' \
   '        } else {\r\n' \
   '          const plat = (2 * Math.atan(Math.exp((eposition[1] * ppos[0] + ppos[2]) / 6378137)) - Math.PI / 2) * 180 / Math.PI;\r\n' \
   '          const plon = (eposition[0] * ppos[0] + ppos[1]) * 180 / Math.PI / 6378137;\r\n' \
