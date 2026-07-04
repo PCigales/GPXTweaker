@@ -18083,10 +18083,14 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue == queue_max) {queue = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw() {\r\n' \
-  '        if (++queue <= queue_max) {_canvas_redraw();} else {queue = queue_max + 1;}\r\n' \
+  '        if (++queue <= queue_max) {\r\n' \
+  '          _canvas_redraw();\r\n' \
+  '          device.queue.onSubmittedWorkDone().then(function () {if (--queue == queue_max) {queue = queue_max - 1; canvas_redraw();};});\r\n' \
+  '        } else {\r\n' \
+  '          queue = queue_max + 1;\r\n' \
+  '        }\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      init();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
   '      function toggle_filling(mode) {\r\n' \
@@ -19898,13 +19902,17 @@ class GPXTweakerWebInterfaceServer():
   '        const commands = encoder.finish();\r\n' \
   '        device.queue.submit([commands]);\r\n' \
   '        modified.clear();\r\n' \
-  '        device.queue.onSubmittedWorkDone().then(function () {if (--queue == queue_max) {queue = queue_max - 1; canvas_redraw();};});\r\n' \
   '      }\r\n' \
   '      function canvas_redraw(force=false) {\r\n' \
   '        if (force) {\r\n' \
   '          if (queue <= 1) {modified.add("v");} else if (! modified.size) {return;}\r\n' \
   '        }\r\n' \
-  '        if (++queue <= queue_max) {_canvas_redraw();} else {queue = queue_max + 1;}\r\n' \
+  '        if (++queue <= queue_max) {\r\n' \
+  '          _canvas_redraw();\r\n' \
+  '          device.queue.onSubmittedWorkDone().then(function () {if (--queue == queue_max) {queue = queue_max - 1; canvas_redraw();};});\r\n' \
+  '        } else {\r\n' \
+  '          queue = queue_max + 1;\r\n' \
+  '        }\r\n' \
   '      }\r\n' + HTML_3D_ROT_TEMPLATE + \
   '      var panorama_init = init();\r\n' \
   '      panorama_init.next();\r\n' + HTML_3D_TOGGLE_ROT_TEMPLATE + \
@@ -20275,11 +20283,18 @@ class GPXTweakerWebInterfaceServer():
   '        vertical-align: middle;\r\n' \
   '      }\r\n' \
   '      div[id^=media] * {\r\n' \
+  '        position: relative;\r\n' \
   '        display: inline-block;\r\n' \
   '        max-height: 100%;\r\n' \
   '        max-width: 100%;\r\n' \
   '        vertical-align: middle;\r\n' \
   '        object-fit: scale-down;\r\n' \
+  '      }\r\n' \
+  '      #medfs {\r\n' \
+  '        contain: strict;\r\n' \
+  '        height: 0;\r\n' \
+  '        width: 0;\r\n' \
+  '        margin-right: 0px;\r\n' \
   '      }\r\n' \
   '      div[id^=media] img {\r\n' \
   '        image-orientation: from-image;\r\n' \
@@ -22491,6 +22506,10 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '        mview.innerHTML = "";\r\n' \
   '        mview.dataset.sl = "0";\r\n' \
+  '        const dfs = document.createElement("div");\r\n' \
+  '        dfs.id = "medfs";\r\n' \
+  '        dfs.addEventListener("fullscreenchange", function (e) {e.stopPropagation(); if (! document.fullscreenElement) {while (this.firstChild) {this.removeChild(this.firstChild);};};})\r\n' \
+  '        mview.appendChild(dfs);\r\n' \
   '        for (const m of mids.split(",")) {\r\n' \
   '          const med = document.createElement(media_isvid[m]?"video":"img");\r\n' \
   '          const port = mportmin + m % (mportmax + 1 - mportmin);\r\n' \
@@ -22508,7 +22527,27 @@ class GPXTweakerWebInterfaceServer():
   '        }\r\n' \
   '      }\r\n' \
   '      function photo_fs(p) {\r\n' \
-  '        if (document.fullscreenElement) {document.exitFullscreen();} else {p.requestFullscreen();}\r\n' \
+  '        const sc = Boolean(p?.target);\r\n' \
+  '        if (! sc && document.fullscreenElement) {\r\n' \
+  '          document.exitFullscreen();\r\n' \
+  '        } else {\r\n' \
+  '          const dfs = document.getElementById("medfs");\r\n' \
+  '          if (sc) {\r\n' \
+  '            p.stopPropagation();\r\n' \
+  '            const pr = p.deltaY < 0;\r\n' \
+  '            p = this;\r\n' \
+  '            do {\r\n' \
+  '              p = pr ? p.previousElementSibling : p.nextElementSibling;\r\n' \
+  '              if (! p) {return;}\r\n' \
+  '            } while (p?.tagName.toUpperCase() != "IMG")\r\n' \
+  '          } else {\r\n' \
+  '            dfs.requestFullscreen();\r\n' \
+  '          }\r\n' \
+  '          const med = p.cloneNode();\r\n' \
+  '          med.addEventListener("wheel", photo_fs.bind(p), {passive: true});\r\n' \
+  '          while (dfs.firstChild) {dfs.removeChild(dfs.firstChild);}\r\n' \
+  '          dfs.appendChild(med);\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      function switch_mediapreview(other=false) {\r\n' \
   '        const lps = document.getElementById("lpanels").style;\r\n' \
