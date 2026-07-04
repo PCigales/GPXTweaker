@@ -326,6 +326,8 @@ FR_STRINGS = {
     'jexphelp': 'clic-glisse gauche sur la carte pour la faire défiler&#13;&#10;roulette souris sur la carte pour la faire défiler verticalement&#13;&#10;shift + roulette souris sur la carte pour la faire défiler horizontalement&#13;&#10;ctrl + roulette souris sur la carte pour zoomer ou dézoomer&#13;&#10;alt + roulette souris sur la carte pour passer à la trace précédente ou suivante&#13;&#10;clic gauche sur le tracé d\'une trace pour la sélectionner&#13;&#10;clic gauche sur une photo / vidéo pour l\'afficher en grand puis clic gauche sur une photo pour activer / quitter le mode plein écran et clic droit pour revenir à l\'explorateur de traces&#13;&#10;clic droit sur le tracé d\'une trace pour la masquer&#13;&#10;clic milieu / shift + clic milieu sur la carte pour afficher la latitude et la longitude / l\'élévation du curseur (+ctrl pour les / la copier dans le presse-papier)&#13;&#10;survol souris d\'un bouton pour afficher sa légende',
     'jexpgset': 'sélectionner le fournisseur de géocodages',
     'jexpgloc': 'privilégier la zone affichée',
+    'jexpswaypoints': 'Points de cheminement',
+    'jexpsmedia': 'Photos et vidéos',
     'jexpgdec': 'minimiser',
     'jexpginc': 'restaurer',
     'jhelp3d': 'survol souris de la mini-carte pour afficher sa légende&#13;&#10;clic sur la vue 3d puis :&#13;&#10;flèche haut / bas ou roulette souris pour avancer / reculer&#13;&#10;flèche gauche / droite ou clic-glisse horizontal pour pivoter sur la gauche / droite&#13;&#10;page précédente / suivante  ou clic-glisse vertical pour incliner vers le haut / bas&#13;&#10;+shift pour accélérer le mouvement&#13;&#10;suppression ou clic roulette pour activer / désactiver la rotation automatique avec la progression&#13;&#10;insertion pour retirer l\'inclinaison&#13;&#10;moins / plus pour abaisser / élever la vue&#13;&#10;entrée ou, directement, double-clic pour activer / quitter le mode plein écran',
@@ -448,11 +450,12 @@ FR_STRINGS = {
     'jmdup1': 'Duplication en cours...',
     'jmdup2': 'Duplication effectuée',
     'jmdup3': 'Échec de la duplication',
-    'jmsearchno': 'Aucun fournisseur de géocodages configuré',
     'jmsearchshort': 'Chaîne de requête trop courte (au moins deux caractères requis)',
     'jmsearch1': 'Récupération des lieux en cours...',
     'jmsearch2': 'Lieux récupérés: %s',
     'jmsearch3': 'Échec de la récupération des lieux',
+    'jmsearch4': 'Points de cheminement trouvés: %s',
+    'jmsearch5': 'Photos et vidéos trouvées: %s',
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jzscale': 'Échelle Z:',
@@ -775,6 +778,8 @@ EN_STRINGS = {
     'jexphelp': 'left click-drag on the map to scroll it&#13;&#10;mouse wheel on the map to scroll it vertically&#13;&#10;shift + mouse wheel on the map to scroll it horizontally&#13;&#10;ctrl + mouse wheel on the map to zoom in or out&#13;&#10;alt + mouse wheel on the map to switch to the previous or the next track&#13;&#10;left click on the plot of a track to select it&#13;&#10;right click on the plot of a track to hide it&#13;&#10;left click on a photo / video to display it big then left click on a photo to toggle the fullscreen mode and right click to go back to the tracks explorer&#13;&#10;middle click / shift + middle click on the map to display the latitude and longitude / the elevation of the cursor (+ctrl to copy them / it to the clipboard)&#13;&#10;mouse over a button to display its legend',
     'jexpgset': 'select the geocodings provider',
     'jexpgloc': 'favor the displayed area',
+    'jexpswaypoints': 'Waypoints',
+    'jexpsmedia': 'Photos and videos',
     'jexpgdec': 'minimize',
     'jexpginc': 'restore',
     'jhelp3d': 'mouse over the mini-map to display its legend&#13;&#10;click on the 3d view then :&#13;&#10;arrow up / down or mouse wheel to move forward / backward&#13;&#10;arrow left / right or horizontal click-drag to rotate left / right&#13;&#10;page up / down or vertical click-drag to tilt up / down&#13;&#10;+shift to accelerate the move&#13;&#10;delete or wheel click to toggle the automatic rotation with the progression&#13;&#10;insertion to remove the tilt&#13;&#10;minus / plus to lower / raise the view&#13;&#10;enter or, directly, double-click to toggle the fullscreen mode',
@@ -893,11 +898,12 @@ EN_STRINGS = {
     'jmdup1': 'Duplication in progress...',
     'jmdup2': 'Duplication completed',
     'jmdup3': 'Failure of the duplication',
-    'jmsearchno': 'No geocodings provider configured',
     'jmsearchshort': 'Query string too short (at least two characters required)',
     'jmsearch1': 'Retrieval of the places in progress...',
     'jmsearch2': 'Places retrieved: %s',
     'jmsearch3': 'Failure of the retrieval of the places',
+    'jmsearch4': 'Waypoints found: %s',
+    'jmsearch5': 'Photos and videos found: %s',
     'jm3dviewer1': 'Loading of the 3D viewer in progress...',
     'jm3dviewer2': '3D viewer started',
     'jm3dviewer3': 'Failure of the loading of the 3D viewer',
@@ -20324,7 +20330,7 @@ class GPXTweakerWebInterfaceServer():
   '      #searchform {\r\n' \
   '        display: inline-block;\r\n' \
   '        width: 54em;\r\n' \
-  '        max-width: calc(100% - 23.5em - 15px);\r\n' \
+  '        max-width: calc(100% - 24.5em - 15px);\r\n' \
   '        padding-top: 3px;\r\n' \
   '        white-space: nowrap;\r\n' \
   '      }\r\n' \
@@ -20355,7 +20361,7 @@ class GPXTweakerWebInterfaceServer():
   '        display: inline-block;\r\n' \
   '        right: calc(2em + 15px);\r\n' \
   '        top: 3px;\r\n' \
-  '        width: 14em;\r\n' \
+  '        width: 15em;\r\n' \
   '        height: 1.7em;\r\n' \
   '        font-size: 102%;\r\n' \
   '      }\r\n' \
@@ -22946,9 +22952,10 @@ class GPXTweakerWebInterfaceServer():
   '        if (plcs.length == 0) {\r\n' \
   '          return 0;\r\n' \
   '        }\r\n' \
+  '        const iswm = t.wm;\r\n' \
   '        pls = [];\r\n' \
   '        for (let p=0; p<plcs.length; p++) {\r\n' \
-  '          const wm = WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
+  '          const wm = iswm ? [plcs[p][0], plcs[p][1]] : WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {continue;}\r\n' \
   '          const pl = places.firstElementChild.cloneNode(true);\r\n' \
   '          pls.push(pl);\r\n' \
@@ -22963,31 +22970,80 @@ class GPXTweakerWebInterfaceServer():
   '        places.append(...pls);\r\n' \
   '        return pls.length;\r\n' \
   '      }\r\n' \
+  '      function norm_mediauri(mediauri) {\r\n' \
+  '        return mediauri.trim().toLowerCase().normalize("NFD").replace(/\\p{Mn}/gu, "").replace(/([^\\p{L}\\p{N}\\\\])+/ug," ");\r\n' \
+  '      }\r\n' \
   '      function search_place() {\r\n' \
-  '        let gset = document.getElementById("gset");\r\n' \
-  '        gset = gset.options.length > 0 ? gset.selectedIndex : -1;\r\n' \
-  '        if (gset < 0) {show_msg("{#jmsearchno#}", 10); return;}\r\n' \
+  '        const gset = document.getElementById("gset").selectedIndex;\r\n' \
+  '        const gsetl = document.getElementById("gset").options.length;\r\n' \
   '        const squery = document.getElementById("squery").value;\r\n' \
-  '        if (squery.length < 2) {show_msg("{#jmsearchshort#}", 10); return;}\r\n' \
-  '        const b = {"query": squery};\r\n' \
-  '        if (document.getElementById("gloc").checked) {\r\n' \
-  '          [b.maxlat, b.minlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)));\r\n' \
-  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.offsetWidth - hpx) * tscale / zoom)), Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.offsetHeight) * tscale / zoom)));\r\n' \
-  '          b.lat = (b.minlat + b.maxlat) / 2;\r\n' \
-  '          b.lon = (b.minlon + b.maxlon) / 2;\r\n' \
+  '        const gloc = document.getElementById("gloc").checked;\r\n' \
+  '        const minx = gloc ? Math.min(vmaxx, Math.max(vminx, htopx - hpx * tscale / zoom)) : vminx;\r\n' \
+  '        const maxx = gloc ? Math.min(vmaxx, Math.max(vminx, htopx + (viewpane.offsetWidth - hpx) * tscale / zoom)) : vmaxx;\r\n' \
+  '        const miny = gloc ? Math.min(vmaxy, Math.max(vminy, htopy + (hpy - viewpane.offsetHeight) * tscale / zoom)) : vminy;\r\n' \
+  '        const maxy = gloc ? Math.min(vmaxy, Math.max(vminy, htopy + hpy * tscale / zoom)) : vmaxy;\r\n' \
+  '        if (gset == gsetl - 2) {\r\n' \
+  '          const sq = norm_trackname(squery);\r\n' \
+  '          const trks = document.getElementById("tracksform").children;\r\n' \
+  '          const response = [];\r\n' \
+  '          for (const trk of trks) {\r\n' \
+  '            if (trk.firstElementChild.checked) {\r\n' \
+  '              const trkid = trk.id.slice(5, -4);\r\n' \
+  '              const trkname = document.getElementById("track" + trkid + "name").value;\r\n' \
+  '              const wpts = document.getElementById("waydots" + trkid);\r\n' \
+  '              const wptsox = htopx + prop_to_wmvalue(wpts.style.left);\r\n' \
+  '              const wptsoy = htopy - prop_to_wmvalue(wpts.style.top);\r\n' \
+  '              for (const wpt of wpts.getElementsByTagName("circle")) {\r\n' \
+  '                const wptname = wpt.getElementsByTagName("title")[0].textContent;\r\n' \
+  '                if (norm_trackname(wptname).indexOf(sq) >= 0) {\r\n' \
+  '                  const wptx = wptsox + parseFloat(wpt.getAttribute("cx"));\r\n' \
+  '                  const wpty = wptsoy - parseFloat(wpt.getAttribute("cy"));\r\n' \
+  '                  if (wptx >= minx && wptx <= maxx && wpty >= miny && wpty <= maxy) {\r\n' \
+  '                    response.push([wptx, wpty, `${wptname} [${trkname}]`]);\r\n' \
+  '                  }\r\n' \
+  '                }\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          show_msg("{#jmsearch4#}".replace("%s", load_gcb({status: 200, response: JSON.stringify(response), wm: true})), 2);\r\n' \
+  '        } else if (gset == gsetl - 1) {\r\n' \
+  '          if (! media_uri_dt) {return;}\r\n' \
+  '          const sq = norm_mediauri(squery);\r\n' \
+  '          const nm = media_gps_ar.length / 3;\r\n' \
+  '          const response = [];\r\n' \
+  '          for (let m=0; m<nm; m++) {\r\n' \
+  '            const [muri, mdt] = media_uri_dt[m].split("\\r\\n");\r\n' \
+  '            if (norm_mediauri(muri).indexOf(sq) >= 0) {\r\n' \
+  '              const mx = media_gps_ar[3 * m];\r\n' \
+  '              const my = media_gps_ar[3 * m + 1];\r\n' \
+  '              if (mx >= minx && mx <= maxx && my >= miny && my <= maxy) {\r\n' \
+  '                response.push([mx, my, `${muri} [${mdt}]`]);\r\n' \
+  '              }\r\n' \
+  '            }\r\n' \
+  '          }\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          show_msg("{#jmsearch5#}".replace("%s", load_gcb({status: 200, response: JSON.stringify(response), wm: true})), 2);\r\n' \
   '        } else {\r\n' \
-  '          [b.maxlat, b.minlon] = WebMercatortoWGS84(vminx, vmaxy);\r\n' \
-  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(vmaxx, vminy);\r\n' \
-  '          b.lat = b.lon = "";\r\n' \
+  '          if (squery.length < 2) {show_msg("{#jmsearchshort#}", 10); return;}\r\n' \
+  '          const b = {"query": squery};\r\n' \
+  '          [b.maxlat, b.minlon] = WebMercatortoWGS84(minx, maxy);\r\n' \
+  '          [b.minlat, b.maxlon] = WebMercatortoWGS84(maxx, miny);\r\n' \
+  '          if (gloc) {\r\n' \
+  '            b.lat = (b.minlat + b.maxlat) / 2;\r\n' \
+  '            b.lon = (b.minlon + b.maxlon) / 2;\r\n' \
+  '          } else {\r\n' \
+  '            b.lat = b.lon = "";\r\n' \
+  '          }\r\n' \
+  '          const xhrg = new XMLHttpRequest();\r\n' \
+  '          const msgn = show_msg("{#jmsearch1#}", 0);\r\n' \
+  '          xhrg.onerror = (e) => {error_gcb; show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
+  '          xhrg.onload = (e) => {const np = load_gcb(e.target); np != null ? show_msg("{#jmsearch2#}".replace("%s", np), 2, msgn) : show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
+  '          xhrg.open("POST", "/geocoding?gset=" + encodeURIComponent(gset.toString()));\r\n' \
+  '          xhrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
+  '          xhr_ongoing++;\r\n' \
+  '          xhrg.send(JSON.stringify(b));\r\n' \
   '        }\r\n' \
-  '        const xhrg = new XMLHttpRequest();\r\n' \
-  '        const msgn = show_msg("{#jmsearch1#}", 0);\r\n' \
-  '        xhrg.onerror = (e) => {error_gcb; show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
-  '        xhrg.onload = (e) => {const np = load_gcb(e.target); np != null ? show_msg("{#jmsearch2#}".replace("%s", np), 2, msgn) : show_msg("{#jmsearch3#}", 10, msgn);};\r\n' \
-  '        xhrg.open("POST", "/geocoding?gset=" + encodeURIComponent(gset.toString()));\r\n' \
-  '        xhrg.setRequestHeader("Content-Type", "application/octet-stream");\r\n' \
-  '        xhr_ongoing++;\r\n' \
-  '        xhrg.send(JSON.stringify(b));\r\n' \
   '      }\r\n' \
   '      function target_place(place) {\r\n' \
   '        const xy = place.value.split(",").map(Number);\r\n' \
@@ -23119,7 +23175,7 @@ class GPXTweakerWebInterfaceServer():
   '          <input type="text" id="squery" name="searchquery" autocomplete="off" list="searchqueryhistory" value="" onfocus="(! navigator_firefox)?this.setAttribute(\'list\', \'searchqueryhistory\'):null" onblur="(! navigator_firefox)?this.setAttribute(\'list\', \'\'):null"><datalist id="searchqueryhistory"></datalist><button onclick="this.parentNode.firstElementChild.blur();input_history(this.parentNode.firstElementChild);search_place();return false;">&#128269;&#xfe0e;</button>\r\n' \
   '        </form>\r\n' \
   '        <input type="checkbox" id="gloc" checked><label for="gloc" title="{#jexpgloc#}">&#128437;</label>\r\n' \
-  '        <select id="gset" name="gset" title="{#jexpgset#}" autocomplete="off">##GSETS##</select>\r\n' \
+  '        <select id="gset" name="gset" title="{#jexpgset#}" autocomplete="off">##GSETS##<option value="Waypoints">{#jexpswaypoints#}</option><option value="Media">{#jexpsmedia#}</option></select>\r\n' \
   '        <button id="spdec" title="{#jexpgdec#}" onclick="resize_spanel(-1)">&darr;</button><button id="spinc" title="{#jexpginc#}" onclick="resize_spanel(1)">&uarr;</button>\r\n' \
   '        <form id="places" onsubmit="return false" onchange="target_place(event.target)" onreset="this.elements.place.value?set_target():null">\r\n' \
   '          <div id="plcont">\r\n' \
