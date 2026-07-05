@@ -20304,6 +20304,10 @@ class GPXTweakerWebInterfaceServer():
   '        width: 0;\r\n' \
   '        margin-right: 0px;\r\n' \
   '      }\r\n' \
+  '      #medfs * {\r\n' \
+  '        width: 100%;\r\n' \
+  '        height: 100%;\r\n' \
+  '      }\r\n' \
   '      div[id^=media] img {\r\n' \
   '        image-orientation: from-image;\r\n' \
   '        cursor: nesw-resize;\r\n' \
