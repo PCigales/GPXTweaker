@@ -456,6 +456,7 @@ FR_STRINGS = {
     'jmsearch3': 'Échec de la récupération des lieux',
     'jmsearch4': 'Points de cheminement trouvés: %s',
     'jmsearch5': 'Photos et vidéos trouvées: %s',
+    'jmsearch6': 'Les photos et vidéos doivent d\'abord être chargées',
     'jtilt': 'Inclinaison:',
     'jrotation': 'Rotation:',
     'jzscale': 'Échelle Z:',
@@ -904,6 +905,7 @@ EN_STRINGS = {
     'jmsearch3': 'Failure of the retrieval of the places',
     'jmsearch4': 'Waypoints found: %s',
     'jmsearch5': 'Photos and videos found: %s',
+    'jmsearch6': 'The photos and videos have to be loaded first',
     'jm3dviewer1': 'Loading of the 3D viewer in progress...',
     'jm3dviewer2': '3D viewer started',
     'jm3dviewer3': 'Failure of the loading of the 3D viewer',
@@ -22940,22 +22942,24 @@ class GPXTweakerWebInterfaceServer():
   '        xhr_ongoing--;\r\n' \
   '      }\r\n' \
   '      function load_gcb(t) {\r\n' \
-  '        xhr_ongoing--;\r\n' \
-  '        if (t.status != 200) {\r\n' \
-  '          return null;\r\n' \
+  '        const loc = t.status === true;\r\n' \
+  '        if (! loc) {\r\n' \
+  '          xhr_ongoing--;\r\n' \
+  '          if (t.status != 200) {\r\n' \
+  '            return null;\r\n' \
+  '          }\r\n' \
   '        }\r\n' \
   '        const places = document.getElementById("plcont");\r\n' \
   '        let pls = Array.from(places.getElementsByTagName("div"));\r\n' \
   '        for (let p=1; p<pls.length; p++) {places.removeChild(pls[p]);}\r\n' \
   '        set_target();\r\n' \
-  '        const plcs = JSON.parse(t.response);\r\n' \
+  '        const plcs = loc ? t.response : JSON.parse(t.response);\r\n' \
   '        if (plcs.length == 0) {\r\n' \
   '          return 0;\r\n' \
   '        }\r\n' \
-  '        const iswm = t.wm;\r\n' \
   '        pls = [];\r\n' \
   '        for (let p=0; p<plcs.length; p++) {\r\n' \
-  '          const wm = iswm ? [plcs[p][0], plcs[p][1]] : WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
+  '          const wm = loc ? [plcs[p][0], plcs[p][1]] : WGS84toWebMercator(plcs[p][0], plcs[p][1]);\r\n' \
   '          if (wm[0] <= vminx || wm[0] >= vmaxx || wm[1] <= vminy || wm[1] >= vmaxy) {continue;}\r\n' \
   '          const pl = places.firstElementChild.cloneNode(true);\r\n' \
   '          pls.push(pl);\r\n' \
@@ -22965,13 +22969,13 @@ class GPXTweakerWebInterfaceServer():
   '          elt.value = (wm[0] - htopx).toFixed(2) + "," + (htopy - wm[1]).toFixed(2);\r\n' \
   '          elt = elt.nextElementSibling;\r\n' \
   '          elt.htmlFor += ps;\r\n' \
-  '          elt.innerHTML = plcs[p][2];\r\n' \
+  '          elt.innerHTML = escape(plcs[p][2]);\r\n' \
   '        }\r\n' \
   '        places.append(...pls);\r\n' \
   '        return pls.length;\r\n' \
   '      }\r\n' \
   '      function norm_mediauri(mediauri) {\r\n' \
-  '        return mediauri.trim().toLowerCase().normalize("NFD").replace(/\\p{Mn}/gu, "").replace(/([^\\p{L}\\p{N}\\\\])+/ug," ");\r\n' \
+  '        return mediauri.trim().toLowerCase().normalize("NFD").replace(/\\p{Mn}/gu, "").replace(/([^\\p{L}\\p{N}\\\\\\.:])+/ug," ");\r\n' \
   '      }\r\n' \
   '      function search_place() {\r\n' \
   '        const gset = document.getElementById("gset").selectedIndex;\r\n' \
@@ -23005,25 +23009,27 @@ class GPXTweakerWebInterfaceServer():
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          xhr_ongoing++;\r\n' \
-  '          show_msg("{#jmsearch4#}".replace("%s", load_gcb({status: 200, response: JSON.stringify(response), wm: true})), 2);\r\n' \
+  '          show_msg("{#jmsearch4#}".replace("%s", load_gcb({status: true, response})), 2);\r\n' \
   '        } else if (gset == gsetl - 1) {\r\n' \
-  '          if (! media_uri_dt) {return;}\r\n' \
+  '          if (! media_uri_dt) {show_msg("{#jmsearch6#}", 10); return;}\r\n' \
   '          const sq = norm_mediauri(squery);\r\n' \
+  '          const isp = sq.indexOf(":") >= 0 || sq.indexOf("\\\\") >= 0;\r\n' \
   '          const nm = media_gps_ar.length / 3;\r\n' \
   '          const response = [];\r\n' \
   '          for (let m=0; m<nm; m++) {\r\n' \
   '            const [muri, mdt] = media_uri_dt[m].split("\\r\\n");\r\n' \
-  '            if (norm_mediauri(muri).indexOf(sq) >= 0) {\r\n' \
+  '            const msp = muri.lastIndexOf("\\\\");\r\n' \
+  '            const mname = muri.substring(msp + 1);\r\n' \
+  '            const mdir = muri.substring(0, msp);\r\n' \
+  '            if (norm_mediauri(isp ? muri : mname).indexOf(sq) >= 0) {\r\n' \
   '              const mx = media_gps_ar[3 * m];\r\n' \
   '              const my = media_gps_ar[3 * m + 1];\r\n' \
   '              if (mx >= minx && mx <= maxx && my >= miny && my <= maxy) {\r\n' \
-  '                response.push([mx, my, `${muri} [${mdt}]`]);\r\n' \
+  '                response.push([mx, my, `${mname} <${mdir}> [${mdt}]`]);\r\n' \
   '              }\r\n' \
   '            }\r\n' \
   '          }\r\n' \
-  '          xhr_ongoing++;\r\n' \
-  '          show_msg("{#jmsearch5#}".replace("%s", load_gcb({status: 200, response: JSON.stringify(response), wm: true})), 2);\r\n' \
+  '          show_msg("{#jmsearch5#}".replace("%s", load_gcb({status: true, response})), 2);\r\n' \
   '        } else {\r\n' \
   '          if (squery.length < 2) {show_msg("{#jmsearchshort#}", 10); return;}\r\n' \
   '          const b = {"query": squery};\r\n' \
