@@ -23178,7 +23178,7 @@ class GPXTweakerWebInterfaceServer():
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
   '    <div id="lpanels" style="--panel:none;">\r\n' + HTML_GRAPH_TEMPLATE + \
-  '      <div id="mediapreview" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
+  '      <div id="mediapreview" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="event.stopPropagation();event.preventDefault();" onwheel="if (! (event.ctrlKey || event.altKey || event.shiftKey || event.deltaX)) {event.stopPropagation();event.preventDefault();this.scrollLeft+=event.deltaY;}">\r\n' \
   '      </div>\r\n' \
   '      <div id="searchpanel" onclick="event.target.id==\'searchpanel\'?document.getElementById(\'places\').reset():null" oncontextmenu="event.stopPropagation();event.preventDefault();">\r\n' \
   '        <form id="searchform" onsubmit="this.firstElementChild.blur();input_history(this.firstElementChild);search_place();return false;">\r\n' \
@@ -23252,7 +23252,7 @@ class GPXTweakerWebInterfaceServer():
   '        </form>\r\n' \
   '      </div>\r\n' \
   '    </div>\r\n' \
-  '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" >\r\n' \
+  '    <div id="mediaview" style="display:none;" onscroll="if (! document.fullscreen) {this.dataset.sl=this.scrollLeft.toString();}" oncontextmenu="close_mediaview(event);" onwheel="if (! (event.ctrlKey || event.altKey || event.shiftKey || event.deltaX)) {event.stopPropagation();event.preventDefault();this.scrollLeft+=2*event.deltaY;}">\r\n' \
   '    </div>\r\n' \
   '    <script>\r\n' \
   '      var mousex = null;\r\n' \
