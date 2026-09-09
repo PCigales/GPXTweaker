@@ -1,4 +1,4 @@
-# GPXTweaker v1.19.4 (https://github.com/PCigales/GPXTweaker)
+# GPXTweaker v1.19.5 (https://github.com/PCigales/GPXTweaker)
 # Copyright © 2022 PCigales
 # This program is licensed under the GNU GPLv3 copyleft license (see https://www.gnu.org/licenses)
 
@@ -6741,6 +6741,10 @@ class WGS84Track(WGS84WebMercator):
   def WebMercatorPts(self):
     self._WebMercatorPts = None
 
+  @property
+  def NbGPXTrks(self):
+    return None if self.Track is None else len(self.Track.documentElement.getChildren('trk'))
+
   def _XMLNewNode(self, localname, uri, prefix=None):
     return XMLElement(self.intern(prefix + ':' + localname, prefix + ':' + localname) if prefix is not None else self.intern(localname, localname), self.intern(uri, uri), self.intern(localname, localname))
 
@@ -7811,6 +7815,7 @@ class ThreadedDualStackServer(socketserver.ThreadingTCPServer):
 
   allow_reuse_address = True
   block_on_close = False
+  request_queue_size = 64
 
   def __init__(self, server_info, port, *args, **kwargs):
     self.address_family, server_address = server_info[::4]
@@ -8966,7 +8971,7 @@ class GPXLoader():
               if trck.Track is None:
                 gaborted += 1
               else:
-                for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
+                for trk in range(1, trck.NbGPXTrks):
                   trck.log(0, 'lerror', uri + (' <%s>' % trk))
                 with gindex.get_lock():
                   print(*LogBuffer, sep='\r\n')
@@ -8994,7 +8999,7 @@ class GPXLoader():
               print(*LogBuffer, sep='\r\n')
             LogBuffer.clear()
           if nbtrk == 1:
-            nbtrk = len(track.Track.documentElement.getChildren('trk'))
+            nbtrk = track.NbGPXTrks
           trk += 1
         else:
           if not gtracks.get(ind):
@@ -24633,7 +24638,7 @@ class GPXTweakerWebInterfaceServer():
                 if trck.Track is None:
                   gaborted += 1
                 else:
-                  for trk in range(1, len(trck.Track.documentElement.getChildren('trk'))):
+                  for trk in range(1, trck.NbGPXTrks):
                     trck.log(0, 'lerror', u + (' <%s>' % trk))
                   taborted += trk + 1
                   trk = 0
@@ -24665,7 +24670,7 @@ class GPXTweakerWebInterfaceServer():
               self.TracksBoundaries.append((minlat, maxlat, minlon, maxlon))
           if uri is None:
             if nbtrk is None:
-              nbtrk = len(track.Track.documentElement.getChildren('trk'))
+              nbtrk = track.NbGPXTrks
             trk += 1
             if trk >= nbtrk:
               trk = 0
