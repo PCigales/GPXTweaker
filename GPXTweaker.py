@@ -6618,6 +6618,39 @@ class ExpatGPXBuilder:
     self.CurText = ''
 
 
+class ExpatGPXSummaryBuilder(ExpatGPXBuilder):
+
+  def __init__(self):
+    super().__init__()
+    self.depth = 0
+
+  def StartElementHandler(self, name, attributes):
+    if self.depth <= 2:
+      super().StartElementHandler(name, attributes)
+    self.depth += 1
+
+  def EndElementHandler(self, name):
+    if self.depth <= 3:
+      super().EndElementHandler(name)
+    self.depth -= 1
+
+  def CharacterDataHandler(self, data):
+    if self.depth <= 3:
+      super().CharacterDataHandler(data)
+
+  def StartNamespaceDeclHandler(self, prefix, uri):
+    if self.depth <= 2:
+      super().StartNamespaceDeclHandler(prefix, uri)
+
+  def EndNamespaceDeclHandler(self, prefix):
+    if self.depth <= 2:
+      super().EndNamespaceDeclHandler(prefix)
+
+  def CommentHandler(self, data):
+    if self.depth <= 3:
+      super().CommentHandler(data)
+
+
 class GCManager():
 
   def __init__(self):
@@ -7463,6 +7496,353 @@ class WGS84Track(WGS84WebMercator):
       GCMan.restore()
     self.OTrack = self.Track
     return self, (nuri or True)
+
+
+class WGS84PropertiesTrack:
+
+  def __init__(self):
+    self._tracks = [None]
+    self.TrkId = None
+    self.Name = None
+    self.Desc = None
+    self.Wpts = None
+    self.NSegs = None 
+    self.NPts = None 
+    self.Start = None
+    self.End = None
+    self.Dur = None
+    self.Dist = None
+    self.EGain = None
+    self.AGain = None
+    self.intern_dict = None
+    self.intern = None
+
+  def unlink(self, track):
+    if track is not None:
+      try:
+        track.unlink()
+      except:
+        pass
+
+  @property
+  def Track(self):
+    return self._tracks[0]
+
+  @Track.setter
+  def Track(self, value):
+    self._tracks[0] = value
+
+  @Track.deleter
+  def Track(self):
+    self.unlink(self._tracks[0])
+    self._tracks[0] = None
+
+  @property
+  def NbGPXTrks(self):
+    return None if self.Track is None else len(self.Track.documentElement.getChildren('trk'))
+
+  @property
+  def Dist_r(self):
+    fround = lambda v: r if (v - (r := math.floor(v)) < 0.5) else r + 1
+    return None if self.Dist is None else fround(fround(self.Dist) / 10) / 100
+
+  @property
+  def EGain_r(self):
+    fround = lambda v: r if (v - (r := math.floor(v)) < 0.5) else r + 1
+    return None if self.EGain is None else fround(fround(self.EGain * 1000) / 1000)
+
+  @property
+  def AGain_r(self):
+    fround = lambda v: r if (v - (r := math.floor(v)) < 0.5) else r + 1
+    return None if self.AGain is None else fround(fround(self.AGain * 1000) / 1000)
+
+  def ProcessGPX(self, mode='s', egthreshold=10, agthreshold=5, smdrange=10, sldrange=80, slmax=100):
+    try:
+      r = self.Track.documentElement
+      trk = r.getChildren('trk')[self.TrkId]
+      if mode in ('s', 'f'):
+        if self.Wpts is None:
+          self.Wpts = tuple(' '.join(pt.getChildrenText('name').splitlines()) for pt in r.getChildren('wpt'))
+        self.Name = ' '.join(trk.getChildrenText('name').splitlines())
+        self.Desc = '\r\n'.join(trk.getChildrenText('desc').splitlines())
+        tsegs = trk.getChildren('trkseg')
+        self.NSegs = len(tsegs)
+        self.NPts = sum(len(seg.getChildren('trkpt')) for seg in tsegs)
+      if mode != 'f':
+        return True
+      rns = r.namespaceURI
+      tnode = (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE)
+      alat = (XMLNode.EMPTY_NAMESPACE, 'lat')
+      alon = (XMLNode.EMPTY_NAMESPACE, 'lon')
+      tstart = tend = tdur = tdist = tegain = tagain = None
+      slmax /= 100
+      sldrange /= 2
+      for seg in tsegs:
+        spts = seg.getChildren('trkpt')
+        if (l := len(spts)) == 0:
+          continue
+        sxs = []
+        sys = []
+        sgs = []
+        sss = []
+        dur = dist = egain = again = 0
+        er = eb = ar = ab = None
+        eg = ag = ''
+        ec = ac = None
+        hp = None
+        tf = ts = te = None
+        for pt in spts:
+          e = a = t = ''
+          for c in pt.childNodes:
+            if c.namespaceURI == rns:
+              if (cln := c.localName) == 'ele':
+                for cc in c.childNodes:
+                  if cc.nodeType in tnode:
+                    e += cc.data
+              elif cln == 'time':
+                for cc in c.childNodes:
+                  if cc.nodeType in tnode:
+                    t += cc.data
+              elif cln == 'extensions':
+                for cc in c.childNodes:
+                  if cc.namespaceURI == self.MT_NAMESPACE and cc.localName == 'ele_alt':
+                    for ccc in cc.childNodes:
+                      if ccc.nodeType in tnode:
+                        a += ccc.data
+          lat = float(pt.attributes[alat][1])
+          lon = float(pt.attributes[alon][1])
+          ch = lat * lon * 0
+          if (e := e.strip() or None):
+            ch *= (e := float(e))
+          if (a := a.strip() or None):
+            ch *= (a := float(a))
+          if ch:
+            raise
+          px, py = WGS84Track.WGS84toWebMercator(lat, lon)
+          sxs.append(px)
+          sys.append(py)
+          if e is not None:
+            if eb is None:
+              er = eb = e
+            if (de := e - eb) > 0:
+              egain += de
+            if e >= er and eg == '+':
+              er = eb = e
+            elif e > er + egthreshold:
+              er = eb = e
+              eg = '+'
+              ec = None
+            elif (e <= er and eg == '-') or e < er - egthreshold:
+              if ec is not None:
+                egain = ec
+                ec = None
+              er = eb = e
+              eg = '-'
+            elif e > eb:
+              eb = e
+              if ec is None:
+                ec = egain - de
+          h = e
+          if a is not None:
+            if ab is None:
+              ar = ab = a
+            if (da := a - ab) > 0:
+              again += da
+            if a >= ar and ag == '+':
+              ar = ab = a
+            elif a > ar + agthreshold:
+              ar = ab = a
+              ag = '+'
+              ac = None
+            elif (a <= ar and ag == '-') or a < ar - agthreshold:
+              if ac is not None:
+                again = ac
+                ac = None
+              ar = ab = a
+              ag = '-'
+            elif a > ab:
+              ab = a
+              if ac is None:
+                ac = again - da
+            h = a
+          if h is not None:
+            if hp is None:
+              for i in range(len(sss)):
+                sss[i] = h
+            hp = h
+          else:
+            h = hp or 0
+          sss.append(h)
+          if (t := t.strip()):
+            t = datetime.fromisoformat(t).timestamp()
+            if tf is None:
+              tf = te = ts = t
+            dur = max(dur, t - tf)
+            if t > te:
+              te = t
+            elif t < ts:
+              ts = t
+        if ec is not None:
+          egain = ec
+        if ac is not None:
+          again = ac
+        my = (min(sys) + max(sys)) / 2
+        smdrangec = smdrange * (math.exp(my / 6378137) + math.exp(- my / 6378137)) / 2
+        dirx = diry = None
+        for p in range(1, l):
+          pdirx = (x := sxs[p]) - (xp := sxs[p - 1])
+          pdiry = (y := sys[p]) - (yp := sys[p - 1])
+          if (pdirl := math.sqrt(pdirx * pdirx + pdiry * pdiry)) <= smdrangec:
+            ndirx = pdirx
+            ndiry = pdiry
+            d = 0
+            for pn in range(p + 1, l):
+              d += math.dist((x, y), ((x := sxs[pn]), (y := sys[pn])))
+              if d > smdrangec:
+                break
+              ndirx += x - xp
+              ndiry += y - yp
+            if (ndirl := math.sqrt(ndirx * ndirx + ndiry * ndiry)) > 0:
+              ndirx /= ndirl
+              ndiry /= ndirl
+              if dirx is None:
+                dirx = ndirx
+                diry = ndiry
+              if pdirl > 0:
+                pdirx /= pdirl
+                pdiry /= pdirl
+                ncos = dirx * ndirx + diry * ndiry
+                pcos = dirx * pdirx + diry * pdiry
+                npcos = ndirx * pdirx + ndiry * pdiry
+                if npcos < ncos * pcos:
+                  if pcos < 0:
+                    if ncos < 0:
+                      pdirl = min(-pdirl * pcos, -ndirl * ncos)
+                      dirx = -dirx
+                      diry = -diry
+                    else:
+                      pdirl = 0
+                  else:
+                    pdirl *= pcos
+                  sxs[p] = xp + pdirl * dirx
+                  sys[p] = yp + pdirl * diry
+                elif ncos > pcos:
+                  pdirl = max(0, pdirl * npcos)
+                  sxs[p] = xp + pdirl * ndirx
+                  sys[p] = yp + pdirl * ndiry
+                  dirx = ndirx
+                  diry = ndiry
+                else:
+                  dirx = pdirx
+                  diry = pdiry
+          else:
+            dirx = pdirx / pdirl
+            diry = pdiry / pdirl
+          sgs.append(pdirl * 2 / ((a := math.exp((sys[p] + yp) / 12756274)) + 1 / a))
+        slope = lambda gd, dh: dh / gd if gd > 0 else slmax * (0 if dh == 0 else (1 if dh > 0 else -1))
+        for p in range(l):
+          hs = sss[p]
+          sl = 0
+          b = False
+          ge = gp = 0
+          for ps in range(p + 1, l):
+            ge += (g := sgs[ps - 1])
+            if ge > sldrange and b:
+              break
+            if ge == 0:
+              continue
+            b = True
+            sl += slope(ge, (h := sss[ps]) - hs) * g
+            gp = ge
+          if p < l - 1:
+            sl = (sl + slope(gp, h - hs) * (sldrange - gp)) / sldrange
+          sss[p] = max(min(sl, slmax), -slmax)
+        for p in range(l - 2, -1, -1):
+          if sgs[p] <= sldrange:
+            ssl = su = 0
+            gf = gn = 0
+            for ps in range(p - 1, -1, -1):
+              gf -= (g := sgs[ps])
+              if gf < - sldrange:
+                break
+              c = g / (1 - gf)
+              ssl += sss[ps] * c
+              su += c
+              gn = gf
+            if gn != 0:
+              sss[p] = max(-slmax, min(slmax, (sss[p] + ssl / 2) / (1 + su / 2)))
+          dist += sgs[p] * math.sqrt(1 + (sl := sss[p]) * sl)
+        if tf is not None:
+          tstart = ts if tstart is None else min(ts, tstart)
+          tend = te if tend is None else max(te, tend)
+          tdur = (tdur or 0) + dur
+        tdist = (tdist or 0) + dist
+        if eb is not None:
+          tegain = (tegain or 0) + egain
+        if ab is not None:
+          tagain = (tagain or 0) + again
+    except:
+      return False
+    self.Start = tstart
+    self.End = tend
+    self.Dur = tdur
+    self.Dist = tdist
+    self.EGain = tegain
+    self.AGain = tagain
+    return True
+
+  def LoadGPX(self, content, trkid=None, source=None, mode='s'):
+    if self.Track is not None:
+      return False
+    GCMan.disable()
+    try:
+      if source is not None and source is not self:
+        self._tracks = source._tracks
+        self.intern_dict = source.intern_dict
+        self.Wpts = source.Wpts
+      else:
+        builder = ExpatGPXSummaryBuilder() if mode == 's' else ExpatGPXBuilder()
+        self.Track = builder.Parse(content)
+        if self.Track is None:
+          raise
+        self.intern_dict = builder.intern_dict
+      WGS84Track._intern(self)
+    except:
+      self.__init__()
+      GCMan.restore()
+      return False
+    self.TrkId = trkid or 0
+    try:
+      if not self.ProcessGPX(mode):
+        raise
+    except:
+      if source is None:
+        del self.Track
+      if source is not self:
+        self.__init__()
+      GCMan.restore()
+      return False
+    GCMan.restore()
+    return True
+
+  def SaveGPX(self):
+    try:
+      return self.Track.toxml()
+    except:
+      return None
+
+  _XMLNewNode = WGS84Track._XMLNewNode
+  _XMLUpdateChildNode = WGS84Track._XMLUpdateChildNode
+  _XMLUpdateChildNodeText = WGS84Track._XMLUpdateChildNodeText
+
+  def UpdateGPX(self, name, desc):
+    try:
+      trk = self.Track.documentElement.getChildren('trk')[self.TrkId]
+      self._XMLUpdateChildNodeText(trk, 'name', trk.namespaceURI, trk.prefix, ' '.join(name.splitlines()), None, True)
+      self._XMLUpdateChildNodeText(trk, 'desc', trk.namespaceURI, trk.prefix, '\n'.join(desc.splitlines()), ('cmt', 'name'), True)
+    except:
+      return False
+    return True
 
 
 class WebMapping():
