@@ -3479,6 +3479,65 @@ class BaseMap(WGS84WebMercator):
   def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=16):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, threads=threads)
 
+  def ProvideTiles(self, infos, matrix, minx, maxx, miny, maxy, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_pending=None, threads=10):
+    if minx >= maxx or miny >= maxy or (res := self._set_infos_mgm_pattern(infos, matrix, local_pattern, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local)) is None:
+      return None
+    try:
+      iscale = infos['scale']
+      iwidth = infos['width'] * iscale
+      iheight = infos['height'] * iscale
+      itopx = infos['topx']
+      itopy = infos['topy']
+      mincol = int((minx - itopx) / iwidth)
+      minrow = int((itopy - maxy) / iheight)
+      maxcol = int((maxx - itopx) / iwidth)
+      maxrow = int((itopy - miny) / iheight)
+    except:
+      return None
+    mgm, local_pattern = res
+    box = ((row, col) for col in range(mincol, maxcol + 1) for row in range(minrow, maxrow + 1))
+    lock = threading.Lock()
+    queue = []
+    if max_pending is not None:
+      sem = threading.Semaphore(max_pending)
+    event = threading.Event()
+    def downloader():
+      pconnection = [None]
+      while True:
+        try:
+          with lock:
+            row, col = next(box)
+          if max_pending is not None:
+            sem.acquire()
+          tile = self.RetrieveMGMapsTile({**infos, 'row': row, 'col': col}, mgm, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection) if mgm else self.RetrieveTile({**infos, 'row': row, 'col': col}, local_pattern, local_expiration, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnection)
+          queue.append((row, col, tile))
+          event.set()
+        except StopIteration:
+          try:
+            pconnection[0].close()
+          except:
+            pass
+          break
+        except:
+          queue.append((row, col, None))
+          event.set()
+    def gen():
+      nbtiles = (maxcol + 1 - mincol) * (maxrow + 1 - minrow)
+      ntiles = 0
+      while True:
+        event.clear()
+        while queue:
+          yield queue.pop()
+          ntiles += 1
+          if max_pending is not None:
+            sem.release()
+        if ntiles == nbtiles:
+          break
+        event.wait()
+    for t in range(threads):
+      threading.Thread(target=downloader, daemon=True).start()
+    return gen()
+
   def ImportTilesIntoMGMaps(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=False, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, max_threads=16, callback=None):
     return None if (res := self._set_infos_mgm_pattern(infos, matrix, pattern, None, key, referer, user_agent, basic_auth, extra_headers, False, complete_infos=False)) is None or res[0] is None else next(res[0].ImportTilesGenerator(infos, matrix, minlat, maxlat, minlon, maxlon, only_missing=only_missing, local_pattern=local_pattern, local_expiration=local_expiration, local_store=local_store, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, max_threads=max_threads, tiles_class=self.__class__, callback=callback))
 
@@ -7506,8 +7565,8 @@ class WGS84PropertiesTrack:
     self.Name = None
     self.Desc = None
     self.Wpts = None
-    self.NSegs = None 
-    self.NPts = None 
+    self.NSegs = None
+    self.NPts = None
     self.Start = None
     self.End = None
     self.Dur = None
@@ -7556,7 +7615,7 @@ class WGS84PropertiesTrack:
     fround = lambda v: r if (v - (r := math.floor(v)) < 0.5) else r + 1
     return None if self.AGain is None else fround(fround(self.AGain * 1000) / 1000)
 
-  def ProcessGPX(self, mode='s', egthreshold=10, agthreshold=5, smdrange=10, sldrange=80, slmax=100):
+  def ProcessGPX(self, mode, egthreshold, agthreshold, smdrange, sldrange, slmax):
     try:
       r = self.Track.documentElement
       trk = r.getChildren('trk')[self.TrkId]
@@ -7791,7 +7850,7 @@ class WGS84PropertiesTrack:
     self.AGain = tagain
     return True
 
-  def LoadGPX(self, content, trkid=None, source=None, mode='s'):
+  def LoadGPX(self, content, trkid=None, source=None, mode='s', egthreshold=10, agthreshold=5, smdrange=10, sldrange=80, slmax=100):
     if self.Track is not None:
       return False
     GCMan.disable()
@@ -7813,7 +7872,7 @@ class WGS84PropertiesTrack:
       return False
     self.TrkId = trkid or 0
     try:
-      if not self.ProcessGPX(mode):
+      if not self.ProcessGPX(mode, egthreshold, agthreshold, smdrange, sldrange, slmax):
         raise
     except:
       if source is None:
@@ -7842,6 +7901,267 @@ class WGS84PropertiesTrack:
       self._XMLUpdateChildNodeText(trk, 'desc', trk.namespaceURI, trk.prefix, '\n'.join(desc.splitlines()), ('cmt', 'name'), True)
     except:
       return False
+    return True
+
+
+class WGS84PreviewTrack:
+
+  def __init__(self):
+    self._tracks = [None]
+    self.TrkId = None
+    self.XWpts = None
+    self.YWpts = None
+    self.XPts = None
+    self.YPts = None
+    self.Arws = None
+    self.Ds = None
+    self.Hs = None
+    self.intern_dict = None
+    self.intern = None
+
+  def unlink(self, track):
+    if track is not None:
+      try:
+        track.unlink()
+      except:
+        pass
+
+  @property
+  def Track(self):
+    return self._tracks[0]
+
+  @Track.setter
+  def Track(self, value):
+    self._tracks[0] = value
+
+  @Track.deleter
+  def Track(self):
+    self.unlink(self._tracks[0])
+    self._tracks[0] = None
+
+  def ProcessGPX(self, smdrange, sldrange, slmax):
+    r = self.Track.documentElement
+    rns = r.namespaceURI
+    tnode = (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE)
+    alat = (XMLNode.EMPTY_NAMESPACE, 'lat')
+    alon = (XMLNode.EMPTY_NAMESPACE, 'lon')
+    try:
+      trk = r.getChildren('trk')[self.TrkId]
+      if self.XWpts is None or self.YWpts is None:
+        self.XWpts = wxs = []
+        self.YWpts = wys = []
+        for pt in r.getChildren('wpt'):
+          lat = float(pt.attributes[alat][1])
+          lon = float(pt.attributes[alon][1])
+          if lat * lon * 0:
+            raise
+          px, py = WGS84Track.WGS84toWebMercator(lat, lon)
+          wxs.append(px)
+          wys.append(py)
+      tsegs = self.Track.documentElement.getChildren('trk')[self.TrkId].getChildren('trkseg')
+      slmax /= 100
+      sldrange /= 2
+      txpts = []
+      typts = []
+      tarws = []
+      tds = []
+      ths = []
+      adrangef = 200
+      adranges = 1000
+      dist = 0
+      for seg in tsegs:
+        spts = seg.getChildren('trkpt')
+        if (l := len(spts)) == 0:
+          continue
+        sxs = []
+        sys = []
+        sarws = []
+        sgs = []
+        shs = []
+        sss = []
+        sds = []
+        hp = None
+        for pt in spts:
+          e = a = ''
+          for c in pt.childNodes:
+            if c.namespaceURI == rns:
+              if (cln := c.localName) == 'ele':
+                for cc in c.childNodes:
+                  if cc.nodeType in tnode:
+                    e += cc.data
+              elif cln == 'extensions':
+                for cc in c.childNodes:
+                  if cc.namespaceURI == self.MT_NAMESPACE and cc.localName == 'ele_alt':
+                    for ccc in cc.childNodes:
+                      if ccc.nodeType in tnode:
+                        a += ccc.data
+          lat = float(pt.attributes[alat][1])
+          lon = float(pt.attributes[alon][1])
+          ch = lat * lon * 0
+          if (e := e.strip() or None):
+            ch *= (e := float(e))
+          if (a := a.strip() or None):
+            ch *= (a := float(a))
+          if ch:
+            raise
+          px, py = WGS84Track.WGS84toWebMercator(lat, lon)
+          sxs.append(px)
+          sys.append(py)
+          h = e if a is None else a
+          if h is not None:
+            if hp is None:
+              for i in range(len(shs)):
+                shs[i] = h
+            hp = h
+          else:
+            h = hp or 0
+          shs.append(h)
+        my = (min(sys) + max(sys)) / 2
+        smdrangec = smdrange * (math.exp(my / 6378137) + math.exp(- my / 6378137)) / 2
+        dirx = diry = None
+        ad = 0
+        adrange = adrangef
+        for p in range(1, l):
+          pdirx = (x := sxs[p]) - (xp := sxs[p - 1])
+          pdiry = (y := sys[p]) - (yp := sys[p - 1])
+          if (pdirl := math.sqrt(pdirx * pdirx + pdiry * pdiry)) <= smdrangec:
+            ndirx = pdirx
+            ndiry = pdiry
+            d = 0
+            for pn in range(p + 1, l):
+              d += math.dist((x, y), ((x := sxs[pn]), (y := sys[pn])))
+              if d > smdrangec:
+                break
+              ndirx += x - xp
+              ndiry += y - yp
+            if (ndirl := math.sqrt(ndirx * ndirx + ndiry * ndiry)) > 0:
+              ndirx /= ndirl
+              ndiry /= ndirl
+              if dirx is None:
+                dirx = ndirx
+                diry = ndiry
+              if pdirl > 0:
+                pdirx /= pdirl
+                pdiry /= pdirl
+                ncos = dirx * ndirx + diry * ndiry
+                pcos = dirx * pdirx + diry * pdiry
+                npcos = ndirx * pdirx + ndiry * pdiry
+                if npcos < ncos * pcos:
+                  if pcos < 0:
+                    if ncos < 0:
+                      pdirl = min(-pdirl * pcos, -ndirl * ncos)
+                      dirx = -dirx
+                      diry = -diry
+                    else:
+                      pdirl = 0
+                  else:
+                    pdirl *= pcos
+                  sxs[p] = xp + pdirl * dirx
+                  sys[p] = yp + pdirl * diry
+                elif ncos > pcos:
+                  pdirl = max(0, pdirl * npcos)
+                  dirx = ndirx
+                  diry = ndiry
+                  sxs[p] = xp + pdirl * dirx
+                  sys[p] = yp + pdirl * diry
+                else:
+                  dirx = pdirx
+                  diry = pdiry
+          else:
+            dirx = pdirx / pdirl
+            diry = pdiry / pdirl
+          sgs.append(pdirl * 2 / ((a := math.exp((sys[p] + yp) / 12756274)) + 1 / a))
+          x = xp
+          y = yp
+          while (adl := adrange - ad) <= pdirl:
+            ad = 0
+            adrange = adranges
+            pdirl -= adl
+            sarws.append(((x := x + adl * dirx), (y := y + adl * diry), dirx, diry))
+          ad += pdirl
+        txpts.append(sxs)
+        typts.append(sys)
+        tarws.append(sarws)
+        slope = lambda gd, dh: dh / gd if gd > 0 else slmax * (0 if dh == 0 else (1 if dh > 0 else -1))
+        for p in range(l):
+          hs = shs[p]
+          sl = 0
+          b = False
+          ge = gp = 0
+          for ps in range(p + 1, l):
+            ge += (g := sgs[ps - 1])
+            if ge > sldrange and b:
+              break
+            if ge == 0:
+              continue
+            b = True
+            sl += slope(ge, (h := shs[ps]) - hs) * g
+            gp = ge
+          if p < l - 1:
+            sl = (sl + slope(gp, h - hs) * (sldrange - gp)) / sldrange
+          sss.append(max(min(sl, slmax), -slmax))
+        for p in range(l - 2, -1, -1):
+          if sgs[p] <= sldrange:
+            ssl = su = 0
+            gf = gn = 0
+            for ps in range(p - 1, -1, -1):
+              gf -= (g := sgs[ps])
+              if gf < - sldrange:
+                break
+              c = g / (1 - gf)
+              ssl += sss[ps] * c
+              su += c
+              gn = gf
+            if gn != 0:
+              sss[p] = max(-slmax, min(slmax, (sss[p] + ssl / 2) / (1 + su / 2)))
+          sss[p] = sgs[p] * math.sqrt(1 + (sl := sss[p]) * sl)
+        sds.append(dist)
+        for p in range(1, l):
+          sds.append(dist := dist + sss[p - 1])
+        tds.append(sds)
+        ths.append(shs)
+    except:
+      return False
+    self.XPts = txpts
+    self.YPts = typts
+    self.Arws = tarws
+    self.Ds = tds
+    self.Hs = ths
+    return True
+
+  def LoadGPX(self, content, trkid=None, source=None, smdrange=10, sldrange=80, slmax=100):
+    if self.Track is not None:
+      return False
+    GCMan.disable()
+    try:
+      if source is not None and source is not self:
+        self._tracks = source._tracks
+        self.intern_dict = source.intern_dict
+        self.XWpts = source.XWpts
+        self.YWpts = source.YWpts
+      else:
+        builder = ExpatGPXBuilder()
+        self.Track = builder.Parse(content)
+        if self.Track is None:
+          raise
+        self.intern_dict = builder.intern_dict
+      WGS84Track._intern(self)
+    except:
+      self.__init__()
+      GCMan.restore()
+      return False
+    self.TrkId = trkid or 0
+    try:
+      if not self.ProcessGPX(smdrange, sldrange, slmax):
+        raise
+    except:
+      if source is None:
+        del self.Track
+      if source is not self:
+        self.__init__()
+      GCMan.restore()
+      return False
+    GCMan.restore()
     return True
 
 
@@ -20951,6 +21271,9 @@ class GPXTweakerWebInterfaceServer():
   '        vertical-align: middle;\r\n' \
   '        white-space: nowrap;\r\n' \
   '      }\r\n' \
+  '      .track {\r\n' \
+  '        overflow: visible;\r\n' \
+  '      \r\n' \
   '      .track text {\r\n' \
   '        display: none;\r\n' \
   '      }\r\n' \
@@ -24064,7 +24387,7 @@ class GPXTweakerWebInterfaceServer():
   HTMLExp_PATH_TEMPLATE = \
   '<svg class="track" id="track%s" viewbox="##VIEWBOX##" stroke="%s" fill="%s" style="width:##WIDTH##;height:##HEIGHT##;top:##TOP##;left:##LEFT##;">\r\n' \
   '<path id="path%s" d="M0,0"><title>%s</title></path>\r\n' \
-  '<text id="patharrows%s" dy="0.25em"><textPath href="#path%s">##ARROWS##</textPath></text>\r\n' \
+  '<text id="patharrows%s" dy="0.25em"><textPath href="#path%s" startOffset="-0.4em">&#8858; ##ARROWS##</textPath></text>\r\n' \
   '</svg>\r\n'
   HTMLExp_WAYDOT_TEMPLATE = \
   '<circle cx="%.1f" cy="%.1f"><title>%s</title></circle>\r\n'
