@@ -21273,7 +21273,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      .track {\r\n' \
   '        overflow: visible;\r\n' \
-  '      \r\n' \
+  '      }\r\n' \
   '      .track text {\r\n' \
   '        display: none;\r\n' \
   '      }\r\n' \
