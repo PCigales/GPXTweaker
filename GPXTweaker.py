@@ -2555,6 +2555,7 @@ class BaseMap(WGS84WebMercator):
   MIME_EXT = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/x-bil;bits=32': 'bil.xz', 'image/hgt': 'hgt.xz', 'image/tiff': 'tif', 'image/geotiff': 'tif', 'image/bmp': 'bmp', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf', 'application/x-protobuf': 'pbf', 'application/vnd.mapbox-vector-tile': 'mvt', 'application/geo+json': 'geojson', 'application/json': 'json', 'image/svg+xml': 'svg'}
   MIME_DOTEXT = {m: '.' + e for m, e in MIME_EXT.items()}
 
+  LOCALMAPSTORE_DEFAULT_PATTERN = r'{name}\{name}-{bbox}-{width},{height},{dpi}.{ext}'
   LOCALSTORE_DEFAULT_PATTERN = r'{name}\{matrix}\{row:0>}\{name}-{matrix}-{row:0>}-{col:0>}.{ext}'
   LOCALSTORE_HGT_DEFAULT_PATTERN = r'{name}\{hgt}.{ext}'
   WMS_PATTERN = {'GetCapabilities': '?SERVICE=WMS&REQUEST=GetCapabilities', 'GetMap': '?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS={layers}&FORMAT={format}&STYLES={styles}&CRS={crs}&BBOX={bbox}&WIDTH={width}&HEIGHT={height}&DPI={dpi}&FORMAT_OPTIONS=DPI:{dpi}'}
@@ -2792,6 +2793,79 @@ class BaseMap(WGS84WebMercator):
       return False
     self.log(1, 'mapsaved', uri)
     return True
+
+  def ProvideMap(self, infos, minx, miny, maxx, maxy, maxwidth, maxheight, dpi=None, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False):
+    if minx >= maxx or miny >= maxy or not infos.get('layers'):
+      return None
+    minx = round(minx, 2)
+    miny = round(miny, 2)
+    maxx = round(maxx, 2)
+    maxy = round(maxy, 2)
+    maxwidth = int(maxwidth)
+    maxheight = int(maxheight)
+    infos['format'] = infos.get('format') or 'image/png'
+    infos['styles'] = infos.get('styles') or ''
+    infos['crs'] = self.CRS
+    infos['bbox'] = getattr(self, 'WMS_BBOX', '{minx},{miny},{maxx},{maxy}').replace('}', ':.2f}').format_map({'minx': minx, 'miny': miny, 'maxx': maxx, 'maxy': maxy})
+    lenx = maxx - minx
+    leny = maxy - miny
+    resolution = max(lenx / maxwidth, leny / maxheight)
+    infos['width'] = round(lenx / resolution)
+    infos['height'] = round(leny / resolution)
+    infos['dpi'] = dpi or 90
+    local_map = None
+    expired = True
+    try:
+      if local_pattern is not None:
+        filepath = (local_pattern if '{' in local_pattern else os.path.join(local_pattern, self.LOCALMAPSTORE_DEFAULT_PATTERN)).format_map({**infos, 'name': (infos.get('alias') or (('%s_%s' % (infos['layers'], infos['styles'])) if infos['styles'] else infos['layers'])), 'ext': BaseMap.MIME_EXT.get(infos['format'], 'img')})
+        if (last_mod := os.path.exists(filepath) and os.path.getmtime(filepath)) != False:
+          try:
+            f = open(filepath, 'rb')
+            rmap = f.read()
+          except:
+            rmap = None
+          finally:
+            try:
+              f.close()
+            except:
+              pass
+          if rmap is not None:
+            if local_expiration is None or local_expiration > max(time.time() - last_mod, 0) / 86400:
+              expired = False
+            else:
+              local_map = rmap
+      if expired:
+        if only_local or not infos.get('source'):
+          return None
+        headers = {}
+        if referer:
+          headers['Referer'] = referer
+        headers['User-Agent'] = user_agent
+        if extra_headers is not None:
+          headers.update(extra_headers)
+        uri = infos['source'].format_map({'wms': self.WMS_PATTERN['GetMap'], 'key': key or ''}).format_map(infos) if '{wms}' in infos['source'] else infos['source'].format_map({**infos, 'key': key or ''})
+        rep = HTTPRequest(uri, 'GET', headers, basic_auth=basic_auth)
+        if (rmap := None if rep.code != '200' else rep.body) is not None and local_pattern is not None and local_store:
+          if rmap != local_map:
+            try:
+              Path(os.path.dirname(filepath)).mkdir(parents=True, exist_ok=True)
+              f = open(filepath, 'wb')
+              f.write(rmap)
+            except:
+              pass
+            finally:
+              try:
+                f.close()
+              except:
+                pass
+          else:
+            try:
+              os.utime(filepath, (time.time(),) * 2)
+            except:
+              pass
+    except:
+      return None
+    return rmap
 
   @classmethod
   def TSAlias(cls, name):
@@ -3479,7 +3553,7 @@ class BaseMap(WGS84WebMercator):
   def DownloadTiles(self, pattern, infos, matrix, minlat, maxlat, minlon, maxlon, expiration=None, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, threads=16):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, threads=threads)
 
-  def ProvideTiles(self, infos, matrix, minx, maxx, miny, maxy, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_pending=None, threads=10):
+  def ProvideTiles(self, infos, matrix, minx, miny, maxx, maxy, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_pending=None, threads=10):
     if minx >= maxx or miny >= maxy or (res := self._set_infos_mgm_pattern(infos, matrix, local_pattern, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local)) is None:
       return None
     try:
@@ -21273,7 +21347,7 @@ class GPXTweakerWebInterfaceServer():
   '      }\r\n' \
   '      .track {\r\n' \
   '        overflow: visible;\r\n' \
-  '      }\r\n' \
+  '      \r\n' \
   '      .track text {\r\n' \
   '        display: none;\r\n' \
   '      }\r\n' \
