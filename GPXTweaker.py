@@ -7983,6 +7983,7 @@ class WGS84PreviewTrack:
   def __init__(self):
     self._tracks = [None]
     self.TrkId = None
+    self.Color = None
     self.XWpts = None
     self.YWpts = None
     self.XPts = None
@@ -8021,6 +8022,24 @@ class WGS84PreviewTrack:
     alon = (XMLNode.EMPTY_NAMESPACE, 'lon')
     try:
       trk = r.getChildren('trk')[self.TrkId]
+      ext = trk.getChildren('extensions')
+      try:
+        for e in ext:
+          if (c := e.getChildren('color', self.MT_NAMESPACE)):
+            c = int(c[0].getText())
+            self.Color = ((c & 0xff0000) / 0xff0000, (c & 0xff00) / 0xff00, (c & 0xff) / 0xff, 1.0)
+            break
+      except:
+        pass
+      if not self.Color:
+        try:
+          for e in ext:
+            if (l := e.getChildren('line', '*')) and (c := l[0].getChildren('color', '*')):
+              c = int(c[0].getText(), 16)
+              self.Color = ((c & 0xff0000) / 0xff0000, (c & 0xff00) / 0xff00, (c & 0xff) / 0xff, 1.0)
+              break
+        except:
+          pass
       if self.XWpts is None or self.YWpts is None:
         self.XWpts = wxs = []
         self.YWpts = wys = []
