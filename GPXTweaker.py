@@ -228,6 +228,7 @@ FR_STRINGS = {
     'jrconfirm': 'Inverser la trace dans son ensemble ?',
     'jfconfirm': 'Lisser la trace dans son ensemble ?',
     'junload': 'Attention, les données seront perdues !',
+    'jcolor': 'couleur de la trace',
     'jdesc': 'ouvrir / fermer le panneau de saisie de la description de la trace',
     'jundo': 'annuler la dernière action d\'insertion ou de modification de propriétés de points&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
     'jredo': 'rétablir la dernière action annulée&#13;&#10;+alt: seulement pour l\'élément qui a le focus',
@@ -681,6 +682,7 @@ EN_STRINGS = {
     'jrconfirm': 'Reverse the whole track ?',
     'jfconfirm': 'Smooth the whole track ?',
     'junload': 'Warning, the data will be lost !',
+    'jcolor': 'color of the track',
     'jdesc': 'open / close the track description input panel',
     'jundo': 'undo the latest action of insertion or modification of properties of points&#13;&#10;+alt: only for the focused element',
     'jredo': 'redo the latest cancelled action&#13;&#10;+alt: only for the focused element',
@@ -7204,6 +7206,59 @@ class WGS84Track(WGS84WebMercator):
       child = None
     self._XMLUpdateChildNode(node, localname, child, predecessors, uri)
 
+  def _UpdateGPXName(self, r, trk, trkns, trkp, name):
+    self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, name, None, True)
+
+  def _UpdateGPXDesc(self, r, trk, trkns, trkp, desc):
+    self._XMLUpdateChildNodeText(trk, 'desc', trkns, trkp, desc, ('cmt', 'name'), True)
+
+  def _UpdateGPXColor(self, r, trk, trkns, trkp, mt, color):
+    if not mt:
+      r.setAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT)
+    ext = trk.getChildren('extensions')
+    l = None
+    if not ext:
+      e = e_ = self._XMLNewNode('extensions', trkns, trkp)
+      s = trk.getChildren('trkseg')
+      if s:
+        trk.insertBefore(e, s[0])
+      else:
+        trk.appendChild(e)
+    else:
+      e = e_ = ext[0]
+      for ex in ext:
+        if ex.getChildren('color', self.MT_NAMESPACE):
+          e = ex
+          break
+      for ex in ext:
+        l = ex.getChildren('line', '*')
+        if l:
+          e_ = ex
+          if l[0].getChildren('color', '*'):
+            break
+    a = self._XMLNewNode('color', self.MT_NAMESPACE, self.MT)
+    t = XMLText(str(int(color, 16) - (1 << 24)))
+    a.appendChild(t)
+    self._XMLUpdateChildNode(e, 'color', a, '*', self.MT_NAMESPACE)
+    if l:
+      a = l[0]
+      if not a.namespaceURI or a.namespaceURI == self.GPX_NAMESPACE:
+        a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+    else:
+      a = self._XMLNewNode('line', self.GPXSTYLE_NAMESPACE)
+      a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
+      e_.appendChild(a)
+    b = a.getChildren('color', '*')
+    if b:
+      b = b[0]
+    else:
+      b = self._XMLNewNode('color', self.GPXSTYLE_NAMESPACE)
+      a.appendChild(b)
+    t = XMLText(color)
+    while b.hasChildNodes():
+      b.removeChild(b.firstChild).unlink()
+    b.appendChild(t)
+
   def UpdateGPX(self, msg, uri=None, backup=True):
     GCMan.disable()
     del self.Track
@@ -7217,69 +7272,25 @@ class WGS84Track(WGS84WebMercator):
       if '\r\n=\r\n' not in msg:
         msgp = msg.split('=', 1)
         if msgp[0][-5:] == 'color':
-          if not mt:
-            r.setAttribute(self.MT, self.MT_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS_MT)
-          ext = trk.getChildren('extensions')
-          l = []
-          if not ext:
-            e = self._XMLNewNode('extensions', trkns, trkp)
-            e_ = e
-            s = trk.getChildren('trkseg')
-            if s:
-              trk.insertBefore(e, s[0])
-            else:
-              trk.appendChild(e)
-          else:
-            e = ext[0]
-            e_ = ext[0]
-            for ex in ext:
-              if ex.getChildren('color', self.MT_NAMESPACE):
-                e = ex
-                break
-            for ex in ext:
-              l = ex.getChildren('line', '*')
-              if l:
-                e_ = ex
-                if l[0].getChildren('color', '*'):
-                  break
-          a = self._XMLNewNode('color', self.MT_NAMESPACE, self.MT)
-          t = XMLText(str(int(msgp[1].lstrip('#'), 16) - (1 << 24)))
-          a.appendChild(t)
-          self._XMLUpdateChildNode(e, 'color', a, '*', self.MT_NAMESPACE)
-          if l:
-            a = l[0]
-            if not a.namespaceURI or a.namespaceURI == self.GPX_NAMESPACE:
-              a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
-          else:
-            a = self._XMLNewNode('line', self.GPXSTYLE_NAMESPACE)
-            a.setAttribute(self.XMLNS, self.GPXSTYLE_NAMESPACE, self.XMLNS_NAMESPACE, self.XMLNS)
-            e_.appendChild(a)
-          b = a.getChildren('color', '*')
-          if b:
-            b = b[0]
-          else:
-            b = self._XMLNewNode('color', self.GPXSTYLE_NAMESPACE)
-            a.appendChild(b)
-          t = XMLText(msgp[1].lstrip('#'))
-          while b.hasChildNodes():
-            b.removeChild(b.firstChild).unlink()
-          b.appendChild(t)
+          self._UpdateGPXColor(r, trk, trkns, trkp, mt, msgp[1].lstrip('#'))
         elif msgp[0][-4:] == 'name':
-          self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, ' '.join(msgp[1].splitlines()), None, True)
+          self._UpdateGPXName(r, trk, trkns, trkp, ' '.join(msgp[1].splitlines()))
         else:
           raise
         if not self.ProcessGPX('e'):
           raise
       else:
         msgp = msg.split('=\r\n')
-        nmsg, dmsg = msgp[0].split('\r\n')[:-1]
+        nmsg, dmsg, cmsg = msgp[0].split('\r\n')[:-1]
         wpmsg = msgp[1].split('\r\n')[:-1]
         smsg = msgp[2].split('-\r\n')[1:]
         wpts = r.removeChildren('wpt')
         segs = trk.removeChildren('trkseg')
         pts = [pt for seg in segs for pt in seg.removeChildren('trkpt')]
-        self._XMLUpdateChildNodeText(trk, 'name', trkns, trkp, nmsg, None, True)
-        self._XMLUpdateChildNodeText(trk, 'desc', trkns, trkp, '\n'.join(dmsg.splitlines()), ('cmt', 'name'), True)
+        self._UpdateGPXName(r, trk, trkns, trkp, nmsg)
+        self._UpdateGPXDesc(r, trk, trkns, trkp, '\n'.join(dmsg.splitlines()))
+        if cmsg:
+          self._UpdateGPXColor(r, trk, trkns, trkp, mt, cmsg.lstrip('#'))
         wpn = []
         for wp in wpmsg:
           if '&' in wp:
@@ -7638,6 +7649,7 @@ class WGS84PropertiesTrack:
     self.TrkId = None
     self.Name = None
     self.Desc = None
+    self.Color = None
     self.Wpts = None
     self.NSegs = None
     self.NPts = None
@@ -7703,6 +7715,22 @@ class WGS84PropertiesTrack:
         self.NPts = sum(len(seg.getChildren('trkpt')) for seg in tsegs)
       if mode != 'f':
         return True
+      ext = trk.getChildren('extensions')
+      try:
+        for e in ext:
+          if (c := e.getChildren('color', self.MT_NAMESPACE)):
+            self.Color = '%06x' % int.from_bytes((int(c[0].getText()) & 0xffffff).to_bytes(3, 'big'), 'little')
+            break
+      except:
+        pass
+      if not self.Color:
+        try:
+          for e in ext:
+            if (l := e.getChildren('line', '*')) and (c := l[0].getChildren('color', '*')):
+              self.Color = '%06x' % int.from_bytes((int(c[0].getText(), 16) & 0xffffff).to_bytes(3, 'big'), 'little')
+              break
+        except:
+          pass
       rns = r.namespaceURI
       tnode = (XMLNode.TEXT_NODE, XMLNode.CDATA_SECTION_NODE)
       alat = (XMLNode.EMPTY_NAMESPACE, 'lat')
@@ -7968,11 +7996,16 @@ class WGS84PropertiesTrack:
   _XMLUpdateChildNode = WGS84Track._XMLUpdateChildNode
   _XMLUpdateChildNodeText = WGS84Track._XMLUpdateChildNodeText
 
-  def UpdateGPX(self, name, desc):
+  def UpdateGPX(self, name=False, desc=False, color=False):
     try:
-      trk = self.Track.documentElement.getChildren('trk')[self.TrkId]
-      self._XMLUpdateChildNodeText(trk, 'name', trk.namespaceURI, trk.prefix, ' '.join(name.splitlines()), None, True)
-      self._XMLUpdateChildNodeText(trk, 'desc', trk.namespaceURI, trk.prefix, '\n'.join(desc.splitlines()), ('cmt', 'name'), True)
+      r = self.Track.documentElement
+      trk = r.getChildren('trk')[self.TrkId]
+      if isinstance(name, str):
+        WGS84Track._UpdateGPXName(self, r, trk, trk.namespaceURI, trk.prefix, ' '.join(name.splitlines()))
+      if isinstance(desc, str):
+        WGS84Track._UpdateGPXDesc(self, r, trk, trk.namespaceURI, trk.prefix, '\n'.join(desc.splitlines()))
+      if isinstance(color, str):
+        WGS84Track._UpdateGPXColor(self, r, trk, trk.namespaceURI, trk.prefix, r.hasAttribute(self.MT, self.XMLNS_NAMESPACE), ('%06X' % int.from_bytes(int(color, 16).to_bytes(3, 'little'), 'big')))
     except:
       return False
     return True
@@ -10001,6 +10034,20 @@ class GPXTweakerWebInterfaceServer():
   '      select>option {\r\n' \
   '        color: rgb(225, 225, 225);\r\n' \
   '      }\r\n' \
+  '      input[type=color] {\r\n' \
+  '        width: 1em;\r\n' \
+  '        height: 1em;\r\n' \
+  '        padding: 0;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-webkit-color-swatch-wrapper{\r\n' \
+  '        padding: 0;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-webkit-color-swatch {\r\n' \
+  '        border: none;\r\n' \
+  '      }\r\n' \
+  '      input[type=color]::-moz-color-swatch {\r\n' \
+  '        border: none;\r\n' \
+  '      }\r\n' \
   '      #top_bar {\r\n' \
   '        contain: strict;\r\n' \
   '        position: fixed;\r\n' \
@@ -10084,14 +10131,26 @@ class GPXTweakerWebInterfaceServer():
   '        font-size: 105%;\r\n' \
   '      }\r\n' \
   '      #name_track {\r\n' \
-  '        width: calc(100% - 65.8em - 6px);\r\n' \
+  '        width: calc(100% - 67em - 6px);\r\n' \
   '        margin-right: 0.2em;\r\n' \
   '      }\r\n' \
-  '      #name_track+button {\r\n' \
+  '      #track_color {\r\n' \
   '        position: relative;\r\n' \
   '        bottom: 1px;\r\n' \
+  '        margin-left: 0.1em;\r\n' \
+  '        margin-right: 0.1em;\r\n' \
+  '        border: 0.5px solid gray;\r\n' \
+  '        vertical-align: middle;\r\n' \
+  '      }\r\n' \
+  '      #track_color+button {\r\n' \
+  '        position: relative;\r\n' \
   '        vertical-align: middle;\r\n' \
   '        font-size: 120%;\r\n' \
+  '      }\r\n' \
+  '      @supports (selector(*::-moz-color-swatch)) {\r\n' \
+  '        #track_color+button {\r\n' \
+  '          bottom: 1px;\r\n' \
+  '        }\r\n' \
   '      }\r\n' \
   '      #actions, #navigation, #message, #help {\r\n' \
   '        contain: strict;\r\n' \
@@ -16098,7 +16157,7 @@ class GPXTweakerWebInterfaceServer():
   '        if (! mode3d) {document.getElementById("save_icon").style.fontSize = "10%";}\r\n' \
   '        document.getElementById("save").disabled = true;\r\n' \
   '        document.getElementById("save").style.pointerEvents = "none";\r\n' \
-  '        let body = document.getElementById("name_track").value.replace("\\r\\n", " ") + "\\r\\n" + document.getElementById("track_desc").value.replace("\\r\\n", "\\n").replace("\\r", "\\n") + "\\r\\n=\\r\\n";\r\n' \
+  '        let body = document.getElementById("name_track").value.replace("\\r\\n", " ") + "\\r\\n" + document.getElementById("track_desc").value.replace("\\r\\n", "\\n").replace("\\r", "\\n") + "\\r\\n" + (document.getElementById("track_color").hasAttribute("data-edited") ? document.getElementById("track_color").value.toUpperCase() : "") + "\\r\\n=\\r\\n";\r\n' \
   '        const wpts = document.getElementById("waypointslist").getElementsByClassName("waypoint");\r\n' \
   '        for (let w=0, l=wpts.length; w<l; w++) {\r\n' \
   '          const wpt = wpts[w];\r\n' \
@@ -16303,7 +16362,7 @@ class GPXTweakerWebInterfaceServer():
   '  </head>\r\n' \
   '  <body style="--mode:##MODE##" onwheel="event.altKey?mouse_wheel(event):null">\r\n' \
   '    <div id="top_bar">\r\n' \
-  '      <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##"><button title="{#jdesc#}" onmousedown="document.activeElement?.blur();event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();" onclick="switch_dpanel()">&#128221;&#xfe0e;</button>\r\n' \
+  '      <input type="text" id="name_track" name="name_track" autocomplete="off" value="##NAME##"><input type="color" id="track_color" title="{#jcolor#}" value="##COLOR##" onchange="this.setAttribute(\'data-edited\', \'\')"><button title="{#jdesc#}" onmousedown="document.activeElement?.blur();event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();" onclick="switch_dpanel()">&#128221;&#xfe0e;</button>\r\n' \
   '      <span id="actions" onmousedown="document.activeElement?.blur();event.target.nodeName.toUpperCase()==\'SELECT\'?null:event.preventDefault();" oncontextmenu="document.activeElement?.blur();event.preventDefault();"><button title="{#jundo#}" onclick="undo(false, ! event.altKey)">&cularr;</button><button title="{#jredo#}" style="margin-left:0.25em;" onclick="undo(true, ! event.altKey)">&curarr;</button><button title="{#jinsertb#}" style="margin-left:0.75em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'b\')">&boxdR;</button><button title="{#jinserta#}" style="margin-left:0.25em;" onclick="(event.shiftKey?segment_insert:point_insert)(\'a\')">&boxuR;</button><button title="{#jpath#}" style="margin-left:0.25em;" onclick="build_path()">&rarrc;</button><button title="{#jelementup#}" style="margin-left:0.75em;" onclick="element_up()">&UpTeeArrow;</button><button title="{#jelementdown#}" style="margin-left:0.25em;" onclick="element_down()">&DownTeeArrow;</button><button title="{#jsegmentcut#}" style="margin-left:0.25em;" onclick="segment_cut()">&latail;</button><button title="{#jsegmentabsorb#}" style="margin-left:0.25em;" onclick="segment_absorb()">&ratail;</button><button title="{#jsegmentreverse#}" style="margin-left:0.25em;" onclick="segment_reverse()">&rlarr;</button><button title="{#jelevationsadd#}" style="margin-left:0.75em;" onclick="ele_add(false, event.altKey)">&plusacir;</button><button title="{#jelevationsreplace#}" style="margin-left:0.25em;" onclick="event.shiftKey?ele_alt_switch():(event.ctrlKey?ele_alt_switch(true):ele_add(true, event.altKey))"><span style="pointer-events:none;vertical-align:0.2em;line-height:0.8em;">&wedgeq;</span></button><button title="{#jaltitudesjoin#}" style="margin-left:0.25em;" onclick="alt_join()">&apacir;</button><button title="{#jdatetime#}" style="margin-left:0.25em;" onclick="event.shiftKey?datetime_check():datetime_interpolate(event.ctrlKey)">&#9201;</button><button title="{#jsave#}" id="save" style="margin-left:1.25em;" onclick="track_save()"><span id="save_icon" style="pointer-events:none;line-height:1em;font-size:inherit">&#128190;</span></button><button title="{#jdotsarrows#}" style="margin-left:1.25em;" onclick="event.ctrlKey?switch_dfpanel():(event.shiftKey?segment_filter():switch_dots_arrows(! event.altKey, event.altKey))">&EmptySmallSquare;<span style="margin-left:-0.55em">&#8618;</span></button><button title="{#jgraph#}" style="margin-left:0.25em;" onclick="if (event.shiftKey || event.ctrlKey || event.altKey) {switch_filterpanel(event.shiftKey?\'1\':(event.ctrlKey?\'2\':\'3\'));} else {switch_dpanel(true);switch_graph()?gfence(refresh_graph):null;}">&angrt;</button><button title="{#j3dviewer#}" style="margin-left:0.25em;" onclick="event.ctrlKey?switch_3Dpanel():open_3D(event.altKey?\'s\':\'p\')">3D</button><select id="tset" name="tset" title="{#jtset#}" autocomplete="off" style="margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_tiles(this.selectedIndex, -1)">##TSETS##</select><select id="eset" name="eset" title="{#jeset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_elevations(this.selectedIndex)">##ESETS##</select><select id="iset" name="iset" title="{#jiset#}" autocomplete="off" style="display:none;margin-left:0.75em;" onmousedown="switch_sel(event, this)" onchange="switch_itineraries(this.selectedIndex)">##ISETS##</select><button title="{#jminus#}" style="margin-left:0.25em;" onclick="event.ctrlKey?map_adjust(\'-\', \'a\'):(event.shiftKey?map_adjust(\'-\', \'e\'):zoom_dec())">-</button><span id="matrix">--</span><button id="tlock" title="{#jlock#}" onclick="switch_tlock()">&#128275;&#xfe0e;</button><span id="zoom">1</span><button title="{#jplus#}" style="" onclick="event.ctrlKey?map_adjust(\'+\', \'a\'):(event.shiftKey?map_adjust(\'+\', \'e\'):zoom_inc())">+</button></span>\r\n' \
   '      <div id="ctset" title="{#jctset#}" style="display:none;" onclick="event.altKey?cancel_switch_tiles():null"></div>\r\n' + HTML_ATTENUATE_TEMPLATE + \
   '    </div>\r\n' \
@@ -20972,21 +21031,9 @@ class GPXTweakerWebInterfaceServer():
   '        cursor: cell;\r\n' \
   '      }\r\n' \
   '      input[type=color] {\r\n' \
-  '        width: 1em;\r\n' \
-  '        height: 1em;\r\n' \
   '        margin-left: -1em;\r\n' \
   '        margin-bottom: 0.3em;\r\n' \
-  '        border: none;\r\n' \
-  '        padding: 0;\r\n' \
   '        vertical-align: bottom;\r\n' \
-  '      }\r\n' \
-  '      input[type=color]::-webkit-color-swatch-wrapper{\r\n' \
-  '        padding: 0;\r\n' \
-  '      }\r\n' \
-  '      input[type=color]::-webkit-color-swatch {\r\n' \
-  '        border: none;\r\n' \
-  '      }\r\n' \
-  '      input[type=color]::-moz-color-swatch {\r\n' \
   '        border: none;\r\n' \
   '      }\r\n' \
   '      label[for$=name], label[for$=file], label[for$=folder], label[for$=period], label[for$=content] {\r\n' \
@@ -25783,7 +25830,7 @@ class GPXTweakerWebInterfaceServer():
     self.HTML = GPXTweakerWebInterfaceServer.HTML_TEMPLATE
     if self.HTMLExp is not None:
       self.HTML = self.HTML.replace('//        window.onpagehide', '        window.onpagehide').replace('//      window.onpageshow', '      window.onpageshow')
-    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles and self.JSONTilesJS else '').replace('##TMAPLIBREMJS##', self.JSONTilesMJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBREVALSTL##', str(bool(self.JSONTilesValStl)).lower()).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace("##DESC##", escape(self.Track.Desc).replace('\n', '&#10;')).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
+    self.HTML = self.HTML.replace('##DECLARATIONS##', declarations).replace('##MODE##', self.Mode).replace('##TMAPLIBREJS##', self.JSONTilesJS[1].replace('"', r'\"') if self.JSONTiles and self.JSONTilesJS else '').replace('##TMAPLIBREMJS##', self.JSONTilesMJS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBRECSS##', self.JSONTilesCSS[1].replace('"', r'\"') if self.JSONTiles else '').replace('##TMAPLIBREVALSTL##', str(bool(self.JSONTilesValStl)).lower()).replace('##TSETS##', tsets).replace('##ESETS##', esets).replace('##ISETS##', isets).replace('##EGTHRESHOLD##', str(self.EleGainThreshold)).replace('##AGTHRESHOLD##', str(self.AltGainThreshold)).replace('##SLRANGE##', str(self.SlopeRange)).replace('##SLMAX##', str(self.SlopeMax)).replace('##SPRANGE##', str(self.SpeedRange)).replace('##SPMAX##', str(self.SpeedMax)).replace('##SMRANGE##', str(self.SmoothRange)).replace('##V3DPMARGIN##', str(self.V3DPanoMargin)).replace('##V3DSMARGIN##', str(self.V3DSubjMargin)).replace('##NAME##', escape(self.Track.Name)).replace('##COLOR##', self.Track.Color or '#000000').replace("##DESC##", escape(self.Track.Desc).replace('\n', '&#10;')).replace('##WAYPOINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_WAYPOINT_TEMPLATE).replace('##SEGMENTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_SEGMENT_TEMPLATE).replace('##POINTTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_POINT_TEMPLATE).replace('##TRACKTEMPLATE##', GPXTweakerWebInterfaceServer.HTML_PATH_TEMPLATE.replace('##WIDTH##', 'calc(%.1fpx / var(--scale))' % (self.Maxx - self.Minx)).replace('##HEIGHT##', 'calc(%.1fpx / var(--scale))' % (self.Maxy - self.Miny)).replace('##LEFT##', 'calc(0px / var(--scale))').replace('##TOP##', 'calc(0px / var(--scale))').replace('##VIEWBOX##', '%.1f %.1f %.1f %.1f' % (0, 0, self.Maxx - self.Minx, self.Maxy - self.Miny)).replace('d="%s"', 'd="M0,0"').replace('##ARROWS##', '&rsaquo; ' * 500)).replace('##WAYDOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_WAYDOT_TEMPLATE).replace('##DOTTEMPLATE##',  GPXTweakerWebInterfaceServer.HTML_DOT_TEMPLATE).replace('#<#WAYPOINTS#>#', waypoints).replace('#<#WAYDOTS#>#', waydots).replace('#<#PATHES#>#', pathes).replace('#<#DOTS#>#', dots).replace('#<#POINTS#>#', points)
     self.log(2, 'built')
     return True
 
