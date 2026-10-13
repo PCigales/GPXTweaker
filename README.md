@@ -7,7 +7,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 This program uses the MapLibre GL JS library (https://github.com/maplibre/maplibre-gl-js), licensed under the 3-Clause BSD license, to display tiles sets defined from a style in JSON format, by import of the main script and its style in the web interface pages, if the feature is enabled in the configuration file through the [JSONTiles] part on the [[Global]] section.
 
-[Description in english in the second part of this document.](###----------English----------)
+[Description in english in the second part of this document.](#----------English----------)
 
 
 ### ----------Français----------
@@ -177,3 +177,10 @@ In the interface:
 In order to associate the files whose extension is ".gpx" with GPXTweaker:
   - create in the same folder a file GPXTweaker.bat containing the line, replacing [path] by the path to the script: @"[path]\GPXTweaker.py" %1
   - in the files explorer, double-click on a ".gpx" file, click on "more applications" then on "look for another application", and navigate towards then choose "GPXTweaker.bat"
+
+### ----------Illustrations---------
+
+<img width="1920" height="1046" src="https://github.com/user-attachments/assets/fba5fca5-d13f-487d-a995-f99f4a05ff60" />
+<img width="1919" height="1048" src="https://github.com/user-attachments/assets/1eeaadfd-b746-49aa-872c-014c979a7d60" />
+<img width="1918" height="1047" src="https://github.com/user-attachments/assets/e8946e18-5f06-46d3-96ab-69b39346e57c" />
+
