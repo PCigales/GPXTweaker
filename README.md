@@ -7,12 +7,12 @@ You should have received a copy of the GNU General Public License along with thi
 
 This program uses the MapLibre GL JS library (https://github.com/maplibre/maplibre-gl-js), licensed under the 3-Clause BSD license, to display tiles sets defined from a style in JSON format, by import of the main script and its style in the web interface pages, if the feature is enabled in the configuration file through the [JSONTiles] part on the [[Global]] section.
 
-Description in english in the second part of this document.
+[Description in english in the second part of this document.](###----------English----------)
 
 
-----------Français----------
+### ----------Français----------
 
-GPXTweaker est une application, écrite en Python (≥ 3.8) et en Javascript, de visualisation, en 2D et en 3D, et d'édition, au travers d'une interface web, de trace GPX sur fond cartographique. Elle offre également la possibilité d'afficher des photos et vidéos géolocalisées. Aucune dépendance n'est requise.
+GPXTweaker est une application, écrite en Python (≥ 3.8) et en Javascript, de visualisation, en 2D et en 3D, et d'édition, au travers d'une interface web, de trace GPX sur fond cartographique. Elle offre également la possibilité d'afficher des photos et vidéos géolocalisées. Aucune dépendance n'est requise. Une bibliothèque d'extensions pour l'explorateur de fichiers et le moteur d'indexation de Windows leur apportant la prise en charge des fichiers GPX est également disponible sur https://github.com/PCigales/GPXShellExt.
 
 Lors de la sauvegarde de la trace mise à jour, le fichier inital est renommé, par ajout du suffixe " - original" ou, les fois suivantes, " - backup", dans le même répertoire. Les données inchangées sont, autant que faire se peut, conservées en l'état, sans altération, pour assurer la préservation des champs constituant des extensions par rapport aux standards.
 
@@ -94,9 +94,9 @@ Pour associer les fichers dont l'extension est ".gpx" avec GPXTweaker:
   - dans l'explorateur de fichiers, double-cliquer sur un fichier ".gpx", cliquer sur "plus d'applications" puis sur "rechercher une autre application", et naviguer jusque puis choisir "GPXTweaker.bat"
 
 
-----------English----------
+### ----------English----------
 
-GPXTweaker is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, GPX tracks on a cartographic background. It also offers the possibility of displaying geotagged photos and videos. No dependency is required.
+GPXTweaker is an application, in Python (≥ 3.8) and Javascript, for visualizing, in 2D and in 3D, and editing, throught a web interface, GPX tracks on a cartographic background. It also offers the possibility of displaying geotagged photos and videos. No dependency is required. A library of extensions for the Windows file explorer and indexing engine bringing to them support for GPX files is also available at https://github.com/PCigales/GPXShellExt.
 
 When saving the updated track, the inital file is renamed, by adding the suffix "- original" or, the following times, "- backup", in the same folder. Unchanged datas are, as much as possible, kept as they are, without alteration, in order to ensure the conservation of fields constituting extensions relatively to standards.
 
