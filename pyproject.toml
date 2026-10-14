@@ -1,0 +1,36 @@
+[build-system]
+requires = [
+    "setuptools>=78",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GPXTweaker"
+version = "1.19.5"
+authors = [{name = "PCigales"}]
+license = "GPL-3.0-or-later"
+description = "A script in Python 3 to visualize, in 2D and 3D, and edit GPX tracks"
+readme = "README.md"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: Microsoft :: Windows",
+  "Development Status :: 5 - Production/Stable",
+  "Topic :: Scientific/Engineering :: GIS"
+]
+keywords = ["gpx", "gis", "wms", "wmts", "3d", "wgs84", "mercator", "geotag"]
+requires-python = ">=3.8"
+
+[project.urls]
+Homepage = "https://github.com/PCigales/GPXTweaker"
+Repository = "https://github.com/PCigales/GPXTweaker"
+"Bug Tracker" = "https://github.com/PCigales/GPXTweaker/issues"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.cfg", "*.bat"] 
