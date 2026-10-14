@@ -180,7 +180,7 @@ In order to associate the files whose extension is ".gpx" with GPXTweaker:
 
 ### ----------Illustrations---------
 
-<img width="1920" height="1046" src="https://github.com/user-attachments/assets/fba5fca5-d13f-487d-a995-f99f4a05ff60" />
-<img width="1919" height="1048" src="https://github.com/user-attachments/assets/1eeaadfd-b746-49aa-872c-014c979a7d60" />
-<img width="1918" height="1047" src="https://github.com/user-attachments/assets/e8946e18-5f06-46d3-96ab-69b39346e57c" />
+<img src="https://github.com/user-attachments/assets/fba5fca5-d13f-487d-a995-f99f4a05ff60" />
+<img src="https://github.com/user-attachments/assets/1eeaadfd-b746-49aa-872c-014c979a7d60" />
+<img src="https://github.com/user-attachments/assets/e8946e18-5f06-46d3-96ab-69b39346e57c" />
 
