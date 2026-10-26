@@ -3556,7 +3556,8 @@ class BaseMap(WGS84WebMercator):
     return self.RetrieveTiles(infos, matrix, minlat, maxlat, minlon, maxlon, local_pattern=pattern, local_expiration=expiration, local_store=True, key=key, referer=referer, user_agent=user_agent, basic_auth=basic_auth, extra_headers=extra_headers, threads=threads)
 
   def ProvideTiles(self, infos, matrix, minx, miny, maxx, maxy, local_pattern=None, local_expiration=None, local_store=False, key=None, referer=None, user_agent='GPXTweaker', basic_auth=None, extra_headers=None, only_local=False, max_pending=None, threads=10):
-    if minx >= maxx or miny >= maxy or (res := self._set_infos_mgm_pattern(infos, matrix, local_pattern, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local)) is None:
+    pconnections = [[None] for i in range(threads)]
+    if threads < 1 or minx >= maxx or miny >= maxy or (res := self._set_infos_mgm_pattern(infos, matrix, local_pattern, local_store, key, referer, user_agent, basic_auth, extra_headers, only_local, pconnections[-1])) is None:
       return None
     try:
       iscale = infos['scale']
@@ -3578,7 +3579,7 @@ class BaseMap(WGS84WebMercator):
       sem = threading.Semaphore(max_pending)
     event = threading.Event()
     def downloader():
-      pconnection = [None]
+      pconnection = pconnections.pop()
       while True:
         try:
           with lock:
