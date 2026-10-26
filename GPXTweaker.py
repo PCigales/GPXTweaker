@@ -8962,16 +8962,17 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
             if not self.server.Interface.Map.JSONTiles:
               _send_err_fail()
               continue
-            resp_body = self.server.Interface.JSONTilesLib.get(req.path[20:], b'')
-            ext = req.path.lower()[20:23]
+            rpath = req.path.rsplit('?', 1)[0].lower()
+            resp_body = self.server.Interface.JSONTilesLib.get(rpath[20:], b'')
+            ext = rpath[20:23]
             if ext == 'mjs':
-              uri = (self.server.Interface.JSONTilesMJS[0], req.path[23:]) if not resp_body else ''
+              uri = (self.server.Interface.JSONTilesMJS[0], rpath[23:]) if not resp_body else ''
               ct = 'text/javascript'
             elif ext == 'css':
-              uri = (self.server.Interface.JSONTilesCSS[0], req.path[23:]) if not resp_body else ''
+              uri = (self.server.Interface.JSONTilesCSS[0], rpath[23:]) if not resp_body else ''
               ct = 'text/css'
             elif ext == 'js/' and self.server.Interface.JSONTilesJS is not None:
-              uri = (self.server.Interface.JSONTilesJS[0], req.path[22:]) if not resp_body else ''
+              uri = (self.server.Interface.JSONTilesJS[0], rpath[22:]) if not resp_body else ''
               ct = 'text/javascript'
             else:
               _send_err_fail()
@@ -8990,7 +8991,7 @@ class GPXTweakerRequestHandler(socketserver.BaseRequestHandler):
                   uri = os.path.join(uri[0], uri[1].replace('/', '\\').lstrip('\\'))
                   f = open(uri, 'rb')
                   resp_body = f.read()
-                self.server.Interface.JSONTilesLib[req.path[20:]] = resp_body
+                self.server.Interface.JSONTilesLib[rpath[20:]] = resp_body
               _send_resp(ct)
             except:
               _send_err_nf()
